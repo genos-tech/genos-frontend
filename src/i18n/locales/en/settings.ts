@@ -222,6 +222,18 @@ export const settings = {
         milestoneNone: "There are no milestones to choose from.",
         milestoneLoadFailed: "Couldn't load the milestones. Close this form and try again.",
         errorMilestone: "Choose a milestone.",
+        paramAiSentences: "AI sentences",
+        paramAiSentencesHint:
+            "Adds one short sentence under a task when its comments explain where it stands. This uses AI. Turn it off for a plain report.",
+        effortLabel: "AI effort",
+        effortDefaultMark: "{level} (default)",
+        effortCostAbout: "About {credits} credits per run. This is an estimate.",
+        effortCostRange: "About {from} to {to} credits per run. This is an estimate.",
+        effortCostTiny: "Less than 0.01 credits per run. This is an estimate.",
+        effortHint:
+            "How hard the AI works on this report. The estimate is for a report of about 10 tasks; the real figure is shown on each report.",
+        effortHeld: "Your plan runs this schedule at {level}.",
+        rowEffort: "AI effort: {level}",
         duplicateSame:
             "You already have a schedule that does the same thing at the same time: {name}.",
         duplicateName: "You already have a schedule named {name}. Give this one another name.",
@@ -253,6 +265,13 @@ export const settings = {
             allowDestructive:
                 "Also allow actions that can't be undone or that change who has access (deleting calendar events, milestones, sprints, notes and note folders; adding people to projects or approving their requests to join; sharing notes)",
             destructiveChip: "Can delete",
+            revokeDialog: {
+                title: "Revoke this API key?",
+                body: "Anything using it stops working right away, and a revoked key can't be turned back on. Create a new key if you still need access.",
+                bodyTeam:
+                    "Anything using this team key stops working right away, and a revoked key can't be turned back on. Its creator will need to make a new one.",
+                confirm: "Revoke key",
+            },
         },
         // Owner-only. Lists every live key bound to the team, including
         // the ones editors made, which the list above never shows.
@@ -320,6 +339,12 @@ export const settings = {
             urlPlaceholder: "https://your-app.example.com/genos",
             create: "Add webhook",
             delete: "Delete",
+            deleteNamed: "Delete {name}",
+            deleteDialog: {
+                title: "Delete this webhook?",
+                body: "Genos stops sending events to this URL. Its signing secret is deleted with it, so adding the URL again creates a new secret.",
+                confirm: "Delete webhook",
+            },
             empty: "No webhooks yet.",
             // The server disables an endpoint after 10 consecutive
             // failures; without saying so, "our webhooks stopped" is a

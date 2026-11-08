@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChrome";
 import { MenuRow, MenuSurface, MoreMenu } from "../../../../components/ui/MoreMenu";
 import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -382,6 +383,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     // The phone header packs a back button, the title and two actions.
                     px: 1,
                     gap: 0.5,
+                    // In a preview modal the dialog's own buttons float over this corner.
+                    ...modalChromeEndPadding("8px"),
                 }}
             >
                 <IconButton
@@ -422,6 +425,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
                 <Dropdown>
                     <MenuButton
+                        aria-label={t.common.ui.moreMenu.ariaLabel}
                         slots={{ root: IconButton }}
                         slotProps={{ root: { size: "sm", variant: "plain" } }}
                     >
@@ -477,6 +481,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 ...pageHeaderFrameSx,
                 justifyContent: "space-between",
                 alignItems: "center",
+                // In a preview modal the dialog's own buttons float over this corner.
+                ...modalChromeEndPadding({ xs: "16px", md: "24px" }),
             }}
         >
             {/* Left section: Thread badge + Avatar + Name */}
@@ -687,19 +693,22 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     );
                 })()}
 
-                {/* Close Button */}
-                <AppTooltip size="sm" title={t.chat.headers.close}>
-                    <IconButton
-                        size="sm"
-                        color="danger"
-                        variant="plain"
-                        onClick={closeThreadByUser}
-                    >
-                        <CloseRoundedIcon
-                            sx={{ fontSize: 18, color: "var(--gp-tint-danger-alt)" }}
-                        />
-                    </IconButton>
-                </AppTooltip>
+                {/* Close Button. In a preview modal the dialog has its own Close, and this
+                    one would sit right under it (MIP-1296). */}
+                {hostZIndex == null && (
+                    <AppTooltip size="sm" title={t.chat.headers.close}>
+                        <IconButton
+                            size="sm"
+                            color="danger"
+                            variant="plain"
+                            onClick={closeThreadByUser}
+                        >
+                            <CloseRoundedIcon
+                                sx={{ fontSize: 18, color: "var(--gp-tint-danger-alt)" }}
+                            />
+                        </IconButton>
+                    </AppTooltip>
+                )}
             </Stack>
 
             {/* Thread Q&A modal — mounted once per header instance so

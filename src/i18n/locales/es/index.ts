@@ -385,7 +385,7 @@ export const es: DeepPartial<Messages> = {
             chats: "Chats",
             tasks: "Tareas",
             notes: "Notas",
-            account: "Cuenta",
+            more: "Más",
             search: "Genos",
             integrations: "Integraciones",
         },
@@ -858,6 +858,19 @@ export const es: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "No se pudieron cargar los hitos. Cierra este formulario e inténtalo de nuevo.",
             errorMilestone: "Elige un hito.",
+            paramAiSentences: "Frases de IA",
+            paramAiSentencesHint:
+                "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA. Desactívala para un informe sin IA.",
+            effortLabel: "Esfuerzo de la IA",
+            effortDefaultMark: "{level} (predeterminado)",
+            effortCostAbout: "Unos {credits} créditos por ejecución. Es una estimación.",
+            effortCostRange:
+                "Entre {from} y {to} créditos por ejecución, aproximadamente. Es una estimación.",
+            effortCostTiny: "Menos de 0.01 créditos por ejecución. Es una estimación.",
+            effortHint:
+                "Cuánto se esfuerza la IA en este informe. La estimación es para un informe de unas 10 tareas; la cifra real se muestra en cada informe.",
+            effortHeld: "Tu plan ejecuta esta programación con esfuerzo {level}.",
+            rowEffort: "Esfuerzo de la IA: {level}",
             duplicateSame: "Ya tienes una programación que hace lo mismo a la misma hora: {name}.",
             duplicateName: "Ya tienes una programación llamada {name}. Ponle otro nombre a esta.",
             suggestExists: "Ya tienes esta: {name}.",
@@ -1279,6 +1292,13 @@ export const es: DeepPartial<Messages> = {
                 allowDestructive:
                     "Permitir también acciones que no se pueden deshacer o que cambian quién tiene acceso (eliminar eventos de calendario, hitos, sprints, notas y carpetas de notas; añadir personas a proyectos o aprobar sus solicitudes de unión; compartir notas)",
                 destructiveChip: "Puede eliminar",
+                revokeDialog: {
+                    title: "¿Revocar esta clave de API?",
+                    body: "Todo lo que la use dejará de funcionar de inmediato, y una clave revocada no se puede volver a activar. Crea una clave nueva si aún necesitas acceso.",
+                    bodyTeam:
+                        "Todo lo que use esta clave de equipo dejará de funcionar de inmediato, y una clave revocada no se puede volver a activar. Quien la creó tendrá que crear una nueva.",
+                    confirm: "Revocar clave",
+                },
             },
             teamKeys: {
                 title: "Claves de API del equipo",
@@ -1340,6 +1360,12 @@ export const es: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "Agregar webhook",
                 delete: "Borrar",
+                deleteNamed: "Eliminar {name}",
+                deleteDialog: {
+                    title: "¿Eliminar este webhook?",
+                    body: "Genos dejará de enviar eventos a esta URL. Su secreto de firma se elimina con él, así que volver a añadir la URL crea un secreto nuevo.",
+                    confirm: "Eliminar webhook",
+                },
                 empty: "Aún no hay webhooks.",
                 disabled: "Deshabilitado después de repetidos fallos",
                 managerOnly: "Solo el propietario o editor del equipo puede agregar un webhook.",
@@ -2155,6 +2181,12 @@ export const es: DeepPartial<Messages> = {
                 confirmButton: "Eliminar tarea",
                 cancelButton: "Cancelar",
             },
+            confirmDeletedStatus: {
+                title: "¿Eliminar esta tarea?",
+                titleMilestone: "¿Eliminar este hito?",
+                body: "Desaparece de todas las listas, tableros y paneles. Para recuperarla, cambia la tabla a la vista Eliminadas y dale otro estado.",
+                bodyMilestone: "Desaparece de todas las listas y tableros.",
+            },
             createProject: {
                 heading: "Crear nuevo proyecto",
                 namePlaceholder: "Introduce el nombre del proyecto…",
@@ -2405,6 +2437,18 @@ export const es: DeepPartial<Messages> = {
                 "No se pudo preparar una nueva tarea. Comprueba tu conexión e inténtalo de nuevo.",
             bootstrapRetry: "Reintentar",
             bootstrapCancel: "Cancelar",
+            discardTaskTitle: "¿Descartar este borrador?",
+            discardTaskBody:
+                "Se perderán el título, el cuerpo y los adjuntos. Esta acción no se puede deshacer.",
+            discardMilestoneTitle: "¿Descartar este borrador de hito?",
+            discardMilestoneBody:
+                "Se perderán el título, la descripción y cualquier otro cambio. Esta acción no se puede deshacer.",
+            discardConfirm: "Descartar borrador",
+            discardKeepEditing: "Seguir editando",
+            closeDraftTitle: "¿Cerrar este borrador?",
+            closeDraftBody:
+                "Puedes descartar los cambios, ocultar el formulario (el borrador se guarda para retomarlo más tarde) o seguir editando.",
+            closeDraftHide: "Ocultar (guardar borrador)",
             taskDetails: "Detalles de la tarea",
             description: "Descripción",
             attachments: "Adjuntos",
@@ -3047,7 +3091,9 @@ export const es: DeepPartial<Messages> = {
             overdueCount: "{count} vencido",
             dueSoonCount: "{count} llegará pronto",
             blockedCount: "{count} bloqueado",
-            confirmDelete: "¿Eliminar esta tarea y todas sus subtareas?",
+            confirmDelete: "¿Eliminar esta tarea?",
+            confirmDeleteBody:
+                "Se marcará como eliminada. Sus subtareas se conservan, pero dejan de contar en las estadísticas.",
             errors: {
                 load: "No se pudo cargar el gráfico de tareas.",
                 update: "La actualización falló.",
@@ -4340,6 +4386,7 @@ export const es: DeepPartial<Messages> = {
             setAlwaysOffline: "Marcar siempre como desconectado",
             updateStatus: "Actualizar estado",
             setStatusPlaceholder: "Define tu estado…",
+            statusPresetsLabel: "Estados predefinidos",
             cancel: "CANCELAR",
             reset: "RESTABLECER",
             set: "GUARDAR",
@@ -4511,6 +4558,13 @@ export const es: DeepPartial<Messages> = {
         },
         connections: {
             loadFailed: "No se pudieron cargar tus conexiones",
+            disconnectDialog: {
+                title: "¿Desconectar {provider}?",
+                bodyGoogle:
+                    "Genos elimina el acceso guardado a esta cuenta de Google. Las funciones de calendario que la usan dejan de funcionar hasta que vuelvas a conectarla, lo que implica iniciar sesión con Google otra vez.",
+                bodyGithub:
+                    "Genos elimina el acceso guardado a esta cuenta de GitHub. Las funciones que la usan, como los enlaces a pull requests, dejan de funcionar hasta que vuelvas a conectarla, lo que implica iniciar sesión con GitHub otra vez.",
+            },
             primaryLogin: "Inicio de sesión principal",
             noEmailShared: "(correo no compartido)",
             notConnected: "No conectado",

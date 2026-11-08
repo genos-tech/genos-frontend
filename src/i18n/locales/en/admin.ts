@@ -431,6 +431,7 @@ export const admin = {
         setAlwaysOffline: "Set Always Offline",
         updateStatus: "Update Status",
         setStatusPlaceholder: "Set your status…",
+        statusPresetsLabel: "Status presets",
         cancel: "CANCEL",
         reset: "RESET",
         set: "SET",

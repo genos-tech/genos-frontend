@@ -1,6 +1,6 @@
-import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Badge, Box } from "@mui/joy";
@@ -23,7 +23,7 @@ import { NAV_HOVER_MEDIA, NAV_SELECTED, navFocusSx, navToneSx } from "../ui/nav/
 type BottomTabBarProps = {
     useIM: InboxManagementState;
     useCM: ChatManagementState;
-    onOpenAccount: () => void;
+    onOpenMore: () => void;
 };
 
 // Mirrors NAV_ITEMS in `sidebar.tsx`. Kept inline rather than imported
@@ -55,19 +55,20 @@ const TAB_ITEMS = [
         labelKey: "notes" as const,
         path: "/workspace/notes",
     },
-    // Account opens a sheet rather than navigating: settings, theme, team
-    // switch and sign-out live in the desktop sidebar, which is `null` on
-    // mobile. `path` is empty so nothing here is ever route-active.
+    // "More" opens a sheet rather than navigating: To-Do, History, settings,
+    // theme, team switch and sign-out live in the desktop sidebar, which is
+    // `null` on mobile (MIP-1277). `path` is empty so nothing here is ever
+    // route-active.
     {
         id: 4,
-        icon: AccountCircleRoundedIcon,
-        labelKey: "account" as const,
+        icon: MoreHorizRoundedIcon,
+        labelKey: "more" as const,
         path: "",
     },
 ];
 
 export const BottomTabBar = (props: BottomTabBarProps) => {
-    const { useIM, useCM, onOpenAccount } = props;
+    const { useIM, useCM, onOpenMore } = props;
     const isMobile = useIsMobile();
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -78,7 +79,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
 
     if (!isMobile) return null;
 
-    // Hide tabs the user turned off in Settings → Sidebar. Account has no
+    // Hide tabs the user turned off in Settings → Sidebar. More has no
     // toggle (like Genos on desktop), so it's kept via the labelKey guard.
     const hideable = new Set<string>(HIDEABLE_SIDEBAR_ITEMS);
     const visibleTabs = TAB_ITEMS.filter(
@@ -121,7 +122,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
             {visibleTabs.map((item) => {
                 const Icon = item.icon;
                 // Guard on empty `path` — `includes("")` is true for every
-                // route, which would light up the Account tab everywhere.
+                // route, which would light up the More tab everywhere.
                 const isActive = item.path !== "" && highlightPath.includes(item.path);
                 const badgeCount = getBadgeCount(item.id);
                 // The unread count is part of the tab's name, not only a badge to look at.
@@ -138,7 +139,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 // 78px tab would be heavy, so the selected tab changes colour only.
                 const openTab = () => {
                     if (item.path === "") {
-                        onOpenAccount();
+                        onOpenMore();
                         return;
                     }
                     markPending(item.path);

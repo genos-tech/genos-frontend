@@ -579,8 +579,10 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                                             whiteSpace: "nowrap",
                                                         }}
                                                     >
-                                                        {resolveChatDisplayName(chat) ||
-                                                            `#${chat.chatId}`}
+                                                        <bdi className="g-bidi-island">
+                                                            {resolveChatDisplayName(chat) ||
+                                                                `#${chat.chatId}`}
+                                                        </bdi>
                                                     </Box>
                                                 </MenuRow>
                                             );
@@ -669,7 +671,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                             whiteSpace: "nowrap",
                                         }}
                                     >
-                                        {group.groupName}
+                                        <bdi className="g-bidi-island">{group.groupName}</bdi>
                                     </Box>
                                 </MenuRow>
                             ))}

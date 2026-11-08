@@ -383,7 +383,7 @@ export const hi: DeepPartial<Messages> = {
             chats: "चैट",
             tasks: "टास्क",
             notes: "नोट्स",
-            account: "अकाउंट",
+            more: "और",
             integrations: "इंटीग्रेशन",
             search: "Genos",
         },
@@ -557,6 +557,13 @@ export const hi: DeepPartial<Messages> = {
                 allowDestructive:
                     "ऐसी कार्रवाइयों की भी अनुमति दें जिन्हें वापस नहीं किया जा सकता या जो एक्सेस बदलती हैं (कैलेंडर इवेंट, माइलस्टोन, स्प्रिंट, नोट्स और नोट फ़ोल्डर हटाना; लोगों को प्रोजेक्ट में जोड़ना या उनके जुड़ने के अनुरोध मंज़ूर करना; नोट्स शेयर करना)",
                 destructiveChip: "हटा सकता है",
+                revokeDialog: {
+                    title: "इस API कुंजी को रद्द करें?",
+                    body: "इसका उपयोग करने वाली हर चीज़ तुरंत काम करना बंद कर देगी, और रद्द की गई कुंजी को दोबारा चालू नहीं किया जा सकता। अगर आपको अब भी पहुँच चाहिए, तो नई कुंजी बनाएँ।",
+                    bodyTeam:
+                        "इस टीम कुंजी का उपयोग करने वाली हर चीज़ तुरंत काम करना बंद कर देगी, और रद्द की गई कुंजी को दोबारा चालू नहीं किया जा सकता। इसे बनाने वाले को नई कुंजी बनानी होगी।",
+                    confirm: "कुंजी रद्द करें",
+                },
             },
             teamKeys: {
                 title: "टीम की API कुंजियाँ",
@@ -618,6 +625,12 @@ export const hi: DeepPartial<Messages> = {
                 urlPlaceholder: "https://your-app.example.com/genos",
                 create: "वेबहुक जोड़ें",
                 delete: "मिटाना",
+                deleteNamed: "{name} हटाएँ",
+                deleteDialog: {
+                    title: "इस वेबहुक को हटाएँ?",
+                    body: "Genos इस URL पर इवेंट भेजना बंद कर देगा। इसका साइनिंग सीक्रेट भी इसके साथ हट जाएगा, इसलिए वही URL दोबारा जोड़ने पर नया सीक्रेट बनता है।",
+                    confirm: "वेबहुक हटाएँ",
+                },
                 empty: "अभी तक कोई वेबहुक नहीं.",
                 disabled: "बार-बार विफलता के बाद अक्षम हो गया",
                 managerOnly: "केवल एक टीम मालिक या संपादक ही वेबहुक जोड़ सकता है।",
@@ -1057,6 +1070,18 @@ export const hi: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "माइलस्टोन लोड नहीं हो सके। यह फ़ॉर्म बंद करके दोबारा कोशिश करें।",
             errorMilestone: "एक माइलस्टोन चुनें।",
+            paramAiSentences: "AI के वाक्य",
+            paramAiSentencesHint:
+                "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है। सामान्य रिपोर्ट के लिए इसे बंद करें।",
+            effortLabel: "AI की कोशिश",
+            effortDefaultMark: "{level} (डिफ़ॉल्ट)",
+            effortCostAbout: "प्रति रन लगभग {credits} क्रेडिट। यह एक अनुमान है।",
+            effortCostRange: "प्रति रन लगभग {from} से {to} क्रेडिट। यह एक अनुमान है।",
+            effortCostTiny: "प्रति रन 0.01 क्रेडिट से कम। यह एक अनुमान है।",
+            effortHint:
+                "AI इस रिपोर्ट पर कितनी मेहनत करता है। अनुमान लगभग 10 कार्यों की रिपोर्ट के लिए है; असली आँकड़ा हर रिपोर्ट पर दिखता है।",
+            effortHeld: "आपका प्लान इस शेड्यूल को “{level}” स्तर पर चलाता है।",
+            rowEffort: "AI की कोशिश: {level}",
             duplicateSame: "आपके पास पहले से एक शेड्यूल है जो उसी समय वही काम करता है: {name}।",
             duplicateName: "आपके पास पहले से {name} नाम का एक शेड्यूल है। इसे कोई दूसरा नाम दें।",
             suggestExists: "यह आपके पास पहले से है: {name}।",
@@ -2146,6 +2171,12 @@ export const hi: DeepPartial<Messages> = {
                 confirmButton: "टास्क हटाएँ",
                 cancelButton: "रद्द करें",
             },
+            confirmDeletedStatus: {
+                title: "इस टास्क को हटाएँ?",
+                titleMilestone: "इस माइलस्टोन को हटाएँ?",
+                body: "यह सभी सूचियों, बोर्ड और डैशबोर्ड से गायब हो जाएगा। इसे वापस लाने के लिए तालिका को “हटाया गया” व्यू पर बदलें और इसे कोई दूसरी स्थिति दें।",
+                bodyMilestone: "यह सभी सूचियों और बोर्ड से गायब हो जाएगा।",
+            },
             deleteComment: {
                 title: "टिप्पणी हटाएं?",
                 body: "इस एक्शन को वापस नहीं किया जा सकता",
@@ -2400,6 +2431,18 @@ export const hi: DeepPartial<Messages> = {
                 "नया टास्क तैयार नहीं हो सका। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
             bootstrapRetry: "फिर से कोशिश करें",
             bootstrapCancel: "रद्द करें",
+            discardTaskTitle: "इस ड्राफ़्ट को छोड़ें?",
+            discardTaskBody:
+                "आपका शीर्षक, मुख्य भाग और अनुलग्नक खो जाएंगे. इसे पूर्ववत नहीं किया जा सकता.",
+            discardMilestoneTitle: "इस माइलस्टोन ड्राफ़्ट को छोड़ें?",
+            discardMilestoneBody:
+                "आपका शीर्षक, विवरण और अन्य बदलाव खो जाएंगे. इसे पूर्ववत नहीं किया जा सकता.",
+            discardConfirm: "ड्राफ़्ट छोड़ें",
+            discardKeepEditing: "संपादन जारी रखें",
+            closeDraftTitle: "इस ड्राफ़्ट को बंद करें?",
+            closeDraftBody:
+                "आप अपने बदलाव छोड़ सकते हैं, फ़ॉर्म छिपा सकते हैं (आपका ड्राफ़्ट सहेजा जाता है ताकि आप बाद में जारी रख सकें), या संपादन जारी रख सकते हैं.",
+            closeDraftHide: "छिपाएं (ड्राफ़्ट सहेजें)",
             description: "विवरण",
             attachments: "अटैचमेंट",
             templates: {
@@ -3030,7 +3073,9 @@ export const hi: DeepPartial<Messages> = {
             overdueCount: "{count} अतिदेय",
             dueSoonCount: "{count} जल्द ही आने वाला है",
             blockedCount: "{count} अवरुद्ध",
-            confirmDelete: "यह कार्य और इसके सभी उप-कार्य हटाएं?",
+            confirmDelete: "यह कार्य हटाएं?",
+            confirmDeleteBody:
+                "इसे हटाया हुआ चिह्नित किया जाएगा. इसके उप-कार्य बने रहेंगे, लेकिन आंकड़ों में नहीं गिने जाएंगे.",
             errors: {
                 load: "कार्य ग्राफ़ लोड नहीं किया जा सका.",
                 update: "भार बढ़ाना विफल हुवा।",
@@ -3689,6 +3734,13 @@ export const hi: DeepPartial<Messages> = {
         },
         connections: {
             loadFailed: "आपके कनेक्शन लोड नहीं हो सके",
+            disconnectDialog: {
+                title: "{provider} को डिस्कनेक्ट करें?",
+                bodyGoogle:
+                    "Genos इस Google खाते की सहेजी गई पहुँच हटा देगा। इसे इस्तेमाल करने वाली कैलेंडर सुविधाएँ दोबारा कनेक्ट करने तक काम नहीं करेंगी, और दोबारा कनेक्ट करने के लिए आपको एक बार फिर Google से साइन इन करना होगा।",
+                bodyGithub:
+                    "Genos इस GitHub खाते की सहेजी गई पहुँच हटा देगा। इसे इस्तेमाल करने वाली सुविधाएँ, जैसे पुल रिक्वेस्ट लिंक, दोबारा कनेक्ट करने तक काम नहीं करेंगी, और दोबारा कनेक्ट करने के लिए आपको एक बार फिर GitHub से साइन इन करना होगा।",
+            },
             primaryLogin: "प्राथमिक लॉगिन",
             noEmailShared: "(कोई ईमेल साझा नहीं किया गया)",
             notConnected: "जुड़े नहीं हैं",
@@ -4835,6 +4887,7 @@ export const hi: DeepPartial<Messages> = {
             setAlwaysOffline: "हमेशा ऑफलाइन सेट करें",
             updateStatus: "स्थिति अपडेट करें",
             setStatusPlaceholder: "अपनी स्थिति सेट करें…",
+            statusPresetsLabel: "स्थिति प्रीसेट",
             cancel: "रद्द करें",
             reset: "रीसेट",
             set: "सेट",

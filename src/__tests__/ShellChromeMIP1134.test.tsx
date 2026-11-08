@@ -179,7 +179,7 @@ describe("the mobile tab bar", () => {
                     <BottomTabBar
                         useCM={{ unReadChatAndActivityCounts: 3 } as never}
                         useIM={{ unReadInboxItemCount: 0 } as never}
-                        onOpenAccount={() => {}}
+                        onOpenMore={() => {}}
                     />
                 </BrowserRouter>
             </CssVarsProvider>
@@ -192,7 +192,7 @@ describe("the mobile tab bar", () => {
         expect(screen.getAllByRole("button")).toHaveLength(5);
         expect(tab("Tasks")).toHaveAttribute("aria-current", "page");
         expect(tab("Tasks")).toHaveAttribute("data-selected", "true");
-        for (const other of ["Inbox", "Chats", "Notes", "Account"]) {
+        for (const other of ["Inbox", "Chats", "Notes", "More"]) {
             expect(tab(other), other).not.toHaveAttribute("aria-current");
         }
     });
@@ -211,9 +211,9 @@ describe("the mobile tab bar", () => {
         expect(cssOf(tab("Tasks"))).toMatch(/touch-action:\s*manipulation/);
     });
 
-    it("the Account tab is never current, whatever the route", () => {
+    it("the More tab is never current, whatever the route", () => {
         mount("/workspace/chat");
-        expect(tab("Account")).not.toHaveAttribute("aria-current");
+        expect(tab("More")).not.toHaveAttribute("aria-current");
         expect(tab("Chats")).toHaveAttribute("aria-current", "page");
     });
 

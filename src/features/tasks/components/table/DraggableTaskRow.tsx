@@ -42,12 +42,14 @@ import {
     setCustomFieldValue,
 } from "../../utils/customFields";
 import { deriveDaysLeft } from "../../utils/daysLeft";
+import { isDeletingStatus } from "../../utils/deletedStatus";
 import { TASK_ROW_CLASS } from "../../utils/familyFocusCss";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
 import { PriorityIcon } from "../meta/PriorityIcon";
 import { StatusLabel } from "../meta/StatusLabel";
+import { ConfirmDeletedStatus } from "../modals/ConfirmDeletedStatus";
 import { ProjectTagChip } from "../ProjectTagChip";
 import {
     CellButton,
@@ -345,6 +347,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         await onRowUpdate(updatedTask);
     };
 
+    // Picking "Deleted" asks first (MIP-1301); the dialog is mounted only while a
+    // choice is pending, so a table of rows carries no closed dialogs.
+    const [pendingDeleted, setPendingDeleted] = useState(false);
+
     const handleStartEditTags = () => {
         setEditingField("tags");
         setEditTags(task.tags ?? []);
@@ -534,6 +540,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         {storedString !== "" ? (
                             <UserAvatar
                                 clickable={false}
+                                fallbackName={memberName}
                                 showPulseDot={false}
                                 size={24}
                                 userId={storedString}
@@ -766,16 +773,28 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             open
                             onClose={handleCancelEdit}
                             onChange={(next) => {
-                                handleSelectChange("status", next);
+                                if (isDeletingStatus(next, task.status)) setPendingDeleted(true);
+                                else handleSelectChange("status", next);
                                 handleCancelEdit();
                             }}
                         />
                     );
                 }
                 return statusOption ? (
-                    <CellButton onClick={() => handleStartEdit("status", value as string)}>
-                        <StatusLabel status={statusOption.value} />
-                    </CellButton>
+                    <>
+                        <CellButton onClick={() => handleStartEdit("status", value as string)}>
+                            <StatusLabel status={statusOption.value} />
+                        </CellButton>
+                        {pendingDeleted && (
+                            <ConfirmDeletedStatus
+                                entityName={task.title ?? undefined}
+                                isMilestone={task.isMilestone === true}
+                                open
+                                onClose={() => setPendingDeleted(false)}
+                                onConfirm={() => void handleSelectChange("status", "Deleted")}
+                            />
+                        )}
+                    </>
                 ) : null;
 
             case "pr": {
@@ -989,6 +1008,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             {task.assigneeId ? (
                                 <UserAvatar
                                     clickable={false}
+                                    fallbackName={task.assigneeName}
                                     showPulseDot={false}
                                     size={24}
                                     userId={task.assigneeId}

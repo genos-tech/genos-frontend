@@ -14,8 +14,8 @@
 // unmounts the content) never loses the conversation.
 
 import { Box, Sheet } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
+import { g } from "../../theme/tokens";
 import { SpotlightContent, type SpotlightContentProps } from "./SpotlightContent";
 
 interface Props extends SpotlightContentProps {
@@ -24,9 +24,6 @@ interface Props extends SpotlightContentProps {
 }
 
 export const SpotlightOverlay = ({ isOpen, onClose, ...contentProps }: Props) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-
     if (!isOpen) return null;
 
     return (
@@ -44,7 +41,7 @@ export const SpotlightOverlay = ({ isOpen, onClose, ...contentProps }: Props) =>
                 // the iPhone notch / status bar.
                 pt: { xs: "calc(env(safe-area-inset-top, 0px) + 12px)", sm: "12vh" },
                 px: { xs: 1, sm: 0 },
-                background: isDark ? "rgba(0,0,0,0.45)" : "rgba(15,15,30,0.25)",
+                background: g.scrim,
                 backdropFilter: "blur(2px)",
                 WebkitBackdropFilter: "blur(2px)",
             }}
@@ -69,16 +66,13 @@ export const SpotlightOverlay = ({ isOpen, onClose, ...contentProps }: Props) =>
                     display: "flex",
                     flexDirection: "column",
                     borderRadius: "16px",
-                    backdropFilter: "blur(20px) saturate(180%)",
-                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    background: isDark
-                        ? "rgba(var(--gp-dark-surface-a-rgb), 0.92)"
-                        : "rgba(250,248,255,0.96)",
+                    // An opaque raised surface (the blur this sheet used to carry
+                    // only showed through a 92% fill), so the conversation
+                    // header inside it can be the very same color.
+                    background: g.surface.raised,
                     border: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                    boxShadow: isDark
-                        ? "0 24px 60px rgba(0,0,0,0.6)"
-                        : "0 24px 60px rgba(15,15,30,0.2)",
+                    borderColor: g.border.default,
+                    boxShadow: g.shadow.lg,
                     overflow: "hidden",
                 }}
             >

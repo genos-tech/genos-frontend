@@ -8,7 +8,8 @@ import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
-import { useTranslation } from "../../../i18n";
+import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
+import { fmt, useTranslation } from "../../../i18n";
 import {
     Connection,
     ConnectionsResponse,
@@ -46,6 +47,9 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
     // the panel must not draw "Connect Google / Connect GitHub" as if the user
     // had no accounts.
     const [loadFailed, setLoadFailed] = useState(false);
+    // The account waiting on a yes. Disconnecting deletes the stored tokens and
+    // coming back is a full OAuth round trip, so it asks first (MIP-1301).
+    const [pendingDisconnect, setPendingDisconnect] = useState<Connection | null>(null);
 
     const reload = useCallback(async () => {
         if (!accessToken) return;
@@ -73,12 +77,13 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         [data]
     );
 
-    const handleDisconnect = async (accountId: string) => {
+    const handleDisconnect = async (accountId: string): Promise<boolean> => {
         setError(null);
         setDisconnecting(accountId);
         const ok = await disconnectAccount(accessToken, accountId, setError);
         setDisconnecting(null);
         if (ok) void reload();
+        return ok;
     };
 
     const startConnect = (provider: "google" | "github") => {
@@ -146,7 +151,7 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                                     color="danger"
                                     disabled={isPrimary || disconnecting === connection.id}
                                     variant="outlined"
-                                    onClick={() => handleDisconnect(connection.id)}
+                                    onClick={() => setPendingDisconnect(connection)}
                                 >
                                     {disconnecting === connection.id
                                         ? t.integrations.connections.disconnecting
@@ -164,6 +169,17 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         );
     };
 
+    const dc = t.integrations.connections.disconnectDialog;
+    const pendingIsGithub = pendingDisconnect?.provider === "github";
+    const pendingTitle = fmt(dc.title, {
+        provider: pendingIsGithub
+            ? t.integrations.providers.github
+            : t.integrations.providers.google,
+    });
+    const pendingBody = pendingIsGithub ? dc.bodyGithub : dc.bodyGoogle;
+    const pendingAccount =
+        pendingDisconnect?.provider_email || t.integrations.connections.noEmailShared;
+
     return (
         <DataState
             error={loadFailed}
@@ -179,6 +195,26 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         >
             <Stack spacing={2}>
                 {error && <Alert color="danger">{error}</Alert>}
+                {pendingDisconnect && (
+                    <ConfirmDialog
+                        cancelLabel={t.common.actions.cancel}
+                        confirmLabel={t.integrations.connections.disconnect}
+                        description={pendingBody}
+                        entityName={pendingAccount}
+                        title={pendingTitle}
+                        closeOnConfirm
+                        destructive
+                        open
+                        onClose={() => setPendingDisconnect(null)}
+                        onConfirm={async () => {
+                            // A refusal stays in the dialog with a message; closing it would
+                            // leave the reason only in the page's alert, behind the overlay.
+                            if (!(await handleDisconnect(pendingDisconnect.id))) {
+                                throw new Error(t.integrations.errors.disconnectFailed);
+                            }
+                        }}
+                    />
+                )}
 
                 {/* User-facing notice: while our OAuth app is still in
                 Google's verification queue, only whitelisted Gmail

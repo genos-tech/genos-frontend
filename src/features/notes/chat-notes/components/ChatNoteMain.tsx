@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChrome";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -268,6 +269,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         mb: "5px",
                         px: { xs: 0.5, md: 0 },
                         minWidth: 0,
+                        // In a preview modal the dialog's own buttons float over this corner.
+                        ...modalChromeEndPadding({ xs: "4px", md: "0px" }),
                     }}
                 >
                     <ChatNoteHeader
