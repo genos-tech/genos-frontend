@@ -6,6 +6,7 @@ import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
 import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { useTranslation } from "../../../../i18n";
@@ -132,15 +133,13 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
     const { t } = useTranslation();
     const { tags, updateTag, deleteTag } = usePersonalGMTags();
 
-    // Inline rename: one row at a time.
-    const [editingTagId, setEditingTagId] = useState<number | null>(null);
-    const [editingName, setEditingName] = useState("");
     // Two-click delete: first click arms the row, second confirms.
     const [armedDeleteTagId, setArmedDeleteTagId] = useState<number | null>(null);
 
-    const commitRename = async (tag: PersonalTag) => {
-        const valid = validateName(editingName, tags, tag.tagId);
-        setEditingTagId(null);
+    // The inline rename is the shared InlineTitleEdit: it hands over trimmed, non-empty,
+    // changed text; this only refuses a duplicate or an over-long name.
+    const commitRename = async (tag: PersonalTag, next: string) => {
+        const valid = validateName(next, tags, tag.tagId);
         if (!valid || valid === tag.name) return;
         await updateTag(tag.tagId, { name: valid });
     };
@@ -155,7 +154,6 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
             zIndex={10010}
             onClose={() => {
                 setArmedDeleteTagId(null);
-                setEditingTagId(null);
                 setOpen(false);
             }}
         >
@@ -169,7 +167,6 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
                     </Typography>
                 )}
                 {tags.map((tag) => {
-                    const isEditing = editingTagId === tag.tagId;
                     const isArmed = armedDeleteTagId === tag.tagId;
                     return (
                         <Stack
@@ -201,36 +198,14 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
                                     })
                                 }
                             />
-                            {isEditing ? (
-                                <Input
-                                    size="sm"
-                                    slotProps={{ input: { maxLength: MAX_NAME_LENGTH } }}
-                                    sx={{ flex: 1 }}
-                                    value={editingName}
-                                    autoFocus
-                                    onBlur={() => void commitRename(tag)}
-                                    onChange={(e) => setEditingName(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            void commitRename(tag);
-                                        }
-                                        if (e.key === "Escape") setEditingTagId(null);
-                                    }}
-                                />
-                            ) : (
-                                <Typography
-                                    level="body-sm"
-                                    sx={{ cursor: "text", flex: 1 }}
-                                    noWrap
-                                    onClick={() => {
-                                        setEditingTagId(tag.tagId);
-                                        setEditingName(tag.name);
-                                    }}
-                                >
-                                    {tag.name}
-                                </Typography>
-                            )}
+                            <InlineTitleEdit
+                                ariaLabel={t.chat.gmTags.manageTitle}
+                                level="body-sm"
+                                maxLength={MAX_NAME_LENGTH}
+                                sx={{ flex: 1, minWidth: 0 }}
+                                value={tag.name}
+                                onCommit={(next) => void commitRename(tag, next)}
+                            />
                             <AppTooltip
                                 size="sm"
                                 title={

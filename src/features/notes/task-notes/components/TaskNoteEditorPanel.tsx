@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import { Box, FormControl, Input } from "@mui/joy";
+import { Box, FormControl } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnTaskNoteEditor } from "../../../../components/editors/bnTaskNoteEditor";
+import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -140,28 +141,16 @@ export const TaskNoteEditorPanel = ({
                 }}
                 required
             >
-                <Input
+                <InlineTitleEdit
+                    ariaLabel={t.notes.editor.titlePlaceholder}
+                    inputRef={titleInputRef}
+                    level="h3"
                     placeholder={t.notes.editor.titlePlaceholder}
                     startDecorator={<NoteAltIcon />}
                     value={currentTaskNoteTitle}
-                    variant="soft"
-                    slotProps={{
-                        input: {
-                            ref: titleInputRef,
-                            onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    titleInputRef.current?.blur();
-                                }
-                            },
-                        },
-                    }}
-                    sx={{
-                        fontSize: "22px",
-                        fontWeight: "bold",
-                    }}
-                    onBlur={handleTitleBlur}
-                    onChange={(e) => handleTitleChange(e.target.value)}
+                    variant="field"
+                    onCommit={() => handleTitleBlur()}
+                    onDraftChange={handleTitleChange}
                 />
             </FormControl>
             {/* "Saved" chip lives INSIDE BnTaskNoteEditor (next to the
