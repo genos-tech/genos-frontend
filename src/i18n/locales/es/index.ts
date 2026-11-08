@@ -932,6 +932,171 @@ export const es: DeepPartial<Messages> = {
                     "Todo lo que Genos ha anotado sobre qué elementos abrieron o cambiaron tus apps de IA, y sobre los colaboradores, dependencias, pendientes y notas compartidas que cambiaste, se borra ahora y no se anota nada nuevo. Tus tareas, notas y mensajes no se ven afectados. Si lo vuelves a activar, empieza de cero.",
                 offConfirm: "Desactivar y borrar",
             },
+            control: {
+                stored: {
+                    heading: "Lo que Genos tiene guardado",
+                    description:
+                        "Lo que Genos ha guardado sobre tu actividad, en todos tus equipos. Son recuentos y fechas, nunca texto que hayas escrito, y solo tú puedes verlo.",
+                    recordingOn: "El registro está activado: Genos sigue añadiendo datos.",
+                    recordingOff:
+                        "El registro está desactivado: no se guarda nada nuevo. Puedes activarlo con «Anotar mi actividad», arriba.",
+                    loading: "Cargando lo que Genos tiene guardado…",
+                    loadFailed: "No se pudo cargar. Inténtalo de nuevo.",
+                    empty: "No hay nada guardado.",
+                    activityLabel: "Registro de actividad",
+                    activityValue:
+                        "Entradas: {count} (de tus apps de IA: {aiApp}; cambios tuyos: {own}). Desde {from}. Se conserva {days} días.",
+                    summariesLabel: "Resúmenes diarios",
+                    summariesValue:
+                        "Guardados: {rows}. Tareas incluidas: {items}. Desde {from}. Se conserva {days} días.",
+                    importanceLabel: "Ajustes de importancia",
+                    importanceValue:
+                        "Tareas que marcaste: {marks}. Señales que cambiaste: {tuned}.",
+                },
+                noticed: {
+                    heading: "Lo que Genos ha notado",
+                    description:
+                        "Las tareas que Genos cree que más te importan ahora, y por qué. Se calcula a partir de tu actividad y nunca cambia una tarea.",
+                    show: "Mostrar lo que Genos ha notado",
+                    hide: "Ocultar",
+                    recordingOff:
+                        "El registro está desactivado, así que Genos no nota nada. Activa «Anotar mi actividad», arriba, para verlo.",
+                    loading: "Calculando qué destaca…",
+                    loadFailed: "No se pudo cargar. Inténtalo de nuevo.",
+                    empty: "Todavía no destaca nada.",
+                    thin: "Genos tiene aún poco historial, así que esto es una estimación aproximada.",
+                    notImportant: "No es importante",
+                    notImportantAria: "Marcar como no importante: {task}",
+                    markedNote: "Marcada como no importante. Genos no volverá a ofrecerla.",
+                    undo: "Deshacer",
+                    undoAria: "Deshacer: {task}",
+                    markFailed: "No se pudo guardar. Inténtalo de nuevo.",
+                    markGone: "Ya no puedes abrir esa tarea, así que no se puede marcar.",
+                    markRecordingOff:
+                        "El registro está desactivado, así que no se puede guardar. Actívalo primero, arriba.",
+                    stale: "La lista está desactualizada tras tus cambios.",
+                    refresh: "Actualizar la lista",
+                    suggestionsHeading: "Sugerencias",
+                    suggestionsNote:
+                        "Son solo sugerencias. Genos nunca cambia una tarea por su cuenta.",
+                    raise: "Mucha actividad esta semana, pero su prioridad es {priority}. ¿Subirla?",
+                    review: "Su prioridad es {priority}, pero no ha pasado nada en los últimos 7 días. ¿Sigue siendo tan importante?",
+                    marksHeading: "Tareas que marcaste",
+                    clear: "Quitar",
+                    clearAria: "Quitar la marca de {task}",
+                },
+                why: {
+                    others: "De otras personas: {count}",
+                    mine: "Tuyo: {count}",
+                    chat: "Chat: {count}",
+                    notes: "Notas: {count}",
+                    prs: "Pull requests: {count}",
+                    days: "Activa {days} de los últimos 7 días",
+                    rising: "Cobrando fuerza",
+                    cooling: "Enfriándose",
+                    people: "Personas implicadas: {count}",
+                },
+                markNames: {
+                    not_important: "No es importante",
+                    priority_is_right: "La prioridad es correcta",
+                },
+                signals: {
+                    others: {
+                        name: "Otras personas",
+                        means: "Lo que hacen otras personas en ella: comentarios, cambios, reacciones.",
+                    },
+                    mine: {
+                        name: "Tú",
+                        means: "Lo que haces tú en ella: tus cambios y comentarios.",
+                    },
+                    chat: {
+                        name: "Chat",
+                        means: "Mensajes del hilo de chat vinculado.",
+                    },
+                    notes: {
+                        name: "Notas",
+                        means: "Ediciones de sus notas.",
+                    },
+                    prs: {
+                        name: "Pull requests",
+                        means: "Eventos de pull requests sobre ella.",
+                    },
+                    spread: {
+                        name: "Días de actividad",
+                        means: "En cuántos de los últimos siete días hubo actividad.",
+                    },
+                    trend: {
+                        name: "Cobra fuerza o se enfría",
+                        means: "Si la actividad aumenta o disminuye.",
+                    },
+                    hints: {
+                        name: "Fecha límite, prioridad, Bloqueada",
+                        means: "Su fecha límite, prioridad y estado Bloqueada (pistas débiles).",
+                    },
+                },
+                levels: {
+                    off: {
+                        name: "No contar",
+                        means: "Genos ignora esta señal.",
+                    },
+                    low: {
+                        name: "Contar menos",
+                        means: "Esta señal cuenta la mitad.",
+                    },
+                    normal: {
+                        name: "Normal",
+                        means: "El valor predeterminado.",
+                    },
+                    high: {
+                        name: "Contar más",
+                        means: "Esta señal cuenta el doble.",
+                    },
+                },
+                tuning: {
+                    heading: "Cómo pondera Genos",
+                    description:
+                        "Genos ordena tus tareas con ocho señales. Elige cuánto cuenta cada una para ti en este equipo. Los cambios se aplican a la siguiente clasificación.",
+                    levelAria: "Cuánto cuenta «{signal}»",
+                    reset: "Restablecer valores predeterminados",
+                    recordingOff:
+                        "El registro está desactivado, así que no se puede cambiar. Activa primero «Anotar mi actividad», arriba.",
+                    failed: "No se pudo guardar. Inténtalo de nuevo.",
+                },
+                remove: {
+                    heading: "Eliminar lo que Genos ha guardado",
+                    description:
+                        "Cada botón elimina un tipo de lo que Genos guardó sobre ti, en todos tus equipos. Antes se te pedirá confirmación.",
+                    stays: "Estos botones nunca eliminan: tus tareas, notas, chat, conversaciones con Genos, bandeja de entrada, programaciones ni el interruptor de registro.",
+                    deleted: "Eliminados: {count}.",
+                    nothing: "No había nada guardado, así que no se eliminó nada.",
+                    failed: "No se pudo eliminar. Inténtalo de nuevo.",
+                    ack: "Entiendo que no se puede deshacer",
+                    importance: {
+                        button: "Eliminar ajustes de importancia",
+                        title: "¿Eliminar tus ajustes de importancia?",
+                        body: "Se eliminan las tareas que marcaste y los niveles que fijaste para cada señal, en todos tus equipos. Genos vuelve a su clasificación predeterminada. Tus resúmenes diarios y el registro de actividad se conservan. No se puede deshacer.",
+                        confirm: "Eliminar ajustes de importancia",
+                    },
+                    summaries: {
+                        button: "Eliminar resúmenes diarios",
+                        title: "¿Eliminar tus resúmenes diarios?",
+                        body: "Se eliminan los recuentos diarios guardados de la actividad de cada tarea, en todos tus equipos. Si el registro está activado, Genos no reconstruye ningún día hasta hoy inclusive: vuelve a registrar desde mañana. Tus marcas, niveles y el registro de actividad se conservan. No se puede deshacer.",
+                        confirm: "Eliminar resúmenes diarios",
+                    },
+                    events: {
+                        button: "Eliminar registro de actividad",
+                        title: "¿Eliminar tu registro de actividad?",
+                        body: "Se elimina el registro de qué elementos abrieron o cambiaron tus apps de IA, y de tus propios cambios que nada más guarda, en todos tus equipos. Tus resúmenes diarios, marcas y niveles se conservan. No se puede deshacer.",
+                        confirm: "Eliminar registro de actividad",
+                    },
+                    everything: {
+                        button: "Eliminar todo",
+                        title: "¿Eliminar todo lo que Genos ha guardado?",
+                        body: "Se eliminan tus ajustes de importancia, resúmenes diarios y registro de actividad, en todos tus equipos. El registro sigue como está, activado o desactivado. Tus tareas, notas, chat y conversaciones con Genos no se ven afectados. No se puede deshacer.",
+                        confirm: "Eliminar todo",
+                    },
+                },
+            },
             settingsUsed: {
                 heading: "Ajustes que usa Genos",
                 description: "Genos lee estos dos ajustes cuando te responde.",

@@ -7,6 +7,12 @@ import { useMemberEventsPreference } from "../../../hooks/common/useMemberEvents
 import { useTranslation } from "../../../i18n";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "./confirmLayer";
 
+interface Props {
+    // Called once the server has confirmed the switch moved (either way), so the sections that
+    // show what is stored read it again: turning it off deletes everything.
+    onChanged?: () => void;
+}
+
 /**
  * "What Genos notes about your work": the one switch for the markers Genos keeps of
  * which items the person's connected AI apps opened or changed over MCP, and of the
@@ -18,7 +24,7 @@ import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "./confirmLayer";
  * the page, and the switch does not move until the server has confirmed. Turning
  * it back on needs no question: nothing is back-filled.
  */
-export const McpUseSection = () => {
+export const McpUseSection = ({ onChanged }: Props) => {
     const { t } = useTranslation();
     const m = t.settings.genosMemory.mcpUse;
     const pref = useMemberEventsPreference();
@@ -37,7 +43,8 @@ export const McpUseSection = () => {
             setOffOpen(true);
             return;
         }
-        if (!(await pref.setEnabled(true))) setToggleError(true);
+        if (await pref.setEnabled(true)) onChanged?.();
+        else setToggleError(true);
     };
 
     const confirmOff = async () => {
@@ -51,6 +58,7 @@ export const McpUseSection = () => {
             return;
         }
         setOffOpen(false);
+        onChanged?.();
     };
 
     return (
