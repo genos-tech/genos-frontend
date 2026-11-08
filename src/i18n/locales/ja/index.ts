@@ -4853,6 +4853,18 @@ export const ja: DeepPartial<Messages> = {
                 "新しいタスクを準備できませんでした。接続を確認して、もう一度お試しください。",
             bootstrapRetry: "再試行",
             bootstrapCancel: "キャンセル",
+            discardTaskTitle: "この下書きを破棄しますか?",
+            discardTaskBody:
+                "タイトル、本文、添付ファイルは失われます。この操作は取り消せません。",
+            discardMilestoneTitle: "このマイルストーンの下書きを破棄しますか?",
+            discardMilestoneBody:
+                "タイトル、説明、その他の変更は失われます。この操作は取り消せません。",
+            discardConfirm: "下書きを破棄",
+            discardKeepEditing: "編集を続ける",
+            closeDraftTitle: "この下書きを閉じますか?",
+            closeDraftBody:
+                "変更を破棄するか、フォームを非表示にする(下書きは保存され、後で再開できます)か、編集を続けることができます。",
+            closeDraftHide: "非表示(下書きを保存)",
             description: "説明",
             attachments: "添付ファイル",
             templates: {
@@ -5487,7 +5499,8 @@ export const ja: DeepPartial<Messages> = {
             overdueCount: "{count} 締切切れ",
             dueSoonCount: "{count} まもなく終了予定",
             blockedCount: "{count} がブロックされました",
-            confirmDelete: "このタスクとそのすべてのサブタスクを削除しますか?",
+            confirmDelete: "このタスクを削除しますか?",
+            confirmDeleteBody: "サブタスクは削除されません。プロジェクトに残ります。",
             errors: {
                 load: "タスクグラフを読み込めませんでした。",
                 update: "アップデートに失敗しました。",

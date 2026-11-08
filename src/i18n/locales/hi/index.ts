@@ -2399,6 +2399,18 @@ export const hi: DeepPartial<Messages> = {
                 "नया टास्क तैयार नहीं हो सका। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
             bootstrapRetry: "फिर से कोशिश करें",
             bootstrapCancel: "रद्द करें",
+            discardTaskTitle: "इस ड्राफ़्ट को छोड़ें?",
+            discardTaskBody:
+                "आपका शीर्षक, मुख्य भाग और अनुलग्नक खो जाएंगे. इसे पूर्ववत नहीं किया जा सकता.",
+            discardMilestoneTitle: "इस माइलस्टोन ड्राफ़्ट को छोड़ें?",
+            discardMilestoneBody:
+                "आपका शीर्षक, विवरण और अन्य बदलाव खो जाएंगे. इसे पूर्ववत नहीं किया जा सकता.",
+            discardConfirm: "ड्राफ़्ट छोड़ें",
+            discardKeepEditing: "संपादन जारी रखें",
+            closeDraftTitle: "इस ड्राफ़्ट को बंद करें?",
+            closeDraftBody:
+                "आप अपने बदलाव छोड़ सकते हैं, फ़ॉर्म छिपा सकते हैं (आपका ड्राफ़्ट सहेजा जाता है ताकि आप बाद में जारी रख सकें), या संपादन जारी रख सकते हैं.",
+            closeDraftHide: "छिपाएं (ड्राफ़्ट सहेजें)",
             description: "विवरण",
             attachments: "अटैचमेंट",
             templates: {
@@ -3027,7 +3039,8 @@ export const hi: DeepPartial<Messages> = {
             overdueCount: "{count} अतिदेय",
             dueSoonCount: "{count} जल्द ही आने वाला है",
             blockedCount: "{count} अवरुद्ध",
-            confirmDelete: "यह कार्य और इसके सभी उप-कार्य हटाएं?",
+            confirmDelete: "यह कार्य हटाएं?",
+            confirmDeleteBody: "इसके उप-कार्य नहीं हटाए जाएंगे; वे प्रोजेक्ट में बने रहेंगे.",
             errors: {
                 load: "कार्य ग्राफ़ लोड नहीं किया जा सका.",
                 update: "भार बढ़ाना विफल हुवा।",

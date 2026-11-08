@@ -4917,6 +4917,18 @@ export const fr: DeepPartial<Messages> = {
                 "Impossible de préparer une nouvelle tâche. Vérifiez votre connexion et réessayez.",
             bootstrapRetry: "Réessayer",
             bootstrapCancel: "Annuler",
+            discardTaskTitle: "Abandonner ce brouillon ?",
+            discardTaskBody:
+                "Le titre, le contenu et les pièces jointes seront perdus. Cette action est irréversible.",
+            discardMilestoneTitle: "Abandonner ce brouillon de jalon ?",
+            discardMilestoneBody:
+                "Le titre, la description et toutes les autres modifications seront perdus. Cette action est irréversible.",
+            discardConfirm: "Abandonner le brouillon",
+            discardKeepEditing: "Continuer la modification",
+            closeDraftTitle: "Fermer ce brouillon ?",
+            closeDraftBody:
+                "Vous pouvez abandonner vos modifications, masquer le formulaire (le brouillon est enregistré pour reprendre plus tard) ou continuer à modifier.",
+            closeDraftHide: "Masquer (enregistrer le brouillon)",
             description: "Description",
             attachments: "Pièces jointes",
             templates: {
@@ -5551,7 +5563,9 @@ export const fr: DeepPartial<Messages> = {
             overdueCount: "{count} en retard",
             dueSoonCount: "{count} bientôt disponible",
             blockedCount: "{count} bloqué",
-            confirmDelete: "Supprimer cette tâche et toutes ses sous-tâches ?",
+            confirmDelete: "Supprimer cette tâche ?",
+            confirmDeleteBody:
+                "Ses sous-tâches ne sont pas supprimées ; elles restent dans le projet.",
             errors: {
                 load: "Impossible de charger le graphique des tâches.",
                 update: "La mise à jour a échoué.",

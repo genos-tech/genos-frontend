@@ -2404,6 +2404,18 @@ export const es: DeepPartial<Messages> = {
                 "No se pudo preparar una nueva tarea. Comprueba tu conexión e inténtalo de nuevo.",
             bootstrapRetry: "Reintentar",
             bootstrapCancel: "Cancelar",
+            discardTaskTitle: "¿Descartar este borrador?",
+            discardTaskBody:
+                "Se perderán el título, el cuerpo y los adjuntos. Esta acción no se puede deshacer.",
+            discardMilestoneTitle: "¿Descartar este borrador de hito?",
+            discardMilestoneBody:
+                "Se perderán el título, la descripción y cualquier otro cambio. Esta acción no se puede deshacer.",
+            discardConfirm: "Descartar borrador",
+            discardKeepEditing: "Seguir editando",
+            closeDraftTitle: "¿Cerrar este borrador?",
+            closeDraftBody:
+                "Puedes descartar los cambios, ocultar el formulario (el borrador se guarda para retomarlo más tarde) o seguir editando.",
+            closeDraftHide: "Ocultar (guardar borrador)",
             taskDetails: "Detalles de la tarea",
             description: "Descripción",
             attachments: "Adjuntos",
@@ -3044,7 +3056,8 @@ export const es: DeepPartial<Messages> = {
             overdueCount: "{count} vencido",
             dueSoonCount: "{count} llegará pronto",
             blockedCount: "{count} bloqueado",
-            confirmDelete: "¿Eliminar esta tarea y todas sus subtareas?",
+            confirmDelete: "¿Eliminar esta tarea?",
+            confirmDeleteBody: "Sus subtareas no se eliminan; permanecen en el proyecto.",
             errors: {
                 load: "No se pudo cargar el gráfico de tareas.",
                 update: "La actualización falló.",
