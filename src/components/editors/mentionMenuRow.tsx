@@ -34,6 +34,7 @@ import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Chip, Typography } from "@mui/joy";
 
+import { g } from "../../theme/tokens";
 import { mentionIconColor, type MentionPalette } from "./mentionPalettes";
 
 /**
@@ -69,12 +70,10 @@ export const MentionIconDisc = ({
     icon: Icon,
     palette,
     shape = "rounded",
-    isDark,
 }: {
     icon: ElementType;
     palette: MentionPalette;
     shape?: "circle" | "rounded";
-    isDark?: boolean;
 }) => (
     <Box
         sx={{
@@ -88,7 +87,7 @@ export const MentionIconDisc = ({
             justifyContent: "center",
         }}
     >
-        <Icon sx={{ fontSize: 18, color: mentionIconColor(palette, isDark) }} />
+        <Icon sx={{ fontSize: 18, color: mentionIconColor(palette) }} />
     </Box>
 );
 
@@ -124,12 +123,11 @@ export const MentionCountChip = ({ count }: { count: number }) => (
 
 /** A person's custom status, pulled right so it never crowds their name.
  *  Italic + muted so it reads as ambient context, not a primary label. */
-export const MentionCustomStatus = ({ text, isDark }: { text: string; isDark?: boolean }) => (
+export const MentionCustomStatus = ({ text }: { text: string }) => (
     <Typography
         level="body-xs"
         sx={{
-            opacity: isDark ? 1 : 0.7,
-            color: isDark ? "rgba(255,255,255,0.62)" : undefined,
+            color: g.text.tertiary,
             fontStyle: "italic",
             ml: "auto",
             flexShrink: 0,
@@ -175,9 +173,6 @@ export interface MentionMenuRowProps {
      */
     trailing?: ReactNode;
     variant?: MentionRowVariant;
-    /** Spotlight's translucent sheet, where Joy's default text tokens are
-     *  illegible; switches to explicit muted whites. */
-    isDark?: boolean;
 }
 
 export const MentionMenuRow = ({
@@ -188,7 +183,6 @@ export const MentionMenuRow = ({
     badge,
     trailing,
     variant = "entity",
-    isDark,
 }: MentionMenuRowProps) => {
     const metrics = VARIANT_METRICS[variant];
     const name = (
@@ -200,7 +194,7 @@ export const MentionMenuRow = ({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 minWidth: 0,
-                color: isDark ? "rgba(255,255,255,0.92)" : undefined,
+                color: g.text.primary,
             }}
         >
             {trigger}
@@ -240,11 +234,7 @@ export const MentionMenuRow = ({
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
-                            // Dark mode needs an explicit muted white:
-                            // stacking opacity on Joy's light-ground token
-                            // washes the line out entirely.
-                            color: isDark ? "rgba(255,255,255,0.62)" : undefined,
-                            opacity: isDark ? 1 : 0.7,
+                            color: g.text.secondary,
                         }}
                     >
                         {subtitle}

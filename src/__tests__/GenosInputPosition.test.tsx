@@ -74,7 +74,7 @@ const contentProps = (over: { query?: string; results?: SpotlightResult[] }) => 
 // The results region is the scroll container that wraps the rows / the
 // no-matches hint. It's the last flex item of the host column.
 const resultsCard = (container: HTMLElement) =>
-    container.querySelector('[class*="custom-scrollbar"]') as HTMLElement;
+    container.querySelector('[data-testid="spotlight-results"]') as HTMLElement;
 
 // The resting-offset spacer: the only aria-hidden empty div in the tree.
 const spacer = (container: HTMLElement) => container.querySelector('div[aria-hidden="true"]');

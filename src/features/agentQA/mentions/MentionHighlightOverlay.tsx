@@ -27,12 +27,13 @@ import {
     type RefObject,
 } from "react";
 
+import { g } from "../../../theme/tokens";
 import type { MentionTokenMatch } from "./useAgentMentionDraft";
 
-// Purple-tinted marker, tuned for legibility of the text underneath on
-// both the light surfaces and Spotlight's translucent dark sheet.
-const HIGHLIGHT_LIGHT = "rgba(124, 77, 255, 0.20)";
-const HIGHLIGHT_DARK = "rgba(180, 155, 255, 0.30)";
+// Accent-tinted marker. A role, so it follows the color theme and the mode:
+// the text underneath stays legible on every surface (the Ask modals used to
+// get the light marker in dark mode: only Spotlight passed `isDark`).
+const HIGHLIGHT = g.accent.border;
 
 interface OverlayBox {
     top: number;
@@ -48,7 +49,6 @@ interface Props {
     elementRef: RefObject<HTMLTextAreaElement | HTMLInputElement | null>;
     value: string;
     ranges: MentionTokenMatch[];
-    isDark?: boolean;
     /** Mirror an <input>: no wrapping, horizontal scroll, centered line. */
     singleLine?: boolean;
 }
@@ -58,7 +58,6 @@ export const MentionHighlightOverlay = ({
     elementRef,
     value,
     ranges,
-    isDark = false,
     singleLine = false,
 }: Props) => {
     const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -147,7 +146,6 @@ export const MentionHighlightOverlay = ({
 
     if (!box || ranges.length === 0) return null;
 
-    const highlight = isDark ? HIGHLIGHT_DARK : HIGHLIGHT_LIGHT;
     const segments: Array<{ text: string; mention: boolean; key: string }> = [];
     let cursor = 0;
     for (const r of ranges) {
@@ -171,7 +169,7 @@ export const MentionHighlightOverlay = ({
                 key={s.key}
                 data-testid="mention-highlight-token"
                 style={{
-                    backgroundColor: highlight,
+                    backgroundColor: HIGHLIGHT,
                     borderRadius: 3,
                     // Keep the pill look on tokens that wrap across lines.
                     boxDecorationBreak: "clone",
