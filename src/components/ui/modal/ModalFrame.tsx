@@ -241,18 +241,18 @@ export const ModalFrame = ({
             // tree, so the same keydown also reaches this Modal. Whether the key belongs to a
             // list is read in the CAPTURE phase, before the list handles it and closes
             // (afterwards the DOM already says "closed").
-            onKeyDownCapture={(event) => {
-                escapeBelongsToPopup.current =
-                    event.key === "Escape" &&
-                    event.target instanceof Element &&
-                    event.target.closest('[role="listbox"], [aria-expanded="true"]') !== null;
-            }}
             onClose={(_event, reason) => {
                 if (reason === "escapeKeyDown" && escapeBelongsToPopup.current) {
                     escapeBelongsToPopup.current = false;
                     return;
                 }
                 if (dismissible) onClose();
+            }}
+            onKeyDownCapture={(event) => {
+                escapeBelongsToPopup.current =
+                    event.key === "Escape" &&
+                    event.target instanceof Element &&
+                    event.target.closest('[role="listbox"], [aria-expanded="true"]') !== null;
             }}
         >
             <ModalDialog
