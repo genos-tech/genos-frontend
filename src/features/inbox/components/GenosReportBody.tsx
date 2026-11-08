@@ -6,19 +6,22 @@
 // without losing the inbox), falling back to SPA navigation outside the provider: never a
 // full-page load from a relative <a>. An https link opens in a new tab with the host shown.
 
-import type { MouseEvent } from "react";
+import { memo, useMemo, useRef, type MouseEvent, type ReactNode } from "react";
 import { Box, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { ExternalLink } from "../../agentQA/agentMarkdown";
+import { projectAvatarSrcMap } from "../../tasks/utils/projectAvatar";
 import {
     GenosReport,
     GenosReportItem,
     isInternalReportLink,
     parseGenosReport,
 } from "../utils/genosReport";
+import { isReportV2, parseGenosReportV2, type GenosReportV2 } from "../utils/genosReportV2";
+import { GenosReportCard } from "./GenosReportCard";
 
 const itemLinkSx = {
     color: g.accent.text,
@@ -63,7 +66,7 @@ const ReportItemRow = ({ item }: { item: GenosReportItem }) => {
     );
 };
 
-export const GenosReportView = ({ report }: { report: GenosReport }) => (
+export const GenosReportView = memo(({ report }: { report: GenosReport }) => (
     <Box sx={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 1.5 }}>
         <Box>
             {report.title !== "" && (
@@ -135,12 +138,59 @@ export const GenosReportView = ({ report }: { report: GenosReport }) => (
             </Box>
         ))}
     </Box>
-);
+));
+GenosReportView.displayName = "GenosReportView";
 
-/** The card body for an inbox item of type 10. Renders nothing for a body that is not a report. */
-export const GenosReportBody = ({ itemBody }: { itemBody: unknown }) => {
-    const report = parseGenosReport(itemBody);
-    return report ? <GenosReportView report={report} /> : null;
+type GenosReportBodyProps = {
+    itemBody: unknown;
+    /** The member's chats: the project marks of a typed report are read from them. */
+    allChats?: Parameters<typeof projectAvatarSrcMap>[0];
+    /** A typed report's footer slot (MIP-1209: AI usage and "Turn this off"). */
+    footer?: ReactNode;
+};
+
+const NO_AVATARS: ReadonlyMap<number, string> = new Map();
+
+const sameMap = (a: ReadonlyMap<number, string>, b: ReadonlyMap<number, string>): boolean => {
+    if (a.size !== b.size) return false;
+    for (const [k, v] of a) if (b.get(k) !== v) return false;
+    return true;
+};
+
+/** The project pictures of a typed report, from the member's chats. The chat list is replaced
+ *  on almost every message, so the map is handed on unchanged while its entries are, and the
+ *  memoized card is not drawn again for a chat that has nothing to do with it. A report with
+ *  no project line never scans the chats. */
+const useProjectAvatars = (
+    report: GenosReportV2 | null,
+    allChats: GenosReportBodyProps["allChats"]
+): ReadonlyMap<number, string> => {
+    const last = useRef<ReadonlyMap<number, string>>(NO_AVATARS);
+    return useMemo(() => {
+        const hasProjects = report?.sections.some((s) => s.items.some((i) => i.project !== null));
+        if (!hasProjects) return NO_AVATARS;
+        const next = projectAvatarSrcMap(allChats);
+        if (!sameMap(last.current, next)) last.current = next;
+        return last.current;
+    }, [report, allChats]);
+};
+
+/** The card body for an inbox item of type 10. A body with `version` 2 gets the rich card; one
+ *  without it (a report stored before the typed fields) is drawn exactly as it always was.
+ *  Renders nothing for a body that is not a report. The body is parsed once per body object and
+ *  both cards are memoized, so an Inbox re-render that hands the same item costs nothing here. */
+export const GenosReportBody = ({ itemBody, allChats, footer }: GenosReportBodyProps) => {
+    // Parsed once per body object: `typed` for a version-2 body, `plain` for any other.
+    const { typed, plain } = useMemo(
+        () =>
+            isReportV2(itemBody)
+                ? { typed: parseGenosReportV2(itemBody), plain: null }
+                : { typed: null, plain: parseGenosReport(itemBody) },
+        [itemBody]
+    );
+    const avatars = useProjectAvatars(typed, allChats);
+    if (typed) return <GenosReportCard avatars={avatars} footer={footer} report={typed} />;
+    return plain ? <GenosReportView report={plain} /> : null;
 };
 
 export default GenosReportBody;

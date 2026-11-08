@@ -3309,6 +3309,15 @@ export const ar: DeepPartial<Messages> = {
             externalShare: "مشتركة مع فريقك",
             genosReport: "تقرير Genos",
         },
+        report: {
+            showMore: "عرض {count} أخرى",
+            showLess: "عرض أقل",
+            emptyTitle: "كل شيء على ما يرام",
+            emptyBody: "لا شيء يحتاج إلى انتباهك الآن.",
+            daysLate: "متأخر {days} يوم",
+            statComments: "التعليقات",
+            statItems: "العناصر",
+        },
         messageReminder: {
             headline: "لقد طلبت تذكيرك بهذه الرسالة.",
             headlineFrom: "لقد طلبت تذكيرك برسالة {name}.",

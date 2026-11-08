@@ -3339,6 +3339,15 @@ export const hi: DeepPartial<Messages> = {
             todoReminder: "टू-डू रिमाइंडर",
             genosReport: "Genos रिपोर्ट",
         },
+        report: {
+            showMore: "{count} और दिखाएँ",
+            showLess: "कम दिखाएँ",
+            emptyTitle: "सब ठीक है",
+            emptyBody: "अभी आपके ध्यान की कोई चीज़ नहीं है।",
+            daysLate: "{days} दिन की देरी",
+            statComments: "टिप्पणियाँ",
+            statItems: "आइटम",
+        },
         messageReminder: {
             headline: "आपने इस मेसेज की याद दिलाने के लिए कहा था।",
             headlineFrom: "आपने {name} के मेसेज की याद दिलाने के लिए कहा था।",

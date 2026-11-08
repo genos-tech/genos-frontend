@@ -478,7 +478,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Suspense>
                 )}
                 {inboxItem.itemType === GENOS_REPORT && (
-                    <GenosReportBody itemBody={inboxItem.itemBody} />
+                    <GenosReportBody allChats={useCM.allChats} itemBody={inboxItem.itemBody} />
                 )}
                 {legacyText !== "" && (
                     <Typography

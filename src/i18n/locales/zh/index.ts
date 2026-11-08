@@ -2189,6 +2189,15 @@ export const zh: DeepPartial<Messages> = {
             todoReminder: "待办提醒",
             genosReport: "Genos 报告",
         },
+        report: {
+            showMore: "再显示 {count} 项",
+            showLess: "收起",
+            emptyTitle: "一切正常",
+            emptyBody: "目前没有需要你处理的事项。",
+            daysLate: "逾期 {days} 天",
+            statComments: "评论",
+            statItems: "条目",
+        },
         messageReminder: {
             headline: "你要求提醒你这条消息。",
             headlineFrom: "你要求提醒你 {name} 的这条消息。",
