@@ -534,6 +534,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         {storedString !== "" ? (
                             <UserAvatar
                                 clickable={false}
+                                fallbackName={memberName}
                                 showPulseDot={false}
                                 size={24}
                                 userId={storedString}
@@ -989,6 +990,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             {task.assigneeId ? (
                                 <UserAvatar
                                     clickable={false}
+                                    fallbackName={task.assigneeName}
                                     showPulseDot={false}
                                     size={24}
                                     userId={task.assigneeId}
