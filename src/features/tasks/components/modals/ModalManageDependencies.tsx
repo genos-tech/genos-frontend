@@ -21,6 +21,7 @@ import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskDependencyRef, TaskProps } from "../../../../types/tasks";
 import { ACTaskSelector, StatusChip } from "../autocompletes/ACTaskSelector";
+import { TaskIdText } from "../card";
 
 type Props = {
     open: boolean;
@@ -92,13 +93,7 @@ const DependencyRow = ({
                 "&:hover": { background: g.hover, borderColor: g.border.default },
             }}
         >
-            <Chip
-                size="sm"
-                sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
-                variant="outlined"
-            >
-                {ref_.displayId ?? `#${ref_.otherTaskId}`}
-            </Chip>
+            <TaskIdText text={ref_.displayId ?? `#${ref_.otherTaskId}`} />
             <StatusChip isDark={isDark} meta={ref_.status} />
             <Typography level="body-md" sx={{ flex: 1, minWidth: 0, fontWeight: 500 }} noWrap>
                 {ref_.title}

@@ -187,18 +187,9 @@ export const computeHealth = (
     return { tone, label, expectedPct, actualPct };
 };
 
-/** Color tokens for the health verdict. Distinct from per-task
- *  `TONE_COLOR` because the semantics are different (per-task urgency
- *  vs. milestone-level pace), and "On track" deserves its own green
- *  rather than the per-task `success` overload. */
-export const HEALTH_TONE_COLOR: Record<ScheduleHealthTone, string> = {
-    "on-track": "#16a34a",
-    "at-risk": "#f59e0b",
-    behind: "#dc2626",
-};
-
-/** Joy color name for chips (`success` | `warning` | `danger`). */
-export const HEALTH_JOY_COLOR: Record<ScheduleHealthTone, "success" | "warning" | "danger"> = {
+/** The tone a health verdict speaks in (the colors live in `nodeTone`'s
+ *  `HEALTH_COLOR` and the shared `ToneLabel`, both from the design tokens). */
+export const HEALTH_TONE: Record<ScheduleHealthTone, "success" | "warning" | "danger"> = {
     "on-track": "success",
     "at-risk": "warning",
     behind: "danger",
