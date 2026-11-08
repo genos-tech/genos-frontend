@@ -135,13 +135,14 @@ export const inbox = {
     },
     section: {
         defaultEmptyTitle: "All caught up!",
-        defaultEmptySubtitle: "No new items to review",
+        defaultEmptySubtitle: "Pick a task to work on, or take a break.",
     },
     emptyStates: {
         activitiesTitle: "No activities yet",
-        activitiesSubtitle: "New updates and notifications will appear here",
+        activitiesSubtitle: "Get assigned a task or @mentioned and updates land here.",
         requestsTitle: "No pending requests",
-        requestsSubtitle: "Team and project requests will show up here",
+        requestsSubtitle:
+            "Approve or decline here when someone asks to join your team or project.",
     },
     notification: {
         approvalBody: "Your request to join the {target} was approved: ",

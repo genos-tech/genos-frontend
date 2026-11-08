@@ -316,7 +316,7 @@ export const notes = {
             "Pick a version to preview it. Restore writes a new version so the history is preserved.",
         viewerDescription:
             "Read-only view — only the note's owner or editors can restore a past version.",
-        emptyList: "No history yet. Versions will appear here after the next save.",
+        emptyList: "No history yet. Save the note to record its first version.",
         currentChip: "current",
         restoredFrom: "restored from v{version}",
         selectVersionPrompt: "Select a version on the left to preview it.",

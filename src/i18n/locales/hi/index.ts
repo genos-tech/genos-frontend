@@ -1357,7 +1357,7 @@ export const hi: DeepPartial<Messages> = {
             },
             delete: "मिटाना",
             completedTodayEmptyTitle: "आज तक कुछ भी ख़त्म नहीं हुआ",
-            completedTodayEmptySubtitle: "आपके द्वारा आज पूर्ण किए गए आइटम यहां दिखाई देंगे.",
+            completedTodayEmptySubtitle: "यहाँ देखने के लिए किसी आइटम को पूरा करें।",
             incompleteEmptySubtitle: "आपके दृश्यमान समूहों में कोई भी अपूर्ण आइटम नहीं है.",
             emptySubtitle: "आरंभ करने के लिए आज का समूह बनाएं.",
             sourceDmThread: "DM धागे से",
@@ -1515,14 +1515,14 @@ export const hi: DeepPartial<Messages> = {
             gmTagPinDefault: "इस चिप को हमेशा दिखाएं",
             gmTagUnpinDefault: "इस चिप को हमेशा दिखाना बंद करें",
             emptyPMTitle: "कोई प्रोजेक्ट अपडेट नहीं",
-            emptyPMSubtitle: "प्रोजेक्ट बातचीत यहाँ दिखाई देगी",
+            emptyPMSubtitle: "इसकी चैट यहाँ पाने के लिए प्रोजेक्ट बनाएँ या उससे जुड़ें।",
             emptyActivityTitle: "अभी कोई गतिविधि नहीं",
-            emptyActivitySubtitle: "मेंशन और जवाब यहाँ दिखेंगे",
+            emptyActivitySubtitle:
+                "जवाब और मेंशन यहाँ पाने के लिए थ्रेड शुरू करें या किसी को @ से मेंशन करें।",
             emptyFlaggedTitle: "कोई फ्लैग किया गया मेसेज नहीं",
             emptyFlaggedSubtitle: "बाद में ढूँढने के लिए ज़रूरी मेसेज को फ्लैग करें",
             emptyPastFlaggedTitle: "कोई पूरा झंडा नहीं",
-            emptyPastFlaggedSubtitle:
-                "जिन झंडों को आपने 'हो गया' के रूप में चिह्नित किया है वे यहां दिखाई देंगे",
+            emptyPastFlaggedSubtitle: "किसी झंडे को 'हो गया' चिह्नित करें, वह यहाँ आ जाएगा।",
             viewPastFlaggedMenu: "पूर्ण झंडे देखें",
             viewActiveFlaggedMenu: "सक्रिय झंडे देखें",
             backToActiveFlaggedButton: "सक्रिय झंडों पर वापस जाएँ",
@@ -2393,6 +2393,7 @@ export const hi: DeepPartial<Messages> = {
         },
         activity: {
             empty: "अभी तक कोई गतिविधि नहीं",
+            emptyBody: "इतिहास शुरू करने के लिए कोई फ़ील्ड बदलें या टिप्पणी जोड़ें।",
             someone: "कोई",
             githubUser: "GitHub उपयोगकर्ता",
             commentedOn: "पर टिप्पणी की",
@@ -2484,7 +2485,7 @@ export const hi: DeepPartial<Messages> = {
                 intro: "इस कार्य को अन्य लोगों से लिंक करें जिन्हें पहले पूरा करना होगा (द्वारा अवरुद्ध) या जो इसे पूरा करने पर निर्भर हैं (अवरुद्ध)। एक ही टीम में क्रॉस-प्रोजेक्ट लिंक की अनुमति है।",
                 blockingDescription: "जब तक यह पूरा नहीं हो जाता, ये कार्य आगे नहीं बढ़ सकते।",
                 blockedByDescription: "इसके आगे बढ़ने से पहले ये कार्य समाप्त होने चाहिए।",
-                emptySection: "अभी तक यहां कुछ भी नहीं है.",
+                emptySection: "अभी कोई नहीं। जोड़ने के लिए नीचे टास्क खोजें।",
                 doneButton: "हो गया",
                 removeTooltip: "निर्भरता हटाओ",
                 closeTooltip: "बंद करना",
@@ -2708,7 +2709,7 @@ export const hi: DeepPartial<Messages> = {
                 promptBody: "उनके कार्य आँकड़े देखने के लिए उपरोक्त किसी सदस्य को चुनें।",
                 nothingAssignedTitle: "इस सदस्य को कुछ भी नहीं सौंपा गया है",
                 nothingAssignedBody:
-                    "इस प्रोजेक्ट में इस सदस्य को सौंपे गए कार्य यहां दिखाई देंगे।",
+                    "यहाँ देखने के लिए इस प्रोजेक्ट का कोई टास्क इस सदस्य को असाइन करें।",
                 milestonesEmpty:
                     "इस परियोजना में कोई भी चालू माइलस्टोन इस सदस्य को नहीं सौंपा गया है।",
                 milestonesHelp:
@@ -2782,7 +2783,7 @@ export const hi: DeepPartial<Messages> = {
             },
             untitledTask: "बिना शीर्षक का टास्क",
             nothingAssignedTitle: "आपको अभी कुछ भी असाइन नहीं किया गया",
-            nothingAssignedBody: "इस प्रोजेक्ट में आपको असाइन किए गए टास्क यहाँ दिखेंगे।",
+            nothingAssignedBody: "यहाँ देखने के लिए इस प्रोजेक्ट का कोई टास्क खुद को असाइन करें।",
             kpiActive: "सक्रिय",
             kpiClosed: "बंद",
             kpiOverdue: "देरी से",
@@ -3294,7 +3295,7 @@ export const hi: DeepPartial<Messages> = {
                 "प्रीव्यू के लिए एक वर्शन चुनें। रिस्टोर करने पर एक नया वर्शन बनता है ताकि हिस्ट्री बनी रहे।",
             viewerDescription:
                 "केवल पढ़ने का व्यू — केवल नोट के ओनर या एडिटर ही पिछला वर्शन रिस्टोर कर सकते हैं।",
-            emptyList: "अभी कोई हिस्ट्री नहीं। अगले सेव के बाद वर्शन यहाँ दिखेंगे।",
+            emptyList: "अभी कोई हिस्ट्री नहीं। पहला वर्शन दर्ज करने के लिए नोट सेव करें।",
             currentChip: "मौजूदा",
             restoredFrom: "v{version} से रिस्टोर किया गया",
             selectVersionPrompt: "प्रीव्यू के लिए बाईं ओर एक वर्शन चुनें।",
@@ -3449,13 +3450,14 @@ export const hi: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "सब कुछ पूरा!",
-            defaultEmptySubtitle: "देखने के लिए कोई नया आइटम नहीं",
+            defaultEmptySubtitle: "काम करने के लिए कोई टास्क चुनें या थोड़ा आराम करें।",
         },
         emptyStates: {
             activitiesTitle: "अभी कोई गतिविधि नहीं",
-            activitiesSubtitle: "नए अपडेट और नोटिफिकेशन यहाँ दिखेंगे",
+            activitiesSubtitle: "टास्क असाइन होने या @ से मेंशन होने पर अपडेट यहाँ मिलेंगे।",
             requestsTitle: "कोई लंबित अनुरोध नहीं",
-            requestsSubtitle: "टीम और प्रोजेक्ट अनुरोध यहाँ दिखेंगे",
+            requestsSubtitle:
+                "जब कोई आपकी टीम या प्रोजेक्ट से जुड़ने का अनुरोध करे, तो यहाँ मंज़ूर या अस्वीकार करें।",
         },
         notification: {
             approvalBody: "{target} में शामिल होने का अनुरोध स्वीकार कर लिया गया है: ",
@@ -5144,6 +5146,10 @@ export const hi: DeepPartial<Messages> = {
             years: "{count}y पहले",
         },
         messageNumber: "संदेश #{id}",
+        emptyTitle: "अभी कोई हिस्ट्री नहीं",
+        emptyChats: "कोई चैट या थ्रेड खोलें, वह यहाँ सूची में आ जाएगा।",
+        emptyTasks: "कोई टास्क खोलें, वह यहाँ सूची में आ जाएगा।",
+        emptyNotes: "कोई नोट खोलें, वह यहाँ सूची में आ जाएगा।",
         empty: "अभी कुछ नहीं है।",
         clear: "हिस्ट्री क्लियर करें",
     },

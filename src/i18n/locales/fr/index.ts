@@ -1027,8 +1027,7 @@ export const fr: DeepPartial<Messages> = {
             },
             delete: "Supprimer",
             completedTodayEmptyTitle: "Rien n'est encore terminé aujourd'hui",
-            completedTodayEmptySubtitle:
-                "Les éléments que vous terminez aujourd'hui s'afficheront ici.",
+            completedTodayEmptySubtitle: "Cochez un élément pour le voir ici.",
             incompleteEmptySubtitle: "Aucun élément incomplet dans vos groupes visibles.",
             emptySubtitle: "Créez le groupe d’aujourd’hui pour commencer.",
             sourceDmThread: "À partir du fil DM",
@@ -1186,14 +1185,14 @@ export const fr: DeepPartial<Messages> = {
             gmTagPinDefault: "Toujours afficher cette puce",
             gmTagUnpinDefault: "Arrêter de toujours afficher cette puce",
             emptyPMTitle: "Aucune mise à jour de projet",
-            emptyPMSubtitle: "Les conversations de projet apparaîtront ici",
+            emptyPMSubtitle: "Créez un projet ou rejoignez-en un pour voir son chat ici.",
             emptyActivityTitle: "Aucune activité pour le moment",
-            emptyActivitySubtitle: "Les mentions et réponses s'afficheront ici",
+            emptyActivitySubtitle:
+                "Lancez un fil ou mentionnez quelqu'un avec @ pour recevoir réponses et mentions ici.",
             emptyFlaggedTitle: "Aucun message marqué",
             emptyFlaggedSubtitle: "Marquez des messages importants pour les retrouver plus tard",
             emptyPastFlaggedTitle: "Aucun indicateur terminé",
-            emptyPastFlaggedSubtitle:
-                "Les indicateurs que vous marquez comme terminés s'affichent ici",
+            emptyPastFlaggedSubtitle: "Marquez un indicateur comme terminé pour le déplacer ici.",
             viewPastFlaggedMenu: "Afficher les indicateurs terminés",
             viewActiveFlaggedMenu: "Afficher les indicateurs actifs",
             backToActiveFlaggedButton: "Retour aux drapeaux actifs",
@@ -2251,6 +2250,10 @@ export const fr: DeepPartial<Messages> = {
             years: "Il y a {count}y",
         },
         messageNumber: "Message #{id}",
+        emptyTitle: "Aucun historique pour le moment",
+        emptyChats: "Ouvrez un chat ou un fil et il sera listé ici.",
+        emptyTasks: "Ouvrez une tâche et elle sera listée ici.",
+        emptyNotes: "Ouvrez une note et elle sera listée ici.",
         empty: "Rien ici pour l'instant.",
         clear: "Effacer l'historique",
     },
@@ -2369,13 +2372,16 @@ export const fr: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "Tout est à jour !",
-            defaultEmptySubtitle: "Aucun nouvel élément à examiner",
+            defaultEmptySubtitle:
+                "Choisissez une tâche sur laquelle travailler, ou faites une pause.",
         },
         emptyStates: {
             activitiesTitle: "Aucune activité pour le moment",
-            activitiesSubtitle: "Les nouvelles mises à jour et notifications apparaîtront ici",
+            activitiesSubtitle:
+                "Quand une tâche vous est assignée ou que l'on vous mentionne avec @, les mises à jour s'affichent ici.",
             requestsTitle: "Aucune demande en attente",
-            requestsSubtitle: "Les demandes d'équipe et de projet s'afficheront ici",
+            requestsSubtitle:
+                "Quand quelqu'un demande à rejoindre votre équipe ou projet, approuvez ou refusez ici.",
         },
         notification: {
             approvalBody: "La demande a été approuvée pour rejoindre {target} : ",
@@ -2997,7 +3003,7 @@ export const fr: DeepPartial<Messages> = {
             viewerDescription:
                 "Vue en lecture seule — seul le propriétaire ou un éditeur de la note peut restaurer une ancienne version.",
             emptyList:
-                "Aucun historique pour le moment. Les versions apparaîtront ici après le prochain enregistrement.",
+                "Aucun historique pour le moment. Enregistrez la note pour créer sa première version.",
             currentChip: "actuelle",
             restoredFrom: "restaurée depuis la v{version}",
             selectVersionPrompt: "Sélectionnez une version à gauche pour la prévisualiser.",
@@ -4884,6 +4890,7 @@ export const fr: DeepPartial<Messages> = {
         },
         activity: {
             empty: "Aucune activité pour l'instant",
+            emptyBody: "Modifiez un champ ou ajoutez un commentaire pour démarrer l'historique.",
             someone: "Quelqu'un",
             githubUser: "Utilisateur GitHub",
             commentedOn: "a commenté",
@@ -4977,7 +4984,8 @@ export const fr: DeepPartial<Messages> = {
                     "Ces tâches ne peuvent pas avancer tant que celle-ci n'est pas terminée.",
                 blockedByDescription:
                     "Ces tâches doivent être terminées avant que celle-ci puisse bouger.",
-                emptySection: "Rien ici pour l'instant.",
+                emptySection:
+                    "Aucune pour le moment. Recherchez une tâche ci-dessous pour l'ajouter.",
                 doneButton: "Terminé",
                 removeTooltip: "Supprimer la dépendance",
                 closeTooltip: "Fermer",
@@ -5202,7 +5210,7 @@ export const fr: DeepPartial<Messages> = {
                 promptBody: "Choisissez un membre ci-dessus pour voir ses statistiques de tâche.",
                 nothingAssignedTitle: "Rien n'est attribué à ce membre",
                 nothingAssignedBody:
-                    "Les tâches assignées à ce membre dans ce projet s'afficheront ici.",
+                    "Assignez une tâche de ce projet à ce membre pour la voir ici.",
                 milestonesEmpty: "Aucun jalon en cours dans ce projet n'est attribué à ce membre.",
                 milestonesHelp:
                     "Jalons en cours dans ce projet auquel ce membre est affecté ou auxquels une tâche lui est assignée. Cliquez sur une carte pour ouvrir son graphique de tâches : les tâches et sous-tâches de ce membre sont mises en surbrillance.",
@@ -5275,8 +5283,7 @@ export const fr: DeepPartial<Messages> = {
             },
             untitledTask: "Tâche sans titre",
             nothingAssignedTitle: "Rien ne vous est assigné pour le moment",
-            nothingAssignedBody:
-                "Les tâches qui vous sont assignées dans ce projet apparaîtront ici.",
+            nothingAssignedBody: "Assignez-vous une tâche de ce projet pour la voir ici.",
             kpiActive: "Actives",
             kpiClosed: "Clôturées",
             kpiOverdue: "En retard",
