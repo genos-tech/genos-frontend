@@ -8,6 +8,7 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -312,12 +313,11 @@ export const ModalManageTags: React.FC<Props> = ({
                 {editingTag === NEW_TAG && <Box sx={rowSx(true)}>{editFields(saveCreate)}</Box>}
 
                 {projectTags.length === 0 && editingTag !== NEW_TAG && (
-                    <Typography
-                        level="body-sm"
-                        sx={{ color: g.text.tertiary, textAlign: "center", py: 3 }}
-                    >
-                        {t.tasks.modals.manageTags.noTagsCreated}
-                    </Typography>
+                    <EmptyState
+                        data-empty="project-tags"
+                        size="sm"
+                        title={t.tasks.modals.manageTags.noTagsCreated}
+                    />
                 )}
 
                 {projectTags.map((tag) => (

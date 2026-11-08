@@ -13,8 +13,9 @@
 // engineering identifier like `search_knowledge_base` or an arg dump
 // like `create_task(title="…", project_id=3)`.
 
-import { Box, Chip, CircularProgress, Typography } from "@mui/joy";
+import { Box, Chip, Typography } from "@mui/joy";
 
+import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation } from "../../i18n";
 import { g } from "../../theme/tokens";
 import { clipText, parsePath, showValue, specFor } from "./approval/editableFields";
@@ -138,9 +139,7 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
                     fontSize: "0.9375rem",
                 }}
             >
-                {isPending && (
-                    <CircularProgress size="sm" sx={{ "--CircularProgress-size": "11px" }} />
-                )}
+                {isPending && <Spinner size="xs" />}
                 {!isPending && !isError && (
                     <Box
                         component="span"

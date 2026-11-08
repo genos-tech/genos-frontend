@@ -5,6 +5,7 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../context/AuthContext";
+import { runScheduleAndAnnounce } from "../../../features/schedules/runScheduleAndAnnounce";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import {
     formatMoment,
@@ -16,7 +17,6 @@ import {
     createSchedule,
     deleteSchedule,
     listSchedules,
-    runScheduleNow,
     Schedule,
     ScheduleChange,
     ScheduleFields,
@@ -26,6 +26,7 @@ import {
     updateSchedule,
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
+import { EmptyState } from "../../ui/feedback/EmptyState";
 import { ScheduleFormPanel } from "./ScheduleFormPanel";
 import { SchedulesUpgradePrompt } from "./SchedulesUpgradePrompt";
 
@@ -100,6 +101,17 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
     // Only the newest request may write: a slow answer for the team the member
     // just left must not paint over the team they are in now.
     const latest = useRef(0);
+
+    // Whether this panel is still on screen. "Run now" finishes in
+    // `runScheduleAndAnnounce`, which outlives the dialog; it asks this so a
+    // failure the panel is about to show itself is not also toasted.
+    const mounted = useRef(true);
+    useEffect(() => {
+        mounted.current = true;
+        return () => {
+            mounted.current = false;
+        };
+    }, []);
 
     const refresh = useCallback(async () => {
         const mine = ++latest.current;
@@ -194,7 +206,15 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         setNotices((cur) =>
             Object.fromEntries(Object.entries(cur).filter(([id]) => id !== sch.id))
         );
-        const res = await runScheduleNow(accessToken, teamId, sch.id);
+        // The run, the Inbox resync and the "Report ready" toast all happen in the
+        // service, so closing this dialog right after pressing the button loses none
+        // of them. What follows is only this panel's own notice.
+        const res = await runScheduleAndAnnounce(
+            accessToken,
+            teamId,
+            sch.id,
+            () => mounted.current
+        );
         let notice: RunNotice;
         if (!res.ok && res.planRequired) {
             setBusy(null);
@@ -321,18 +341,16 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
             )}
 
             {data && !planBlockedNow && schedules.length === 0 && mode === null && (
-                <Stack alignItems="flex-start" spacing={1}>
-                    <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                        {s.empty}
-                    </Typography>
-                    <Button
-                        size="sm"
-                        startDecorator={<AddRoundedIcon />}
-                        onClick={() => setMode({ kind: "new" })}
-                    >
-                        {s.createFirst}
-                    </Button>
-                </Stack>
+                <EmptyState
+                    body={s.empty}
+                    data-empty="schedules"
+                    size="sm"
+                    action={{
+                        label: s.createFirst,
+                        icon: <AddRoundedIcon />,
+                        onClick: () => setMode({ kind: "new" }),
+                    }}
+                />
             )}
 
             {data && !planBlockedNow && suggestions.length > 0 && mode === null && (
@@ -358,6 +376,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                         return (
                             <Sheet
                                 key={sug.key}
+                                variant="outlined"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -367,7 +386,6 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     borderRadius: "md",
                                     minWidth: 0,
                                 }}
-                                variant="outlined"
                             >
                                 <Stack spacing={0.25} sx={{ flex: "1 1 12rem", minWidth: 0 }}>
                                     <Typography level="title-sm" sx={{ overflowWrap: "anywhere" }}>

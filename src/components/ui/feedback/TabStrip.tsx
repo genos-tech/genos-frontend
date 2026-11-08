@@ -17,6 +17,12 @@ import { focusRing, g, type } from "../../../theme/tokens";
  * sideways instead of squeezing labels, and the selected tab scrolls into
  * view.
  *
+ * Close buttons stay OUT of the tablist: a `tablist` may only own `tab`s
+ * (axe: aria-required-children, critical), so the visible x is a pointer /
+ * touch affordance (`aria-hidden`), the keyboard path is Delete on the tab
+ * (`aria-keyshortcuts`), and screen-reader browse mode gets real "Close
+ * <title>" buttons in a visually hidden group after the strip (MIP-1173).
+ *
  * It does not render the panels; the caller shows the content for `value`.
  * Give each tab a `panelId` and the panel `role="tabpanel"` with that id to
  * link them for assistive tech.
@@ -107,20 +113,24 @@ export const TabStrip = ({
                 ?.focus();
         });
 
+    // The closed tab's node is about to go; hand focus to its neighbour
+    // instead of letting it fall to <body>.
+    const closeAndHandOff = (id: string) => {
+        onClose?.(id);
+        const at = tabs.findIndex((t) => t.id === id);
+        const neighbour = [...tabs.slice(at + 1), ...tabs.slice(0, at).reverse()].find(
+            (t) => !t.disabled
+        );
+        if (neighbour) focusTab(neighbour.id);
+    };
+
     const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === "Delete" && onClose) {
             const focused = (e.target as HTMLElement).closest<HTMLElement>("[data-tab-id]");
             const tab = tabs.find((t) => t.id === focused?.dataset.tabId);
             if (tab?.closable) {
                 e.preventDefault();
-                onClose(tab.id);
-                // The closed tab's node is about to go; hand focus to its
-                // neighbour instead of letting it fall to <body>.
-                const at = tabs.findIndex((t) => t.id === tab.id);
-                const neighbour = [...tabs.slice(at + 1), ...tabs.slice(0, at).reverse()].find(
-                    (t) => !t.disabled
-                );
-                if (neighbour) focusTab(neighbour.id);
+                closeAndHandOff(tab.id);
             }
             return;
         }
@@ -152,154 +162,188 @@ export const TabStrip = ({
 
     const height = size === "sm" ? g.control.sm : g.control.md;
 
+    const closables = onClose ? tabs.filter((t) => t.closable) : [];
+
     return (
-        <Box
-            ref={listRef}
-            aria-label={ariaLabel}
-            role="tablist"
-            sx={{
-                display: "flex",
-                alignItems: "stretch",
-                gap: 0.5,
-                minWidth: 0,
-                overflowX: "auto",
-                scrollbarWidth: "none",
-                "&::-webkit-scrollbar": { display: "none" },
-                ...(baseline ? { boxShadow: `inset 0 -1px 0 ${g.border.subtle}` } : null),
-            }}
-            onKeyDown={onKeyDown}
-        >
-            {tabs.map((tab) => {
-                const selected = tab.id === value;
-                return (
-                    <Box
-                        key={tab.id}
-                        role="presentation"
-                        sx={{
-                            position: "relative",
-                            display: "flex",
-                            alignItems: "center",
-                            flexShrink: 0,
-                            borderRadius: `${g.radius.sm} ${g.radius.sm} 0 0`,
-                            "&:hover": tab.disabled ? undefined : { background: g.hover },
-                            // The underline sits on the strip's baseline.
-                            "&::after": {
-                                content: '""',
-                                position: "absolute",
-                                insetInline: 8,
-                                bottom: 0,
-                                height: 2,
-                                borderRadius: 2,
-                                background: selected ? g.accent.solid : "transparent",
-                            },
-                        }}
-                    >
+        <Box sx={{ display: "flex", minWidth: 0, position: "relative" }}>
+            <Box
+                ref={listRef}
+                aria-label={ariaLabel}
+                role="tablist"
+                sx={{
+                    display: "flex",
+                    alignItems: "stretch",
+                    gap: 0.5,
+                    flex: "1 1 auto",
+                    minWidth: 0,
+                    overflowX: "auto",
+                    scrollbarWidth: "none",
+                    "&::-webkit-scrollbar": { display: "none" },
+                    ...(baseline ? { boxShadow: `inset 0 -1px 0 ${g.border.subtle}` } : null),
+                }}
+                onKeyDown={onKeyDown}
+            >
+                {tabs.map((tab) => {
+                    const selected = tab.id === value;
+                    return (
                         <Box
-                            aria-controls={tab.panelId}
-                            aria-selected={selected}
-                            component="button"
-                            data-tab-id={tab.id}
-                            disabled={tab.disabled}
-                            role="tab"
-                            tabIndex={tab.id === stopId ? 0 : -1}
-                            title={tab.title}
-                            type="button"
+                            key={tab.id}
+                            role="presentation"
                             sx={{
-                                all: "unset",
-                                boxSizing: "border-box",
-                                display: "inline-flex",
+                                position: "relative",
+                                display: "flex",
                                 alignItems: "center",
-                                gap: 0.75,
-                                height,
-                                px: 1.25,
-                                cursor: tab.disabled ? "default" : "pointer",
-                                color: selected ? g.text.primary : g.text.secondary,
-                                opacity: tab.disabled ? 0.5 : 1,
-                                ...type("body-sm"),
-                                fontWeight: selected ? 600 : 500,
-                                transition: `color ${g.motion.fast} ${g.ease}`,
-                                "&:focus-visible": { ...focusRing, borderRadius: g.radius.sm },
-                                "&:hover": tab.disabled ? undefined : { color: g.text.primary },
+                                flexShrink: 0,
+                                borderRadius: `${g.radius.sm} ${g.radius.sm} 0 0`,
+                                "&:hover": tab.disabled ? undefined : { background: g.hover },
+                                // The underline sits on the strip's baseline.
+                                "&::after": {
+                                    content: '""',
+                                    position: "absolute",
+                                    insetInline: 8,
+                                    bottom: 0,
+                                    height: 2,
+                                    borderRadius: 2,
+                                    background: selected ? g.accent.solid : "transparent",
+                                },
                             }}
-                            onClick={() => !tab.disabled && onChange(tab.id)}
                         >
-                            {tab.icon && (
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        "--Icon-color": "currentColor",
-                                        "& svg": { fontSize: 16 },
-                                    }}
-                                    aria-hidden
-                                >
-                                    {tab.icon}
-                                </Box>
-                            )}
                             <Box
-                                component="span"
-                                sx={{
-                                    minWidth: 0,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    ...(maxLabelWidth ? { maxWidth: maxLabelWidth } : null),
-                                }}
-                            >
-                                {tab.label}
-                            </Box>
-                            {tab.count !== undefined && tab.count > 0 && (
-                                <Typography
-                                    component="span"
-                                    sx={{
-                                        ...type("caption"),
-                                        minWidth: 18,
-                                        height: 18,
-                                        px: 0.75,
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        borderRadius: g.radius.full,
-                                        background: tab.attention ? g.accent.solid : g.active,
-                                        color: tab.attention ? g.accent.fg : g.text.secondary,
-                                    }}
-                                >
-                                    {tab.count > 99 ? "99+" : tab.count}
-                                </Typography>
-                            )}
-                        </Box>
-                        {tab.closable && onClose && (
-                            <Box
-                                aria-label={closeLabel}
+                                aria-controls={tab.panelId}
+                                aria-keyshortcuts={tab.closable && onClose ? "Delete" : undefined}
+                                aria-selected={selected}
                                 component="button"
-                                tabIndex={-1}
+                                data-tab-id={tab.id}
+                                disabled={tab.disabled}
+                                role="tab"
+                                tabIndex={tab.id === stopId ? 0 : -1}
+                                title={tab.title}
                                 type="button"
                                 sx={{
                                     all: "unset",
                                     boxSizing: "border-box",
                                     display: "inline-flex",
                                     alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 18,
-                                    height: 18,
-                                    mr: 0.75,
-                                    borderRadius: g.radius.xs,
-                                    cursor: "pointer",
-                                    color: g.text.tertiary,
-                                    "--Icon-color": "currentColor",
-                                    "&:hover": { background: g.active, color: g.text.primary },
-                                    "&:focus-visible": focusRing,
+                                    gap: 0.75,
+                                    height,
+                                    px: 1.25,
+                                    cursor: tab.disabled ? "default" : "pointer",
+                                    color: selected ? g.text.primary : g.text.secondary,
+                                    opacity: tab.disabled ? 0.5 : 1,
+                                    ...type("body-sm"),
+                                    fontWeight: selected ? 600 : 500,
+                                    transition: `color ${g.motion.fast} ${g.ease}`,
+                                    "&:focus-visible": { ...focusRing, borderRadius: g.radius.sm },
+                                    "&:hover": tab.disabled
+                                        ? undefined
+                                        : { color: g.text.primary },
                                 }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onClose(tab.id);
-                                }}
+                                onClick={() => !tab.disabled && onChange(tab.id)}
                             >
-                                <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                                {tab.icon && (
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            "--Icon-color": "currentColor",
+                                            "& svg": { fontSize: 16 },
+                                        }}
+                                        aria-hidden
+                                    >
+                                        {tab.icon}
+                                    </Box>
+                                )}
+                                <Box
+                                    component="span"
+                                    sx={{
+                                        minWidth: 0,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        ...(maxLabelWidth ? { maxWidth: maxLabelWidth } : null),
+                                    }}
+                                >
+                                    {tab.label}
+                                </Box>
+                                {tab.count !== undefined && tab.count > 0 && (
+                                    <Typography
+                                        component="span"
+                                        sx={{
+                                            ...type("caption"),
+                                            minWidth: 18,
+                                            height: 18,
+                                            px: 0.75,
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            borderRadius: g.radius.full,
+                                            background: tab.attention ? g.accent.solid : g.active,
+                                            color: tab.attention ? g.accent.fg : g.text.secondary,
+                                        }}
+                                    >
+                                        {tab.count > 99 ? "99+" : tab.count}
+                                    </Typography>
+                                )}
                             </Box>
-                        )}
-                    </Box>
-                );
-            })}
+                            {tab.closable && onClose && (
+                                <Box
+                                    component="span"
+                                    data-tab-close={tab.id}
+                                    title={closeLabel}
+                                    sx={{
+                                        boxSizing: "border-box",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 18,
+                                        height: 18,
+                                        mr: 0.75,
+                                        borderRadius: g.radius.xs,
+                                        cursor: "pointer",
+                                        color: g.text.tertiary,
+                                        "--Icon-color": "currentColor",
+                                        "&:hover": { background: g.active, color: g.text.primary },
+                                    }}
+                                    aria-hidden
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onClose(tab.id);
+                                    }}
+                                >
+                                    <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                                </Box>
+                            )}
+                        </Box>
+                    );
+                })}
+            </Box>
+            {closables.length > 0 && (
+                <Box
+                    aria-label={closeLabel}
+                    role="group"
+                    sx={{
+                        position: "absolute",
+                        width: 1,
+                        height: 1,
+                        overflow: "hidden",
+                        clip: "rect(0 0 0 0)",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {closables.map((tab) => (
+                        <button
+                            key={tab.id}
+                            tabIndex={-1}
+                            type="button"
+                            aria-label={
+                                typeof tab.title === "string" && tab.title
+                                    ? `${closeLabel}: ${tab.title}`
+                                    : closeLabel
+                            }
+                            onClick={() => closeAndHandOff(tab.id)}
+                        />
+                    ))}
+                </Box>
+            )}
         </Box>
     );
 };

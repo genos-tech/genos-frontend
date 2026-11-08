@@ -28,19 +28,12 @@ import BookmarksRoundedIcon from "@mui/icons-material/BookmarksRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
 import SaveAsRoundedIcon from "@mui/icons-material/SaveAsRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    IconButton,
-    Input,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
@@ -327,27 +320,10 @@ export const SavedFiltersMenu = ({
             </AppTooltip>
 
             <FilterMenu isDark={isDark} maxHeight="340px" minWidth="260px" styles={styles}>
-                {isLoading && saved.length === 0 && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, py: 1.5 }}>
-                        <CircularProgress
-                            size="sm"
-                            sx={{
-                                "--CircularProgress-size": "14px",
-                                "--CircularProgress-progressColor": accent,
-                            }}
-                        />
-                        <Typography sx={{ fontSize: "12px", color: styles.mutedText }}>
-                            {ts.loading}
-                        </Typography>
-                    </Box>
-                )}
+                {isLoading && saved.length === 0 && <SkeletonRows count={3} label={ts.loading} />}
 
                 {!isLoading && saved.length === 0 && (
-                    <Box sx={{ px: 2, py: 1.5, maxWidth: 260 }}>
-                        <Typography sx={{ fontSize: "12px", color: styles.mutedText }}>
-                            {ts.empty}
-                        </Typography>
-                    </Box>
+                    <EmptyState body={ts.empty} data-empty="saved-filters" size="sm" />
                 )}
 
                 {saved.map((row) => {

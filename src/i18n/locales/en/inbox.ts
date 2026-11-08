@@ -15,6 +15,14 @@ export const inbox = {
         title: "Inbox",
         subtitle: "Stay on top of notifications",
     },
+    // The Sync button in the header: fetch what arrived without a socket event to announce it
+    // (a report a schedule filed, a reminder).
+    sync: {
+        label: "Sync inbox",
+        upToDate: "Inbox is up to date",
+        added: "{count, plural, one {# new item} other {# new items}}",
+        failed: "Couldn't sync the inbox. Try again.",
+    },
     tabs: {
         ariaLabel: "Inbox sections",
         requests: "Requests",
@@ -52,6 +60,7 @@ export const inbox = {
         usedAtLeast: "AI credits used: at least {credits}",
         usedTiny: "AI credits used: less than 0.01",
         unmeasured: "Genos used AI for this. The amount wasn't measured.",
+        noAiUsed: "No AI used",
         deductedNone: "None deducted from your balance",
         deducted: "{credits} deducted from your balance",
         scheduleFallback: "This schedule",
@@ -64,6 +73,7 @@ export const inbox = {
         offDigest:
             "{name} is off. No more will be written, and no more AI credits spent on it, until you turn it back on.",
         offSchedule: "{name} is off. It won't run or use AI credits until you turn it back on.",
+        offScheduleNoAi: "{name} is off. It won't run until you turn it back on.",
         alreadyOff: "{name} is already off.",
         restingOff: "{name} is turned off.",
         onAgain: "{name} is on again.",
@@ -127,13 +137,14 @@ export const inbox = {
     },
     section: {
         defaultEmptyTitle: "All caught up!",
-        defaultEmptySubtitle: "No new items to review",
+        defaultEmptySubtitle: "Pick a task to work on, or take a break.",
     },
     emptyStates: {
         activitiesTitle: "No activities yet",
-        activitiesSubtitle: "New updates and notifications will appear here",
+        activitiesSubtitle: "Get assigned a task or @mentioned and updates land here.",
         requestsTitle: "No pending requests",
-        requestsSubtitle: "Team and project requests will show up here",
+        requestsSubtitle:
+            "Approve or decline here when someone asks to join your team or project.",
     },
     notification: {
         approvalBody: "Your request to join the {target} was approved: ",

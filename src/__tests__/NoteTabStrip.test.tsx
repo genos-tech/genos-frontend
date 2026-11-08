@@ -69,12 +69,48 @@ describe("NoteTabStrip", () => {
         expect(onSelect).toHaveBeenCalledWith(1);
     });
 
-    it("closes with the index and the note id, and does not select", () => {
+    it("the visible x closes with the index and the note id, and does not select", () => {
         const { onSelect, onCloseTab } = mount(0);
-        fireEvent.click(
-            screen.getAllByRole("button", { name: getMessages().notes.tabs.closeTab })[1]
-        );
+        const x = document.querySelectorAll("[data-tab-close]")[1];
+        fireEvent.click(x);
         expect(onCloseTab).toHaveBeenCalledWith(1, 12);
         expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    // MIP-1173: axe flags any non-tab child of a tablist (aria-required-children, critical).
+    it("the tablist owns only tabs: the x is aria-hidden and Delete is advertised", () => {
+        mount(0);
+        const list = screen.getByRole("tablist");
+        expect(list.querySelectorAll("button:not([role='tab'])").length).toBe(0);
+        for (const x of Array.from(list.querySelectorAll("[data-tab-close]"))) {
+            expect(x.getAttribute("aria-hidden")).toBe("true");
+        }
+        for (const tab of screen.getAllByRole("tab")) {
+            expect(tab.getAttribute("aria-keyshortcuts")).toBe("Delete");
+        }
+    });
+
+    it("screen readers still get one real 'Close <title>' button per tab, outside the tablist", () => {
+        const { onSelect, onCloseTab } = mount(0);
+        const label = getMessages().notes.tabs.closeTab;
+        const buttons = screen.getAllByRole("button", { name: new RegExp(`^${label}: `) });
+        expect(buttons.length).toBe(screen.getAllByRole("tab").length);
+        for (const b of buttons) {
+            expect(screen.getByRole("tablist").contains(b)).toBe(false);
+            expect(b.getAttribute("tabindex")).toBe("-1");
+        }
+        fireEvent.click(buttons[1]);
+        expect(onCloseTab).toHaveBeenCalledWith(1, 12);
+        expect(onSelect).not.toHaveBeenCalled();
+    });
+
+    it("closing from the screen-reader button hands focus to a neighbouring tab", async () => {
+        mount(0);
+        const label = getMessages().notes.tabs.closeTab;
+        const buttons = screen.getAllByRole("button", { name: new RegExp(`^${label}: `) });
+        fireEvent.click(buttons[0]);
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+        expect(document.activeElement?.getAttribute("role")).toBe("tab");
+        expect(document.activeElement?.getAttribute("data-tab-id")).not.toBeNull();
     });
 });

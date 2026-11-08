@@ -49,6 +49,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -1572,48 +1573,12 @@ export const TaskHomeContent = ({
                         </Card>
                     ) : (
                         /* No Project selected */
-                        <Card
-                            variant="soft"
-                            sx={{
-                                p: 4,
-                                textAlign: "center",
-                                background: cardBg,
-                                border: "2px dashed",
-                                borderColor: cardBorder,
-                            }}
-                        >
-                            <Stack alignItems="center" spacing={2}>
-                                <Box
-                                    sx={{
-                                        width: 64,
-                                        height: 64,
-                                        borderRadius: "16px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        background: isDark
-                                            ? "rgba(251,146,60,0.1)"
-                                            : "rgba(251,146,60,0.08)",
-                                    }}
-                                >
-                                    <WorkRoundedIcon
-                                        sx={{
-                                            fontSize: 32,
-                                            color: isDark ? "#fb923c" : "#ea580c",
-                                        }}
-                                    />
-                                </Box>
-                                <Typography
-                                    level="title-lg"
-                                    sx={{ fontWeight: 600, color: textPrimary, mb: 0.5 }}
-                                >
-                                    {t.tasks.dashboard.noProjectSelected}
-                                </Typography>
-                                <Typography level="body-sm" sx={{ color: textMuted }}>
-                                    {t.tasks.dashboard.selectProjectForAnalytics}
-                                </Typography>
-                            </Stack>
-                        </Card>
+                        <EmptyState
+                            body={t.tasks.dashboard.selectProjectForAnalytics}
+                            data-empty="home-no-project"
+                            icon={<WorkRoundedIcon />}
+                            title={t.tasks.dashboard.noProjectSelected}
+                        />
                     )}
 
                     {/* Only render remaining sections if a project is selected */}
@@ -2095,66 +2060,25 @@ export const TaskHomeContent = ({
 
                                     {/* No tasks empty state */}
                                     {recentTasks.length === 0 && (
-                                        <Card
-                                            variant="soft"
-                                            sx={{
-                                                p: 4,
-                                                textAlign: "center",
-                                                background: cardBg,
-                                                border: "2px dashed",
-                                                borderColor: cardBorder,
+                                        <EmptyState
+                                            data-empty="home-no-tasks"
+                                            icon={<AssignmentRoundedIcon />}
+                                            action={{
+                                                label: t.tasks.dashboard.emptyCreateTask,
+                                                icon: <AddRoundedIcon />,
+                                                onClick: handleCreateTask,
                                             }}
-                                        >
-                                            <Stack alignItems="center" spacing={2}>
-                                                <Box
-                                                    sx={{
-                                                        width: 56,
-                                                        height: 56,
-                                                        borderRadius: "14px",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        background: isDark
-                                                            ? "rgba(59,130,246,0.1)"
-                                                            : "rgba(59,130,246,0.08)",
-                                                    }}
-                                                >
-                                                    <AssignmentRoundedIcon
-                                                        sx={{
-                                                            fontSize: 28,
-                                                            color: isDark ? "#60a5fa" : "#3b82f6",
-                                                        }}
-                                                    />
-                                                </Box>
-                                                <Typography
-                                                    level="title-md"
-                                                    sx={{ fontWeight: 600, color: textPrimary }}
-                                                >
-                                                    {selectedSprint
-                                                        ? t.tasks.dashboard.emptySprintTitle
-                                                        : t.tasks.dashboard.emptyBacklogTitle}
-                                                </Typography>
-                                                <Typography
-                                                    level="body-sm"
-                                                    sx={{ color: textMuted }}
-                                                >
-                                                    {selectedSprint
-                                                        ? t.tasks.dashboard.emptySprintSubtitle
-                                                        : t.tasks.dashboard.emptyBacklogSubtitle}
-                                                </Typography>
-                                                {/* An empty list that only says "nothing here"
-                                                    leaves a new team stuck; offer the action the
-                                                    header button already owns. */}
-                                                <Button
-                                                    size="sm"
-                                                    startDecorator={<AddRoundedIcon />}
-                                                    variant="soft"
-                                                    onClick={handleCreateTask}
-                                                >
-                                                    {t.tasks.dashboard.emptyCreateTask}
-                                                </Button>
-                                            </Stack>
-                                        </Card>
+                                            body={
+                                                selectedSprint
+                                                    ? t.tasks.dashboard.emptySprintSubtitle
+                                                    : t.tasks.dashboard.emptyBacklogSubtitle
+                                            }
+                                            title={
+                                                selectedSprint
+                                                    ? t.tasks.dashboard.emptySprintTitle
+                                                    : t.tasks.dashboard.emptyBacklogTitle
+                                            }
+                                        />
                                     )}
                                 </>
                             )}
@@ -2401,57 +2325,22 @@ export const TaskHomeContent = ({
                                         contradictorily, above populated milestone cards. */}
                                     {focusStats.totalCount === 0 &&
                                     focusAssignedMilestones.length === 0 ? (
-                                        <Card
-                                            variant="soft"
-                                            sx={{
-                                                p: 4,
-                                                textAlign: "center",
-                                                background: cardBg,
-                                                border: "2px dashed",
-                                                borderColor: cardBorder,
-                                            }}
-                                        >
-                                            <Stack alignItems="center" spacing={2}>
-                                                <Box
-                                                    sx={{
-                                                        width: 56,
-                                                        height: 56,
-                                                        borderRadius: "14px",
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        background: isDark
-                                                            ? "rgba(34,197,94,0.1)"
-                                                            : "rgba(34,197,94,0.08)",
-                                                    }}
-                                                >
-                                                    <PersonRoundedIcon
-                                                        sx={{
-                                                            fontSize: 28,
-                                                            color: isDark ? "#4ade80" : "#22c55e",
-                                                        }}
-                                                    />
-                                                </Box>
-                                                <Typography
-                                                    level="title-md"
-                                                    sx={{ fontWeight: 600, color: textPrimary }}
-                                                >
-                                                    {isViewingSelf
-                                                        ? t.tasks.dashboard.nothingAssignedTitle
-                                                        : t.tasks.dashboard.memberTasks
-                                                              .nothingAssignedTitle}
-                                                </Typography>
-                                                <Typography
-                                                    level="body-sm"
-                                                    sx={{ color: textMuted }}
-                                                >
-                                                    {isViewingSelf
-                                                        ? t.tasks.dashboard.nothingAssignedBody
-                                                        : t.tasks.dashboard.memberTasks
-                                                              .nothingAssignedBody}
-                                                </Typography>
-                                            </Stack>
-                                        </Card>
+                                        <EmptyState
+                                            data-empty="home-nothing-assigned"
+                                            icon={<PersonRoundedIcon />}
+                                            body={
+                                                isViewingSelf
+                                                    ? t.tasks.dashboard.nothingAssignedBody
+                                                    : t.tasks.dashboard.memberTasks
+                                                          .nothingAssignedBody
+                                            }
+                                            title={
+                                                isViewingSelf
+                                                    ? t.tasks.dashboard.nothingAssignedTitle
+                                                    : t.tasks.dashboard.memberTasks
+                                                          .nothingAssignedTitle
+                                            }
+                                        />
                                     ) : (
                                         <Stack spacing={2}>
                                             {/* KPI strip */}
@@ -2780,16 +2669,17 @@ export const TaskHomeContent = ({
                                                 )}
                                             </Stack>
                                             {focusAssignedMilestones.length === 0 ? (
-                                                <Typography
-                                                    level="body-sm"
-                                                    sx={{ color: textMuted }}
-                                                >
-                                                    {isViewingSelf
-                                                        ? t.tasks.dashboard.assignedMilestones
-                                                              .empty
-                                                        : t.tasks.dashboard.memberTasks
-                                                              .milestonesEmpty}
-                                                </Typography>
+                                                <EmptyState
+                                                    data-empty="home-milestones"
+                                                    size="sm"
+                                                    body={
+                                                        isViewingSelf
+                                                            ? t.tasks.dashboard.assignedMilestones
+                                                                  .empty
+                                                            : t.tasks.dashboard.memberTasks
+                                                                  .milestonesEmpty
+                                                    }
+                                                />
                                             ) : (
                                                 <Box
                                                     sx={{
@@ -3361,16 +3251,11 @@ export const TaskHomeContent = ({
                                             }}
                                         >
                                             {teamCapacity.length === 0 ? (
-                                                <Typography
-                                                    level="body-sm"
-                                                    sx={{
-                                                        color: textMuted,
-                                                        textAlign: "center",
-                                                        py: 1,
-                                                    }}
-                                                >
-                                                    {t.tasks.dashboard.capacity.empty}
-                                                </Typography>
+                                                <EmptyState
+                                                    body={t.tasks.dashboard.capacity.empty}
+                                                    data-empty="home-capacity"
+                                                    size="sm"
+                                                />
                                             ) : (
                                                 <Stack spacing={2}>
                                                     {/* Legend */}
@@ -3880,56 +3765,12 @@ export const TaskHomeContent = ({
                                         </Typography>
 
                                         {tagStats.rows.length === 0 ? (
-                                            <Card
-                                                variant="soft"
-                                                sx={{
-                                                    p: 4,
-                                                    textAlign: "center",
-                                                    background: cardBg,
-                                                    border: "2px dashed",
-                                                    borderColor: cardBorder,
-                                                }}
-                                            >
-                                                <Stack alignItems="center" spacing={1.5}>
-                                                    <Box
-                                                        sx={{
-                                                            width: 56,
-                                                            height: 56,
-                                                            borderRadius: "14px",
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            background: isDark
-                                                                ? "rgba(236,72,153,0.1)"
-                                                                : "rgba(236,72,153,0.08)",
-                                                        }}
-                                                    >
-                                                        <LocalOfferRoundedIcon
-                                                            sx={{
-                                                                fontSize: 28,
-                                                                color: isDark
-                                                                    ? "#f472b6"
-                                                                    : "#ec4899",
-                                                            }}
-                                                        />
-                                                    </Box>
-                                                    <Typography
-                                                        level="title-md"
-                                                        sx={{
-                                                            fontWeight: 600,
-                                                            color: textPrimary,
-                                                        }}
-                                                    >
-                                                        {t.tasks.dashboard.tags.emptyTitle}
-                                                    </Typography>
-                                                    <Typography
-                                                        level="body-sm"
-                                                        sx={{ color: textMuted }}
-                                                    >
-                                                        {t.tasks.dashboard.tags.emptyBody}
-                                                    </Typography>
-                                                </Stack>
-                                            </Card>
+                                            <EmptyState
+                                                body={t.tasks.dashboard.tags.emptyBody}
+                                                data-empty="home-no-tags"
+                                                icon={<LocalOfferRoundedIcon />}
+                                                title={t.tasks.dashboard.tags.emptyTitle}
+                                            />
                                         ) : (
                                             <Stack spacing={2}>
                                                 {/* Summary KPI tiles */}

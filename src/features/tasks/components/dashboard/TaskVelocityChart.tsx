@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { VelocityGranularity, VelocityPoint } from "../../services/loadTaskVelocity";
 
@@ -148,13 +149,7 @@ export const TaskVelocityChart = ({
     const labelStep = Math.max(1, Math.ceil(34 / bucketW));
 
     if (n === 0) {
-        return (
-            <Box sx={{ py: 4, textAlign: "center" }}>
-                <Typography level="body-sm" sx={{ color: textMuted }}>
-                    {v.empty}
-                </Typography>
-            </Box>
-        );
+        return <EmptyState data-empty="task-velocity" size="sm" title={v.empty} />;
     }
 
     const seriesLabel: Record<(typeof SERIES)[number]["key"], string> = {

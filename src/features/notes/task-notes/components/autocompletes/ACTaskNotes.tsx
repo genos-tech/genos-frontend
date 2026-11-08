@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import Autocomplete from "@mui/joy/Autocomplete";
-import CircularProgress from "@mui/joy/CircularProgress";
+import Box from "@mui/joy/Box";
 
+import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/AuthContext";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../../i18n";
@@ -82,7 +83,10 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
             startDecorator={<SearchRoundedIcon />}
             endDecorator={
                 loading ? (
-                    <CircularProgress size="sm" sx={{ bgcolor: "background.surface" }} />
+                    // Masks the popup arrow under it, as the old spinner's own background did.
+                    <Box sx={{ display: "inline-flex", bgcolor: "background.surface" }}>
+                        <Spinner />
+                    </Box>
                 ) : null
             }
             onChange={(event, value) => {

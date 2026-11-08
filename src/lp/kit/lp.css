@@ -439,7 +439,17 @@
     overscroll-behavior: contain;
 }
 
+.lp-menu__scrim {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: default;
+}
+
 .lp-menu__panel {
+    position: relative;
     background: var(--lp-bg);
     border-bottom: 1px solid var(--lp-border-subtle);
     padding: 12px 16px 20px;

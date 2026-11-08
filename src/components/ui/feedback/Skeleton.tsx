@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Skeleton, Stack } from "@mui/joy";
+import { Box, CircularProgress, Skeleton, Stack, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
@@ -10,8 +10,8 @@ import { g } from "../../../theme/tokens";
  *
  * Use `SkeletonRows` where a LIST or panel of rows is loading (it takes the
  * user's row height, so the page does not move when the data arrives),
- * `SkeletonLines` for a block of text, and `Spinner` only for a small
- * inline wait (a button, a field, one value) where no shape is known.
+ * `SkeletonLines` for a block of text, and `Spinner` for a wait with no
+ * known shape (a field, one value, a dialog body, a page).
  *
  * Each one announces itself once as "Loading" (`role="status"`) instead of
  * every bar being read out.
@@ -115,16 +115,55 @@ export const SkeletonLines = ({ lines = 3, label }: SkeletonLinesProps) => {
     );
 };
 
-type SpinnerProps = { size?: "sm" | "md"; label?: string };
+type SpinnerSize = "xs" | "sm" | "md" | "lg";
+type SpinnerProps = {
+    /** xs 12 (beside a line of text), sm 16 (in a field/menu row), md 24 (a dialog body), lg 40 (a page). */
+    size?: SpinnerSize;
+    label?: string;
+    /**
+     * Visible words beside the spinner ("Finishing sign-in..."). Use it when
+     * the wait can last seconds (a page, an AI answer). It also names the
+     * spinner for assistive tech, so `label` is not needed with it.
+     */
+    caption?: string;
+    /** Put the caption under the spinner instead of beside it. */
+    stacked?: boolean;
+};
 
-/** A small inline wait. Not for lists: use `SkeletonRows`. */
-export const Spinner = ({ size = "sm", label }: SpinnerProps) => {
+const SPINNER_PX: Record<SpinnerSize, string> = { xs: "12px", sm: "16px", md: "24px", lg: "40px" };
+
+/**
+ * One spinner for everything that is not a list (MIP-1173). Decision rule:
+ * inside a button -> the Button's own `loading` prop; a LIST or table that
+ * is loading -> `SkeletonRows`; a block of text -> `SkeletonLines`; a field,
+ * a menu row or one value -> `Spinner`; a dialog body or a whole page ->
+ * `Spinner` with a `caption`.
+ */
+export const Spinner = ({ size = "sm", label, caption, stacked = false }: SpinnerProps) => {
     const { t } = useTranslation();
-    return (
+    const indicator = (
         <CircularProgress
-            aria-label={label ?? t.common.feedback.loading}
-            size={size === "sm" ? "sm" : "md"}
-            sx={{ "--CircularProgress-size": size === "sm" ? "16px" : "24px" }}
+            // With a caption the wrapper's status already says it in words: the ring
+            // is decoration then, or a screen reader would read it three times.
+            aria-hidden={caption ? true : undefined}
+            aria-label={caption ? undefined : (label ?? t.common.feedback.loading)}
+            size={size === "xs" || size === "sm" ? "sm" : "md"}
+            sx={{ "--CircularProgress-size": SPINNER_PX[size], flexShrink: 0 }}
         />
+    );
+    if (!caption) return indicator;
+    return (
+        <Stack
+            alignItems="center"
+            direction={stacked ? "column" : "row"}
+            role="status"
+            spacing={stacked ? 1.5 : 1}
+            sx={{ minWidth: 0 }}
+        >
+            {indicator}
+            <Typography level="body-sm" sx={{ color: g.text.secondary, minWidth: 0 }}>
+                {caption}
+            </Typography>
+        </Stack>
     );
 };

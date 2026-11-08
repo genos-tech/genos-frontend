@@ -58,7 +58,6 @@ export const es: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "Sin resultados",
-            noItems: "Aún no hay nada aquí",
         },
         errors: {
             generic: "Algo salió mal. Inténtalo de nuevo.",
@@ -378,6 +377,8 @@ export const es: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "Navegación principal",
+        unreadTab: "{label}, {count} sin leer",
         nav: {
             inbox: "Bandeja",
             chats: "Chats",
@@ -783,6 +784,10 @@ export const es: DeepPartial<Messages> = {
             running: "Ejecutando…",
             ranOk: "Ejecutada: {title}, {count, plural, one {# elemento} other {# elementos}}. El informe está en tu bandeja de entrada.",
             ranFailed: "La ejecución falló: {error}",
+            reportReady: "Informe listo",
+            reportReadyTitled: "Informe listo: {title}",
+            openInbox: "Abrir bandeja",
+            planRefused: "Tu plan no incluye informes programados.",
             edit: "Editar",
             delete: "Eliminar",
             deleteConfirm: "¿Eliminar {name}? Dejará de ejecutarse y no se puede recuperar.",
@@ -926,6 +931,171 @@ export const es: DeepPartial<Messages> = {
                 offBody:
                     "Todo lo que Genos ha anotado sobre qué elementos abrieron o cambiaron tus apps de IA, y sobre los colaboradores, dependencias, pendientes y notas compartidas que cambiaste, se borra ahora y no se anota nada nuevo. Tus tareas, notas y mensajes no se ven afectados. Si lo vuelves a activar, empieza de cero.",
                 offConfirm: "Desactivar y borrar",
+            },
+            control: {
+                stored: {
+                    heading: "Lo que Genos tiene guardado",
+                    description:
+                        "Lo que Genos ha guardado sobre tu actividad, en todos tus equipos. Son recuentos y fechas, nunca texto que hayas escrito, y solo tú puedes verlo.",
+                    recordingOn: "El registro está activado: Genos sigue añadiendo datos.",
+                    recordingOff:
+                        "El registro está desactivado: no se guarda nada nuevo. Puedes activarlo con «Anotar mi actividad», arriba.",
+                    loading: "Cargando lo que Genos tiene guardado…",
+                    loadFailed: "No se pudo cargar. Inténtalo de nuevo.",
+                    empty: "No hay nada guardado.",
+                    activityLabel: "Registro de actividad",
+                    activityValue:
+                        "Entradas: {count} (de tus apps de IA: {aiApp}; cambios tuyos: {own}). Desde {from}. Se conserva {days} días.",
+                    summariesLabel: "Resúmenes diarios",
+                    summariesValue:
+                        "Guardados: {rows}. Tareas incluidas: {items}. Desde {from}. Se conserva {days} días.",
+                    importanceLabel: "Ajustes de importancia",
+                    importanceValue:
+                        "Tareas que marcaste: {marks}. Señales que cambiaste: {tuned}.",
+                },
+                noticed: {
+                    heading: "Lo que Genos ha notado",
+                    description:
+                        "Las tareas que Genos cree que más te importan ahora, y por qué. Se calcula a partir de tu actividad y nunca cambia una tarea.",
+                    show: "Mostrar lo que Genos ha notado",
+                    hide: "Ocultar",
+                    recordingOff:
+                        "El registro está desactivado, así que Genos no nota nada. Activa «Anotar mi actividad», arriba, para verlo.",
+                    loading: "Calculando qué destaca…",
+                    loadFailed: "No se pudo cargar. Inténtalo de nuevo.",
+                    empty: "Todavía no destaca nada.",
+                    thin: "Genos tiene aún poco historial, así que esto es una estimación aproximada.",
+                    notImportant: "No es importante",
+                    notImportantAria: "Marcar como no importante: {task}",
+                    markedNote: "Marcada como no importante. Genos no volverá a ofrecerla.",
+                    undo: "Deshacer",
+                    undoAria: "Deshacer: {task}",
+                    markFailed: "No se pudo guardar. Inténtalo de nuevo.",
+                    markGone: "Ya no puedes abrir esa tarea, así que no se puede marcar.",
+                    markRecordingOff:
+                        "El registro está desactivado, así que no se puede guardar. Actívalo primero, arriba.",
+                    stale: "La lista está desactualizada tras tus cambios.",
+                    refresh: "Actualizar la lista",
+                    suggestionsHeading: "Sugerencias",
+                    suggestionsNote:
+                        "Son solo sugerencias. Genos nunca cambia una tarea por su cuenta.",
+                    raise: "Mucha actividad esta semana, pero su prioridad es {priority}. ¿Subirla?",
+                    review: "Su prioridad es {priority}, pero no ha pasado nada en los últimos 7 días. ¿Sigue siendo tan importante?",
+                    marksHeading: "Tareas que marcaste",
+                    clear: "Quitar",
+                    clearAria: "Quitar la marca de {task}",
+                },
+                why: {
+                    others: "De otras personas: {count}",
+                    mine: "Tuyo: {count}",
+                    chat: "Chat: {count}",
+                    notes: "Notas: {count}",
+                    prs: "Pull requests: {count}",
+                    days: "Activa {days} de los últimos 7 días",
+                    rising: "Cobrando fuerza",
+                    cooling: "Enfriándose",
+                    people: "Personas implicadas: {count}",
+                },
+                markNames: {
+                    not_important: "No es importante",
+                    priority_is_right: "La prioridad es correcta",
+                },
+                signals: {
+                    others: {
+                        name: "Otras personas",
+                        means: "Lo que hacen otras personas en ella: comentarios, cambios, reacciones.",
+                    },
+                    mine: {
+                        name: "Tú",
+                        means: "Lo que haces tú en ella: tus cambios y comentarios.",
+                    },
+                    chat: {
+                        name: "Chat",
+                        means: "Mensajes del hilo de chat vinculado.",
+                    },
+                    notes: {
+                        name: "Notas",
+                        means: "Ediciones de sus notas.",
+                    },
+                    prs: {
+                        name: "Pull requests",
+                        means: "Eventos de pull requests sobre ella.",
+                    },
+                    spread: {
+                        name: "Días de actividad",
+                        means: "En cuántos de los últimos siete días hubo actividad.",
+                    },
+                    trend: {
+                        name: "Cobra fuerza o se enfría",
+                        means: "Si la actividad aumenta o disminuye.",
+                    },
+                    hints: {
+                        name: "Fecha límite, prioridad, Bloqueada",
+                        means: "Su fecha límite, prioridad y estado Bloqueada (pistas débiles).",
+                    },
+                },
+                levels: {
+                    off: {
+                        name: "No contar",
+                        means: "Genos ignora esta señal.",
+                    },
+                    low: {
+                        name: "Contar menos",
+                        means: "Esta señal cuenta la mitad.",
+                    },
+                    normal: {
+                        name: "Normal",
+                        means: "El valor predeterminado.",
+                    },
+                    high: {
+                        name: "Contar más",
+                        means: "Esta señal cuenta el doble.",
+                    },
+                },
+                tuning: {
+                    heading: "Cómo pondera Genos",
+                    description:
+                        "Genos ordena tus tareas con ocho señales. Elige cuánto cuenta cada una para ti en este equipo. Los cambios se aplican a la siguiente clasificación.",
+                    levelAria: "Cuánto cuenta «{signal}»",
+                    reset: "Restablecer valores predeterminados",
+                    recordingOff:
+                        "El registro está desactivado, así que no se puede cambiar. Activa primero «Anotar mi actividad», arriba.",
+                    failed: "No se pudo guardar. Inténtalo de nuevo.",
+                },
+                remove: {
+                    heading: "Eliminar lo que Genos ha guardado",
+                    description:
+                        "Cada botón elimina un tipo de lo que Genos guardó sobre ti, en todos tus equipos. Antes se te pedirá confirmación.",
+                    stays: "Estos botones nunca eliminan: tus tareas, notas, chat, conversaciones con Genos, bandeja de entrada, programaciones ni el interruptor de registro.",
+                    deleted: "Eliminados: {count}.",
+                    nothing: "No había nada guardado, así que no se eliminó nada.",
+                    failed: "No se pudo eliminar. Inténtalo de nuevo.",
+                    ack: "Entiendo que no se puede deshacer",
+                    importance: {
+                        button: "Eliminar ajustes de importancia",
+                        title: "¿Eliminar tus ajustes de importancia?",
+                        body: "Se eliminan las tareas que marcaste y los niveles que fijaste para cada señal, en todos tus equipos. Genos vuelve a su clasificación predeterminada. Tus resúmenes diarios y el registro de actividad se conservan. No se puede deshacer.",
+                        confirm: "Eliminar ajustes de importancia",
+                    },
+                    summaries: {
+                        button: "Eliminar resúmenes diarios",
+                        title: "¿Eliminar tus resúmenes diarios?",
+                        body: "Se eliminan los recuentos diarios guardados de la actividad de cada tarea, en todos tus equipos. Si el registro está activado, Genos no reconstruye ningún día hasta hoy inclusive: vuelve a registrar desde mañana. Tus marcas, niveles y el registro de actividad se conservan. No se puede deshacer.",
+                        confirm: "Eliminar resúmenes diarios",
+                    },
+                    events: {
+                        button: "Eliminar registro de actividad",
+                        title: "¿Eliminar tu registro de actividad?",
+                        body: "Se elimina el registro de qué elementos abrieron o cambiaron tus apps de IA, y de tus propios cambios que nada más guarda, en todos tus equipos. Tus resúmenes diarios, marcas y niveles se conservan. No se puede deshacer.",
+                        confirm: "Eliminar registro de actividad",
+                    },
+                    everything: {
+                        button: "Eliminar todo",
+                        title: "¿Eliminar todo lo que Genos ha guardado?",
+                        body: "Se eliminan tus ajustes de importancia, resúmenes diarios y registro de actividad, en todos tus equipos. El registro sigue como está, activado o desactivado. Tus tareas, notas, chat y conversaciones con Genos no se ven afectados. No se puede deshacer.",
+                        confirm: "Eliminar todo",
+                    },
+                },
             },
             settingsUsed: {
                 heading: "Ajustes que usa Genos",
@@ -1369,7 +1539,7 @@ export const es: DeepPartial<Messages> = {
             },
             delete: "Borrar",
             completedTodayEmptyTitle: "Nada terminado todavía hoy",
-            completedTodayEmptySubtitle: "Los elementos que completes hoy aparecerán aquí.",
+            completedTodayEmptySubtitle: "Marca un elemento como hecho para verlo aquí.",
             incompleteEmptySubtitle: "No hay elementos incompletos en tus grupos visibles.",
             emptySubtitle: "Crea el grupo de hoy para comenzar.",
             sourceDmThread: "Del hilo DM",
@@ -1481,9 +1651,10 @@ export const es: DeepPartial<Messages> = {
             emptyGMTitle: "No hay mensajes de grupo",
             emptyGMSubtitle: "Crea o únete a un grupo para empezar",
             emptyPMTitle: "No hay actualizaciones de proyecto",
-            emptyPMSubtitle: "Las conversaciones de proyecto aparecerán aquí",
+            emptyPMSubtitle: "Crea un proyecto o únete a uno para ver su chat aquí.",
             emptyActivityTitle: "Aún no hay actividad",
-            emptyActivitySubtitle: "Las menciones y respuestas se mostrarán aquí",
+            emptyActivitySubtitle:
+                "Inicia un hilo o menciona a alguien con @ para recibir respuestas y menciones aquí.",
             emptyFlaggedTitle: "No hay mensajes destacados",
             emptyFlaggedSubtitle: "Destaca los mensajes importantes para encontrarlos luego",
             previewGif: "GIF",
@@ -1524,7 +1695,7 @@ export const es: DeepPartial<Messages> = {
             gmTagPinDefault: "Muestra siempre este chip.",
             gmTagUnpinDefault: "Deja de mostrar siempre este chip",
             emptyPastFlaggedTitle: "No hay banderas completadas",
-            emptyPastFlaggedSubtitle: "Las banderas que marcas como terminadas aparecen aquí",
+            emptyPastFlaggedSubtitle: "Marca una bandera como terminada para moverla aquí.",
             viewPastFlaggedMenu: "Ver banderas completadas",
             viewActiveFlaggedMenu: "Ver banderas activas",
             backToActiveFlaggedButton: "Volver a banderas activas",
@@ -2450,6 +2621,7 @@ export const es: DeepPartial<Messages> = {
                 critical: "Crítico",
             },
             loadingTasks: "Esperando a cargar las tareas…",
+            gridLabel: "Tabla de tareas",
             emptyTitle: "No hay tareas que mostrar",
             emptyHint: "Prueba a ajustar los filtros",
             addTagsPlaceholder: "Añadir etiquetas…",
@@ -2493,7 +2665,7 @@ export const es: DeepPartial<Messages> = {
             },
             untitledTask: "Tarea sin título",
             nothingAssignedTitle: "Aún no tienes nada asignado",
-            nothingAssignedBody: "Las tareas que se te asignen en este proyecto aparecerán aquí.",
+            nothingAssignedBody: "Asígnate una tarea de este proyecto para verla aquí.",
             kpiActive: "Activas",
             kpiClosed: "Cerradas",
             kpiOverdue: "Atrasadas",
@@ -2532,7 +2704,7 @@ export const es: DeepPartial<Messages> = {
                 promptBody: "Elige un miembro arriba para ver las estadísticas de sus tareas.",
                 nothingAssignedTitle: "No hay nada asignado a este miembro.",
                 nothingAssignedBody:
-                    "Las tareas asignadas a este miembro en este proyecto se mostrarán aquí.",
+                    "Asigna una tarea de este proyecto a este miembro para verla aquí.",
                 milestonesEmpty:
                     "No se han asignado hitos en curso en este proyecto a este miembro.",
                 milestonesHelp:
@@ -2695,6 +2867,7 @@ export const es: DeepPartial<Messages> = {
         },
         activity: {
             empty: "Aún no hay actividad",
+            emptyBody: "Cambia un campo o añade un comentario para iniciar el historial.",
             someone: "Alguien",
             githubUser: "Usuario GitHub",
             commentedOn: "comentado en",
@@ -2776,7 +2949,7 @@ export const es: DeepPartial<Messages> = {
                     "Estas tareas no pueden avanzar hasta que ésta esté terminada.",
                 blockedByDescription:
                     "Estas tareas deben terminar antes de que ésta pueda moverse.",
-                emptySection: "Nada aquí todavía.",
+                emptySection: "Aún no hay ninguna. Busca una tarea abajo para añadirla.",
                 doneButton: "Hecho",
                 removeTooltip: "Eliminar dependencia",
                 closeTooltip: "Cerca",
@@ -3157,8 +3330,7 @@ export const es: DeepPartial<Messages> = {
                 "Elige una versión para previsualizarla. Restaurar crea una nueva versión, así se preserva el historial.",
             viewerDescription:
                 "Vista solo de lectura — solo el propietario o los editores pueden restaurar una versión anterior.",
-            emptyList:
-                "Aún no hay historial. Las versiones aparecerán aquí tras el siguiente guardado.",
+            emptyList: "Aún no hay historial. Guarda la nota para registrar su primera versión.",
             currentChip: "actual",
             restoredFrom: "restaurado desde la v{version}",
             selectVersionPrompt: "Selecciona una versión a la izquierda para previsualizarla.",
@@ -3365,6 +3537,12 @@ export const es: DeepPartial<Messages> = {
             title: "Bandeja",
             subtitle: "No te pierdas ninguna notificación",
         },
+        sync: {
+            label: "Sincronizar bandeja",
+            upToDate: "La bandeja está al día",
+            added: "{count, plural, one {# elemento nuevo} other {# elementos nuevos}}",
+            failed: "No se pudo sincronizar la bandeja. Inténtalo de nuevo.",
+        },
         tabs: {
             ariaLabel: "Secciones de la bandeja",
             requests: "Solicitudes",
@@ -3397,6 +3575,7 @@ export const es: DeepPartial<Messages> = {
             usedAtLeast: "Créditos de IA usados: al menos {credits}",
             usedTiny: "Créditos de IA usados: menos de 0.01",
             unmeasured: "Genos usó IA para esto. No se midió la cantidad.",
+            noAiUsed: "No se usó IA",
             deductedNone: "Nada descontado de tu saldo",
             deducted: "{credits} descontados de tu saldo",
             scheduleFallback: "Esta programación",
@@ -3410,6 +3589,8 @@ export const es: DeepPartial<Messages> = {
                 "Se desactivó {name}. No se escribirán más resúmenes ni se gastarán más créditos de IA hasta que lo vuelvas a activar.",
             offSchedule:
                 "Se desactivó {name}. No se ejecutará ni usará créditos de IA hasta que lo vuelvas a activar.",
+            offScheduleNoAi:
+                "{name} está desactivado. No se ejecutará hasta que lo vuelvas a activar.",
             alreadyOff: "{name} ya está desactivado.",
             restingOff: "{name} está desactivado.",
             onAgain: "Se volvió a activar {name}.",
@@ -3442,13 +3623,15 @@ export const es: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "¡Todo al día!",
-            defaultEmptySubtitle: "No hay nada nuevo por revisar",
+            defaultEmptySubtitle: "Elige una tarea para trabajar o descansa un poco.",
         },
         emptyStates: {
             activitiesTitle: "Aún no hay actividad",
-            activitiesSubtitle: "Las nuevas actualizaciones y notificaciones aparecerán aquí",
+            activitiesSubtitle:
+                "Cuando te asignen una tarea o te mencionen con @, verás las novedades aquí.",
             requestsTitle: "No hay solicitudes pendientes",
-            requestsSubtitle: "Las solicitudes de equipo y proyecto se mostrarán aquí",
+            requestsSubtitle:
+                "Cuando alguien pida unirse a tu equipo o proyecto, aprueba o rechaza aquí.",
         },
         notification: {
             approvalBody: "Se ha aprobado la solicitud para unirse a {target}: ",
@@ -5160,7 +5343,10 @@ export const es: DeepPartial<Messages> = {
             years: "Hace {count}y",
         },
         messageNumber: "Mensaje #{id}",
-        empty: "Nada aquí todavía.",
+        emptyTitle: "Aún no hay historial",
+        emptyChats: "Abre un chat o un hilo y aparecerá en la lista.",
+        emptyTasks: "Abre una tarea y aparecerá en la lista.",
+        emptyNotes: "Abre una nota y aparecerá en la lista.",
         clear: "Borrar historial",
     },
     featuresPage: {

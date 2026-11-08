@@ -119,19 +119,21 @@ describe("MySecurityActivity", () => {
         ).toBeInTheDocument();
         expect(screen.queryByText(/Nothing recorded yet/i)).not.toBeInTheDocument();
         expect(screen.getByText("Your security activity")).toBeInTheDocument();
-        // And the spinner is gone: a failure is not still "loading".
-        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+        // And the placeholder rows are gone: a failure is not still "loading".
+        expect(screen.queryByRole("status", { name: /loading/i })).not.toBeInTheDocument();
     });
 
-    it("shows a spinner while the first page is loading", async () => {
+    it("shows placeholder rows (one 'Loading' status) while the first page is loading", async () => {
         let resolve!: (v: unknown) => void;
         listMySecurityEvents.mockReturnValue(new Promise((r) => (resolve = r)));
         render(<MySecurityActivity />);
 
-        expect(await screen.findByRole("progressbar")).toBeInTheDocument();
+        expect(await screen.findByRole("status", { name: /loading/i })).toBeInTheDocument();
 
         resolve({ events: [event()], nextBefore: null });
-        await waitFor(() => expect(screen.queryByRole("progressbar")).not.toBeInTheDocument());
+        await waitFor(() =>
+            expect(screen.queryByRole("status", { name: /loading/i })).not.toBeInTheDocument()
+        );
     });
 
     it("retries a failed first load, and shows the rows when it works", async () => {

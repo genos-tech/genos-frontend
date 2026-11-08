@@ -13,6 +13,7 @@
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
@@ -273,7 +274,13 @@ export function ThreadPanelV3({
                                 </li>
                             ))}
                             {replies.length === 0 && (
-                                <li style={{ opacity: 0.5 }}>{t.chat.channel.thread.noReplies}</li>
+                                <li>
+                                    <EmptyState
+                                        body={t.chat.channel.thread.noReplies}
+                                        data-empty="channel-replies"
+                                        size="sm"
+                                    />
+                                </li>
                             )}
                         </ul>
                     </>

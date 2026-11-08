@@ -1,20 +1,11 @@
 import { useMemo } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import {
-    Box,
-    Button,
-    Checkbox,
-    Chip,
-    CircularProgress,
-    Divider,
-    Sheet,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Checkbox, Chip, Divider, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { CalendarSummary, sourceKey } from "../../integrations/services/calendar";
 
@@ -133,7 +124,7 @@ export const CalendarSourcePicker = ({
                 >
                     {t.calendar.sources.title}
                 </Typography>
-                {loading && <CircularProgress size="sm" />}
+                {loading && <Spinner />}
                 {flat.map((c) => {
                     const key = sourceKey(c.account_id, c.id);
                     const checked = selectedKeys.has(key);
@@ -214,7 +205,7 @@ export const CalendarSourcePicker = ({
                     {t.calendar.sources.title}
                 </Typography>
                 <Box sx={{ flex: 1 }} />
-                {loading && <CircularProgress size="sm" />}
+                {loading && <Spinner />}
             </Stack>
 
             {groups.map((group, groupIndex) => {

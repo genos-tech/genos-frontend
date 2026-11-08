@@ -77,6 +77,10 @@ const ALLOWED: Record<string, { count: number; reason: string }> = {
         count: 1,
         reason: "aria-hidden chevron, a mouse shortcut: the row's own keydown handler expands with ArrowRight / ArrowLeft",
     },
+    "components/ui/feedback/TabStrip.tsx": {
+        count: 1,
+        reason: "aria-hidden close x, a pointer/touch shortcut: a tablist may own only tabs (MIP-1173), so the keyboard path is Delete on the tab and screen readers get real buttons in a hidden group",
+    },
     "components/editors/Mention.tsx": {
         count: 3,
         reason: "the suggestion listbox option (focus stays in the editor, its key handler picks) and two mention chips that are inline content of the rich-text editor: a focusable chip would take the caret out of the document (the same chip in a sent message is a Clickable)",

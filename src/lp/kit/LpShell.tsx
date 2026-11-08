@@ -216,17 +216,17 @@ export function LpShell({
             </header>
 
             {menuOpen && (
-                <div
-                    className="lp-menu"
-                    id="lp-menu"
-                    role="presentation"
-                    onClick={() => setMenuOpen(false)}
-                >
-                    <nav
-                        aria-label="Genos"
-                        className="lp-menu__panel"
-                        onClick={(event) => event.stopPropagation()}
-                    >
+                <div className="lp-menu" id="lp-menu">
+                    {/* The scrim is a real button (a click outside the panel closes the menu), not a
+                        clickable div: it is also reachable by keyboard-less assistive tech. */}
+                    <button
+                        aria-label={t.closeMenu}
+                        className="lp-menu__scrim"
+                        tabIndex={-1}
+                        type="button"
+                        onClick={() => setMenuOpen(false)}
+                    />
+                    <nav aria-label="Genos" className="lp-menu__panel">
                         {navItems.map((item) => (
                             <Link
                                 key={item.key}

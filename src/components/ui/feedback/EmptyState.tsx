@@ -28,12 +28,21 @@ type EmptyStateAction = {
 };
 
 export type EmptyStateProps = {
-    title: string;
+    /**
+     * What is empty. Omit it only for a one-sentence hint that already names
+     * the thing and the next step ("No tags yet. Add one below."): the
+     * sentence is then shown as the quiet direction line, not as a heading.
+     */
+    title?: string;
     /** What to do next. Omit only when the title already says it. */
     body?: string;
     icon?: ReactNode;
     action?: EmptyStateAction;
-    size?: "md" | "sm";
+    /**
+     * `xs` is one quiet line for a dense list (a sidebar section, a settings
+     * list): start-aligned, small type, no icon, no title.
+     */
+    size?: "md" | "sm" | "xs";
     /** Center in the parent's full height instead of sitting at the top. */
     fill?: boolean;
     /** Marker for tests and analytics, e.g. "chat-list". */
@@ -49,6 +58,32 @@ export const EmptyState = ({
     fill = false,
     "data-empty": dataEmpty,
 }: EmptyStateProps) => {
+    if (size === "xs") {
+        return (
+            <Box data-empty={dataEmpty} sx={{ py: 0.5, minWidth: 0 }}>
+                <Typography
+                    level="body-xs"
+                    sx={{ color: g.text.tertiary, overflowWrap: "anywhere" }}
+                >
+                    {body ?? title}
+                </Typography>
+                {action && (
+                    <Box sx={{ mt: 0.5 }}>
+                        <Button
+                            color="neutral"
+                            size="sm"
+                            startDecorator={action.icon}
+                            sx={{ "&:focus-visible": focusRing }}
+                            variant="outlined"
+                            onClick={action.onClick}
+                        >
+                            {action.label}
+                        </Button>
+                    </Box>
+                )}
+            </Box>
+        );
+    }
     const small = size === "sm";
     return (
         <Box
@@ -88,16 +123,22 @@ export const EmptyState = ({
                     {icon}
                 </Box>
             )}
-            <Typography
-                level={small ? "title-sm" : "title-md"}
-                sx={{ color: g.text.primary, overflowWrap: "anywhere" }}
-            >
-                {title}
-            </Typography>
+            {title && (
+                <Typography
+                    level={small ? "title-sm" : "title-md"}
+                    sx={{ color: g.text.primary, overflowWrap: "anywhere" }}
+                >
+                    {title}
+                </Typography>
+            )}
             {body && (
                 <Typography
                     level="body-sm"
-                    sx={{ color: g.text.secondary, maxWidth: 280, overflowWrap: "anywhere" }}
+                    sx={{
+                        color: g.text.secondary,
+                        maxWidth: title ? 280 : 320,
+                        overflowWrap: "anywhere",
+                    }}
                 >
                     {body}
                 </Typography>

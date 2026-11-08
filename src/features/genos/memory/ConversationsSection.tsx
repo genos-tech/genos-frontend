@@ -4,6 +4,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { Box, Button, Checkbox, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { fmt, useTranslation } from "../../../i18n";
@@ -132,9 +133,7 @@ export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) 
                     </Button>
                 </Stack>
             ) : sessions.length === 0 ? (
-                <Typography level="body-sm" sx={{ py: 1, color: "text.tertiary" }}>
-                    {m.empty}
-                </Typography>
+                <EmptyState body={m.empty} data-empty="genos-conversations" size="xs" />
             ) : (
                 <>
                     <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, minWidth: 0 }}>

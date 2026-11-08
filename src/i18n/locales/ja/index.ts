@@ -1017,7 +1017,7 @@ export const ja: DeepPartial<Messages> = {
             },
             delete: "消去",
             completedTodayEmptyTitle: "今日はまだ何も終わっていない",
-            completedTodayEmptySubtitle: "今日完了したアイテムがここに表示されます。",
+            completedTodayEmptySubtitle: "アイテムにチェックを入れると、ここに記録されます。",
             incompleteEmptySubtitle: "表示されているグループに不完全な項目はありません。",
             emptySubtitle: "まずは今日のグループを作成してください。",
             sourceDmThread: "DMスレッドより",
@@ -1175,13 +1175,14 @@ export const ja: DeepPartial<Messages> = {
             gmTagPinDefault: "このチップを常に表示する",
             gmTagUnpinDefault: "このチップの常時表示をやめる",
             emptyPMTitle: "プロジェクト更新はありません",
-            emptyPMSubtitle: "プロジェクトの会話がここに表示されます",
+            emptyPMSubtitle: "プロジェクトを作成するか参加すると、そのチャットがここに並びます。",
             emptyActivityTitle: "アクティビティはまだありません",
-            emptyActivitySubtitle: "メンションや返信がここに表示されます",
+            emptyActivitySubtitle:
+                "スレッドを始めるか誰かにメンションすると、返信やメンションがここに届きます。",
             emptyFlaggedTitle: "フラグ付きメッセージはありません",
             emptyFlaggedSubtitle: "重要なメッセージにフラグを付けると、後から見つけやすくなります",
             emptyPastFlaggedTitle: "完了したフラグはありません",
-            emptyPastFlaggedSubtitle: "完了にしたフラグはここに表示されます",
+            emptyPastFlaggedSubtitle: "フラグを完了にすると、ここに移動します。",
             viewPastFlaggedMenu: "完了したフラグを表示",
             viewActiveFlaggedMenu: "アクティブなフラグを表示",
             backToActiveFlaggedButton: "アクティブなフラグに戻る",
@@ -1621,7 +1622,6 @@ export const ja: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "該当する結果はありません",
-            noItems: "まだ何もありません",
         },
         errors: {
             generic: "問題が発生しました。もう一度お試しください。",
@@ -2231,7 +2231,10 @@ export const ja: DeepPartial<Messages> = {
             years: "{count}y 前",
         },
         messageNumber: "メッセージ #{id}",
-        empty: "まだ何もありません。",
+        emptyTitle: "履歴はまだありません",
+        emptyChats: "チャットやスレッドを開くと、ここに一覧表示されます。",
+        emptyTasks: "タスクを開くと、ここに一覧表示されます。",
+        emptyNotes: "ノートを開くと、ここに一覧表示されます。",
         clear: "履歴をクリア",
     },
     inbox: {
@@ -2250,6 +2253,12 @@ export const ja: DeepPartial<Messages> = {
         header: {
             title: "受信箱",
             subtitle: "通知を見逃さないようにしましょう",
+        },
+        sync: {
+            label: "受信箱を同期",
+            upToDate: "受信箱は最新です",
+            added: "{count, plural, one {新着#件} other {新着#件}}",
+            failed: "受信箱を同期できませんでした。もう一度お試しください。",
         },
         tabs: {
             ariaLabel: "受信箱のセクション",
@@ -2283,6 +2292,7 @@ export const ja: DeepPartial<Messages> = {
             usedAtLeast: "使用した AI クレジット: {credits} 以上",
             usedTiny: "使用した AI クレジット: 0.01 未満",
             unmeasured: "Genos がこれに AI を使用しました。使用量は計測されていません。",
+            noAiUsed: "AI は使用していません",
             deductedNone: "残高からの差し引きなし",
             deducted: "残高から {credits} を差し引き",
             scheduleFallback: "このスケジュール",
@@ -2296,6 +2306,7 @@ export const ja: DeepPartial<Messages> = {
                 "{name} をオフにしました。オンに戻すまで、新しく作成されず、AI クレジットも使われません。",
             offSchedule:
                 "{name} をオフにしました。オンに戻すまで、実行されず AI クレジットも使われません。",
+            offScheduleNoAi: "{name} はオフです。再びオンにするまで実行されません。",
             alreadyOff: "{name} はすでにオフです。",
             restingOff: "{name} はオフになっています。",
             onAgain: "{name} を再びオンにしました。",
@@ -2344,13 +2355,15 @@ export const ja: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "すべて確認済みです！",
-            defaultEmptySubtitle: "確認が必要な新しい項目はありません",
+            defaultEmptySubtitle: "取り組むタスクを選ぶか、少し休みましょう。",
         },
         emptyStates: {
             activitiesTitle: "アクティビティはまだありません",
-            activitiesSubtitle: "新しい更新や通知がここに表示されます",
+            activitiesSubtitle:
+                "タスクが割り当てられたりメンションされたりすると、更新がここに届きます。",
             requestsTitle: "保留中のリクエストはありません",
-            requestsSubtitle: "チームやプロジェクトのリクエストがここに表示されます",
+            requestsSubtitle:
+                "チームやプロジェクトへの参加リクエストが届いたら、ここで承認または拒否します。",
         },
         notification: {
             approvalBody: "{target}への参加リクエストが承認されました：",
@@ -2956,7 +2969,7 @@ export const ja: DeepPartial<Messages> = {
                 "バージョンを選んでプレビューします。復元すると新しいバージョンとして書き込まれ、履歴は保持されます。",
             viewerDescription:
                 "読み取り専用ビュー — 過去のバージョンに復元できるのはノートのオーナーまたは編集者のみです。",
-            emptyList: "まだ履歴はありません。次回の保存後に表示されます。",
+            emptyList: "まだ履歴はありません。ノートを保存すると最初のバージョンが記録されます。",
             currentChip: "現在",
             restoredFrom: "v{version} から復元",
             selectVersionPrompt: "左側のバージョンを選択するとプレビューが表示されます。",
@@ -3747,6 +3760,10 @@ export const ja: DeepPartial<Messages> = {
             running: "実行中…",
             ranOk: "実行しました: {title}、{count, plural, one {#件} other {#件}}。レポートは受信箱にあります。",
             ranFailed: "実行に失敗しました: {error}",
+            reportReady: "レポートの準備ができました",
+            reportReadyTitled: "レポートの準備ができました: {title}",
+            openInbox: "受信箱を開く",
+            planRefused: "お使いのプランでは定期レポートを利用できません。",
             edit: "編集",
             delete: "削除",
             deleteConfirm: "{name} を削除しますか? 実行されなくなり、元に戻せません。",
@@ -3890,6 +3907,170 @@ export const ja: DeepPartial<Messages> = {
                 offBody:
                     "AIアプリが開いたり変更したりした項目、およびあなたが変更した共同作業者、依存関係、To-Do、ノートの共有についてGenosが記録した内容は、今すぐすべて削除され、新たな記録もされません。タスク、ノート、メッセージには影響しません。再びオンにすると、記録は最初から始まります。",
                 offConfirm: "オフにして削除",
+            },
+            control: {
+                stored: {
+                    heading: "Genos が保存しているもの",
+                    description:
+                        "すべてのチームにわたって、Genos があなたの活動について保存している内容です。保存されるのは件数と日付だけで、あなたが書いた文章は含まれません。あなただけが見られます。",
+                    recordingOn: "記録はオンです。Genos はこれに追加し続けます。",
+                    recordingOff:
+                        "記録はオフです。新しいものは保存されません。上の「自分の作業を記録する」でオンにできます。",
+                    loading: "Genos が保存しているものを読み込み中…",
+                    loadFailed: "読み込めませんでした。もう一度お試しください。",
+                    empty: "保存されているものはありません。",
+                    activityLabel: "アクティビティ記録",
+                    activityValue:
+                        "件数: {count}（AI アプリ経由: {aiApp}、自分の変更: {own}）。{from} 以降。保存期間 {days} 日。",
+                    summariesLabel: "日ごとのまとめ",
+                    summariesValue:
+                        "保存数: {rows}。対象タスク数: {items}。{from} 以降。保存期間 {days} 日。",
+                    importanceLabel: "重要度の設定",
+                    importanceValue: "印を付けたタスク: {marks}。変更したシグナル: {tuned}。",
+                },
+                noticed: {
+                    heading: "Genos が気づいたこと",
+                    description:
+                        "今のあなたにとって特に重要だと Genos が考えるタスクと、その理由です。あなたの活動から算出され、タスクを変更することはありません。",
+                    show: "Genos が気づいたことを表示",
+                    hide: "隠す",
+                    recordingOff:
+                        "記録がオフのため、Genos は何も気づいていません。表示するには、上の「自分の作業を記録する」をオンにしてください。",
+                    loading: "目立つものを調べています…",
+                    loadFailed: "読み込めませんでした。もう一度お試しください。",
+                    empty: "今のところ目立つものはありません。",
+                    thin: "Genos にはまだ履歴が少ないため、これはおおまかな推測です。",
+                    notImportant: "重要ではない",
+                    notImportantAria: "重要ではないとして印を付ける: {task}",
+                    markedNote: "重要ではないと印を付けました。Genos は今後これを挙げません。",
+                    undo: "元に戻す",
+                    undoAria: "元に戻す: {task}",
+                    markFailed: "保存できませんでした。もう一度お試しください。",
+                    markGone: "このタスクはもう開けないため、印を付けられません。",
+                    markRecordingOff:
+                        "記録がオフのため保存できません。先に上でオンにしてください。",
+                    stale: "変更により、このリストは最新ではありません。",
+                    refresh: "リストを更新",
+                    suggestionsHeading: "提案",
+                    suggestionsNote:
+                        "これらは提案にすぎません。Genos が勝手にタスクを変更することはありません。",
+                    raise: "今週は動きが多いのに、優先度は {priority} です。上げますか？",
+                    review: "優先度は {priority} ですが、過去 7 日間に動きがありません。まだそれほど重要ですか？",
+                    marksHeading: "印を付けたタスク",
+                    clear: "解除",
+                    clearAria: "{task} の印を解除",
+                },
+                why: {
+                    others: "他の人: {count}",
+                    mine: "自分: {count}",
+                    chat: "チャット: {count}",
+                    notes: "ノート: {count}",
+                    prs: "プルリクエスト: {count}",
+                    days: "直近 7 日のうち {days} 日で動きあり",
+                    rising: "盛り上がっている",
+                    cooling: "落ち着いてきている",
+                    people: "関わっている人: {count}",
+                },
+                markNames: {
+                    not_important: "重要ではない",
+                    priority_is_right: "優先度は適切",
+                },
+                signals: {
+                    others: {
+                        name: "他の人",
+                        means: "他の人がそのタスクで行うこと: コメント、変更、リアクション。",
+                    },
+                    mine: {
+                        name: "自分",
+                        means: "あなたがそのタスクで行うこと: 変更とコメント。",
+                    },
+                    chat: {
+                        name: "チャット",
+                        means: "関連付けられたチャットスレッドのメッセージ。",
+                    },
+                    notes: {
+                        name: "ノート",
+                        means: "そのタスクのノートの編集。",
+                    },
+                    prs: {
+                        name: "プルリクエスト",
+                        means: "そのタスクに関するプルリクエストのイベント。",
+                    },
+                    spread: {
+                        name: "動きのあった日数",
+                        means: "直近 7 日のうち、動きがあった日数。",
+                    },
+                    trend: {
+                        name: "盛り上がり・落ち着き",
+                        means: "盛り上がっているか、落ち着いてきているか。",
+                    },
+                    hints: {
+                        name: "期限・優先度・ブロック",
+                        means: "期限、優先度、ブロック状態（弱い手がかり）。",
+                    },
+                },
+                levels: {
+                    off: {
+                        name: "数えない",
+                        means: "Genos はこのシグナルを無視します。",
+                    },
+                    low: {
+                        name: "少なめ",
+                        means: "このシグナルの重みが半分になります。",
+                    },
+                    normal: {
+                        name: "標準",
+                        means: "初期設定です。",
+                    },
+                    high: {
+                        name: "多め",
+                        means: "このシグナルの重みが 2 倍になります。",
+                    },
+                },
+                tuning: {
+                    heading: "Genos の重み付け",
+                    description:
+                        "Genos は 8 つのシグナルでタスクを順位付けします。このチームで、それぞれをどれだけ重視するか選べます。変更は次の順位付けから反映されます。",
+                    levelAria: "「{signal}」の重み",
+                    reset: "初期設定に戻す",
+                    recordingOff:
+                        "記録がオフのため変更できません。先に上の「自分の作業を記録する」をオンにしてください。",
+                    failed: "保存できませんでした。もう一度お試しください。",
+                },
+                remove: {
+                    heading: "Genos が保存したものを削除",
+                    description:
+                        "各ボタンは、すべてのチームにわたって、Genos が保存したあなたに関する情報の 1 種類を削除します。先に確認が表示されます。",
+                    stays: "これらのボタンでは削除されないもの: タスク、ノート、チャット、Genos との会話、受信箱、スケジュール、記録のスイッチ。",
+                    deleted: "{count} 件を削除しました。",
+                    nothing: "保存されているものがなかったため、削除したものはありません。",
+                    failed: "削除できませんでした。もう一度お試しください。",
+                    ack: "元に戻せないことを理解しました",
+                    importance: {
+                        button: "重要度の設定を削除",
+                        title: "重要度の設定を削除しますか？",
+                        body: "印を付けたタスクと、各シグナルに設定した重みを、すべてのチームで削除します。Genos は初期の順位付けに戻ります。日ごとのまとめとアクティビティ記録は残ります。この操作は元に戻せません。",
+                        confirm: "重要度の設定を削除",
+                    },
+                    summaries: {
+                        button: "日ごとのまとめを削除",
+                        title: "日ごとのまとめを削除しますか？",
+                        body: "各タスクの動きの多さを日ごとに数えて保存したものを、すべてのチームで削除します。記録がオンの場合でも、Genos は今日までの日を作り直さず、明日から改めて記録します。印、重み、アクティビティ記録は残ります。この操作は元に戻せません。",
+                        confirm: "日ごとのまとめを削除",
+                    },
+                    events: {
+                        button: "アクティビティ記録を削除",
+                        title: "アクティビティ記録を削除しますか？",
+                        body: "AI アプリが開いた・変更したアイテムの記録と、他では保存されないあなた自身の変更の記録を、すべてのチームで削除します。日ごとのまとめ、印、重みは残ります。この操作は元に戻せません。",
+                        confirm: "アクティビティ記録を削除",
+                    },
+                    everything: {
+                        button: "すべて削除",
+                        title: "Genos が保存したものをすべて削除しますか？",
+                        body: "重要度の設定、日ごとのまとめ、アクティビティ記録を、すべてのチームで削除します。記録のオン・オフはそのままです。タスク、ノート、チャット、Genos との会話には影響しません。この操作は元に戻せません。",
+                        confirm: "すべて削除",
+                    },
+                },
             },
             settingsUsed: {
                 heading: "Genosが使う設定",
@@ -4061,6 +4242,8 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "メインナビゲーション",
+        unreadTab: "{label}、未読 {count} 件",
         nav: {
             inbox: "受信箱",
             chats: "チャット",
@@ -4811,6 +4994,7 @@ export const ja: DeepPartial<Messages> = {
         },
         activity: {
             empty: "まだ活動はありません",
+            emptyBody: "項目を変更するかコメントを追加すると、履歴が始まります。",
             restore: {
                 button: "以前の説明に戻す",
                 viaAgent: "Genos AI が書き換えました",
@@ -4905,7 +5089,7 @@ export const ja: DeepPartial<Messages> = {
                     "このタスクが完了するまで、これらのタスクを進めることはできません。",
                 blockedByDescription:
                     "これらのタスクは、このタスクが移動する前に完了する必要があります。",
-                emptySection: "ここにはまだ何もありません。",
+                emptySection: "まだありません。下でタスクを検索して追加してください。",
                 doneButton: "終わり",
                 removeTooltip: "依存関係を削除する",
                 closeTooltip: "近い",
@@ -5084,6 +5268,7 @@ export const ja: DeepPartial<Messages> = {
                 critical: "致命的",
             },
             loadingTasks: "タスクの読み込みを待っています…",
+            gridLabel: "タスク一覧",
             emptyTitle: "表示するタスクがありません",
             emptyHint: "フィルターを調整してみてください",
             addTagsPlaceholder: "タグを追加…",
@@ -5130,7 +5315,7 @@ export const ja: DeepPartial<Messages> = {
                 promptBody: "上でメンバーを選択すると、タスクの統計情報が表示されます。",
                 nothingAssignedTitle: "このメンバーには何も割り当てられていません",
                 nothingAssignedBody:
-                    "このプロジェクトでこのメンバーに割り当てられたタスクがここに表示されます。",
+                    "このプロジェクトのタスクをこのメンバーに割り当てると、ここに表示されます。",
                 milestonesEmpty:
                     "このプロジェクトの進行中のマイルストーンはこのメンバーに割り当てられていません。",
                 milestonesHelp:
@@ -5205,7 +5390,7 @@ export const ja: DeepPartial<Messages> = {
             untitledTask: "無題のタスク",
             nothingAssignedTitle: "まだ割り当てられたタスクはありません",
             nothingAssignedBody:
-                "このプロジェクトで自分に割り当てられたタスクがここに表示されます。",
+                "このプロジェクトのタスクを自分に割り当てると、ここに表示されます。",
             kpiActive: "進行中",
             kpiClosed: "Closed",
             kpiOverdue: "締切超過",

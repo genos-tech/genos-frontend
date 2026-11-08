@@ -17,11 +17,12 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
-import { Alert, Box, Button, CircularProgress, Divider, Link, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Divider, Link, Stack, Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useTranslation } from "../../i18n";
@@ -310,12 +311,9 @@ export const ThreadAskModal = ({
             </Stack>
 
             {state.summaryLoading && !state.summary ? (
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ py: 2 }}>
-                    <CircularProgress size="sm" />
-                    <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
-                        {t.threadAsk.summary.loading}
-                    </Typography>
-                </Stack>
+                <Box sx={{ py: 2 }}>
+                    <Spinner caption={t.threadAsk.summary.loading} />
+                </Box>
             ) : null}
 
             {state.summaryError ? (

@@ -23,6 +23,7 @@ import { Socket } from "socket.io-client";
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../../../components/ui/avatars/BaseAvatar";
+import { EmptyState } from "../../../../../../components/ui/feedback/EmptyState";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
@@ -934,45 +935,12 @@ export const TaskActivityFeed = ({
     return (
         <Stack spacing={0.5} sx={{ p: 1 }}>
             {empty && !isLoading && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        py: 4,
-                        gap: 1,
-                    }}
-                >
-                    <Box
-                        sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: "12px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                            border: "1px dashed",
-                            borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                        }}
-                    >
-                        <HistoryRoundedIcon
-                            sx={{
-                                fontSize: 24,
-                                color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.25)",
-                            }}
-                        />
-                    </Box>
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                        }}
-                    >
-                        {t.tasks.activity.empty}
-                    </Typography>
-                </Box>
+                <EmptyState
+                    body={t.tasks.activity.emptyBody}
+                    data-empty="task-activity"
+                    icon={<HistoryRoundedIcon />}
+                    title={t.tasks.activity.empty}
+                />
             )}
 
             {activities.map((row) => {

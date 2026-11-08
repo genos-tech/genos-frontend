@@ -59,7 +59,6 @@ export const ar: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "لا توجد نتائج",
-            noItems: "لا يوجد شيء هنا بعد",
         },
         errors: {
             generic: "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",
@@ -370,6 +369,8 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "التنقل الرئيسي",
+        unreadTab: "{label}، {count} غير مقروءة",
         nav: {
             inbox: "الوارد",
             chats: "المحادثات",
@@ -767,6 +768,10 @@ export const ar: DeepPartial<Messages> = {
             running: "جارٍ التشغيل…",
             ranOk: "تم التشغيل: {title}، {count, plural, one {# عنصر} other {# عناصر}}. التقرير في صندوق الوارد لديك.",
             ranFailed: "فشل التشغيل: {error}",
+            reportReady: "التقرير جاهز",
+            reportReadyTitled: "التقرير جاهز: {title}",
+            openInbox: "فتح صندوق الوارد",
+            planRefused: "خطتك لا تشمل التقارير المجدولة.",
             edit: "تعديل",
             delete: "حذف",
             deleteConfirm: "هل تريد حذف {name}؟ سيتوقف عن العمل ولا يمكن استرجاعه.",
@@ -906,6 +911,169 @@ export const ar: DeepPartial<Messages> = {
                 offBody:
                     "سيُحذف الآن كل ما سجّله Genos عن العناصر التي فتحتها تطبيقات الذكاء الاصطناعي لديك أو غيّرتها، وعن المتعاونين والتبعيات وعناصر قائمة المهام ومشاركات الملاحظات التي غيّرتها، ولن يُسجَّل أي شيء جديد. لن تتأثر مهامك وملاحظاتك ورسائلك. إذا شغّلته مرة أخرى فسيبدأ من جديد.",
                 offConfirm: "إيقاف وحذف",
+            },
+            control: {
+                stored: {
+                    heading: "ما حفظه Genos",
+                    description:
+                        "ما حفظه Genos عن نشاطك في جميع فرقك. هي أعداد وتواريخ فقط، ولا تتضمن أي نص كتبته، ولا يراها غيرك.",
+                    recordingOn: "التسجيل قيد التشغيل: يواصل Genos الإضافة إلى هذا.",
+                    recordingOff:
+                        "التسجيل متوقف: لا يُحفظ أي شيء جديد. يمكنك تشغيله من «تسجيل نشاطي» أعلاه.",
+                    loading: "جارٍ تحميل ما حفظه Genos…",
+                    loadFailed: "تعذّر التحميل. يُرجى المحاولة مرة أخرى.",
+                    empty: "لا شيء محفوظ.",
+                    activityLabel: "سجل النشاط",
+                    activityValue:
+                        "الإدخالات: {count} (من تطبيقات الذكاء الاصطناعي لديك: {aiApp}؛ تغييراتك أنت: {own}). منذ {from}. يُحتفظ به {days} يومًا.",
+                    summariesLabel: "الملخصات اليومية",
+                    summariesValue:
+                        "المحفوظ: {rows}. المهام المشمولة: {items}. منذ {from}. يُحتفظ به {days} يومًا.",
+                    importanceLabel: "إعدادات الأهمية",
+                    importanceValue:
+                        "المهام التي وسمتها: {marks}. الإشارات التي غيّرتها: {tuned}.",
+                },
+                noticed: {
+                    heading: "ما لاحظه Genos",
+                    description:
+                        "المهام التي يرى Genos أنها الأهم لك الآن، ولماذا. يُحسب هذا من نشاطك ولا يغيّر أي مهمة أبدًا.",
+                    show: "عرض ما لاحظه Genos",
+                    hide: "إخفاء",
+                    recordingOff:
+                        "التسجيل متوقف، لذا لا يلاحظ Genos شيئًا. شغّل «تسجيل نشاطي» أعلاه لرؤية هذا.",
+                    loading: "جارٍ استخراج ما يبرز…",
+                    loadFailed: "تعذّر التحميل. يُرجى المحاولة مرة أخرى.",
+                    empty: "لا شيء يبرز حتى الآن.",
+                    thin: "لدى Genos سجل قليل حتى الآن، لذا فهذا تقدير تقريبي.",
+                    notImportant: "غير مهمة",
+                    notImportantAria: "وسم كغير مهمة: {task}",
+                    markedNote: "وُسمت كغير مهمة. لن يقترحها Genos مرة أخرى.",
+                    undo: "تراجع",
+                    undoAria: "تراجع: {task}",
+                    markFailed: "تعذّر الحفظ. يُرجى المحاولة مرة أخرى.",
+                    markGone: "لم يعد بإمكانك فتح هذه المهمة، لذا لا يمكن وسمها.",
+                    markRecordingOff: "التسجيل متوقف، لذا لا يمكن الحفظ. شغّله أولًا من الأعلى.",
+                    stale: "القائمة قديمة بعد تغييراتك.",
+                    refresh: "تحديث القائمة",
+                    suggestionsHeading: "اقتراحات",
+                    suggestionsNote: "هذه مجرد اقتراحات. لا يغيّر Genos أي مهمة من تلقاء نفسه.",
+                    raise: "نشاط كبير هذا الأسبوع، لكن أولويتها {priority}. هل ترفعها؟",
+                    review: "أولويتها {priority}، لكن لم يحدث شيء عليها خلال آخر 7 أيام. هل ما زالت بهذه الأهمية؟",
+                    marksHeading: "المهام التي وسمتها",
+                    clear: "إزالة",
+                    clearAria: "إزالة الوسم عن {task}",
+                },
+                why: {
+                    others: "من الآخرين: {count}",
+                    mine: "منك: {count}",
+                    chat: "الدردشة: {count}",
+                    notes: "الملاحظات: {count}",
+                    prs: "طلبات الدمج: {count}",
+                    days: "نشطة في {days} من آخر 7 أيام",
+                    rising: "تزداد حرارة",
+                    cooling: "تهدأ",
+                    people: "الأشخاص المعنيون: {count}",
+                },
+                markNames: {
+                    not_important: "غير مهمة",
+                    priority_is_right: "الأولوية صحيحة",
+                },
+                signals: {
+                    others: {
+                        name: "الآخرون",
+                        means: "ما يفعله الآخرون عليها: التعليقات والتغييرات والتفاعلات.",
+                    },
+                    mine: {
+                        name: "أنت",
+                        means: "ما تفعله أنت عليها: تغييراتك وتعليقاتك.",
+                    },
+                    chat: {
+                        name: "الدردشة",
+                        means: "الرسائل في سلسلة الدردشة المرتبطة بها.",
+                    },
+                    notes: {
+                        name: "الملاحظات",
+                        means: "تعديلات ملاحظاتها.",
+                    },
+                    prs: {
+                        name: "طلبات الدمج",
+                        means: "أحداث طلبات الدمج المتعلقة بها.",
+                    },
+                    spread: {
+                        name: "أيام النشاط",
+                        means: "في كم يومًا من آخر سبعة أيام كان عليها نشاط.",
+                    },
+                    trend: {
+                        name: "تزداد حرارة أو تهدأ",
+                        means: "هل نشاطها يزداد أم يتراجع.",
+                    },
+                    hints: {
+                        name: "الموعد النهائي والأولوية والمحظورة",
+                        means: "موعدها النهائي وأولويتها وحالة «محظورة» (إشارات ضعيفة).",
+                    },
+                },
+                levels: {
+                    off: {
+                        name: "لا تحتسب",
+                        means: "يتجاهل Genos هذه الإشارة.",
+                    },
+                    low: {
+                        name: "احتسب أقل",
+                        means: "تُحتسب هذه الإشارة بنصف وزنها.",
+                    },
+                    normal: {
+                        name: "عادي",
+                        means: "الإعداد الافتراضي.",
+                    },
+                    high: {
+                        name: "احتسب أكثر",
+                        means: "تُحتسب هذه الإشارة بضعف وزنها.",
+                    },
+                },
+                tuning: {
+                    heading: "كيف يوازن Genos الأمور",
+                    description:
+                        "يرتّب Genos مهامك باستخدام ثماني إشارات. اختر مقدار ما تحتسبه كل إشارة لك في هذا الفريق. تُطبَّق التغييرات في الترتيب التالي.",
+                    levelAria: "مقدار احتساب «{signal}»",
+                    reset: "إعادة إلى الافتراضي",
+                    recordingOff:
+                        "التسجيل متوقف، لذا لا يمكن تغيير هذه. شغّل «تسجيل نشاطي» أعلاه أولًا.",
+                    failed: "تعذّر الحفظ. يُرجى المحاولة مرة أخرى.",
+                },
+                remove: {
+                    heading: "حذف ما حفظه Genos",
+                    description:
+                        "يحذف كل زر نوعًا واحدًا مما حفظه Genos عنك في جميع فرقك. سيُطلب منك التأكيد أولًا.",
+                    stays: "لا تحذف هذه الأزرار أبدًا: مهامك وملاحظاتك ودردشاتك ومحادثاتك مع Genos وصندوق الوارد والجداول ومفتاح التسجيل.",
+                    deleted: "تم حذف {count}.",
+                    nothing: "لم يكن هناك شيء محفوظ، لذا لم يُحذف شيء.",
+                    failed: "تعذّر الحذف. يُرجى المحاولة مرة أخرى.",
+                    ack: "أدرك أنه لا يمكن التراجع عن ذلك",
+                    importance: {
+                        button: "حذف إعدادات الأهمية",
+                        title: "حذف إعدادات الأهمية؟",
+                        body: "يحذف هذا المهام التي وسمتها والمستويات التي ضبطتها لكل إشارة، في جميع فرقك. يعود Genos إلى ترتيبه الافتراضي. تبقى ملخصاتك اليومية وسجل النشاط. لا يمكن التراجع عن ذلك.",
+                        confirm: "حذف إعدادات الأهمية",
+                    },
+                    summaries: {
+                        button: "حذف الملخصات اليومية",
+                        title: "حذف ملخصاتك اليومية؟",
+                        body: "يحذف هذا الأعداد اليومية المحفوظة لمدى نشاط كل مهمة، في جميع فرقك. إذا كان التسجيل قيد التشغيل، فلن يعيد Genos بناء أي يوم حتى اليوم ضمنًا؛ بل يعاود التسجيل من الغد. تبقى وسومك ومستوياتك وسجل النشاط. لا يمكن التراجع عن ذلك.",
+                        confirm: "حذف الملخصات اليومية",
+                    },
+                    events: {
+                        button: "حذف سجل النشاط",
+                        title: "حذف سجل نشاطك؟",
+                        body: "يحذف هذا سجل العناصر التي فتحتها أو غيّرتها تطبيقات الذكاء الاصطناعي لديك، وتغييراتك أنت التي لا يحفظها شيء آخر، في جميع فرقك. تبقى ملخصاتك اليومية ووسومك ومستوياتك. لا يمكن التراجع عن ذلك.",
+                        confirm: "حذف سجل النشاط",
+                    },
+                    everything: {
+                        button: "حذف كل شيء",
+                        title: "حذف كل ما حفظه Genos؟",
+                        body: "يحذف هذا إعدادات الأهمية والملخصات اليومية وسجل النشاط، في جميع فرقك. يبقى التسجيل كما هو، قيد التشغيل أو متوقفًا. لا تتأثر مهامك وملاحظاتك ودردشاتك ومحادثاتك مع Genos. لا يمكن التراجع عن ذلك.",
+                        confirm: "حذف كل شيء",
+                    },
+                },
             },
             settingsUsed: {
                 heading: "الإعدادات التي يستخدمها Genos",
@@ -1345,7 +1513,7 @@ export const ar: DeepPartial<Messages> = {
             },
             delete: "يمسح",
             completedTodayEmptyTitle: "لا شيء انتهى بعد اليوم",
-            completedTodayEmptySubtitle: "العناصر التي أكملتها اليوم ستظهر هنا.",
+            completedTodayEmptySubtitle: "أكمل عنصرًا لتراه هنا.",
             incompleteEmptySubtitle: "لا توجد عناصر غير مكتملة في مجموعاتك المرئية.",
             emptySubtitle: "قم بإنشاء مجموعة اليوم للبدء.",
             sourceDmThread: "من DM الموضوع",
@@ -1455,9 +1623,10 @@ export const ar: DeepPartial<Messages> = {
             emptyGMTitle: "لا توجد رسائل مجموعات",
             emptyGMSubtitle: "أنشئ مجموعة أو انضم إليها للبدء",
             emptyPMTitle: "لا توجد تحديثات للمشاريع",
-            emptyPMSubtitle: "ستظهر هنا محادثات المشاريع",
+            emptyPMSubtitle: "أنشئ مشروعًا أو انضم إلى مشروع ليظهر لك محادثته هنا.",
             emptyActivityTitle: "لا يوجد نشاط بعد",
-            emptyActivitySubtitle: "ستظهر الإشارات والردود هنا",
+            emptyActivitySubtitle:
+                "ابدأ موضوعًا أو أشِر إلى زميل بـ @ لتصلك الردود والإشارات هنا.",
             emptyFlaggedTitle: "لا توجد رسائل مُعلّمة",
             emptyFlaggedSubtitle: "علّم الرسائل المهمة لتجدها لاحقًا",
             previewGif: "GIF",
@@ -1498,7 +1667,7 @@ export const ar: DeepPartial<Messages> = {
             gmTagPinDefault: "أظهر هذه الشريحة دائمًا",
             gmTagUnpinDefault: "توقف عن إظهار هذه الشريحة دائمًا",
             emptyPastFlaggedTitle: "لا توجد أعلام مكتملة",
-            emptyPastFlaggedSubtitle: 'تظهر العلامات التي وضعت عليها علامة "تم" هنا',
+            emptyPastFlaggedSubtitle: 'ضع علامة "تم" على علامة لتنتقل إلى هنا.',
             viewPastFlaggedMenu: "عرض الأعلام المكتملة",
             viewActiveFlaggedMenu: "عرض الأعلام النشطة",
             backToActiveFlaggedButton: "العودة إلى الأعلام النشطة",
@@ -2417,6 +2586,7 @@ export const ar: DeepPartial<Messages> = {
                 critical: "شديد الأهمية",
             },
             loadingTasks: "في انتظار تحميل المهام…",
+            gridLabel: "جدول المهام",
             emptyTitle: "لا توجد مهام لعرضها",
             emptyHint: "جرّب تعديل عوامل التصفية",
             addTagsPlaceholder: "إضافة علامات…",
@@ -2460,7 +2630,7 @@ export const ar: DeepPartial<Messages> = {
             },
             untitledTask: "مهمة بدون عنوان",
             nothingAssignedTitle: "لم يتم إسناد أي شيء إليك بعد",
-            nothingAssignedBody: "ستظهر هنا المهام المُسنَدة إليك في هذا المشروع.",
+            nothingAssignedBody: "أسنِد إلى نفسك مهمة في هذا المشروع لتراها هنا.",
             kpiActive: "نشطة",
             kpiClosed: "مغلقة",
             kpiOverdue: "متأخرة",
@@ -2497,7 +2667,7 @@ export const ar: DeepPartial<Messages> = {
                 promptTitle: "اختر عضوا",
                 promptBody: "اختر عضوًا أعلاه لرؤية إحصائيات مهمته.",
                 nothingAssignedTitle: "لم يتم تعيين أي شيء لهذا العضو",
-                nothingAssignedBody: "ستظهر هنا المهام المخصصة لهذا العضو في هذا المشروع.",
+                nothingAssignedBody: "أسنِد إلى هذا العضو مهمة في هذا المشروع لتراها هنا.",
                 milestonesEmpty: "لم يتم تعيين أي معالم مستمرة في هذا المشروع لهذا العضو.",
                 milestonesHelp:
                     "المعالم المستمرة في هذا المشروع التي تم تعيين هذا العضو لها، أو التي تم تعيين مهمة لها. انقر فوق البطاقة لفتح الرسم البياني للمهام الخاصة بها - يتم تمييز مهام هذا العضو ومهامه الفرعية.",
@@ -2655,6 +2825,7 @@ export const ar: DeepPartial<Messages> = {
         },
         activity: {
             empty: "لا يوجد نشاط بعد",
+            emptyBody: "غيّر حقلًا أو أضف تعليقًا لتبدأ السجل.",
             someone: "شخص ما",
             githubUser: "GitHub المستخدم",
             commentedOn: "علق على",
@@ -2733,7 +2904,7 @@ export const ar: DeepPartial<Messages> = {
                 intro: "اربط هذه المهمة بالآخرين الذين يجب أن ينتهيوا أولاً (محظور بواسطة) أو الذين يعتمدون على إنهاءها (حظر). يُسمح بالروابط المشتركة بين المشاريع داخل نفس الفريق.",
                 blockingDescription: "لا يمكن المضي قدمًا في هذه المهام حتى تنتهي هذه المهمة.",
                 blockedByDescription: "يجب أن تنتهي هذه المهام قبل أن تتمكن هذه المهمة من التحرك.",
-                emptySection: "لا شيء هنا بعد.",
+                emptySection: "لا توجد بعد. ابحث عن مهمة أدناه لإضافتها.",
                 doneButton: "منتهي",
                 removeTooltip: "إزالة التبعية",
                 closeTooltip: "إغلاق",
@@ -2865,8 +3036,8 @@ export const ar: DeepPartial<Messages> = {
                 hideClosed: "إخفاء المهام المغلقة",
                 showClosed: "إظهار المهام المغلقة",
                 close: "إغلاق",
-                collapse: "ينهار",
-                expand: "يوسع",
+                collapse: "طي",
+                expand: "توسيع",
                 dependencyBlocks: "{source} كتل {target}",
                 dependencyDirection: "مانع → محظور",
                 parentChild: "{parent} → {child}",
@@ -3113,7 +3284,7 @@ export const ar: DeepPartial<Messages> = {
                 "اختر إصدارًا لمعاينته. تُكتب الاستعادة في إصدار جديد للحفاظ على السجل.",
             viewerDescription:
                 "عرض للقراءة فقط — لا يمكن استعادة إصدار سابق إلا لمالك الملاحظة أو محرريها.",
-            emptyList: "لا يوجد سجل بعد. ستظهر الإصدارات هنا بعد الحفظ التالي.",
+            emptyList: "لا يوجد سجل بعد. احفظ الملاحظة لتسجيل أول إصدار.",
             currentChip: "الحالي",
             restoredFrom: "تمت الاستعادة من v{version}",
             selectVersionPrompt: "اختر إصدارًا من اليسار لمعاينته.",
@@ -3315,6 +3486,12 @@ export const ar: DeepPartial<Messages> = {
             title: "صندوق الوارد",
             subtitle: "تابع الإشعارات أولًا بأول",
         },
+        sync: {
+            label: "مزامنة صندوق الوارد",
+            upToDate: "صندوق الوارد محدّث",
+            added: "{count, plural, one {# عنصر جديد} other {# عناصر جديدة}}",
+            failed: "تعذّرت مزامنة صندوق الوارد. حاول مرة أخرى.",
+        },
         tabs: {
             ariaLabel: "أقسام صندوق الوارد",
             requests: "الطلبات",
@@ -3347,6 +3524,7 @@ export const ar: DeepPartial<Messages> = {
             usedAtLeast: "رصيد الذكاء الاصطناعي المستخدم: {credits} على الأقل",
             usedTiny: "رصيد الذكاء الاصطناعي المستخدم: أقل من 0.01",
             unmeasured: "استخدم Genos الذكاء الاصطناعي في هذا. لم يتم قياس الكمية.",
+            noAiUsed: "لم يُستخدم الذكاء الاصطناعي",
             deductedNone: "لم يُخصم شيء من رصيدك",
             deducted: "خُصم {credits} من رصيدك",
             scheduleFallback: "هذا الجدول",
@@ -3360,6 +3538,7 @@ export const ar: DeepPartial<Messages> = {
                 "تم إيقاف {name}. لن يُكتب المزيد ولن يُنفق عليه المزيد من رصيد الذكاء الاصطناعي حتى تعيد تشغيله.",
             offSchedule:
                 "تم إيقاف {name}. لن يعمل ولن يستخدم رصيد الذكاء الاصطناعي حتى تعيد تشغيله.",
+            offScheduleNoAi: "{name} متوقف. لن يعمل حتى تُعيد تشغيله.",
             alreadyOff: "{name} متوقف بالفعل.",
             restingOff: "{name} متوقف.",
             onAgain: "تمت إعادة تشغيل {name}.",
@@ -3392,13 +3571,14 @@ export const ar: DeepPartial<Messages> = {
         },
         section: {
             defaultEmptyTitle: "أنجزت كل شيء!",
-            defaultEmptySubtitle: "لا توجد عناصر جديدة لمراجعتها",
+            defaultEmptySubtitle: "اختر مهمة للعمل عليها أو خذ استراحة.",
         },
         emptyStates: {
             activitiesTitle: "لا توجد أنشطة بعد",
-            activitiesSubtitle: "ستظهر هنا التحديثات والإشعارات الجديدة",
+            activitiesSubtitle: "عند إسناد مهمة إليك أو الإشارة إليك بـ @ ستصلك التحديثات هنا.",
             requestsTitle: "لا توجد طلبات معلّقة",
-            requestsSubtitle: "ستظهر هنا طلبات الفرق والمشاريع",
+            requestsSubtitle:
+                "عندما يطلب أحد الانضمام إلى فريقك أو مشروعك، اقبل الطلب أو ارفضه هنا.",
         },
         notification: {
             approvalBody: "تمت الموافقة على طلب الانضمام إلى {target}: ",
@@ -5080,7 +5260,10 @@ export const ar: DeepPartial<Messages> = {
             years: "{count}y مضت",
         },
         messageNumber: "الرسالة رقم {id}",
-        empty: "لا شيء هنا بعد.",
+        emptyTitle: "لا يوجد سجل بعد",
+        emptyChats: "افتح محادثة أو موضوعًا وسيُدرج هنا.",
+        emptyTasks: "افتح مهمة وستُدرج هنا.",
+        emptyNotes: "افتح ملاحظة وستُدرج هنا.",
         clear: "مسح التاريخ",
     },
     integrations: {
