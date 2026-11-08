@@ -318,6 +318,8 @@ export const MonthView = ({
                                     return (
                                         <Sheet
                                             key={key}
+                                            // Named by its date, not by the events inside it.
+                                            aria-label={day.format("LL")}
                                             role="button"
                                             tabIndex={0}
                                             variant="outlined"
