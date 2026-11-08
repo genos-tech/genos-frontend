@@ -16,6 +16,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
+import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 
 interface TaskNoteEditorPanelProps {
@@ -55,7 +56,10 @@ export const TaskNoteEditorPanel = ({
     const { t } = useTranslation();
     const isMobile = useIsMobile();
     const titleInputRef = useRef<HTMLInputElement | null>(null);
-    const { note, accessDenied } = useNoteData<TaskNoteProps>(tab, { myself, accessToken });
+    const { note, accessDenied, isLoading, error, reload } = useNoteData<TaskNoteProps>(tab, {
+        myself,
+        accessToken,
+    });
 
     const {
         noteBodySaved,
@@ -114,7 +118,15 @@ export const TaskNoteEditorPanel = ({
     }
 
     if (!note || !body) {
-        return null;
+        return (
+            <NoteLoadState
+                error={error !== null}
+                fillHeight={fillHeight}
+                isActive={isActive}
+                isLoading={isLoading}
+                onRetry={reload}
+            />
+        );
     }
 
     return (

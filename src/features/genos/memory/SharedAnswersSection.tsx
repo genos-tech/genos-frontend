@@ -3,6 +3,7 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import { Box, Button, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useShareAnswersPreference } from "../../../hooks/common/useShareAnswersPreference";
@@ -101,14 +102,12 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
         }
         if (list.status === "error") {
             return (
-                <Stack alignItems="flex-start" spacing={1} sx={{ py: 1 }}>
-                    <Typography level="body-sm" sx={{ color: "danger.500" }}>
-                        {m.loadFailed}
-                    </Typography>
-                    <Button size="sm" variant="outlined" onClick={list.reload}>
-                        {t.common.actions.retry}
-                    </Button>
-                </Stack>
+                <ErrorState
+                    data-error="genos-shared-answers"
+                    size="xs"
+                    title={m.loadFailed}
+                    onRetry={list.reload}
+                />
             );
         }
         if (enabled === false || list.answers.length === 0) {

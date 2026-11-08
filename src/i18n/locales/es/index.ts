@@ -11,6 +11,7 @@ export const es: DeepPartial<Messages> = {
         },
         feedback: {
             loading: "Cargando…",
+            loadFailedBody: "Comprueba tu conexión e inténtalo de nuevo.",
             toast: {
                 region: "Notificaciones",
                 undo: "Deshacer",
@@ -2739,6 +2740,7 @@ export const es: DeepPartial<Messages> = {
                 },
             },
             velocity: {
+                loadFailed: "No se pudo cargar el gráfico de velocidad",
                 title: "Velocidad",
                 subtitle:
                     "Tareas creadas, iniciadas, cerradas y actualizadas a lo largo del tiempo.",
@@ -2867,6 +2869,7 @@ export const es: DeepPartial<Messages> = {
             effort: "Esfuerzo: {value}",
         },
         activity: {
+            loadFailed: "No se pudo cargar la actividad",
             empty: "Aún no hay actividad",
             emptyBody: "Cambia un campo o añade un comentario para iniciar el historial.",
             someone: "Alguien",
@@ -3203,6 +3206,7 @@ export const es: DeepPartial<Messages> = {
             newNote: "Nueva nota",
         },
         editor: {
+            loadFailed: "No se pudo abrir esta nota",
             deleteTooltip: "Eliminar",
             colorsTooltip: "Colores",
             resetTypeTooltip: "Restablecer tipo",
@@ -4506,6 +4510,7 @@ export const es: DeepPartial<Messages> = {
             github: "GitHub",
         },
         connections: {
+            loadFailed: "No se pudieron cargar tus conexiones",
             primaryLogin: "Inicio de sesión principal",
             noEmailShared: "(correo no compartido)",
             notConnected: "No conectado",
@@ -4614,6 +4619,7 @@ export const es: DeepPartial<Messages> = {
                 needsAdmin: "Requiere ser administrador del repositorio",
             },
             repoAccess: {
+                loadFailed: "No se pudieron cargar tus repositorios",
                 title: "Acceso a repos",
                 description:
                     "Genos accede a GitHub con los permisos de tu cuenta, así que los repos que crees en ella funcionan de inmediato. Cada organización debe conceder acceso una vez; si falta alguna, añádela con los botones inferiores.",

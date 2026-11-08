@@ -6,6 +6,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import {
@@ -40,13 +41,20 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
     // pending state.
     const [disconnecting, setDisconnecting] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    // The LOAD failed (MIP-1276). Not `error`: that one also carries a failed
+    // disconnect, which must not hide accounts we did load. With nothing loaded
+    // the panel must not draw "Connect Google / Connect GitHub" as if the user
+    // had no accounts.
+    const [loadFailed, setLoadFailed] = useState(false);
 
     const reload = useCallback(async () => {
         if (!accessToken) return;
         setLoading(true);
-        const res = await listConnections(accessToken, setError);
+        setLoadFailed(false);
+        const res = await listConnections(accessToken);
         setLoading(false);
         if (res) setData(res);
+        else setLoadFailed(true);
     }, [accessToken]);
 
     useEffect(() => {
@@ -156,97 +164,109 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         );
     };
 
-    if (loading && !data) {
-        return <SkeletonRows count={3} twoLines />;
-    }
-
     return (
-        <Stack spacing={2}>
-            {error && <Alert color="danger">{error}</Alert>}
+        <DataState
+            error={loadFailed}
+            hasData={data !== null}
+            loading={loading}
+            size="sm"
+            skeleton={<SkeletonRows count={3} twoLines />}
+            errorState={{
+                title: t.integrations.connections.loadFailed,
+                onRetry: () => void reload(),
+                "data-error": "connections",
+            }}
+        >
+            <Stack spacing={2}>
+                {error && <Alert color="danger">{error}</Alert>}
 
-            {/* User-facing notice: while our OAuth app is still in
+                {/* User-facing notice: while our OAuth app is still in
                 Google's verification queue, only whitelisted Gmail
                 addresses can grant Google access. Anyone else hits
                 "Error 403: access_denied" on the consent screen.
                 Surfacing the support email lets users self-serve
                 instead of getting stuck mid-flow. */}
-            <Alert
-                color="neutral"
-                startDecorator={<InfoOutlinedIcon />}
-                sx={{ alignItems: "flex-start" }}
-                variant="soft"
-            >
-                <Box>
-                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        {t.integrations.connections.verificationTitle}
-                    </Typography>
-                    <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.25 }}>
-                        {t.integrations.connections.verificationBeforeError}{" "}
-                        <Typography
-                            component="span"
-                            sx={{ fontFamily: "monospace", fontWeight: 600 }}
-                        >
-                            {t.integrations.connections.verificationError}
-                        </Typography>{" "}
-                        {t.integrations.connections.verificationAfterError}{" "}
-                        <Typography
-                            component="a"
-                            href="mailto:genos.support@genosai.dev?subject=Add%20me%20as%20Google%20test%20user"
-                            sx={{ color: "primary.500", textDecoration: "underline" }}
-                        >
-                            genos.support@genosai.dev
-                        </Typography>{" "}
-                        {t.integrations.connections.verificationEnding}
-                    </Typography>
-                </Box>
-            </Alert>
+                <Alert
+                    color="neutral"
+                    startDecorator={<InfoOutlinedIcon />}
+                    sx={{ alignItems: "flex-start" }}
+                    variant="soft"
+                >
+                    <Box>
+                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                            {t.integrations.connections.verificationTitle}
+                        </Typography>
+                        <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.25 }}>
+                            {t.integrations.connections.verificationBeforeError}{" "}
+                            <Typography
+                                component="span"
+                                sx={{ fontFamily: "monospace", fontWeight: 600 }}
+                            >
+                                {t.integrations.connections.verificationError}
+                            </Typography>{" "}
+                            {t.integrations.connections.verificationAfterError}{" "}
+                            <Typography
+                                component="a"
+                                href="mailto:genos.support@genosai.dev?subject=Add%20me%20as%20Google%20test%20user"
+                                sx={{ color: "primary.500", textDecoration: "underline" }}
+                            >
+                                genos.support@genosai.dev
+                            </Typography>{" "}
+                            {t.integrations.connections.verificationEnding}
+                        </Typography>
+                    </Box>
+                </Alert>
 
-            {googleAccounts.length === 0 ? (
-                <AccountRow
-                    label={t.integrations.providers.google}
-                    provider="google"
-                    icon={
-                        <CalendarMonthRoundedIcon fontSize="inherit" sx={{ color: "#4285f4" }} />
-                    }
-                />
-            ) : (
-                <>
-                    {googleAccounts.map((c) => (
-                        <AccountRow
-                            key={c.id}
-                            connection={c}
-                            label={t.integrations.providers.google}
-                            provider="google"
-                            icon={
-                                <CalendarMonthRoundedIcon
-                                    fontSize="inherit"
-                                    sx={{ color: "#4285f4" }}
-                                />
-                            }
-                        />
-                    ))}
-                    {/* Connecting a second Google account is the whole
+                {googleAccounts.length === 0 ? (
+                    <AccountRow
+                        label={t.integrations.providers.google}
+                        provider="google"
+                        icon={
+                            <CalendarMonthRoundedIcon
+                                fontSize="inherit"
+                                sx={{ color: "#4285f4" }}
+                            />
+                        }
+                    />
+                ) : (
+                    <>
+                        {googleAccounts.map((c) => (
+                            <AccountRow
+                                key={c.id}
+                                connection={c}
+                                label={t.integrations.providers.google}
+                                provider="google"
+                                icon={
+                                    <CalendarMonthRoundedIcon
+                                        fontSize="inherit"
+                                        sx={{ color: "#4285f4" }}
+                                    />
+                                }
+                            />
+                        ))}
+                        {/* Connecting a second Google account is the whole
                         point of the multi-account calendar — work and
                         personal side by side. The consent screen opens
                         on Google's account chooser so the user picks a
                         DIFFERENT account than the one they're signed
                         into. */}
-                    <Button
-                        startDecorator={<AddRoundedIcon />}
-                        sx={{ alignSelf: "flex-start" }}
-                        variant="outlined"
-                        onClick={() => startConnect("google")}
-                    >
-                        {t.integrations.connections.addGoogleAccount}
-                    </Button>
-                </>
-            )}
-            <AccountRow
-                connection={githubAccount}
-                icon={<GitHubIcon fontSize="inherit" />}
-                label={t.integrations.providers.github}
-                provider="github"
-            />
-        </Stack>
+                        <Button
+                            startDecorator={<AddRoundedIcon />}
+                            sx={{ alignSelf: "flex-start" }}
+                            variant="outlined"
+                            onClick={() => startConnect("google")}
+                        >
+                            {t.integrations.connections.addGoogleAccount}
+                        </Button>
+                    </>
+                )}
+                <AccountRow
+                    connection={githubAccount}
+                    icon={<GitHubIcon fontSize="inherit" />}
+                    label={t.integrations.providers.github}
+                    provider="github"
+                />
+            </Stack>
+        </DataState>
     );
 };

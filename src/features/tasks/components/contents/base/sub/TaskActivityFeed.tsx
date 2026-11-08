@@ -23,7 +23,7 @@ import { Socket } from "socket.io-client";
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../../../components/ui/avatars/BaseAvatar";
-import { EmptyState } from "../../../../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../../../../components/ui/feedback/DataState";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
@@ -54,6 +54,10 @@ type TaskActivityFeedProps = {
      *  intermediate spinner because the typical fetch is sub-100ms and
      *  a flicker would itself read as a "refresh". */
     isLoading: boolean;
+    /** The load FAILED: with no rows to show, say so (and offer `onRetry`)
+     *  instead of "No activity yet" (MIP-1276). Rows already loaded stay. */
+    loadFailed: boolean;
+    onRetry: () => void;
     /** Loaded tasks for the current project (the lightweight table
      *  shape — `id` + `displayId` are all this feed needs). Used as a
      *  best-effort fallback to render a parent-task reference with its
@@ -896,6 +900,8 @@ const ValueChip = ({
 export const TaskActivityFeed = ({
     activities,
     isLoading,
+    loadFailed,
+    onRetry,
     allTasks,
     taskId,
     myself,
@@ -934,12 +940,25 @@ export const TaskActivityFeed = ({
 
     return (
         <Stack spacing={0.5} sx={{ p: 1 }}>
-            {empty && !isLoading && (
-                <EmptyState
-                    body={t.tasks.activity.emptyBody}
-                    data-empty="task-activity"
-                    icon={<HistoryRoundedIcon />}
-                    title={t.tasks.activity.empty}
+            {empty && (
+                <DataState
+                    error={loadFailed}
+                    hasData={false}
+                    loading={isLoading}
+                    // Silent while loading: the fetch is sub-100ms and a skeleton
+                    // flicker would itself read as a refresh (see `isLoading`).
+                    skeleton={null}
+                    empty={{
+                        body: t.tasks.activity.emptyBody,
+                        "data-empty": "task-activity",
+                        icon: <HistoryRoundedIcon />,
+                        title: t.tasks.activity.empty,
+                    }}
+                    errorState={{
+                        title: t.tasks.activity.loadFailed,
+                        onRetry,
+                        "data-error": "task-activity",
+                    }}
                 />
             )}
 

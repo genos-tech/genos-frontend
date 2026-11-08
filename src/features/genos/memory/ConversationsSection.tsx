@@ -5,6 +5,7 @@ import { Box, Button, Checkbox, IconButton, Sheet, Stack, Typography } from "@mu
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { fmt, useTranslation } from "../../../i18n";
@@ -124,14 +125,12 @@ export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) 
             {isLoading ? (
                 <SkeletonRows count={3} label={m.loading} />
             ) : sessions.length === 0 && loadFailed ? (
-                <Stack alignItems="flex-start" spacing={1} sx={{ py: 1 }}>
-                    <Typography level="body-sm" sx={{ color: "danger.500" }}>
-                        {m.loadFailed}
-                    </Typography>
-                    <Button size="sm" variant="outlined" onClick={reload}>
-                        {t.common.actions.retry}
-                    </Button>
-                </Stack>
+                <ErrorState
+                    data-error="genos-conversations"
+                    size="xs"
+                    title={m.loadFailed}
+                    onRetry={reload}
+                />
             ) : sessions.length === 0 ? (
                 <EmptyState body={m.empty} data-empty="genos-conversations" size="xs" />
             ) : (

@@ -703,9 +703,12 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     // `taskActivities` into `useTM`.
     const [taskActivities, setTaskActivities] = useState<TaskActivityProps[]>([]);
     const [isLoadingTaskActivities, setIsLoadingTaskActivities] = useState(false);
+    // The last load failed (MIP-1276); the feed offers Retry instead of "No activity".
+    const [taskActivitiesFailed, setTaskActivitiesFailed] = useState(false);
     useEffect(() => {
         if (!Number.isFinite(previewTaskId) || previewTaskId <= 0) {
             setTaskActivities([]);
+            setTaskActivitiesFailed(false);
             return;
         }
         let cancelled = false;
@@ -715,7 +718,10 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             const rows = await loadTaskActivities(myself, previewTaskId, accessToken);
             ticket.land(() => {
                 if (cancelled) return;
-                setTaskActivities(rows);
+                // A failed refresh keeps the rows already shown; the feed only
+                // surfaces the failure when it has nothing to show.
+                if (rows !== null) setTaskActivities(rows);
+                setTaskActivitiesFailed(rows === null);
                 setIsLoadingTaskActivities(false);
             });
         })();
@@ -1033,6 +1039,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                             socket={socket}
                             tabIndex={tabIndex}
                             taskActivities={taskActivities}
+                            taskActivitiesFailed={taskActivitiesFailed}
                             taskCommentLines={taskCommentLines}
                             taskComments={taskComments}
                             taskContent={taskEditState.tmpCurrentTaskContent}
@@ -1044,6 +1051,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                             useTM={useTM}
                             useUISM={useUISM}
                             onAttachmentDeleted={handleAttachmentDeleted}
+                            onRetryTaskActivities={() => setActivityRefreshNonce((n) => n + 1)}
                         />
                     }
                 />
@@ -1641,10 +1649,12 @@ const MilestonePreviewInner = ({
     // sibling effect in `TaskPreview`).
     const [taskActivities, setTaskActivities] = useState<TaskActivityProps[]>([]);
     const [isLoadingTaskActivities, setIsLoadingTaskActivities] = useState(false);
+    const [taskActivitiesFailed, setTaskActivitiesFailed] = useState(false);
     useEffect(() => {
         const taskId = milestone?.taskId;
         if (taskId == null) {
             setTaskActivities([]);
+            setTaskActivitiesFailed(false);
             return;
         }
         let cancelled = false;
@@ -1652,7 +1662,8 @@ const MilestonePreviewInner = ({
             setIsLoadingTaskActivities(true);
             const rows = await loadTaskActivities(myself, taskId, accessToken);
             if (cancelled) return;
-            setTaskActivities(rows);
+            if (rows !== null) setTaskActivities(rows);
+            setTaskActivitiesFailed(rows === null);
             setIsLoadingTaskActivities(false);
         })();
         return () => {
@@ -2748,6 +2759,7 @@ const MilestonePreviewInner = ({
                         socket={socket}
                         tabIndex={tabIndex}
                         taskActivities={taskActivities}
+                        taskActivitiesFailed={taskActivitiesFailed}
                         taskCommentLines={taskCommentLines}
                         taskComments={taskComments}
                         taskContent={taskContentLike}
@@ -2759,6 +2771,7 @@ const MilestonePreviewInner = ({
                         useTM={useTM}
                         useUISM={useUISM}
                         onAttachmentDeleted={handleAttachmentDeleted}
+                        onRetryTaskActivities={() => setActivityRefreshNonce((n) => n + 1)}
                     />
                 ) : null
             }

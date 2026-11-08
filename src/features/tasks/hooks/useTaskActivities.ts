@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
@@ -28,11 +28,20 @@ import { onTaskTouched } from "../services/taskEvents";
 export const useTaskActivities = (
     myself: UserProps,
     taskId: number | null | undefined
-): { activities: TaskActivityProps[]; isLoading: boolean } => {
+): {
+    activities: TaskActivityProps[];
+    isLoading: boolean;
+    /** The last load failed (MIP-1276); `activities` keeps what was already loaded. */
+    loadFailed: boolean;
+    /** Ask again, e.g. from the feed's Retry. */
+    reload: () => void;
+} => {
     const { accessToken } = useAuth();
     const [activities, setActivities] = useState<TaskActivityProps[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshNonce, setRefreshNonce] = useState(0);
+    const [loadFailed, setLoadFailed] = useState(false);
+    const reload = useCallback(() => setRefreshNonce((n) => n + 1), []);
 
     const numericId = Number(taskId);
     const resolvedId = Number.isFinite(numericId) && numericId > 0 ? numericId : null;
@@ -50,6 +59,7 @@ export const useTaskActivities = (
     useEffect(() => {
         if (resolvedId == null) {
             setActivities([]);
+            setLoadFailed(false);
             return;
         }
         // Cancelled-flag guard: a stale load must not clobber the
@@ -59,7 +69,8 @@ export const useTaskActivities = (
             setIsLoading(true);
             const rows = await loadTaskActivities(myself, resolvedId, accessToken);
             if (cancelled) return;
-            setActivities(rows);
+            if (rows !== null) setActivities(rows);
+            setLoadFailed(rows === null);
             setIsLoading(false);
         })();
         return () => {
@@ -70,5 +81,5 @@ export const useTaskActivities = (
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [resolvedId, refreshNonce, accessToken, myself.teamId]);
 
-    return { activities, isLoading };
+    return { activities, isLoading, loadFailed, reload };
 };
