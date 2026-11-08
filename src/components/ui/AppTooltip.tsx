@@ -126,6 +126,28 @@ export const AppTooltip = ({
     const painted = surface === "chip";
     const showArrow = arrow ?? (painted || arrowColor !== undefined);
 
+    const surfaceSx = {
+        ...(painted
+            ? {
+                  background: LIGHT.menuBg,
+                  border: `1px solid ${LIGHT.menuBorder}`,
+                  borderRadius: "8px",
+                  '[data-joy-color-scheme="dark"] &': {
+                      background: DARK.menuBg,
+                      border: `1px solid ${DARK.menuBorder}`,
+                  },
+              }
+            : {
+                  bgcolor: "transparent",
+                  border: "none",
+                  boxShadow: "none",
+                  p: 0,
+                  maxWidth: "none",
+              }),
+        ...(maxWidth !== undefined ? { maxWidth } : {}),
+        ...(arrowColor ? { "--Tooltip-arrowColor": arrowColor } : {}),
+    };
+
     return (
         <Tooltip
             arrow={showArrow}
@@ -134,29 +156,16 @@ export const AppTooltip = ({
             open={resolvedOpen}
             placement={placement}
             size={size}
+            // On `slotProps.root`, NOT the Tooltip's own `sx`: Joy's Tooltip never
+            // consumes `sx`, it spreads it onto the popper AND onto the child it
+            // wraps (`cloneElement(child, { ...other, ...child.props })`). A child
+            // with no `sx` of its own then wore the chip's border, background and
+            // radius (the boxed pin in the chat row, MIP-1127); a child WITH an
+            // `sx` silently dropped them. Slot props reach only the popper.
+            // (Joy types `slotProps.root` as the whole PopperProps, `open` included.)
+            slotProps={{ root: { sx: surfaceSx } as never }}
             title={title}
             variant={painted ? "outlined" : "plain"}
-            sx={{
-                ...(painted
-                    ? {
-                          background: LIGHT.menuBg,
-                          border: `1px solid ${LIGHT.menuBorder}`,
-                          borderRadius: "8px",
-                          '[data-joy-color-scheme="dark"] &': {
-                              background: DARK.menuBg,
-                              border: `1px solid ${DARK.menuBorder}`,
-                          },
-                      }
-                    : {
-                          bgcolor: "transparent",
-                          border: "none",
-                          boxShadow: "none",
-                          p: 0,
-                          maxWidth: "none",
-                      }),
-                ...(maxWidth !== undefined ? { maxWidth } : {}),
-                ...(arrowColor ? { "--Tooltip-arrowColor": arrowColor } : {}),
-            }}
             onClose={() => setHoverOpen(false)}
             onOpen={() => setHoverOpen(true)}
         >
