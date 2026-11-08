@@ -1162,6 +1162,7 @@ export const tasks = {
     // Task graph (React Flow diagram) — tooltips on nodes and modal chrome.
     diagram: {
         title: "Task graph",
+        editSchedule: "Edit schedule",
         loading: "Loading task graph…",
         untitled: "Untitled",
         newTask: "New task",

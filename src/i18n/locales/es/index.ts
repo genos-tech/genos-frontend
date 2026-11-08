@@ -2834,6 +2834,7 @@ export const es: DeepPartial<Messages> = {
         },
         diagram: {
             title: "Gráfico de tareas",
+            editSchedule: "Editar fechas",
             loading: "Cargando gráfico de tareas…",
             untitled: "Intitulado",
             newTask: "Nueva tarea",

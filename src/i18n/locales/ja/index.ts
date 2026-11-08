@@ -5212,6 +5212,7 @@ export const ja: DeepPartial<Messages> = {
         },
         diagram: {
             title: "タスクグラフ",
+            editSchedule: "日程を編集",
             loading: "タスクグラフを読み込み中…",
             untitled: "無題",
             newTask: "新しいタスク",

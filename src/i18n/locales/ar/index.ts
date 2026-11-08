@@ -2792,6 +2792,7 @@ export const ar: DeepPartial<Messages> = {
         },
         diagram: {
             title: "الرسم البياني للمهمة",
+            editSchedule: "تعديل التواريخ",
             loading: "جارٍ تحميل الرسم البياني للمهمة...",
             untitled: "بدون عنوان",
             newTask: "مهمة جديدة",
