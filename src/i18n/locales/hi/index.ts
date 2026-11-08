@@ -1915,7 +1915,6 @@ export const hi: DeepPartial<Messages> = {
             delete: "हटाएँ",
             save: "सेव करें",
             cancel: "रद्द करें",
-            download: "डाउनलोड करें",
             close: "बंद करें",
             checkThread: "स्रोत थ्रेड देखें",
             dragToReorder: "क्रम बदलने के लिए ड्रैग करें",
@@ -2540,7 +2539,6 @@ export const hi: DeepPartial<Messages> = {
             notes: "नोट",
             attachments: "अटैचमेंट",
             activity: "गतिविधि",
-            downloadTooltip: "डाउनलोड करें",
             downloadFileTooltip: '"{name}" डाउनलोड करें',
         },
         sprintFilter: {

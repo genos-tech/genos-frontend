@@ -39,7 +39,12 @@ import { redirectToOAuthConnect } from "../../integrations/services/oauth";
 import { isWritableCalendar, useCalendarSources } from "../hooks/useCalendarSources";
 import { useStickyPeriodScroll } from "../hooks/useStickyPeriodScroll";
 import { eventLabel } from "../utils/eventLabel";
-import { CalendarView, visibleRange } from "../utils/monthGrid";
+import {
+    CalendarView,
+    formatCalendarDate,
+    formatCalendarRange,
+    visibleRange,
+} from "../utils/monthGrid";
 import { isMultiDaySpan } from "../utils/multiDay";
 import { CalendarSourcePicker } from "./CalendarSourcePicker";
 import { MonthView } from "./MonthView";
@@ -123,7 +128,7 @@ interface ModalInitial {
 
 export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const { accessToken } = useAuth();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const theme = useTheme();
     const isMobile = useIsMobile();
 
@@ -355,18 +360,19 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     });
 
     const headerTitle = useMemo(() => {
-        if (view === "month") return anchor.format("MMMM YYYY");
-        if (view === "day") return anchor.format("MMMM D, YYYY");
-        const start = range.start;
-        const last = range.end;
-        // Compact range labels: same month "May 19 – 25, 2026",
-        // crossing months "Apr 28 – May 4, 2026". Year always at
-        // the end so the user keeps their place when paging.
-        if (start.isSame(last, "month")) {
-            return `${start.format("MMM D")} – ${last.format("D, YYYY")}`;
-        }
-        return `${start.format("MMM D")} – ${last.format("MMM D, YYYY")}`;
-    }, [view, anchor, range.start, range.end]);
+        if (view === "month")
+            return formatCalendarDate(anchor, locale, { month: "long", year: "numeric" });
+        if (view === "day")
+            return formatCalendarDate(anchor, locale, {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+            });
+        // Compact range labels: same month "May 19 – 25, 2026", crossing months
+        // "Apr 28 – May 4, 2026", in the app's language. Year always at the end so the user
+        // keeps their place when paging.
+        return formatCalendarRange(range.start, range.end, locale);
+    }, [view, anchor, range.start, range.end, locale]);
 
     /** Default target for a newly created event: the first SELECTED
      *  calendar the user can actually write to. Picking a read-only
@@ -736,8 +742,15 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 <ModalFrame
                     open={popoverDayKey !== null}
                     size="sm"
-                    title={popoverDayKey ? dayjs(popoverDayKey).format("MMMM D") : ""}
                     zIndex={theme.zIndex.modal}
+                    title={
+                        popoverDayKey
+                            ? formatCalendarDate(dayjs(popoverDayKey), locale, {
+                                  month: "long",
+                                  day: "numeric",
+                              })
+                            : ""
+                    }
                     onClose={() => setPopoverDayKey(null)}
                 >
                     <Stack spacing={0.5}>

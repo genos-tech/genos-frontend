@@ -132,7 +132,6 @@ export const tasks = {
         delete: "Delete",
         save: "Save",
         cancel: "Cancel",
-        download: "Download",
         close: "Close",
         checkThread: "Check source thread",
         dragToReorder: "Drag to reorder",
@@ -845,7 +844,6 @@ export const tasks = {
         notes: "Notes",
         attachments: "Attachments",
         activity: "Activity",
-        downloadTooltip: "Download",
         downloadFileTooltip: 'Download "{name}"',
     },
 

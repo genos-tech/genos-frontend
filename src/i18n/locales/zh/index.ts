@@ -4157,7 +4157,6 @@ export const zh: DeepPartial<Messages> = {
             delete: "删除",
             save: "保存",
             cancel: "取消",
-            download: "下载",
             close: "关闭",
             checkThread: "查看来源话题",
             dragToReorder: "拖动以重新排序",
@@ -4770,7 +4769,6 @@ export const zh: DeepPartial<Messages> = {
             notes: "笔记",
             attachments: "附件",
             activity: "动态",
-            downloadTooltip: "下载",
             downloadFileTooltip: "下载“{name}”",
         },
         sprintFilter: {

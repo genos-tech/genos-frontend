@@ -8,6 +8,7 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
+import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
 import { buildMonthGrid, weekdayLabels } from "../utils/monthGrid";
@@ -111,9 +112,10 @@ export const MonthView = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const isMobile = useIsMobile();
+    const { locale } = useTranslation();
 
     const grid = useMemo(() => buildMonthGrid(focused, 0), [focused]);
-    const weekLabels = useMemo(() => weekdayLabels(0), []);
+    const weekLabels = useMemo(() => weekdayLabels(0, locale), [locale]);
     const todayKey = useMemo(() => dayKey(dayjs()), []);
 
     /** Span layout per week, memoised together: lane packing runs for
