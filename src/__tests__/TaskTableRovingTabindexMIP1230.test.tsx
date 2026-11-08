@@ -80,7 +80,15 @@ const useTM = {
 
 type RowSpec = { task: TaskTableProps; depth?: number; hasChildren?: boolean; isGhost?: boolean };
 
-const Table = ({ rows, rtl = false }: { rows: RowSpec[]; rtl?: boolean }) => {
+const Table = ({
+    rows,
+    rtl = false,
+    onRowUpdate = vi.fn(async (t: TaskTableProps) => t),
+}: {
+    rows: RowSpec[];
+    rtl?: boolean;
+    onRowUpdate?: (task: TaskTableProps) => Promise<TaskTableProps>;
+}) => {
     const { nav, gridRef } = useGridNavController();
     const [updates, setUpdates] = useState(0);
     return (
@@ -141,7 +149,7 @@ const Table = ({ rows, rtl = false }: { rows: RowSpec[]; rtl?: boolean }) => {
                                         onOpenDiagram={vi.fn()}
                                         onQuickAddChild={vi.fn()}
                                         onRequestPreview={vi.fn()}
-                                        onRowUpdate={vi.fn(async (t) => t)}
+                                        onRowUpdate={onRowUpdate}
                                     />
                                 ))}
                                 {provided.placeholder}
@@ -402,6 +410,37 @@ describe("Enter / Space open the editor, Escape returns to the cell", () => {
         await waitFor(() => expect(screen.queryByLabelText("Due Date")).toBeNull());
         await waitFor(() => expect(where()).toBe("1/dueDate"));
     });
+
+    it.each([
+        ["status", "Open"],
+        ["priority", "High"],
+    ])(
+        "%s: Enter opens the list with focus in it, arrows and Enter pick, the cell gets focus back",
+        async (col, current) => {
+            const user = userEvent.setup();
+            const onRowUpdate = vi.fn(async (t: TaskTableProps) => t);
+            render(wrap(<Table rows={ROWS} onRowUpdate={onRowUpdate} />));
+            focusCell("1", col);
+
+            await user.keyboard("{Enter}");
+            // The editor mounts where the button was: focus must be IN the open select,
+            // or the arrows below would do nothing.
+            const listbox = await screen.findByRole("listbox");
+            expect(
+                listbox.contains(document.activeElement) ||
+                    !!document.activeElement?.closest("[role=combobox]")
+            ).toBe(true);
+            await user.keyboard("{ArrowDown}");
+            await user.keyboard("{Enter}");
+
+            await waitFor(() => expect(onRowUpdate).toHaveBeenCalledTimes(1));
+            const updated = onRowUpdate.mock.calls[0][0] as unknown as Record<string, string>;
+            expect(updated[col]).not.toBe(current);
+            await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+            await waitFor(() => expect(where()).toBe(`1/${col}`));
+            expect(stops()).toHaveLength(1);
+        }
+    );
 
     it("a mouse blur does not pull focus back to the cell", async () => {
         const user = userEvent.setup();
