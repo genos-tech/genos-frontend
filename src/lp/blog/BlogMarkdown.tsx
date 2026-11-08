@@ -9,6 +9,11 @@ import remarkGfm from "remark-gfm";
  * Server-authored marketing copy only — no user-generated HTML.
  */
 const components: Components = {
+    table: ({ children }) => (
+        <div className="lp-table-scroll">
+            <table>{children}</table>
+        </div>
+    ),
     a: ({ href, children }) => {
         if (!href) return <>{children}</>;
         const external = /^https?:\/\//i.test(href);
