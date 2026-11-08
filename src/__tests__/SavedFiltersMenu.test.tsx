@@ -17,7 +17,7 @@
 
 import { useState } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SavedFiltersMenu } from "../features/tasks/components/table/SavedFiltersMenu";
@@ -29,6 +29,7 @@ import {
     type ProjectSavedFilter,
     type SavedFilterPayload,
 } from "../features/tasks/services/projectSavedFilters";
+import { en } from "../i18n/locales/en";
 
 vi.mock("../features/tasks/services/projectSavedFilters", () => ({
     loadProjectSavedFilters: vi.fn(),
@@ -136,10 +137,12 @@ const openMenu = async () => {
     fireEvent.click(await trigger());
 };
 
-// Each row's Delete icon carries "Delete" as its accessible name (AppTooltip
-// again), so the confirm button gets a testid rather than being queried by the
-// same word.
-const deleteConfirm = () => screen.findByTestId("saved-filter-delete-confirm");
+// Each row's Delete icon carries "Delete" as its accessible name (AppTooltip again), so
+// the confirm button is looked up inside the confirmation dialog.
+const deleteConfirm = async () =>
+    within(await screen.findByRole("alertdialog")).findByRole("button", {
+        name: en.tasks.savedFilters.deleteConfirm,
+    });
 
 describe("SavedFiltersMenu", () => {
     beforeEach(() => {

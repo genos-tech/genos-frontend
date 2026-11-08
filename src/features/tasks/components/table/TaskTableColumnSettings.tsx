@@ -1,5 +1,4 @@
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DragIndicatorRoundedIcon from "@mui/icons-material/DragIndicatorRounded";
 import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import {
@@ -7,8 +6,6 @@ import {
     Button,
     Divider,
     IconButton,
-    Modal,
-    ModalDialog,
     Option,
     Select,
     Stack,
@@ -19,6 +16,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { SortTier, useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { useTaskTableColumnPreferences } from "../../../../hooks/common/useTaskTableColumnPreferences";
 import { useTranslation } from "../../../../i18n";
@@ -202,280 +200,245 @@ export const TaskTableColumnSettings = ({ open, onClose, customColumns }: Props)
     };
 
     return (
-        <Modal open={open} onClose={onClose}>
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                size="md"
-                sx={{
-                    // Wider than the original 440px so the two sections
-                    // ("Customize columns" + "Task sort") can sit side
-                    // by side at md+ without crowding either side.
-                    // Below md the layout falls back to a single column.
-                    width: "92vw",
-                    maxWidth: 820,
-                    maxHeight: "85vh",
-                    overflowY: "auto",
-                    borderRadius: "xl",
-                    p: 2.5,
-                }}
-            >
-                {/* Action row — no modal-level title here. The left/right
-                    section headings inside the body label the modal's
-                    two halves, and a duplicate "Customize columns"
-                    above the left column would just be noise. */}
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={1}
-                    sx={{ mb: 2, justifyContent: "flex-end" }}
-                >
-                    <AppTooltip title={t.tasks.table.columnSettings.resetTooltip}>
-                        <IconButton
-                            aria-label={t.tasks.table.columnSettings.resetTooltip}
-                            size="sm"
-                            variant="plain"
-                            onClick={reset}
-                        >
-                            <RestartAltRoundedIcon />
-                        </IconButton>
-                    </AppTooltip>
+        <ModalFrame
+            // Joy's own layer, not the frame's page layer: the dragged row is portaled to <body>
+            // at 1500 (below), and it has to out-stack the dialog.
+            open={open}
+            size="xl"
+            title={t.tasks.table.columnSettings.heading}
+            zIndex={1300}
+            actions={
+                <Button size="sm" variant="solid" onClick={onClose}>
+                    {t.common.actions.done}
+                </Button>
+            }
+            headerAccessory={
+                <AppTooltip title={t.tasks.table.columnSettings.resetTooltip}>
                     <IconButton
-                        aria-label={t.common.actions.close}
+                        aria-label={t.tasks.table.columnSettings.resetTooltip}
                         size="sm"
                         variant="plain"
-                        onClick={onClose}
+                        onClick={reset}
                     >
-                        <CloseRoundedIcon />
+                        <RestartAltRoundedIcon />
                     </IconButton>
-                </Stack>
+                </AppTooltip>
+            }
+            onClose={onClose}
+        >
+            <Stack
+                direction={{ xs: "column", md: "row" }}
+                spacing={2}
+                sx={{ alignItems: "flex-start" }}
+            >
+                {/* LEFT — Customize columns */}
+                <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", md: "auto" } }}>
+                    <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                        {t.tasks.table.columnSettings.description}
+                    </Typography>
 
-                <Stack
-                    direction={{ xs: "column", md: "row" }}
-                    spacing={2}
-                    sx={{ alignItems: "flex-start" }}
-                >
-                    {/* LEFT — Customize columns */}
-                    <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", md: "auto" } }}>
-                        <Typography level="title-md" sx={{ mb: 0.5 }}>
-                            {t.tasks.table.columnSettings.heading}
-                        </Typography>
-                        <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                            {t.tasks.table.columnSettings.description}
-                        </Typography>
-
-                        <DragDropContext onDragEnd={handleDragEnd}>
-                            <Droppable droppableId="column-settings-list">
-                                {(provided) => (
-                                    <Stack
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        spacing={0}
-                                        sx={{
-                                            border: "1px solid",
-                                            borderColor: isDark
-                                                ? "rgba(255,255,255,0.08)"
-                                                : "rgba(0,0,0,0.08)",
-                                            borderRadius: "lg",
-                                            overflow: "hidden",
-                                        }}
-                                    >
-                                        {orderedColumns.map((col, index) => (
-                                            <Draggable
-                                                key={col.field}
-                                                draggableId={col.field}
-                                                index={index}
-                                            >
-                                                {(dragProvided, snapshot) => {
-                                                    const row = (
-                                                        <Stack
-                                                            ref={dragProvided.innerRef}
-                                                            {...dragProvided.draggableProps}
-                                                            alignItems="center"
-                                                            direction="row"
-                                                            spacing={1}
-                                                            // While dragging, the row is portaled to
-                                                            // <body> (below) to escape the ModalDialog's
-                                                            // `translate(-50%,-50%)` centering transform —
-                                                            // that transform is the containing block for the
-                                                            // library's position:fixed drag clone, so without
-                                                            // this the dragged row is offset from the cursor.
-                                                            // At <body> it must out-stack the modal.
-                                                            style={{
-                                                                ...dragProvided.draggableProps
-                                                                    .style,
-                                                                ...(snapshot.isDragging
-                                                                    ? { zIndex: 1500 }
-                                                                    : {}),
-                                                            }}
-                                                            sx={{
-                                                                px: 1.25,
-                                                                py: 1,
-                                                                borderBottom:
-                                                                    index ===
-                                                                    orderedColumns.length - 1
-                                                                        ? "none"
-                                                                        : "1px solid",
-                                                                borderColor: isDark
-                                                                    ? "rgba(255,255,255,0.06)"
-                                                                    : "rgba(0,0,0,0.06)",
-                                                                background: snapshot.isDragging
-                                                                    ? isDark
-                                                                        ? "rgba(var(--gp-brandalt-400-rgb), 0.12)"
-                                                                        : "rgba(var(--gp-brand-700-rgb), 0.08)"
-                                                                    : "transparent",
-                                                                transition:
-                                                                    "background-color 0.1s ease",
-                                                            }}
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                        <Droppable droppableId="column-settings-list">
+                            {(provided) => (
+                                <Stack
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    spacing={0}
+                                    sx={{
+                                        border: "1px solid",
+                                        borderColor: isDark
+                                            ? "rgba(255,255,255,0.08)"
+                                            : "rgba(0,0,0,0.08)",
+                                        borderRadius: "lg",
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    {orderedColumns.map((col, index) => (
+                                        <Draggable
+                                            key={col.field}
+                                            draggableId={col.field}
+                                            index={index}
+                                        >
+                                            {(dragProvided, snapshot) => {
+                                                const row = (
+                                                    <Stack
+                                                        ref={dragProvided.innerRef}
+                                                        {...dragProvided.draggableProps}
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        spacing={1}
+                                                        // While dragging, the row is portaled to
+                                                        // <body> (below) to escape the ModalDialog's
+                                                        // `translate(-50%,-50%)` centering transform —
+                                                        // that transform is the containing block for the
+                                                        // library's position:fixed drag clone, so without
+                                                        // this the dragged row is offset from the cursor.
+                                                        // At <body> it must out-stack the modal.
+                                                        style={{
+                                                            ...dragProvided.draggableProps.style,
+                                                            ...(snapshot.isDragging
+                                                                ? { zIndex: 1500 }
+                                                                : {}),
+                                                        }}
+                                                        sx={{
+                                                            px: 1.25,
+                                                            py: 1,
+                                                            borderBottom:
+                                                                index === orderedColumns.length - 1
+                                                                    ? "none"
+                                                                    : "1px solid",
+                                                            borderColor: isDark
+                                                                ? "rgba(255,255,255,0.06)"
+                                                                : "rgba(0,0,0,0.06)",
+                                                            background: snapshot.isDragging
+                                                                ? isDark
+                                                                    ? "rgba(var(--gp-brandalt-400-rgb), 0.12)"
+                                                                    : "rgba(var(--gp-brand-700-rgb), 0.08)"
+                                                                : "transparent",
+                                                            transition:
+                                                                "background-color 0.1s ease",
+                                                        }}
+                                                    >
+                                                        <AppTooltip
+                                                            title={
+                                                                t.tasks.table.columnSettings
+                                                                    .dragHandle
+                                                            }
                                                         >
-                                                            <AppTooltip
-                                                                title={
-                                                                    t.tasks.table.columnSettings
-                                                                        .dragHandle
-                                                                }
+                                                            <Box
+                                                                {...dragProvided.dragHandleProps}
+                                                                sx={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    cursor: "grab",
+                                                                    color: isDark
+                                                                        ? "rgba(255,255,255,0.4)"
+                                                                        : "rgba(0,0,0,0.35)",
+                                                                    "&:active": {
+                                                                        cursor: "grabbing",
+                                                                    },
+                                                                }}
                                                             >
-                                                                <Box
-                                                                    {...dragProvided.dragHandleProps}
-                                                                    sx={{
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        cursor: "grab",
-                                                                        color: isDark
-                                                                            ? "rgba(255,255,255,0.4)"
-                                                                            : "rgba(0,0,0,0.35)",
-                                                                        "&:active": {
-                                                                            cursor: "grabbing",
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <DragIndicatorRoundedIcon
-                                                                        sx={{ fontSize: 18 }}
-                                                                    />
-                                                                </Box>
-                                                            </AppTooltip>
-                                                            <Typography
-                                                                level="body-sm"
-                                                                sx={{ flex: 1, fontWeight: 500 }}
-                                                            >
-                                                                {labelFor(col)}
-                                                            </Typography>
-                                                            <Switch
-                                                                checked={isVisible(col)}
-                                                                size="sm"
-                                                                onChange={(e) =>
-                                                                    setVisibility(
-                                                                        col.field,
-                                                                        e.target.checked
-                                                                    )
-                                                                }
-                                                            />
-                                                        </Stack>
-                                                    );
-                                                    return snapshot.isDragging
-                                                        ? createPortal(row, document.body)
-                                                        : row;
-                                                }}
-                                            </Draggable>
-                                        ))}
-                                        {provided.placeholder}
-                                    </Stack>
-                                )}
-                            </Droppable>
-                        </DragDropContext>
-                    </Box>
+                                                                <DragIndicatorRoundedIcon
+                                                                    sx={{ fontSize: 18 }}
+                                                                />
+                                                            </Box>
+                                                        </AppTooltip>
+                                                        <Typography
+                                                            level="body-sm"
+                                                            sx={{ flex: 1, fontWeight: 500 }}
+                                                        >
+                                                            {labelFor(col)}
+                                                        </Typography>
+                                                        <Switch
+                                                            checked={isVisible(col)}
+                                                            size="sm"
+                                                            onChange={(e) =>
+                                                                setVisibility(
+                                                                    col.field,
+                                                                    e.target.checked
+                                                                )
+                                                            }
+                                                        />
+                                                    </Stack>
+                                                );
+                                                return snapshot.isDragging
+                                                    ? createPortal(row, document.body)
+                                                    : row;
+                                            }}
+                                        </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                </Stack>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
+                </Box>
 
-                    {/* Vertical divider between the two sections at md+.
+                {/* Vertical divider between the two sections at md+.
                         Hidden on xs/sm where the layout falls back to a
                         stacked column and the section title alone gives
                         enough visual break. */}
-                    <Divider
-                        orientation="vertical"
-                        sx={{
-                            display: { xs: "none", md: "block" },
-                            alignSelf: "stretch",
-                        }}
-                    />
+                <Divider
+                    orientation="vertical"
+                    sx={{
+                        display: { xs: "none", md: "block" },
+                        alignSelf: "stretch",
+                    }}
+                />
 
-                    {/* RIGHT — Task sort. Translation keys live under
+                {/* RIGHT — Task sort. Translation keys live under
                         `t.settings.taskSort.*` since they were shared
                         with the older copy site and there's no win in
                         duplicating them. */}
-                    <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", md: "auto" } }}>
-                        <Typography level="title-md" sx={{ mb: 0.5 }}>
-                            {t.settings.taskSort.heading}
-                        </Typography>
-                        <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                            {t.settings.taskSort.description}
-                        </Typography>
+                <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", md: "auto" } }}>
+                    <Typography level="title-md" sx={{ mb: 0.5 }}>
+                        {t.settings.taskSort.heading}
+                    </Typography>
+                    <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                        {t.settings.taskSort.description}
+                    </Typography>
 
-                        {/* Task table — up to 2 tiers. Listed first since
+                    {/* Task table — up to 2 tiers. Listed first since
                         this modal is "the" task-table settings dialog. */}
-                        <Box sx={{ mb: 1.5 }}>
-                            <Typography level="title-sm">
-                                {t.settings.taskSort.tableLabel}
-                            </Typography>
-                            <Typography level="body-xs" sx={{ mb: 1 }}>
-                                {t.settings.taskSort.tableHelper}
-                            </Typography>
-                            <Stack spacing={1}>
-                                <SortTierRow
-                                    label={t.settings.taskSort.primaryLabel}
-                                    tier={tableSortTiers[0]}
-                                    onChange={(next) =>
-                                        setTableSortTiers(setTierAtIndex(tableSortTiers, 0, next))
-                                    }
-                                />
-                                <SortTierRow
-                                    disabled={tableSortTiers.length === 0}
-                                    label={t.settings.taskSort.secondaryLabel}
-                                    tier={tableSortTiers[1]}
-                                    onChange={(next) =>
-                                        setTableSortTiers(setTierAtIndex(tableSortTiers, 1, next))
-                                    }
-                                />
-                            </Stack>
-                        </Box>
-
-                        <Divider />
-
-                        {/* Sprint board — up to 2 tiers, default = []. */}
-                        <Box sx={{ mt: 1.5 }}>
-                            <Typography level="title-sm">
-                                {t.settings.taskSort.sprintBoardLabel}
-                            </Typography>
-                            <Typography level="body-xs" sx={{ mb: 1 }}>
-                                {t.settings.taskSort.sprintBoardHelper}
-                            </Typography>
-                            <Stack spacing={1}>
-                                <SortTierRow
-                                    label={t.settings.taskSort.primaryLabel}
-                                    tier={sprintBoardSortTiers[0]}
-                                    onChange={(next) =>
-                                        setSprintBoardSortTiers(
-                                            setTierAtIndex(sprintBoardSortTiers, 0, next)
-                                        )
-                                    }
-                                />
-                                <SortTierRow
-                                    disabled={sprintBoardSortTiers.length === 0}
-                                    label={t.settings.taskSort.secondaryLabel}
-                                    tier={sprintBoardSortTiers[1]}
-                                    onChange={(next) =>
-                                        setSprintBoardSortTiers(
-                                            setTierAtIndex(sprintBoardSortTiers, 1, next)
-                                        )
-                                    }
-                                />
-                            </Stack>
-                        </Box>
+                    <Box sx={{ mb: 1.5 }}>
+                        <Typography level="title-sm">{t.settings.taskSort.tableLabel}</Typography>
+                        <Typography level="body-xs" sx={{ mb: 1 }}>
+                            {t.settings.taskSort.tableHelper}
+                        </Typography>
+                        <Stack spacing={1}>
+                            <SortTierRow
+                                label={t.settings.taskSort.primaryLabel}
+                                tier={tableSortTiers[0]}
+                                onChange={(next) =>
+                                    setTableSortTiers(setTierAtIndex(tableSortTiers, 0, next))
+                                }
+                            />
+                            <SortTierRow
+                                disabled={tableSortTiers.length === 0}
+                                label={t.settings.taskSort.secondaryLabel}
+                                tier={tableSortTiers[1]}
+                                onChange={(next) =>
+                                    setTableSortTiers(setTierAtIndex(tableSortTiers, 1, next))
+                                }
+                            />
+                        </Stack>
                     </Box>
-                </Stack>
 
-                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
-                    <Button size="sm" variant="solid" onClick={onClose}>
-                        {t.common.actions.done}
-                    </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                    <Divider />
+
+                    {/* Sprint board — up to 2 tiers, default = []. */}
+                    <Box sx={{ mt: 1.5 }}>
+                        <Typography level="title-sm">
+                            {t.settings.taskSort.sprintBoardLabel}
+                        </Typography>
+                        <Typography level="body-xs" sx={{ mb: 1 }}>
+                            {t.settings.taskSort.sprintBoardHelper}
+                        </Typography>
+                        <Stack spacing={1}>
+                            <SortTierRow
+                                label={t.settings.taskSort.primaryLabel}
+                                tier={sprintBoardSortTiers[0]}
+                                onChange={(next) =>
+                                    setSprintBoardSortTiers(
+                                        setTierAtIndex(sprintBoardSortTiers, 0, next)
+                                    )
+                                }
+                            />
+                            <SortTierRow
+                                disabled={sprintBoardSortTiers.length === 0}
+                                label={t.settings.taskSort.secondaryLabel}
+                                tier={sprintBoardSortTiers[1]}
+                                onChange={(next) =>
+                                    setSprintBoardSortTiers(
+                                        setTierAtIndex(sprintBoardSortTiers, 1, next)
+                                    )
+                                }
+                            />
+                        </Stack>
+                    </Box>
+                </Box>
+            </Stack>
+        </ModalFrame>
     );
 };
