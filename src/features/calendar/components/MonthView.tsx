@@ -7,6 +7,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Clickable } from "../../../components/ui/Clickable";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
@@ -150,7 +151,7 @@ export const MonthView = ({
                         : label
                 }
             >
-                <Box
+                <Clickable
                     sx={{
                         // 1-based grid lines, and the end line is
                         // exclusive — hence +1 / +2. Spanning several
@@ -198,7 +199,7 @@ export const MonthView = ({
                             : `3px solid ${palette.base}`,
                         "&:hover": { backgroundColor: palette.fillHover },
                     }}
-                    onClick={(ev) => {
+                    onActivate={(ev) => {
                         ev.stopPropagation();
                         onEventClick(segment.event);
                     }}
@@ -223,7 +224,7 @@ export const MonthView = ({
                     {segment.continuesAfter && (
                         <ArrowRightRoundedIcon sx={{ fontSize: 14, flexShrink: 0, mr: -0.5 }} />
                     )}
-                </Box>
+                </Clickable>
             </AppTooltip>
         );
     };

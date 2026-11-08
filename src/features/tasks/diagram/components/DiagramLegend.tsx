@@ -5,6 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 
@@ -36,18 +37,19 @@ export const DiagramLegend = () => {
                     transition: "min-width 0.2s ease",
                 }}
             >
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={0.5}
+                <Clickable
                     sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexDirection: "row",
+                        gap: 0.5,
                         px: 1.25,
                         py: 0.6,
                         cursor: "pointer",
                         background: open ? "transparent" : P.hoverBg,
                         "&:hover": { background: P.hoverBg },
                     }}
-                    onClick={() => setOpen((v) => !v)}
+                    onActivate={() => setOpen((v) => !v)}
                 >
                     <HelpOutlineRoundedIcon sx={{ fontSize: 14, color: P.textMuted }} />
                     <Typography
@@ -88,7 +90,7 @@ export const DiagramLegend = () => {
                             </Typography>
                         </IconButton>
                     </AppTooltip>
-                </Stack>
+                </Clickable>
                 {open && (
                     <Stack
                         spacing={0.5}

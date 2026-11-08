@@ -19,6 +19,7 @@ import WorkOutlineRoundedIcon from "@mui/icons-material/WorkOutlineRounded";
 import { Box, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { Clickable } from "../../../../components/ui/Clickable";
 import {
     MenuDivider,
     MenuGroupLabel,
@@ -388,16 +389,16 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                     const isActive = currentActivityMessageType === filter.id;
 
                     return (
-                        <Box
+                        <Clickable
                             key={filter.id}
                             sx={chipButtonSx(isActive)}
-                            onClick={() => handlePrimaryClick(filter.id)}
+                            onActivate={() => handlePrimaryClick(filter.id)}
                         >
                             <Icon sx={chipIconSx(isActive)} />
                             <Typography level="body-xs" sx={chipLabelSx(isActive)}>
                                 {t.chat.sidebar[filter.labelKey]}
                             </Typography>
-                        </Box>
+                        </Clickable>
                     );
                 })}
 

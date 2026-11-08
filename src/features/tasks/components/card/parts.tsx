@@ -16,6 +16,7 @@ import { Box } from "@mui/joy";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { useTranslation } from "../../../../i18n";
 import { focusRing, g, type } from "../../../../theme/tokens";
 import { TagListProps } from "../../../../types/tasks";
@@ -44,8 +45,8 @@ const CopyableId = ({ text, focusable }: { text: string; focusable: boolean }) =
     const copy = onClick(text);
     return (
         <AppTooltip title={copied ? t.common.ui.copy.copied : t.common.ui.copy.clickToCopy}>
-            <Box
-                component="span"
+            <Clickable
+                as="span"
                 sx={{
                     ...idSx,
                     cursor: "pointer",
@@ -53,7 +54,7 @@ const CopyableId = ({ text, focusable }: { text: string; focusable: boolean }) =
                     "&:hover": { color: g.accent.text },
                     "&:focus-visible": { ...focusRing, borderRadius: g.radius.xs },
                 }}
-                onClick={copy}
+                onActivate={copy}
                 {...(focusable
                     ? {
                           role: "button",
@@ -70,7 +71,7 @@ const CopyableId = ({ text, focusable }: { text: string; focusable: boolean }) =
                     : {})}
             >
                 {text}
-            </Box>
+            </Clickable>
         </AppTooltip>
     );
 };

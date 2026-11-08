@@ -10,6 +10,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
 import { Socket } from "socket.io-client";
 
+import { PlainButton } from "../../../../components/ui/PlainButton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
@@ -1694,7 +1695,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 }}
                             >
                                 {/* Header content - clickable for sorting */}
-                                <div
+                                <PlainButton
                                     style={{
                                         display: "flex",
                                         alignItems: "center",
@@ -1742,7 +1743,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             {sortTiers[0].direction === "asc" ? "▲" : "▼"}
                                         </span>
                                     )}
-                                </div>
+                                </PlainButton>
 
                                 {/* Resize handle */}
                                 {column.resizable !== false && (

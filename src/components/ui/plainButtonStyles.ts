@@ -8,6 +8,10 @@ export const plainButtonSx = {
     margin: 0,
     padding: 0,
     font: "inherit",
+    // A button resets these two to its own defaults; a title that is uppercase or
+    // tracked in its row must stay that way as a button.
+    textTransform: "inherit",
+    letterSpacing: "inherit",
     color: "inherit",
     textAlign: "inherit",
     textDecoration: "none",

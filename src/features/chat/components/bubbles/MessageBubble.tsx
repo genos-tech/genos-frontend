@@ -7,6 +7,7 @@ import { MessageBody } from "../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { Bubble } from "../../../../components/ui/bubble";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
@@ -561,10 +562,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 </>
             }
         >
-            <Box
+            <Clickable
                 className={previewWrapClassName || undefined}
                 sx={isCompact ? undefined : { cursor: message.taskId ? "pointer" : "default" }}
-                onClick={
+                onActivate={
                     isCompact
                         ? undefined
                         : () => {
@@ -591,7 +592,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
-            </Box>
+            </Clickable>
         </AppTooltip>
     ) : null;
 

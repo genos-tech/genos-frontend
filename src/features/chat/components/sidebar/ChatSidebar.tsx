@@ -14,6 +14,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { MoreMenu } from "../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
@@ -473,7 +474,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                 },
                                             }}
                                         >
-                                            <Box
+                                            <Clickable
+                                                label={t.chat.sidebar[item.labelKey]}
                                                 sx={{
                                                     width: 36,
                                                     height: 36,
@@ -509,7 +511,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                         transform: "translateY(0)",
                                                     },
                                                 }}
-                                                onClick={() => handleNavClick(item.type)}
+                                                onActivate={() => handleNavClick(item.type)}
                                             >
                                                 <Icon
                                                     sx={{
@@ -524,7 +526,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                         transition: "color 0.2s ease",
                                                     }}
                                                 />
-                                            </Box>
+                                            </Clickable>
                                         </Badge>
                                     </AppTooltip>
                                 );
@@ -716,13 +718,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatTagFilter={gmTagFilter}
                             currentActivityMessageType={-1}
                             data={{ myself, setMyself }}
-                            emptySubtitleKey={gmTagFilter ? "emptyGMFilteredSubtitle" : undefined}
+                            emptyActionLabelKey={gmTagFilter ? undefined : "newGroupMessageMenu"}
                             emptyTitleKey={gmTagFilter ? "emptyGMFilteredTitle" : undefined}
                             // CTA only on the truly-empty state — a tag
                             // filter with zero matches shouldn't push
                             // "create another group" as the fix.
-                            emptyActionLabelKey={gmTagFilter ? undefined : "newGroupMessageMenu"}
-                            onEmptyAction={gmTagFilter ? undefined : () => setOpenCreateGM(true)}
+                            emptySubtitleKey={gmTagFilter ? "emptyGMFilteredSubtitle" : undefined}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
                             selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             selectedActivityMentionGroupIds={EMPTY_GROUP_ID_SET}
@@ -734,6 +735,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
+                            onEmptyAction={gmTagFilter ? undefined : () => setOpenCreateGM(true)}
                         />
                     )}
 

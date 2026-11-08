@@ -2,6 +2,7 @@ import { Typography, TypographyProps } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
+import { focusRing } from "../../../theme/tokens";
 import { formatTaskDisplayId } from "../utils/taskDisplayId";
 import { useCopyState } from "./useCopyState";
 
@@ -45,8 +46,22 @@ export const CopyableTaskIdText = ({
             <Typography
                 {...rest}
                 component="span"
-                sx={[{ cursor: "pointer" }, ...(Array.isArray(sx) ? sx : [sx])]}
+                role="button"
+                tabIndex={0}
+                sx={[
+                    { cursor: "pointer", "&:focus-visible": focusRing },
+                    ...(Array.isArray(sx) ? sx : [sx]),
+                ]}
                 onClick={onClick(text)}
+                onKeyDown={(event: React.KeyboardEvent<HTMLElement>) => {
+                    // The task id sits inside clickable rows and cards: Enter / Space
+                    // copy it and stay here.
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onClick(text)(event);
+                    }
+                }}
             >
                 {prefix}
                 {text}

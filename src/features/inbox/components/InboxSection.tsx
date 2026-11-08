@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
+import { Clickable } from "../../../components/ui/Clickable";
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../i18n";
 import { InboxSectionProps } from "../types/inboxTypes";
@@ -85,7 +86,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                             const item = items[index];
                             const isSelected = selectedItemId === item.itemId;
                             return (
-                                <Box
+                                <Clickable
                                     key={`${itemKeyPrefix}-${item.itemId}`}
                                     sx={{
                                         // Narrower gutters on a phone so the
@@ -119,7 +120,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                             },
                                         },
                                     }}
-                                    onClick={() => handleItemClick(item.itemId)}
+                                    onActivate={() => handleItemClick(item.itemId)}
                                 >
                                     <InboxBubble
                                         inboxItem={item}
@@ -131,7 +132,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                         useUISM={useUISM}
                                         onItemChanged={onItemChanged}
                                     />
-                                </Box>
+                                </Clickable>
                             );
                         }}
                     />

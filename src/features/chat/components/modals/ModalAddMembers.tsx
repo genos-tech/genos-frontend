@@ -5,6 +5,7 @@ import { Alert, Box, Button, Checkbox, Chip, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { Clickable } from "../../../../components/ui/Clickable";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -323,8 +324,10 @@ export const ModalAddMembers: React.FC<Props> = ({
                     filteredMembers.map((member) => {
                         const isSelected = selectedMembers.some((m) => m.userId === member.userId);
                         return (
-                            <Box
+                            <Clickable
                                 key={member.userId}
+                                aria-checked={isSelected}
+                                role="checkbox"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -338,7 +341,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                                     },
                                     "&:last-child": { borderBottom: "none" },
                                 }}
-                                onClick={() => handleToggleMember(member)}
+                                onActivate={() => handleToggleMember(member)}
                             >
                                 <Checkbox
                                     checked={isSelected}
@@ -381,7 +384,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                                         {member.userEmail}
                                     </Typography>
                                 </Box>
-                            </Box>
+                            </Clickable>
                         );
                     })
                 )}

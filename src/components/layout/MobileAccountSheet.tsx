@@ -25,6 +25,7 @@ import { g } from "../../theme/tokens";
 import { Team, TeamProfileProps, UserProps } from "../../types/admin";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
+import { plainButtonSx } from "../ui/plainButtonStyles";
 import { SettingsModal } from "./SettingsModal";
 
 type MobileAccountSheetProps = {
@@ -183,7 +184,7 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
             >
                 <Box sx={{ p: 2 }}>
                     <Stack alignItems="center" direction="row" spacing={1.5} sx={{ mb: 1 }}>
-                        <UserAvatar showNameAndEmail size={44} userId={myself.userId} />
+                        <UserAvatar size={44} userId={myself.userId} showNameAndEmail />
                         <ModalClose sx={{ position: "static", ml: "auto" }} />
                     </Stack>
 
@@ -218,12 +219,12 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                         />
                         <RowButton
                             icon={isDark ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />}
-                            onClick={() => setMode(isDark ? "light" : "dark")}
                             label={
                                 isDark
                                     ? t.layout.mobileAccount.lightMode
                                     : t.layout.mobileAccount.darkMode
                             }
+                            onClick={() => setMode(isDark ? "light" : "dark")}
                         />
                         <RowButton
                             icon={<SettingsRoundedIcon />}
@@ -235,9 +236,9 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                         />
                         <Divider sx={{ my: 0.5 }} />
                         <RowButton
-                            danger
                             icon={<LogoutRoundedIcon />}
                             label={t.layout.mobileAccount.signOut}
+                            danger
                             onClick={() => setSignOutOpen(true)}
                         />
                     </Stack>
@@ -276,17 +277,25 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                             return (
                                 <Sheet
                                     key={team.teamId}
+                                    aria-current={isCurrent ? "true" : undefined}
+                                    aria-disabled={isCurrent || undefined}
+                                    component="button"
+                                    type="button"
                                     variant={isCurrent ? "soft" : "plain"}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        minHeight: 48,
-                                        px: 1.5,
-                                        borderRadius: "md",
-                                        cursor: "pointer",
-                                        "&:active": { opacity: 0.7 },
-                                    }}
+                                    sx={[
+                                        plainButtonSx,
+                                        {
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            minHeight: 48,
+                                            px: 1.5,
+                                            width: "100%",
+                                            borderRadius: "md",
+                                            cursor: isCurrent ? "default" : "pointer",
+                                            "&:active": { opacity: 0.7 },
+                                        },
+                                    ]}
                                     onClick={() => !isCurrent && handleSwitchTeam(team)}
                                 >
                                     <Typography level="body-md" sx={{ flex: 1, minWidth: 0 }}>

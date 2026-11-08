@@ -5,6 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Clickable } from "../../../components/ui/Clickable";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
@@ -297,7 +298,7 @@ export const TimelineView = ({
                                         : label
                                 }
                             >
-                                <Box
+                                <Clickable
                                     sx={{
                                         gridColumn: `${segment.startIndex + 1} / ${segment.endIndex + 2}`,
                                         gridRow: segment.lane + 1,
@@ -327,7 +328,7 @@ export const TimelineView = ({
                                             : `3px solid ${palette.base}`,
                                         "&:hover": { backgroundColor: palette.fillHover },
                                     }}
-                                    onClick={(ev) => {
+                                    onActivate={(ev) => {
                                         ev.stopPropagation();
                                         onEventClick(segment.event);
                                     }}
@@ -335,7 +336,7 @@ export const TimelineView = ({
                                     {segment.continuesBefore ? "← " : ""}
                                     {label}
                                     {segment.continuesAfter ? " →" : ""}
-                                </Box>
+                                </Clickable>
                             </AppTooltip>
                         );
                     })}
@@ -375,7 +376,7 @@ export const TimelineView = ({
                                                     : label
                                             }
                                         >
-                                            <Box
+                                            <Clickable
                                                 sx={{
                                                     cursor: "pointer",
                                                     backgroundColor: palette.fill,
@@ -392,13 +393,13 @@ export const TimelineView = ({
                                                         backgroundColor: palette.fillHover,
                                                     },
                                                 }}
-                                                onClick={(ev) => {
+                                                onActivate={(ev) => {
                                                     ev.stopPropagation();
                                                     onEventClick(e);
                                                 }}
                                             >
                                                 {label}
-                                            </Box>
+                                            </Clickable>
                                         </AppTooltip>
                                     );
                                 })}
@@ -510,7 +511,7 @@ export const TimelineView = ({
                                             size="sm"
                                             title={`${event.summary || "(no title)"} · ${start.format("h:mm A")}–${end.format("h:mm A")}${event._source?.account_email ? ` — ${event._source.account_email}` : ""}`}
                                         >
-                                            <Box
+                                            <Clickable
                                                 sx={{
                                                     position: "absolute",
                                                     top,
@@ -532,7 +533,7 @@ export const TimelineView = ({
                                                         backgroundColor: timedPalette.fillHover,
                                                     },
                                                 }}
-                                                onClick={(ev) => {
+                                                onActivate={(ev) => {
                                                     ev.stopPropagation();
                                                     onEventClick(event);
                                                 }}
@@ -574,7 +575,7 @@ export const TimelineView = ({
                                                         {end.format("h:mm A")}
                                                     </Box>
                                                 )}
-                                            </Box>
+                                            </Clickable>
                                         </AppTooltip>
                                     );
                                 })}
