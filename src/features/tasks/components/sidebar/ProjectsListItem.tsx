@@ -2,21 +2,10 @@ import { memo, useMemo, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import WorkIcon from "@mui/icons-material/Work";
-import {
-    Box,
-    Dropdown,
-    IconButton,
-    List,
-    ListDivider,
-    ListItem,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Dropdown, IconButton, List, ListItem, MenuButton, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { MenuDivider, MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
@@ -63,8 +52,6 @@ type ProjectsListItemProps = {
 
 export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsListItemProps) {
     const { usePM, setOpenJoinProject, useTM, useSM, useTEM, useCM, myself } = props;
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { t } = useTranslation();
 
     // --- Project-label filter + always-on sort -------------------------
@@ -162,33 +149,22 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                             )}
                                         </MenuButton>
                                     </AppTooltip>
-                                    <Menu
-                                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                    <MenuSurface
                                         placement="bottom-end"
-                                        size="sm"
-                                        sx={{
-                                            maxHeight: 320,
-                                            minWidth: 147,
-                                            overflowY: "auto",
-                                            borderRadius: "10px",
-                                        }}
+                                        sx={{ maxHeight: 320, minWidth: 147 }}
                                     >
                                         {allLabels.length === 0 ? (
-                                            <MenuItem
-                                                sx={{ fontSize: "0.8rem", opacity: 0.7 }}
-                                                disabled
-                                            >
-                                                {t.tasks.sidebar.noLabels}
-                                            </MenuItem>
+                                            <MenuRow disabled>{t.tasks.sidebar.noLabels}</MenuRow>
                                         ) : (
                                             allLabels.map((label) => {
                                                 const selected = effectiveActiveIds.includes(
                                                     label.labelId
                                                 );
                                                 return (
-                                                    <MenuItem
+                                                    <MenuRow
                                                         key={label.labelId}
-                                                        sx={{ gap: 1, fontSize: "0.8rem" }}
+                                                        mark="none"
+                                                        selected={selected}
                                                         onClick={() => toggleLabel(label.labelId)}
                                                     >
                                                         <CheckRoundedIcon
@@ -200,7 +176,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                                                 // toggle affordance reads.
                                                                 opacity: selected ? 1 : 0.25,
                                                                 color: selected
-                                                                    ? "var(--joy-palette-primary-500)"
+                                                                    ? g.accent.text
                                                                     : "inherit",
                                                             }}
                                                         />
@@ -221,23 +197,20 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                                         >
                                                             {label.name}
                                                         </Box>
-                                                    </MenuItem>
+                                                    </MenuRow>
                                                 );
                                             })
                                         )}
-                                        {filterActive && <ListDivider />}
+                                        {filterActive && <MenuDivider />}
                                         {filterActive && (
-                                            <MenuItem
-                                                sx={{
-                                                    justifyContent: "center",
-                                                    fontSize: "0.8rem",
-                                                }}
+                                            <MenuRow
+                                                sx={{ justifyContent: "center" }}
                                                 onClick={() => setActiveLabelIds([])}
                                             >
                                                 {t.tasks.sidebar.clearLabelFilter}
-                                            </MenuItem>
+                                            </MenuRow>
                                         )}
-                                    </Menu>
+                                    </MenuSurface>
                                 </Dropdown>
                             </>
                         }
