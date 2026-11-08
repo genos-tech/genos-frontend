@@ -28,11 +28,11 @@ import { TaskCommentProps } from "../../types/tasks";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
+import { countEditorLines, useChatComposer } from "./composer/useChatComposer";
 import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { useGenosEditor } from "./genos/useGenosEditor";
 
 type BnUpdateTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -106,7 +106,43 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     const dictionary = useBlockNoteDictionary();
     // Without the stored trailing blank line (MIP-1039; see bnUpdateEditor).
     const initialContent: any[] = withoutTrailingBlank(targetComment.commentBody);
-    const editor = useGenosEditor({ surface: "composer", schema, dictionary, initialContent });
+    const [numEditorLines, setNumEditorLines] = useState<number>(0);
+
+    // Edit in place, no inline uploads (no `uploads`), no draft: the shared composer pipeline
+    // for the editor, Send state and the chord; the host closes the editor itself.
+    const composer = useChatComposer({
+        schema,
+        dictionary,
+        initialContent,
+        initialCanSend: hasSendableContent(targetComment.commentBody),
+        onLinesChange: setNumEditorLines,
+        canSubmit: () => !!socket,
+        clear: "never",
+        // Save and Cmd/Ctrl+Enter both close the editor right after firing the save.
+        onSendAttempt: () => setIsInEdit(false),
+        submit: (blocks) => {
+            socket?.emit(
+                "task_comment",
+                {
+                    method_type: "PUT",
+                    project_id: projectId,
+                    project_name: projectName,
+                    task_id: taskId,
+                    // Mirrors the POST-side emit in bnTaskCommentEditor so the
+                    // derived activity broadcast carries the friendly task id.
+                    display_id: taskDisplayId,
+                    comment_id: targetComment.commentId,
+                    comment_body: withTrailingBlank(blocks),
+                    is_private: isPrivate || false,
+                },
+                () => {
+                    useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
+                    emitTaskTouched(Number(taskId), "comment");
+                }
+            );
+        },
+    });
+    const { editor } = composer;
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
@@ -128,31 +164,6 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         setShowGifPicker(false);
     };
 
-    const countLines = (nodes: any[]): number => {
-        let count = 0;
-        for (const node of nodes) {
-            count += 1; // count the current node itself
-            if (node.children?.length) {
-                count += countLines(node.children); // recursive call
-            }
-            // Guarded: image/file blocks carry no `content` array.
-            if (node.content && node.content[0]) {
-                if (node.content[0].text) {
-                    count += node.content[0].text.split("\n").length;
-                }
-            }
-            // Add lines for each image to avoid scroll issues (same
-            // heuristic as BnChatEditor).
-            if (node.type === "image") {
-                count += 10;
-            }
-        }
-        return count;
-    };
-
-    const [canSend, setCanSend] = useState<boolean>(hasSendableContent(targetComment.commentBody));
-    const [numEditorLines, setNumEditorLines] = useState<number>(0);
-
     // Mirror the local line count back up to the task page. Editor
     // height is now controlled by App.css min/max-height bounds.
     useEffect(() => {
@@ -163,8 +174,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
 
     // Initial num of lines
     useEffect(() => {
-        const comments: any[] = editor.document;
-        setNumEditorLines(countLines(comments));
+        setNumEditorLines(countEditorLines(editor.document));
     }, []);
 
     useEffect(() => {
@@ -178,32 +188,6 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             editor.replaceBlocks(editor.document, []);
         }
     }, [isInEdit, taskId]);
-
-    const updateComment = async () => {
-        if (socket) {
-            if (hasSendableContent(editor.document)) {
-                socket.emit(
-                    "task_comment",
-                    {
-                        method_type: "PUT",
-                        project_id: projectId,
-                        project_name: projectName,
-                        task_id: taskId,
-                        // Mirrors the POST-side emit in bnTaskCommentEditor so the
-                        // derived activity broadcast carries the friendly task id.
-                        display_id: taskDisplayId,
-                        comment_id: targetComment.commentId,
-                        comment_body: withTrailingBlank(editor.document),
-                        is_private: isPrivate || false,
-                    },
-                    (ack: any) => {
-                        useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
-                        emitTaskTouched(Number(taskId), "comment");
-                    }
-                );
-            }
-        }
-    };
 
     const boxRef = useRef<HTMLDivElement>(null);
     // Picker is rendered via portal into document.body with position:fixed so it
@@ -278,21 +262,12 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                             setTaskUpdated(true);
                         }
                     }}
-                    onChange={() => {
-                        const comments: any[] = editor.document;
-                        setNumEditorLines(countLines(comments));
-                        setCanSend(hasSendableContent(editor.document));
-                    }}
-                    onKeyDown={(event) => {
-                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            updateComment();
-                            setIsInEdit(false);
-                        }
-                    }}
+                    onChange={composer.viewProps.onChange}
+                    onKeyDown={composer.viewProps.onKeyDown}
                 >
                     <IconButton
                         color="success"
-                        disabled={!canSend}
+                        disabled={composer.sendDisabled}
                         size="sm"
                         variant="solid"
                         sx={{
@@ -302,10 +277,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                             zIndex: 1,
                             p: 0.7,
                         }}
-                        onClick={() => {
-                            updateComment();
-                            setIsInEdit(false);
-                        }}
+                        onClick={composer.trigger}
                     >
                         Save
                     </IconButton>

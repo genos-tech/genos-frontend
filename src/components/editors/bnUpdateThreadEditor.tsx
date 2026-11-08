@@ -30,15 +30,13 @@ import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
-import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
-import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
+import { useChatComposer } from "./composer/useChatComposer";
 import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { useGenosEditor } from "./genos/useGenosEditor";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -98,32 +96,52 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         "mount"
     );
 
-    // See `bnChatEditor` for the rationale on `useUploadCounter`.
-    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
-
-    // Per-file size cap. See `bnChatEditor` for the rationale.
-    const { rejection, dismissRejection, guardUploadFile } = useFileSizeGuard();
-
-    const uploadFile = guardUploadFile(
-        trackUpload(async (file: File) => {
-            // v3: compose-time inline upload via the channel-scoped uploader
-            // (returns an absolute URL; no `django_url` prepend). Replaces
-            // the deleted `/chat/attachment/` route.
-            return channelService.uploadInlineFile(String(message.chatId), file);
-        })
-    );
-
     const dictionary = useBlockNoteDictionary();
     // Without the stored trailing blank line, or editing shows (and saves) an
     // extra empty line at the end (MIP-1039).
     const initialContent: any[] = withoutTrailingBlank(message.content);
-    const editor = useGenosEditor({
-        surface: "composer",
+
+    // Edit in place: the shared composer pipeline with no draft and no send gate on uploads
+    // (`holdWhileUploading: false`, as before), and the host closes the editor itself.
+    const composer = useChatComposer({
         schema,
         dictionary,
-        uploadFile,
         initialContent,
+        uploads: { channelId: String(message.chatId) },
+        initialCanSend: hasSendableContent(message.content),
+        onLinesChange: setNumEditorLines,
+        holdWhileUploading: false,
+        clear: "never",
+        // Save and Cmd/Ctrl+Enter both close the editor right after firing the save.
+        onSendAttempt: () => setIsInEdit(false),
+        submit: async (blocks) => {
+            // v3 cutover. Was a `socket.emit("thread_message", PUT, ...)`
+            // plus a sibling `socket.emit("message", PUT, ...)` mirror at
+            // `messageId === 1` (the synthetic "first thread message"
+            // pattern from the legacy data model). The v3 model collapses
+            // both: thread replies and top-level messages are the same
+            // `Message` row, edits route through one `channelService.edit`
+            // emit. The server broadcasts `message.updated` and the open
+            // thread's live-update subscription picks up the new body.
+            const v3MessageId = (message as { messageIdWithChatIdAndThreadId?: string })
+                .messageIdWithChatIdAndThreadId;
+            if (!v3MessageId) {
+                return;
+            }
+            try {
+                await channelService.edit(
+                    v3MessageId,
+                    // Stored with the trailing blank line every reader expects (MIP-1039).
+                    withTrailingBlank(blocks),
+                    getFirstLine(blocks[0])
+                );
+            } catch (e) {
+                console.error("[bnUpdateThreadEditor] channelService.edit failed:", e);
+                notifyActionError(e);
+            }
+        },
     });
+    const { editor } = composer;
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
@@ -150,28 +168,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         }
     }, [selectedEmoji]);
 
-    const [canSend, setCanSend] = useState<boolean>(hasSendableContent(message.content));
-
-    const countLines = (nodes: any[]): number => {
-        let count = 0;
-        for (const node of nodes) {
-            count += 1; // count the current node itself
-            if (node.children?.length) {
-                count += countLines(node.children); // recursive call
-            }
-            if (node.content && node.content[0]) {
-                if (node.content[0].text) {
-                    count += node.content[0].text.split("\n").length;
-                }
-            }
-            // Add 30 lines for each image to avoid scroll issues.
-            if (node.type === "image") {
-                count += 10;
-            }
-        }
-        return count;
-    };
-
     useEffect(() => {
         if (isInEdit === false) {
             editor.replaceBlocks(editor.document, []);
@@ -183,37 +179,12 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         editor.replaceBlocks(editor.document, newInitialContent);
     }, [message]);
 
-    const sendUpdatedMessage = async () => {
-        if (!hasSendableContent(editor.document)) return;
-        // v3 cutover. Was a `socket.emit("thread_message", PUT, ...)`
-        // plus a sibling `socket.emit("message", PUT, ...)` mirror at
-        // `messageId === 1` (the synthetic "first thread message"
-        // pattern from the legacy data model). The v3 model collapses
-        // both: thread replies and top-level messages are the same
-        // `Message` row, edits route through one `channelService.edit`
-        // emit. The server broadcasts `message.updated` and the open
-        // thread's live-update subscription picks up the new body.
-        const v3MessageId = (message as { messageIdWithChatIdAndThreadId?: string })
-            .messageIdWithChatIdAndThreadId;
-        if (!v3MessageId) {
-            return;
-        }
-        try {
-            await channelService.edit(
-                v3MessageId,
-                // Stored with the trailing blank line every reader expects (MIP-1039).
-                withTrailingBlank(editor.document),
-                getFirstLine(editor.document[0])
-            );
-        } catch (e) {
-            console.error("[bnUpdateThreadEditor] channelService.edit failed:", e);
-            notifyActionError(e);
-        }
-    };
-
     return (
         <Box>
-            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            <FileSizeRejectionSnackbar
+                rejection={composer.rejection}
+                onDismiss={composer.dismissRejection}
+            />
             {/* Anchored so the picker's bottom edge sits right on the
                 editor's top edge (the zero-height wrapper renders directly
                 above the editor box) instead of floating over the list. */}
@@ -232,7 +203,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 onSelect={insertGif}
             />
             <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
-                <FileUploadStatusBadge count={editorUploadCount} />
+                <FileUploadStatusBadge count={composer.editorUploadCount} />
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
@@ -245,21 +216,12 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo // custom font
-                    onChange={() => {
-                        const comments: any[] = editor.document;
-                        setNumEditorLines(countLines(comments));
-                        setCanSend(hasSendableContent(editor.document));
-                    }}
-                    onKeyDown={async (event) => {
-                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            sendUpdatedMessage();
-                            setIsInEdit(false);
-                        }
-                    }}
+                    onChange={composer.viewProps.onChange}
+                    onKeyDown={composer.viewProps.onKeyDown}
                 >
                     <IconButton
                         color="success"
-                        disabled={!canSend}
+                        disabled={composer.sendDisabled}
                         size="sm"
                         variant="solid"
                         sx={{
@@ -269,10 +231,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                             zIndex: 1,
                             p: 0.7,
                         }}
-                        onClick={async () => {
-                            sendUpdatedMessage();
-                            setIsInEdit(false);
-                        }}
+                        onClick={composer.trigger}
                     >
                         Save
                     </IconButton>
