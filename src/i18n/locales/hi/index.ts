@@ -2665,6 +2665,7 @@ export const hi: DeepPartial<Messages> = {
                 critical: "गंभीर",
             },
             loadingTasks: "टास्क लोड होने की प्रतीक्षा है…",
+            gridLabel: "टास्क तालिका",
             emptyTitle: "दिखाने के लिए कोई टास्क नहीं",
             emptyHint: "अपने फ़िल्टर बदलकर देखें",
             addTagsPlaceholder: "टैग जोड़ें…",

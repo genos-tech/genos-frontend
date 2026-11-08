@@ -5096,6 +5096,7 @@ export const ja: DeepPartial<Messages> = {
                 critical: "致命的",
             },
             loadingTasks: "タスクの読み込みを待っています…",
+            gridLabel: "タスク一覧",
             emptyTitle: "表示するタスクがありません",
             emptyHint: "フィルターを調整してみてください",
             addTagsPlaceholder: "タグを追加…",

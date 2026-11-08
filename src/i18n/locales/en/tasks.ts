@@ -959,6 +959,8 @@ export const tasks = {
             critical: "Critical",
         },
         loadingTasks: "Waiting to load tasks...",
+        // Accessible name of the task table (a treegrid).
+        gridLabel: "Tasks table",
         emptyTitle: "No tasks to display",
         emptyHint: "Try adjusting your filters",
     },

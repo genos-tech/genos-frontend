@@ -242,6 +242,7 @@ export const ChipSelect = ({
     empty,
     minWidth,
     fullWidth = true,
+    autoFocus,
 }: {
     value: string;
     options: ChipSelectOption[];
@@ -255,6 +256,10 @@ export const ChipSelect = ({
     empty?: ReactNode;
     minWidth?: number;
     fullWidth?: boolean;
+    /** Focus the select on mount. The table's in-cell editor mounts open where a
+     *  button was: without this, focus is lost with the button and a keyboard
+     *  user cannot move through the open list (MIP-1230). */
+    autoFocus?: boolean;
 }) => {
     const all: ChipSelectOption[] = empty ? [{ value: "", node: empty }, ...options] : options;
 
@@ -286,6 +291,7 @@ export const ChipSelect = ({
 
     return (
         <Select
+            autoFocus={autoFocus}
             disabled={disabled}
             size="sm"
             value={value}
