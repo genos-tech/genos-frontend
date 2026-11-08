@@ -1148,7 +1148,7 @@ const Components = () => (
             </Labelled>
 
             <Labelled
-                note="One host, bottom-center, announced to screen readers. Errors are assertive; hover pauses the timer; Undo is for soft actions."
+                note="One host, bottom-center, announced to screen readers. Errors are assertive; hover pauses the timer; Undo is for soft actions. A state that stays (connection lost, a page about to reload) is pinned at the top instead, so it never covers what you are typing in."
                 title="Toast"
             >
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, p: 1.5 }}>

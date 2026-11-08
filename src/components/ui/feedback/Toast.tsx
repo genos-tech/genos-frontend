@@ -37,7 +37,16 @@ import {
  * need no setup.
  */
 
-const REGION_ID = "genos-toast-region";
+/** Where a toast lands. `bottom` is for what is over in seconds (saved, copied,
+ *  Undo); `top` is for a STATE that stays for minutes (connection lost, a page
+ *  about to reload), which must not sit on top of what the person is typing in
+ *  (MIP-1171). */
+export type ToastPlacement = "bottom" | "top";
+
+const REGION_IDS: Record<ToastPlacement, string> = {
+    bottom: "genos-toast-region",
+    top: "genos-banner-region",
+};
 
 /** Above every modal and the Spotlight layer (13300); a toast is the one
  *  thing that must never be hidden by the surface that caused it. */
@@ -50,12 +59,12 @@ const REGION_Z_INDEX = 13500;
 const LANES = { alert: "assertive", status: "polite" } as const;
 type Lane = keyof typeof LANES;
 
-const getToastRegion = (): HTMLElement | null => {
+const getToastRegion = (placement: ToastPlacement = "bottom"): HTMLElement | null => {
     if (typeof document === "undefined") return null;
-    let el = document.getElementById(REGION_ID);
+    let el = document.getElementById(REGION_IDS[placement]);
     if (!el) {
         el = document.createElement("div");
-        el.id = REGION_ID;
+        el.id = REGION_IDS[placement];
         el.setAttribute("role", "region");
         // Centered with translateX(-50%), which is direction-neutral, so the
         // same block works in `ar`. `pointer-events: none` on the region and
@@ -65,9 +74,12 @@ const getToastRegion = (): HTMLElement | null => {
             `z-index:${REGION_Z_INDEX}`,
             "left:50%",
             "transform:translateX(-50%)",
-            // On a phone, clear the tab bar (or the keyboard): the inset var
-            // already includes the home-indicator, so it is not added twice.
-            "bottom:calc(16px + var(--mobile-bottom-inset, env(safe-area-inset-bottom, 0px)))",
+            placement === "top"
+                ? // Below the notch / status bar on a phone.
+                  "top:calc(12px + env(safe-area-inset-top, 0px))"
+                : // On a phone, clear the tab bar (or the keyboard): the inset var
+                  // already includes the home-indicator, so it is not added twice.
+                  "bottom:calc(16px + var(--mobile-bottom-inset, env(safe-area-inset-bottom, 0px)))",
             "display:flex",
             "flex-direction:column",
             "gap:8px",
@@ -108,9 +120,9 @@ const laneFor = (region: HTMLElement, tone: ToastTone): HTMLElement =>
 /** Resolved on every render rather than memoized: if something clears
  *  <body>, the next render re-creates the region instead of portaling into
  *  a detached node. */
-const useToastRegion = (): HTMLElement | null => {
+const useToastRegion = (placement: ToastPlacement = "bottom"): HTMLElement | null => {
     const { t } = useTranslation();
-    const region = getToastRegion();
+    const region = getToastRegion(placement);
     const label = t.common.feedback.toast.region;
     useEffect(() => {
         region?.setAttribute("aria-label", label);
@@ -120,6 +132,11 @@ const useToastRegion = (): HTMLElement | null => {
 
 const slideIn = keyframes`
     from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+`;
+
+const slideDown = keyframes`
+    from { opacity: 0; transform: translateY(-8px); }
     to { opacity: 1; transform: translateY(0); }
 `;
 
@@ -134,6 +151,7 @@ export type ToastCloseReason = "timeout" | "dismiss" | "action";
 
 type CardProps = {
     tone: ToastTone;
+    placement?: ToastPlacement;
     duration: number | null;
     /** `undefined` = the tone's icon, `null` = none (custom content). */
     icon?: ReactNode | null;
@@ -149,6 +167,7 @@ type CardProps = {
 
 const ToastCard = ({
     tone,
+    placement = "bottom",
     duration,
     icon,
     action,
@@ -197,7 +216,7 @@ const ToastCard = ({
                 borderRadius: g.radius.md,
                 boxShadow: g.shadow.md,
                 ...type("body-sm"),
-                animation: `${slideIn} ${g.motion.base} ${g.easeOut}`,
+                animation: `${placement === "top" ? slideDown : slideIn} ${g.motion.base} ${g.easeOut}`,
                 "@media (prefers-reduced-motion: reduce)": { animation: "none" },
             }}
             onBlur={() => setPaused(false)}
@@ -269,6 +288,8 @@ const ToastCard = ({
 type ToastProps = {
     open: boolean;
     tone?: ToastTone;
+    /** `top` for a persistent state banner; default `bottom`. */
+    placement?: ToastPlacement;
     /** ms before it hides itself; `null` keeps it until closed. Default 5 s
      *  (8 s with an action, since someone has to read and decide). */
     duration?: number | null;
@@ -289,6 +310,7 @@ type ToastProps = {
 export const Toast = ({
     open,
     tone = "neutral",
+    placement = "bottom",
     duration,
     icon,
     action,
@@ -298,7 +320,7 @@ export const Toast = ({
     onClick,
     children,
 }: ToastProps) => {
-    const region = useToastRegion();
+    const region = useToastRegion(placement);
     if (!open || !region) return null;
     return createPortal(
         <ToastCard
@@ -306,6 +328,7 @@ export const Toast = ({
             actions={actions}
             dismissible={dismissible}
             icon={icon}
+            placement={placement}
             tone={tone}
             duration={
                 duration !== undefined

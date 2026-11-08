@@ -23,7 +23,7 @@ interface Props {
 export const IdleReloadSnackbar = ({ open }: Props) => {
     const { t } = useTranslation();
     return (
-        <Toast dismissible={false} duration={null} icon={null} open={open}>
+        <Toast dismissible={false} duration={null} icon={null} open={open} placement="top">
             <Typography
                 level="body-sm"
                 sx={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 1 }}

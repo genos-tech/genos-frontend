@@ -9,6 +9,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ConnectionStatusSnackbar } from "../components/layout/ConnectionStatusSnackbar";
+import { IdleReloadSnackbar } from "../components/layout/IdleReloadSnackbar";
 import { EmptyState } from "../components/ui/feedback/EmptyState";
 import { SkeletonLines, SkeletonRows, Spinner } from "../components/ui/feedback/Skeleton";
 import { TabItem, TabStrip } from "../components/ui/feedback/TabStrip";
@@ -23,6 +25,7 @@ afterEach(() => {
     cleanup();
     __resetToasts();
     document.getElementById("genos-toast-region")?.remove();
+    document.getElementById("genos-banner-region")?.remove();
     // The Arabic test switches the document to RTL; later tests must not inherit it.
     document.documentElement.dir = "ltr";
     document.documentElement.lang = "en";
@@ -111,6 +114,53 @@ describe("toast host", () => {
         // On a phone the tab bar (or the keyboard) is reserved, not covered.
         expect(style.bottom).toContain("--mobile-bottom-inset");
         expect(Number(style.zIndex)).toBeGreaterThan(13300);
+    });
+
+    it("pins a persistent state banner at the TOP, clear of the composer (MIP-1171)", () => {
+        render(
+            wrap(
+                <>
+                    <Toast duration={null} open placement="top" tone="danger">
+                        Connection lost
+                    </Toast>
+                    <Toast open>Saved</Toast>
+                </>
+            )
+        );
+        const banner = document.getElementById("genos-banner-region")!;
+        const bottom = document.getElementById("genos-toast-region")!;
+        expect(banner.textContent).toContain("Connection lost");
+        expect(bottom.textContent).not.toContain("Connection lost");
+        expect(bottom.textContent).toContain("Saved");
+        // Top-anchored, never bottom-anchored, and still above the Spotlight layer.
+        expect(banner.style.top).toContain("12px");
+        expect(banner.style.bottom).toBe("");
+        expect(Number(banner.style.zIndex)).toBeGreaterThan(13300);
+        // A failure is still announced assertively, in the banner region's own lane.
+        expect(
+            banner
+                .querySelector("[data-toast-tone]")
+                ?.closest("[aria-live]")
+                ?.getAttribute("aria-live")
+        ).toBe("assertive");
+    });
+
+    it("puts the connection and idle-reload banners in the top region", () => {
+        render(
+            wrap(
+                <I18nProvider>
+                    <ConnectionStatusSnackbar showApiDown showWsDisconnected />
+                    <IdleReloadSnackbar open />
+                </I18nProvider>
+            )
+        );
+        const banner = document.getElementById("genos-banner-region")!;
+        const { wsLost, idleReload } = getMessages().app.snackbar;
+        expect(banner.textContent).toContain(wsLost);
+        expect(banner.textContent).toContain(idleReload);
+        expect(document.getElementById("genos-toast-region")?.textContent ?? "").not.toContain(
+            wsLost
+        );
     });
 
     it("announces a failure assertively and a confirmation politely", () => {
