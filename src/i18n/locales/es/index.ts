@@ -857,6 +857,19 @@ export const es: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "No se pudieron cargar los hitos. Cierra este formulario e inténtalo de nuevo.",
             errorMilestone: "Elige un hito.",
+            paramAiSentences: "Frases de IA",
+            paramAiSentencesHint:
+                "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA. Desactívala para un informe sin IA.",
+            effortLabel: "Esfuerzo de la IA",
+            effortDefaultMark: "{level} (predeterminado)",
+            effortCostAbout: "Unos {credits} créditos por ejecución. Es una estimación.",
+            effortCostRange:
+                "Entre {from} y {to} créditos por ejecución, aproximadamente. Es una estimación.",
+            effortCostTiny: "Menos de 0.01 créditos por ejecución. Es una estimación.",
+            effortHint:
+                "Cuánto se esfuerza la IA en este informe. La estimación es para un informe de unas 10 tareas; la cifra real se muestra en cada informe.",
+            effortHeld: "Tu plan ejecuta esta programación con esfuerzo {level}.",
+            rowEffort: "Esfuerzo de la IA: {level}",
             duplicateSame: "Ya tienes una programación que hace lo mismo a la misma hora: {name}.",
             duplicateName: "Ya tienes una programación llamada {name}. Ponle otro nombre a esta.",
             suggestExists: "Ya tienes esta: {name}.",

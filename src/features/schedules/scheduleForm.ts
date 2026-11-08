@@ -17,6 +17,7 @@ import type {
     ScheduleFrequency,
     ScheduleJob,
 } from "../../services/schedules";
+import { asEffortLevel, showsEffort } from "./scheduleEffort";
 import { isRequiredParam } from "./scheduleParams";
 
 export const FREQUENCIES: ScheduleFrequency[] = ["daily", "weekdays", "weekly", "monthly", "once"];
@@ -38,6 +39,8 @@ export interface ScheduleForm {
     monthDay: string;
     runDate: string;
     deliverPush: boolean;
+    /** "" = the job's own default (MIP-1212); else the member's own level. */
+    aiEffort: string;
 }
 
 export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
@@ -50,6 +53,7 @@ export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
     monthDay: "1",
     runDate: "",
     deliverPush: false,
+    aiEffort: "",
 });
 
 /** Only the keys the job declares, as text for the inputs. */
@@ -78,6 +82,7 @@ export const formFromSchedule = (s: Schedule, jobs: ScheduleJob[]): ScheduleForm
     monthDay: s.monthDay === undefined ? "1" : String(s.monthDay),
     runDate: s.runDate ?? "",
     deliverPush: s.deliverPush,
+    aiEffort: asEffortLevel(s.aiEffort) ?? "",
 });
 
 /** "9:30" -> "09:30"; anything that is not a 24-hour time -> null. */
@@ -90,13 +95,14 @@ export const normalizeTime = (raw: string): string | null => {
     return `${String(h).padStart(2, "0")}:${m[2]}`;
 };
 
-export type ParamKind = "integer" | "enum" | "text";
+export type ParamKind = "integer" | "enum" | "boolean" | "text";
 
 /** How a declared parameter is entered: an integer (number input, min/max), a
  *  string with an enum (a select), anything else as text. The wire type
  *  follows the declared type, never the widget. */
 export const paramKind = (p: JobParam): ParamKind => {
     if (Array.isArray(p.enum) && p.enum.length > 0) return "enum";
+    if (p.type === "boolean") return "boolean";
     if (p.type === "integer" || p.type === "number") return "integer";
     return "text";
 };
@@ -106,6 +112,7 @@ export const paramKind = (p: JobParam): ParamKind => {
 const wireValue = (p: JobParam, raw: string): ParamValue | null | undefined => {
     const text = raw.trim();
     if (text === "") return undefined;
+    if (p.type === "boolean") return text === "true" ? true : text === "false" ? false : null;
     if (p.type === "integer") return /^-?\d+$/.test(text) ? Number(text) : null;
     if (p.type === "number")
         return text !== "" && Number.isFinite(Number(text)) ? Number(text) : null;
@@ -206,13 +213,17 @@ const recurrence = (form: ScheduleForm): Partial<ScheduleFields> => {
 };
 
 /** The whole schedule, for a create. */
-export const buildCreate = (form: ScheduleForm, job: ScheduleJob | undefined): ScheduleFields => ({
-    name: form.name.trim(),
-    job: form.job,
-    params: paramsFromForm(job, form.params),
-    deliverPush: form.deliverPush,
-    ...(recurrence(form) as Pick<ScheduleFields, "frequency" | "timeOfDay">),
-});
+export const buildCreate = (form: ScheduleForm, job: ScheduleJob | undefined): ScheduleFields => {
+    const effort = showsEffort(job, form.params) ? asEffortLevel(form.aiEffort) : null;
+    return {
+        name: form.name.trim(),
+        job: form.job,
+        params: paramsFromForm(job, form.params),
+        deliverPush: form.deliverPush,
+        ...(effort ? { aiEffort: effort } : {}),
+        ...(recurrence(form) as Pick<ScheduleFields, "frequency" | "timeOfDay">),
+    };
+};
 
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
@@ -234,6 +245,14 @@ export const buildPatch = (
         const params = paramsFromForm(job, form.params);
         const before = paramsFromForm(job, declaredAsText(job, original.params ?? {}));
         if (jobChanged || !same(params, before)) patch.params = params;
+    }
+
+    // The effort belongs to AI jobs only; a plain job's schedule never sends it, and neither does a
+    // form whose control is hidden (the AI switch is off): what the member cannot see is left as it
+    // was. "" goes back to the job's default (null on the wire).
+    if (showsEffort(job, form.params)) {
+        const chosen = asEffortLevel(form.aiEffort) ?? "";
+        if (chosen !== (asEffortLevel(original.aiEffort) ?? "")) patch.aiEffort = chosen || null;
     }
 
     const now = recurrence(form);

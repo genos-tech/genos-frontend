@@ -3903,6 +3903,18 @@ export const fr: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "Impossible de charger les jalons. Fermez ce formulaire et réessayez.",
             errorMilestone: "Choisissez un jalon.",
+            paramAiSentences: "Phrases de l'IA",
+            paramAiSentencesHint:
+                "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA. Désactivez-la pour un rapport simple.",
+            effortLabel: "Effort de l'IA",
+            effortDefaultMark: "{level} (par défaut)",
+            effortCostAbout: "Environ {credits} crédits par exécution. C'est une estimation.",
+            effortCostRange: "Environ {from} à {to} crédits par exécution. C'est une estimation.",
+            effortCostTiny: "Moins de 0.01 crédit par exécution. C'est une estimation.",
+            effortHint:
+                "Le degré d'effort de l'IA sur ce rapport. L'estimation vaut pour un rapport d'environ 10 tâches ; le chiffre réel est affiché sur chaque rapport.",
+            effortHeld: "Votre offre exécute cette planification au niveau « {level} ».",
+            rowEffort: "Effort de l'IA : {level}",
             duplicateSame:
                 "Vous avez déjà une planification qui fait la même chose à la même heure : {name}.",
             duplicateName:

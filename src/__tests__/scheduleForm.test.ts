@@ -62,7 +62,7 @@ describe("how a declared parameter is entered", () => {
         expect(paramKind({ type: "integer" })).toBe("integer");
         expect(paramKind({ type: "string", enum: ["a", "b"] })).toBe("enum");
         expect(paramKind({ type: "string" })).toBe("text");
-        expect(paramKind({ type: "boolean" })).toBe("text");
+        expect(paramKind({ type: "boolean" })).toBe("boolean"); // a switch (MIP-1212)
         expect(paramKind({})).toBe("text");
     });
 

@@ -222,6 +222,18 @@ export const settings = {
         milestoneNone: "There are no milestones to choose from.",
         milestoneLoadFailed: "Couldn't load the milestones. Close this form and try again.",
         errorMilestone: "Choose a milestone.",
+        paramAiSentences: "AI sentences",
+        paramAiSentencesHint:
+            "Adds one short sentence under a task when its comments explain where it stands. This uses AI. Turn it off for a plain report.",
+        effortLabel: "AI effort",
+        effortDefaultMark: "{level} (default)",
+        effortCostAbout: "About {credits} credits per run. This is an estimate.",
+        effortCostRange: "About {from} to {to} credits per run. This is an estimate.",
+        effortCostTiny: "Less than 0.01 credits per run. This is an estimate.",
+        effortHint:
+            "How hard the AI works on this report. The estimate is for a report of about 10 tasks; the real figure is shown on each report.",
+        effortHeld: "Your plan runs this schedule at {level}.",
+        rowEffort: "AI effort: {level}",
         duplicateSame:
             "You already have a schedule that does the same thing at the same time: {name}.",
         duplicateName: "You already have a schedule named {name}. Give this one another name.",

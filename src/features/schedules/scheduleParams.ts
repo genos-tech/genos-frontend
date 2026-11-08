@@ -24,6 +24,14 @@ export interface KnownParam {
     /** The catalog does not say which parameters a job requires (the server
      *  enforces it), so the one the form must not send without is named here. */
     required?: boolean;
+    /** A true/false parameter, drawn as a switch. `defaultOn`: what "not set" means, because the
+     *  catalog states no default (`ai_sentences` is on unless turned off). */
+    boolean?: { defaultOn: boolean };
+    /** This switch turns the job's AI step off: the AI effort control is hidden while it is off. */
+    aiSwitch?: boolean;
+    /** Show our own localized hint even when the server sends a description: the server's is
+     *  English only, and for the AI switch it must stay neutral about whether AI is running. */
+    preferOwnHint?: boolean;
 }
 
 export const KNOWN_PARAMS: Record<string, KnownParam> = {
@@ -38,6 +46,13 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         required: true,
     },
     hours: { label: "paramHours", hint: "paramHoursHint" },
+    ai_sentences: {
+        label: "paramAiSentences",
+        hint: "paramAiSentencesHint",
+        boolean: { defaultOn: true },
+        aiSwitch: true,
+        preferOwnHint: true,
+    },
 };
 
 // Own-property lookups only: a key that arrives from the API must never read

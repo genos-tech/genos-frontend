@@ -28,11 +28,37 @@ export interface JobParam {
     required?: boolean;
 }
 
+/** The AI effort levels (MIP-1212): the same low / medium / high Spotlight uses. */
+export type EffortLevel = "low" | "medium" | "high";
+
+/** What one run costs at one level: an ESTIMATE from the size of a typical prompt and the
+ *  catalog prices, never a measurement. Each range is [fewest, most], in thousandths of a
+ *  credit (15 = 0.015 credits). */
+export interface EffortLevelCost {
+    model?: string;
+    creditsMilli: [number, number];
+    usdMicro?: [number, number];
+}
+
+export interface EffortCost {
+    estimate: true;
+    /** English only ("a report listing 10 tasks with comments, ..."): the form writes its own. */
+    basis?: string;
+    levels: Partial<Record<EffortLevel, EffortLevelCost>>;
+}
+
 export interface ScheduleJob {
     job: string;
     title: string;
     description: string;
     params: Record<string, JobParam>;
+    /** False: the job uses no AI and the form draws no effort control. Absent on a server that
+     *  predates MIP-1212: read it as false. */
+    usesAi?: boolean;
+    /** The level the job runs at when the member chose none. Null without AI. */
+    effortDefault?: EffortLevel | null;
+    /** Null without AI. */
+    effortCost?: EffortCost | null;
 }
 
 export type ParamValue = string | number | boolean;
@@ -53,6 +79,12 @@ export interface Schedule {
     enabled: boolean;
     pausedReason?: string;
     deliverPush: boolean;
+    /** The member's own choice of effort; null = the job's default. Only on a schedule of an AI
+     *  job. */
+    aiEffort?: EffortLevel | null;
+    /** The level a run will use: the choice (or the default) held to the member's plan. Show it
+     *  when it differs from the choice. Only on a schedule of an AI job. */
+    aiEffortEffective?: EffortLevel;
     nextRun: string | null;
     lastRun: string | null;
     lastStatus: ScheduleStatus | null;
@@ -98,6 +130,8 @@ export interface ScheduleFields {
     monthDay?: number;
     runDate?: string;
     deliverPush: boolean;
+    /** AI jobs only. null goes back to the job's default; omitted leaves it alone. */
+    aiEffort?: EffortLevel | null;
 }
 
 export type ScheduleChange = Partial<ScheduleFields> & { enabled?: boolean };
