@@ -68,7 +68,7 @@ const path_ = () => screen.getByTestId("path").textContent;
 describe("BottomTabBar", () => {
     const renderBar = (start: string) => {
         window.history.replaceState({}, "", start);
-        const onOpenAccount = vi.fn();
+        const onOpenMore = vi.fn();
         render(
             <CssVarsProvider>
                 <BrowserRouter>
@@ -76,12 +76,12 @@ describe("BottomTabBar", () => {
                     <BottomTabBar
                         useCM={{ unReadChatAndActivityCounts: 0 } as never}
                         useIM={{ unReadInboxItemCount: 0 } as never}
-                        onOpenAccount={onOpenAccount}
+                        onOpenMore={onOpenMore}
                     />
                 </BrowserRouter>
             </CssVarsProvider>
         );
-        return { onOpenAccount };
+        return { onOpenMore };
     };
 
     it("a tab for another service shows the loader first and navigates a frame later", async () => {
@@ -102,10 +102,10 @@ describe("BottomTabBar", () => {
         expect(path_()).toBe("/workspace/chat");
     });
 
-    it("the Account tab opens the sheet and never starts a switch", () => {
-        const { onOpenAccount } = renderBar("/workspace/chat");
-        fireEvent.click(screen.getByText("Account"));
-        expect(onOpenAccount).toHaveBeenCalledTimes(1);
+    it("the More tab opens the sheet and never starts a switch", () => {
+        const { onOpenMore } = renderBar("/workspace/chat");
+        fireEvent.click(screen.getByText("More"));
+        expect(onOpenMore).toHaveBeenCalledTimes(1);
         expect(getServiceSwitchTarget()).toBeNull();
     });
 });
