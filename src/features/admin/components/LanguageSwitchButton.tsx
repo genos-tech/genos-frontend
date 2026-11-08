@@ -1,7 +1,8 @@
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
-import { Dropdown, IconButton, Menu, MenuButton, MenuItem } from "@mui/joy";
+import { Dropdown, IconButton, MenuButton } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { MenuRow, MenuSurface } from "../../../components/ui/MoreMenu";
 import { useTranslation, type Locale } from "../../../i18n";
 
 const LANGUAGE_OPTIONS: ReadonlyArray<{
@@ -44,17 +45,17 @@ export const LanguageSwitchButton = ({ color }: LanguageSwitchButtonProps) => {
                     <LanguageRoundedIcon />
                 </MenuButton>
             </AppTooltip>
-            <Menu placement="bottom-end" size="sm">
+            <MenuSurface placement="bottom-end">
                 {LANGUAGE_OPTIONS.map((option) => (
-                    <MenuItem
+                    <MenuRow
                         key={option.locale}
                         selected={locale === option.locale}
                         onClick={() => setLocale(option.locale)}
                     >
                         {t.settings.language[option.labelKey]}
-                    </MenuItem>
+                    </MenuRow>
                 ))}
-            </Menu>
+            </MenuSurface>
         </Dropdown>
     );
 };

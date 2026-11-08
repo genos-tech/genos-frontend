@@ -1,8 +1,9 @@
 import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRounded from "@mui/icons-material/NotificationsOffRounded";
-import { IconButton, MenuItem } from "@mui/joy";
+import { IconButton } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { MenuRow } from "../../components/ui/MoreMenu";
 import { useTranslation } from "../../i18n";
 import { useNotificationsContext } from "./NotificationsContext";
 
@@ -68,7 +69,7 @@ export const MuteToggleButton = ({
 
 /**
  * Same per-chat mute toggle as `MuteToggleButton`, rendered as a
- * `<MenuItem>` for an overflow menu instead of a standalone icon button.
+ * `<MenuRow>` for an overflow menu instead of a standalone icon button.
  * Used on the mobile chat header, where the ToDo action takes the visible
  * icon slot and mute moves into the overflow "…" menu.
  */
@@ -97,13 +98,12 @@ export const MuteMenuItem = ({
     };
 
     return (
-        <MenuItem aria-label={label} onClick={handleClick}>
-            {muted ? (
-                <NotificationsOffRounded sx={{ fontSize: 18 }} />
-            ) : (
-                <NotificationsActiveRounded sx={{ fontSize: 18 }} />
-            )}
+        <MenuRow
+            aria-label={label}
+            icon={muted ? <NotificationsOffRounded /> : <NotificationsActiveRounded />}
+            onClick={handleClick}
+        >
             {label}
-        </MenuItem>
+        </MenuRow>
     );
 };
