@@ -21,7 +21,6 @@ import {
     IconButton,
     Input,
     Stack,
-    Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Handle, Position } from "@xyflow/react";
