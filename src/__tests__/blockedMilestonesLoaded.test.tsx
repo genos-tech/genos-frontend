@@ -150,15 +150,20 @@ describe("SprintMilestonePicker with a Blocked milestone", () => {
         fireEvent.keyDown(milestoneInput, { key: "ArrowDown" });
     };
 
-    it("lists both Blocked milestones with a danger status chip", () => {
+    it("lists both Blocked milestones with the table's Blocked label (red icon, the word)", () => {
         renderPicker();
         for (const name of [/Beta launch/, /Carry-over/]) {
             const option = screen.getByRole("option", { name });
-            const chip = [...option.querySelectorAll(".MuiChip-root")].find(
-                (el) => el.textContent === "Blocked"
-            );
-            expect(chip, `status chip in ${String(name)}`).toBeTruthy();
-            expect(chip?.className).toContain("MuiChip-colorDanger");
+            const word = option.querySelector("[data-status-word]");
+            expect(word?.textContent, `status in ${String(name)}`).toBe("Blocked");
+            // The icon carries the status color; no filled Chip says it.
+            const icon = word?.previousElementSibling as HTMLElement;
+            expect(icon.style.color).toBe("var(--g-danger-text)");
+            expect(
+                [...option.querySelectorAll(".MuiChip-root")].filter(
+                    (el) => el.textContent === "Blocked"
+                )
+            ).toHaveLength(0);
         }
     });
 });
