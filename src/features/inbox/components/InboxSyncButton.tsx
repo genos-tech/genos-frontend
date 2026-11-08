@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { CircularProgress, IconButton } from "@mui/joy";
+import { IconButton } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { toast } from "../../../components/ui/feedback/toastStore";
 import { fmt, useTranslation } from "../../../i18n";
 import { focusRing } from "../../../theme/tokens";
@@ -63,11 +64,9 @@ export const InboxSyncButton = () => {
                 onClick={() => void sync()}
             >
                 {syncing ? (
-                    <CircularProgress
-                        size="sm"
-                        thickness={2}
-                        sx={{ "--CircularProgress-size": "18px" }}
-                    />
+                    // Not the Button `loading` prop: that disables the button, and this one is
+                    // busy-not-disabled on purpose (see above).
+                    <Spinner />
                 ) : (
                     <RefreshRoundedIcon sx={{ fontSize: 18 }} />
                 )}
