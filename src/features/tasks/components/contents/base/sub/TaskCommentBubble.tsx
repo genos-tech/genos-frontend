@@ -455,6 +455,14 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         </Stack>
     );
 
+    const senderAvatar = (
+        <UserAvatar
+            fallbackName={comment.senderName}
+            showPulseDot={false}
+            userId={comment.senderId}
+        />
+    );
+
     // One frame for both looks of the bubble-style preference. The toolbar
     // (quick emoji, edit, more menu) stays mounted while the ⋮ menu is open.
     // The keyed remount on `tsUpdated` is the bubble look's (as before).
@@ -462,7 +470,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         <Bubble
             key={isCompact ? undefined : `${comment.commentId}-${comment.tsUpdated}`}
             actionsOpen={showToolbarActions}
-            avatar={<UserAvatar showPulseDot={false} userId={comment.senderId} />}
+            avatar={senderAvatar}
             bodyOffset={isCompact ? 0.25 : 0.5}
             emphasis={isFocused ? "focused" : false}
             footer={reactionsDisplay}

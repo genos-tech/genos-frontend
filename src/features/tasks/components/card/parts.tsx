@@ -175,13 +175,22 @@ export const DueText = ({
  *  clickable: the surface around it is what opens the task. */
 export const AssigneeAvatar = ({
     userId,
+    name,
     size = "sm",
 }: {
     userId: string | number | null | undefined;
+    /** The stored assignee name, for the initial while the roster is still loading. */
+    name?: string | null;
     size?: "xs" | "sm";
 }) =>
     userId != null && userId !== "" ? (
-        <UserAvatar clickable={false} showPulseDot={false} size={size} userId={userId} />
+        <UserAvatar
+            clickable={false}
+            fallbackName={name}
+            showPulseDot={false}
+            size={size}
+            userId={userId}
+        />
     ) : (
         <BaseAvatar
             aria-hidden="true"

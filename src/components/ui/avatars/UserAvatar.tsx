@@ -34,9 +34,18 @@ type UserAvatarProps = {
     /**
      * Optional initial override (e.g. chat-name initials in GM/PM bubbles
      * where the avatar represents the chat itself, not a single user).
-     * When unset, falls back to the user's name -> email -> "?".
+     * When unset, falls back to the user's name -> email -> `fallbackName` -> "?".
      */
     fallbackInitial?: string;
+    /**
+     * The name the surrounding row already shows for this person (a stored
+     * `assigneeName`, `sender.userName`, a DM's partner name). The roster that
+     * `userId` resolves through loads lazily, so for its first moments there
+     * is no profile, and without this the avatar read "?" next to a name that
+     * is printed right beside it (MIP-1244). The live profile still wins once
+     * it arrives; this only fills the gap.
+     */
+    fallbackName?: string | null;
 };
 
 // Empty / null / undefined path -> `undefined` so the browser does not
@@ -53,9 +62,10 @@ const buildSrc = (path: string | null | undefined): string | undefined => {
 const buildInitial = (
     fallbackInitial: string | undefined,
     userName: string | undefined,
-    userEmail: string | undefined
+    userEmail: string | undefined,
+    fallbackName: string | null | undefined
 ): string => {
-    const candidates = [fallbackInitial, userName, userEmail];
+    const candidates = [fallbackInitial, userName, userEmail, fallbackName];
     for (const candidate of candidates) {
         if ((candidate ?? "").trim().length > 0) return initialOf(candidate);
     }
@@ -70,6 +80,7 @@ const UserAvatarInner = (props: UserAvatarProps) => {
         showNameAndEmail,
         showPulseDot = true,
         fallbackInitial,
+        fallbackName,
     } = props;
 
     const ctx = useAvatarContext();
@@ -109,10 +120,12 @@ const UserAvatarInner = (props: UserAvatarProps) => {
             buildInitial(
                 fallbackInitial,
                 isYou ? ctx.myself.userName : profile?.userName,
-                isYou ? ctx.myself.userEmail : profile?.userEmail
+                isYou ? ctx.myself.userEmail : profile?.userEmail,
+                fallbackName
             ),
         [
             fallbackInitial,
+            fallbackName,
             isYou,
             ctx.myself.userName,
             ctx.myself.userEmail,

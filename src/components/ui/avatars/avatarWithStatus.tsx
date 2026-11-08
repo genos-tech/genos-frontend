@@ -94,6 +94,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         <UserAvatar
             clickable={clickable}
             fallbackInitial={fallbackInitial}
+            fallbackName={avatarUser?.userName}
             showNameAndEmail={showNameAndEmail}
             showPulseDot={showPulseDot}
             size={avatarSize}

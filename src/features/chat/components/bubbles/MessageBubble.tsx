@@ -612,7 +612,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             "reserve"
         ) : undefined
     ) : (
-        <UserAvatar userId={isSent ? myself.userId : message.sender.userId} />
+        <UserAvatar
+            fallbackName={isSent ? myself.userName : message.sender.userName}
+            userId={isSent ? myself.userId : message.sender.userId}
+        />
     );
 
     return (

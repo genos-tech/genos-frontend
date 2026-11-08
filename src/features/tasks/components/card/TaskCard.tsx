@@ -276,7 +276,11 @@ export const TaskCard = ({
                         <Box
                             sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}
                         >
-                            <AssigneeAvatar size="xs" userId={task.assigneeId} />
+                            <AssigneeAvatar
+                                name={task.assigneeName}
+                                size="xs"
+                                userId={task.assigneeId}
+                            />
                             <Box
                                 component="span"
                                 sx={{
