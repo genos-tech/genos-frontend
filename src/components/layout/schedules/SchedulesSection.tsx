@@ -5,6 +5,7 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../context/AuthContext";
+import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import {
     formatMoment,
     STATUS_KEYS,
@@ -30,6 +31,9 @@ import { ScheduleFormPanel } from "./ScheduleFormPanel";
 type Props = {
     /** The team on screen. Every call carries it. */
     teamId: string;
+    /** Draw the "Schedules" heading row. A host that already titles the panel (the Genos
+     *  page's dialog) turns it off so the word does not appear twice. */
+    showHeading?: boolean;
 };
 
 type Mode = { kind: "new" } | { kind: "edit"; id: string } | null;
@@ -48,7 +52,7 @@ type RunNotice =
     | { kind: "refused"; error: string };
 
 /**
- * Settings → Schedules (MIP-1150): the member's own "at this local time, on
+ * Settings → Schedules (MIP-1150), also opened from the Genos page (MIP-1200): the member's own "at this local time, on
  * these days, run this report" rules. The report lands in the Inbox; this page
  * only creates, edits, pauses, runs and deletes the rules.
  *
@@ -58,7 +62,7 @@ type RunNotice =
  * Deleting asks first, in the page, because a browser confirm dialog is not
  * available inside every host this runs in.
  */
-export const SchedulesSection = ({ teamId }: Props) => {
+export const SchedulesSection = ({ teamId, showHeading = true }: Props) => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const s = t.settings.schedules;
@@ -206,6 +210,7 @@ export const SchedulesSection = ({ teamId }: Props) => {
 
     const form = (existing: Schedule | null) => (
         <ScheduleFormPanel
+            existing={schedules}
             jobs={data?.jobs ?? []}
             schedule={existing}
             timeZone={zone}
@@ -216,10 +221,12 @@ export const SchedulesSection = ({ teamId }: Props) => {
 
     return (
         <Stack data-testid="schedules-section" spacing={1.5} sx={{ minWidth: 0 }}>
-            <Stack alignItems="center" direction="row" spacing={1}>
-                <EventRepeatRoundedIcon sx={{ fontSize: 18 }} />
-                <Typography level="title-md">{s.title}</Typography>
-            </Stack>
+            {showHeading && (
+                <Stack alignItems="center" direction="row" spacing={1}>
+                    <EventRepeatRoundedIcon sx={{ fontSize: 18 }} />
+                    <Typography level="title-md">{s.title}</Typography>
+                </Stack>
+            )}
             <Typography level="body-sm" sx={{ color: g.text.secondary }}>
                 {s.blurb}
             </Typography>
@@ -277,6 +284,18 @@ export const SchedulesSection = ({ teamId }: Props) => {
                     </Typography>
                     {suggestions.map((sug) => {
                         const known = SUGGESTION_TEXT[sug.key as keyof typeof SUGGESTION_TEXT];
+                        // The member may already have it under the same name or doing the same
+                        // at the same time (the API says so too; this is the instant answer).
+                        const have = findDuplicate(
+                            {
+                                name: known ? s[known.name] : sug.name,
+                                job: sug.job,
+                                params: sug.params,
+                                frequency: sug.frequency,
+                                timeOfDay: sug.timeOfDay,
+                            },
+                            schedules
+                        );
                         return (
                             <Sheet
                                 key={sug.key}
@@ -302,10 +321,18 @@ export const SchedulesSection = ({ teamId }: Props) => {
                                             ? fmt(s.suggestDaily, { time: sug.timeOfDay })
                                             : sug.timeOfDay}
                                     </Typography>
+                                    {have && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: g.text.secondary }}
+                                        >
+                                            {fmt(s.suggestExists, { name: have.schedule.name })}
+                                        </Typography>
+                                    )}
                                 </Stack>
                                 <Button
                                     color="neutral"
-                                    disabled={atLimit || adding !== null}
+                                    disabled={atLimit || adding !== null || !!have}
                                     loading={adding === sug.key}
                                     size="sm"
                                     startDecorator={<AddRoundedIcon />}

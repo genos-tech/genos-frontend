@@ -914,7 +914,7 @@ export const hi: DeepPartial<Messages> = {
                 "एजेंट को जवाब देते समय वेब ब्राउज़ करने दें। इसके लिए AI जवाब चालू होना ज़रूरी है।",
         },
         schedules: {
-            title: "शेड्यूल",
+            title: "Genos Assist शेड्यूल",
             blurb: "Genos आपके चुने हुए समय पर आपके लिए रिपोर्ट तैयार करता है; वह आपके इनबॉक्स में पहुँचती है।",
             loading: "आपके शेड्यूल लोड हो रहे हैं…",
             loadFailed: "आपके शेड्यूल लोड नहीं हो सके।",
@@ -997,6 +997,37 @@ export const hi: DeepPartial<Messages> = {
             errorWeekdays: "कम से कम एक दिन चुनें।",
             errorMonthDay: "1 से 31 के बीच का दिन चुनें।",
             errorRunDate: "एक तारीख़ चुनें।",
+            shortTitle: "Assist शेड्यूल",
+            paramChangedHours: "कितना पीछे देखें (घंटे)",
+            paramChangedHoursHint:
+                "पिछले N घंटों{range} के बदलाव दिखाएँ। खाली छोड़ने पर पिछले 24 घंटे।",
+            paramProject: "प्रोजेक्ट",
+            paramProjectHint:
+                "रिपोर्ट को एक प्रोजेक्ट तक सीमित करें। सभी प्रोजेक्ट पर छोड़ने से वह सब शामिल होगा जो आप देख सकते हैं।",
+            paramDay: "दिन",
+            paramDayHint: "किस दिन का सार चाहिए। खाली छोड़ने पर आज।",
+            paramDays: "कितना पीछे देखें (दिन)",
+            paramDaysHint:
+                "पिछले N दिनों{range} में आपने जो किया, उसे शामिल करें। खाली छोड़ने पर पिछले 7 दिन।",
+            paramMilestone: "माइलस्टोन",
+            paramMilestoneHint: "यह रिपोर्ट जिस माइलस्टोन को फ़ॉलो करती है। ज़रूरी।",
+            paramHours: "कितना पीछे देखें (घंटे)",
+            paramHoursHint:
+                "पिछले N घंटों{range} के बदलाव दिखाएँ। खाली छोड़ने पर पिछले 168 घंटे (एक सप्ताह)।",
+            paramRangeNote: " ({min} से {max})",
+            paramDayToday: "आज",
+            paramDayYesterday: "कल",
+            allProjects: "सभी प्रोजेक्ट",
+            unavailable: "(उपलब्ध नहीं)",
+            milestonePlaceholder: "माइलस्टोन चुनें",
+            milestoneLoading: "माइलस्टोन लोड हो रहे हैं…",
+            milestoneNone: "चुनने के लिए कोई माइलस्टोन नहीं है।",
+            milestoneLoadFailed:
+                "माइलस्टोन लोड नहीं हो सके। यह फ़ॉर्म बंद करके दोबारा कोशिश करें।",
+            errorMilestone: "एक माइलस्टोन चुनें।",
+            duplicateSame: "आपके पास पहले से एक शेड्यूल है जो उसी समय वही काम करता है: {name}।",
+            duplicateName: "आपके पास पहले से {name} नाम का एक शेड्यूल है। इसे कोई दूसरा नाम दें।",
+            suggestExists: "यह आपके पास पहले से है: {name}।",
         },
         genosMemory: {
             entryHeading: "Genos क्या याद रखता है",

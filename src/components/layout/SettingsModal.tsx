@@ -1788,6 +1788,9 @@ export const SettingsModal = ({
     // sessions. Default to "general" because it holds the broadest
     // app-wide preferences (appearance, language, privacy).
     const [tab, setTab] = useState<SettingsTabKey>("general");
+    // The team the Genos tab works in (its memory page and its schedules).
+    const genosTeamId =
+        useTEM?.currentTeamId || myself?.teamId || localStorage.getItem("teamId") || "";
     return (
         <ModalFrame
             icon={<SettingsRoundedIcon />}
@@ -1928,16 +1931,20 @@ export const SettingsModal = ({
                             jump to General because this dialog owns the
                             tab state. */}
                         <GenosSettingsPanel
-                            teamId={
-                                useTEM?.currentTeamId ||
-                                myself?.teamId ||
-                                localStorage.getItem("teamId") ||
-                                ""
-                            }
+                            teamId={genosTeamId}
                             onOpenLanguageSettings={() => setTab("general")}
                         >
                             <LlmModelSection />
                             <SpotlightSection />
+                            {/* Genos Assist Schedules (MIP-1200): the member's own
+                                morning plan, recaps and reports live with the
+                                rest of Genos, not under Developer. */}
+                            <Sheet
+                                sx={{ p: 2, borderRadius: "lg", minWidth: 0 }}
+                                variant="outlined"
+                            >
+                                <SchedulesSection teamId={genosTeamId} />
+                            </Sheet>
                         </GenosSettingsPanel>
                     </TabPanel>
                     <TabPanel sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }} value="chat">
@@ -2052,14 +2059,6 @@ export const SettingsModal = ({
                     >
                         <Stack spacing={2}>
                             <ConnectedAppsSection />
-                            <SchedulesSection
-                                teamId={
-                                    useTEM?.currentTeamId ||
-                                    myself?.teamId ||
-                                    localStorage.getItem("teamId") ||
-                                    ""
-                                }
-                            />
                             <DeveloperSettingsSection teamId={localStorage.getItem("teamId")} />
                         </Stack>
                     </TabPanel>

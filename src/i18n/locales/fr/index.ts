@@ -3699,7 +3699,7 @@ export const fr: DeepPartial<Messages> = {
                 "Autoriser l'agent à naviguer sur le web pour répondre. Nécessite l'activation des réponses IA.",
         },
         schedules: {
-            title: "Planifications",
+            title: "Planifications Genos Assist",
             blurb: "Genos vous prépare un rapport aux heures que vous choisissez ; il arrive dans votre boîte de réception.",
             loading: "Chargement de vos planifications…",
             loadFailed: "Impossible de charger vos planifications.",
@@ -3783,6 +3783,39 @@ export const fr: DeepPartial<Messages> = {
             errorWeekdays: "Choisissez au moins un jour.",
             errorMonthDay: "Choisissez un jour de 1 à 31.",
             errorRunDate: "Choisissez une date.",
+            shortTitle: "Planifications Assist",
+            paramChangedHours: "Remonter dans le temps (heures)",
+            paramChangedHoursHint:
+                "Affiche les changements des N dernières heures{range}. Laissez vide pour les 24 dernières.",
+            paramProject: "Projet",
+            paramProjectHint:
+                "Limite le rapport à un projet. Laissez sur Tous les projets pour inclure tout ce que vous pouvez voir.",
+            paramDay: "Jour",
+            paramDayHint: "Quel jour résumer. Laissez vide pour aujourd’hui.",
+            paramDays: "Remonter dans le temps (jours)",
+            paramDaysHint:
+                "Inclut ce que vous avez fait ces N derniers jours{range}. Laissez vide pour les 7 derniers.",
+            paramMilestone: "Jalon",
+            paramMilestoneHint: "Le jalon que suit ce rapport. Obligatoire.",
+            paramHours: "Remonter dans le temps (heures)",
+            paramHoursHint:
+                "Affiche les changements des N dernières heures{range}. Laissez vide pour les 168 dernières (une semaine).",
+            paramRangeNote: " ({min} à {max})",
+            paramDayToday: "Aujourd’hui",
+            paramDayYesterday: "Hier",
+            allProjects: "Tous les projets",
+            unavailable: "(indisponible)",
+            milestonePlaceholder: "Choisir un jalon",
+            milestoneLoading: "Chargement des jalons…",
+            milestoneNone: "Aucun jalon à choisir.",
+            milestoneLoadFailed:
+                "Impossible de charger les jalons. Fermez ce formulaire et réessayez.",
+            errorMilestone: "Choisissez un jalon.",
+            duplicateSame:
+                "Vous avez déjà une planification qui fait la même chose à la même heure : {name}.",
+            duplicateName:
+                "Vous avez déjà une planification nommée {name}. Donnez un autre nom à celle-ci.",
+            suggestExists: "Vous avez déjà celle-ci : {name}.",
         },
         genosMemory: {
             entryHeading: "Ce dont Genos se souvient",

@@ -15,6 +15,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import {
     buildCreate,
     buildPatch,
@@ -30,6 +31,11 @@ import {
     WEEKDAY_NUMBERS,
 } from "../../../features/schedules/scheduleForm";
 import { humanizeKey, weekdayName } from "../../../features/schedules/scheduleFormat";
+import {
+    enumLabelKey,
+    isRequiredParam,
+    knownParam,
+} from "../../../features/schedules/scheduleParams";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { fmt, useTranslation } from "../../../i18n";
 import type {
@@ -40,11 +46,14 @@ import type {
     ScheduleResult,
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
+import { MilestoneParamSelect, ProjectParamSelect } from "./ScheduleParamPickers";
 
 type Props = {
     /** The schedule being edited; null to create one. */
     schedule: Schedule | null;
     jobs: ScheduleJob[];
+    /** The member's schedules on screen, for the instant "you already have this" check. */
+    existing?: Schedule[];
     timeZone: string;
     /** Resolves with the server's verdict; the panel shows its sentence. */
     onSubmit: (body: ScheduleFields | ScheduleChange) => Promise<ScheduleResult<object>>;
@@ -70,7 +79,14 @@ const FREQUENCY_KEYS = {
  * which shows 12-hour in some browser locales and the zone beside it must be
  * unambiguous.
  */
-export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel }: Props) => {
+export const ScheduleFormPanel = ({
+    schedule,
+    jobs,
+    existing = [],
+    timeZone,
+    onSubmit,
+    onCancel,
+}: Props) => {
     const { t, locale } = useTranslation();
     const s = t.settings.schedules;
 
@@ -96,11 +112,44 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
         [form, job, keepsUnknownJob]
     );
     const show = touched && hasProblems(problems);
+    // The form as it opened, to tell "the member changed something" from "the form is
+    // simply what it opened as" (the default new form is often a copy of Morning plan).
+    const [initialForm] = useState(form);
+    const dirty = JSON.stringify(form) !== JSON.stringify(initialForm);
+    // The API refuses a duplicate with a sentence of its own (shown below if it
+    // gets that far); this is the same question asked of the list on screen, so the
+    // answer comes while typing. Only for a form that is otherwise valid, and for an
+    // edit only when the change CREATES the duplicate: two schedules that already
+    // look alike must stay editable (pause, push, time) without the first one flagged.
+    const duplicateNow = useMemo(() => {
+        if (hasProblems(problems)) return null;
+        const found = findDuplicate(buildCreate(form, job), existing, schedule?.id);
+        if (!found || !schedule) return found;
+        const before = findDuplicate(
+            buildCreate(
+                formFromSchedule(schedule, jobs),
+                jobs.find((j) => j.job === schedule.job)
+            ),
+            existing,
+            schedule.id
+        );
+        return before?.kind === found.kind && before.schedule.id === found.schedule.id
+            ? null
+            : found;
+    }, [problems, form, job, jobs, existing, schedule]);
+    // Shown (and blocking) once the member has changed the form or tried to save it.
+    const duplicate = dirty || touched ? duplicateNow : null;
 
-    const set = <K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K]) =>
+    // Any edit makes the API's last refusal stale, so it goes: what it said was about the
+    // form as it was sent, and left up it would sit beside the instant checks as a second,
+    // older opinion.
+    const set = <K extends keyof ScheduleForm>(key: K, value: ScheduleForm[K]) => {
+        setFailure(null);
         setForm((cur) => ({ ...cur, [key]: value }));
+    };
 
-    const pickJob = (next: string) =>
+    const pickJob = (next: string) => {
+        setFailure(null);
         setForm((cur) => {
             const prev = jobs.find((j) => j.job === cur.job);
             const nextJob = jobs.find((j) => j.job === next);
@@ -113,6 +162,7 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
                 name: follows ? (nextJob?.title ?? cur.name) : cur.name,
             };
         });
+    };
 
     const toggleDay = (day: number) =>
         set(
@@ -137,7 +187,8 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
             setRefused((n) => n + 1);
             return;
         }
-        if (busy) return;
+        // An unchanged form that is a copy: say so here instead of asking the API.
+        if (duplicateNow || busy) return;
         setBusy(true);
         setFailure(null);
         const res = await onSubmit(
@@ -160,7 +211,10 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
             <Stack spacing={1.5} sx={{ minWidth: 0 }}>
                 <Typography level="title-sm">{schedule ? s.formEdit : s.formNew}</Typography>
 
-                <FormControl error={show && !!problems.name} sx={{ minWidth: 0 }}>
+                <FormControl
+                    error={(show && !!problems.name) || duplicate?.kind === "name"}
+                    sx={{ minWidth: 0 }}
+                >
                     <FormLabel>{s.name}</FormLabel>
                     <Input
                         placeholder={s.namePlaceholder}
@@ -178,6 +232,11 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
                             {problems.name === "required"
                                 ? s.errorNameRequired
                                 : fmt(s.errorNameTooLong, { max: NAME_MAX })}
+                        </FormHelperText>
+                    )}
+                    {duplicate?.kind === "name" && (
+                        <FormHelperText>
+                            {fmt(s.duplicateName, { name: duplicate.schedule.name })}
                         </FormHelperText>
                     )}
                 </FormControl>
@@ -209,31 +268,65 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
                         <Typography level="title-sm">{s.options}</Typography>
                         {Object.entries(job.params).map(([key, spec]) => {
                             const kind = paramKind(spec);
+                            const known = knownParam(key);
                             const problem = show ? problems.params[key] : undefined;
+                            const required = isRequiredParam(key, spec);
                             const range =
                                 spec.minimum !== undefined && spec.maximum !== undefined
-                                    ? fmt(s.paramRange, { min: spec.minimum, max: spec.maximum })
-                                    : null;
+                                    ? fmt(s.paramRangeNote, {
+                                          min: spec.minimum,
+                                          max: spec.maximum,
+                                      })
+                                    : "";
+                            // A label or hint the server sends wins; then the plain one for the
+                            // built-in jobs; then the one made from the key.
+                            const label =
+                                spec.title || (known ? s[known.label] : humanizeKey(key));
+                            const hint =
+                                spec.description ||
+                                (known
+                                    ? fmt(s[known.hint], { range })
+                                    : kind === "integer" && range
+                                      ? fmt(s.paramRange, {
+                                            min: spec.minimum ?? "",
+                                            max: spec.maximum ?? "",
+                                        })
+                                      : null);
+                            const setParam = (v: string) =>
+                                set("params", { ...form.params, [key]: v });
                             return (
-                                <FormControl key={key} error={!!problem} sx={{ minWidth: 0 }}>
-                                    <FormLabel>{spec.title || humanizeKey(key)}</FormLabel>
-                                    {kind === "enum" ? (
+                                <FormControl
+                                    key={key}
+                                    error={!!problem}
+                                    required={required}
+                                    sx={{ minWidth: 0 }}
+                                >
+                                    <FormLabel>{label}</FormLabel>
+                                    {known?.picker === "project" ? (
+                                        <ProjectParamSelect
+                                            value={form.params[key] ?? ""}
+                                            onChange={setParam}
+                                        />
+                                    ) : known?.picker === "milestone" ? (
+                                        <MilestoneParamSelect
+                                            value={form.params[key] ?? ""}
+                                            onChange={setParam}
+                                        />
+                                    ) : kind === "enum" ? (
                                         <Select
                                             placeholder={s.paramDefault}
                                             sx={{ minWidth: 0 }}
                                             value={form.params[key] || null}
-                                            onChange={(_, v) =>
-                                                set("params", {
-                                                    ...form.params,
-                                                    [key]: v ?? "",
-                                                })
-                                            }
+                                            onChange={(_, v) => setParam(v ?? "")}
                                         >
-                                            {(spec.enum ?? []).map((v) => (
-                                                <Option key={String(v)} value={String(v)}>
-                                                    {humanizeKey(String(v))}
-                                                </Option>
-                                            ))}
+                                            {(spec.enum ?? []).map((v) => {
+                                                const text = enumLabelKey(String(v));
+                                                return (
+                                                    <Option key={String(v)} value={String(v)}>
+                                                        {text ? s[text] : humanizeKey(String(v))}
+                                                    </Option>
+                                                );
+                                            })}
                                         </Select>
                                     ) : (
                                         <Input
@@ -254,29 +347,28 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
                                                               spellCheck: false,
                                                           },
                                             }}
-                                            onChange={(e) =>
-                                                set("params", {
-                                                    ...form.params,
-                                                    [key]: e.target.value,
-                                                })
-                                            }
+                                            onChange={(e) => setParam(e.target.value)}
                                         />
                                     )}
-                                    {(spec.description || (kind === "integer" && range)) && (
+                                    {hint && (
                                         <FormHelperText sx={{ color: g.text.secondary }}>
-                                            {spec.description || range}
+                                            {hint}
                                         </FormHelperText>
                                     )}
                                     {problem && (
                                         <FormHelperText>
-                                            {problem === "range" &&
-                                            spec.minimum !== undefined &&
-                                            spec.maximum !== undefined
-                                                ? fmt(s.errorParamRange, {
-                                                      min: spec.minimum,
-                                                      max: spec.maximum,
-                                                  })
-                                                : s.errorParam}
+                                            {problem === "required"
+                                                ? known?.picker === "milestone"
+                                                    ? s.errorMilestone
+                                                    : s.errorRequired
+                                                : problem === "range" &&
+                                                    spec.minimum !== undefined &&
+                                                    spec.maximum !== undefined
+                                                  ? fmt(s.errorParamRange, {
+                                                        min: spec.minimum,
+                                                        max: spec.maximum,
+                                                    })
+                                                  : s.errorParam}
                                         </FormHelperText>
                                     )}
                                 </FormControl>
@@ -415,6 +507,12 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
                     <FormLabel sx={{ m: 0 }}>{s.push}</FormLabel>
                 </FormControl>
 
+                {duplicate?.kind === "same" && (
+                    <Alert color="warning" role="status" size="sm">
+                        {fmt(s.duplicateSame, { name: duplicate.schedule.name })}
+                    </Alert>
+                )}
+
                 {failure && (
                     <Alert color="danger" role="alert" size="sm">
                         {failure}
@@ -422,7 +520,7 @@ export const ScheduleFormPanel = ({ schedule, jobs, timeZone, onSubmit, onCancel
                 )}
 
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
-                    <Button loading={busy} size="sm" type="submit">
+                    <Button disabled={!!duplicate} loading={busy} size="sm" type="submit">
                         {schedule ? s.save : s.create}
                     </Button>
                     <Button
