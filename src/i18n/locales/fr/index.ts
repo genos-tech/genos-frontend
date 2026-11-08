@@ -4117,6 +4117,8 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "Navigation principale",
+        unreadTab: "{label}, {count} non lus",
         nav: {
             inbox: "Réception",
             chats: "Chats",

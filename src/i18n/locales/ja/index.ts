@@ -4061,6 +4061,8 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "メインナビゲーション",
+        unreadTab: "{label}、未読 {count} 件",
         nav: {
             inbox: "受信箱",
             chats: "チャット",

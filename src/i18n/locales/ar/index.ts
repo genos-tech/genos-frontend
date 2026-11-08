@@ -370,6 +370,8 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "التنقل الرئيسي",
+        unreadTab: "{label}، {count} غير مقروءة",
         nav: {
             inbox: "الوارد",
             chats: "المحادثات",

@@ -3915,6 +3915,8 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "主导航",
+        unreadTab: "{label}，{count} 条未读",
         nav: {
             inbox: "收件箱",
             chats: "聊天",

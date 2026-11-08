@@ -376,6 +376,8 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     sidebar: {
+        navLabel: "मुख्य नेविगेशन",
+        unreadTab: "{label}, {count} अपठित",
         nav: {
             inbox: "इनबॉक्स",
             chats: "चैट",

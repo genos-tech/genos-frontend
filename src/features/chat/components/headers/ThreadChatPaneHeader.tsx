@@ -21,6 +21,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { MenuRow, MenuSurface, MoreMenu } from "../../../../components/ui/MoreMenu";
+import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -375,13 +376,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
             <Stack
                 direction="row"
                 sx={{
+                    ...pageHeaderFrameSx,
                     justifyContent: "space-between",
                     alignItems: "center",
+                    // The phone header packs a back button, the title and two actions.
                     px: 1,
-                    background: styles.containerBg,
-                    backdropFilter: "blur(12px)",
-                    borderBottom: `1px solid ${styles.containerBorder}`,
-                    minHeight: "56px",
                     gap: 0.5,
                 }}
             >
@@ -475,13 +474,9 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         <Stack
             direction="row"
             sx={{
+                ...pageHeaderFrameSx,
                 justifyContent: "space-between",
                 alignItems: "center",
-                px: { xs: 1.5, md: 2 },
-                background: styles.containerBg,
-                backdropFilter: "blur(12px)",
-                borderBottom: `1px solid ${styles.containerBorder}`,
-                minHeight: "64px",
             }}
         >
             {/* Left section: Thread badge + Avatar + Name */}
