@@ -291,6 +291,23 @@ describe("empty surfaces tell 'nothing here' from 'could not load'", () => {
     });
 });
 
+describe("mobile task list with no project", () => {
+    it("says the projects could not load when that is why there is none", () => {
+        const props = {
+            usePM: { currentProject: null } as never,
+            useTM: { allTasks: [] } as never,
+        };
+        const { unmount } = render(wrap(<MobileTaskList {...props} />));
+        expect(screen.getByText(en.tasks.mobile.pickProject)).toBeInTheDocument();
+        unmount();
+
+        syncStatus.report("projects", false);
+        render(wrap(<MobileTaskList {...props} />));
+        expect(screen.queryByText(en.tasks.mobile.pickProject)).toBeNull();
+        expect(screen.getByRole("alert")).toHaveTextContent(s.projectsFailed);
+    });
+});
+
 describe("adoption (source-level: the table and the dashboard are too big to mount here)", () => {
     const SRC = join(dirname(fileURLToPath(import.meta.url)), "..");
     const read = (p: string) => readFileSync(join(SRC, p), "utf8");

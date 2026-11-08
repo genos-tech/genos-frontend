@@ -25,6 +25,7 @@ type MobileTaskListProps = {
 export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
     const { t } = useTranslation();
     const sync = useSyncFailure("tasks");
+    const projectsSync = useSyncFailure("projects");
     const projectId = usePM.currentProject?.projectId;
 
     // Project-scoped, top-level rows. Closed and Deleted are hidden —
@@ -50,6 +51,22 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
     };
 
     if (!projectId) {
+        // The project list never loaded: "pick a project" would send them to an empty list (MIP-1298).
+        if (projectsSync.failed) {
+            return (
+                <DataState
+                    hasData={false}
+                    loading={projectsSync.retrying}
+                    skeleton={<SkeletonRows count={5} />}
+                    errorState={{
+                        "data-error": "mobile-no-project",
+                        onRetry: projectsSync.retry,
+                        title: t.common.feedback.sync.projectsFailed,
+                    }}
+                    error
+                />
+            );
+        }
         return (
             <Box sx={{ p: 3, textAlign: "center" }}>
                 <Typography level="body-sm" sx={{ opacity: 0.7 }}>
