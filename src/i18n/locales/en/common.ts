@@ -155,7 +155,6 @@ export const common = {
     },
     empty: {
         noResults: "No results",
-        noItems: "Nothing here yet",
     },
     errors: {
         generic: "Something went wrong. Please try again.",

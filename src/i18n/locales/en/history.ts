@@ -29,6 +29,5 @@ export const history = {
     emptyChats: "Open a chat or thread and it is listed here.",
     emptyTasks: "Open a task and it is listed here.",
     emptyNotes: "Open a note and it is listed here.",
-    empty: "Nothing here yet.",
     clear: "Clear history",
 } as const;

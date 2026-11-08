@@ -1622,7 +1622,6 @@ export const ja: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "該当する結果はありません",
-            noItems: "まだ何もありません",
         },
         errors: {
             generic: "問題が発生しました。もう一度お試しください。",
@@ -2236,7 +2235,6 @@ export const ja: DeepPartial<Messages> = {
         emptyChats: "チャットやスレッドを開くと、ここに一覧表示されます。",
         emptyTasks: "タスクを開くと、ここに一覧表示されます。",
         emptyNotes: "ノートを開くと、ここに一覧表示されます。",
-        empty: "まだ何もありません。",
         clear: "履歴をクリア",
     },
     inbox: {

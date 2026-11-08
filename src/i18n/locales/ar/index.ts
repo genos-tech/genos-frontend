@@ -59,7 +59,6 @@ export const ar: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "لا توجد نتائج",
-            noItems: "لا يوجد شيء هنا بعد",
         },
         errors: {
             generic: "حدث خطأ ما. يُرجى المحاولة مرة أخرى.",
@@ -5097,7 +5096,6 @@ export const ar: DeepPartial<Messages> = {
         emptyChats: "افتح محادثة أو موضوعًا وسيُدرج هنا.",
         emptyTasks: "افتح مهمة وستُدرج هنا.",
         emptyNotes: "افتح ملاحظة وستُدرج هنا.",
-        empty: "لا شيء هنا بعد.",
         clear: "مسح التاريخ",
     },
     integrations: {

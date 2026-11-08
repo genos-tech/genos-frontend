@@ -1560,7 +1560,6 @@ export const zh: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "没有结果",
-            noItems: "还没有内容",
         },
         errors: {
             generic: "出现了一些问题，请重试。",
@@ -2158,7 +2157,6 @@ export const zh: DeepPartial<Messages> = {
         emptyChats: "打开一个聊天或话题，它就会列在这里。",
         emptyTasks: "打开一个任务，它就会列在这里。",
         emptyNotes: "打开一篇笔记，它就会列在这里。",
-        empty: "暂无记录。",
         clear: "清除历史",
     },
     inbox: {

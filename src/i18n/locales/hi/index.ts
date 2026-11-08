@@ -141,7 +141,6 @@ export const hi: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "कोई परिणाम नहीं",
-            noItems: "यहाँ अभी कुछ नहीं है",
         },
         errors: {
             generic: "कुछ गड़बड़ हो गई। कृपया फिर से कोशिश करें।",
@@ -5150,7 +5149,6 @@ export const hi: DeepPartial<Messages> = {
         emptyChats: "कोई चैट या थ्रेड खोलें, वह यहाँ सूची में आ जाएगा।",
         emptyTasks: "कोई टास्क खोलें, वह यहाँ सूची में आ जाएगा।",
         emptyNotes: "कोई नोट खोलें, वह यहाँ सूची में आ जाएगा।",
-        empty: "अभी कुछ नहीं है।",
         clear: "हिस्ट्री क्लियर करें",
     },
     featuresPage: {

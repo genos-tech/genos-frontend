@@ -58,7 +58,6 @@ export const es: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "Sin resultados",
-            noItems: "Aún no hay nada aquí",
         },
         errors: {
             generic: "Algo salió mal. Inténtalo de nuevo.",
@@ -5177,7 +5176,6 @@ export const es: DeepPartial<Messages> = {
         emptyChats: "Abre un chat o un hilo y aparecerá en la lista.",
         emptyTasks: "Abre una tarea y aparecerá en la lista.",
         emptyNotes: "Abre una nota y aparecerá en la lista.",
-        empty: "Nada aquí todavía.",
         clear: "Borrar historial",
     },
     featuresPage: {

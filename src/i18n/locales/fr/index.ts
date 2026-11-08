@@ -1641,7 +1641,6 @@ export const fr: DeepPartial<Messages> = {
         },
         empty: {
             noResults: "Aucun résultat",
-            noItems: "Rien à afficher pour le moment",
         },
         errors: {
             generic: "Une erreur est survenue. Veuillez réessayer.",
@@ -2254,7 +2253,6 @@ export const fr: DeepPartial<Messages> = {
         emptyChats: "Ouvrez un chat ou un fil et il sera listé ici.",
         emptyTasks: "Ouvrez une tâche et elle sera listée ici.",
         emptyNotes: "Ouvrez une note et elle sera listée ici.",
-        empty: "Rien ici pour l'instant.",
         clear: "Effacer l'historique",
     },
     inbox: {
