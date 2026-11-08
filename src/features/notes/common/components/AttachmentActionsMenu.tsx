@@ -1,6 +1,7 @@
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
-import { Dropdown, IconButton, Menu, MenuButton, MenuItem } from "@mui/joy";
+import { Dropdown, IconButton, MenuButton } from "@mui/joy";
 
+import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { fmt, useTranslation } from "../../../../i18n";
 
 interface Props {
@@ -32,10 +33,10 @@ export const AttachmentActionsMenu = ({ name, onDownload, onImportAsNote, disabl
             >
                 <MoreVertRoundedIcon sx={{ fontSize: 16 }} />
             </MenuButton>
-            <Menu placement="bottom-end" size="sm">
-                <MenuItem onClick={onDownload}>{t.common.actions.download}</MenuItem>
-                <MenuItem onClick={onImportAsNote}>{t.notes.importMd.importAsNote}</MenuItem>
-            </Menu>
+            <MenuSurface placement="bottom-end">
+                <MenuRow onClick={onDownload}>{t.common.actions.download}</MenuRow>
+                <MenuRow onClick={onImportAsNote}>{t.notes.importMd.importAsNote}</MenuRow>
+            </MenuSurface>
         </Dropdown>
     );
 };

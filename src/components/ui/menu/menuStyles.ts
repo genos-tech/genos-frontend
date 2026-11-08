@@ -28,6 +28,7 @@ export const menuSurfaceSx = {
     "--ListDivider-gap": "4px",
     "@media (pointer: coarse)": { "--ListItem-minHeight": MENU_ITEM_HEIGHT_COARSE },
     minWidth: 180,
+    maxWidth: "calc(100vw - 16px)",
     // Scrolls inside the viewport instead of running off it.
     maxHeight: "calc(100dvh - 16px)",
     overflowY: "auto",
@@ -52,26 +53,41 @@ const inset = { outline: `2px solid ${g.focus}`, outlineOffset: "-2px" } as cons
  * A row. `&&` doubles the class so these beat Joy's own hover rule
  * (`&:not(.Mui-selected, [aria-selected="true"]):hover`) without `!important`.
  */
-export const menuRowSx = (danger: boolean) =>
-    ({
+export type MenuRowTone = "default" | "danger" | "accent";
+
+const TONES = {
+    default: { fg: g.text.primary, icon: g.text.secondary, fill: g.hover, press: g.active },
+    danger: {
+        fg: g.danger.text,
+        icon: g.danger.text,
+        fill: g.danger.subtle,
+        press: g.danger.subtle,
+    },
+    accent: {
+        fg: g.accent.text,
+        icon: g.accent.text,
+        fill: g.accent.subtle,
+        press: g.accent.subtle,
+    },
+} as const;
+
+export const menuRowSx = (tone: MenuRowTone = "default") => {
+    const t = TONES[tone];
+    return {
         ...type("body-sm"),
-        color: danger ? g.danger.text : g.text.primary,
-        "--Icon-color": danger ? g.danger.text : g.text.secondary,
+        color: t.fg,
+        "--Icon-color": t.icon,
         border: "none",
         cursor: "pointer",
         transitionProperty: "background-color, color",
         transitionDuration: g.motion.fast,
         transitionTimingFunction: g.ease,
         "@media (prefers-reduced-motion: reduce)": { transition: "none" },
-        "&&:hover": {
-            background: danger ? g.danger.subtle : g.hover,
-            color: danger ? g.danger.text : g.text.primary,
-        },
-        "&&:active": { background: danger ? g.danger.subtle : g.active },
-        "&&.Mui-focusVisible": {
-            background: danger ? g.danger.subtle : g.hover,
-            ...inset,
-        },
+        // Joy's own hover also sets `color`, so it is restated here: a caller's
+        // `sx.color` would lose to it (use `tone` instead).
+        "&&:hover": { background: t.fill, color: t.fg },
+        "&&:active": { background: t.press },
+        "&&.Mui-focusVisible": { background: t.fill, ...inset },
         "&&.Mui-selected": {
             background: g.accent.subtle,
             color: g.accent.text,
@@ -84,7 +100,8 @@ export const menuRowSx = (danger: boolean) =>
             background: "transparent",
             cursor: "default",
         },
-    }) as const;
+    } as const;
+};
 
 export const menuDividerSx = { background: g.border.subtle } as const;
 

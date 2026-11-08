@@ -1,25 +1,17 @@
 import { useState } from "react";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
 import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
-import {
-    Box,
-    Dropdown,
-    IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { MenuDivider, MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { BoxSlotRoot } from "../../../../components/ui/slotRoot";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { PersonalTag } from "../../../../types/personalTags";
 import { selectVisibleTagChips } from "../../utils/gmTagFilters";
 import { ModalManageGMTags } from "../modals/ModalManageGMTags";
@@ -239,161 +231,72 @@ export const GMTagFilterRow = ({ selectedTagIds, setSelectedTagIds }: GMTagFilte
                             </Box>
                         )}
                     </MenuButton>
-                    <Menu
+                    <MenuSurface
                         placement="bottom-start"
-                        size="sm"
-                        sx={{
-                            background: isDark
-                                ? "rgba(30, 30, 40, 0.98)"
-                                : "rgba(255, 255, 255, 0.98)",
-                            border: "1px solid",
-                            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                            borderRadius: "10px",
-                            boxShadow: isDark
-                                ? "0 8px 24px rgba(0,0,0,0.5)"
-                                : "0 8px 24px rgba(0,0,0,0.12)",
-                            maxHeight: 400,
-                            minWidth: 220,
-                            overflowY: "auto",
-                            zIndex: 10010,
-                        }}
+                        sx={{ maxHeight: 400, minWidth: 220 }}
+                        zIndex={10010}
                     >
-                        {tags.map((tag) => {
-                            const isChecked = selectedTagIds.has(tag.tagId);
-                            return (
-                                <MenuItem
-                                    key={tag.tagId}
-                                    selected={isChecked}
-                                    sx={{
-                                        borderRadius: "6px",
-                                        fontSize: "0.8rem",
-                                        gap: 1,
-                                        mx: 0.5,
-                                        py: 0.5,
-                                    }}
-                                    onClick={(e) => {
-                                        // Keep the menu open so users can
-                                        // toggle multiple tags in one
-                                        // session (ActivityDivider pattern).
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleTag(tag.tagId);
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            alignItems: "center",
-                                            color: isChecked
-                                                ? isDark
-                                                    ? "var(--gp-brandalt-400)"
-                                                    : "var(--gp-brand-700)"
-                                                : "transparent",
-                                            display: "flex",
-                                            justifyContent: "center",
-                                            width: 16,
-                                        }}
-                                    >
-                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
-                                    </Box>
-                                    {colorDot(tag, 10)}
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{ flex: 1, fontSize: "0.8rem" }}
-                                        noWrap
-                                    >
-                                        {tag.name}
-                                    </Typography>
-                                    {/* Pin toggle = "show this chip by
+                        {tags.map((tag) => (
+                            // Stays open so users can toggle several tags in one
+                            // session (ActivityDivider pattern).
+                            <MenuRow
+                                key={tag.tagId}
+                                selected={selectedTagIds.has(tag.tagId)}
+                                keepOpen
+                                onClick={() => toggleTag(tag.tagId)}
+                            >
+                                {colorDot(tag, 10)}
+                                <Typography level="body-sm" sx={{ flex: 1 }} noWrap>
+                                    {tag.name}
+                                </Typography>
+                                {/* Pin toggle = "show this chip by
                                         default". Stop propagation so it
                                         doesn't also toggle the filter. */}
-                                    <AppTooltip
+                                <AppTooltip
+                                    size="sm"
+                                    title={
+                                        tag.isDefaultVisible
+                                            ? t.chat.sidebar.gmTagUnpinDefault
+                                            : t.chat.sidebar.gmTagPinDefault
+                                    }
+                                >
+                                    <IconButton
                                         size="sm"
-                                        title={
-                                            tag.isDefaultVisible
-                                                ? t.chat.sidebar.gmTagUnpinDefault
-                                                : t.chat.sidebar.gmTagPinDefault
-                                        }
+                                        variant="plain"
+                                        sx={{
+                                            "--IconButton-size": "22px",
+                                            color: tag.isDefaultVisible
+                                                ? g.accent.text
+                                                : g.text.tertiary,
+                                        }}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            void updateTag(tag.tagId, {
+                                                isDefaultVisible: !tag.isDefaultVisible,
+                                            });
+                                        }}
                                     >
-                                        <IconButton
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                "--IconButton-size": "22px",
-                                                color: tag.isDefaultVisible
-                                                    ? isDark
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)"
-                                                    : isDark
-                                                      ? "rgba(255,255,255,0.35)"
-                                                      : "rgba(0,0,0,0.3)",
-                                            }}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                void updateTag(tag.tagId, {
-                                                    isDefaultVisible: !tag.isDefaultVisible,
-                                                });
-                                            }}
-                                        >
-                                            {tag.isDefaultVisible ? (
-                                                <PushPinRoundedIcon sx={{ fontSize: 14 }} />
-                                            ) : (
-                                                <PushPinOutlinedIcon sx={{ fontSize: 14 }} />
-                                            )}
-                                        </IconButton>
-                                    </AppTooltip>
-                                </MenuItem>
-                            );
-                        })}
+                                        {tag.isDefaultVisible ? (
+                                            <PushPinRoundedIcon sx={{ fontSize: 14 }} />
+                                        ) : (
+                                            <PushPinOutlinedIcon sx={{ fontSize: 14 }} />
+                                        )}
+                                    </IconButton>
+                                </AppTooltip>
+                            </MenuRow>
+                        ))}
+                        {hasSelection && <MenuDivider />}
                         {hasSelection && (
-                            <MenuItem
-                                sx={{
-                                    borderRadius: "6px",
-                                    borderTop: "1px solid",
-                                    borderTopColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.06)",
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
-                                    fontSize: "0.8rem",
-                                    fontWeight: 600,
-                                    gap: 1,
-                                    mt: 0.5,
-                                    mx: 0.5,
-                                    py: 0.75,
-                                }}
-                                onClick={() => setSelectedTagIds(new Set())}
-                            >
+                            <MenuRow accent onClick={() => setSelectedTagIds(new Set())}>
                                 {t.chat.sidebar.gmTagFilterClear}
-                            </MenuItem>
+                            </MenuRow>
                         )}
-                        <MenuItem
-                            sx={{
-                                borderRadius: "6px",
-                                borderTop: "1px solid",
-                                borderTopColor: isDark
-                                    ? "rgba(255,255,255,0.06)"
-                                    : "rgba(0,0,0,0.06)",
-                                fontSize: "0.8rem",
-                                gap: 1,
-                                mt: 0.5,
-                                mx: 0.5,
-                                py: 0.75,
-                            }}
-                            onClick={() => setOpenManage(true)}
-                        >
-                            <LabelOutlinedIcon
-                                sx={{
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
-                                    fontSize: 16,
-                                }}
-                            />
+                        <MenuDivider />
+                        <MenuRow icon={<LabelOutlinedIcon />} onClick={() => setOpenManage(true)}>
                             {t.chat.sidebar.gmTagManageMenu}
-                        </MenuItem>
-                    </Menu>
+                        </MenuRow>
+                    </MenuSurface>
                 </Dropdown>
             </Stack>
 

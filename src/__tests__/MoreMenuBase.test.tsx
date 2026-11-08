@@ -5,6 +5,7 @@
  * components emit (token references), not on pixels.
  */
 
+import React from "react";
 import { CssVarsProvider, Dropdown, MenuButton } from "@mui/joy";
 import { cleanup, render as rtlRender, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -85,6 +86,21 @@ describe("MoreMenu", () => {
             .map((el, i) => (el.getAttribute("role") === "separator" ? i : -1))
             .filter((i) => i >= 0);
         expect(seps).toEqual([2]);
+    });
+
+    it("puts a rule above an item that asks for one, but never above the first", async () => {
+        const user = userEvent.setup();
+        const mk = (id: string, divider?: boolean) => ({
+            id,
+            label: id,
+            icon,
+            divider,
+            onClick: vi.fn(),
+        });
+        render(<MoreMenu items={[mk("a", true), mk("b"), mk("c", true)]} />);
+        const menu = await openMenu(user);
+        const roles = Array.from(menu.children).map((el) => el.getAttribute("role"));
+        expect(roles).toEqual(["menuitem", "menuitem", "separator", "menuitem"]);
     });
 
     it("fires the item and closes the menu", async () => {
@@ -241,6 +257,66 @@ describe("layer", () => {
         const user = userEvent.setup();
         render(<MoreMenu items={items()} />);
         expect(Number(zOf(await openMenu(user)))).toBeGreaterThan(1400);
+    });
+});
+
+describe("a controlled menu inside a dialog-like host (the task diagram's status picker)", () => {
+    it("Escape reports open=false and never reaches the host's key handler", async () => {
+        const user = userEvent.setup();
+        const hostKey = vi.fn();
+        const Harness = () => {
+            const [open, setOpen] = React.useState(false);
+            return (
+                <div onKeyDown={hostKey}>
+                    <Dropdown open={open} onOpenChange={(_e, next) => setOpen(next)}>
+                        <MenuButton>Open</MenuButton>
+                        <MenuSurface>
+                            <MenuRow>One</MenuRow>
+                        </MenuSurface>
+                    </Dropdown>
+                    <output data-testid="state">{String(open)}</output>
+                </div>
+            );
+        };
+        render(<Harness />);
+        await user.click(screen.getByText("Open"));
+        expect(screen.getByTestId("state").textContent).toBe("true");
+        hostKey.mockClear();
+        await user.keyboard("{Escape}");
+        await waitFor(() => expect(screen.getByTestId("state").textContent).toBe("false"));
+        expect(hostKey).not.toHaveBeenCalled();
+    });
+});
+
+describe("tones", () => {
+    it("accent rows carry the accent token, selected rows can skip the mark", async () => {
+        const user = userEvent.setup();
+        render(
+            <Dropdown>
+                <MenuButton>Open</MenuButton>
+                <MenuSurface>
+                    <MenuRow accent>Clear</MenuRow>
+                    <MenuRow>Plain</MenuRow>
+                    <MenuRow mark="none" selected>
+                        Picked
+                    </MenuRow>
+                </MenuSurface>
+            </Dropdown>
+        );
+        await user.click(screen.getByText("Open"));
+        // jsdom keeps `var()` unresolved, so the computed color names the token.
+        expect(getComputedStyle(screen.getByRole("menuitem", { name: "Clear" })).color).toBe(
+            "var(--g-accent-text)"
+        );
+        expect(getComputedStyle(screen.getByRole("menuitem", { name: "Picked" })).color).toBe(
+            "var(--g-accent-text)"
+        );
+        expect(getComputedStyle(screen.getByRole("menuitem", { name: "Plain" })).color).toBe(
+            "var(--g-text)"
+        );
+        const picked = screen.getByRole("menuitem", { name: "Picked" });
+        expect(picked.className).toContain("Mui-selected");
+        expect(picked.querySelector("svg")).toBeNull();
     });
 });
 

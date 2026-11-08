@@ -8,16 +8,14 @@ import {
     Divider,
     Dropdown,
     Input,
-    ListDivider,
-    Menu,
     MenuButton,
-    MenuItem,
     Stack,
     Switch,
     Typography,
 } from "@mui/joy";
 
 import { ModalFrame } from "../../components/ui/modal/ModalFrame";
+import { MenuDivider, MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
 import { NotificationPauseState } from "../../hooks/common/useNotificationPause";
 import { fmt, useTranslation } from "../../i18n";
 import { Messages } from "../../i18n/types";
@@ -81,8 +79,8 @@ type PresetItemsProps = Pick<
 };
 
 /**
- * The shared list of pause-duration `<MenuItem>` rows. Drops into any Joy
- * `<Menu>` — the settings section's own dropdown AND the profile-status
+ * The shared list of pause-duration `<MenuRow>` rows. Drops into any Joy
+ * `<MenuSurface>` — the settings section's own dropdown AND the profile-status
  * presence menu — so the presets read identically in both places. Renders a
  * Resume row (only) while paused.
  */
@@ -98,19 +96,18 @@ export const NotificationPausePresetItems = ({
     const p = t.services.notifications.pause;
     return (
         <>
-            <MenuItem onClick={() => pauseFor(30 * MINUTE)}>{p.for30m}</MenuItem>
-            <MenuItem onClick={() => pauseFor(HOUR)}>{p.for1h}</MenuItem>
-            <MenuItem onClick={() => pauseFor(2 * HOUR)}>{p.for2h}</MenuItem>
-            <MenuItem onClick={pauseUntilTomorrow}>{p.untilTomorrow}</MenuItem>
-            <MenuItem onClick={pauseUntilNextWeek}>{p.untilNextWeek}</MenuItem>
-            {onCustom && <MenuItem onClick={onCustom}>{p.custom}</MenuItem>}
+            <MenuRow onClick={() => pauseFor(30 * MINUTE)}>{p.for30m}</MenuRow>
+            <MenuRow onClick={() => pauseFor(HOUR)}>{p.for1h}</MenuRow>
+            <MenuRow onClick={() => pauseFor(2 * HOUR)}>{p.for2h}</MenuRow>
+            <MenuRow onClick={pauseUntilTomorrow}>{p.untilTomorrow}</MenuRow>
+            <MenuRow onClick={pauseUntilNextWeek}>{p.untilNextWeek}</MenuRow>
+            {onCustom && <MenuRow onClick={onCustom}>{p.custom}</MenuRow>}
             {isPausedNow && (
                 <>
-                    <ListDivider />
-                    <MenuItem color="danger" onClick={resume}>
-                        <PlayArrowRoundedIcon />
+                    <MenuDivider />
+                    <MenuRow danger icon={<PlayArrowRoundedIcon />} onClick={resume}>
                         {p.resumeShort}
-                    </MenuItem>
+                    </MenuRow>
                 </>
             )}
         </>
@@ -222,7 +219,7 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                     >
                         {p.durationMenuLabel}
                     </MenuButton>
-                    <Menu sx={{ zIndex: 10010 }} placement="bottom-end">
+                    <MenuSurface placement="bottom-end" zIndex={10010}>
                         <NotificationPausePresetItems
                             isPausedNow={isPausedNow}
                             pauseFor={pauseFor}
@@ -231,7 +228,7 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                             resume={resume}
                             onCustom={openCustom}
                         />
-                    </Menu>
+                    </MenuSurface>
                 </Dropdown>
                 {untilActive && (
                     <Button

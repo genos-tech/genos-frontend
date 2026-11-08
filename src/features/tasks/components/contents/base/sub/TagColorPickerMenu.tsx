@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import PaletteIcon from "@mui/icons-material/Palette";
-import { IconButton, ListItemDecorator, Menu, MenuItem, useColorScheme } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 
+import { MenuRow, MenuSurface } from "../../../../../../components/ui/MoreMenu";
 import { useTranslation } from "../../../../../../i18n";
+import { g } from "../../../../../../theme/tokens";
 import { TagColorOption } from "../../../../../../types/tasks";
 import { getContrastTextColor } from "../../../../utils/contrastTextColor";
 
@@ -68,9 +70,7 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
     onSelectColor,
     zIndex = 10010,
 }) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -98,33 +98,37 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
                 <PaletteIcon />
             </IconButton>
 
-            <Menu
+            <MenuSurface
                 anchorEl={anchorEl}
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 open={Boolean(anchorEl)}
                 placement="bottom-start"
-                sx={{ zIndex, maxHeight: "300px", overflowY: "scroll" }}
+                sx={{ maxHeight: "300px" }}
+                zIndex={zIndex}
                 onBlur={handleClose}
                 onClose={handleClose}
             >
                 {COLORS.map((color) => (
-                    <MenuItem key={color.name} onClick={() => handleSelect(color)}>
-                        <ListItemDecorator>
-                            <span
-                                style={{
+                    <MenuRow
+                        key={color.name}
+                        icon={
+                            <Box
+                                component="span"
+                                sx={{
                                     display: "inline-block",
-                                    width: "16px",
-                                    height: "16px",
-                                    borderRadius: "50%",
+                                    width: 16,
+                                    height: 16,
+                                    borderRadius: g.radius.full,
                                     backgroundColor: color.value,
-                                    border: "1px solid #ccc",
+                                    border: `1px solid ${g.border.strong}`,
                                 }}
                             />
-                        </ListItemDecorator>
+                        }
+                        onClick={() => handleSelect(color)}
+                    >
                         {t.tasks.tagColors[color.key]}
-                    </MenuItem>
+                    </MenuRow>
                 ))}
-            </Menu>
+            </MenuSurface>
         </>
     );
 };

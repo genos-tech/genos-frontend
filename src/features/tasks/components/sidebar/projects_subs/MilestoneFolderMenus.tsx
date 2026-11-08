@@ -1,17 +1,14 @@
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import {
-    Dropdown,
-    IconButton,
-    ListDivider,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Typography,
-} from "@mui/joy";
+import { Dropdown, IconButton, MenuButton } from "@mui/joy";
 
+import {
+    MenuDivider,
+    MenuGroupLabel,
+    MenuRow,
+    MenuSurface,
+} from "../../../../../components/ui/MoreMenu";
 import { useTranslation } from "../../../../../i18n";
 import { g } from "../../../../../theme/tokens";
 import { MilestoneFolder } from "../../../sprint-milestone/types";
@@ -61,50 +58,45 @@ export const MilestoneRowMenu = ({
             >
                 <MoreHorizRoundedIcon sx={{ fontSize: 16 }} />
             </MenuButton>
-            <Menu
-                placement="bottom-end"
-                size="sm"
-                sx={{ zIndex: 10010, minWidth: 180 }}
-                onClick={stop}
-            >
-                <MenuItem onClick={onToggleFavorite}>
-                    {isFavorited ? (
-                        <StarRoundedIcon sx={{ fontSize: 16, color: FAVORITE_COLOR }} />
-                    ) : (
-                        <StarOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                    )}
+            <MenuSurface placement="bottom-end" zIndex={10010}>
+                <MenuRow
+                    icon={
+                        isFavorited ? (
+                            <StarRoundedIcon sx={{ color: FAVORITE_COLOR }} />
+                        ) : (
+                            <StarOutlineRoundedIcon />
+                        )
+                    }
+                    onClick={onToggleFavorite}
+                >
                     {isFavorited
                         ? t.tasks.sidebar.removeFromFavorites
                         : t.tasks.sidebar.addToFavorites}
-                </MenuItem>
+                </MenuRow>
                 {canMove && (
                     <>
-                        <ListDivider />
-                        <Typography level="body-xs" sx={{ opacity: 0.6, px: 1.5, py: 0.5 }}>
-                            {t.tasks.folders.moveToFolder}
-                        </Typography>
-                        <MenuItem
+                        <MenuDivider />
+                        <MenuGroupLabel>{t.tasks.folders.moveToFolder}</MenuGroupLabel>
+                        <MenuRow
                             disabled={currentFolderId == null}
+                            selected={currentFolderId == null}
                             onClick={() => onMoveToFolder(null)}
                         >
-                            {currentFolderId == null && <CheckRoundedIcon sx={{ fontSize: 16 }} />}
                             {t.tasks.folders.noFolder}
-                        </MenuItem>
+                        </MenuRow>
                         {folders.map((f) => (
-                            <MenuItem
+                            <MenuRow
                                 key={f.folderId}
                                 disabled={f.folderId === currentFolderId}
+                                selected={f.folderId === currentFolderId}
                                 onClick={() => onMoveToFolder(f.folderId)}
                             >
-                                {f.folderId === currentFolderId && (
-                                    <CheckRoundedIcon sx={{ fontSize: 16 }} />
-                                )}
                                 {f.name}
-                            </MenuItem>
+                            </MenuRow>
                         ))}
                     </>
                 )}
-            </Menu>
+            </MenuSurface>
         </Dropdown>
     );
 };
@@ -179,13 +171,13 @@ export const FolderMenu = ({ folderName, onRename, onDelete }: FolderMenuProps) 
             >
                 <MoreHorizRoundedIcon sx={{ fontSize: 16 }} />
             </MenuButton>
-            <Menu placement="bottom-end" size="sm" sx={{ zIndex: 10010 }} onClick={stop}>
-                <MenuItem onClick={onRename}>{t.tasks.folders.renameFolder}</MenuItem>
-                <ListDivider />
-                <MenuItem color="danger" onClick={onDelete}>
+            <MenuSurface placement="bottom-end" zIndex={10010}>
+                <MenuRow onClick={onRename}>{t.tasks.folders.renameFolder}</MenuRow>
+                <MenuDivider />
+                <MenuRow danger onClick={onDelete}>
                     {t.tasks.folders.deleteFolder}
-                </MenuItem>
-            </Menu>
+                </MenuRow>
+            </MenuSurface>
         </Dropdown>
     );
 };

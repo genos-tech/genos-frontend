@@ -1,6 +1,5 @@
 import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import CheckIcon from "@mui/icons-material/Check";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
@@ -11,21 +10,17 @@ import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import {
-    Box,
-    Dropdown,
-    IconButton,
-    Input,
-    ListDivider,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Typography,
-    useColorScheme,
-} from "@mui/joy";
+import { Box, Dropdown, IconButton, Input, MenuButton, useColorScheme } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import {
+    MenuDivider,
+    MenuGroupLabel,
+    MenuRow,
+    MenuSurface,
+} from "../../../../components/ui/MoreMenu";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { TodoCategoryProps } from "../../../../types/chat";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
 import { useTodoDialogLayer } from "./TodoHostLayer";
@@ -130,113 +125,100 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                     <MoreVertRoundedIcon sx={{ fontSize: 16 }} />
                 </MenuButton>
             </AppTooltip>
-            <Menu placement="bottom-end" size="sm" sx={{ minWidth: 200, zIndex: layer }}>
+            <MenuSurface placement="bottom-end" sx={{ minWidth: 200 }} zIndex={layer}>
                 {/* Mobile-only row actions, folded in from the inline icon
                     strip. They lead because they act on THIS row's content
                     (its notes, its steps) rather than on the row as an
                     object, and the divider keeps that distinction. */}
                 {onToggleNotes && (
-                    <MenuItem onClick={onToggleNotes}>
-                        {notesExpanded ? (
-                            <ExpandLessRoundedIcon sx={{ fontSize: 16 }} />
-                        ) : (
-                            <ExpandMoreRoundedIcon sx={{ fontSize: 16 }} />
-                        )}
-                        <Typography level="body-sm">
-                            {notesExpanded
-                                ? t.chat.todoPane.collapseNotes
-                                : t.chat.todoPane.expandNotes}
-                        </Typography>
-                    </MenuItem>
+                    <MenuRow
+                        icon={
+                            notesExpanded ? <ExpandLessRoundedIcon /> : <ExpandMoreRoundedIcon />
+                        }
+                        onClick={onToggleNotes}
+                    >
+                        {notesExpanded
+                            ? t.chat.todoPane.collapseNotes
+                            : t.chat.todoPane.expandNotes}
+                    </MenuRow>
                 )}
                 {onAddSubitem && (
-                    <MenuItem onClick={onAddSubitem}>
-                        <SubdirectoryArrowRightRoundedIcon sx={{ fontSize: 16 }} />
-                        <Typography level="body-sm">{t.chat.todoPane.addSubitem}</Typography>
-                    </MenuItem>
+                    <MenuRow icon={<SubdirectoryArrowRightRoundedIcon />} onClick={onAddSubitem}>
+                        {t.chat.todoPane.addSubitem}
+                    </MenuRow>
                 )}
-                {(onToggleNotes || onAddSubitem) && <ListDivider />}
+                {(onToggleNotes || onAddSubitem) && <MenuDivider />}
                 {/* From here the order is the shared one (moreMenuOrder.ts):
                     share, personal, create, organize, delete. */}
                 {!isChild && (
-                    <MenuItem onClick={onCopyLink}>
-                        <LinkRoundedIcon sx={{ fontSize: 16 }} />
-                        <Typography level="body-sm">
-                            {linkCopied ? t.chat.todoPane.linkCopied : t.chat.todoPane.copyLink}
-                        </Typography>
-                    </MenuItem>
+                    <MenuRow icon={<LinkRoundedIcon />} onClick={onCopyLink}>
+                        {linkCopied ? t.chat.todoPane.linkCopied : t.chat.todoPane.copyLink}
+                    </MenuRow>
                 )}
                 {/* Offered on every open row including children: a to-do you
                     have to remember to look at is the case this whole feature
                     exists for. `selected` marks a pending one so the state is
                     visible before reading the label. */}
                 {onRemindMe && (
-                    <MenuItem selected={Boolean(reminderLabel)} onClick={onRemindMe}>
-                        <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />
-                        <Typography level="body-sm">
-                            {reminderLabel ?? t.chat.todoPane.remindMe.menu}
-                        </Typography>
-                    </MenuItem>
+                    <MenuRow
+                        icon={<NotificationsActiveRoundedIcon />}
+                        mark="dot"
+                        selected={Boolean(reminderLabel)}
+                        onClick={onRemindMe}
+                    >
+                        {reminderLabel ?? t.chat.todoPane.remindMe.menu}
+                    </MenuRow>
                 )}
                 {/* Next to the reminder, not down with create-task: both of
                     these answer "not now" about the same to-do — nudge me
                     later, or carry it to tomorrow — whereas create-task
                     takes the to-do somewhere else. */}
                 {onMoveToTomorrow && (
-                    <MenuItem onClick={onMoveToTomorrow}>
-                        <EventRepeatRoundedIcon sx={{ fontSize: 16 }} />
-                        <Typography level="body-sm">{t.chat.todoPane.moveToTomorrow}</Typography>
-                    </MenuItem>
+                    <MenuRow icon={<EventRepeatRoundedIcon />} onClick={onMoveToTomorrow}>
+                        {t.chat.todoPane.moveToTomorrow}
+                    </MenuRow>
                 )}
                 {!isChild && (
-                    <MenuItem onClick={onCreateTask}>
-                        <TaskAltRoundedIcon sx={{ fontSize: 16 }} />
-                        <Typography level="body-sm">{t.chat.todoPane.createTask.menu}</Typography>
-                    </MenuItem>
+                    <MenuRow icon={<TaskAltRoundedIcon />} onClick={onCreateTask}>
+                        {t.chat.todoPane.createTask.menu}
+                    </MenuRow>
                 )}
                 {!isChild && (
                     <>
-                        <ListDivider />
+                        <MenuDivider />
                         {/* Tag section — the old CategoryPickerMenu content,
                             inlined. Selecting closes the menu; typing in the
                             create input keeps it open (it's not a MenuItem). */}
-                        <Typography
-                            level="body-xs"
-                            startDecorator={<LocalOfferRoundedIcon sx={{ fontSize: 12 }} />}
-                            sx={{ opacity: 0.6, px: 1, py: 0.25 }}
-                        >
-                            {t.chat.todoPane.tag}
-                        </Typography>
-                        <MenuItem onClick={() => onSelectCategory(null)}>
-                            <Box sx={{ width: 18 }}>
-                                {currentCategoryId === null ? (
-                                    <CheckIcon sx={{ fontSize: 16 }} />
-                                ) : null}
+                        <MenuGroupLabel>
+                            <Box sx={{ alignItems: "center", display: "flex", gap: 0.5 }}>
+                                <LocalOfferRoundedIcon sx={{ fontSize: 12 }} />
+                                {t.chat.todoPane.tag}
                             </Box>
-                            <Typography level="body-sm">{t.chat.todoPane.general}</Typography>
-                        </MenuItem>
+                        </MenuGroupLabel>
+                        <MenuRow
+                            selected={currentCategoryId === null}
+                            onClick={() => onSelectCategory(null)}
+                        >
+                            {t.chat.todoPane.general}
+                        </MenuRow>
                         {categories.map((c) => (
-                            <MenuItem
+                            <MenuRow
                                 key={c.categoryId}
+                                selected={c.categoryId === currentCategoryId}
                                 onClick={() => onSelectCategory(c.categoryId)}
                             >
-                                <Box sx={{ width: 18 }}>
-                                    {c.categoryId === currentCategoryId ? (
-                                        <CheckIcon sx={{ fontSize: 16 }} />
-                                    ) : null}
-                                </Box>
                                 <ProjectTagChip
                                     isDark={isDark}
                                     label={c.name}
                                     tagColor={todoTagColor(c)}
                                 />
-                            </MenuItem>
+                            </MenuRow>
                         ))}
                         <Box sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
                             <Input
                                 placeholder={t.chat.todoPane.newTagPlaceholder}
                                 size="sm"
-                                sx={{ flex: 1, fontSize: "0.8rem" }}
+                                sx={{ flex: 1 }}
                                 value={newName}
                                 onChange={(e) => setNewName(e.target.value)}
                                 onKeyDown={(e) => {
@@ -249,23 +231,20 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                             <IconButton
                                 disabled={!newName.trim() || creating}
                                 size="sm"
-                                sx={{ borderRadius: "6px" }}
+                                sx={{ borderRadius: g.radius.sm }}
                                 variant="soft"
                                 onClick={handleCreate}
                             >
                                 <AddIcon sx={{ fontSize: 16 }} />
                             </IconButton>
                         </Box>
-                        <ListDivider />
+                        <MenuDivider />
                     </>
                 )}
-                <MenuItem color="danger" onClick={onDelete}>
-                    <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                    <Typography color="danger" level="body-sm">
-                        {t.chat.todoPane.delete}
-                    </Typography>
-                </MenuItem>
-            </Menu>
+                <MenuRow icon={<DeleteOutlineRoundedIcon />} danger onClick={onDelete}>
+                    {t.chat.todoPane.delete}
+                </MenuRow>
+            </MenuSurface>
         </Dropdown>
     );
 };

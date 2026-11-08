@@ -34,6 +34,9 @@ export type MoreMenuItem = {
     active?: boolean;
     /** Shown but not clickable. */
     disabled?: boolean;
+    /** A rule above the item (a danger item always gets one), to set a group of
+     *  actions apart. Ignored on the first visible item. */
+    divider?: boolean;
 };
 
 export type MoreMenuProps = {
@@ -103,7 +106,7 @@ export const MoreMenu = ({
                 <MenuSurface placement={placement} sx={{ minWidth: menuMinWidth }} zIndex={zIndex}>
                     {visibleItems.map((item, index) => (
                         <Fragment key={item.id}>
-                            {item.danger && index > 0 && <MenuDivider />}
+                            {(item.danger || item.divider) && index > 0 && <MenuDivider />}
                             <MenuRow
                                 danger={item.danger}
                                 disabled={item.disabled}
