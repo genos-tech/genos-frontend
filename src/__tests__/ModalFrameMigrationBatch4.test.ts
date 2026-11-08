@@ -151,7 +151,8 @@ describe("migrated dialogs (batch 4)", () => {
         it("the lightbox takes the frame's page layer, raised only by an exact layer or a host", () => {
             const text = code(FRAMES.imageZoom);
             expect(text).toMatch(/zIndex=\{zIndex\}/);
-            expect(text).toMatch(/hostZIndex=\{hostZIndex\}/);
+            // An explicit host wins; otherwise the layer UrlLinkModal provides (MIP-1193).
+            expect(text).toMatch(/hostZIndex=\{hostZIndex \?\? contextHost\}/);
             expect(text).not.toMatch(/ownsListboxPopups/);
         });
 
@@ -167,7 +168,7 @@ describe("migrated dialogs (batch 4)", () => {
         it("the forgot-password dialog still resets its transient state on every close", () => {
             const text = code(FRAMES.signIn);
             expect(text).toMatch(
-                /const closeForgotPassword = \(\) => \{\s*setOpenForgotPassword\(false\);\s*setForgotSucceeded\(false\);\s*setForgotError\(null\);\s*setForgotSubmitting\(false\);\s*\};/
+                /const closeForgotPassword = \(\) => \{\s*forgotAttemptRef\.current \+= 1;\s*setOpenForgotPassword\(false\);\s*setForgotSucceeded\(false\);\s*setForgotError\(null\);\s*setForgotSubmitting\(false\);\s*\};/
             );
             expect(text.match(/onClose=\{closeForgotPassword\}/g)).toHaveLength(1);
             expect(text).toMatch(/onClick=\{closeForgotPassword\}/);
