@@ -127,6 +127,19 @@ describe("graph delete", () => {
         await waitFor(() => expect(loadTaskGraph.mock.calls.length).toBeGreaterThan(loadsBefore));
     });
 
+    it("the card still leaves the canvas when the reload after the save fails", async () => {
+        renderCanvas();
+        await askToDelete(2);
+        // The first load (on open) succeeded; the reload after the delete fails.
+        loadTaskGraph.mockImplementation(async () => null);
+        confirm();
+
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        // The other task is untouched, and the load error is the one on screen.
+        expect(screen.getByTestId("delete-1")).toBeTruthy();
+        expect(screen.getByText(en.tasks.diagram.errors.load)).toBeTruthy();
+    });
+
     it("keeps the task when the server refuses, and says so", async () => {
         patchTaskFields.mockResolvedValue({ ok: false });
         renderCanvas();
@@ -140,11 +153,11 @@ describe("graph delete", () => {
         expect(setAllTasks).not.toHaveBeenCalled();
     });
 
-    it("the confirm says the sub-tasks are not deleted", async () => {
+    it("the confirm says the sub-tasks are kept (and drop out of the stats)", async () => {
         renderCanvas();
         await askToDelete(1);
         expect(screen.getByText(en.tasks.diagram.confirmDeleteBody)).toBeTruthy();
         expect(en.tasks.diagram.confirmDelete).not.toMatch(/sub-tasks/i);
-        expect(en.tasks.diagram.confirmDeleteBody).toMatch(/not deleted/i);
+        expect(en.tasks.diagram.confirmDeleteBody).toMatch(/sub-tasks are kept/i);
     });
 });

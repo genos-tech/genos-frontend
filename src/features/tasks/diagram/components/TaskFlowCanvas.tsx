@@ -44,6 +44,7 @@ import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
 import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
+import { statuses } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { loadMilestoneBurndown } from "../services/loadMilestoneBurndown";
@@ -137,8 +138,8 @@ const addDaysIso = (iso: string, days: number): string => {
     return `${y}-${m}-${day}`;
 };
 
-// What the status picker's "Deleted" entry sends (utils/taskMeta): the status and its code.
-const DELETED_STATUS = { status: "Deleted", code: 0 } as const;
+// The status picker's "Deleted" entry (utils/taskMeta): what a delete sends.
+const DELETED_STATUS = statuses.find((s) => s.status === "Deleted");
 
 // Soft-deleted rows the rest of the app never exposes (table, sidebar,
 // search) and which the canvas always hides. Shared by every stats
@@ -899,11 +900,13 @@ const CanvasInner = ({
         async (taskId: number) => {
             const saved = await handleChange(
                 taskId,
-                { status: DELETED_STATUS.status, statusCode: DELETED_STATUS.code },
+                { status: "Deleted", statusCode: DELETED_STATUS?.code ?? 0 },
                 t.tasks.diagram.errors.delete
             );
             if (!saved) return;
-            const graph = await refresh();
+            // The save already marked the task in the cached graph, so if the reload fails
+            // the card still leaves the canvas (the load error is on screen).
+            const graph = (await refresh()) ?? graphRef.current;
             if (graph) assembleAndLayout(graph, { fit: false });
             void useTM.loadUpdatedTask(projectId);
         },

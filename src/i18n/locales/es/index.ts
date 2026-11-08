@@ -3057,7 +3057,8 @@ export const es: DeepPartial<Messages> = {
             dueSoonCount: "{count} llegará pronto",
             blockedCount: "{count} bloqueado",
             confirmDelete: "¿Eliminar esta tarea?",
-            confirmDeleteBody: "Sus subtareas no se eliminan; permanecen en el proyecto.",
+            confirmDeleteBody:
+                "Se marcará como eliminada. Sus subtareas se conservan, pero dejan de contar en las estadísticas.",
             errors: {
                 load: "No se pudo cargar el gráfico de tareas.",
                 update: "La actualización falló.",

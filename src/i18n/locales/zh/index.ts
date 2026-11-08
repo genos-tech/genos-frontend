@@ -5314,7 +5314,7 @@ export const zh: DeepPartial<Messages> = {
             dueSoonCount: "{count} 即将到期",
             blockedCount: "{count} 被阻止",
             confirmDelete: "删除此任务？",
-            confirmDeleteBody: "其子任务不会被删除，仍保留在项目中。",
+            confirmDeleteBody: "该任务将被标记为已删除。其子任务会保留，但不再计入统计。",
             errors: {
                 load: "无法加载任务图。",
                 update: "更新失败。",

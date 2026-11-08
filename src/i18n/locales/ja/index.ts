@@ -5500,7 +5500,8 @@ export const ja: DeepPartial<Messages> = {
             dueSoonCount: "{count} まもなく終了予定",
             blockedCount: "{count} がブロックされました",
             confirmDelete: "このタスクを削除しますか?",
-            confirmDeleteBody: "サブタスクは削除されません。プロジェクトに残ります。",
+            confirmDeleteBody:
+                "削除済みとして扱われます。サブタスクは残りますが、統計には含まれなくなります。",
             errors: {
                 load: "タスクグラフを読み込めませんでした。",
                 update: "アップデートに失敗しました。",

@@ -3010,7 +3010,8 @@ export const ar: DeepPartial<Messages> = {
             dueSoonCount: "{count} مستحق قريبا",
             blockedCount: "{count} محظور",
             confirmDelete: "حذف هذه المهمة؟",
-            confirmDeleteBody: "لن تُحذف مهامها الفرعية؛ ستبقى في المشروع.",
+            confirmDeleteBody:
+                "ستُوسَم المهمة كمحذوفة. تبقى مهامها الفرعية لكنها لن تُحتسب في الإحصاءات.",
             errors: {
                 load: "تعذر تحميل الرسم البياني للمهمة.",
                 update: "فشل التحديث.",

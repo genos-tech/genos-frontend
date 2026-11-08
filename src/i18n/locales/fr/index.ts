@@ -5565,7 +5565,7 @@ export const fr: DeepPartial<Messages> = {
             blockedCount: "{count} bloqué",
             confirmDelete: "Supprimer cette tâche ?",
             confirmDeleteBody:
-                "Ses sous-tâches ne sont pas supprimées ; elles restent dans le projet.",
+                "Elle sera marquée comme supprimée. Ses sous-tâches sont conservées, mais ne comptent plus dans les statistiques.",
             errors: {
                 load: "Impossible de charger le graphique des tâches.",
                 update: "La mise à jour a échoué.",

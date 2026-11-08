@@ -1186,7 +1186,8 @@ export const tasks = {
         dueSoonCount: "{count} due soon",
         blockedCount: "{count} blocked",
         confirmDelete: "Delete this task?",
-        confirmDeleteBody: "Its sub-tasks are not deleted; they stay in the project.",
+        confirmDeleteBody:
+            "It is marked Deleted. Its sub-tasks are kept, but they stop counting in the stats.",
         errors: {
             load: "Couldn't load the task graph.",
             update: "Update failed.",

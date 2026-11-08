@@ -3040,7 +3040,8 @@ export const hi: DeepPartial<Messages> = {
             dueSoonCount: "{count} जल्द ही आने वाला है",
             blockedCount: "{count} अवरुद्ध",
             confirmDelete: "यह कार्य हटाएं?",
-            confirmDeleteBody: "इसके उप-कार्य नहीं हटाए जाएंगे; वे प्रोजेक्ट में बने रहेंगे.",
+            confirmDeleteBody:
+                "इसे हटाया हुआ चिह्नित किया जाएगा. इसके उप-कार्य बने रहेंगे, लेकिन आंकड़ों में नहीं गिने जाएंगे.",
             errors: {
                 load: "कार्य ग्राफ़ लोड नहीं किया जा सका.",
                 update: "भार बढ़ाना विफल हुवा।",

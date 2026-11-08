@@ -88,10 +88,11 @@ describe("discard-draft and graph-delete strings", () => {
     });
 
     it("the graph confirm no longer promises to delete the sub-tasks (it does not)", () => {
-        // English reads "Delete this task and all its sub-tasks?" before; the title now
-        // names the task alone and the body says the sub-tasks stay.
+        // English read "Delete this task and all its sub-tasks?" before; the title now
+        // names the task alone and the body says what happens to the sub-tasks.
         expect(en.tasks.diagram.confirmDelete).not.toMatch(/sub-?tasks/i);
-        expect(en.tasks.diagram.confirmDeleteBody).toMatch(/not deleted/i);
+        expect(en.tasks.diagram.confirmDeleteBody).toMatch(/sub-tasks are kept/i);
+        expect(en.tasks.diagram.confirmDeleteBody).not.toMatch(/all its sub-tasks/i);
     });
 });
 
