@@ -440,8 +440,11 @@ describe("a task node keeps what it did", () => {
         const { container } = render(
             withContext(<TaskNodeView data={data({ onOpenPreview, onAddSubtask })} />)
         );
+        // The title is a button too now (double-click / Enter renames); it is not one of these.
         const buttons = [...container.querySelectorAll("button")].filter(
-            (b) => b.getAttribute("aria-haspopup") !== "menu"
+            (b) =>
+                b.getAttribute("aria-haspopup") !== "menu" &&
+                !b.querySelector('[data-testid="task-title"]')
         );
         expect(buttons.length).toBe(2);
         fireEvent.click(buttons[0]);

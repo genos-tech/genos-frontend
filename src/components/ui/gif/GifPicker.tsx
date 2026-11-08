@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Box, Button, Input, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Box, Button, Typography } from "@mui/joy";
 import { createPortal } from "react-dom";
 
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "../../../i18n";
 import { GifResult, searchGifs } from "../../../services/gifApi";
+import { g } from "../../../theme/tokens";
+import { SearchField } from "../fields/SearchField";
+import { PlainButton } from "../PlainButton";
 
 // GIF search popup (GIPHY via the api proxy). Positioning contract is
 // copied from EmojiPicker so each editor wires both pickers the same
@@ -37,8 +38,6 @@ export const GifPicker = ({
     pickerTopPosition = "auto",
     useFixedPosition = false,
 }: GifPickerProps) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const pickerRef = useRef<HTMLDivElement>(null);
@@ -118,20 +117,21 @@ export const GifPicker = ({
                 maxHeight: 420,
                 display: "flex",
                 flexDirection: "column",
-                background: isDark ? "#1c1c1f" : "#fff",
+                background: g.surface.raised,
+                border: `1px solid ${g.border.default}`,
                 borderRadius: 8,
-                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
+                boxShadow: g.shadow.md,
                 overflow: "hidden",
             }}
         >
             <Box sx={{ p: 1 }}>
-                <Input
-                    autoFocus
+                <SearchField
+                    loading={loading && query !== ""}
                     placeholder={t.common.editor.gifSearchPlaceholder}
-                    size="sm"
-                    startDecorator={<SearchRoundedIcon />}
+                    size="md"
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    autoFocus
+                    onChange={setQuery}
                 />
             </Box>
 
@@ -153,30 +153,33 @@ export const GifPicker = ({
                         }}
                     >
                         {results.map((gif) => (
-                            <Box
+                            <PlainButton
                                 key={gif.id}
-                                component="img"
-                                alt={gif.title}
+                                aria-label={gif.title || "GIF"}
                                 data-testid={`gif-picker-item-${gif.id}`}
-                                loading="lazy"
-                                src={gif.previewUrl}
                                 sx={{
-                                    width: "100%",
-                                    borderRadius: 6,
-                                    cursor: "pointer",
                                     display: "block",
-                                    "&:hover": { outline: "2px solid #6366f1" },
+                                    borderRadius: "6px",
+                                    "&:hover": { outline: `2px solid ${g.accent.solid}` },
                                 }}
                                 onClick={() => {
                                     onSelect({ url: gif.url, title: gif.title });
                                     setShowGifPicker(false);
                                 }}
-                            />
+                            >
+                                <Box
+                                    alt=""
+                                    component="img"
+                                    loading="lazy"
+                                    src={gif.previewUrl}
+                                    sx={{ width: "100%", borderRadius: "6px", display: "block" }}
+                                />
+                            </PlainButton>
                         ))}
                     </Box>
                 )}
                 {next && !loading && !notConfigured && (
-                    <Button fullWidth size="sm" sx={{ my: 1 }} variant="plain" onClick={loadMore}>
+                    <Button size="sm" sx={{ my: 1 }} variant="plain" fullWidth onClick={loadMore}>
                         {t.common.editor.gifLoadMore}
                     </Button>
                 )}

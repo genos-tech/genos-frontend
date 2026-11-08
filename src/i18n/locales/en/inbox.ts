@@ -33,6 +33,17 @@ export const inbox = {
         todoReminder: "To-do reminder",
         genosReport: "Genos report",
     },
+    // The rich card of a typed report (item_body.version 2, MIP-1208). Section headings and
+    // the lines in them come from the server; this is only the card's own chrome.
+    report: {
+        showMore: "Show {count} more",
+        showLess: "Show less",
+        emptyTitle: "All clear",
+        emptyBody: "Nothing needs your attention right now.",
+        daysLate: "{days}d late",
+        statComments: "Comments",
+        statItems: "Items",
+    },
     // A reminder that has come due (item_type 9). The card is written from
     // the reader's side — they asked for this, so it says so.
     messageReminder: {

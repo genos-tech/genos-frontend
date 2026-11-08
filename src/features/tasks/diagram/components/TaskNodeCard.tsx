@@ -3,10 +3,11 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import { Box, Dropdown, Input, MenuButton } from "@mui/joy";
+import { Box, Dropdown, MenuButton } from "@mui/joy";
 import { NodeProps } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
@@ -86,22 +87,11 @@ export const TaskNodeView = ({
     const isExternal = isGhost || !!isDimmed;
 
     const [editing, setEditing] = useState(false);
-    const [draftTitle, setDraftTitle] = useState(task.title ?? "");
     const [dateEditorOpen, setDateEditorOpen] = useState(false);
     const [statusMenuOpen, setStatusMenuOpen] = useState(false);
 
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
     const scheduleLabel = useScheduleLabel(schedule, task.status);
-
-    const commitTitle = () => {
-        const next = draftTitle.trim();
-        setEditing(false);
-        if (next && next !== task.title) {
-            void onChange({ title: next });
-        } else {
-            setDraftTitle(task.title ?? "");
-        }
-    };
 
     const emphasis: CardEmphasis | undefined = isCurrentPreview
         ? "current"
@@ -244,45 +234,43 @@ export const TaskNodeView = ({
                 )}
             </Box>
 
-            {/* Title — double-click to edit (disabled for ghosts) */}
-            {editing && !isExternal ? (
-                <Input
-                    size="sm"
-                    sx={{ fontWeight: 500 }}
-                    value={draftTitle}
-                    autoFocus
-                    onBlur={commitTitle}
-                    onChange={(e) => setDraftTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") commitTitle();
-                        if (e.key === "Escape") {
-                            // Cancel the rename only: the key must not reach
-                            // the graph dialog and close it with the title.
-                            e.stopPropagation();
-                            setEditing(false);
-                            setDraftTitle(task.title ?? "");
-                        }
-                    }}
-                />
+            {/* Title: double-click or Enter to rename (not for another team's ghost,
+                which is plain text). `nodrag nopan` keeps a drag or a pan from starting
+                inside the field; InlineTitleEdit keeps Escape from closing the graph. */}
+            {isExternal ? (
+                <Box sx={{ display: "flex", minHeight: NODE_TITLE_MIN_HEIGHT, cursor: "pointer" }}>
+                    <TaskTitle lines={2}>{task.title || t.tasks.diagram.untitled}</TaskTitle>
+                </Box>
             ) : (
                 <AppTooltip
-                    disableHoverListener={isExternal}
+                    disableHoverListener={editing}
                     enterDelay={500}
-                    title={isExternal ? "" : t.tasks.diagram.tooltips.doubleClickToRename}
+                    title={t.tasks.diagram.tooltips.doubleClickToRename}
                 >
-                    <Box
-                        sx={{
-                            display: "flex",
-                            minHeight: NODE_TITLE_MIN_HEIGHT,
-                            cursor: isExternal ? "pointer" : "text",
-                        }}
-                        onDoubleClick={() => {
-                            if (isExternal) return;
-                            setDraftTitle(task.title ?? "");
-                            setEditing(true);
-                        }}
-                    >
-                        <TaskTitle lines={2}>{task.title || t.tasks.diagram.untitled}</TaskTitle>
+                    <Box sx={{ display: "flex", minWidth: 0 }}>
+                        <InlineTitleEdit
+                            activate="doubleClick"
+                            ariaLabel={t.tasks.diagram.tooltips.doubleClickToRename}
+                            className="nodrag nopan"
+                            editing={editing}
+                            inputSx={{ fontWeight: 500 }}
+                            level="body-sm"
+                            value={task.title ?? ""}
+                            renderValue={(value) => (
+                                <TaskTitle lines={2}>
+                                    {value || t.tasks.diagram.untitled}
+                                </TaskTitle>
+                            )}
+                            sx={{
+                                display: "flex",
+                                flex: 1,
+                                minHeight: NODE_TITLE_MIN_HEIGHT,
+                                alignItems: "flex-start",
+                                whiteSpace: "normal",
+                            }}
+                            onCommit={(next) => void onChange({ title: next })}
+                            onEditingChange={setEditing}
+                        />
                     </Box>
                 </AppTooltip>
             )}

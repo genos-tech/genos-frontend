@@ -7,13 +7,11 @@
 // plugin disagrees with it on react-vs-@mui ordering; prettier wins.
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
-import SearchIcon from "@mui/icons-material/Search";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import {
     Box,
@@ -35,6 +33,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
@@ -855,61 +854,17 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         {t.common.addMembers.openButton}
                                                     </Button>
                                                 </Stack>
-                                                <Input
+                                                <SearchField
                                                     value={memberSearchQuery}
-                                                    endDecorator={
-                                                        memberSearchQuery && (
-                                                            <IconButton
-                                                                size="sm"
-                                                                variant="plain"
-                                                                sx={{
-                                                                    minWidth: "24px",
-                                                                    minHeight: "24px",
-                                                                    borderRadius: "50%",
-                                                                }}
-                                                                onClick={() =>
-                                                                    setMemberSearchQuery("")
-                                                                }
-                                                            >
-                                                                <CloseIcon
-                                                                    sx={{
-                                                                        fontSize: "16px",
-                                                                    }}
-                                                                />
-                                                            </IconButton>
-                                                        )
-                                                    }
                                                     placeholder={
                                                         t.chat.modals.gmProfile
                                                             .searchMembersPlaceholder
                                                     }
-                                                    startDecorator={
-                                                        <SearchIcon
-                                                            sx={{
-                                                                color: g.accent.text,
-                                                                fontSize: "18px",
-                                                            }}
-                                                        />
-                                                    }
                                                     sx={{
                                                         width: { xs: "100%", sm: "220px" },
                                                         maxWidth: "100%",
-                                                        "--Input-focusedThickness": "1px",
-                                                        "--Input-radius": g.radius.md,
-                                                        background: g.bg.subtle,
-                                                        border: `1px solid ${g.border.default}`,
-                                                        fontSize: "14px",
-                                                        transition: "all 0.2s ease",
-                                                        "&:hover": {
-                                                            borderColor: g.accent.text,
-                                                        },
-                                                        "&:focus-within": {
-                                                            borderColor: g.accent.text,
-                                                        },
                                                     }}
-                                                    onChange={(e) =>
-                                                        setMemberSearchQuery(e.target.value)
-                                                    }
+                                                    onChange={setMemberSearchQuery}
                                                 />
                                             </Stack>
                                         </FormControl>

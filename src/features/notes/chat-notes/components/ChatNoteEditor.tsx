@@ -1,9 +1,10 @@
 import { PartialBlock } from "@blocknote/core";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import { FormControl, Input } from "@mui/joy";
+import { FormControl } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatNoteEditor } from "../../../../components/editors/bnChatNoteEditor";
+import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -70,29 +71,16 @@ export const ChatNoteEditor = ({
                 }}
                 required
             >
-                <Input
-                    key={"currentChatNoteTitle"}
+                <InlineTitleEdit
+                    ariaLabel={t.notes.editor.titlePlaceholder}
+                    inputRef={titleInputRef}
+                    level="h3"
                     placeholder={t.notes.editor.titlePlaceholder}
                     startDecorator={<NoteAltIcon />}
                     value={currentChatNoteTitle}
-                    variant="soft"
-                    slotProps={{
-                        input: {
-                            ref: titleInputRef,
-                            onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault(); // stop form submission if inside <form>
-                                    titleInputRef.current?.blur();
-                                }
-                            },
-                        },
-                    }}
-                    sx={{
-                        fontSize: "22px",
-                        fontWeight: "bold",
-                    }}
-                    onBlur={onTitleBlur}
-                    onChange={(e) => onTitleChange(e.target.value)}
+                    variant="field"
+                    onCommit={() => onTitleBlur()}
+                    onDraftChange={onTitleChange}
                 />
             </FormControl>
 

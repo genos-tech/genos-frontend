@@ -1,13 +1,13 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { hasSendableContent, withTrailingBlank } from "./utils/messageBlocks";
+import { withTrailingBlank } from "./utils/messageBlocks";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
@@ -15,7 +15,6 @@ import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
-import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -27,15 +26,13 @@ import { ChatProps, ThreadProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
-import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
-import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
+import { useChatComposer } from "./composer/useChatComposer";
 import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
-import { useGenosEditor } from "./genos/useGenosEditor";
 import { EditorSendButton } from "./sub/EditorSendButton";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
@@ -113,27 +110,74 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         "mount"
     );
 
-    // See `bnChatEditor` for the rationale on `useUploadCounter`. Same
-    // pattern: every uploadFile call ticks the counter so the in-editor
-    // badge reflects in-flight work, and the `pendingFiles` loop below
-    // also surfaces a blocking overlay with current/total progress.
-    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
-
-    // Per-file size cap. See `bnChatEditor` for the rationale —
-    // identical behaviour for thread-pane uploads.
-    const { rejection, dismissRejection, filterFiles, guardUploadFile } = useFileSizeGuard();
-
-    const uploadFile = guardUploadFile(
-        trackUpload(async (file: File) => {
-            // v3: compose-time inline upload via the channel-scoped uploader
-            // (returns an absolute URL; no `django_url` prepend). Replaces
-            // the deleted `/chat/attachment/` route.
-            return channelService.uploadInlineFile(String(thread.chatId), file);
-        })
-    );
-
     const dictionary = useBlockNoteDictionary();
-    const editor = useGenosEditor({ surface: "composer", schema, dictionary, uploadFile });
+
+    // Upload pipeline, `pendingFiles` drop queue, draft, canSend and the send flow are the
+    // shared composer hook's (see `composer/useChatComposer`). A reply is emptied from the
+    // composer BEFORE the server answers and put back if the send fails.
+    const composer = useChatComposer({
+        schema,
+        dictionary,
+        // v3: compose-time inline upload via the channel-scoped uploader
+        // (returns an absolute URL; no `django_url` prepend). Replaces
+        // the deleted `/chat/attachment/` route.
+        uploads: { channelId: String(thread.chatId) },
+        // Files dropped on the thread pane (outside the editor).
+        dropQueue: { files: pendingFiles, clear: clearPendingFiles, mode: "after" },
+        // Per-thread draft cache. Keyed by chatType + chatId + threadId so each thread keeps
+        // its own in-progress reply separate from the parent chat's main-channel draft.
+        draftKey:
+            thread?.chatType != null && thread?.chatId != null && thread?.threadId != null
+                ? `thread:${thread.chatType}:${thread.chatId}:${thread.threadId}`
+                : null,
+        onLinesChange: setNumEditorLines,
+        submit: async (content) => {
+            // v3 cutover. The legacy `socket.emit("thread_message", POST,
+            // ...)` + manual optimistic append + addThreadMessage IDB
+            // write is replaced by `channelService.send(channelUuid,
+            // body, {parentId: threadRootUuid, bodyText})`. The v3 backend:
+            //
+            //   1. Persists a `Message` row with `is_thread_reply=true`
+            //      and `parent_id = threadRootUuid`.
+            //   2. Increments the parent's `reply_count` atomically.
+            //   3. Broadcasts `message.created` to the channel room.
+            //
+            // channelService.handleMessageCreated upserts the row into the
+            // channel's `messagesByChannel` slice; the thread-pane
+            // subscription in `useChatManagement` picks it up and patches
+            // `currentThreadChat.messages` automatically. No optimistic
+            // local state needed here.
+            const bodyText: string = getFirstLine(content[0]);
+            const channelUuid = String(thread.chatId);
+            const threadRootUuid = String(thread.threadId);
+            try {
+                // `echo`: optimistic local row so the reply renders in the
+                // thread pane immediately instead of after the server ack
+                // round-trip. channelService swaps it for the server row on
+                // ack and removes it on failure (the restore then
+                // puts the text back in the composer).
+                await channelService.send(channelUuid, withTrailingBlank(content), {
+                    parentId: threadRootUuid,
+                    bodyText,
+                    echo: {
+                        sender: {
+                            avatarImgPath: myself.avatarImgPath || null,
+                            isSystemUser: false,
+                            userEmail: myself.userEmail,
+                            userId: myself.userId,
+                            userName: myself.userName,
+                        },
+                    },
+                });
+                return true;
+            } catch (e) {
+                console.error("[bnThreadEditor] channelService.send failed:", e);
+                emitRequestError("messageSendFailed");
+                return false;
+            }
+        },
+    });
+    const { editor } = composer;
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
@@ -161,187 +205,21 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         }
     }, [selectedEmoji]);
 
-    // Per-file progress for the thread-pane drop loop, mirroring the
-    // chat editor.
-    const [pendingUpload, setPendingUpload] = useState<{
-        index: number;
-        total: number;
-        name: string;
-    } | null>(null);
-
-    // Upload files in series and insert each as an image/file block at
-    // the end of the doc, driving the dim progress overlay. Shared by the
-    // thread-pane drop loop and the mobile "attach image/file" toolbar
-    // picker (both hand off a raw File[] the same way).
-    const uploadAndInsertFiles = async (files: File[]) => {
-        // Drop oversize files up-front so the dim overlay only counts
-        // files we'll actually try to upload.
-        const acceptedFiles = filterFiles(files);
-        if (acceptedFiles.length === 0) return;
-        try {
-            for (let i = 0; i < acceptedFiles.length; i += 1) {
-                const file = acceptedFiles[i];
-                setPendingUpload({
-                    index: i + 1,
-                    total: acceptedFiles.length,
-                    name: file.name,
-                });
-                try {
-                    const url = await uploadFile(file);
-                    const isImage = file.type.startsWith("image/");
-                    editor.insertBlocks(
-                        [
-                            isImage
-                                ? { type: "image", props: { url, name: file.name } }
-                                : { type: "file", props: { url, name: file.name } },
-                        ],
-                        editor.document[editor.document.length - 1],
-                        "after"
-                    );
-                } catch (err) {
-                    console.error("Failed to insert file:", err);
-                }
-            }
-        } finally {
-            setPendingUpload(null);
-        }
-    };
-
-    // Hidden native picker behind the mobile "attach" toolbar button. On
-    // a phone BlockNote's drag-drop / side-menu insert paths aren't
-    // reachable, so this is the only way to send an image/file.
-    const attachInputRef = useRef<HTMLInputElement>(null);
-    const onAttachInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files ? Array.from(event.target.files) : [];
-        // Reset so picking the same file twice in a row re-fires change.
-        event.target.value = "";
-        if (files.length > 0) void uploadAndInsertFiles(files);
-    };
-
-    // Process files dropped on the thread pane (outside the editor)
-    useEffect(() => {
-        if (pendingFiles && pendingFiles.length > 0 && clearPendingFiles) {
-            void uploadAndInsertFiles(pendingFiles).finally(() => clearPendingFiles());
-        }
-    }, [pendingFiles]);
-
-    // Whether there is anything to send (MIP-1039; see bnChatEditor).
-    const [canSend, setCanSend] = useState<boolean>(false);
-
-    // Per-thread draft cache: see `useEditorDraft` for the
-    // load/save/clear lifecycle. Keyed by chatType + chatId +
-    // threadId so each thread keeps its own in-progress reply
-    // separate from the parent chat's main-channel draft.
-    const draftCacheKey =
-        thread?.chatType != null && thread?.chatId != null && thread?.threadId != null
-            ? `thread:${thread.chatType}:${thread.chatId}:${thread.threadId}`
-            : null;
-    const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
-
-    // Hold send while a dropped/pasted image or file is still uploading —
-    // BlockNote inserts the block before its `url` resolves, so sending now
-    // ships an empty attachment. `editorUploadCount` covers BlockNote's own
-    // drop/paste/slash inserts; `pendingUpload` covers the thread-pane drop
-    // loop. See `bnChatEditor` for the fuller rationale.
-    const uploadInProgress = editorUploadCount > 0 || pendingUpload !== null;
-
-    const sendingThreadMessage = async () => {
-        if (!hasSendableContent(editor.document) || uploadInProgress) return;
-        // v3 cutover. The legacy `socket.emit("thread_message", POST,
-        // ...)` + manual optimistic append + addThreadMessage IDB
-        // write is replaced by `channelService.send(channelUuid,
-        // body, {parentId: threadRootUuid, bodyText})`. The v3 backend:
-        //
-        //   1. Persists a `Message` row with `is_thread_reply=true`
-        //      and `parent_id = threadRootUuid`.
-        //   2. Increments the parent's `reply_count` atomically.
-        //   3. Broadcasts `message.created` to the channel room.
-        //
-        // channelService.handleMessageCreated upserts the row into the
-        // channel's `messagesByChannel` slice; the thread-pane
-        // subscription in `useChatManagement` picks it up and patches
-        // `currentThreadChat.messages` automatically. No optimistic
-        // local state needed here.
-        const content: any[] | any = editor.document;
-        const bodyText: string = getFirstLine(content[0]);
-        const channelUuid = String(thread.chatId);
-        const threadRootUuid = String(thread.threadId);
-        // Clear the composer immediately — don't freeze it on the server
-        // round-trip (same fix as bnChatEditor; the previous code awaited
-        // the send before clearing, holding the editor full for the full
-        // ack latency, up to the backend's 10s Django timeout). The send
-        // runs in the background.
-        editor.replaceBlocks(editor.document, []);
-        clearDraft();
-        let sent = true;
-        try {
-            // `echo`: optimistic local row so the reply renders in the
-            // thread pane immediately instead of after the server ack
-            // round-trip. channelService swaps it for the server row on
-            // ack and removes it on failure (the restore below then
-            // puts the text back in the composer).
-            await channelService.send(channelUuid, withTrailingBlank(content), {
-                parentId: threadRootUuid,
-                bodyText,
-                echo: {
-                    sender: {
-                        avatarImgPath: myself.avatarImgPath || null,
-                        isSystemUser: false,
-                        userEmail: myself.userEmail,
-                        userId: myself.userId,
-                        userName: myself.userName,
-                    },
-                },
-            });
-        } catch (e) {
-            console.error("[bnThreadEditor] channelService.send failed:", e);
-            emitRequestError("messageSendFailed");
-            sent = false;
-        }
-        // On failure (toast already surfaced), restore the text so it isn't
-        // lost — but only if the user hasn't started a new message. Re-insert
-        // a JSON deep-clone, matching how useEditorDraft restores a draft.
-        if (!sent && !hasSendableContent(editor.document)) {
-            try {
-                editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(content)));
-            } catch {
-                /* stale block shape — nothing else we can do */
-            }
-        }
-    };
-
-    const countLines = (nodes: any[]): number => {
-        let count = 0;
-        for (const node of nodes) {
-            count += 1; // count the current node itself
-            if (node.children?.length) {
-                count += countLines(node.children); // recursive call
-            }
-            if (node.content && node.content[0]) {
-                if (node.content[0].text) {
-                    count += node.content[0].text.split("\n").length;
-                }
-            }
-            // Add 30 lines for each image to avoid scroll issues.
-            if (node.type === "image") {
-                count += 10;
-            }
-        }
-        return count;
-    };
-
     return (
         <Box>
-            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            <FileSizeRejectionSnackbar
+                rejection={composer.rejection}
+                onDismiss={composer.dismissRejection}
+            />
             {/* Hidden native picker for the mobile "attach image/file"
                 toolbar button. Rendered unconditionally; only the button
                 that clicks it is mobile-gated. */}
             <input
-                ref={attachInputRef}
+                ref={composer.attachInputRef}
                 type="file"
                 multiple
                 style={{ display: "none" }}
-                onChange={onAttachInputChange}
+                onChange={composer.onAttachInputChange}
             />
             {/* Anchored so the picker's bottom edge sits right on the
                 editor's top edge (the zero-height wrapper renders directly
@@ -361,15 +239,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 onSelect={insertGif}
             />
             <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
-                <FileUploadStatusBadge count={editorUploadCount} />
+                <FileUploadStatusBadge count={composer.editorUploadCount} />
                 <FileUploadOverlay
                     label={t.common.ui.fileUpload.uploadingDroppedFiles}
-                    open={pendingUpload !== null}
-                    detail={
-                        pendingUpload
-                            ? `${pendingUpload.name} (${pendingUpload.index} / ${pendingUpload.total})`
-                            : undefined
-                    }
+                    open={composer.overlay.open}
+                    detail={composer.overlay.detail}
                 />
                 <BlockNoteView
                     className="bn-box"
@@ -383,22 +257,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo // custom font
-                    onChange={() => {
-                        const comments: any[] = editor.document;
-                        setNumEditorLines(countLines(comments));
-                        setCanSend(hasSendableContent(editor.document));
-                        saveDraft(editor.document);
-                    }}
-                    onKeyDown={(event) => {
-                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            sendingThreadMessage();
-                        }
-                    }}
+                    onChange={composer.viewProps.onChange}
+                    onKeyDown={composer.viewProps.onKeyDown}
                 >
-                    <EditorSendButton
-                        disabled={!canSend || uploadInProgress}
-                        onSend={sendingThreadMessage}
-                    />
+                    <EditorSendButton disabled={composer.sendDisabled} onSend={composer.send} />
 
                     <Box
                         className="bn-editor-toolbar"
@@ -415,7 +277,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             isMobile={isMobile}
                             setShowEmojiPicker={setShowEmojiPicker}
                             setShowGifPicker={setShowGifPicker}
-                            onAttach={() => attachInputRef.current?.click()}
+                            onAttach={composer.openAttach}
                             wrapToggles={{ unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode }}
                         />
                     </Box>

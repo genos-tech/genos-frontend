@@ -1,4 +1,8 @@
 export const common = {
+    // The shared SearchField (components/ui/SearchField.tsx).
+    searchField: {
+        clear: "Clear search",
+    },
     feedback: {
         loading: "Loading…",
         toast: {

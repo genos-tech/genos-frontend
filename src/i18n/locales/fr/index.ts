@@ -1506,6 +1506,9 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     common: {
+        searchField: {
+            clear: "Effacer la recherche",
+        },
         feedback: {
             loading: "Chargement…",
             toast: {
@@ -2285,6 +2288,15 @@ export const fr: DeepPartial<Messages> = {
             messageReminder: "Rappel",
             todoReminder: "Rappel de tâche",
             genosReport: "Rapport Genos",
+        },
+        report: {
+            showMore: "Afficher {count} de plus",
+            showLess: "Afficher moins",
+            emptyTitle: "Tout est à jour",
+            emptyBody: "Rien ne demande votre attention pour le moment.",
+            daysLate: "{days} j de retard",
+            statComments: "Commentaires",
+            statItems: "Éléments",
         },
         messageReminder: {
             headline: "Vous avez demandé un rappel à propos de ce message.",

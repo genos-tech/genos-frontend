@@ -6,6 +6,9 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const hi: DeepPartial<Messages> = {
     common: {
+        searchField: {
+            clear: "खोज साफ़ करें",
+        },
         feedback: {
             loading: "लोड हो रहा है…",
             toast: {
@@ -3338,6 +3341,15 @@ export const hi: DeepPartial<Messages> = {
             messageReminder: "रिमाइंडर",
             todoReminder: "टू-डू रिमाइंडर",
             genosReport: "Genos रिपोर्ट",
+        },
+        report: {
+            showMore: "{count} और दिखाएँ",
+            showLess: "कम दिखाएँ",
+            emptyTitle: "सब ठीक है",
+            emptyBody: "अभी आपके ध्यान की कोई चीज़ नहीं है।",
+            daysLate: "{days} दिन की देरी",
+            statComments: "टिप्पणियाँ",
+            statItems: "आइटम",
         },
         messageReminder: {
             headline: "आपने इस मेसेज की याद दिलाने के लिए कहा था।",

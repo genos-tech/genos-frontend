@@ -50,6 +50,7 @@ import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectTagChip } from "../ProjectTagChip";
 import {
     CellButton,
+    CellDateInput,
     CellTextInput,
     ChipSelect,
     EffortLabel,
@@ -561,21 +562,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 const commitDate = () =>
                     void commitCustomField(def.fieldId, editValue.trim() || null);
                 return (
-                    <input
-                        type="date"
+                    <CellDateInput
+                        ariaLabel={def.fieldName}
                         value={editValue}
-                        style={{
-                            width: "100%",
-                            padding: "6px 10px",
-                            fontSize: "0.875rem",
-                            border: `1px solid ${mode === "dark" ? "#555" : "#ccc"}`,
-                            borderRadius: "6px",
-                            backgroundColor: mode === "dark" ? "#1e1e1e" : "#fff",
-                            color: mode === "dark" ? "#e0e0e0" : "#333",
-                        }}
                         autoFocus
                         onBlur={commitDate}
-                        onChange={(e) => setEditValue(e.target.value)}
+                        onChange={setEditValue}
                         onKeyDown={(e) => {
                             if (e.key === "Enter") commitDate();
                             if (e.key === "Escape") handleCancelEdit();
@@ -1171,21 +1163,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
             case "dueDate":
                 if (editingField === "dueDate") {
                     return (
-                        <input
-                            type="date"
+                        <CellDateInput
+                            ariaLabel={t.tasks.table.columns.dueDate}
                             value={editValue}
-                            style={{
-                                width: "100%",
-                                padding: "6px 10px",
-                                fontSize: "0.875rem",
-                                border: `1px solid ${mode === "dark" ? "#555" : "#ccc"}`,
-                                borderRadius: "6px",
-                                backgroundColor: mode === "dark" ? "#1e1e1e" : "#fff",
-                                color: mode === "dark" ? "#e0e0e0" : "#333",
-                            }}
                             autoFocus
                             onBlur={() => handleSaveEdit("dueDate")}
-                            onChange={(e) => setEditValue(e.target.value)}
+                            onChange={setEditValue}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") handleSaveEdit("dueDate");
                                 if (e.key === "Escape") handleCancelEdit();

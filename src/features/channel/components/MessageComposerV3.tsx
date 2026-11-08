@@ -40,17 +40,20 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { DefaultReactSuggestionItem, SuggestionMenuController } from "@blocknote/react";
 
+import {
+    isSendShortcut,
+    useChatComposer,
+} from "../../../components/editors/composer/useChatComposer";
 import { createGenosSchema } from "../../../components/editors/genos/genosSchema";
-import { useGenosEditor } from "../../../components/editors/genos/useGenosEditor";
 import { HashSuggestionMenuController } from "../../../components/editors/HashMention";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
-import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
+import type { Message } from "../../../types/channel";
 import { filterAndRankSuggestionItems } from "../../../utils/suggestionRanking";
 import { useAttachmentDraft } from "../hooks/useAttachmentDraft";
 import { createMentionGroupSpecV3, createMentionSpecV3 } from "./MentionV3";
@@ -166,11 +169,17 @@ export function MessageComposerV3({
         [currentUserId]
     );
 
-    // The same editing rules as every composer (Tab indents, the ``` fence rule that keeps an
-    // unknown typed language from wedging the highlighted code block, the link-host caption):
-    // they come with the `composer` surface instead of a copy of the list here.
-    const editor = useGenosEditor({
-        surface: "composer",
+    const attachments = useAttachmentDraft();
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const hasAttachments = attachments.pending.some((p) => p.error === null);
+
+    // Draft, editor, chord and send flow come from the shared composer hook. The same editing
+    // rules as every composer (Tab indents, the ``` fence rule that keeps an unknown typed
+    // language from wedging the highlighted code block, the link-host caption) come with its
+    // `composer` surface. What differs on purpose here: the text stays in the editor until the
+    // request is acked (`clear: "after"`), staged attachments count as content, emptiness is
+    // this file's own `hasContent`, and there is no inline upload (the strip stages files).
+    const composer = useChatComposer<Message | null>({
         schema,
         dictionary: {
             placeholders: {
@@ -180,57 +189,47 @@ export function MessageComposerV3({
             },
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
-    });
-
-    const draftKey = useMemo(() => draftKeyFor(channelId, parentId), [channelId, parentId]);
-    const { saveDraft, clearDraft } = useEditorDraft(editor, draftKey);
-
-    const attachments = useAttachmentDraft();
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [busy, setBusy] = useState(false);
-
-    /** Send the current document. Idempotent against rapid double-clicks
-     *  via the `busy` lock — channelService's pending-queue would
-     *  dedupe at the correlation_id layer if a duplicate did slip
-     *  through, but we'd rather not stage two pending entries. */
-    const send = useCallback(async () => {
-        const blocks = editor.document;
-        const hasAttachments = attachments.pending.some((p) => p.error === null);
-        if (!hasContent(blocks) && !hasAttachments) return;
-
-        setBusy(true);
-        try {
-            const bodyText = deriveBodyText(blocks);
-            const msg = await channelService.send(channelId, blocks, { bodyText, parentId });
-            // Upload attachments AFTER the message exists. If the ack
-            // didn't echo the message (older server shape), skip the
-            // uploads — the user can retry once the broadcast lands.
-            if (msg && hasAttachments) {
-                const report = await attachments.uploadAll(channelId, msg.id);
-                if (report.failed.length > 0 && onError) {
-                    onError(
-                        `Uploaded ${report.succeeded}, ${report.failed.length} failed: ` +
-                            report.failed.map((f) => f.error).join("; ")
-                    );
+        draftKey: draftKeyFor(channelId, parentId),
+        // The Send button reads `editor.document` at render time (it never had state).
+        trackCanSend: false,
+        isSendable: (blocks) => hasContent(blocks) || hasAttachments,
+        clear: "after",
+        // Send the current document. `busy` disables the Send and attach buttons while this
+        // runs; it does NOT stop a second Cmd+Enter (the text stays until the ack), so a fast
+        // double chord sends twice. Kept as it was; see MIP-1161.
+        submit: async (blocks) => {
+            try {
+                const bodyText = deriveBodyText(blocks);
+                const msg = await channelService.send(channelId, blocks, { bodyText, parentId });
+                // Upload attachments AFTER the message exists. If the ack
+                // didn't echo the message (older server shape), skip the
+                // uploads — the user can retry once the broadcast lands.
+                if (msg && hasAttachments) {
+                    const report = await attachments.uploadAll(channelId, msg.id);
+                    if (report.failed.length > 0 && onError) {
+                        onError(
+                            `Uploaded ${report.succeeded}, ${report.failed.length} failed: ` +
+                                report.failed.map((f) => f.error).join("; ")
+                        );
+                    }
                 }
+                return msg ?? null;
+            } catch (e) {
+                const err = e as ChannelServiceError;
+                onError?.(`${err.code ?? "ERROR"}: ${err.message ?? String(e)}`);
+                return false;
             }
-            // Clear the editor + draft on a clean send. Pending strip
-            // is only reset when there are no remaining errors — failed
-            // uploads stay visible so the user can retry without
-            // re-picking the files.
-            editor.replaceBlocks(editor.document, []);
-            clearDraft();
+        },
+        // After the clear. Pending strip is only reset when there are no remaining errors —
+        // failed uploads stay visible so the user can retry without re-picking the files.
+        onSent: (msg) => {
             if (!hasAttachments || attachments.pending.length === 0) {
                 attachments.reset();
             }
             if (msg) onSendComplete?.(msg.id);
-        } catch (e) {
-            const err = e as ChannelServiceError;
-            onError?.(`${err.code ?? "ERROR"}: ${err.message ?? String(e)}`);
-        } finally {
-            setBusy(false);
-        }
-    }, [editor, channelId, parentId, attachments, clearDraft, onSendComplete, onError]);
+        },
+    });
+    const { editor, busy } = composer;
 
     const getMentionItems = useCallback(
         async (query: string): Promise<DefaultReactSuggestionItem[]> => {
@@ -258,8 +257,6 @@ export function MessageComposerV3({
         },
         [editor, members]
     );
-
-    const hasAttachments = attachments.pending.some((p) => p.error === null);
 
     return (
         <>
@@ -312,10 +309,10 @@ export function MessageComposerV3({
                     data-testid={`${testIdPrefix}-editor-host`}
                     style={{ flex: 1, minWidth: 0 }}
                     onKeyDown={(e) => {
-                        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                        if (isSendShortcut(e)) {
                             e.preventDefault();
                             e.stopPropagation();
-                            void send();
+                            void composer.send();
                         }
                     }}
                 >
@@ -325,7 +322,7 @@ export function MessageComposerV3({
                         formattingToolbar={true}
                         sideMenu={false}
                         slashMenu={true}
-                        onChange={() => saveDraft(editor.document)}
+                        onChange={composer.viewProps.onChange}
                     >
                         <HashSuggestionMenuController editor={editor} />
                         <SuggestionMenuController
@@ -343,7 +340,7 @@ export function MessageComposerV3({
                         attachments.isUploading ||
                         (!hasContent(editor.document) && !hasAttachments)
                     }
-                    onClick={() => void send()}
+                    onClick={() => void composer.send()}
                 >
                     {attachments.isUploading ? "Uploading…" : "Send"}
                 </button>

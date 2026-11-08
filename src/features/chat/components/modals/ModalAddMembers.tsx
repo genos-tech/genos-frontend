@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy";
+import { Alert, Box, Button, Checkbox, Chip, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -292,12 +292,11 @@ export const ModalAddMembers: React.FC<Props> = ({
             )}
 
             {/* Search Input */}
-            <Input
+            <SearchField
                 placeholder={t.chat.modals.addMembers.searchPlaceholder}
-                startDecorator={<SearchRoundedIcon sx={{ color: g.text.tertiary }} />}
                 sx={{ mb: 2 }}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={setSearchQuery}
             />
 
             {/* Member List */}

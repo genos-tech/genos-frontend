@@ -15,12 +15,13 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
-import { Box, Button, FormControl, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { Box, Button, FormControl, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation } from "react-router-dom";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { Toast } from "../../../../../components/ui/feedback/Toast";
+import { InlineTitleEdit } from "../../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
@@ -844,57 +845,20 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 later), or keep editing.
             </ModalFrame>
 
-            {/* Title Input */}
+            {/* Title: the shared inline editor, always an input here. Live text goes to
+                the host as before (the create form reads it on Create); a change that
+                survives blur marks the task updated so it saves. Escape puts the saved
+                title back; an emptied title is refused. */}
             <FormControl sx={{ width: "100%" }} required>
-                <Input
-                    key={"taskTitle"}
+                <InlineTitleEdit
+                    ariaLabel={t.tasks.titleBlock.titlePlaceholder}
+                    inputRef={titleInputRef}
+                    level="h3"
                     placeholder={t.tasks.titleBlock.titlePlaceholder}
                     value={taskTitle}
-                    variant="plain"
-                    slotProps={{
-                        input: {
-                            ref: titleInputRef,
-                            onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-                                if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    titleInputRef.current?.blur();
-                                }
-                            },
-                        },
-                    }}
-                    sx={{
-                        width: "100%",
-                        fontSize: "1.35rem",
-                        fontWeight: 700,
-                        backgroundColor: "transparent",
-                        p: 0,
-                        "--Input-focusedInset": "none",
-                        "--Input-focusedThickness": "0",
-                        "&::before": { display: "none" },
-                        color: isDark ? "rgba(255,255,255,0.95)" : "rgba(0,0,0,0.9)",
-                        "&:hover": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.02)"
-                                : "rgba(0,0,0,0.02)",
-                        },
-                        "&:focus-within": {
-                            backgroundColor: isDark
-                                ? "rgba(255,255,255,0.03)"
-                                : "rgba(0,0,0,0.02)",
-                        },
-                        "& input::placeholder": {
-                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                            fontWeight: 500,
-                        },
-                    }}
-                    onBlur={() => {
-                        if (setTaskUpdated) {
-                            setTaskUpdated(true);
-                        }
-                    }}
-                    onChange={(e) => {
-                        setTaskTitle(e.target.value);
-                    }}
+                    variant="field"
+                    onCommit={() => setTaskUpdated?.(true)}
+                    onDraftChange={setTaskTitle}
                 />
             </FormControl>
 

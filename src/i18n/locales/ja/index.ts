@@ -1486,6 +1486,9 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     common: {
+        searchField: {
+            clear: "検索をクリア",
+        },
         feedback: {
             loading: "読み込み中…",
             toast: {
@@ -2265,6 +2268,15 @@ export const ja: DeepPartial<Messages> = {
             messageReminder: "リマインダー",
             todoReminder: "To-Do リマインダー",
             genosReport: "Genos レポート",
+        },
+        report: {
+            showMore: "残り{count}件を表示",
+            showLess: "表示を減らす",
+            emptyTitle: "問題なし",
+            emptyBody: "今すぐ対応が必要なものはありません。",
+            daysLate: "{days}日遅れ",
+            statComments: "コメント",
+            statItems: "項目",
         },
         messageReminder: {
             headline: "このメッセージのリマインダーです。",
