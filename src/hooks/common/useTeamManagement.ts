@@ -48,8 +48,50 @@ export const useTeamManagement = (
     // effect would stack another interval on top of the old one.
     const intervalRef = useRef<number | null>(null);
 
+    // Reads the roster (one row per member, with presence) out of IndexedDB and
+    // hands it to `teamMemberProfiles`, the map every avatar resolves a person
+    // through. `alsoMembers` additionally feeds `teamMembers` (the 60 s poll
+    // does; `funcSetTeamMembers` has its own, sorted, read for that list).
+    const loadProfiles = (who: UserProps, alsoMembers: boolean) =>
+        usersChannel
+            .request("popTeamUsers", { myself: who })
+            .then((data) => {
+                if (data && typeof data === "object" && "error" in data) {
+                    console.error("popTeamUsers failed:", data.error);
+                    return;
+                }
+                const record = data as Record<string, UserProps>;
+                // This runs every 60 s and the worker rebuilds the record
+                // from IndexedDB each time, so an unchanged roster comes
+                // back as a new object and a new array. Keep the previous
+                // references when the content is equal: the task table's
+                // row memos compare `teamMembers` by reference, so a fresh
+                // array re-rendered every visible row once a minute. A
+                // real change (a new member, a new avatar, a status or
+                // presence flip) still produces a new reference; the
+                // heartbeat timestamp alone does not.
+                setTeamMemberProfiles((prev) => keepIfEqual(prev, record, ROSTER_IGNORED_KEYS));
+                if (!alsoMembers) return;
+                const members = Object.values(record);
+                if (members.length > 0) {
+                    setTeamMembers((prev) => keepIfEqual(prev, members, ROSTER_IGNORED_KEYS));
+                }
+            })
+            .catch((err) => {
+                console.error("popTeamUsers error:", err);
+            });
+
+    // Called when the roster has just been (re)written to IndexedDB (the boot
+    // and wake refreshes). It must repaint BOTH lists: on a cold start the two
+    // reads the 60 s poll made before the roster landed came back empty, and
+    // with only `teamMembers` refreshed here `teamMemberProfiles` stayed `{}`
+    // for up to a minute — every avatar resolved through it (the DM list, the
+    // chat bubbles) showed "?" for the whole first minute (MIP-1244).
     const funcSetTeamMembers = async () => {
-        const teamMembers: UserProps[] = await popTeamMembers(myself);
+        const [teamMembers] = await Promise.all([
+            popTeamMembers(myself),
+            loadProfiles(myself, false),
+        ]);
         if (teamMembers) {
             // Same identity guard as the 60 s poll below: the boot / wake
             // refresh re-reads the roster, and an equal one is not a change.
@@ -93,34 +135,7 @@ export const useTeamManagement = (
         if (!myself.userId) return;
 
         const refresh = () => {
-            usersChannel
-                .request("popTeamUsers", { myself })
-                .then((data) => {
-                    if (data && typeof data === "object" && "error" in data) {
-                        console.error("popTeamUsers failed:", data.error);
-                        return;
-                    }
-                    const record = data as Record<string, UserProps>;
-                    // This runs every 60 s and the worker rebuilds the record
-                    // from IndexedDB each time, so an unchanged roster comes
-                    // back as a new object and a new array. Keep the previous
-                    // references when the content is equal: the task table's
-                    // row memos compare `teamMembers` by reference, so a fresh
-                    // array re-rendered every visible row once a minute. A
-                    // real change (a new member, a new avatar, a status or
-                    // presence flip) still produces a new reference; the
-                    // heartbeat timestamp alone does not.
-                    setTeamMemberProfiles((prev) =>
-                        keepIfEqual(prev, record, ROSTER_IGNORED_KEYS)
-                    );
-                    const members = Object.values(record);
-                    if (members.length > 0) {
-                        setTeamMembers((prev) => keepIfEqual(prev, members, ROSTER_IGNORED_KEYS));
-                    }
-                })
-                .catch((err) => {
-                    console.error("popTeamUsers error:", err);
-                });
+            void loadProfiles(myself, true);
         };
 
         refresh();

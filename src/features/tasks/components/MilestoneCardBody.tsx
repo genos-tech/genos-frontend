@@ -154,6 +154,7 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
                                 {assignees.slice(0, MAX_AVATARS).map((a) => (
                                     <AssigneeAvatar
                                         key={String(a.userId)}
+                                        name={cachedName(a)}
                                         size="xs"
                                         userId={a.userId as string | number}
                                     />

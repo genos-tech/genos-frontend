@@ -35,11 +35,19 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     socket,
     useCM,
 }) => {
+    // The roster loads lazily; until the partner's profile is in it the row
+    // still knows who they are (id + name), which is all the avatar needs
+    // for its initial and for resolving the live profile when it lands.
+    const partnerProfile =
+        chatType === 1
+            ? (useTEM.teamMemberProfiles[chat.dmPartnerUser.userId] ?? chat.dmPartnerUser)
+            : undefined;
+
     // DM Chat with partner
     if (chatType === 1 && chat.dmPartnerUser.userId !== "") {
         return (
             <AvatarWithStatus
-                avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
+                avatarUser={partnerProfile}
                 chat={chat}
                 isYou={isYou}
                 myself={myself}

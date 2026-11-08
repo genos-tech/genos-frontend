@@ -155,7 +155,10 @@ export const TaskListItem = ({
                     {task.assigneeId ? (
                         <AppTooltip title={assigneeLabel ?? task.assigneeName ?? ""}>
                             <Box sx={{ display: "flex" }}>
-                                <AssigneeAvatar userId={task.assigneeId} />
+                                <AssigneeAvatar
+                                    name={task.assigneeName}
+                                    userId={task.assigneeId}
+                                />
                             </Box>
                         </AppTooltip>
                     ) : null}

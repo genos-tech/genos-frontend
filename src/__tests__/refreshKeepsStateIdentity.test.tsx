@@ -529,6 +529,30 @@ describe("team roster refresh", () => {
         expect(result.current.teamMemberProfiles["user-2"].isOnline).toBe(false);
     });
 
+    it("the post-refresh repaint fills teamMemberProfiles, not just teamMembers (MIP-1244)", async () => {
+        // Cold start: the two reads the hook makes on mount happen before the
+        // roster has been written to IndexedDB, so they come back empty. The
+        // boot refresh then writes it and calls `funcSetTeamMembers`; that
+        // repaint used to refresh `teamMembers` only, leaving the map every
+        // avatar resolves through empty until the next 60 s tick.
+        vi.mocked(usersChannel.request).mockResolvedValue({} as never);
+        const { result } = renderHook(() => useTeamManagement(myself, "test-token"));
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(0);
+        });
+        expect(Object.keys(result.current.teamMemberProfiles)).toHaveLength(0);
+
+        answerWith([member("user-1", { isOnline: true }), member("user-2")]);
+        await act(async () => {
+            await result.current.funcSetTeamMembers();
+        });
+
+        expect(Object.keys(result.current.teamMemberProfiles).sort()).toEqual([
+            "user-1",
+            "user-2",
+        ]);
+    });
+
     it("produces new references when a member's avatar changes", async () => {
         const users = [member("user-1", { isOnline: true }), member("user-2")];
         answerWith(users);

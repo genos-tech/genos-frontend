@@ -340,7 +340,11 @@ export const TaskNodeView = ({
                 {!isGhost && task.assigneeId && (
                     <AppTooltip enterDelay={400} title={task.assigneeName ?? ""}>
                         <Box sx={{ display: "inline-flex" }}>
-                            <AssigneeAvatar size="xs" userId={task.assigneeId} />
+                            <AssigneeAvatar
+                                name={task.assigneeName}
+                                size="xs"
+                                userId={task.assigneeId}
+                            />
                         </Box>
                     </AppTooltip>
                 )}
