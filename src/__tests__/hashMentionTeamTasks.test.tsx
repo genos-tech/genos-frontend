@@ -173,9 +173,8 @@ describe("HashMentionMenuItems — task status chip", () => {
     });
 
     it("renders no chip when the status is unknown, rather than a wrong one", () => {
-        // `TaskStatusChip` falls back to Open's styling for an
-        // unrecognized label, so an absent status must render nothing at
-        // all instead of silently claiming the task is Open.
+        // An unknown status must render nothing at all instead of
+        // silently claiming the task is Open.
         const items = HashMentionMenuItems(
             newEditor(),
             dataWith({ tasks: [openProjectTask({ status: null })] })

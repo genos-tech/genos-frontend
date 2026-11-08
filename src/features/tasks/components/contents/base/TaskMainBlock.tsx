@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -45,6 +44,7 @@ import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
 import { MultiMemberPicker } from "../../autocompletes/MultiMemberPicker";
 import { TaskIdText } from "../../card";
+import { StatusLabel } from "../../meta/StatusLabel";
 import { CustomFieldsBlock } from "./CustomFieldsBlock";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
@@ -546,21 +546,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             {blocked && (
                 <Box sx={{ mb: 1 }}>
                     <AppTooltip title={t.tasks.dependencies.blockedTooltip}>
-                        <Chip
-                            color="warning"
-                            size="sm"
-                            startDecorator={<BlockRoundedIcon sx={{ fontSize: 14 }} />}
-                            variant="soft"
-                            sx={{
-                                fontWeight: 700,
-                                letterSpacing: "0.04em",
-                                textTransform: "uppercase",
-                                fontSize: "0.7rem",
-                                borderRadius: "5px",
-                            }}
-                        >
-                            {t.tasks.dependencies.blockedBadge}
-                        </Chip>
+                        {/* A derived "a blocker is still open" flag, not the status
+                            field: the table's Blocked look (icon and word). */}
+                        <Box component="span" sx={{ display: "inline-flex" }} data-blocked-badge>
+                            <StatusLabel status="Blocked" />
+                        </Box>
                     </AppTooltip>
                 </Box>
             )}

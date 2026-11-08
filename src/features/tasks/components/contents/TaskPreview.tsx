@@ -63,7 +63,7 @@ import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
-import { STATUS_FILL } from "../../meta/taskTone";
+import { isStatusName, statusSolid, toneSolid } from "../../meta/taskTone";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -1127,8 +1127,10 @@ const milestoneToTaskProps = (
         status: {
             code: 0,
             status: m.status as string,
-            color: STATUS_FILL[m.status as string] ?? "#94a3b8",
-            textColor: "white",
+            // The status's own fill from the tone source; an unknown one is neutral.
+            ...(isStatusName(m.status as string)
+                ? statusSolid(m.status as Parameters<typeof statusSolid>[0])
+                : { color: toneSolid("neutral").bg, textColor: toneSolid("neutral").fg }),
         },
         priority: {
             code: m.priorityCode ?? -1,

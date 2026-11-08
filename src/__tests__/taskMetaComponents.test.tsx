@@ -16,7 +16,6 @@ import { PriorityIcon } from "../features/tasks/components/meta/PriorityIcon";
 import { StatusLabel } from "../features/tasks/components/meta/StatusLabel";
 import { Tag } from "../features/tasks/components/meta/Tag";
 import { ProjectTagChip } from "../features/tasks/components/ProjectTagChip";
-import { TaskStatusChip } from "../features/tasks/components/TaskStatusChip";
 import { PRIORITY_NAMES, STATUS_NAMES } from "../features/tasks/meta/taskTone";
 import { I18nProvider, loadLocale } from "../i18n";
 import { ja } from "../i18n/locales/ja";
@@ -235,8 +234,8 @@ describe("Tag", () => {
 });
 
 describe("the old chips are the shared label now", () => {
-    it("TaskStatusChip and the dependency StatusChip render a StatusLabel", () => {
-        const a = render(<TaskStatusChip status="Blocked" />);
+    it("StatusLabel and the dependency StatusChip draw the same status", () => {
+        const a = render(<StatusLabel status="Blocked" />);
         const b = render(
             <StatusChip
                 meta={{ code: 0, status: "Blocked", color: "#dc2626", textColor: "#fff" }}

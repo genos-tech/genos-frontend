@@ -12,8 +12,8 @@ import {
     HashNoteEntry,
     useHashMentionData,
 } from "../../context/HashMentionDataContext";
+import { StatusLabel } from "../../features/tasks/components/meta/StatusLabel";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
-import { TaskStatusChip } from "../../features/tasks/components/TaskStatusChip";
 import { lookupTaskByDisplayId } from "../../features/tasks/services/lookupTaskByDisplayId";
 import {
     displayIdEquals,
@@ -338,9 +338,9 @@ const taskSuggestionItem = (
                       project: t.projectName,
                   })
                 : fmt(plainTpl, { id: displayId }),
-            // The canonical dashboard status chip, so a status
+            // The table's StatusLabel, so a status
             // reads identically here and in the task surfaces.
-            t.status ? <TaskStatusChip iconSize={11} status={t.status} /> : null
+            t.status ? <StatusLabel iconSize={11} status={t.status} /> : null
         ),
     };
 };

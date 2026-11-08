@@ -7,8 +7,8 @@ import { AvatarGroup, BaseAvatar } from "../../../../components/ui/avatars/BaseA
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
-import { SPRINT_TONE, STATUS_NAMES, STATUS_TONE, toneJoyColor } from "../../meta/taskTone";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { StatusLabel } from "../../components/meta/StatusLabel";
+import { SprintStatusLabel } from "../../components/meta/ToneLabel";
 import { Milestone, Sprint } from "../types";
 import { selectVisibleMilestones, selectVisibleSprints } from "../utils/sortMilestones";
 
@@ -61,17 +61,6 @@ const makeNoMilestone = (label: string): MilestoneOption => ({
     label,
     milestone: null,
 });
-
-// Joy colors come from the one tone source (MIP-1122): Open is `primary` (Joy
-// has no info), Blocked is danger, and so on, exactly as they were.
-const SPRINT_STATUS_COLOR = Object.fromEntries(
-    Object.entries(SPRINT_TONE).map(([k, tone]) => [k, toneJoyColor(tone)])
-) as Record<string, "primary" | "warning" | "success" | "neutral">;
-
-const MILESTONE_STATUS_COLOR: Record<
-    string,
-    "primary" | "warning" | "danger" | "success" | "neutral"
-> = Object.fromEntries(STATUS_NAMES.map((s) => [s, toneJoyColor(STATUS_TONE[s])]));
 
 // Shared listbox slot styling for both autocompletes. Joy's default
 // listbox lays options flush against each other with no breathing room
@@ -217,21 +206,7 @@ export const SprintMilestonePicker = ({
                                         {option.sprint?.name ?? option.label}
                                     </Typography>
                                     {option.sprint && (
-                                        <Chip
-                                            size="sm"
-                                            variant="soft"
-                                            color={
-                                                SPRINT_STATUS_COLOR[option.sprint.status] ??
-                                                "neutral"
-                                            }
-                                        >
-                                            {
-                                                t.tasks.sprint.status[
-                                                    option.sprint
-                                                        .status as keyof typeof t.tasks.sprint.status
-                                                ]
-                                            }
-                                        </Chip>
+                                        <SprintStatusLabel status={option.sprint.status} />
                                     )}
                                 </Stack>
                                 {option.sprint && (
@@ -288,18 +263,7 @@ export const SprintMilestonePicker = ({
                                         >
                                             {option.label}
                                         </Typography>
-                                        {m && (
-                                            <Chip
-                                                size="sm"
-                                                variant="soft"
-                                                color={
-                                                    MILESTONE_STATUS_COLOR[m.status as string] ??
-                                                    "neutral"
-                                                }
-                                            >
-                                                {taskMetaLabel(m.status, t.tasks.filters)}
-                                            </Chip>
-                                        )}
+                                        {m && <StatusLabel status={m.status as string} />}
                                     </Stack>
                                     {m && (
                                         <Stack

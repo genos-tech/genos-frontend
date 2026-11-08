@@ -14,16 +14,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { STATUS_COLORS } from "../features/tasks/components/TaskStatusChip";
 import {
     PRIORITY_NAMES,
     prioritySolid,
-    STATUS_FILL,
     STATUS_NAMES,
-    STATUS_TONE,
     statusSolid,
-    toneBase,
-    toneSoftBg,
 } from "../features/tasks/meta/taskTone";
 import { MILESTONE_STATUS_CHIP_COLORS } from "../features/tasks/sprint-milestone/utils/sortMilestones";
 import {
@@ -55,22 +50,10 @@ describe("taskMeta arrays are the tone source", () => {
 });
 
 describe("every other palette agrees with it", () => {
-    it.each(STATUS_NAMES)("%s: milestone chip colors, STATUS_FILL", (name) => {
+    it.each(STATUS_NAMES)("%s: milestone chip colors", (name) => {
         const solid = statusSolid(name);
         expect(MILESTONE_STATUS_CHIP_COLORS[name]).toEqual(solid);
-        expect(STATUS_FILL[name]).toBe(solid.color);
     });
-
-    it.each(["Open", "WIP", "Blocked", "Pending", "Closed"] as const)(
-        "%s: the dashboard's soft swatch",
-        (name) => {
-            const tone = STATUS_TONE[name];
-            expect(STATUS_COLORS[name].text).toBe(toneBase(tone));
-            expect(STATUS_COLORS[name].bg).toBe(toneSoftBg(tone, 0.12));
-            // The stat tiles rewrite the alpha by string; that has to keep working.
-            expect(STATUS_COLORS[name].bg.replace("0.12", "0.08")).toMatch(/0\.08\)$/);
-        }
-    );
 
     it.each(["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"] as const)(
         "%s: the table's status filter chip",
@@ -115,13 +98,10 @@ describe("every other palette agrees with it", () => {
         const seen = new Set([
             statuses.find((s) => s.status === "Pending")!.color,
             MILESTONE_STATUS_CHIP_COLORS.Pending.color,
-            STATUS_FILL.Pending,
             byLabel(predefinedStatusFilters, "Pending").lightModeColor,
             COLUMNS.find((c) => c.status === "Pending")!.color,
         ]);
         expect([...seen]).toHaveLength(1);
-        // and the dashboard's soft swatch is the same hue family (neutral gray), not orange
-        expect(STATUS_COLORS.Pending.text).toBe(toneBase("neutral"));
     }, 30000);
 });
 
@@ -190,7 +170,6 @@ describe("the migrated files do not re-declare the old status hexes", () => {
 
     it.each([
         "features/tasks/utils/taskMeta.ts",
-        "features/tasks/components/TaskStatusChip.tsx",
         "features/tasks/components/TaskIdentityRow.tsx",
         "features/tasks/components/sidebar/SearchBox.tsx",
         "features/tasks/components/contents/CreateTaskForm.tsx",

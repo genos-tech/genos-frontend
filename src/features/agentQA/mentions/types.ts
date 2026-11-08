@@ -83,7 +83,7 @@ export interface AgentMentionCandidate {
      * `#task`: the owning project's id and name, and the task's status
      * label ("Open" / "WIP" / …). The subtitle reads "Task · ID · Project"
      * when the name is known, and `status` paints the trailing
-     * `TaskStatusChip` — both matching the BlockNote `#` row.
+     * `StatusLabel` — both matching the BlockNote `#` row.
      *
      * `projectId` additionally supplies the coordinate a task hover card
      * needs (`TaskMentionHoverCard` is project-scoped), which is why the

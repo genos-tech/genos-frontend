@@ -9,8 +9,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
-import { STATUS_FILL } from "../../meta/taskTone";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { StatusLabel } from "../../components/meta/StatusLabel";
 import { Sprint } from "../types";
 import { MILESTONE_LIST_STATUSES } from "../utils/sortMilestones";
 import { DeleteSprintModal } from "./DeleteSprintModal";
@@ -205,16 +204,7 @@ const SprintRow = ({
                                 <Typography level="body-sm" sx={{ flex: 1 }}>
                                     {m.title}
                                 </Typography>
-                                <Chip
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        color: STATUS_FILL[m.status as string] ?? "#94a3b8",
-                                        backgroundColor: `${STATUS_FILL[m.status as string] ?? "#94a3b8"}1A`,
-                                    }}
-                                >
-                                    {taskMetaLabel(m.status, t.tasks.filters)}
-                                </Chip>
+                                <StatusLabel status={m.status as string} />
                                 <Select
                                     placeholder={t.tasks.sprintManager.moveToPlaceholder}
                                     size="sm"
