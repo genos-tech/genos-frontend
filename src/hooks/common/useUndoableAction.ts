@@ -21,14 +21,16 @@ import { toast, ToastDismissReason } from "../../components/ui/feedback/toastSto
  * call also tells other people, purges the search index, writes history and can
  * fire webhooks, and no restore call takes those back.
  *
- * Nothing is ever lost silently. A pending action is committed when
+ * Nothing is meant to be lost silently. A pending action is committed when
  *   - its toast goes away for any reason but Undo (timeout, closed, pushed off
  *     the screen by newer toasts);
  *   - another action starts (one Undo at a time);
  *   - the route changes (`UndoableRouteFlush`);
  *   - the page is hidden or closed (`pagehide`, `beforeunload`), through
  *     `onExit` when given: an axios call or a socket emit does not survive the
- *     page going away, a `fetch` with `keepalive` does.
+ *     page going away, a `fetch` with `keepalive` does. Against a
+ *     cross-origin API that fetch needs a CORS preflight and lands after the
+ *     page is gone, so an immediate reload can still show the item for a moment.
  * The state lives in this module, not in a component, so a keep-alive page that
  * never unmounts and a component that unmounts mid-window both behave.
  *
@@ -62,7 +64,7 @@ export type UndoableRun = {
 
 type State = "pending" | "committing" | "settled";
 
-type Entry = { run: UndoableRun; state: State; toastId: string };
+type Entry = { run: UndoableRun; state: State; toastId: string; exitSent?: boolean };
 
 /** In flight: waiting for Undo, or committing. */
 const entries = new Map<string, Entry>();
@@ -123,6 +125,9 @@ const commitOnExit = (entry: Entry) => {
     if (entry.state !== "pending") return;
     entry.state = "settled";
     entries.delete(entry.run.key);
+    // If the page comes back (bfcache, a cancelled `beforeunload` prompt), an
+    // Undo that does nothing must not be left on screen.
+    toast.dismiss(entry.toastId, "dismiss");
     try {
         if (entry.run.onExit) entry.run.onExit();
         else void entry.run.commit().catch(() => undefined);
@@ -138,8 +143,25 @@ const commitOnExit = (entry: Entry) => {
  */
 export const flushUndoables = (reason: "next" | "navigate" | "exit" = "navigate"): void => {
     for (const entry of [...entries.values()]) {
-        if (reason === "exit") commitOnExit(entry);
-        else void commit(entry);
+        if (reason !== "exit") void commit(entry);
+        else if (entry.state === "pending") commitOnExit(entry);
+        else sendExitAgain(entry);
+    }
+};
+
+/**
+ * A commit that is already running when the page goes away (the toast just
+ * timed out) is an axios call or a socket emit, which the page's death
+ * abandons. The same delete again through the keepalive path is harmless
+ * (every delete here is idempotent) and is the only one that can finish.
+ */
+const sendExitAgain = (entry: Entry) => {
+    if (entry.state !== "committing" || entry.exitSent || !entry.run.onExit) return;
+    entry.exitSent = true;
+    try {
+        entry.run.onExit();
+    } catch {
+        // The page is going away: nothing left to tell.
     }
 };
 
@@ -174,7 +196,7 @@ const isEditable = (target: EventTarget | null): boolean => {
 };
 
 const onKeyDown = (e: KeyboardEvent) => {
-    if (e.defaultPrevented || e.shiftKey || e.altKey) return;
+    if (e.defaultPrevented || e.shiftKey || e.altKey || e.repeat || e.isComposing) return;
     if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== "z") return;
     if (isEditable(e.target)) return;
     const pending = [...entries.values()].filter((entry) => entry.state === "pending");

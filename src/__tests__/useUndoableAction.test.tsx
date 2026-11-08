@@ -235,11 +235,34 @@ describe("useUndoableAction", () => {
         const { run, commit } = make({ key: "a", onExit });
         mount();
         act(() => runUndoable(run));
-        window.dispatchEvent(new Event("pagehide"));
-        window.dispatchEvent(new Event("beforeunload"));
+        act(() => {
+            window.dispatchEvent(new Event("pagehide"));
+            window.dispatchEvent(new Event("beforeunload"));
+        });
+        // The page may come back (bfcache): no Undo that does nothing is left on screen.
+        expect(screen.queryByText("a deleted")).toBeNull();
         await tick(WINDOW * 2);
         expect(onExit).toHaveBeenCalledTimes(1);
         expect(commit).not.toHaveBeenCalled();
+    });
+
+    it("a commit already running when the page goes away is sent again through onExit, once", async () => {
+        // The toast timed out and the commit (an axios call or a socket emit) is in flight;
+        // the page's death abandons it. The keepalive path is the only one that can finish.
+        const onExit = vi.fn();
+        const commit = vi.fn(() => new Promise<void>(() => undefined));
+        const { run } = make({ key: "a", onExit, commit });
+        mount();
+        act(() => runUndoable(run));
+        await tick(WINDOW + 100);
+        expect(commit).toHaveBeenCalledTimes(1);
+        expect(onExit).not.toHaveBeenCalled();
+        act(() => {
+            window.dispatchEvent(new Event("pagehide"));
+            window.dispatchEvent(new Event("beforeunload"));
+        });
+        expect(onExit).toHaveBeenCalledTimes(1);
+        expect(commit).toHaveBeenCalledTimes(1);
     });
 
     it("without onExit the page going away runs commit", async () => {
