@@ -122,7 +122,7 @@ export const RecentProjectGroup = ({
                                                 minWidth: 0,
                                             }}
                                         >
-                                            <TaskIdText copyable={false} task={task} />
+                                            <TaskIdText task={task} />
                                             <StatusLabel iconOnly status={task.status.status} />
                                             <Box
                                                 component="span"
