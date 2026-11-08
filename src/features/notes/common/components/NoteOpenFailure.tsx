@@ -1,13 +1,12 @@
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { Box, IconButton } from "@mui/joy";
 
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import type { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { NoteGoneState } from "./NoteGoneState";
 
 /**
  * What the note pane shows when the route (or a click) named a note and nothing
@@ -59,13 +58,7 @@ export const NoteOpenFailure = ({ useNM, onMobileBack }: NoteOpenFailureProps) =
                         <Spinner size="md" />
                     </Box>
                 ) : failure.reason === "not_found" ? (
-                    <EmptyState
-                        body={t.notes.placeholder.noteNotFoundBody}
-                        data-empty="note-gone"
-                        icon={<DescriptionOutlinedIcon />}
-                        title={t.notes.placeholder.noteNotFoundTitle}
-                        fill
-                    />
+                    <NoteGoneState />
                 ) : (
                     <ErrorState
                         data-error="note-open"

@@ -109,7 +109,8 @@ describe("opening a note from the sidebar when the request fails", () => {
             hook.result.current.nm.retryNoteOpen();
         });
         await waitFor(() => expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(1));
-        expect(hook.result.current.nm.noteOpenFailure).toBeNull();
+        // The clearing effect runs in the commit after the tab appears.
+        await waitFor(() => expect(hook.result.current.nm.noteOpenFailure).toBeNull());
         expect(loadSpecificNote).toHaveBeenCalledTimes(2);
     });
 
@@ -177,5 +178,26 @@ describe("opening a note from the sidebar when the request fails", () => {
         expect(hook.result.current.nm.noteOpenFailure).not.toBeNull();
         act(() => hook.result.current.nm.clearNoteOpenFailure());
         expect(hook.result.current.nm.noteOpenFailure).toBeNull();
+    });
+
+    it("a slow failure for a note the route has since left puts nothing up", async () => {
+        let fail!: (v: undefined) => void;
+        vi.mocked(loadSpecificNote).mockReturnValueOnce(
+            new Promise((r) => (fail = r as typeof fail)) as never
+        );
+        const hook = renderNm();
+        await settle();
+        let pending!: Promise<void>;
+        act(() => {
+            pending = hook.result.current.nm.loadNote(1, 5, -1);
+        });
+        // The URL changed (the routing effect clears on every pathname change).
+        act(() => hook.result.current.nm.clearNoteOpenFailure());
+        await act(async () => {
+            fail(undefined);
+            await pending;
+        });
+        expect(hook.result.current.nm.noteOpenFailure).toBeNull();
+        expect(hook.result.current.toasts).toHaveLength(0);
     });
 });

@@ -255,11 +255,10 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
         // useTaskRouting).
         lastNavigatedPath.current = location.pathname;
 
-        // A failed open belongs to the URL that asked for it: once the route
-        // names something else, the pane must stop reporting it (MIP-1307).
-        if (useNM.noteOpenFailure && useNM.noteOpenFailure.noteId !== routeInfo.noteId) {
-            useNM.clearNoteOpenFailure();
-        }
+        // A failed open belongs to the URL that asked for it: the route changed, so
+        // the pane must stop reporting it and a slow answer must not revive it
+        // (MIP-1307). A note this URL names is asked for again just below.
+        useNM.clearNoteOpenFailure();
 
         // If no note type in URL, don't do anything (user can browse)
         if (!routeInfo.noteType) {

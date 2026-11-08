@@ -416,7 +416,14 @@ export const useNoteManagement = (
     useEffect(() => {
         if (tabsApi.tabs.length > 0) setNoteOpenFailure(null);
     }, [tabsApi.tabs.length]);
-    const clearNoteOpenFailure = useCallback(() => setNoteOpenFailure(null), []);
+    // Every open (and every clear) bumps this; a result only reports if it is still the
+    // latest ask, so a slow request for a note the user has since left cannot put an
+    // error up for it.
+    const openSeqRef = useRef(0);
+    const clearNoteOpenFailure = useCallback(() => {
+        openSeqRef.current += 1;
+        setNoteOpenFailure(null);
+    }, []);
 
     // Chat notes
     const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
@@ -2228,9 +2235,11 @@ export const useNoteManagement = (
         // resolves undefined on a failed request (403 is `{ error: "forbidden" }`
         // and is not a failure: the access-request panel handles it).
         const requestedType = noteType;
+        const openSeq = ++openSeqRef.current;
         // `loadSpecificNote`: undefined = request failed, { error: "not_found" } = 404,
         // { error: "forbidden" } = 403, which is not a failure here.
         const reportOpenFailed = (fetched: { error?: string } | undefined) => {
+            if (openSeq !== openSeqRef.current) return;
             if (fetched && fetched.error !== "not_found") {
                 // 403: the access-request panel owns it; a Retry in flight is over.
                 setNoteOpenFailure(null);

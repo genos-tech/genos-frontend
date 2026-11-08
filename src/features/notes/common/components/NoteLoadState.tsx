@@ -1,9 +1,8 @@
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { Box } from "@mui/joy";
 
 import { DataState } from "../../../../components/ui/feedback/DataState";
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../../i18n";
+import { NoteGoneState } from "./NoteGoneState";
 
 /**
  * What a note editor panel shows until its note has resolved (MIP-1276).
@@ -48,13 +47,7 @@ export const NoteLoadState = ({
             }}
         >
             {notFound ? (
-                <EmptyState
-                    body={t.notes.placeholder.noteNotFoundBody}
-                    data-empty="note-gone"
-                    icon={<DescriptionOutlinedIcon />}
-                    title={t.notes.placeholder.noteNotFoundTitle}
-                    fill
-                />
+                <NoteGoneState />
             ) : (
                 <DataState
                     hasData={false}

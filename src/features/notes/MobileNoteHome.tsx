@@ -65,10 +65,10 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
 
     // A deep link whose note would not open leaves no tab, so the sidebar
     // default would hide the reason; show the pane that says it (MIP-1307).
-    const hasOpenFailure = useNM.noteOpenFailure !== null;
+    // Keyed on the object, not a boolean: a second failure after Back replaces it.
     useEffect(() => {
-        if (hasOpenFailure) setMobileViewMode("content");
-    }, [hasOpenFailure]);
+        if (useNM.noteOpenFailure) setMobileViewMode("content");
+    }, [useNM.noteOpenFailure]);
 
     // (The Home dashboard used to need its own flip-to-content signal
     // here, since it wasn't a tab. With Home gone, `openTick` above is
