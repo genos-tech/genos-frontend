@@ -1895,7 +1895,6 @@ export const ar: DeepPartial<Messages> = {
             delete: "حذف",
             save: "حفظ",
             cancel: "إلغاء",
-            download: "تنزيل",
             close: "إغلاق",
             checkThread: "عرض الموضوع المصدر",
             dragToReorder: "اسحب لإعادة الترتيب",
@@ -2334,7 +2333,6 @@ export const ar: DeepPartial<Messages> = {
             notes: "الملاحظات",
             attachments: "المرفقات",
             activity: "النشاط",
-            downloadTooltip: "تنزيل",
             downloadFileTooltip: 'تنزيل "{name}"',
         },
         sprintFilter: {

@@ -4359,7 +4359,6 @@ export const fr: DeepPartial<Messages> = {
             delete: "Supprimer",
             save: "Enregistrer",
             cancel: "Annuler",
-            download: "Télécharger",
             close: "Fermer",
             checkThread: "Voir le fil d'origine",
             dragToReorder: "Glisser pour réorganiser",
@@ -4993,7 +4992,6 @@ export const fr: DeepPartial<Messages> = {
             notes: "Notes",
             attachments: "Pièces jointes",
             activity: "Activité",
-            downloadTooltip: "Télécharger",
             downloadFileTooltip: 'Télécharger "{name}"',
         },
         sprintFilter: {

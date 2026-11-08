@@ -84,20 +84,33 @@ export const timelineDays = (view: CalendarView, anchor: Dayjs): Dayjs[] => {
 };
 
 /**
- * Weekday labels in the same order as the grid columns. Short form
- * suitable for header chips ("Sun", "Mon", ...). Locale-aware via
- * `dayjs.weekdaysShort()`; falls back to English if locale data is
- * absent so tests/CI never blow up.
+ * Weekday labels in the same order as the grid columns. Short form suitable for header
+ * chips ("Sun", "Mon", ...), in the app's language through `Intl` (dayjs only knows the
+ * languages whose locale files were imported, which the app never does: the labels were
+ * English even in Arabic, MIP-1194).
  */
-export const weekdayLabels = (weekStart: 0 | 1 = 0): string[] => {
-    const labels = (dayjs as unknown as { weekdaysShort?: () => string[] }).weekdaysShort?.() ?? [
-        "Sun",
-        "Mon",
-        "Tue",
-        "Wed",
-        "Thu",
-        "Fri",
-        "Sat",
-    ];
+export const weekdayLabels = (weekStart: 0 | 1 = 0, locale = "en"): string[] => {
+    const format = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
+    // 2024-01-07 was a Sunday.
+    const labels = Array.from({ length: 7 }, (_, i) =>
+        format.format(new Date(Date.UTC(2024, 0, 7 + i)))
+    );
     return [...labels.slice(weekStart), ...labels.slice(0, weekStart)];
+};
+
+/** A date in the app's language: `format(date, "ar", { month: "long", year: "numeric" })`. */
+export const formatCalendarDate = (
+    date: Dayjs,
+    locale: string,
+    options: Intl.DateTimeFormatOptions
+): string => new Intl.DateTimeFormat(locale, options).format(date.toDate());
+
+/** "May 19 – 25, 2026", "Apr 28 – May 4, 2026": the compact range the header shows, localised. */
+export const formatCalendarRange = (start: Dayjs, end: Dayjs, locale: string): string => {
+    const format = new Intl.DateTimeFormat(locale, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }) as Intl.DateTimeFormat & { formatRange: (from: Date, to: Date) => string };
+    return format.formatRange(start.toDate(), end.toDate());
 };

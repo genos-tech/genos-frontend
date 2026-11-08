@@ -4300,7 +4300,6 @@ export const ja: DeepPartial<Messages> = {
             delete: "削除",
             save: "保存",
             cancel: "キャンセル",
-            download: "ダウンロード",
             close: "閉じる",
             checkThread: "元スレッドを確認",
             dragToReorder: "ドラッグして並び替え",
@@ -4931,7 +4930,6 @@ export const ja: DeepPartial<Messages> = {
             notes: "ノート",
             attachments: "添付ファイル",
             activity: "アクティビティ",
-            downloadTooltip: "ダウンロード",
             downloadFileTooltip: "「{name}」をダウンロード",
         },
         sprintFilter: {

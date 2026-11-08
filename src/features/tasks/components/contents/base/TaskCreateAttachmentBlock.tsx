@@ -19,6 +19,7 @@ import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { downloadFile } from "../../../../../utils/downloadUtils";
 import { useAttachmentClientIds } from "../../../hooks/useAttachmentClientIds";
 import { useAttachmentPreviews } from "../../../hooks/useAttachmentPreviews";
+import { attachmentDownloadName } from "../../../utils/attachmentDownloadName";
 
 type TaskCreateAttachmentBlockProps = {
     taskContent: TaskProps;
@@ -40,7 +41,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
     const nextClientId = useAttachmentClientIds();
     const { rejection, dismissRejection, filterFiles } = useFileSizeGuard();
 
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedImage, setSelectedImage] = useState<{ src: string; name: string } | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     const appendFiles = (files: Iterable<File>) => {
@@ -79,7 +80,10 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
     const handleDownload = (imageUrl: string) => {
         const link = document.createElement("a");
         link.href = imageUrl;
-        link.download = `image-${getLocalCurrentTimestamp()}`;
+        link.download = attachmentDownloadName(
+            selectedImage?.name ?? "",
+            getLocalCurrentTimestamp()
+        );
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -325,7 +329,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 }}
                                 onClick={() => {
                                     if (isUploading) return;
-                                    setSelectedImage(preview.url);
+                                    setSelectedImage({ src: preview.url, name });
                                 }}
                             />
                             <UploadingTileBadge open={isUploading} />
@@ -384,7 +388,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
             </Box>
 
             <ImageZoomModal
-                src={selectedImage}
+                src={selectedImage?.src ?? null}
                 onClose={() => setSelectedImage(null)}
                 onDownload={handleDownload}
             />
