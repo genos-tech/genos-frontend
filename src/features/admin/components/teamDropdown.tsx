@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import { Box, Dropdown, IconButton, Typography } from "@mui/joy";
+import { Box, Dropdown, IconButton, MenuButton, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
@@ -48,26 +48,22 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         setOpenUserProfile,
     } = props;
     const { accessToken } = useAuth();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [teams, setTeams] = useState<Team[]>([]);
-    const dropdownRef = useRef<HTMLDivElement>(null);
     const [teamProfile, setTeamProfile] = useState<TeamProfileProps | null>(null);
     const [openModalTeamProfile, setOpenModalTeamProfile] = useState<boolean>(false);
     const { t } = useTranslation();
     const teamName = (useTEM.currentTeam.teamName || myself.teamName || "").trim();
 
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        if (accessToken !== null) {
-            (async () => {
-                const loadedTeams: Team[] = await loadMyTeams(accessToken, myself.userId);
-                setTeams(membershipTeams(loadedTeams));
-            })();
-            setAnchorEl(event.currentTarget);
-        }
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
+    // The teams are read each time the menu opens. The Dropdown, not this component, owns
+    // open / close: it moves focus into the menu, closes it on Escape, on a click away and on
+    // an item (an `anchorEl` held here left focus on the button, so the Arrow keys did nothing
+    // and Escape did not close it: MIP-1202).
+    const handleOpenChange = (_event: unknown, open: boolean) => {
+        if (!open || accessToken === null) return;
+        (async () => {
+            const loadedTeams: Team[] = await loadMyTeams(accessToken, myself.userId);
+            setTeams(membershipTeams(loadedTeams));
+        })();
     };
 
     const handleClicked = (team: Team) => {
@@ -78,20 +74,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             teamId: team.teamId,
             teamName: team.teamName,
         });
-        handleClose();
     };
-
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                handleClose();
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
 
     const handleShowTeamProfileClick = () => {
         if (accessToken !== null) {
@@ -129,22 +112,28 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                 />
             )}
 
-            <Dropdown>
+            <Dropdown onOpenChange={handleOpenChange}>
                 <AppTooltip
                     placement="right-start"
                     size="sm"
                     title={t.admin.teamDropdown.openMenu}
                 >
-                    <IconButton
+                    <MenuButton
                         aria-label={t.admin.teamDropdown.openMenu}
-                        sx={{
-                            p: 0.5,
-                            borderRadius: g.radius.md,
-                            // The tile is the button's whole look: no glow, no scale. Hover is the
-                            // shared tint; the keyboard ring is the app's.
-                            "&:focus-visible": focusRing,
+                        slots={{ root: IconButton }}
+                        slotProps={{
+                            root: {
+                                variant: "plain",
+                                color: "neutral",
+                                sx: {
+                                    p: 0.5,
+                                    borderRadius: g.radius.md,
+                                    // The tile is the button's whole look: no glow, no scale. Hover is the
+                                    // shared tint; the keyboard ring is the app's.
+                                    "&:focus-visible": focusRing,
+                                },
+                            },
                         }}
-                        onClick={handleClick}
                     >
                         {/* The team's picture, else its first letter, else a team icon: the tile is
                             never blank (it was, when the session had no team name in storage). */}
@@ -158,17 +147,10 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         >
                             {teamName ? undefined : <GroupsRoundedIcon />}
                         </BaseAvatar>
-                    </IconButton>
+                    </MenuButton>
                 </AppTooltip>
 
-                <MenuSurface
-                    ref={dropdownRef}
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    sx={{ maxHeight: "350px", minWidth: 240 }}
-                    zIndex={10001}
-                    onClose={handleClose}
-                >
+                <MenuSurface sx={{ maxHeight: "350px", minWidth: 240 }} zIndex={10001}>
                     <MenuGroupLabel>{t.admin.teamDropdown.management}</MenuGroupLabel>
 
                     {/* Show Team Profile */}
