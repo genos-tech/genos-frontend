@@ -31,6 +31,7 @@ import {
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { modalChromeEndPadding } from "../../components/ui/modal/modalChrome";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -331,16 +332,37 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             alignItems="center"
                             direction="row"
                             justifyContent="space-between"
-                            sx={hostedInModal ? { pr: "76px" } : undefined}
                             mb={1.5}
                             // In a modal the "open full page" and ✕ buttons float over
-                            // this corner (UrlLinkModal: right 56 and 12, 36px wide,
-                            // so 92px from the edge). The box already pads 20px; keep
-                            // the rest of that corner free so they don't cover the
-                            // actions (MIP-1044).
+                            // this corner (UrlLinkModal publishes how much: ui/modal/
+                            // modalChrome). MIP-1044 kept it clear of the actions; on a
+                            // phone the row does not fit beside the title and the
+                            // clearance together, so there the actions wrap to their own
+                            // line and only the title line keeps the corner free
+                            // (MIP-1296). On the page nothing changes.
                             data-todo-header-row
+                            sx={
+                                hostedInModal
+                                    ? isMobile
+                                        ? { flexWrap: "wrap", rowGap: 1 }
+                                        : modalChromeEndPadding()
+                                    : undefined
+                            }
                         >
-                            <Stack alignItems="center" direction="row" spacing={1.5}>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={1.5}
+                                sx={
+                                    hostedInModal && isMobile
+                                        ? {
+                                              flexBasis: "100%",
+                                              minWidth: 0,
+                                              ...modalChromeEndPadding(),
+                                          }
+                                        : undefined
+                                }
+                            >
                                 <Box
                                     sx={{
                                         width: 36,
@@ -402,7 +424,24 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
                             {/* Right-hand action cluster: repeat (always visible) +
                         Start today (only when today's group is empty/absent). */}
-                            <Stack alignItems="center" direction="row" spacing={1}>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={1}
+                                sx={
+                                    hostedInModal
+                                        ? {
+                                              // 44px touch targets in the modal (MIP-1296).
+                                              "& .MuiIconButton-root, & .MuiButton-root": {
+                                                  "@media (pointer: coarse)": {
+                                                      minWidth: 44,
+                                                      minHeight: 44,
+                                                  },
+                                              },
+                                          }
+                                        : undefined
+                                }
+                            >
                                 <AppTooltip title={t.chat.todoPane.tags.manageTooltip}>
                                     <IconButton
                                         aria-label={t.chat.todoPane.tags.manageTooltip}
