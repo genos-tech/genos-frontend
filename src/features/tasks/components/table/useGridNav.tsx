@@ -72,6 +72,8 @@ export class GridNav {
     private container: HTMLElement | null = null;
     private active: GridPos | null = null;
     private activeRowIndex = 1;
+    /** The active cell's element, so a mutation batch checks it in O(1). */
+    private activeEl: HTMLElement | null = null;
     /** The active cell was picked by the model, not by the user: while only the
      *  header existed it is a header cell, and it moves to the first row when rows arrive. */
     private activeIsDefault = false;
@@ -146,6 +148,16 @@ export class GridNav {
         );
     }
 
+    /** The active cell's element (cached; looked up again when it was replaced). */
+    private activeCell(): HTMLElement | null {
+        if (!this.active) return null;
+        if (this.activeEl?.isConnected && samePos(posOf(this.activeEl), this.active)) {
+            return this.activeEl;
+        }
+        this.activeEl = this.cellEl(this.active);
+        return this.activeEl;
+    }
+
     private buildModel(): GridModel {
         const rows = this.rowEls();
         const byId = new Map<string, HTMLElement>();
@@ -179,9 +191,12 @@ export class GridNav {
         if (isWrapper(cell)) {
             // The wrapper only takes focus when it has nothing of its own inside.
             if (target !== cell) cell.removeAttribute("tabindex");
-            // A second control in one cell is not a second stop.
-            for (const extra of cell.querySelectorAll<HTMLElement>(FOCUSABLE)) {
-                if (extra !== target) extra.setAttribute("tabindex", "-1");
+            // A second control in one cell is not a second stop. (Not while the cell
+            // is an editor: Tab inside an editor walks the editor's own controls.)
+            if (!target.matches(TEXT_ENTRY)) {
+                for (const extra of cell.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+                    if (extra !== target) extra.setAttribute("tabindex", "-1");
+                }
             }
         }
         target.setAttribute("tabindex", isActive ? "0" : "-1");
@@ -196,14 +211,20 @@ export class GridNav {
         for (const cell of this.container.querySelectorAll<HTMLElement>(CELL)) {
             this.applyStop(cell, false);
         }
-        this.active = this.active && this.cellEl(this.active) ? this.active : null;
-        this.ensureActive();
+        this.activeEl = null;
+        this.active = this.activeCell() ? this.active : null;
+        this.ensureActive(true);
     }
 
     private onMutations(records: MutationRecord[]) {
         const container = this.container;
         if (!container) return;
         const touched = new Set<HTMLElement>();
+        // Rows or cells mounted or unmounted: the only batches that can move the
+        // default cell, remove the active one or shift its row's index.
+        let structural = false;
+        const isStructural = (node: Node) =>
+            node instanceof HTMLElement && (node.matches(ROW) || node.matches(CELL));
         const owner = (node: Node | null) => {
             if (!(node instanceof HTMLElement) || !container.contains(node)) return;
             const own = node.closest<HTMLElement>(CELL);
@@ -218,32 +239,48 @@ export class GridNav {
             // Content swapped inside a cell, or whole cells / rows mounted.
             owner(record.target);
             record.addedNodes.forEach(added);
+            if (!structural) {
+                structural =
+                    Array.from(record.addedNodes).some(isStructural) ||
+                    Array.from(record.removedNodes).some(isStructural);
+            }
         }
         for (const cell of touched) this.applyStop(cell, this.isActiveCell(cell));
-        this.ensureActive();
+        this.ensureActive(structural);
     }
 
     /** Make sure the grid has an active cell that exists (the nearest if it vanished). */
-    private ensureActive() {
+    private ensureActive(structural: boolean) {
         if (!this.container) return;
-        const exists = this.active !== null && this.cellEl(this.active) !== null;
+        const current = this.activeCell();
+        // Nothing that could matter happened (a re-render inside cells).
+        if (current && !structural) return;
+        // The row may have moved (a re-sort, a collapse above it): keep the index of
+        // the "nearest row" fallback current.
+        if (current && this.active) {
+            this.activeRowIndex = Math.max(0, this.rowIndexOf(this.active.rowId));
+        }
         // A default is re-picked as the grid fills in (rows arrive after the header,
         // columns after the rows) until the user chooses a cell themselves.
-        if (exists && !this.activeIsDefault) return;
+        if (current && !this.activeIsDefault) return;
         const model = this.buildModel();
         const next =
             this.active && !this.activeIsDefault
                 ? resolvePosition(model, this.active, this.activeRowIndex)
                 : defaultPosition(model);
-        if (exists && samePos(next, this.active)) return;
+        if (current && samePos(next, this.active)) return;
         if (this.active === null || this.activeIsDefault) this.activeIsDefault = next !== null;
-        const previous = this.active ? this.cellEl(this.active) : null;
         this.active = next;
-        if (previous) this.applyStop(previous, false);
+        if (current) this.applyStop(current, false);
+        this.activeEl = null;
         if (!next) return;
         this.activeRowIndex = Math.max(0, model.rowIds.indexOf(next.rowId));
-        const cell = this.cellEl(next);
+        const cell = this.activeCell();
         if (cell) this.applyStop(cell, true);
+    }
+
+    private rowIndexOf(rowId: string) {
+        return this.rowEls().findIndex((r) => r.getAttribute(GRID_ROW_ATTR) === rowId);
     }
 
     private setActive(pos: GridPos) {
@@ -252,14 +289,12 @@ export class GridNav {
             return;
         }
         this.activeIsDefault = false;
-        const previous = this.active ? this.cellEl(this.active) : null;
+        const previous = this.activeCell();
         this.active = pos;
-        this.activeRowIndex = Math.max(
-            0,
-            this.rowEls().findIndex((r) => r.getAttribute(GRID_ROW_ATTR) === pos.rowId)
-        );
+        this.activeEl = null;
+        this.activeRowIndex = Math.max(0, this.rowIndexOf(pos.rowId));
         if (previous) this.applyStop(previous, false);
-        const cell = this.cellEl(pos);
+        const cell = this.activeCell();
         if (cell) this.applyStop(cell, true);
     }
 
@@ -275,6 +310,8 @@ export class GridNav {
         if (!cell) return;
         this.setActive(pos);
         targetOf(cell).focus();
+        // The header is sticky, so focusing it scrolls nothing: going to it means the top.
+        if (pos.rowId === GRID_HEADER_ROW && this.container) this.container.scrollTop = 0;
     }
 
     // ── keys ─────────────────────────────────────────────────────────────────
@@ -288,9 +325,10 @@ export class GridNav {
         if (!(node instanceof HTMLElement)) return;
         const cell = node.closest<HTMLElement>(CELL);
         if (!cell || !container.contains(cell)) return;
-        // Only a key pressed ON the cell's focus target: inside an editor (an input,
-        // an open select) the arrows belong to the editor.
-        if (node !== targetOf(cell) || node.matches(TEXT_ENTRY)) return;
+        // Inside an editor (an input, an open select) the arrows belong to the
+        // editor. Anywhere else in the cell (a second control reached by a click)
+        // they move the grid from this cell.
+        if (node.matches(TEXT_ENTRY) || cell.querySelector(TEXT_ENTRY)) return;
 
         const intent = intentForKey(event, getComputedStyle(container).direction === "rtl");
         const from = posOf(cell);

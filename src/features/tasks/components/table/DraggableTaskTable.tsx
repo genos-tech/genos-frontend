@@ -1683,8 +1683,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             outlineOffset: "-2px",
                             borderRadius: "4px",
                         },
-                        // Scrolling a cell into view must not park it under the sticky header.
-                        "& [data-grid-row] [data-grid-col]": { scrollMarginTop: "48px" },
+                        // Moving the keyboard to a cell scrolls it into view: not under the
+                        // sticky header (the scroller's padding, so it holds for every target).
+                        scrollPaddingTop: "48px",
                     }}
                 >
                     {/* Table Header */}
