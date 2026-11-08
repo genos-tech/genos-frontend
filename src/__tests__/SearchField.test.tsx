@@ -91,6 +91,14 @@ describe("SearchField", () => {
         expect(outer).not.toHaveBeenCalled();
     });
 
+    it("other keys never clear the field", () => {
+        render(<Harness initial="ken" />);
+        for (const key of ["Enter", "a", "ArrowDown", "Backspace"]) {
+            fireEvent.keyDown(input(), { key });
+        }
+        expect(input().value).toBe("ken");
+    });
+
     it("Escape on an EMPTY field is left alone, so the modal around it can close", () => {
         const outer = vi.fn();
         render(<Harness onOuterKey={outer} />);
