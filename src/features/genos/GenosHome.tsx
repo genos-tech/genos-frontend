@@ -163,10 +163,13 @@ export const GenosHome = ({
                 color="neutral"
                 data-testid="genos-schedules-entry"
                 size="sm"
+                // Phone: 32px, the size of the history button beside it. Desktop: a
+                // 40px target with a 22px icon (the corner has room; 32px read small).
+                sx={isMobile ? undefined : { "--IconButton-size": "40px" }}
                 variant={isMobile ? "soft" : "plain"}
                 onClick={handleOpenSchedules}
             >
-                <EventRepeatRoundedIcon sx={{ fontSize: 18 }} />
+                <EventRepeatRoundedIcon sx={{ fontSize: isMobile ? 18 : 22 }} />
             </IconButton>
         </AppTooltip>
     );
@@ -255,11 +258,12 @@ export const GenosHome = ({
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    // Desktop leaves a 40px side gutter (the 24px it had, plus room) so
-                    // the schedules button in the top-right corner always sits in the
-                    // gutter and never over the card's own top-right "Back to search".
-                    // The content is centered, so nothing moves at wide widths.
-                    px: { xs: 1, sm: 3, md: 5 },
+                    // Desktop leaves a 48px side gutter (the 24px it had, plus room) so
+                    // the 40px schedules button in the top-right corner (4px from the
+                    // edge) always sits in the gutter and never over the card's own
+                    // top-right "Back to search". The content is centered, so nothing
+                    // moves at wide widths.
+                    px: { xs: 1, sm: 3, md: 6 },
                     py: { xs: 1, sm: 2 },
                 }}
             >

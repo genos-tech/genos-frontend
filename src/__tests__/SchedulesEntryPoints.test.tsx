@@ -178,6 +178,20 @@ describe("Genos page schedules entry (MIP-1218)", () => {
         expect(await screen.findByRole("tooltip")).toHaveTextContent(NAME);
     });
 
+    it("desktop: a 40px button; phone: the 32px of the history button beside it", () => {
+        const size = (el: HTMLElement) =>
+            getComputedStyle(el).getPropertyValue("--IconButton-size").trim();
+        const { unmount } = renderGenos();
+        expect(size(screen.getByRole("button", { name: NAME }))).toBe("40px");
+        unmount();
+        isMobileViewport = true;
+        renderGenos();
+        const phoneEntry = screen.getByRole("button", { name: NAME });
+        const history = screen.getByRole("button", { name: en.genos.sidebar.openLabel });
+        expect(size(phoneEntry)).not.toBe("40px");
+        expect(size(phoneEntry)).toBe(size(history));
+    });
+
     it("the session sidebar carries no schedules row any more", () => {
         render(
             <CssVarsProvider>
