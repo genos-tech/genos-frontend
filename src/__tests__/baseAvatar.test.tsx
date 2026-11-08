@@ -113,13 +113,11 @@ describe("UserAvatar initials", () => {
 });
 
 describe("no raw Joy Avatar outside components/ui/avatars", () => {
-    // Files whose raw Avatars are still to be converted (the milestone sidebar row: MIP-1163).
-    // This list may only SHRINK.
-    const PENDING = new Set([
-        "features/tasks/components/sidebar/projects_subs/MilestonesListItem.tsx",
-    ]);
+    // Files whose raw Avatars are still to be converted. Empty since the milestone sidebar
+    // row moved (MIP-1172): no file outside `components/ui/avatars` may render a raw Avatar.
+    const PENDING = new Set<string>([]);
 
-    it("imports Avatar from @mui/joy only in the pending files", () => {
+    it("imports Avatar from @mui/joy nowhere outside the avatar folder", () => {
         const offenders = walk(SRC)
             .map((f) => relative(SRC, f))
             .filter((f) => !f.startsWith("components/ui/avatars/"))
