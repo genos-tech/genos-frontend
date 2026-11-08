@@ -103,7 +103,9 @@ import {
     unregisterApiHealthListener,
     type ApiDownReason,
 } from "./services/api";
+import { channelService } from "./services/channel/channelService";
 import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
+import { markTeamHydrated } from "./services/hydrationState";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
@@ -575,10 +577,17 @@ const AppBody = () => {
                 syncStatus.getSnapshot().failed.includes("projects")
                     ? usePM.loadProjectsAndTasks(lastProjectId ?? -1)
                     : Promise.resolve(),
+                // `refreshAllData` fires the channel list without awaiting it.
+                syncStatus.getSnapshot().failed.includes("channels")
+                    ? channelService.refreshChannels()
+                    : Promise.resolve(),
             ]);
         } finally {
             syncStatus.end();
         }
+        // A boot that failed cold never marked the team hydrated (see
+        // `loadInitialData`); a retry that put everything right does.
+        if (syncStatus.getSnapshot().failed.length === 0) markTeamHydrated(useTEM.currentTeamId);
     };
     useEffect(() => {
         syncStatus.setRetry(() => retrySyncRef.current());

@@ -95,6 +95,29 @@ describe("syncStatus store", () => {
         expect(syncStatus.getSnapshot().episode).toBe(2);
     });
 
+    it("reset forgets the failures (the cache they were about was wiped) but not the retry", () => {
+        const retrySync = vi.fn();
+        syncStatus.setRetry(retrySync);
+        syncStatus.report("inbox", false);
+        syncStatus.reset();
+        expect(syncStatus.getSnapshot().failed).toEqual([]);
+        syncStatus.retry();
+        expect(retrySync).toHaveBeenCalledTimes(1);
+    });
+
+    it("a retry that rejects is logged, not left unhandled; a retry while syncing is a no-op", async () => {
+        const err = vi.spyOn(console, "error").mockImplementation(() => {});
+        const retrySync = vi.fn().mockRejectedValue(new Error("boom"));
+        syncStatus.setRetry(retrySync);
+        syncStatus.retry();
+        await vi.waitFor(() => expect(err).toHaveBeenCalled());
+
+        syncStatus.begin();
+        syncStatus.retry();
+        expect(retrySync).toHaveBeenCalledTimes(1);
+        syncStatus.end();
+    });
+
     it("keeps `syncing` until the last overlapping run ends", () => {
         syncStatus.begin();
         syncStatus.begin();

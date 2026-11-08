@@ -87,10 +87,18 @@ export const syncStatus = {
         retryFn = fn;
     },
 
-    /** Re-run the sync. A no-op while one is already running or nothing is registered. */
+    /** Re-run the sync. A no-op while one is already running (the banner and the
+     *  empty states show that run as "syncing") or nothing is registered. */
     retry: () => {
         if (snapshot.syncing || !retryFn) return;
-        void retryFn();
+        // The loaders report their own failures; a rejection here must not become
+        // an unhandled one.
+        Promise.resolve(retryFn()).catch((e) => console.error("[syncStatus] retry failed", e));
+    },
+
+    /** Forget what failed: the cache it was about was wiped (team switch). */
+    reset: () => {
+        if (snapshot.failed.length > 0) set({ ...snapshot, failed: EMPTY });
     },
 
     /** Test helper. */
