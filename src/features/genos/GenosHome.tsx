@@ -21,6 +21,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { SchedulesModal } from "../../components/layout/schedules/SchedulesModal";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useIsDemoUser } from "../../hooks/common/useIsDemoUser";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
@@ -82,6 +83,8 @@ export const GenosHome = ({
     // Mobile: the session sidebar is an overlay drawer, toggled from a
     // floating history button. Desktop always shows it.
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    // The schedules dialog (MIP-1200), opened from the sidebar footer.
+    const [schedulesOpen, setSchedulesOpen] = useState(false);
 
     // Session list refresh: `turns.length` changes exactly when a turn
     // completes (or a session is resumed / cleared), which is when the
@@ -117,6 +120,11 @@ export const GenosHome = ({
         [spotlight]
     );
 
+    const handleOpenSchedules = useCallback(() => {
+        setSchedulesOpen(true);
+        setMobileSidebarOpen(false);
+    }, []);
+
     const handleNewChat = useCallback(() => {
         spotlight.onNewConversation();
         setMobileSidebarOpen(false);
@@ -136,6 +144,7 @@ export const GenosHome = ({
             search={sessionSearch}
             sessions={sessions}
             onNewChat={handleNewChat}
+            onOpenSchedules={handleOpenSchedules}
             onRetry={reloadSessions}
             onSearchChange={setSessionSearch}
             onSelectSession={handleSelectSession}
@@ -212,6 +221,12 @@ export const GenosHome = ({
                     </Box>
                 </>
             )}
+
+            <SchedulesModal
+                open={schedulesOpen}
+                teamId={teamId}
+                onClose={() => setSchedulesOpen(false)}
+            />
 
             {/* Main conversation column. */}
             <Box

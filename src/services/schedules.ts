@@ -23,6 +23,9 @@ export interface JobParam {
      *  server provides is shown in preference to one made from the key. */
     title?: string;
     description?: string;
+    /** Optional, same as `title`: the catalog does not send it today (the form knows the
+     *  one parameter it must have, see `scheduleParams`), but the server may. */
+    required?: boolean;
 }
 
 export interface ScheduleJob {

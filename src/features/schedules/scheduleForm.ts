@@ -17,6 +17,7 @@ import type {
     ScheduleFrequency,
     ScheduleJob,
 } from "../../services/schedules";
+import { isRequiredParam } from "./scheduleParams";
 
 export const FREQUENCIES: ScheduleFrequency[] = ["daily", "weekdays", "weekly", "monthly", "once"];
 
@@ -159,7 +160,11 @@ export const validateForm = (
 
     for (const [key, spec] of Object.entries(job?.params ?? {})) {
         const raw = (form.params[key] ?? "").trim();
-        if (raw === "") continue;
+        if (raw === "") {
+            // A parameter the report cannot run without (the milestone one).
+            if (isRequiredParam(key, spec)) problems.params[key] = "required";
+            continue;
+        }
         const v = wireValue(spec, raw);
         if (v === null) {
             problems.params[key] = "format";

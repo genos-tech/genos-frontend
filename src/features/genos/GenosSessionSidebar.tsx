@@ -14,6 +14,7 @@
 
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
@@ -53,6 +54,9 @@ interface Props {
     onSelectSession: (sessionId: string) => void;
     onNewChat: () => void;
     onRetry: () => void;
+    // Opens the member's schedules (MIP-1200). When absent the sidebar has no
+    // footer, so a host that cannot show them draws nothing.
+    onOpenSchedules?: () => void;
 }
 
 export const GenosSessionSidebar = ({
@@ -68,6 +72,7 @@ export const GenosSessionSidebar = ({
     onSelectSession,
     onNewChat,
     onRetry,
+    onOpenSchedules,
 }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -282,6 +287,31 @@ export const GenosSessionSidebar = ({
                     renderGroupLabel(t.genos.sidebar.recent)}
                 {recentSessions.map(renderRow)}
             </Box>
+
+            {/* Footer: outside the scrolling list, so it stays put at any history
+                length and never takes room from the conversation column. */}
+            {onOpenSchedules && (
+                <Box
+                    sx={{
+                        flexShrink: 0,
+                        borderTop: `1px solid ${g.border.default}`,
+                        pt: 1,
+                    }}
+                >
+                    <AppTooltip placement="top" title={t.settings.schedules.title}>
+                        <NavItem
+                            as="div"
+                            // Short on the row, the full name in the tooltip and as the
+                            // accessible name (it contains the visible words).
+                            aria-label={t.settings.schedules.title}
+                            icon={<EventRepeatRoundedIcon />}
+                            label={t.settings.schedules.shortTitle}
+                            rootProps={{ "data-testid": "genos-schedules-entry" }}
+                            onClick={onOpenSchedules}
+                        />
+                    </AppTooltip>
+                </Box>
+            )}
         </Box>
     );
 };
