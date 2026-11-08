@@ -27,14 +27,26 @@ const sources = (dir: string): string[] =>
         return /\.(ts|tsx)$/.test(name) && !/\.test\./.test(name) ? [path] : [];
     });
 
-// Where an editor is created. Since MIP-1131 that is three places: the two Genos hooks (the
-// local one takes a `surface`, the collaborative one is for the documents), the v3 composer's
-// own `useCreateBlockNote` call, and the collaborative hook, which receives its extensions from
-// `useGenosCollabEditor`. Every wrapper goes through one of the Genos hooks.
+// Where an editor is created. Since MIP-1131 that is a few places: the two Genos hooks (the
+// local one takes a `surface`, the collaborative one is for the documents), and the collaborative
+// hook, which receives its extensions from `useGenosCollabEditor`. Every wrapper goes through one
+// of the Genos hooks. Since MIP-1161 the seven chat-style composers (chat, thread, task comment,
+// v3 and the three edit-in-place ones) create theirs in ONE place, `useChatComposer`, on the
+// `composer` surface; `COMPOSERS` below pins that none of them creates its own again.
 const CREATES_AN_EDITOR =
     /\buseCreateBlockNote\(|\buseCollaborativeBlockNote\(\{|\buseGenosEditor\(\{/;
 const HOOK_ITSELF = "hooks/common/useCollaborativeBlockNote.ts";
 const GENOS_HOOKS = "components/editors/genos/useGenosEditor.ts";
+const COMPOSER_HOOK = "components/editors/composer/useChatComposer.ts";
+const COMPOSERS = [
+    "components/editors/bnChatEditor.tsx",
+    "components/editors/bnThreadEditor.tsx",
+    "components/editors/bnTaskCommentEditor.tsx",
+    "components/editors/bnUpdateEditor.tsx",
+    "components/editors/bnUpdateThreadEditor.tsx",
+    "components/editors/bnUpdateTaskCommentEditor.tsx",
+    "features/channel/components/MessageComposerV3.tsx",
+];
 
 // Comment lines are not code: a comment that names `useCreateBlockNote(` is not an editor.
 const withoutComments = (text: string) =>
@@ -58,10 +70,17 @@ const surfacesWithoutEditingRules = (hooks: string): string[] => {
 
 describe("link host caption in every editable editor", () => {
     it("finds the editors (so the scan can't pass by finding none)", () => {
-        // 6 composers, the template and todo bodies and the read-only chat preview (all through
-        // useGenosEditor), the v3 composer, and the Genos hooks file. The 4 collab wrappers go
-        // through useGenosCollabEditor.
-        expect(editorFiles.length).toBeGreaterThanOrEqual(11);
+        // The composer hook (all 7 composers), the template and todo bodies and the read-only
+        // chat preview (all through useGenosEditor), and the Genos hooks file. The 4 collab
+        // wrappers go through useGenosCollabEditor.
+        expect(editorFiles.length).toBeGreaterThanOrEqual(5);
+        expect(editorFiles.map(({ file }) => file)).toContain(COMPOSER_HOOK);
+    });
+
+    it.each(COMPOSERS)("%s gets its editor from the shared composer hook", (file) => {
+        const text = withoutComments(readFileSync(join(SRC, file), "utf8"));
+        expect(text, `${file} calls useChatComposer`).toMatch(/\buseChatComposer\b[<(]/);
+        expect(text, `${file} does not create an editor itself`).not.toMatch(CREATES_AN_EDITOR);
     });
 
     it.each(
@@ -72,8 +91,7 @@ describe("link host caption in every editable editor", () => {
         const readOnly = /editable=\{false\}/.test(text);
         if (readOnly) return;
 
-        // A wrapper on `useGenosEditor` gets it from the surface (checked below); the v3
-        // composer lists its own extensions.
+        // A wrapper on `useGenosEditor` gets it from the surface (checked below).
         if (/\buseGenosEditor\(/.test(text)) {
             expect(text, `${file} names a surface`).toMatch(
                 /surface:\s*"(composer|todo|template)"/
