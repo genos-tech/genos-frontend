@@ -1943,7 +1943,7 @@ export const SettingsModal = ({
                                 sx={{ p: 2, borderRadius: "lg", minWidth: 0 }}
                                 variant="outlined"
                             >
-                                <SchedulesSection teamId={genosTeamId} />
+                                <SchedulesSection teamId={genosTeamId} onNavigateAway={onClose} />
                             </Sheet>
                         </GenosSettingsPanel>
                     </TabPanel>

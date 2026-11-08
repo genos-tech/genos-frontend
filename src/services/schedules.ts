@@ -73,6 +73,13 @@ export interface ScheduleSuggestion {
 }
 
 export interface ScheduleList {
+    /** Whether the member's plan includes schedules (Core and up, MIP-1213). Absent on a server
+     *  that predates the gate: read it as allowed (`planAllowed !== false`). When false the page
+     *  shows the upgrade prompt instead of the form. */
+    planAllowed?: boolean;
+    /** The upgrade sentence the server wrote ("" when allowed). English only, so the page writes
+     *  its own words and does not show it. */
+    planMessage?: string;
     timeZone: string;
     limit: number;
     jobs: ScheduleJob[];
@@ -96,8 +103,15 @@ export interface ScheduleFields {
 export type ScheduleChange = Partial<ScheduleFields> & { enabled?: boolean };
 
 /** `error`: the sentence the API wrote for the member (400), or null when there
- *  was none (network, 5xx). `gone`: a 404, so the list on screen is stale. */
-export type ScheduleFailure = { ok: false; gone: boolean; error: string | null };
+ *  was none (network, 5xx). `gone`: a 404, so the list on screen is stale.
+ *  `planRequired`: a 403 `plan_required` (MIP-1213), the member's plan does not include
+ *  schedules: show the upgrade prompt, not a failure. */
+export type ScheduleFailure = {
+    ok: false;
+    gone: boolean;
+    error: string | null;
+    planRequired: boolean;
+};
 export type ScheduleResult<T> = ({ ok: true } & T) | ScheduleFailure;
 
 export interface RunOutcome {
@@ -111,17 +125,19 @@ export interface RunOutcome {
 const SILENT = { suppressErrorToast: true } as const;
 
 const failure = (error: unknown): ScheduleFailure => {
-    const res = (error as { response?: { status?: number; data?: { error?: unknown } } })
-        ?.response;
+    const res = (
+        error as { response?: { status?: number; data?: { error?: unknown; code?: unknown } } }
+    )?.response;
     const sentence = res?.data?.error;
     return {
         ok: false,
         gone: res?.status === 404,
         error: typeof sentence === "string" && sentence.trim() !== "" ? sentence : null,
+        planRequired: res?.status === 403 && res?.data?.code === "plan_required",
     };
 };
 
-const NO_SESSION: ScheduleFailure = { ok: false, gone: false, error: null };
+const NO_SESSION: ScheduleFailure = { ok: false, gone: false, error: null, planRequired: false };
 
 export const listSchedules = async (
     accessToken: string | null,
@@ -135,6 +151,9 @@ export const listSchedules = async (
             ...SILENT,
         });
         return {
+            // A server that predates the plan gate sends neither key: that is "allowed".
+            planAllowed: res.data.planAllowed !== false,
+            planMessage: typeof res.data.planMessage === "string" ? res.data.planMessage : "",
             timeZone: res.data.timeZone ?? "",
             limit: res.data.limit ?? 0,
             jobs: res.data.jobs ?? [],

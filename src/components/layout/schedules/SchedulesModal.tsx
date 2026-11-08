@@ -38,7 +38,7 @@ export const SchedulesModal = ({ open, onClose, teamId }: Props) => {
             onClose={onClose}
         >
             {teamId ? (
-                <SchedulesSection showHeading={false} teamId={teamId} />
+                <SchedulesSection showHeading={false} teamId={teamId} onNavigateAway={onClose} />
             ) : (
                 // The team has not resolved yet: say so rather than open an empty dialog.
                 <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>
