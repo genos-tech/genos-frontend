@@ -203,9 +203,11 @@ describe("MilestonesListItem: the row menu shows on hover (MIP-1021)", () => {
 
     it("gives the overlaying button a background, but not where it has its own space", () => {
         renderSidebar();
-        // Hover-capable: opaque + fade (it overlays the row's end). Touch in a
-        // wide list: transparent, no fade (it sits in the reserved 32px). Touch
-        // in a compact list: overlay again, so the background comes back.
+        // Milestone rows, hover-capable: transparent (the buttons take the progress counter's
+        // place, nothing is under them, MIP-1156: see MilestoneRowHoverActions.test). Touch
+        // in a wide list: transparent, no fade (it sits in the reserved 32px). Touch
+        // in a compact list: overlay again, so the background comes back. Folder rows
+        // still overlay their count: they keep the opaque default.
         const row = (label: string) =>
             `.${[...rowOf(label).classList].find((c) => c.startsWith("css-"))}`;
         const touch = rulesMatching(

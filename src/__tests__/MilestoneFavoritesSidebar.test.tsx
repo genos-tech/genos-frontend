@@ -279,14 +279,15 @@ const mountTree = (favorited: number[] = []) =>
 const liOf = (title: string) => screen.getByText(title).closest("li") as HTMLElement;
 
 describe("the star on a milestone row", () => {
-    it("is a button on every row, unpressed until starred", () => {
+    it("is a button on a row that is not a favorite yet; a favorite has none (MIP-1156)", () => {
         mountTree([2]);
         const launch = within(liOf("Launch")).getByTestId("milestone-favorite-star");
-        const beta = within(liOf("Beta")).getByTestId("milestone-favorite-star");
         expect(launch.getAttribute("aria-pressed")).toBe("false");
-        expect(beta.getAttribute("aria-pressed")).toBe("true");
         expect(launch.getAttribute("aria-label")).toBe("Add to favorites: Launch");
-        expect(beta.getAttribute("aria-label")).toBe("Remove from favorites: Beta");
+        // A favorite shows its lit star after the title at rest and hides it on hover, where the
+        // buttons are the "..." menu alone: "Remove from favorites" is in that menu.
+        expect(within(liOf("Beta")).queryByTestId("milestone-favorite-star")).toBeNull();
+        expect(within(liOf("Beta")).queryByTestId("milestone-favorite-mark")).not.toBeNull();
     });
 
     it("toggles the milestone and does not open it", () => {

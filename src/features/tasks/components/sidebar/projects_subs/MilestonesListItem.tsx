@@ -20,7 +20,11 @@ import {
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../../components/ui/avatars/BaseAvatar";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
-import { NAV_OVERLAY_BG, NAV_OVERLAY_FADE } from "../../../../../components/ui/nav/navStyles";
+import {
+    NAV_HOVER_MEDIA,
+    NAV_OVERLAY_BG,
+    NAV_OVERLAY_FADE,
+} from "../../../../../components/ui/nav/navStyles";
 import { useTranslation } from "../../../../../i18n";
 import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
@@ -41,12 +45,8 @@ import type {
     SidebarTreeTEM,
     SidebarTreeTM,
 } from "../useSidebarSlices";
-import {
-    FavoriteMark,
-    FolderMenu,
-    MilestoneFavoriteStar,
-    MilestoneRowMenu,
-} from "./MilestoneFolderMenus";
+import { FavoriteMark, FolderMenu, MilestoneRowActions } from "./MilestoneFolderMenus";
+import { ROW_ACTIONS_ENGAGED_ATTR } from "./milestoneRowEngaged";
 import { MilestoneFolderModalState, ModalMilestoneFolder } from "./ModalMilestoneFolder";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -82,6 +82,8 @@ const LIST_TIGHT_MAX_PX = 199;
 // ~20px next to icon + count + arrow).
 const LIST_NO_FOLDER_COUNT_MAX_PX = 159;
 const PROGRESS_CLASS = "MsRowProgress";
+const FAVORITE_MARK_CLASS = "MsRowFavoriteMark";
+const ACTIONS_SPACER_CLASS = "MsRowActionsSpacer";
 const FOLDER_COUNT_CLASS = "MsFolderCount";
 // The title never gets less than this; a chip or the indent never wins.
 const TITLE_MIN_WIDTH = "4ch";
@@ -114,8 +116,8 @@ const SPRINT_CLASS = "MsRowSprint";
 //     for a mouse, and 0 in a compact (<= 299px) list on touch too: title room is
 //     scarcer than chip room there, and the buttons simply overlay (with their
 //     background, which the compact rule below puts back).
-//   - The menu is centred on the first line (title), so it covers the progress
-//     chip and not the second line's chips and avatars.
+//   - The menu is centred on the first line (title). On a milestone row it replaces the
+//     progress chip there (see "A milestone row's hover actions" below).
 const MENU_BUTTON_TOUCH = "32px";
 // How far the buttons sit from the row's end, and the end padding the rows keep
 // (the tight tier narrows the second through `--nav-pad-end`).
@@ -144,6 +146,51 @@ const compactActionsSx = {
         "--nav-actions-reserve": "0px",
         "--nav-actions-bg": NAV_OVERLAY_BG,
         "--nav-actions-fade": NAV_OVERLAY_FADE,
+    },
+} as const;
+
+// ── A milestone row's hover actions (MIP-1156) ──
+// Like the chat row, where the time gives way to Pin and "..." (MIP-1167): at rest the
+// row is as it always was. While it is hovered, keyboard-focused or has its menu open,
+// the progress counter and a favorite's small star LEAVE the row's first line, and the
+// star (only if the milestone is not a favorite yet) and the "..." menu take their place.
+// A same-width spacer holds the title's room, so the row never changes size and the
+// buttons overlay nothing: they have no background to hide a title behind, and no fade.
+//   - hover and the row button's keyboard ring are plain CSS on the row;
+//   - keyboard focus on the star / menu button and an open menu come after the row button
+//     in the DOM, which CSS cannot look back from (and `:has()` is out, MIP-963), so
+//     `MilestoneRowActions` sets `ROW_ACTIONS_ENGAGED_ATTR` on the row for them.
+// On touch the buttons are always visible in the room the row reserves, so nothing gives way.
+const STAR_BUTTON_PX = 28;
+const actionsInstead = (when: string) => ({
+    [`${when} .${PROGRESS_CLASS}`]: { display: "none" },
+    [`${when} .${FAVORITE_MARK_CLASS}`]: { display: "none" },
+    [`${when} .${ACTIONS_SPACER_CLASS}`]: { display: "block" },
+});
+const milestoneActionsSx = {
+    // Touch in a compact list: the buttons overlay the chips (no room reserved), so they
+    // keep the opaque background. (Hover-capable lists never overlay, see below.)
+    "@media (hover: none)": { ...compactActionsSx },
+    [NAV_HOVER_MEDIA]: {
+        // Nothing is under the buttons: no plate, no fade.
+        "--nav-actions-bg": "transparent",
+        "--nav-actions-fade": "none",
+        // A tight list (<= 199px) has no room to hold: the buttons overlay the row's end again,
+        // as they did before, so they get their opaque plate back and the spacer goes.
+        [`@container ${MS_LIST} (max-width: ${LIST_TIGHT_MAX_PX}px)`]: {
+            "--nav-actions-bg": NAV_OVERLAY_BG,
+            "--nav-actions-fade": NAV_OVERLAY_FADE,
+            [`& .${ACTIONS_SPACER_CLASS}`]: { width: 0 },
+        },
+        ...actionsInstead("&:hover"),
+        ...actionsInstead("& > .Mui-focusVisible"),
+        ...actionsInstead(`&[${ROW_ACTIONS_ENGAGED_ATTR}]`),
+        // Focus on one button or its open menu would show only that button (NavItem reveals
+        // the focused one): show both, so the spacer's room is not half empty.
+        [`&[${ROW_ACTIONS_ENGAGED_ATTR}] .NavItem-actions button`]: {
+            opacity: 1,
+            pointerEvents: "auto",
+        },
     },
 } as const;
 
@@ -258,9 +305,9 @@ export const MilestonesListItem = memo(function MilestonesListItem({
         const selected =
             useTM.currentPreviewKind === "milestone" &&
             useTM.currentPreviewMilestoneId === m.milestoneId;
-        // A mouse keeps no room for the star and the menu (they show over the row's end
-        // on hover); a touch device, where they are always visible, keeps 32px each.
-        const rowSx = { ...indentSx(depth), ...compactActionsSx };
+        // A mouse keeps no room for the star and the menu (they take the progress counter's
+        // place on hover); a touch device, where they are always visible, keeps 32px each.
+        const rowSx = { ...indentSx(depth), ...milestoneActionsSx };
         return (
             <NavItem
                 key={m.milestoneId}
@@ -269,28 +316,21 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                 selected={selected}
                 sx={rowSx}
                 actions={
-                    // The star and the "..." menu share the actions slot, so the row's
-                    // hover reveal shows both. Past milestones keep their folder but
-                    // are not filed from here: they sit in the year/sprint tree, not
-                    // in a folder, so their menu holds only the favorite item.
-                    <Stack alignItems="center" direction="row">
-                        <MilestoneFavoriteStar
-                            isFavorited={favorited}
-                            milestoneTitle={m.title}
-                            onToggle={toggleFavorite}
-                        />
-                        <MilestoneRowMenu
-                            canMove={canFile}
-                            currentFolderId={m.folderId ?? null}
-                            folders={folders}
-                            isFavorited={favorited}
-                            milestoneTitle={m.title}
-                            onToggleFavorite={toggleFavorite}
-                            onMoveToFolder={(folderId) =>
-                                void useSM.moveMilestoneToFolder(m.milestoneId, folderId)
-                            }
-                        />
-                    </Stack>
+                    // The star and the "..." menu share the actions slot. Past milestones
+                    // keep their folder but are not filed from here: they sit in the
+                    // year/sprint tree, not in a folder, so their menu holds only the
+                    // favorite item.
+                    <MilestoneRowActions
+                        canMove={canFile}
+                        currentFolderId={m.folderId ?? null}
+                        folders={folders}
+                        isFavorited={favorited}
+                        milestoneTitle={m.title}
+                        onToggleFavorite={toggleFavorite}
+                        onMoveToFolder={(folderId) =>
+                            void useSM.moveMilestoneToFolder(m.milestoneId, folderId)
+                        }
+                    />
                 }
                 onClick={() => handleOpen(m.milestoneId)}
             >
@@ -341,7 +381,7 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             >
                                 {m.title}
                             </Typography>
-                            {favorited && <FavoriteMark />}
+                            {favorited && <FavoriteMark className={FAVORITE_MARK_CLASS} />}
                             <Chip
                                 className={PROGRESS_CLASS}
                                 size="sm"
@@ -350,6 +390,20 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                             >
                                 {m.tasksClosed ?? 0}/{m.tasksTotal ?? 0}
                             </Chip>
+                            {/* Holds the buttons' room while they replace the chip and the
+                                small star (hover, focus, open menu): hidden at rest. Their
+                                width less the row's end padding they reach into, plus the
+                                4px gap to the title; a favorite has no star button. */}
+                            <Box
+                                className={ACTIONS_SPACER_CLASS}
+                                sx={{
+                                    display: "none",
+                                    flexShrink: 0,
+                                    width: `max(0px, calc(${favorited ? 1 : 2} * ${STAR_BUTTON_PX}px + 4px - var(--nav-pad-end, 8px)))`,
+                                    height: 1,
+                                }}
+                                aria-hidden
+                            />
                         </Stack>
                         {/* One line at any width (MIP-1012): wrapping put each
                             chip on its own line. `useFlexGap` so a chip the

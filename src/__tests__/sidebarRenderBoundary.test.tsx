@@ -11,7 +11,7 @@
  * managers, exactly as `TaskHomeLayout` and `MobileTaskHome` do, and counts
  * renders at leaves that only the tree under test renders:
  *   - `ProjectIdentityRow`: once per visible project, per `ProjectsListItem` render;
- *   - `MilestoneRowMenu`: once per live milestone row, per `MilestonesListItem` render;
+ *   - `MilestoneRowActions`: once per live milestone row, per `MilestonesListItem` render;
  *   - `RecentProjectGroup`: once per recent project, per `RecentsListItem` render;
  *   - the Home / Table / Board / Search icons: once per render of the sidebar's own
  *     body, of the two view buttons, and of the search box.
@@ -92,7 +92,7 @@ vi.mock("../features/tasks/components/sidebar/projects_subs/MilestoneFolderMenus
     >("../features/tasks/components/sidebar/projects_subs/MilestoneFolderMenus");
     return {
         ...actual,
-        MilestoneRowMenu: () => {
+        MilestoneRowActions: () => {
             counts.milestoneRows += 1;
             return null;
         },
