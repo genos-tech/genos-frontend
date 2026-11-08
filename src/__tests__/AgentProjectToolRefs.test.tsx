@@ -90,7 +90,10 @@ describe("emitProjectToolResult", () => {
             emitProjectToolResult(tool);
             resync.stop();
             deleted.stop();
-            expect(resync.seen).toEqual([{ reason: "agent-write", deliveredTag: undefined }]);
+            // `done` is the reply channel `requestInboxResync` adds; only the reason matters here.
+            expect(resync.seen).toEqual([
+                expect.objectContaining({ reason: "agent-write", deliveredTag: undefined }),
+            ]);
             expect(deleted.seen).toEqual([]);
         }
     );

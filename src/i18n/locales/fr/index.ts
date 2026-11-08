@@ -2271,6 +2271,12 @@ export const fr: DeepPartial<Messages> = {
             title: "Boîte de réception",
             subtitle: "Restez informé de vos notifications",
         },
+        sync: {
+            label: "Synchroniser la boîte",
+            upToDate: "La boîte de réception est à jour",
+            added: "{count, plural, one {# nouvel élément} other {# nouveaux éléments}}",
+            failed: "Impossible de synchroniser la boîte de réception. Réessayez.",
+        },
         tabs: {
             ariaLabel: "Sections de la boîte de réception",
             requests: "Demandes",
@@ -3797,6 +3803,10 @@ export const fr: DeepPartial<Messages> = {
             running: "Exécution…",
             ranOk: "Exécutée : {title}, {count, plural, one {# élément} other {# éléments}}. Le rapport est dans votre boîte de réception.",
             ranFailed: "L'exécution a échoué : {error}",
+            reportReady: "Rapport prêt",
+            reportReadyTitled: "Rapport prêt : {title}",
+            openInbox: "Ouvrir la boîte",
+            planRefused: "Votre forfait n'inclut pas les rapports programmés.",
             edit: "Modifier",
             delete: "Supprimer",
             deleteConfirm:

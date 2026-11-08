@@ -149,6 +149,11 @@ export const settings = {
         running: "Running…",
         ranOk: "Ran: {title}, {count, plural, one {# item} other {# items}}. The report is in your Inbox.",
         ranFailed: "The run failed: {error}",
+        // Said by a toast after "Run now", so it is heard with the dialog closed.
+        reportReady: "Report ready",
+        reportReadyTitled: "Report ready: {title}",
+        openInbox: "Open inbox",
+        planRefused: "Your plan doesn't include scheduled reports.",
         edit: "Edit",
         delete: "Delete",
         deleteConfirm: "Delete {name}? It stops running and can't be brought back.",

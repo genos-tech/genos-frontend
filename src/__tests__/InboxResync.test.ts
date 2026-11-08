@@ -18,9 +18,13 @@
 //     the sweep and the push for one reminder land seconds apart.
 
 import { renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { requestInboxResync } from "../features/inbox/inboxResyncEvent";
+import {
+    INBOX_FOCUS_RESYNC_MS,
+    markInboxSyncing,
+    requestInboxResync,
+} from "../features/inbox/inboxResyncEvent";
 import { useInboxResync } from "../hooks/inbox/useInboxResync";
 import { NotificationManager } from "../services/notifications/notificationManager";
 import type { UserProps } from "../types/admin";
@@ -341,6 +345,178 @@ describe("useInboxResync — overlapping requests", () => {
         mount();
         window.dispatchEvent(new Event("inbox:resync"));
         await Promise.resolve();
+        expect(loadCount).toBe(0);
+    });
+});
+
+describe("requestInboxResync — the answer", () => {
+    it("resolves with how many rows were new once the sync is done", async () => {
+        mount();
+        stored = [joinRequestRow(1)];
+        serverAdds = [joinRequestRow(2), joinRequestRow(3)];
+
+        // The Sync button's "2 new items". Counted against what storage held
+        // BEFORE the sync, like the reminder diff, not against React state.
+        expect(await requestInboxResync("manual")).toEqual({ ok: true, added: 2 });
+    });
+
+    it("says up to date when nothing was new", async () => {
+        mount();
+        stored = [joinRequestRow(1)];
+        expect(await requestInboxResync("manual")).toEqual({ ok: true, added: 0 });
+    });
+
+    it("says it failed when the sync rejects, and the next one still works", async () => {
+        vi.spyOn(console, "warn").mockImplementation(() => {});
+        mount();
+        request.mockRejectedValueOnce(new Error("offline"));
+        expect(await requestInboxResync("manual")).toEqual({ ok: false, added: 0 });
+
+        serverAdds = [joinRequestRow(4)];
+        expect(await requestInboxResync("manual")).toEqual({ ok: true, added: 1 });
+    });
+
+    it("says it failed when nothing is listening (signed out) rather than waiting forever", async () => {
+        // No hook mounted at all: the promise must still settle.
+        expect(await requestInboxResync("manual")).toEqual({ ok: false, added: 0 });
+
+        renderHook(() => useInboxResync(myself, null, null, vi.fn()));
+        expect(await requestInboxResync("manual")).toEqual({ ok: false, added: 0 });
+        expect(request).not.toHaveBeenCalled();
+    });
+
+    it("answers every caller of a coalesced cycle with the same result, from one extra pass", async () => {
+        let releaseLoad: (() => void) | null = null;
+        request.mockImplementation(async (method: string) => {
+            if (method === "popInboxItems") return stored;
+            if (method === "loadInbox") {
+                loadCount += 1;
+                if (loadCount === 1) {
+                    await new Promise<void>((resolve) => {
+                        releaseLoad = resolve;
+                    });
+                }
+                stored = [...stored, ...serverAdds];
+                serverAdds = [];
+            }
+            return undefined;
+        });
+        mount();
+        serverAdds = [joinRequestRow(5)];
+
+        const first = requestInboxResync("manual");
+        await waitFor(() => expect(releaseLoad).not.toBeNull());
+        const second = requestInboxResync("schedule-run");
+        releaseLoad!();
+
+        // The first pass found row 5; the follow-up found nothing more; both
+        // callers hear the whole cycle's total, not just their own pass.
+        expect(await Promise.all([first, second])).toEqual([
+            { ok: true, added: 1 },
+            { ok: true, added: 1 },
+        ]);
+        expect(loadCount).toBe(2);
+    });
+});
+
+let clockBase = Date.now();
+
+describe("useInboxResync — the tab or window coming back", () => {
+    // Fake Date and timers only: the hook's check waits one task, and the
+    // throttle is wall-clock. `shouldAdvanceTime` is off so nothing moves
+    // unless the test says so.
+    beforeEach(() => {
+        vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] });
+        // The sync clock is module state that outlives a test, so every test
+        // starts an hour after the last one (and after real "now", which is when
+        // the module loaded): "long ago" relative to whatever was stamped.
+        clockBase += 60 * 60_000;
+        vi.setSystemTime(clockBase);
+    });
+    afterEach(() => {
+        vi.useRealTimers();
+        Object.defineProperty(document, "visibilityState", {
+            value: "visible",
+            configurable: true,
+        });
+    });
+
+    const comeBack = async (...events: Array<"focus" | "visibilitychange">) => {
+        for (const name of events) {
+            if (name === "focus") window.dispatchEvent(new Event("focus"));
+            else document.dispatchEvent(new Event("visibilitychange"));
+        }
+        await vi.advanceTimersByTimeAsync(0);
+        // The sync itself is a chain of awaited (mocked) requests.
+        for (let i = 0; i < 20; i++) await Promise.resolve();
+    };
+
+    it("syncs when the last sync is older than a minute", async () => {
+        mount();
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS + 1);
+        await comeBack("focus");
+        expect(loadCount).toBe(1);
+    });
+
+    it("does nothing within a minute of the last sync (Cmd-Tab back and forth is free)", async () => {
+        mount();
+        markInboxSyncing();
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS - 1000);
+        await comeBack("focus", "visibilitychange");
+        expect(loadCount).toBe(0);
+    });
+
+    it("counts its own sync: back-to-back returns cost one request", async () => {
+        mount();
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS + 1);
+        await comeBack("focus");
+        await comeBack("focus");
+        vi.setSystemTime(Date.now() + 30_000);
+        await comeBack("visibilitychange");
+        expect(loadCount).toBe(1);
+
+        // And a minute later it is allowed again.
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS);
+        await comeBack("focus");
+        expect(loadCount).toBe(2);
+    });
+
+    it("`focus` and `visibilitychange` together are one sync", async () => {
+        mount();
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS + 1);
+        await comeBack("focus", "visibilitychange");
+        expect(loadCount).toBe(1);
+    });
+
+    it("does not repeat a sync the wake refresh just started", async () => {
+        // `refreshAllData` stamps the clock synchronously. The check runs one task
+        // after the event, so it sees that whichever listener ran first.
+        mount();
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS + 1);
+        document.dispatchEvent(new Event("visibilitychange"));
+        markInboxSyncing();
+        await vi.advanceTimersByTimeAsync(0);
+        for (let i = 0; i < 20; i++) await Promise.resolve();
+        expect(loadCount).toBe(0);
+    });
+
+    it("stays quiet while the page is hidden", async () => {
+        mount();
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS + 1);
+        Object.defineProperty(document, "visibilityState", {
+            value: "hidden",
+            configurable: true,
+        });
+        await comeBack("visibilitychange");
+        expect(loadCount).toBe(0);
+    });
+
+    it("stops listening when the hook unmounts", async () => {
+        const setInboxItems = vi.fn();
+        const view = renderHook(() => useInboxResync(myself, "token-1", null, setInboxItems));
+        view.unmount();
+        vi.setSystemTime(Date.now() + INBOX_FOCUS_RESYNC_MS + 1);
+        await comeBack("focus");
         expect(loadCount).toBe(0);
     });
 });
