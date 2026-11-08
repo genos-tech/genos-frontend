@@ -1,6 +1,7 @@
 import type { SxProps } from "@mui/joy/styles/types";
 
 import type { BubbleLayout } from "../../components/ui/bubble";
+import { type } from "../../theme/tokens";
 
 /**
  * The `sx` an answer turn passes to its `Bubble` frame, shared by the live turn
@@ -14,3 +15,13 @@ import type { BubbleLayout } from "../../components/ui/bubble";
  */
 export const turnFrameSx = (layout: BubbleLayout): SxProps =>
     layout === "compact" ? { px: { xs: 1, md: 2 } } : { overflow: "visible" };
+
+/** The "Q" / "A" label in a turn's gutter, in `color`. Shared with the archive turn. */
+export const turnLabelSx = (color: string) => ({
+    ...type("title-sm"),
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    color,
+    minWidth: 18,
+    mt: "2px",
+});

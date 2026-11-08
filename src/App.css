@@ -278,7 +278,7 @@ input[type="checkbox"] {
     color: #4b5563; /* Muted gray against the body's near-black */
 }
 
-/* Light mode - Sent messages (light indigo background #eef2ff) */
+/* Light mode - Sent messages (the accent wash: `Bubble` paints the fill from tokens) */
 .bn-message-bubble-box-light-me .bn-editor {
     background-color: transparent;
     padding: 1px;
@@ -298,7 +298,7 @@ input[type="checkbox"] {
     color: #4338ca; /* Lighter indigo against the body's deep indigo */
 }
 
-/* Dark mode - Received messages (dark gray background #1f2937) */
+/* Dark mode - Received messages (the bubble fills are `Bubble` tokens, since MIP-1130) */
 .bn-message-bubble-box-dark .bn-editor {
     background-color: transparent;
     padding: 1px;
@@ -333,7 +333,7 @@ input[type="checkbox"] {
     color: #c7d2fe;
 }
 
-/* Dark mode - Sent messages (deep indigo background #312e81) */
+/* Dark mode - Sent messages (the accent wash) */
 .bn-message-bubble-box-dark-me .bn-editor {
     background-color: transparent;
     padding: 1px;

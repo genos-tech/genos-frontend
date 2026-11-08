@@ -77,7 +77,7 @@ import { Bubble, BubbleMeta, type BubbleLayout } from "../../components/ui/bubbl
 import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { fmt } from "../../i18n";
 import type { PendingApprovalPayload } from "../../services/agentApi";
-import { g, type } from "../../theme/tokens";
+import { g } from "../../theme/tokens";
 import { entitySubtitle } from "../spotlight/SpotlightResultItem";
 import type { SpotlightResult } from "../spotlight/types";
 import { agentMarkdownComponents } from "./agentMarkdown";
@@ -95,7 +95,7 @@ import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
 import type { AgentMentionRef } from "./mentions/types";
 import { formatDurationMs, ToolProgressList } from "./ToolProgressList";
-import { turnFrameSx } from "./turnFrame";
+import { turnFrameSx, turnLabelSx } from "./turnFrame";
 import type { ToolEvent } from "./types";
 import { UndoSlot } from "./UndoControls";
 import { mergeUndoSteps, type UndoRequest, type UndoStepRef } from "./undoSteps";
@@ -360,6 +360,8 @@ const AgentTurnInner = ({
     // on the floating toolbar: an answer is read to its end, and a toolbar on the
     // top edge would be scrolled away by then. The reveal (hover / focus / touch)
     // is Bubble's, in CSS, so the turn still holds no hover state (MIP-904).
+    // The frame's padding / clipping for each look is `turnFrameSx` (shared with
+    // the read-only archive turn in Spotlight's History).
     const frameSx = turnFrameSx(layout);
 
     return (
@@ -428,17 +430,7 @@ const AgentTurnInner = ({
                             gap: 0.75,
                         }}
                     >
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                ...type("title-sm"),
-                                textTransform: "uppercase",
-                                letterSpacing: "0.04em",
-                                color: g.text.tertiary,
-                                minWidth: 18,
-                                mt: "2px",
-                            }}
-                        >
+                        <Typography level="body-sm" sx={turnLabelSx(g.text.tertiary)}>
                             {labels.turnLabelQ}
                         </Typography>
                         <Typography
@@ -455,17 +447,7 @@ const AgentTurnInner = ({
                 )}
 
                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            ...type("title-sm"),
-                            textTransform: "uppercase",
-                            letterSpacing: "0.04em",
-                            minWidth: 18,
-                            mt: "2px",
-                            color: g.accent.text,
-                        }}
-                    >
+                    <Typography level="body-sm" sx={turnLabelSx(g.accent.text)}>
                         {labels.turnLabelA}
                     </Typography>
                     <Box sx={{ flex: 1, minWidth: 0 }}>

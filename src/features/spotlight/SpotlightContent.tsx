@@ -57,7 +57,7 @@ import type {
     AgentSessionTurn,
 } from "../../services/agentApi";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
-import { focusRing, g, type } from "../../theme/tokens";
+import { focusRing, g } from "../../theme/tokens";
 import type { UserProps } from "../../types/admin";
 import type { ProjectProps } from "../../types/tasks";
 import {
@@ -74,6 +74,7 @@ import {
     renderSaveAnswerStatus,
     rewriteCitations,
     turnFrameSx,
+    turnLabelSx,
     useAgentMentionDraft,
     useAgentMentionSources,
     type AgentMentionCandidate,
@@ -1954,7 +1955,11 @@ const HistorySessionDetailView = ({
 }: HistorySessionDetailViewProps) => {
     if (isLoading || detail === null) {
         if (isLoading) {
-            return <SkeletonLines label={ts.history.loading} lines={4} />;
+            return (
+                <Box sx={{ px: inset }}>
+                    <SkeletonLines label={ts.history.loading} lines={4} />
+                </Box>
+            );
         }
         // detail === null after a failed fetch.
         return (
@@ -2122,16 +2127,6 @@ const HistoryArchiveTurn = ({
         </Bubble>
     );
 };
-
-// The "Q" / "A" gutter label, as `AgentTurn` sets it.
-const turnLabelSx = (color: string) => ({
-    ...type("title-sm"),
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.04em",
-    color,
-    minWidth: 18,
-    mt: "2px",
-});
 
 // Relative-time helper for History list rows. Keeps the dependency
 // surface zero (no date-fns / dayjs) — just the buckets the i18n

@@ -127,7 +127,7 @@ export const MentionCustomStatus = ({ text }: { text: string }) => (
     <Typography
         level="body-xs"
         sx={{
-            opacity: 0.7,
+            color: g.text.tertiary,
             fontStyle: "italic",
             ml: "auto",
             flexShrink: 0,
@@ -234,7 +234,7 @@ export const MentionMenuRow = ({
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
-                            opacity: 0.7,
+                            color: g.text.secondary,
                         }}
                     >
                         {subtitle}
