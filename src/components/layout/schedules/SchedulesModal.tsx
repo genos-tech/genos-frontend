@@ -1,4 +1,5 @@
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
+import { Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../../i18n";
@@ -36,7 +37,14 @@ export const SchedulesModal = ({ open, onClose, teamId }: Props) => {
             headerDivider
             onClose={onClose}
         >
-            {teamId ? <SchedulesSection showHeading={false} teamId={teamId} /> : null}
+            {teamId ? (
+                <SchedulesSection showHeading={false} teamId={teamId} />
+            ) : (
+                // The team has not resolved yet: say so rather than open an empty dialog.
+                <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>
+                    {t.settings.schedules.loading}
+                </Typography>
+            )}
         </ModalFrame>
     );
 };

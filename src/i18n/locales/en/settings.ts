@@ -194,6 +194,7 @@ export const settings = {
         milestonePlaceholder: "Choose a milestone",
         milestoneLoading: "Loading milestones…",
         milestoneNone: "There are no milestones to choose from.",
+        milestoneLoadFailed: "Couldn't load the milestones. Close this form and try again.",
         errorMilestone: "Choose a milestone.",
         duplicateSame:
             "You already have a schedule that does the same thing at the same time: {name}.",

@@ -787,6 +787,7 @@ export const ar: DeepPartial<Messages> = {
             milestonePlaceholder: "اختر معلمًا",
             milestoneLoading: "جارٍ تحميل المعالم…",
             milestoneNone: "لا توجد معالم للاختيار منها.",
+            milestoneLoadFailed: "تعذّر تحميل المعالم. أغلق هذا النموذج وحاول مرة أخرى.",
             errorMilestone: "اختر معلمًا.",
             duplicateSame: "لديك بالفعل جدول يفعل الشيء نفسه في الوقت نفسه: {name}.",
             duplicateName: "لديك بالفعل جدول باسم {name}. أعطِ هذا الجدول اسمًا آخر.",

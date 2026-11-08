@@ -207,6 +207,27 @@ describe("Genos page schedules entry", () => {
         );
     });
 
+    it("does not open an empty dialog while the team is unknown", async () => {
+        render(
+            <CssVarsProvider>
+                <GenosHome
+                    accessToken="tok"
+                    spotlight={spotlight}
+                    teamId={null}
+                    onOpenSettings={vi.fn()}
+                    onPreview={vi.fn()}
+                    onSelect={vi.fn()}
+                />
+            </CssVarsProvider>
+        );
+        await userEvent.click(screen.getByRole("button", { name: en.settings.schedules.title }));
+        const dialog = await screen.findByRole("dialog");
+        expect(within(dialog).getByRole("status")).toHaveTextContent(
+            en.settings.schedules.loading
+        );
+        expect(within(dialog).queryByTestId("schedules-section")).toBeNull();
+    });
+
     it("on a phone the entry is in the history drawer, and opening schedules closes the drawer", async () => {
         isMobileViewport = true;
         renderGenos();

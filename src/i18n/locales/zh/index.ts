@@ -3136,6 +3136,7 @@ export const zh: DeepPartial<Messages> = {
             milestonePlaceholder: "选择里程碑",
             milestoneLoading: "正在加载里程碑…",
             milestoneNone: "没有可选择的里程碑。",
+            milestoneLoadFailed: "无法加载里程碑。请关闭此表单后重试。",
             errorMilestone: "请选择一个里程碑。",
             duplicateSame: "你已经有一个在相同时间做相同事情的定时任务:{name}。",
             duplicateName: "你已经有一个名为“{name}”的定时任务。请换一个名称。",

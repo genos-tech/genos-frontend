@@ -802,6 +802,8 @@ export const es: DeepPartial<Messages> = {
             milestonePlaceholder: "Elige un hito",
             milestoneLoading: "Cargando hitos…",
             milestoneNone: "No hay hitos entre los que elegir.",
+            milestoneLoadFailed:
+                "No se pudieron cargar los hitos. Cierra este formulario e inténtalo de nuevo.",
             errorMilestone: "Elige un hito.",
             duplicateSame: "Ya tienes una programación que hace lo mismo a la misma hora: {name}.",
             duplicateName: "Ya tienes una programación llamada {name}. Ponle otro nombre a esta.",

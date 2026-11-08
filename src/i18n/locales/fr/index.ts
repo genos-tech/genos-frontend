@@ -3294,6 +3294,8 @@ export const fr: DeepPartial<Messages> = {
             milestonePlaceholder: "Choisir un jalon",
             milestoneLoading: "Chargement des jalons…",
             milestoneNone: "Aucun jalon à choisir.",
+            milestoneLoadFailed:
+                "Impossible de charger les jalons. Fermez ce formulaire et réessayez.",
             errorMilestone: "Choisissez un jalon.",
             duplicateSame:
                 "Vous avez déjà une planification qui fait la même chose à la même heure : {name}.",

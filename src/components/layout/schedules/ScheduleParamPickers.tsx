@@ -54,9 +54,14 @@ export const useProjectMilestones = (projects: ProjectProps[]) => {
     const { accessToken } = useAuth();
     const [groups, setGroups] = useState<Group[]>([]);
     const [loading, setLoading] = useState(true);
-    // The effect runs for the SET of projects, not for a new array of the same ones.
+    // Some project's list could not be read: an empty picker then is not "no milestones".
+    const [failed, setFailed] = useState(false);
+    // The effect runs for the SET of projects, not for a new array of the same ones, and a
+    // refreshed token must not refetch every list (and flash the picker back to "Loading").
     const projectsRef = useRef(projects);
     projectsRef.current = projects;
+    const tokenRef = useRef(accessToken);
+    tokenRef.current = accessToken;
     const ids = projects.map((p) => p.projectId).join(",");
 
     useEffect(() => {
@@ -64,20 +69,21 @@ export const useProjectMilestones = (projects: ProjectProps[]) => {
         setLoading(true);
         void Promise.all(
             projectsRef.current.map(async (project) => {
-                const res = await loadProjectMilestones(project.projectId, accessToken);
-                return { project, milestones: res?.milestones ?? [] };
+                const res = await loadProjectMilestones(project.projectId, tokenRef.current);
+                return { project, milestones: res?.milestones ?? [], ok: !!res };
             })
         ).then((next) => {
             if (cancelled) return;
             setGroups(next.filter((g) => g.milestones.length > 0));
+            setFailed(next.some((g) => !g.ok));
             setLoading(false);
         });
         return () => {
             cancelled = true;
         };
-    }, [ids, accessToken]);
+    }, [ids]);
 
-    return { groups, loading };
+    return { groups, loading, failed };
 };
 
 /** The required milestone parameter: a milestone by name, grouped by project. */
@@ -85,7 +91,7 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
     const { t } = useTranslation();
     const s = t.settings.schedules;
     const projects = useJoinedProjects();
-    const { groups, loading } = useProjectMilestones(projects);
+    const { groups, loading, failed } = useProjectMilestones(projects);
 
     // A finished milestone is not worth a report, but one that is already chosen stays listed.
     const shown = groups
@@ -110,7 +116,7 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
             )}
             {!loading && shown.length === 0 && value === "" && (
                 <Typography level="body-sm" sx={{ px: 1.5, py: 1 }}>
-                    {s.milestoneNone}
+                    {failed ? s.milestoneLoadFailed : s.milestoneNone}
                 </Typography>
             )}
             {shown.map((group, i) => (

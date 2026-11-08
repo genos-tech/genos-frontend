@@ -3572,6 +3572,8 @@ export const ja: DeepPartial<Messages> = {
             milestonePlaceholder: "マイルストーンを選択",
             milestoneLoading: "マイルストーンを読み込み中…",
             milestoneNone: "選べるマイルストーンがありません。",
+            milestoneLoadFailed:
+                "マイルストーンを読み込めませんでした。このフォームを閉じて、もう一度お試しください。",
             errorMilestone: "マイルストーンを選択してください。",
             duplicateSame: "同じ時刻に同じ内容を行うスケジュールがすでにあります：{name}。",
             duplicateName:

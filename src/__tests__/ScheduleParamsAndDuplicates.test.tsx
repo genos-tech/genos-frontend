@@ -301,6 +301,20 @@ describe("milestone picker", () => {
         });
     });
 
+    it("says the milestones could not be loaded, not that there are none, when every request fails", async () => {
+        loadProjectMilestones.mockResolvedValue(undefined);
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await openNew(user);
+        await pickJob(user, "Milestone updates");
+        await waitFor(() => expect(loadProjectMilestones).toHaveBeenCalledTimes(2));
+        await user.click(await screen.findByRole("combobox", { name: /Milestone/ }));
+        expect(
+            await screen.findByText("Couldn't load the milestones. Close this form and try again.")
+        ).toBeTruthy();
+        expect(screen.queryByText("There are no milestones to choose from.")).toBeNull();
+    });
+
     it("will not send without a milestone, and says so", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
