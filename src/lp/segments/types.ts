@@ -2,139 +2,41 @@ export type Lang = "ja" | "en";
 
 export type SegmentKey = "research" | "teams" | "projects" | "students";
 
-export interface SegmentMeta {
-    pageTitle: string;
-    metaDescription: string;
-    ogTitle: string;
-    ogDescription: string;
-}
-
-export interface SegmentHero {
-    badge: string;
-    title: string;
-    titleSub: string;
-    lead: string;
-    primary: string;
-    secondary: string;
-    footnote: string;
-}
-
-export interface ProblemCard {
-    title: string;
-    body: string;
-}
-
-export interface SegmentProblem {
-    eyebrow: string;
-    title: string;
-    body: string;
-    questions: string[];
-    closing: string;
-    cards: ProblemCard[];
-}
-
-export interface SegmentWorkflow {
-    eyebrow: string;
-    title: string;
-    body: string;
-    steps: string[];
-}
-
-export interface SegmentSolution {
-    eyebrow: string;
-    title: string;
-    body: string;
-}
-
-export interface SegmentFeature {
-    title: string;
-    subtitle: string;
-    bullets: string[];
-    image: string;
-    imageAlt: string;
-}
-
-export interface SegmentContext {
-    eyebrow: string;
-    title: string;
-    body: string;
-    points: string[];
-}
-
-export interface SegmentAI {
-    eyebrow: string;
-    title: string;
-    body: string;
-    agentTagline: string;
-    examplePrompts: string[];
-}
-
-export interface SegmentApprovalTrust {
-    eyebrow: string;
-    title: string;
-    body: string;
-    steps?: string[];
-}
-
-export interface SegmentCurrentAndNext {
-    availableNow: string[];
-    roadmap: string[];
-}
-
-export interface SegmentAudience {
-    eyebrow: string;
-    title: string;
-    items: string[];
-    hookQuote: string;
-    hookLine: string;
-}
-
-export interface SegmentComparison {
-    headers: [string, string, string];
-    rows: [string, string, string][];
-}
-
-export interface SegmentCta {
-    title: string;
-    body: string;
-    primary: string;
-    secondary: string;
-}
-
 export interface FaqItem {
     q: string;
     a: string;
 }
 
-export interface SegmentFaq {
-    eyebrow: string;
-    title: string;
-    items: FaqItem[];
-}
-
+/**
+ * One audience page in one language (MIP-1232). Lean on purpose: a page that
+ * answers "is this for me, how does it work, what do I get, what is not here
+ * yet" in that order, and nothing else. The earlier model carried fifteen
+ * sections per page, most of them restating each other.
+ */
 export interface SegmentCopy {
-    nav: {
-        home: string;
-        contact: string;
-        faq: string;
-        plans: string;
-        demo: string;
+    meta: { title: string; description: string; ogTitle: string; ogDescription: string };
+    hero: {
+        title: string;
+        sub: string;
+        lead: string;
+        primary: string;
+        secondary: string;
+        footnote: string;
     };
-    meta: SegmentMeta;
-    hero: SegmentHero;
-    socialProof: string[];
-    problem: SegmentProblem;
-    workflow: SegmentWorkflow;
-    solution: SegmentSolution;
-    features: SegmentFeature[];
-    context: SegmentContext;
-    ai: SegmentAI;
-    approvalTrust: SegmentApprovalTrust;
-    currentAndNext: SegmentCurrentAndNext;
-    audience: SegmentAudience;
-    comparison: SegmentComparison;
-    cta: SegmentCta;
-    faq: SegmentFaq;
+    /** Three short facts under the hero. */
+    trust: string[];
+    /** The questions this audience keeps asking, and what is wrong with the answer today. */
+    questions: { title: string; items: string[]; closing: string };
+    /** The loop the audience's work follows, as ordered steps. */
+    workflow: { title: string; body: string; steps: string[] };
+    features: Array<{ title: string; subtitle: string; bullets: string[] }>;
+    ai: { title: string; body: string; prompts: string[] };
+    /** What works today, and what is genuinely not available yet (shown with a "Coming" badge). */
+    now: string[];
+    coming: string[];
+    audience: { title: string; items: string[]; quote: string };
+    faq: { title: string; items: FaqItem[] };
+    cta: { title: string; body: string; primary: string; secondary: string };
 }
 
 export interface SegmentConfig {

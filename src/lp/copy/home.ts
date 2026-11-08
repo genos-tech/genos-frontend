@@ -15,9 +15,10 @@ import type { Lang } from "../lpLang";
  *    from the developers page's tool list (`{tools}` below).
  *  - Nothing about model training: the privacy page deliberately makes no
  *    such claim (see its TODO(owner)), so neither does this page.
- *  - The demo story (Kotone Coffee's subscription launch) is the demo
- *    workspace's own content (MIP-1237), so the page shows what "Try the
- *    demo" opens.
+ *  - The examples are the demo workspace's own story (kept by MIP-1237): the
+ *    "framer-motion or plain CSS?" spike of the website-redesign project. The
+ *    page shows what "Try the demo" opens, so these words and the screenshots
+ *    are the same events.
  */
 
 export type LineKind = "chat" | "note" | "task";
@@ -105,25 +106,25 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     kind: "chat",
                     tag: "議論",
-                    what: "定期便の送料、価格に含める？",
-                    where: "#定期便ローンチ のスレッド",
+                    what: "マーケは CSS だけで行く方向。難しいのはドロワーだけ",
+                    where: "スパイク調査タスクのコメント",
                 },
                 {
                     kind: "note",
                     tag: "決定",
-                    what: "送料込み・月額2,980円に決定",
-                    where: "ノート「定期便 価格設計 v3」",
+                    what: "マーケティングページでは framer-motion を使わない",
+                    where: "同じタスクの「決定事項」",
                 },
                 {
                     kind: "task",
-                    tag: "完了",
-                    what: "料金ページを更新",
-                    where: "タスク KTN-24（美咲さんが完了）",
+                    tag: "反映",
+                    what: "ナビは CSS のドロワーで実装。800バイト（framer-motion は40KB）",
+                    where: "全体チャットで共有されたナビのPR",
                 },
             ],
         },
         heroAlt:
-            "Genosの回答画面。定期便の価格決定について、元のスレッド・ノート・タスクを出典として示している",
+            "Genosの回答画面。「いま止まっているタスクは何で、何を待っていますか？」に、プロジェクトごとにタスクをリンクつきで並べ、出典チップを添えて答えている",
         works: {
             label: "連携",
             items: [
@@ -201,10 +202,10 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
             transcript: {
                 label: "AIアシスタントとの会話の例",
-                you: "定期便ローンチの状況を教えて。",
+                you: "Webサイトリニューアルの状況を教えて。",
                 tool: "get_my_briefing",
-                ai: "火曜以降の動きです。美咲さんが料金ページ（KTN-24）を完了しました。梱包資材の業者決定（KTN-31、金曜締切）はあなたの判断待ちです。KTN-31を今のスプリントに入れますか？",
-                approve: "KTN-31 をスプリント12へ移動",
+                ai: "火曜以降の動きです。framer-motion のスパイク調査は完了し、CSS のみで行く決定になりました。アクセシビリティ監査は Hero と FeatureGrid の完成待ち、モバイル Safari の読み込み遅延は調査中です。次の2件を今日のTo-Doに追加しますか？",
+                approve: "今日のTo-Doに2件を追加",
                 approveBtn: "承認",
             },
             link: "すべてのツールを見る",
@@ -321,25 +322,25 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     kind: "chat",
                     tag: "Discussed",
-                    what: "Should shipping be included in the subscription price?",
-                    where: "Thread in #subscription-launch",
+                    what: "Leaning toward CSS-only for marketing; the drawer is the tricky part",
+                    where: "Comments on the spike task",
                 },
                 {
                     kind: "note",
                     tag: "Decided",
-                    what: "Shipping included, $24 a month",
-                    where: "Note: Subscription pricing v3",
+                    what: "No framer-motion on the marketing pages",
+                    where: "The same task's Decision section",
                 },
                 {
                     kind: "task",
-                    tag: "Done",
-                    what: "Pricing page updated",
-                    where: "Task KTN-24, closed by Mia",
+                    tag: "Applied",
+                    what: "The nav ships with a CSS drawer: 800 bytes, not 40 KB",
+                    where: "Nav PR shared in the general chat",
                 },
             ],
         },
         heroAlt:
-            "A Genos answer about the subscription price decision, citing the original thread, note and task as sources",
+            'A Genos answer to "What is blocked right now and what does it wait on?", with the tasks grouped by project, linked, and source chips underneath',
         works: {
             label: "Works with",
             items: [
@@ -418,10 +419,10 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
             transcript: {
                 label: "An example conversation with an AI assistant",
-                you: "Catch me up on the subscription launch.",
+                you: "Catch me up on the website redesign.",
                 tool: "get_my_briefing",
-                ai: "Since Tuesday: Mia closed the pricing page (KTN-24). Choosing the packaging supplier (KTN-31, due Friday) is waiting on you. Want me to move KTN-31 into the current sprint?",
-                approve: "Move KTN-31 to Sprint 12",
+                ai: "Since Tuesday: the framer-motion spike is closed, and the call is CSS-only. The accessibility audit is waiting on the hero and feature grid, and the slow mobile Safari load is still being investigated. Want me to put the next two on today's to-do list?",
+                approve: "Add 2 items to today's to-do list",
                 approveBtn: "Approve",
             },
             link: "See every tool",

@@ -48,16 +48,14 @@ export const useLpMode = (): {
     const [mode, setMode] = useState<Mode>(initialMode);
 
     const toggleMode = useCallback(() => {
-        setMode((current) => {
-            const next = current === "dark" ? "light" : "dark";
-            try {
-                localStorage.setItem(STORAGE_KEY, next);
-            } catch {
-                // Not persisted; the page still switches.
-            }
-            return next;
-        });
-    }, []);
+        const next: Mode = mode === "dark" ? "light" : "dark";
+        setMode(next);
+        try {
+            localStorage.setItem(STORAGE_KEY, next);
+        } catch {
+            // Not persisted; the page still switches.
+        }
+    }, [mode]);
 
     // Native controls and scrollbars follow the page.
     useEffect(() => {

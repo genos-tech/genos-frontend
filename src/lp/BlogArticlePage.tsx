@@ -21,7 +21,7 @@ export default function BlogArticlePage() {
     const article = getBlogArticle(slug);
 
     if (!article) {
-        return <Navigate replace to="/blog" />;
+        return <Navigate to="/blog" replace />;
     }
 
     const others = listBlogArticles()

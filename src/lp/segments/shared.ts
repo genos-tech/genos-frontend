@@ -1,62 +1,41 @@
 import type { Lang } from "./types";
 
-export const SHARED_NAV: Record<
+/** Section labels shared by the four audience pages. */
+export const SEGMENT_LABELS: Record<
     Lang,
-    { home: string; contact: string; faq: string; plans: string; demo: string }
+    {
+        questions: string;
+        workflow: string;
+        features: string;
+        ai: string;
+        now: string;
+        coming: string;
+        audience: string;
+        comingBadge: string;
+        askLabel: string;
+    }
 > = {
     ja: {
-        home: "ホーム",
-        contact: "お問い合わせ",
-        faq: "よくある質問",
-        plans: "料金",
-        demo: "デモを見る",
+        questions: "こんな問いを、毎週繰り返していませんか",
+        workflow: "仕事の流れ",
+        features: "できること",
+        ai: "Genosに聞く",
+        now: "いま使えるもの",
+        coming: "これから",
+        audience: "こんな方に",
+        comingBadge: "近日公開",
+        askLabel: "質問の例",
     },
     en: {
-        home: "Home",
-        contact: "Contact",
-        faq: "FAQ",
-        plans: "Pricing",
-        demo: "See the demo",
-    },
-};
-
-export const SHARED_TRUST_STRIP: Record<Lang, string[]> = {
-    ja: [
-        "回答には、元の情報へ戻れるリンク",
-        "AIによる書き込みは、実行前に必ず確認",
-        "ログイン不要のデモ・クレジットカード不要",
-    ],
-    en: [
-        "Answers link back to their sources",
-        "AI writes only after you approve",
-        "No-login demo and no credit card required",
-    ],
-};
-
-export const AVAILABILITY_LABELS: Record<Lang, { availableNow: string; roadmap: string }> = {
-    ja: {
-        availableNow: "現在利用できます",
-        roadmap: "ロードマップ — 現在は未提供",
-    },
-    en: {
-        availableNow: "Available now",
-        roadmap: "On the roadmap — not available today",
-    },
-};
-
-export const DEFAULT_APPROVAL_STEPS: Record<Lang, string[]> = {
-    ja: ["依頼する", "提案を確認する", "承認して実行する"],
-    en: ["Ask", "Review the proposal", "Approve the change"],
-};
-
-export const SHARED_FOOTER: Record<Lang, { line: string; scopeNote: string }> = {
-    ja: {
-        line: "仕事・研究・学習の経緯をつなぐAIワークスペース。",
-        scopeNote: "GenosはMVPとして公開中です。機能は継続的に改善しています。",
-    },
-    en: {
-        line: "An AI workspace that keeps the history of work, research, and learning connected.",
-        scopeNote: "Genos is live as an MVP and continues to improve through real user feedback.",
+        questions: "Questions you keep asking every week",
+        workflow: "The flow of the work",
+        features: "What you get",
+        ai: "Ask Genos",
+        now: "Works today",
+        coming: "Coming",
+        audience: "Made for",
+        comingBadge: "Coming",
+        askLabel: "Example questions",
     },
 };
 

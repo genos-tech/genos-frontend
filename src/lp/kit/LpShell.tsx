@@ -187,7 +187,7 @@ export function LpShell({
                         </button>
                         <a
                             className="lp-btn lp-btn--ghost lp-btn--sm lp-only-wide"
-                            href={appHref(APP_URL)}
+                            href={appHref(`${APP_URL}/signin`)}
                         >
                             {t.signIn}
                         </a>
@@ -241,7 +241,10 @@ export function LpShell({
                             <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
                                 {t.tryDemo}
                             </a>
-                            <a className="lp-btn lp-btn--secondary" href={appHref(APP_URL)}>
+                            <a
+                                className="lp-btn lp-btn--secondary"
+                                href={appHref(`${APP_URL}/signin`)}
+                            >
                                 {t.signIn}
                             </a>
                         </div>
