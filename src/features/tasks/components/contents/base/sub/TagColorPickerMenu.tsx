@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import PaletteIcon from "@mui/icons-material/Palette";
-import { Box, IconButton } from "@mui/joy";
+import { Box, Dropdown, IconButton, MenuButton } from "@mui/joy";
 
 import { MenuRow, MenuSurface } from "../../../../../../components/ui/MoreMenu";
 import { useTranslation } from "../../../../../../i18n";
@@ -71,42 +71,27 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
     zIndex = 10010,
 }) => {
     const { t } = useTranslation();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleSelect = (color: TagColorOption) => {
-        onSelectColor(color);
-        handleClose();
-    };
-
+    // A Dropdown + MenuButton like every other menu: Joy then moves focus into the menu
+    // on open, and Escape closes the menu and returns focus to the button. With an
+    // `anchorEl` and `open` held here, focus stayed on the button (Arrow keys did
+    // nothing) and Escape went on to close the whole Manage Tags dialog (MIP-1202).
     return (
-        <>
-            <IconButton
-                color="neutral"
-                size="sm"
-                sx={{ ml: "5px" }}
-                variant="outlined"
-                onClick={handleOpen}
+        <Dropdown>
+            <MenuButton
+                slots={{ root: IconButton }}
+                slotProps={{
+                    root: {
+                        variant: "outlined",
+                        color: "neutral",
+                        size: "sm",
+                        sx: { ml: "5px" },
+                    },
+                }}
             >
                 <PaletteIcon />
-            </IconButton>
+            </MenuButton>
 
-            <MenuSurface
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                placement="bottom-start"
-                sx={{ maxHeight: "300px" }}
-                zIndex={zIndex}
-                onBlur={handleClose}
-                onClose={handleClose}
-            >
+            <MenuSurface placement="bottom-start" sx={{ maxHeight: "300px" }} zIndex={zIndex}>
                 {COLORS.map((color) => (
                     <MenuRow
                         key={color.name}
@@ -123,12 +108,12 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({
                                 }}
                             />
                         }
-                        onClick={() => handleSelect(color)}
+                        onClick={() => onSelectColor(color)}
                     >
                         {t.tasks.tagColors[color.key]}
                     </MenuRow>
                 ))}
             </MenuSurface>
-        </>
+        </Dropdown>
     );
 };
