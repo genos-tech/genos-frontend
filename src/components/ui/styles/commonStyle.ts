@@ -450,44 +450,6 @@ export const ProfileModalStyles = {
     },
 };
 
-export const TeamDropdownStyles = {
-    dark: {
-        avatarBorder: D.borderStrong,
-        avatarShadow: D.shadowSoft,
-        avatarHoverShadow: D.shadow,
-        menuBg: D.menuBg,
-        menuBorder: D.borderStrong,
-        menuShadow: D.shadow,
-        menuItemHover: D.hoverBg,
-        menuItemActive: D.chipBg,
-        iconColor: D.accentSoft,
-        iconColorRgb: D.accentSoftRgb,
-        textColor: D.text,
-        subtitleColor: D.textMuted,
-        accentGradient: D.accentGradient,
-        // "Currently selected team" indicator — decorative, not data.
-        successColor: D.accentSoft,
-        dividerColor: D.divider,
-    },
-    light: {
-        avatarBorder: L.borderStrong,
-        avatarShadow: L.shadowSoft,
-        avatarHoverShadow: L.shadow,
-        menuBg: L.menuBg,
-        menuBorder: L.border,
-        menuShadow: L.shadow,
-        menuItemHover: L.hoverBg,
-        menuItemActive: L.chipBg,
-        iconColor: L.accent,
-        iconColorRgb: L.accentRgb,
-        textColor: L.text,
-        subtitleColor: L.textMuted,
-        accentGradient: L.accentGradient,
-        successColor: L.accent,
-        dividerColor: L.divider,
-    },
-};
-
 export const TaskFilterMenuStyles = {
     dark: {
         containerBg: D.surfaceElevated,
