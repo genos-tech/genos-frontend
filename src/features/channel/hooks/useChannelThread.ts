@@ -25,6 +25,7 @@ import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
 import type { Message } from "../../../types/channel";
+import { useChannelReload } from "./useChannelReload";
 
 export interface UseChannelThreadResult {
     /** The thread's root message, or null if it isn't in the store yet. */
@@ -41,6 +42,14 @@ export interface UseChannelThreadResult {
     /** True until the root message lands in the store. Useful for
      *  rendering a "Loading thread…" placeholder. */
     isLoading: boolean;
+    /** The channel's last history sync (messages AND threads) failed and has
+     *  not recovered (MIP-1299). `isLoading` stays true while the root is
+     *  missing, so read this to tell "still loading" from "could not load". */
+    loadFailed: boolean;
+    /** Run the history sync again (Retry). */
+    reload: () => void;
+    /** A `reload` is in flight. */
+    reloading: boolean;
 }
 
 export function useChannelThread(
@@ -67,6 +76,8 @@ export function useChannelThread(
         // Already sorted by tsSent at the store level via `_upsertMessage`.
         return { root: foundRoot, replies: matchedReplies };
     }, [allMessages, rootMessageId]);
+
+    const { reload, reloading } = useChannelReload(channelId);
 
     const replyInThread = useCallback(
         async (
@@ -96,5 +107,8 @@ export function useChannelThread(
         // consumer should fetch the channel detail or fall back to a
         // "thread not loaded" empty state.
         isLoading: !snapshot.hydrated || root === null,
+        loadFailed: snapshot.syncFailedByChannel.has(channelId),
+        reload,
+        reloading,
     };
 }

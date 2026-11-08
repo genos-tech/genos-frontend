@@ -19,6 +19,7 @@ import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 import { channelService } from "../../../services/channel/channelService";
 import type { Channel, ChannelRetention, Message, ReadCursor } from "../../../types/channel";
+import { useChannelReload } from "./useChannelReload";
 
 export interface UseChannelResult {
     channel: Channel | null;
@@ -45,6 +46,13 @@ export interface UseChannelResult {
      *  history for the viewing user). `truncated` drives the
      *  "history limited" banner. */
     retention: ChannelRetention | null;
+    /** The last history sync of this channel failed and has not recovered
+     *  (MIP-1299): an empty pane is "couldn't load", not "no messages". */
+    loadFailed: boolean;
+    /** Run the history sync again (Retry). */
+    reload: () => void;
+    /** A `reload` is in flight. */
+    reloading: boolean;
 }
 
 export function useChannel(channelId: string): UseChannelResult {
@@ -77,6 +85,8 @@ export function useChannel(channelId: string): UseChannelResult {
         return { messages: top, threadReplies: replies };
     }, [allMessages, retentionCutoff]);
 
+    const { reload, reloading } = useChannelReload(channelId);
+
     const markRead = useCallback(
         async (messageId: string) => {
             await channelService.markRead(channelId, messageId);
@@ -95,5 +105,8 @@ export function useChannel(channelId: string): UseChannelResult {
         // (consumers handle that case directly via `channel === null`).
         isLoading: !snapshot.hydrated,
         retention,
+        loadFailed: snapshot.syncFailedByChannel.has(channelId),
+        reload,
+        reloading,
     };
 }
