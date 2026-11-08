@@ -873,10 +873,6 @@ export const fr: DeepPartial<Messages> = {
             "Votre connexion Google Calendar a expiré. Reconnectez-vous pour voir et gérer vos événements.",
         reconnectButton: "Reconnecter Google Calendar",
         openTooltip: "Ouvrir le calendrier",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "Précédent",
         next: "Suivant",
         views: {
@@ -4270,6 +4266,15 @@ export const fr: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Raccourcis clavier",
+            editing: {
+                title: "Pendant la rédaction",
+                description:
+                    "Actifs pendant que vous écrivez un message ou remplissez le formulaire de nouvelle tâche.",
+                rows: {
+                    send: "Envoyer un message ou un commentaire",
+                    createTask: "Créer la tâche",
+                },
+            },
             global: {
                 title: "Global",
                 description:
@@ -4286,9 +4291,9 @@ export const fr: DeepPartial<Messages> = {
                     cycle: "Parcourir les services",
                 },
                 cycleCombo: {
-                    hold: "Maintenir ⌘",
+                    hold: "Maintenir {key}",
                     tap: "Appuyer sur Ctrl pour parcourir",
-                    release: "Relâcher ⌘ pour basculer",
+                    release: "Relâcher {key} pour basculer",
                 },
             },
             chat: {
@@ -4388,28 +4393,12 @@ export const fr: DeepPartial<Messages> = {
             settings: "Paramètres",
             signOut: "Se déconnecter",
             openProfile: "Ouvrir mon profil",
-            switchServiceMac: "Maintenir ⌘ + appuyer sur Ctrl",
-            switchServiceOther: "Maintenir Ctrl + appuyer sur Alt",
-            spotlightShortcut: {
-                mac: "Genos demande rapide · ⌘+K",
-                windows: "Genos demande rapide · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "Tâches · Ctrl+⌘+T",
-                windows: "Tâches · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "Remarques · Ctrl+⌘+N",
-                windows: "Remarques · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "Historique · Ctrl+⌘+H",
-                windows: "Historique · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "À faire · Ctrl+⌘+O",
-                windows: "À faire · Ctrl+Alt+O",
-            },
+            switchService: "Maintenir {hold} + appuyer sur {tap}",
+            spotlightShortcut: "Genos demande rapide · {shortcut}",
+            tasksShortcut: "Tâches · {shortcut}",
+            notesShortcut: "Remarques · {shortcut}",
+            historyShortcut: "Historique · {shortcut}",
+            todoShortcut: "À faire · {shortcut}",
         },
         signOutConfirm: {
             title: "Se déconnecter de cet espace de travail ?",
@@ -4710,13 +4699,6 @@ export const fr: DeepPartial<Messages> = {
                 titleMilestone: "Supprimer ce jalon ?",
                 body: "Elle disparaît de toutes les listes, de tous les tableaux et du tableau de bord. Pour la récupérer, passez le tableau sur la vue Supprimée et donnez-lui un autre statut.",
                 bodyMilestone: "Il disparaît de toutes les listes et de tous les tableaux.",
-            },
-            deleteComment: {
-                title: "Supprimer le commentaire ?",
-                body: "Cette action est irréversible",
-                confirmButton: "Supprimer le commentaire",
-                cancelButton: "Annuler",
-                error: "Échec de la suppression du commentaire.",
             },
             createProject: {
                 heading: "Créer un nouveau projet",
@@ -5264,6 +5246,8 @@ export const fr: DeepPartial<Messages> = {
             wrapAll: "Envelopper le contenu",
             unwrapCode: "Déballer les blocs de code",
             wrapCode: "Envelopper les blocs de code",
+            deleted: "Commentaire supprimé",
+            deleteFailedRestored: "Impossible de supprimer le commentaire. Il a été rétabli.",
         },
         titleBlock: {
             titlePlaceholder: "Saisir le titre de la tâche…",
@@ -5359,23 +5343,21 @@ export const fr: DeepPartial<Messages> = {
             saveHelper: "Partagé avec tous les participants à ce projet.",
             renameTitle: "Renommer le filtre enregistré",
             renameHelper: "Tout le monde dans le projet voit le nouveau nom.",
-            deleteTitle: "Supprimer le filtre enregistré",
-            deleteHelper: "Cela supprime « {name} » pour tout le monde dans le projet.",
             namePlaceholder: "par ex. Mon travail bloqué",
             saveConfirm: "Enregistrer",
             overwriteConfirm: "Écraser",
             renameConfirm: "Renommer",
-            deleteConfirm: "Supprimer",
             cancel: "Annuler",
             overwriteTooltip: "Remplacer par les filtres actuels",
             renameTooltip: "Renommer",
             deleteTooltip: "Supprimer",
+            deleted: "« {name} » supprimé pour tout le monde dans le projet.",
+            errorDeleteRestored: "Impossible de supprimer « {name} ». Il a été rétabli.",
             overwriteWarning:
                 "« {name} » existe déjà : la sauvegarde le remplace pour tout le monde.",
             errorNameRequired: "Donnez un nom au filtre.",
             errorNameTaken: "Un autre filtre enregistré utilise déjà ce nom.",
             errorSaveFailed: "Impossible d'enregistrer. Veuillez réessayer.",
-            errorDeleteFailed: "Impossible de supprimer. Veuillez réessayer.",
         },
         table: {
             searchMembersPlaceholder: "Rechercher des membres…",

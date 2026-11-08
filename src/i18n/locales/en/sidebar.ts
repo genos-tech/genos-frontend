@@ -28,8 +28,7 @@ export const sidebar = {
         settings: "Settings",
         signOut: "Sign out",
         openProfile: "Open My Profile",
-        switchServiceMac: "Switch service · Hold ⌘ + tap Ctrl",
-        switchServiceOther: "Switch service · Hold Ctrl + tap Alt",
+        switchService: "Switch service · Hold {hold} + tap {tap}",
         // Per-service letter shortcuts surfaced in sidebar tooltips.
         // Split per platform so the consumer can pick via `isMac()`.
         // Mirrors bindings in `useGlobalServiceShortcut`. Inbox/Chats
@@ -37,11 +36,11 @@ export const sidebar = {
         // On the Genos button: it navigates to the page; the shortcut
         // hint stays because ⌘/Ctrl+K opens the quick-ask overlay from
         // anywhere else.
-        spotlightShortcut: { mac: "Genos quick ask · ⌘+K", windows: "Genos quick ask · Ctrl+K" },
-        tasksShortcut: { mac: "Tasks · Ctrl+⌘+T", windows: "Tasks · Ctrl+Alt+T" },
-        notesShortcut: { mac: "Notes · Ctrl+⌘+N", windows: "Notes · Ctrl+Alt+N" },
-        historyShortcut: { mac: "History · Ctrl+⌘+H", windows: "History · Ctrl+Alt+H" },
-        todoShortcut: { mac: "To-Do · Ctrl+⌘+O", windows: "To-Do · Ctrl+Alt+O" },
+        spotlightShortcut: "Genos quick ask · {shortcut}",
+        tasksShortcut: "Tasks · {shortcut}",
+        notesShortcut: "Notes · {shortcut}",
+        historyShortcut: "History · {shortcut}",
+        todoShortcut: "To-Do · {shortcut}",
     },
     signOutConfirm: {
         title: "Sign out of this workspace?",

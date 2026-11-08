@@ -406,28 +406,12 @@ export const hi: DeepPartial<Messages> = {
             settings: "सेटिंग्स",
             signOut: "साइन आउट",
             openProfile: "मेरी प्रोफाइल खोलें",
-            switchServiceMac: "⌘ दबाए रखें + Ctrl टैप करें",
-            switchServiceOther: "Ctrl दबाए रखें + Alt टैप करें",
-            spotlightShortcut: {
-                mac: "Genos त्वरित प्रश्न · ⌘+K",
-                windows: "Genos त्वरित प्रश्न · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "कार्य · Ctrl+⌘+T",
-                windows: "कार्य · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "नोट्स · Ctrl+⌘+N",
-                windows: "नोट्स · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "हिस्ट्री · Ctrl+⌘+H",
-                windows: "हिस्ट्री · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "टू-डू · Ctrl+⌘+O",
-                windows: "टू-डू · Ctrl+Alt+O",
-            },
+            switchService: "{hold} दबाए रखें + {tap} टैप करें",
+            spotlightShortcut: "Genos त्वरित प्रश्न · {shortcut}",
+            tasksShortcut: "कार्य · {shortcut}",
+            notesShortcut: "नोट्स · {shortcut}",
+            historyShortcut: "हिस्ट्री · {shortcut}",
+            todoShortcut: "टू-डू · {shortcut}",
         },
         signOutConfirm: {
             title: "इस कार्यक्षेत्र से साइन आउट करें?",
@@ -1402,6 +1386,14 @@ export const hi: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "कीबोर्ड शॉर्टकट",
+            editing: {
+                title: "लिखते समय",
+                description: "संदेश लिखते समय या नया टास्क फ़ॉर्म भरते समय सक्रिय।",
+                rows: {
+                    send: "संदेश या टिप्पणी भेजें",
+                    createTask: "टास्क बनाएँ",
+                },
+            },
             global: {
                 title: "ग्लोबल",
                 description:
@@ -1418,9 +1410,9 @@ export const hi: DeepPartial<Messages> = {
                     cycle: "सेवाओं के बीच साइकल करें",
                 },
                 cycleCombo: {
-                    hold: "⌘ दबाए रखें",
+                    hold: "{key} दबाए रखें",
                     tap: "साइकल के लिए Ctrl टैप करें",
-                    release: "बदलने के लिए ⌘ छोड़ें",
+                    release: "बदलने के लिए {key} छोड़ें",
                 },
             },
             chat: {
@@ -2186,13 +2178,6 @@ export const hi: DeepPartial<Messages> = {
                 body: "यह सभी सूचियों, बोर्ड और डैशबोर्ड से गायब हो जाएगा। इसे वापस लाने के लिए तालिका को “हटाया गया” व्यू पर बदलें और इसे कोई दूसरी स्थिति दें।",
                 bodyMilestone: "यह सभी सूचियों और बोर्ड से गायब हो जाएगा।",
             },
-            deleteComment: {
-                title: "टिप्पणी हटाएं?",
-                body: "इस एक्शन को वापस नहीं किया जा सकता",
-                confirmButton: "टिप्पणी हटाएँ",
-                cancelButton: "रद्द करना",
-                error: "टिप्पणी हटाने में विफल.",
-            },
             createProject: {
                 heading: "नया प्रोजेक्ट बनाएँ",
                 namePlaceholder: "प्रोजेक्ट का नाम डालें…",
@@ -2729,6 +2714,8 @@ export const hi: DeepPartial<Messages> = {
             wrapAll: "सामग्री लपेटें",
             unwrapCode: "कोड ब्लॉक खोलें",
             wrapCode: "कोड ब्लॉक लपेटें",
+            deleted: "टिप्पणी हटा दी गई",
+            deleteFailedRestored: "टिप्पणी हटाई नहीं जा सकी। इसे वापस रख दिया गया है।",
         },
         titleBlock: {
             titlePlaceholder: "टास्क का शीर्षक डालें…",
@@ -2824,23 +2811,21 @@ export const hi: DeepPartial<Messages> = {
             saveHelper: "इस प्रोजेक्ट में सभी के साथ साझा किया गया.",
             renameTitle: "सहेजे गए फ़िल्टर का नाम बदलें",
             renameHelper: "प्रोजेक्ट में हर कोई नया नाम देखता है।",
-            deleteTitle: "सहेजा गया फ़िल्टर हटाएं",
-            deleteHelper: 'यह प्रोजेक्ट में सभी के लिए "{name}" हटा देता है।',
             namePlaceholder: "जैसे मेरा अवरुद्ध कार्य",
             saveConfirm: "बचाना",
             overwriteConfirm: "ओवरराइट",
             renameConfirm: "नाम बदलें",
-            deleteConfirm: "हटाएं",
             cancel: "रद्द करना",
             overwriteTooltip: "वर्तमान फ़िल्टर से बदलें",
             renameTooltip: "नाम बदलें",
             deleteTooltip: "मिटाना",
+            deleted: '"{name}" प्रोजेक्ट में सभी के लिए हटा दिया गया।',
+            errorDeleteRestored: '"{name}" हटाया नहीं जा सका। इसे वापस रख दिया गया है।',
             overwriteWarning:
                 '"{name}" पहले से मौजूद है - बचत इसे सभी के लिए प्रतिस्थापित कर देती है।',
             errorNameRequired: "फ़िल्टर को एक नाम दें.",
             errorNameTaken: "एक अन्य सहेजा गया फ़िल्टर पहले से ही उस नाम का उपयोग करता है।",
             errorSaveFailed: "सहेजा नहीं जा सका. कृपया पुन: प्रयास करें।",
-            errorDeleteFailed: "हटाया नहीं जा सका. कृपया पुन: प्रयास करें।",
         },
         table: {
             searchMembersPlaceholder: "मेंबर खोजें…",
@@ -5282,10 +5267,6 @@ export const hi: DeepPartial<Messages> = {
             "आपका Google Calendar कनेक्शन समाप्त हो गया। अपने ईवेंट देखने और प्रबंधित करने के लिए पुनः कनेक्ट करें।",
         reconnectButton: "Google Calendar को पुनः कनेक्ट करें",
         openTooltip: "कैलेंडर खोलें",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "पिछला",
         next: "अगला",
         views: {

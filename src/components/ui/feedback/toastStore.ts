@@ -13,7 +13,9 @@ import { ReactNode, useSyncExternalStore } from "react";
  *
  * `undoable` is the pattern for any soft action (delete, archive, move):
  * do the action at once, then offer Undo for a few seconds rather than
- * asking "are you sure?" first.
+ * asking "are you sure?" first. When the thing cannot be done and then
+ * undone (it tells other people, or there is no restore), use
+ * `useUndoableAction` instead: it defers the real call until the window ends.
  */
 
 export type ToastTone = "neutral" | "success" | "warning" | "danger";
@@ -23,6 +25,10 @@ export type ToastAction = {
     onClick: () => void;
 };
 
+/** Why a toast left the screen. `evicted` and `replaced` are the store's own
+ *  doing (over the cap, or the same id shown again). */
+export type ToastDismissReason = "timeout" | "dismiss" | "action" | "evicted" | "replaced";
+
 export type ToastOptions = {
     /** Same id replaces the toast already showing instead of stacking. */
     id?: string;
@@ -30,6 +36,10 @@ export type ToastOptions = {
     /** ms before it hides itself. `null` keeps it until dismissed. */
     duration?: number | null;
     action?: ToastAction;
+    /** Runs ONCE when the toast leaves the screen, whatever the reason. A
+     *  caller whose action waits on the toast (a deferred delete) must not
+     *  assume `timeout`: it can be dismissed, evicted or replaced. */
+    onClose?: (reason: ToastDismissReason) => void;
 };
 
 export type ToastItem = {
@@ -43,6 +53,7 @@ export type ToastItem = {
     action?: ToastAction;
     /** Marks the Undo flavour so the host can supply the localized label. */
     undo?: boolean;
+    onClose?: (reason: ToastDismissReason) => void;
 };
 
 /** Longer when there is something to click: a person needs time to decide. */
@@ -82,23 +93,32 @@ const show = (message: ReactNode, opts: ToastOptions & { undo?: boolean } = {}):
                   : DEFAULT_DURATION,
         action: opts.action,
         undo: opts.undo,
+        onClose: opts.onClose,
     };
+    const closed: Array<[ToastItem, ToastDismissReason]> = [];
+    const replaced = items.find((i) => i.id === id);
+    if (replaced) closed.push([replaced, "replaced"]);
     const next = [...items.filter((i) => i.id !== id), item];
     // Over the cap, drop the oldest toast that offers nothing to click: an
     // Undo that vanishes early makes the action permanent.
     while (next.length > MAX_VISIBLE) {
         const drop = next.findIndex((i) => !i.action);
-        next.splice(drop === -1 ? 0 : drop, 1);
+        const [gone] = next.splice(drop === -1 ? 0 : drop, 1);
+        closed.push([gone, "evicted"]);
     }
     items = next;
     emit();
+    // After the state is settled: a callback may show or dismiss toasts itself.
+    closed.forEach(([gone, reason]) => gone.onClose?.(reason));
     return id;
 };
 
-const dismiss = (id: string) => {
-    if (!items.some((i) => i.id === id)) return;
+const dismiss = (id: string, reason: ToastDismissReason = "dismiss") => {
+    const gone = items.find((i) => i.id === id);
+    if (!gone) return;
     items = items.filter((i) => i.id !== id);
     emit();
+    gone.onClose?.(reason);
 };
 
 export const toast = {

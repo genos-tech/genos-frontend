@@ -394,28 +394,12 @@ export const ar: DeepPartial<Messages> = {
             settings: "الإعدادات",
             signOut: "تسجيل الخروج",
             openProfile: "فتح ملفي الشخصي",
-            switchServiceMac: "استمر بالضغط على ⌘ + اضغط على Ctrl",
-            switchServiceOther: "استمر بالضغط على Ctrl + اضغط على Alt",
-            spotlightShortcut: {
-                mac: "Genos سؤال سريع · ⌘+K",
-                windows: "Genos سؤال سريع · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "المهام · Ctrl+⌘+T",
-                windows: "المهام · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "ملاحظات · Ctrl+⌘+N",
-                windows: "ملاحظات · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "التاريخ · Ctrl+⌘+H",
-                windows: "التاريخ · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "مهام اليوم · Ctrl+⌘+O",
-                windows: "مهام اليوم · Ctrl+Alt+O",
-            },
+            switchService: "استمر بالضغط على {hold} + اضغط على {tap}",
+            spotlightShortcut: "Genos سؤال سريع · {shortcut}",
+            tasksShortcut: "المهام · {shortcut}",
+            notesShortcut: "ملاحظات · {shortcut}",
+            historyShortcut: "التاريخ · {shortcut}",
+            todoShortcut: "مهام اليوم · {shortcut}",
         },
         actions: {
             todo: "مهام اليوم",
@@ -1121,6 +1105,14 @@ export const ar: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "اختصارات لوحة المفاتيح",
+            editing: {
+                title: "أثناء الكتابة",
+                description: "نشطة أثناء كتابة رسالة أو ملء نموذج المهمة الجديدة.",
+                rows: {
+                    send: "إرسال رسالة أو تعليق",
+                    createTask: "إنشاء المهمة",
+                },
+            },
             global: {
                 title: "عام",
                 description:
@@ -1137,9 +1129,9 @@ export const ar: DeepPartial<Messages> = {
                     openTodo: "افتح قائمة المهام",
                 },
                 cycleCombo: {
-                    hold: "استمر بالضغط على ⌘",
+                    hold: "استمر بالضغط على {key}",
                     tap: "اضغط على Ctrl للتنقّل",
-                    release: "حرّر ⌘ للتبديل",
+                    release: "حرّر {key} للتبديل",
                 },
             },
             chat: {
@@ -2271,13 +2263,6 @@ export const ar: DeepPartial<Messages> = {
                 no: "لا",
                 closeButton: "إغلاق",
             },
-            deleteComment: {
-                title: "هل تريد حذف التعليق؟",
-                body: "لا يمكن التراجع عن هذا الإجراء",
-                confirmButton: "حذف التعليق",
-                cancelButton: "إلغاء",
-                error: "فشل في حذف التعليق.",
-            },
         },
         picker: {
             noSprintLabel: "بدون سبرنت",
@@ -2549,6 +2534,8 @@ export const ar: DeepPartial<Messages> = {
             wrapAll: "التفاف المحتوى",
             unwrapCode: "قم بفك كتل التعليمات البرمجية",
             wrapCode: "التفاف كتل التعليمات البرمجية",
+            deleted: "تم حذف التعليق",
+            deleteFailedRestored: "تعذّر حذف التعليق. تمت إعادته.",
         },
         titleBlock: {
             titlePlaceholder: "أدخل عنوان المهمة...",
@@ -3021,22 +3008,20 @@ export const ar: DeepPartial<Messages> = {
             saveHelper: "مشتركة مع الجميع في هذا المشروع.",
             renameTitle: "إعادة تسمية الفلتر المحفوظ",
             renameHelper: "يرى كل فرد في المشروع الاسم الجديد.",
-            deleteTitle: "حذف الفلتر المحفوظ",
-            deleteHelper: 'يؤدي هذا إلى إزالة "{name}" للجميع في المشروع.',
             namePlaceholder: "على سبيل المثال أعمالي المحظورة",
             saveConfirm: "يحفظ",
             overwriteConfirm: "الكتابة فوق",
             renameConfirm: "إعادة تسمية",
-            deleteConfirm: "حذف",
             cancel: "إلغاء",
             overwriteTooltip: "استبدل بالمرشحات الحالية",
             renameTooltip: "إعادة تسمية",
             deleteTooltip: "حذف",
+            deleted: 'تم حذف "{name}" للجميع في المشروع.',
+            errorDeleteRestored: 'تعذّر حذف "{name}". تمت إعادته.',
             overwriteWarning: '"{name}" موجود بالفعل - الحفظ يحل محله للجميع.',
             errorNameRequired: "قم بتسمية الفلتر.",
             errorNameTaken: "هناك عامل تصفية محفوظ آخر يستخدم هذا الاسم بالفعل.",
             errorSaveFailed: "لا يمكن الحفظ. يرجى المحاولة مرة أخرى.",
-            errorDeleteFailed: "لا يمكن الحذف. يرجى المحاولة مرة أخرى.",
         },
         diagram: {
             title: "الرسم البياني للمهمة",
@@ -4986,10 +4971,6 @@ export const ar: DeepPartial<Messages> = {
             "انتهت صلاحية اتصال التقويم Google الخاص بك. أعد الاتصال لرؤية الأحداث الخاصة بك وإدارتها.",
         reconnectButton: "أعد الاتصال Google التقويم",
         openTooltip: "افتح التقويم",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+ج",
-        },
         prev: "سابق",
         next: "التالي",
         views: {

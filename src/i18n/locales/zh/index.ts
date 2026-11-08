@@ -825,10 +825,6 @@ export const zh: DeepPartial<Messages> = {
         reauthPrompt: "Google Calendar 连接已过期。请重新连接以查看和管理日程。",
         reconnectButton: "重新连接 Google Calendar",
         openTooltip: "打开日历",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "上一个",
         next: "下一个",
         views: {
@@ -4065,6 +4061,14 @@ export const zh: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "键盘快捷键",
+            editing: {
+                title: "编写时",
+                description: "在撰写消息或填写新建任务表单时可用。",
+                rows: {
+                    send: "发送消息或评论",
+                    createTask: "创建任务",
+                },
+            },
             global: {
                 title: "全局",
                 description:
@@ -4081,9 +4085,9 @@ export const zh: DeepPartial<Messages> = {
                     cycle: "在各服务间循环切换",
                 },
                 cycleCombo: {
-                    hold: "按住 ⌘",
+                    hold: "按住 {key}",
                     tap: "点按 Ctrl 切换",
-                    release: "松开 ⌘ 确认",
+                    release: "松开 {key} 确认",
                 },
             },
             chat: {
@@ -4175,28 +4179,12 @@ export const zh: DeepPartial<Messages> = {
             settings: "设置",
             signOut: "退出登录",
             openProfile: "打开我的资料",
-            switchServiceMac: "按住 ⌘ + 点按 Ctrl",
-            switchServiceOther: "按住 Ctrl + 点按 Alt",
-            spotlightShortcut: {
-                mac: "Genos 快问·⌘+K",
-                windows: "Genos 快问·Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "任务·Ctrl+⌘+T",
-                windows: "任务·Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "笔记·Ctrl+⌘+N",
-                windows: "注·Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "历史 · Ctrl+⌘+H",
-                windows: "历史 · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "待办事项·Ctrl+⌘+O",
-                windows: "待办事项·Ctrl+Alt+O",
-            },
+            switchService: "按住 {hold} + 点按 {tap}",
+            spotlightShortcut: "Genos 快问 · {shortcut}",
+            tasksShortcut: "任务 · {shortcut}",
+            notesShortcut: "笔记 · {shortcut}",
+            historyShortcut: "历史 · {shortcut}",
+            todoShortcut: "待办事项 · {shortcut}",
         },
         signOutConfirm: {
             title: "退出此工作区？",
@@ -4492,13 +4480,6 @@ export const zh: DeepPartial<Messages> = {
                 titleMilestone: "删除此里程碑？",
                 body: "它将从所有列表、看板和仪表盘中消失。若要恢复，请将表格切换到“已删除”视图，并为它选择其他状态。",
                 bodyMilestone: "它将从所有列表和看板中消失。",
-            },
-            deleteComment: {
-                title: "删除评论？",
-                body: "此操作无法撤消",
-                confirmButton: "删除评论",
-                cancelButton: "取消",
-                error: "删除评论失败。",
             },
             createProject: {
                 heading: "新建项目",
@@ -5024,6 +5005,8 @@ export const zh: DeepPartial<Messages> = {
             wrapAll: "换行内容",
             unwrapCode: "解开代码块",
             wrapCode: "包裹代码块",
+            deleted: "评论已删除",
+            deleteFailedRestored: "无法删除评论，已恢复。",
         },
         titleBlock: {
             titlePlaceholder: "请输入任务标题…",
@@ -5116,22 +5099,20 @@ export const zh: DeepPartial<Messages> = {
             saveHelper: "分享给参与这个项目的大家。",
             renameTitle: "重命名已保存的过滤器",
             renameHelper: "项目中的每个人都会看到新名称。",
-            deleteTitle: "删除已保存的过滤器",
-            deleteHelper: "这将为项目中的每个人删除“{name}”。",
             namePlaceholder: "例如我受阻的工作",
             saveConfirm: "保存",
             overwriteConfirm: "覆盖",
             renameConfirm: "重命名",
-            deleteConfirm: "删除",
             cancel: "取消",
             overwriteTooltip: "更换当前的过滤器",
             renameTooltip: "重命名",
             deleteTooltip: "删除",
+            deleted: "已为项目中的每个人删除“{name}”。",
+            errorDeleteRestored: "无法删除“{name}”，已恢复。",
             overwriteWarning: "“{name}”已经存在——每个人都可以用保存代替它。",
             errorNameRequired: "为过滤器命名。",
             errorNameTaken: "另一个保存的过滤器已使用该名称。",
             errorSaveFailed: "无法保存。请再试一次。",
-            errorDeleteFailed: "无法删除。请再试一次。",
         },
         table: {
             searchMembersPlaceholder: "搜索成员…",

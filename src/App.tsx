@@ -46,6 +46,7 @@ import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { useAvatarContextValue } from "./components/ui/avatars/useAvatarContextValue";
 import { ToastHost } from "./components/ui/feedback/Toast";
+import { UndoableRouteFlush } from "./components/ui/feedback/UndoableRouteFlush";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
@@ -1566,6 +1567,7 @@ const AppBody = () => {
                                                         />
                                                         <BillingReturnSnackbar />
                                                         <ToastHost />
+                                                        <UndoableRouteFlush />
                                                         <QuickMeetClipboardHost
                                                             ref={meetClipboardRef}
                                                             accessToken={accessToken}

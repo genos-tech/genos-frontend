@@ -402,28 +402,12 @@ export const es: DeepPartial<Messages> = {
             settings: "Ajustes",
             signOut: "Cerrar sesión",
             openProfile: "Abrir mi perfil",
-            switchServiceMac: "Mantén ⌘ + pulsa Ctrl",
-            switchServiceOther: "Mantén Ctrl + pulsa Alt",
-            spotlightShortcut: {
-                mac: "Pregunta rápida Genos · ⌘+K",
-                windows: "Pregunta rápida Genos · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "Tareas · Ctrl+⌘+T",
-                windows: "Tareas · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "Notas · Ctrl+⌘+N",
-                windows: "Notas · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "Historia · Ctrl+⌘+H",
-                windows: "Historia · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "Por hacer · Ctrl+⌘+O",
-                windows: "Por hacer · Ctrl+Alt+O",
-            },
+            switchService: "Mantén {hold} + pulsa {tap}",
+            spotlightShortcut: "Pregunta rápida Genos · {shortcut}",
+            tasksShortcut: "Tareas · {shortcut}",
+            notesShortcut: "Notas · {shortcut}",
+            historyShortcut: "Historia · {shortcut}",
+            todoShortcut: "Por hacer · {shortcut}",
         },
         actions: {
             todo: "Por hacer",
@@ -1145,6 +1129,15 @@ export const es: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Atajos de teclado",
+            editing: {
+                title: "Al escribir",
+                description:
+                    "Activos mientras escribes un mensaje o rellenas el formulario de nueva tarea.",
+                rows: {
+                    send: "Enviar un mensaje o comentario",
+                    createTask: "Crear la tarea",
+                },
+            },
             global: {
                 title: "Globales",
                 description:
@@ -1161,9 +1154,9 @@ export const es: DeepPartial<Messages> = {
                     openTodo: "Abrir la lista de tareas pendientes",
                 },
                 cycleCombo: {
-                    hold: "Mantén ⌘",
+                    hold: "Mantén {key}",
                     tap: "Pulsa Ctrl para navegar",
-                    release: "Suelta ⌘ para cambiar",
+                    release: "Suelta {key} para cambiar",
                 },
             },
             chat: {
@@ -2305,13 +2298,6 @@ export const es: DeepPartial<Messages> = {
                 no: "No",
                 closeButton: "Cerrar",
             },
-            deleteComment: {
-                title: "¿Eliminar comentario?",
-                body: "Esta acción no se puede deshacer.",
-                confirmButton: "Eliminar comentario",
-                cancelButton: "Cancelar",
-                error: "No se pudo eliminar el comentario.",
-            },
         },
         picker: {
             noSprintLabel: "Sin sprint",
@@ -2586,6 +2572,8 @@ export const es: DeepPartial<Messages> = {
             wrapAll: "Ajustar contenido",
             unwrapCode: "Desenvolver bloques de código",
             wrapCode: "Envolver bloques de código",
+            deleted: "Comentario eliminado",
+            deleteFailedRestored: "No se pudo eliminar el comentario. Se ha restaurado.",
         },
         titleBlock: {
             titlePlaceholder: "Introduce el título de la tarea…",
@@ -3069,22 +3057,20 @@ export const es: DeepPartial<Messages> = {
             saveHelper: "Compartido con todos en este proyecto.",
             renameTitle: "Cambiar el nombre del filtro guardado",
             renameHelper: "Todos en el proyecto ven el nuevo nombre.",
-            deleteTitle: "Eliminar el filtro guardado",
-            deleteHelper: "Esto elimina “{name}” para todos en el proyecto.",
             namePlaceholder: "p.ej. mi trabajo bloqueado",
             saveConfirm: "Guardar",
             overwriteConfirm: "Sobrescribir",
             renameConfirm: "Cambiar nombre",
-            deleteConfirm: "Eliminar",
             cancel: "Cancelar",
             overwriteTooltip: "Reemplazar con los filtros actuales.",
             renameTooltip: "Rebautizar",
             deleteTooltip: "Borrar",
+            deleted: "“{name}” eliminado para todos en el proyecto.",
+            errorDeleteRestored: "No se pudo eliminar “{name}”. Se ha restaurado.",
             overwriteWarning: "“{name}” ya existe; guardarlo lo reemplaza para todos.",
             errorNameRequired: "Dale un nombre al filtro.",
             errorNameTaken: "Otro filtro guardado ya usa ese nombre.",
             errorSaveFailed: "No se pudo guardar. Inténtalo de nuevo.",
-            errorDeleteFailed: "No se pudo eliminar. Inténtalo de nuevo.",
         },
         diagram: {
             title: "Gráfico de tareas",
@@ -5312,10 +5298,6 @@ export const es: DeepPartial<Messages> = {
             "Tu conexión con Google Calendar ha caducado. Vuelve a conectarla para consultar y gestionar tus eventos.",
         reconnectButton: "Reconectar Google Calendar",
         openTooltip: "Abrir calendario",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "Anterior",
         next: "Siguiente",
         views: {

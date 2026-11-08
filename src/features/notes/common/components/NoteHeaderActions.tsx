@@ -31,11 +31,11 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
+import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
-import { isMac } from "../../../../utils/platform";
 import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";
 import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
@@ -319,7 +319,7 @@ export const NoteHeaderActions = ({
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {isMac() ? "⌘ + Ctrl + N" : "Alt + Ctrl + N"}
+                                {shortcutText("global.notesNew")}
                             </Typography>
                         </Box>
                     }

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -9,12 +9,14 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
+import { useUndoHidden } from "../../../../../../hooks/common/useUndoableAction";
 import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { TaskCommentProps } from "../../../../../../types/tasks";
 import { useFollowOwnOutput } from "../../../../../chat/hooks/useFollowOwnOutput";
 import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
+import { taskCommentKey } from "../../../../services/deleteTaskComment";
 import { TaskCommentBubble } from "./TaskCommentBubble";
 
 // Render this many extra pixels of rows above/below the viewport —
@@ -91,7 +93,7 @@ export const TaskCommentList = ({
     socket,
     myself,
     setMyself,
-    taskComments,
+    taskComments: allTaskComments,
     setIsInEdit,
     setEditTargetComment,
     useTEM,
@@ -110,6 +112,22 @@ export const TaskCommentList = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const navigate = useNavigate();
+
+    // A comment being deleted leaves the list at once while its Undo window is
+    // open (the real DELETE goes out when it ends). Filtered here, ABOVE the
+    // Virtuoso rows, not inside a bubble: hiding a bubble unmounts it, and the
+    // delete must not hang on a component that is about to disappear. Returns
+    // the SAME array when nothing is hidden, so Virtuoso sees no change.
+    const hiddenKeys = useUndoHidden();
+    const taskComments = useMemo(
+        () =>
+            allTaskComments.some((c) => hiddenKeys.has(taskCommentKey(c.taskId, c.commentId)))
+                ? allTaskComments.filter(
+                      (c) => !hiddenKeys.has(taskCommentKey(c.taskId, c.commentId))
+                  )
+                : allTaskComments,
+        [allTaskComments, hiddenKeys]
+    );
 
     // Scroll-time hover suppression (bubbles sliding under a stationary
     // cursor must not fire hover handlers — toolbar mounts, emotion style

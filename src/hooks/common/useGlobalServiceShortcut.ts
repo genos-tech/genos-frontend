@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
-import { isMac } from "../../utils/platform";
+import { currentPlatform, matchesShortcut, type ShortcutId } from "../../shortcuts";
 
 // Ordered list of services. The array index doubles as the service id,
 // which is what `mruOrder` stores. Mirrors the NAV_ITEMS table in
@@ -20,6 +20,18 @@ const SERVICES_BY_ID: Array<{ id: number; path: string | null }> = [
     { id: 3, path: "/workspace/notes" },
     { id: 4, path: "/workspace/genos" },
     { id: TODO_SERVICE_ID, path: null },
+];
+
+// The seven action shortcuts, in the order they are tested, and the option
+// callback each one runs. The chords themselves are in `src/shortcuts`.
+const LETTER_ACTIONS: ReadonlyArray<[ShortcutId, keyof GlobalServiceShortcutOptions]> = [
+    ["global.tasksNew", "onOpenTasksAndCreate"],
+    ["global.notesNew", "onOpenNotesAndCreate"],
+    ["global.calendar", "onOpenCalendarModal"],
+    ["global.meetClipboard", "onQuickMeetClipboard"],
+    ["global.history", "onOpenHistory"],
+    ["global.taskGraph", "onOpenTaskDiagram"],
+    ["global.todo", "onOpenTodo"],
 ];
 
 // Derive the active service id from the current URL. Returns -1 when the
@@ -235,7 +247,8 @@ export const useGlobalServiceShortcut = (
     const commitRef = useRef<(positionInMru: number) => void>(() => {});
 
     useEffect(() => {
-        const mac = isMac();
+        const platform = currentPlatform();
+        const mac = platform === "mac";
 
         const commit = (positionInMru: number) => {
             const serviceId = mruOrderRef.current[positionInMru];
@@ -268,56 +281,18 @@ export const useGlobalServiceShortcut = (
                 return;
             }
 
-            // Letter shortcuts: action shortcuts (no instant nav).
-            // Allow Shift either way so an in-progress backward-cycle
-            // (Shift held) still surrenders to a letter press.
-            const lettersModifiersOk = mac
-                ? e.ctrlKey && e.metaKey && !e.altKey
-                : e.ctrlKey && e.altKey && !e.metaKey;
-            if (lettersModifiersOk) {
-                const key = e.key.toLowerCase();
-                if (key === "t" && optionsRef.current?.onOpenTasksAndCreate) {
-                    e.preventDefault();
-                    if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    optionsRef.current.onOpenTasksAndCreate();
-                    return;
-                }
-                if (key === "n" && optionsRef.current?.onOpenNotesAndCreate) {
-                    e.preventDefault();
-                    if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    optionsRef.current.onOpenNotesAndCreate();
-                    return;
-                }
-                if (key === "c" && optionsRef.current?.onOpenCalendarModal) {
-                    e.preventDefault();
-                    if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    optionsRef.current.onOpenCalendarModal();
-                    return;
-                }
-                if (key === "m" && optionsRef.current?.onQuickMeetClipboard) {
-                    e.preventDefault();
-                    if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    optionsRef.current.onQuickMeetClipboard();
-                    return;
-                }
-                if (key === "h" && optionsRef.current?.onOpenHistory) {
-                    e.preventDefault();
-                    if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    optionsRef.current.onOpenHistory();
-                    return;
-                }
-                if (key === "g" && optionsRef.current?.onOpenTaskDiagram) {
-                    e.preventDefault();
-                    if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    optionsRef.current.onOpenTaskDiagram();
-                    return;
-                }
-                if (key === "o" && optionsRef.current?.onOpenTodo) {
-                    e.preventDefault();
-                    if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    optionsRef.current.onOpenTodo();
-                    return;
-                }
+            // Letter shortcuts: action shortcuts (no instant nav). The chords
+            // live in the shortcut registry; a letter whose callback was not
+            // passed falls through, as it always did. If one fires while a
+            // cycle preview is in progress, the preview is canceled and the
+            // letter target wins.
+            for (const [id, option] of LETTER_ACTIONS) {
+                const run = optionsRef.current?.[option] as (() => void) | undefined;
+                if (!run || !matchesShortcut(id, e, platform)) continue;
+                e.preventDefault();
+                if (previewIndexRef.current !== null) setPreviewIndex(null);
+                run();
+                return;
             }
 
             // Cycle gesture: hold-key (Cmd/mac, Alt/other) is held AND the

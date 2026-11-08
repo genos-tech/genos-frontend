@@ -866,10 +866,6 @@ export const ja: DeepPartial<Messages> = {
             "Google カレンダーの接続が期限切れになりました。再接続してイベントを表示および管理します。",
         reconnectButton: "Google カレンダーを再接続する",
         openTooltip: "カレンダーを開く",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "前",
         next: "次",
         views: {
@@ -4211,6 +4207,15 @@ export const ja: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "キーボードショートカット",
+            editing: {
+                title: "入力中",
+                description:
+                    "メッセージを書いているとき、または新しいタスクのフォームを開いているときに使えます。",
+                rows: {
+                    send: "メッセージやコメントを送信",
+                    createTask: "タスクを作成",
+                },
+            },
             global: {
                 title: "グローバル",
                 description:
@@ -4227,9 +4232,9 @@ export const ja: DeepPartial<Messages> = {
                     cycle: "サービスを順に切り替え",
                 },
                 cycleCombo: {
-                    hold: "⌘ を長押し",
+                    hold: "{key} を長押し",
                     tap: "Ctrl をタップして切り替え",
-                    release: "⌘ を離して確定",
+                    release: "{key} を離して確定",
                 },
             },
             chat: {
@@ -4329,28 +4334,12 @@ export const ja: DeepPartial<Messages> = {
             settings: "設定",
             signOut: "サインアウト",
             openProfile: "マイプロフィールを開く",
-            switchServiceMac: "⌘ を長押し ＋ Ctrl をタップ",
-            switchServiceOther: "Ctrl を長押し ＋ Alt をタップ",
-            spotlightShortcut: {
-                mac: "Genos クイック質問 · ⌘+K",
-                windows: "Genos クイック質問 · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "タスク · Ctrl+⌘+T",
-                windows: "タスク · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "ノート · Ctrl+⌘+N",
-                windows: "ノート · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "履歴 · Ctrl+⌘+H",
-                windows: "履歴 · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "To-Do · Ctrl+⌘+O",
-                windows: "To-Do · Ctrl+Alt+O",
-            },
+            switchService: "{hold} を長押し ＋ {tap} をタップ",
+            spotlightShortcut: "Genos クイック質問 · {shortcut}",
+            tasksShortcut: "タスク · {shortcut}",
+            notesShortcut: "ノート · {shortcut}",
+            historyShortcut: "履歴 · {shortcut}",
+            todoShortcut: "To-Do · {shortcut}",
         },
         signOutConfirm: {
             title: "このワークスペースからサインアウトしますか?",
@@ -4648,13 +4637,6 @@ export const ja: DeepPartial<Messages> = {
                 titleMilestone: "このマイルストーンを削除しますか？",
                 body: "すべてのリスト、ボード、ダッシュボードから消えます。元に戻すには、テーブルを「Deleted」ビューに切り替えて、別のステータスを選んでください。",
                 bodyMilestone: "すべてのリストとボードから消えます。",
-            },
-            deleteComment: {
-                title: "コメントを削除しますか？",
-                body: "この操作は取り消せません",
-                confirmButton: "コメントを削除",
-                cancelButton: "キャンセル",
-                error: "コメントの削除に失敗しました。",
             },
             createProject: {
                 heading: "新規プロジェクトを作成",
@@ -5198,6 +5180,8 @@ export const ja: DeepPartial<Messages> = {
             wrapAll: "折り返して表示",
             unwrapCode: "コードの折り返しを解除",
             wrapCode: "コードを折り返して表示",
+            deleted: "コメントを削除しました",
+            deleteFailedRestored: "コメントを削除できませんでした。元に戻しました。",
         },
         titleBlock: {
             titlePlaceholder: "タスクのタイトルを入力…",
@@ -5293,23 +5277,21 @@ export const ja: DeepPartial<Messages> = {
             saveHelper: "このプロジェクトの全員と共有されます。",
             renameTitle: "保存されたフィルターの名前を変更する",
             renameHelper: "プロジェクトの全員に新しい名前が表示されます。",
-            deleteTitle: "保存されたフィルターを削除する",
-            deleteHelper: "「{name}」はプロジェクトの全員から削除されます。",
             namePlaceholder: "例えばブロックされた私の作品",
             saveConfirm: "保存",
             overwriteConfirm: "上書き",
             renameConfirm: "名前の変更",
-            deleteConfirm: "削除",
             cancel: "キャンセル",
             overwriteTooltip: "現在のフィルターと交換します",
             renameTooltip: "名前の変更",
             deleteTooltip: "消去",
+            deleted: "「{name}」をプロジェクトの全員から削除しました。",
+            errorDeleteRestored: "「{name}」を削除できませんでした。元に戻しました。",
             overwriteWarning:
                 "「{name}」はすでに存在します。保存すると、全員がそれを置き換えます。",
             errorNameRequired: "フィルターに名前を付けます。",
             errorNameTaken: "保存された別のフィルターがすでにその名前を使用しています。",
             errorSaveFailed: "保存できませんでした。もう一度お試しください。",
-            errorDeleteFailed: "削除できませんでした。もう一度お試しください。",
         },
         table: {
             searchMembersPlaceholder: "メンバーを検索…",

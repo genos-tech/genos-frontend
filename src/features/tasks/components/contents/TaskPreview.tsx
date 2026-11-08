@@ -45,6 +45,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTaskSaveTriggers } from "../../../../hooks/tasks/useTaskSaveTriggers";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
+import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
@@ -55,7 +56,6 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../types/tasks";
-import { getServiceShortcutModifierKeys } from "../../../../utils/platform";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { askGenosRefForTask } from "../../../spotlight/askGenosAbout";
 import { askGenosMenuItem } from "../../../spotlight/askGenosMenuItem";
@@ -2262,9 +2262,7 @@ const MilestonePreviewInner = ({
                         {milestone.taskId != null && milestone.projectId != null && (
                             <AppTooltip
                                 title={fmt(t.tasks.tooltips.openTaskGraphWithShortcut, {
-                                    shortcut: `${getServiceShortcutModifierKeys().join(
-                                        " + "
-                                    )} + G`,
+                                    shortcut: shortcutText("global.taskGraph"),
                                 })}
                             >
                                 <IconButton

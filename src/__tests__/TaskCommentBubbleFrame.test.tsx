@@ -33,9 +33,8 @@ vi.mock("../components/ui/emoji/TaskCommentEmojiReaction", () => ({
     TaskCommentEmojiReaction: () => <div data-testid="quick-emoji-reaction" />,
 }));
 vi.mock("../components/ui/emoji/EmojiPicker", () => ({ EmojiPicker: () => null }));
-vi.mock("../features/tasks/components/modals/ModalDeleteTaskComment", () => ({
-    ModalDeleteTaskComment: ({ open }: { open: boolean }) =>
-        open ? <div data-testid="delete-confirm-open" /> : null,
+vi.mock("../context/AuthContext", () => ({
+    useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({
     UserAvatar: () => <div data-testid="avatar" />,
