@@ -128,24 +128,8 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 return (
                     <Box
                         key={item.id}
-                        aria-current={isActive ? "page" : undefined}
-                        // The unread count is part of the tab's name, not only a badge to look at.
-                        aria-label={
-                            badgeCount > 0
-                                ? fmt(t.sidebar.unreadTab, {
-                                      label: t.sidebar.nav[item.labelKey],
-                                      count: badgeCount,
-                                  })
-                                : undefined
-                        }
                         component="button"
                         data-selected={isActive ? "true" : undefined}
-                        type="button"
-                        // A real button: focusable and announced, where it used to be a
-                        // clickable div. The look is the rail's (`navToneSx`: text colour,
-                        // the icon colour that goes with it, selected = accent text and
-                        // medium weight); a full-width tint on a 78px tab would be heavy,
-                        // so the selected tab changes colour only.
                         sx={[
                             navToneSx,
                             {
@@ -178,6 +162,12 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             },
                             navFocusSx,
                         ]}
+                        type="button"
+                        // A real button: focusable and announced, where it used to be a
+                        // clickable div. The look is the rail's (`navToneSx`: text colour,
+                        // the icon colour that goes with it, selected = accent text and
+                        // medium weight); a full-width tint on a 78px tab would be heavy,
+                        // so the selected tab changes colour only.
                         onClick={() => {
                             if (item.path === "") {
                                 onOpenAccount();
@@ -186,6 +176,16 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             markPending(item.path);
                             switchService(navigate, item.path);
                         }}
+                        aria-current={isActive ? "page" : undefined}
+                        // The unread count is part of the tab's name, not only a badge to look at.
+                        aria-label={
+                            badgeCount > 0
+                                ? fmt(t.sidebar.unreadTab, {
+                                      label: t.sidebar.nav[item.labelKey],
+                                      count: badgeCount,
+                                  })
+                                : undefined
+                        }
                     >
                         <Badge
                             badgeContent={badgeCount > 0 ? badgeCount : 0}
