@@ -28,7 +28,6 @@ import BookmarksRoundedIcon from "@mui/icons-material/BookmarksRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
 import SaveAsRoundedIcon from "@mui/icons-material/SaveAsRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import {
     Alert,
     Box,
@@ -36,14 +35,14 @@ import {
     CircularProgress,
     IconButton,
     Input,
-    Modal,
-    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -516,143 +515,88 @@ export const SavedFiltersMenu = ({
                 </Box>
             </FilterMenu>
 
-            {/* One Modal for all three dialogs: they're mutually exclusive by
-                construction (`dialog.kind`), and sharing it keeps one backdrop,
-                one close path and one `isSubmitting`. Delete gets its own body
-                rather than a fourth variant of the name form — it has no input,
-                and its confirm is destructive. */}
-            <Modal open={dialog.kind !== "closed"} onClose={closeDialog}>
-                {dialog.kind === "delete" ? (
-                    <ModalDialog sx={{ minWidth: 340, maxWidth: 420, borderRadius: "lg" }}>
-                        <Typography
-                            level="title-md"
-                            startDecorator={
-                                <WarningAmberRoundedIcon
-                                    sx={{ color: isDark ? "#f87171" : "#dc2626" }}
-                                />
+            {/* The name form (save / rename) is a ModalFrame; delete is the shared
+                ConfirmDialog (destructive, busy while it runs). The three are mutually
+                exclusive by construction (`dialog.kind`), so they share one close path and
+                one `isSubmitting`. */}
+            <ConfirmDialog
+                busy={isSubmitting}
+                cancelLabel={ts.cancel}
+                confirmLabel={ts.deleteConfirm}
+                error={dialogError}
+                open={dialog.kind === "delete"}
+                title={ts.deleteTitle}
+                description={
+                    dialog.kind === "delete" ? fmt(ts.deleteHelper, { name: dialog.name }) : ""
+                }
+                destructive
+                onClose={closeDialog}
+                onConfirm={() => void handleSubmitDelete()}
+            />
+            <ModalFrame
+                description={dialog.kind === "rename" ? ts.renameHelper : ts.saveHelper}
+                dismissible={!isSubmitting}
+                open={dialog.kind === "save" || dialog.kind === "rename"}
+                size="sm"
+                title={dialog.kind === "rename" ? ts.renameTitle : ts.saveTitle}
+                actions={
+                    <>
+                        <Button color="neutral" size="sm" variant="plain" onClick={closeDialog}>
+                            {ts.cancel}
+                        </Button>
+                        <Button
+                            disabled={isSubmitting || trimmedDraft.length === 0}
+                            size="sm"
+                            variant="solid"
+                            onClick={() =>
+                                void (dialog.kind === "rename"
+                                    ? handleSubmitRename()
+                                    : handleSubmitSave())
                             }
                         >
-                            {ts.deleteTitle}
-                        </Typography>
-                        <Stack spacing={1.5}>
-                            <Typography level="body-sm">
-                                {fmt(ts.deleteHelper, { name: dialog.name })}
-                            </Typography>
-                            {dialogError && (
-                                <Alert color="danger" size="sm" variant="soft">
-                                    {dialogError}
-                                </Alert>
-                            )}
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "flex-end",
-                                    gap: 1,
-                                    mt: 0.5,
-                                }}
-                            >
-                                <Button
-                                    color="neutral"
-                                    disabled={isSubmitting}
-                                    size="sm"
-                                    variant="plain"
-                                    onClick={closeDialog}
-                                >
-                                    {ts.cancel}
-                                </Button>
-                                <Button
-                                    color="danger"
-                                    // The row's Delete icon carries the same
-                                    // word as its accessible name, so tests get
-                                    // an unambiguous handle on the confirm.
-                                    data-testid="saved-filter-delete-confirm"
-                                    loading={isSubmitting}
-                                    size="sm"
-                                    variant="solid"
-                                    onClick={() => void handleSubmitDelete()}
-                                >
-                                    {ts.deleteConfirm}
-                                </Button>
-                            </Box>
-                        </Stack>
-                    </ModalDialog>
-                ) : (
-                    <ModalDialog sx={{ minWidth: 340, maxWidth: 420, borderRadius: "lg" }}>
-                        <Typography level="title-md">
-                            {dialog.kind === "rename" ? ts.renameTitle : ts.saveTitle}
-                        </Typography>
-                        <Typography level="body-xs" sx={{ mb: 0.5 }}>
-                            {dialog.kind === "rename" ? ts.renameHelper : ts.saveHelper}
-                        </Typography>
-                        <Stack spacing={1.5}>
-                            <Input
-                                placeholder={ts.namePlaceholder}
-                                size="sm"
-                                slotProps={{ input: { maxLength: NAME_MAX_LENGTH } }}
-                                value={nameDraft}
-                                autoFocus
-                                onChange={(e) => {
-                                    setNameDraft(e.target.value);
-                                    setDialogError(null);
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key !== "Enter" || isSubmitting) return;
-                                    e.preventDefault();
-                                    void (dialog.kind === "rename"
-                                        ? handleSubmitRename()
-                                        : handleSubmitSave());
-                                }}
-                            />
-                            {/* Typing an existing name IS the overwrite
-                            gesture, so say so before the click rather
-                            than refusing it after. */}
-                            {willOverwrite && (
-                                <Alert color="warning" size="sm" variant="soft">
-                                    {fmt(ts.overwriteWarning, { name: trimmedDraft })}
-                                </Alert>
-                            )}
-                            {dialogError && (
-                                <Alert color="danger" size="sm" variant="soft">
-                                    {dialogError}
-                                </Alert>
-                            )}
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "flex-end",
-                                    gap: 1,
-                                    mt: 0.5,
-                                }}
-                            >
-                                <Button
-                                    color="neutral"
-                                    size="sm"
-                                    variant="plain"
-                                    onClick={closeDialog}
-                                >
-                                    {ts.cancel}
-                                </Button>
-                                <Button
-                                    disabled={isSubmitting || trimmedDraft.length === 0}
-                                    size="sm"
-                                    variant="solid"
-                                    onClick={() =>
-                                        void (dialog.kind === "rename"
-                                            ? handleSubmitRename()
-                                            : handleSubmitSave())
-                                    }
-                                >
-                                    {dialog.kind === "rename"
-                                        ? ts.renameConfirm
-                                        : willOverwrite
-                                          ? ts.overwriteConfirm
-                                          : ts.saveConfirm}
-                                </Button>
-                            </Box>
-                        </Stack>
-                    </ModalDialog>
-                )}
-            </Modal>
+                            {dialog.kind === "rename"
+                                ? ts.renameConfirm
+                                : willOverwrite
+                                  ? ts.overwriteConfirm
+                                  : ts.saveConfirm}
+                        </Button>
+                    </>
+                }
+                onClose={closeDialog}
+            >
+                <Stack spacing={1.5}>
+                    <Input
+                        placeholder={ts.namePlaceholder}
+                        size="sm"
+                        slotProps={{ input: { maxLength: NAME_MAX_LENGTH } }}
+                        value={nameDraft}
+                        autoFocus
+                        onChange={(e) => {
+                            setNameDraft(e.target.value);
+                            setDialogError(null);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key !== "Enter" || isSubmitting) return;
+                            e.preventDefault();
+                            void (dialog.kind === "rename"
+                                ? handleSubmitRename()
+                                : handleSubmitSave());
+                        }}
+                    />
+                    {/* Typing an existing name IS the overwrite gesture, so say so before
+                        the click rather than refusing it after. */}
+                    {willOverwrite && (
+                        <Alert color="warning" size="sm" variant="soft">
+                            {fmt(ts.overwriteWarning, { name: trimmedDraft })}
+                        </Alert>
+                    )}
+                    {dialogError && (
+                        <Alert color="danger" size="sm" variant="soft">
+                            {dialogError}
+                        </Alert>
+                    )}
+                </Stack>
+            </ModalFrame>
         </FilterDropdown>
     );
 };

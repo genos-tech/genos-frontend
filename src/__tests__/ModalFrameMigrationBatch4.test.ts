@@ -211,17 +211,12 @@ const walk = (dir: string, out: string[] = []): string[] => {
 describe("inventory: where a hand-built dialog frame may still exist", () => {
     // `ModalFrame` itself builds the frame. UrlLinkModal is the decided exception (batch 3,
     // section 4: it is the preview host, its content brings its own header and floats the
-    // chrome). The rest are owned by other PRs of the milestone and are removed from this list
-    // by them: the task table pilot (saved filters, column settings), the tag manager
-    // (`ModalManageTags`) and the "no access to this note" card.
+    // chrome). The mobile account sheet is a bottom sheet, not a dialog. Nothing else may
+    // build one (MIP-1126 is done: the saved-filter dialogs, the column settings, the tag
+    // manager and the "no access to this note" card were the last).
     const ALLOWED = new Set([
         "components/ui/modal/ModalFrame.tsx",
         "components/modals/UrlLinkModal.tsx",
-        "features/tasks/components/table/SavedFiltersMenu.tsx",
-        "features/tasks/components/table/TaskTableColumnSettings.tsx",
-        "features/tasks/components/modals/ModalManageTags.tsx",
-        "features/chat/components/sidebar/activity/chatListItemForActivity.tsx",
-        // two bottom sheets, not dialogs
         "components/layout/MobileAccountSheet.tsx",
     ]);
 

@@ -1,39 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { keyframes } from "@emotion/react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import {
-    Alert,
-    Box,
-    Button,
-    Chip,
-    IconButton,
-    Input,
-    Modal,
-    ModalDialog,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
+import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
-
-const fadeIn = keyframes`
-    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-`;
+import { ProjectTagChip } from "../ProjectTagChip";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -62,8 +46,6 @@ export const ModalManageTags: React.FC<Props> = ({
 }) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [editingTag, setEditingTag] = useState<string | null>(null);
     const [editName, setEditName] = useState("");
@@ -231,23 +213,15 @@ export const ModalManageTags: React.FC<Props> = ({
         <>
             <Input
                 size="sm"
+                sx={{ flex: 1, "--Input-focusedThickness": "1px" }}
                 value={editName}
-                sx={{
-                    flex: 1,
-                    "--Input-focusedThickness": "1px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "8px",
-                    color: "#e0e0e0",
-                    "& input::placeholder": {
-                        color: "rgba(255,255,255,0.4)",
-                    },
-                }}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter" && editName.trim()) {
                         onSave();
                     } else if (e.key === "Escape") {
+                        // The dialog's own Escape must not also close it.
+                        e.stopPropagation();
                         cancelEdit();
                     }
                 }}
@@ -260,29 +234,17 @@ export const ModalManageTags: React.FC<Props> = ({
                     })
                 }
             />
-            <Chip
-                size="sm"
-                variant="outlined"
-                sx={{
-                    borderWidth: "2px",
-                    borderColor: alpha(editColor.chipColor, 0.6),
-                    backgroundColor: alpha(editColor.chipColor, 0.1),
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: "0.7rem",
-                }}
-            >
-                {editName || t.tasks.modals.manageTags.previewName}
-            </Chip>
+            <ProjectTagChip
+                label={editName || t.tasks.modals.manageTags.previewName}
+                tagColor={editColor.chipColor}
+            />
             <AppTooltip title={t.tasks.modals.manageTags.saveTooltip}>
                 <IconButton
+                    aria-label={t.tasks.modals.manageTags.saveTooltip}
+                    color="primary"
                     disabled={!editName.trim()}
                     size="sm"
                     variant="plain"
-                    sx={{
-                        color: "rgba(var(--gp-brand-700-rgb), 0.8)",
-                        "&:hover": { color: "var(--gp-brand-700)" },
-                    }}
                     onClick={() => onSave()}
                 >
                     <CheckRoundedIcon sx={{ fontSize: 18 }} />
@@ -290,12 +252,10 @@ export const ModalManageTags: React.FC<Props> = ({
             </AppTooltip>
             <AppTooltip title={t.tasks.modals.manageTags.cancelTooltip}>
                 <IconButton
+                    aria-label={t.tasks.modals.manageTags.cancelTooltip}
+                    color="neutral"
                     size="sm"
                     variant="plain"
-                    sx={{
-                        color: "rgba(255,255,255,0.4)",
-                        "&:hover": { color: "rgba(255,255,255,0.8)" },
-                    }}
                     onClick={cancelEdit}
                 >
                     <CloseRoundedIcon sx={{ fontSize: 18 }} />
@@ -304,294 +264,137 @@ export const ModalManageTags: React.FC<Props> = ({
         </>
     );
 
+    const rowSx = (active: boolean) => ({
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        p: 1,
+        borderRadius: g.radius.md,
+        background: active ? g.accent.subtle : "transparent",
+        border: "1px solid",
+        borderColor: active ? g.accent.border : g.border.subtle,
+        "&:hover": { background: active ? g.accent.subtle : g.hover },
+    });
+
     return (
-        <Modal
+        <ModalFrame
+            icon={<LocalOfferIcon sx={{ fontSize: 20, color: g.accent.text }} />}
             open={open}
-            sx={{
-                zIndex: 10010,
-                backdropFilter: "blur(4px)",
-                // Transparent: Joy's own Backdrop slot already paints
-                // `palette.background.backdrop` + blur(8px). Stacking a
-                // second 50% black on the modal root composited to ~75%,
-                // which read as a solid black page. Matches ModalUserProfile.
-                backgroundColor: "transparent",
-            }}
+            size="md"
+            title={t.tasks.modals.manageTags.heading}
+            zIndex={10010}
+            actions={
+                <Button color="neutral" variant="plain" onClick={onClose}>
+                    {t.tasks.modals.manageTags.closeButton}
+                </Button>
+            }
+            headerAccessory={
+                <Button
+                    disabled={editingTag === NEW_TAG}
+                    size="sm"
+                    startDecorator={<AddRoundedIcon sx={{ fontSize: 18 }} />}
+                    variant="soft"
+                    onClick={startCreate}
+                >
+                    {t.tasks.modals.manageTags.newTag}
+                </Button>
+            }
             onClose={onClose}
         >
-            <ModalDialog
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                sx={{
-                    animation: `${fadeIn} 0.2s ease-out`,
-                    background:
-                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
-                    borderRadius: "16px",
-                    boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--gp-brand-700-rgb), 0.1)",
-                    width: { xs: "calc(100vw - 24px)", md: "auto" },
-                    minWidth: { xs: 0, md: "400px" },
-                    maxWidth: { xs: "100vw", md: "600px" },
-                    maxHeight: { xs: "calc(100dvh - 32px)", md: "70vh" },
-                    p: { xs: 2, md: 3 },
-                    overflow: "auto",
-                }}
-            >
-                {/* Header */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 40,
-                            height: 40,
-                            borderRadius: "10px",
-                            background:
-                                "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.2) 0%, rgba(var(--gp-brandalt-500-rgb), 0.2) 100%)",
-                            border: "1px solid rgba(var(--gp-brand-700-rgb), 0.3)",
-                        }}
-                    >
-                        <LocalOfferIcon
-                            sx={{ color: "rgba(var(--gp-brandalt-500-rgb), 0.9)", fontSize: 22 }}
-                        />
-                    </Box>
-                    <Typography
-                        level="h4"
-                        sx={{
-                            background:
-                                "linear-gradient(135deg, var(--gp-brandalt-200) 0%, var(--gp-brandalt-300) 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            fontWeight: 600,
-                            flex: 1,
-                        }}
-                    >
-                        {t.tasks.modals.manageTags.heading}
-                    </Typography>
-                    <Button
-                        disabled={editingTag === NEW_TAG}
-                        size="sm"
-                        startDecorator={<AddRoundedIcon sx={{ fontSize: 18 }} />}
-                        variant="soft"
-                        onClick={startCreate}
-                    >
-                        {t.tasks.modals.manageTags.newTag}
-                    </Button>
-                    <IconButton
-                        size="sm"
-                        variant="plain"
-                        sx={{
-                            color: "rgba(255,255,255,0.5)",
-                            "&:hover": { color: "rgba(255,255,255,0.9)" },
-                        }}
-                        onClick={onClose}
-                    >
-                        <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                    </IconButton>
-                </Box>
+            {errorMessage && (
+                <Alert color="danger" sx={{ mb: 2 }}>
+                    {errorMessage}
+                </Alert>
+            )}
 
-                {errorMessage && (
-                    <Alert
-                        color="danger"
-                        sx={{
-                            mb: 2,
-                            borderRadius: "10px",
-                            backgroundColor: "rgba(var(--gp-tint-danger-rgb), 0.1)",
-                            border: "1px solid rgba(var(--gp-tint-danger-rgb), 0.3)",
-                        }}
+            {/* Tag List */}
+            <Stack spacing={0.5}>
+                {editingTag === NEW_TAG && <Box sx={rowSx(true)}>{editFields(saveCreate)}</Box>}
+
+                {projectTags.length === 0 && editingTag !== NEW_TAG && (
+                    <Typography
+                        level="body-sm"
+                        sx={{ color: g.text.tertiary, textAlign: "center", py: 3 }}
                     >
-                        {errorMessage}
-                    </Alert>
+                        {t.tasks.modals.manageTags.noTagsCreated}
+                    </Typography>
                 )}
 
-                {/* Tag List */}
-                <Stack
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    spacing={0.5}
-                    sx={{
-                        overflowY: "auto",
-                        maxHeight: "45vh",
-                        pr: 0.5,
-                    }}
-                >
-                    {editingTag === NEW_TAG && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                p: 1,
-                                borderRadius: "10px",
-                                backgroundColor: "rgba(var(--gp-brand-700-rgb), 0.08)",
-                                border: "1px solid rgba(var(--gp-brand-700-rgb), 0.2)",
-                            }}
-                        >
-                            {editFields(saveCreate)}
-                        </Box>
-                    )}
-
-                    {projectTags.length === 0 && editingTag !== NEW_TAG && (
-                        <Typography
-                            level="body-sm"
-                            sx={{ color: "rgba(255,255,255,0.4)", textAlign: "center", py: 3 }}
-                        >
-                            {t.tasks.modals.manageTags.noTagsCreated}
-                        </Typography>
-                    )}
-
-                    {projectTags.map((tag) => (
-                        <Box
-                            key={tag.tagName}
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                p: 1,
-                                borderRadius: "10px",
-                                backgroundColor:
-                                    editingTag === tag.tagName
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.08)"
-                                        : "rgba(255,255,255,0.02)",
-                                border: "1px solid",
-                                borderColor:
-                                    editingTag === tag.tagName
-                                        ? "rgba(var(--gp-brand-700-rgb), 0.2)"
-                                        : "rgba(255,255,255,0.05)",
-                                transition: "all 0.15s ease",
-                                "&:hover": {
-                                    backgroundColor: "rgba(255,255,255,0.04)",
-                                },
-                            }}
-                        >
-                            {editingTag === tag.tagName ? (
-                                editFields(() => saveEdit(tag.tagName))
-                            ) : (
-                                <>
-                                    <Chip
-                                        size="sm"
-                                        variant="outlined"
-                                        sx={{
-                                            borderWidth: "2px",
-                                            borderColor: alpha(tag.tagColor, isDark ? 0.6 : 0.75),
-                                            backgroundColor: alpha(tag.tagColor, 0.1),
-                                            color: "#fff",
-                                            fontWeight: 600,
-                                            fontSize: "0.7rem",
-                                        }}
+                {projectTags.map((tag) => (
+                    <Box key={tag.tagName} sx={rowSx(editingTag === tag.tagName)}>
+                        {editingTag === tag.tagName ? (
+                            editFields(() => saveEdit(tag.tagName))
+                        ) : (
+                            <>
+                                <ProjectTagChip label={tag.tagName} tagColor={tag.tagColor} />
+                                <Box sx={{ flex: 1 }} />
+                                {confirmDelete === tag.tagName ? (
+                                    <Stack
+                                        direction="row"
+                                        spacing={0.5}
+                                        sx={{ alignItems: "center" }}
                                     >
-                                        {tag.tagName}
-                                    </Chip>
-                                    <Box sx={{ flex: 1 }} />
-                                    {confirmDelete === tag.tagName ? (
-                                        <Stack
-                                            direction="row"
-                                            spacing={0.5}
-                                            sx={{ alignItems: "center" }}
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: g.danger.text, mr: 0.5 }}
                                         >
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: "rgba(var(--gp-tint-danger-rgb), 0.8)",
-                                                    mr: 0.5,
-                                                }}
-                                            >
-                                                {t.tasks.modals.manageTags.deletePrompt}
-                                            </Typography>
-                                            <Button
-                                                color="danger"
-                                                size="sm"
-                                                variant="soft"
-                                                sx={{
-                                                    minHeight: 26,
-                                                    fontSize: "0.7rem",
-                                                    borderRadius: "6px",
-                                                }}
-                                                onClick={() => deleteTag(tag.tagName)}
-                                            >
-                                                {t.tasks.modals.manageTags.yes}
-                                            </Button>
-                                            <Button
+                                            {t.tasks.modals.manageTags.deletePrompt}
+                                        </Typography>
+                                        <Button
+                                            color="danger"
+                                            size="sm"
+                                            variant="soft"
+                                            onClick={() => deleteTag(tag.tagName)}
+                                        >
+                                            {t.tasks.modals.manageTags.yes}
+                                        </Button>
+                                        <Button
+                                            color="neutral"
+                                            size="sm"
+                                            variant="plain"
+                                            onClick={() => setConfirmDelete(null)}
+                                        >
+                                            {t.tasks.modals.manageTags.no}
+                                        </Button>
+                                    </Stack>
+                                ) : (
+                                    <>
+                                        <AppTooltip title={t.tasks.modals.manageTags.editTooltip}>
+                                            <IconButton
+                                                aria-label={t.tasks.modals.manageTags.editTooltip}
+                                                color="neutral"
                                                 size="sm"
                                                 variant="plain"
-                                                sx={{
-                                                    minHeight: 26,
-                                                    fontSize: "0.7rem",
-                                                    borderRadius: "6px",
-                                                    color: "rgba(255,255,255,0.5)",
+                                                onClick={() => startEdit(tag)}
+                                            >
+                                                <EditRoundedIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                        </AppTooltip>
+                                        <AppTooltip
+                                            title={t.tasks.modals.manageTags.deleteTooltip}
+                                        >
+                                            <IconButton
+                                                color="danger"
+                                                size="sm"
+                                                variant="plain"
+                                                aria-label={
+                                                    t.tasks.modals.manageTags.deleteTooltip
+                                                }
+                                                onClick={() => {
+                                                    setConfirmDelete(tag.tagName);
+                                                    setEditingTag(null);
                                                 }}
-                                                onClick={() => setConfirmDelete(null)}
                                             >
-                                                {t.tasks.modals.manageTags.no}
-                                            </Button>
-                                        </Stack>
-                                    ) : (
-                                        <>
-                                            <AppTooltip
-                                                title={t.tasks.modals.manageTags.editTooltip}
-                                            >
-                                                <IconButton
-                                                    size="sm"
-                                                    variant="plain"
-                                                    sx={{
-                                                        color: "rgba(255,255,255,0.4)",
-                                                        "&:hover": {
-                                                            color: "rgba(var(--gp-brand-700-rgb), 0.9)",
-                                                        },
-                                                    }}
-                                                    onClick={() => startEdit(tag)}
-                                                >
-                                                    <EditRoundedIcon sx={{ fontSize: 16 }} />
-                                                </IconButton>
-                                            </AppTooltip>
-                                            <AppTooltip
-                                                title={t.tasks.modals.manageTags.deleteTooltip}
-                                            >
-                                                <IconButton
-                                                    size="sm"
-                                                    variant="plain"
-                                                    sx={{
-                                                        color: "rgba(255,255,255,0.4)",
-                                                        "&:hover": {
-                                                            color: "rgba(var(--gp-tint-danger-rgb), 0.9)",
-                                                        },
-                                                    }}
-                                                    onClick={() => {
-                                                        setConfirmDelete(tag.tagName);
-                                                        setEditingTag(null);
-                                                    }}
-                                                >
-                                                    <DeleteOutlineRoundedIcon
-                                                        sx={{ fontSize: 16 }}
-                                                    />
-                                                </IconButton>
-                                            </AppTooltip>
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </Box>
-                    ))}
-                </Stack>
-
-                {/* Footer */}
-                <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end", mt: 2 }}>
-                    <Button
-                        variant="plain"
-                        sx={{
-                            color: "rgba(255, 255, 255, 0.6)",
-                            borderRadius: "10px",
-                            px: 2.5,
-                            "&:hover": {
-                                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                                color: "rgba(255, 255, 255, 0.9)",
-                            },
-                        }}
-                        onClick={onClose}
-                    >
-                        {t.tasks.modals.manageTags.closeButton}
-                    </Button>
-                </Stack>
-            </ModalDialog>
-        </Modal>
+                                                <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                            </IconButton>
+                                        </AppTooltip>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </Box>
+                ))}
+            </Stack>
+        </ModalFrame>
     );
 };

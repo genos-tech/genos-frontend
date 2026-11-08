@@ -7,11 +7,12 @@
 // on react-vs-@mui ordering.
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
-import { ListDivider, Modal, ModalClose, ModalDialog, Stack, Typography } from "@mui/joy";
+import { ListDivider, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
@@ -796,18 +797,21 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 the note's id + type, both of which the activity already
                 carries — so this works even though the fetch that would
                 have supplied the deep-link coordinates 403'd. */}
-            <Modal open={deniedNote !== null} onClose={() => setDeniedNote(null)}>
-                <ModalDialog sx={{ maxWidth: 460 }}>
-                    <ModalClose />
-                    {deniedNote && (
-                        <NoteAccessRequestPanel
-                            noteId={deniedNote.noteId}
-                            noteType={deniedNote.noteType}
-                            socket={socket}
-                        />
-                    )}
-                </ModalDialog>
-            </Modal>
+            <ModalFrame
+                flush
+                open={deniedNote !== null}
+                size="md"
+                title={t.notes.accessRequest.privateBadge}
+                onClose={() => setDeniedNote(null)}
+            >
+                {deniedNote && (
+                    <NoteAccessRequestPanel
+                        noteId={deniedNote.noteId}
+                        noteType={deniedNote.noteType}
+                        socket={socket}
+                    />
+                )}
+            </ModalFrame>
         </React.Fragment>
     );
 };
