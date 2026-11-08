@@ -1,4 +1,4 @@
-import { Fragment, memo } from "react";
+import { Fragment, memo, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -12,6 +12,7 @@ import { TaskFieldRules } from "../../utils/taskFieldRules";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { ColumnDef } from "./DraggableTaskTable";
 import { QuickAddDraft, QuickAddTaskRow } from "./QuickAddTaskRow";
+import { useGridNav } from "./useGridNav";
 
 export type TaskTableRowsProps = {
     displayRows: TaskTableProps[];
@@ -101,6 +102,17 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
         onQuickAddDirtyChange,
         onQuickAddSubmit,
     } = props;
+
+    // Closing the quick-add form from the keyboard (Escape, or Enter to create) puts
+    // the keyboard back on the "+" cell that opened it (MIP-1230); the form unmounts
+    // with focus in it. A click-away keeps wherever the click went.
+    const grid = useGridNav();
+    const lastQuickAddParent = useRef<string | null>(null);
+    useEffect(() => {
+        const previous = lastQuickAddParent.current;
+        lastQuickAddParent.current = quickAddParentId;
+        if (previous && !quickAddParentId) grid?.restoreFocus({ rowId: previous, col: "__add" });
+    }, [quickAddParentId, grid]);
 
     return (
         <>

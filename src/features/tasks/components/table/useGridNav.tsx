@@ -37,8 +37,9 @@ import {
 export const GRID_ROW_ATTR = "data-grid-row";
 export const GRID_COL_ATTR = "data-grid-col";
 export const GRID_HEADER_ROW = "__header";
-/** The leading gutter's cells (drag handle, open graph, quick add), before the columns. */
-export const GRID_GUTTER_COLS = ["__drag", "__graph", "__add"] as const;
+/** The cells that sit before the data columns and have no header cell: the leading
+ *  gutter (drag handle, open graph, quick add) and the expand chevron. */
+export const GRID_LEADING_COLS = ["__drag", "__graph", "__add", "__expand"] as const;
 
 const ROW = `[${GRID_ROW_ATTR}]`;
 const CELL = `[${GRID_COL_ATTR}]`;
@@ -164,7 +165,7 @@ export class GridNav {
             return cols;
         };
         return {
-            colOrder: [...GRID_GUTTER_COLS, ...colsOf(GRID_HEADER_ROW)],
+            colOrder: [...GRID_LEADING_COLS, ...colsOf(GRID_HEADER_ROW)],
             rowIds: Array.from(byId.keys()),
             colsOf,
         };

@@ -1818,53 +1818,53 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     </div>
 
                     {/* Draggable Table Body */}
-                    <GridNavContext.Provider value={gridNav}>
-                        <DragDropContext
-                            onDragEnd={handleDragEnd}
-                            onDragStart={() => {
-                                // A pristine quick-add row is dismissed before dnd
-                                // measures the list (a non-Draggable row between
-                                // Draggables makes the gap animation read wrong);
-                                // a dirty one is preserved — typed input is never
-                                // destroyed by starting a drag.
-                                if (!quickAddDirtyRef.current) closeQuickAdd();
-                                setIsDragActive(true);
-                            }}
+                    <DragDropContext
+                        onDragEnd={handleDragEnd}
+                        onDragStart={() => {
+                            // A pristine quick-add row is dismissed before dnd
+                            // measures the list (a non-Draggable row between
+                            // Draggables makes the gap animation read wrong);
+                            // a dirty one is preserved — typed input is never
+                            // destroyed by starting a drag.
+                            if (!quickAddDirtyRef.current) closeQuickAdd();
+                            setIsDragActive(true);
+                        }}
+                    >
+                        <Droppable
+                            direction="vertical"
+                            droppableId="task-table"
+                            ignoreContainerClipping={false}
+                            isCombineEnabled={true}
+                            isDropDisabled={false}
                         >
-                            <Droppable
-                                direction="vertical"
-                                droppableId="task-table"
-                                ignoreContainerClipping={false}
-                                isCombineEnabled={true}
-                                isDropDisabled={false}
-                            >
-                                {(provided, snapshot) => (
-                                    <div
-                                        ref={provided.innerRef}
-                                        {...provided.droppableProps}
-                                        // Scope for the hover family-focus rules and the
-                                        // element their pointer handlers read rows
-                                        // from, so the class must sit on the rows'
-                                        // common parent. The drag attribute disables
-                                        // the rules wholesale while a row is in flight.
-                                        className={TASK_BODY_CLASS}
-                                        role="rowgroup"
-                                        {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
-                                        style={{
-                                            minHeight: 100,
-                                            minWidth: totalTableWidth,
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            backgroundColor: snapshot.isDraggingOver
-                                                ? mode === "dark"
-                                                    ? "rgba(59, 130, 246, 0.08)"
-                                                    : "rgba(59, 130, 246, 0.04)"
-                                                : "transparent",
-                                            transition: "background-color 0.25s ease",
-                                        }}
-                                        onPointerLeave={onFamilyFocusPointerLeave}
-                                        onPointerOver={onFamilyFocusPointerOver}
-                                    >
+                            {(provided, snapshot) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    // Scope for the hover family-focus rules and the
+                                    // element their pointer handlers read rows
+                                    // from, so the class must sit on the rows'
+                                    // common parent. The drag attribute disables
+                                    // the rules wholesale while a row is in flight.
+                                    className={TASK_BODY_CLASS}
+                                    role="rowgroup"
+                                    {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
+                                    style={{
+                                        minHeight: 100,
+                                        minWidth: totalTableWidth,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        backgroundColor: snapshot.isDraggingOver
+                                            ? mode === "dark"
+                                                ? "rgba(59, 130, 246, 0.08)"
+                                                : "rgba(59, 130, 246, 0.04)"
+                                            : "transparent",
+                                        transition: "background-color 0.25s ease",
+                                    }}
+                                    onPointerLeave={onFamilyFocusPointerLeave}
+                                    onPointerOver={onFamilyFocusPointerOver}
+                                >
+                                    <GridNavContext.Provider value={gridNav}>
                                         <TaskTableRows
                                             childrenByParent={childrenByParentEffective}
                                             columns={columnsWithWidths}
@@ -1898,12 +1898,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             onRequestPreview={requestPreview}
                                             onRowUpdate={handleRowUpdate}
                                         />
-                                        {provided.placeholder}
-                                    </div>
-                                )}
-                            </Droppable>
-                        </DragDropContext>
-                    </GridNavContext.Provider>
+                                    </GridNavContext.Provider>
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
 
                     {/* Empty state: show a spinner while we are still fetching tasks
                         (initial mount, team switch, or project switch). Once the load

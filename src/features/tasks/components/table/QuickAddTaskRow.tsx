@@ -375,6 +375,9 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
     return (
         <div
             ref={rootRef}
+            // A row of the table's treegrid, but not a stop of its roving tabindex: it
+            // is a transient form, so Tab walks its fields (MIP-1230).
+            role="row"
             style={{
                 display: "flex",
                 alignItems: "center",
@@ -431,6 +434,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
             {/* Leading gutter, same width as the drag-handle gutter on
                 sibling rows; holds the ✓ confirm in place of a handle. */}
             <div
+                role="gridcell"
                 style={{
                     width: LEADING_GUTTER_WIDTH,
                     minWidth: LEADING_GUTTER_WIDTH,
@@ -465,6 +469,7 @@ export const QuickAddTaskRow = (props: QuickAddTaskRowProps) => {
             {columns.map((column, idx) => (
                 <div
                     key={column.field}
+                    role="gridcell"
                     style={{
                         ...getTableCellStyles(column.width, column.align),
                         borderRight:

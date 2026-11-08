@@ -24,6 +24,7 @@ import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { PlainButton } from "../components/ui/PlainButton";
 import { DraggableTaskRow } from "../features/tasks/components/table/DraggableTaskRow";
 import { defaultColumns } from "../features/tasks/components/table/DraggableTaskTable";
+import { TaskTableRows } from "../features/tasks/components/table/TaskTableRows";
 import {
     GRID_COL_ATTR,
     GRID_HEADER_ROW,
@@ -94,8 +95,15 @@ const Table = ({ rows, rtl = false }: { rows: RowSpec[]; rtl?: boolean }) => {
             >
                 <div role="row" {...{ [GRID_ROW_ATTR]: GRID_HEADER_ROW }}>
                     {columns.map((c) => (
-                        <div key={c.field} role="columnheader" {...{ [GRID_COL_ATTR]: c.field }}>
-                            <PlainButton>{c.field}</PlainButton>
+                        // As the real header: the expand column has no header cell to stop on.
+                        <div
+                            key={c.field}
+                            role="columnheader"
+                            {...(c.field === "__expand" ? {} : { [GRID_COL_ATTR]: c.field })}
+                        >
+                            <PlainButton tabIndex={c.field === "__expand" ? -1 : undefined}>
+                                {c.field}
+                            </PlainButton>
                         </div>
                     ))}
                 </div>
@@ -272,6 +280,26 @@ describe("arrow keys", () => {
         expect(stops()[0]).toBe(document.activeElement);
     });
 
+    it("walk a row in the order the cells are drawn, nothing skipped, nothing out of place", async () => {
+        const user = userEvent.setup();
+        render(wrap(<Table rows={ROWS} />));
+        const row = grid().querySelector(`[${GRID_ROW_ATTR}="1"]`)!;
+        const drawn = [...row.querySelectorAll(`[${GRID_COL_ATTR}]`)].map((c) =>
+            c.getAttribute(GRID_COL_ATTR)
+        );
+        // The first row has children, so it has every cell: gutter, chevron, columns.
+        expect(drawn.slice(0, 5)).toEqual(["__drag", "__graph", "__add", "__expand", "id"]);
+
+        focusCell("1", "title");
+        await user.keyboard("{Home}");
+        const walked = [where().split("/")[1]];
+        for (let i = 1; i < drawn.length; i++) {
+            await user.keyboard("{ArrowRight}");
+            walked.push(where().split("/")[1]);
+        }
+        expect(walked).toEqual(drawn);
+    });
+
     it("Home / End / Ctrl+Home / Ctrl+End / PageDown", async () => {
         const user = userEvent.setup();
         render(wrap(<Table rows={ROWS} />));
@@ -434,5 +462,77 @@ describe("the active cell survives", () => {
         rerender(wrap(<Table rows={ROWS} />));
         await waitFor(() => expect(grid().querySelectorAll(`[${GRID_ROW_ATTR}]`)).toHaveLength(5));
         expect(stops()).toHaveLength(1);
+    });
+});
+
+describe("the quick-add form", () => {
+    const QuickAddTable = () => {
+        const { nav, gridRef } = useGridNavController();
+        const [parent, setParent] = useState<string | null>(null);
+        const rows = ROWS.map((r) => r.task);
+        return (
+            <GridNavContext.Provider value={nav}>
+                <div ref={gridRef} aria-label="Tasks table" role="treegrid">
+                    <div role="row" {...{ [GRID_ROW_ATTR]: GRID_HEADER_ROW }}>
+                        <div role="columnheader" {...{ [GRID_COL_ATTR]: "title" }} />
+                    </div>
+                    <DragDropContext onDragEnd={() => {}}>
+                        <Droppable droppableId="t">
+                            {(provided) => (
+                                <div ref={provided.innerRef} {...provided.droppableProps}>
+                                    <TaskTableRows
+                                        childrenByParent={new Map()}
+                                        columns={columns}
+                                        customFieldDefs={[]}
+                                        depthMap={new Map()}
+                                        displayRows={rows}
+                                        expandedRows={new Set()}
+                                        familyKeyByRow={new Map()}
+                                        ghostIds={new Set()}
+                                        mode="light"
+                                        myself={me}
+                                        projectTags={[]}
+                                        quickAddFieldRules={null}
+                                        quickAddParentId={parent}
+                                        quickAddProjectTags={[]}
+                                        resolveIsSelected={() => false}
+                                        setMyself={vi.fn()}
+                                        socket={null}
+                                        sprintNamesById={new Map()}
+                                        teamMembers={[me]}
+                                        toggleExpand={vi.fn()}
+                                        useCM={{} as never}
+                                        useTEM={{} as never}
+                                        useTM={useTM}
+                                        useUISM={{} as never}
+                                        onOpenDiagram={vi.fn()}
+                                        onQuickAddChild={(t) => setParent(String(t.id))}
+                                        onQuickAddClose={() => setParent(null)}
+                                        onQuickAddDirtyChange={() => {}}
+                                        onQuickAddSubmit={async () => {}}
+                                        onRequestPreview={vi.fn()}
+                                        onRowUpdate={vi.fn(async (t) => t)}
+                                    />
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
+                </div>
+            </GridNavContext.Provider>
+        );
+    };
+
+    it("Enter on the + cell opens it; Escape closes it and the keyboard is back on the + cell", async () => {
+        const user = userEvent.setup();
+        render(wrap(<QuickAddTable />));
+        focusCell("2", "__add");
+
+        await user.keyboard("{Enter}");
+        const title = await screen.findByPlaceholderText(/Type a title/);
+        expect(title).toBeTruthy();
+        await user.keyboard("{Escape}");
+        await waitFor(() => expect(screen.queryByPlaceholderText(/Type a title/)).toBeNull());
+        await waitFor(() => expect(where()).toBe("2/__add"));
     });
 });
