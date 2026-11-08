@@ -1561,8 +1561,8 @@ export const ar: DeepPartial<Messages> = {
                 empty: "لا توجد مهام مجدولة حتى الآن. أضف واحدة أعلاه.",
                 active: "نشيط",
                 paused: "متوقف مؤقتًا",
-                pause: "يوقف",
-                resume: "سيرة ذاتية",
+                pause: "إيقاف مؤقت",
+                resume: "استئناف",
                 delete: "حذف",
                 deleteTitle: "هل تريد حذف هذا الجدول؟",
                 deleteBody: "ستبقى المهام التي أُضيفت مسبقًا.",
@@ -1882,7 +1882,7 @@ export const ar: DeepPartial<Messages> = {
         gmTags: {
             assignTitle: "الكلمات الدلالية لـ {name}",
             cancelButton: "إلغاء",
-            createButton: "يضيف",
+            createButton: "إضافة",
             createFailed: "تعذر إنشاء العلامة. حاول ثانية.",
             createPlaceholder: "اسم العلامة الجديدة",
             deleteConfirm: "حذف؟",
@@ -2791,7 +2791,7 @@ export const ar: DeepPartial<Messages> = {
             deleteOptionTooltip: "إزالة الخيار",
             optionNamePlaceholder: "اسم الخيار الجديد",
             optionPreviewName: "معاينة",
-            addOption: "يضيف",
+            addOption: "إضافة",
             fieldNamePlaceholder: "اسم الحقل الجديد",
             addField: "إضافة حقل",
             types: {
@@ -4394,7 +4394,7 @@ export const ar: DeepPartial<Messages> = {
                 "تتم مشاركة العلامات عبر الفريق. ضع علامة على علامة لوضعها في هذا المشروع؛ تحرير أو حذف واحد يغيره لكل مشروع يستخدمه.",
             newLabelPlaceholder: "اسم العلامة الجديدة",
             newLabelPreview: "معاينة",
-            add: "يضيف",
+            add: "إضافة",
             empty: "لا توجد علامات في هذا الفريق حتى الآن. قم بإنشاء الأول أعلاه.",
             usedByProjects:
                 "{count, plural, one {مستخدم في مشروع واحد} other {مستخدم في # مشاريع}}",

@@ -435,9 +435,14 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
             for (const childId of childIds) dropReminderLocally(childId);
             const ok = await deleteTodoItem(accessToken, itemId);
             if (!ok) {
-                // Reload on failure since we have no snapshot for revert.
-                const fresh = await loadTodoGroups(myself, accessToken);
+                // Reload on failure since we have no snapshot for revert. The reminders
+                // dropped above (the row's and its children's) come back with it.
+                const [fresh, reminders] = await Promise.all([
+                    loadTodoGroups(myself, accessToken),
+                    loadTodoReminders(accessToken),
+                ]);
                 if (fresh) setGroups(fresh);
+                if (reminders) setReminderByItemId(new Map(reminders.map((r) => [r.itemId, r])));
             }
             return ok;
         },

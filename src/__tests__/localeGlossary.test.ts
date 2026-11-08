@@ -117,6 +117,16 @@ describe("ar", () => {
         expect(L.ar["tasks.comment.deleteTooltip"]).toBe("حذف");
     });
 
+    it("button labels are verbs in the imperative or a noun, never the third person or a wrong word", () => {
+        // يضيف / يوقف are "he adds / he stops"; "سيرة ذاتية" is a CV, and stood in for Resume.
+        for (const k of Object.keys(EN).filter((k) => /^Add$/.test(EN[k]) && k in L.ar)) {
+            expect(L.ar[k], k).toBe("إضافة");
+        }
+        expect(L.ar["chat.todoPane.schedule.pause"]).toBe("إيقاف مؤقت");
+        expect(L.ar["chat.todoPane.schedule.resume"]).toBe("استئناف");
+        expect(using("ar", /^(يوقف|يضيف|سيرة ذاتية)$/)).toEqual([]);
+    });
+
     it("effort is الجهد (not المجهود) and a thread is موضوع (not خيط)", () => {
         expect(using("ar", /المجهود|خيط/)).toEqual([]);
     });

@@ -345,6 +345,22 @@ describe("useTodoGroups — reminders follow the to-do they are about", () => {
         expect(deleteTodoItemMock.mock.calls[0][1]).toBe(1);
     });
 
+    it("a refused delete brings back the rows and every reminder it dropped (MIP-1304)", async () => {
+        deleteTodoItemMock.mockResolvedValue(false);
+        const reminders = [reminder, { ...reminder, id: "r-3", itemId: 3 }];
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        loadTodoRemindersMock.mockResolvedValue(reminders);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+
+        await act(async () => {
+            await result.current.removeItem(1);
+        });
+
+        expect(result.current.groups[0].items.map((i) => i.itemId)).toEqual([1, 2, 3, 4]);
+        expect([...result.current.reminderByItemId.keys()].sort()).toEqual([2, 3]);
+    });
+
     it("deleting one sub-item leaves its parent and siblings (MIP-1304)", async () => {
         deleteTodoItemMock.mockResolvedValue(true);
         loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
