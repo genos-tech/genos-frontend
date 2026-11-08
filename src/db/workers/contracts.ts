@@ -64,6 +64,10 @@ export type InboxRequests = {
         req: { kind: "digest" | "schedule"; scheduleId?: string; enabled: boolean };
         res: void;
     };
+    /** After the member has looked at an item long enough to count as read (MIP-1292): flip
+     *  `isRead` on the stored rows and nothing else. Reads each row before writing, so it never
+     *  writes back a stale copy of anything else on it. */
+    markInboxItemsRead: { req: { itemIds: number[] }; res: void };
 };
 
 // ---- activity channel -----------------------------------------------------
