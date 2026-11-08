@@ -8,6 +8,7 @@ import { useTheme } from "@mui/joy/styles";
 
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -211,9 +212,11 @@ export const ModalTeamFolderTags = (props: Props) => {
         >
             <Stack spacing={0.5} sx={{ maxHeight: 300, overflowY: "auto" }}>
                 {allTags.length === 0 && (
-                    <Typography level="body-sm" sx={{ fontStyle: "italic", opacity: 0.7 }}>
-                        {t.notes.teamNotes.noTags}
-                    </Typography>
+                    <EmptyState
+                        body={t.notes.teamNotes.noTags}
+                        data-empty="team-folder-tags"
+                        size="xs"
+                    />
                 )}
                 {allTags.map((tag) => {
                     const isOn = selected.has(tag.tagId);

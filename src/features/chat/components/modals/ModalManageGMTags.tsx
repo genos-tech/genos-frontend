@@ -3,9 +3,10 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
-import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, IconButton, Input, Stack } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
@@ -159,12 +160,7 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
         >
             <Box sx={{ maxHeight: 320, overflowY: "auto", my: 1 }}>
                 {tags.length === 0 && (
-                    <Typography
-                        level="body-sm"
-                        sx={{ color: g.text.secondary, py: 1.5, textAlign: "center" }}
-                    >
-                        {t.chat.gmTags.emptyList}
-                    </Typography>
+                    <EmptyState body={t.chat.gmTags.emptyList} data-empty="gm-tags" size="sm" />
                 )}
                 {tags.map((tag) => {
                     const isArmed = armedDeleteTagId === tag.tagId;

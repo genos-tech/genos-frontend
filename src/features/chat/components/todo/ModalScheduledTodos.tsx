@@ -25,6 +25,7 @@ import dayjs from "dayjs";
 import { CreateTodoScheduleInput, UpdateTodoSchedulePatch } from "./services/todoSchedules";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalConfirmAction } from "../../../../components/ui/misc/ModalConfirmAction";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -313,9 +314,7 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
                     {ts.listHeading}
                 </Typography>
                 {schedules.length === 0 ? (
-                    <Typography level="body-sm" sx={{ color: g.text.tertiary }}>
-                        {ts.empty}
-                    </Typography>
+                    <EmptyState body={ts.empty} data-empty="scheduled-todos" size="xs" />
                 ) : (
                     <Stack spacing={1}>
                         {schedules.map((s) => (

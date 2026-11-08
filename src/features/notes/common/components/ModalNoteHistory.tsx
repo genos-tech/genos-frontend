@@ -5,6 +5,7 @@ import { useTheme } from "@mui/joy/styles";
 
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonLines } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
@@ -230,12 +231,11 @@ export const ModalNoteHistory = ({
                     }}
                 >
                     {versions.length === 0 ? (
-                        <Typography
-                            level="body-xs"
-                            sx={{ p: 2, fontStyle: "italic", color: g.text.tertiary }}
-                        >
-                            {t.notes.history.emptyList}
-                        </Typography>
+                        <EmptyState
+                            body={t.notes.history.emptyList}
+                            data-empty="note-history"
+                            size="xs"
+                        />
                     ) : (
                         <Stack spacing={0} sx={{ p: 1 }}>
                             {versions.map((v) => {

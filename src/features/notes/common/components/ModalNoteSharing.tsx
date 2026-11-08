@@ -17,6 +17,7 @@ import { useTheme } from "@mui/joy/styles";
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -155,17 +156,11 @@ export const ModalNoteSharing = ({
             {/* Current members */}
             <Box sx={{ mb: 1 }}>
                 {members.length === 0 ? (
-                    <Box sx={{ py: 1.5 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontStyle: "italic",
-                                color: g.text.tertiary,
-                            }}
-                        >
-                            {t.notes.sharing.noAccessYet}
-                        </Typography>
-                    </Box>
+                    <EmptyState
+                        body={t.notes.sharing.noAccessYet}
+                        data-empty="note-access"
+                        size="xs"
+                    />
                 ) : (
                     <Stack spacing={0.75}>
                         {members.map((m) => {

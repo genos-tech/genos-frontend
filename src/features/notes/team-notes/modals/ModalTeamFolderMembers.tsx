@@ -18,6 +18,7 @@ import type { Socket } from "socket.io-client";
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PersonPicker } from "../../../../components/ui/PersonPicker";
@@ -272,9 +273,11 @@ export const ModalTeamFolderMembers = (props: Props) => {
             ) : (
                 <Stack spacing={1} sx={{ mt: 1, maxHeight: 260, overflowY: "auto" }}>
                     {members.length === 0 && (
-                        <Typography level="body-sm" sx={{ fontStyle: "italic", opacity: 0.7 }}>
-                            {t.notes.teamNotes.noMembers}
-                        </Typography>
+                        <EmptyState
+                            body={t.notes.teamNotes.noMembers}
+                            data-empty="team-folder-members"
+                            size="xs"
+                        />
                     )}
                     {members.map((m) => {
                         const via = groupLabel(m);

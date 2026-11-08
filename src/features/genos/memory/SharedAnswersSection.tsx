@@ -2,6 +2,7 @@ import { useState } from "react";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import { Box, Button, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useShareAnswersPreference } from "../../../hooks/common/useShareAnswersPreference";
@@ -112,9 +113,11 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
         }
         if (enabled === false || list.answers.length === 0) {
             return (
-                <Typography level="body-sm" sx={{ py: 1, color: "text.tertiary" }}>
-                    {enabled === false ? m.emptyOff : m.empty}
-                </Typography>
+                <EmptyState
+                    body={enabled === false ? m.emptyOff : m.empty}
+                    data-empty="shared-answers"
+                    size="xs"
+                />
             );
         }
         return (

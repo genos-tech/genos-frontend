@@ -26,6 +26,7 @@ import {
     updateSchedule,
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
+import { EmptyState } from "../../ui/feedback/EmptyState";
 import { ScheduleFormPanel } from "./ScheduleFormPanel";
 import { SchedulesUpgradePrompt } from "./SchedulesUpgradePrompt";
 
@@ -340,18 +341,16 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
             )}
 
             {data && !planBlockedNow && schedules.length === 0 && mode === null && (
-                <Stack alignItems="flex-start" spacing={1}>
-                    <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                        {s.empty}
-                    </Typography>
-                    <Button
-                        size="sm"
-                        startDecorator={<AddRoundedIcon />}
-                        onClick={() => setMode({ kind: "new" })}
-                    >
-                        {s.createFirst}
-                    </Button>
-                </Stack>
+                <EmptyState
+                    body={s.empty}
+                    data-empty="schedules"
+                    size="sm"
+                    action={{
+                        label: s.createFirst,
+                        icon: <AddRoundedIcon />,
+                        onClick: () => setMode({ kind: "new" }),
+                    }}
+                />
             )}
 
             {data && !planBlockedNow && suggestions.length > 0 && mode === null && (
@@ -377,6 +376,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                         return (
                             <Sheet
                                 key={sug.key}
+                                variant="outlined"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -386,7 +386,6 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     borderRadius: "md",
                                     minWidth: 0,
                                 }}
-                                variant="outlined"
                             >
                                 <Stack spacing={0.25} sx={{ flex: "1 1 12rem", minWidth: 0 }}>
                                     <Typography level="title-sm" sx={{ overflowWrap: "anywhere" }}>

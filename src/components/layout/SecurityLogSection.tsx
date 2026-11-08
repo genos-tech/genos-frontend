@@ -5,6 +5,7 @@ import { Box, Button, Chip, Sheet, Stack, Typography } from "@mui/joy";
 import { useAuth } from "../../context/AuthContext";
 import { fmt, useTranslation } from "../../i18n";
 import { listTeamSecurityEvents, SecurityEvent } from "../../services/developerApi";
+import { EmptyState } from "../ui/feedback/EmptyState";
 
 type Props = {
     teamId: string;
@@ -124,9 +125,7 @@ export const SecurityLogSection = ({ teamId }: Props) => {
                 {s.blurb}
             </Typography>
             {events.length === 0 && (
-                <Typography level="body-xs" sx={{ opacity: 0.6 }}>
-                    {s.empty}
-                </Typography>
+                <EmptyState body={s.empty} data-empty="security-log" size="xs" />
             )}
             {events.map((e) => (
                 <SecurityEventRow event={e} key={e.id} />

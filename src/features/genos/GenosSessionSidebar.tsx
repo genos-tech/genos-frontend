@@ -20,6 +20,7 @@ import { Box, Button, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { SearchField } from "../../components/ui/fields/SearchField";
 import { NavItem } from "../../components/ui/nav/NavItem";
@@ -250,13 +251,14 @@ export const GenosSessionSidebar = ({
                 )}
 
                 {!isLoading && sessions.length === 0 && !loadFailed && (
-                    <Typography level="body-sm" sx={{ opacity: 0.7, px: 0.5, py: 1 }}>
-                        {/* An empty result while searching isn't an empty
-                            history — saying "ask Genos anything to start
-                            one" there would read as if the past asks were
-                            gone. */}
-                        {isSearching ? t.genos.sidebar.noMatches : t.genos.sidebar.empty}
-                    </Typography>
+                    // An empty result while searching isn't an empty history:
+                    // saying "ask Genos anything to start one" there would read
+                    // as if the past asks were gone.
+                    <EmptyState
+                        body={isSearching ? t.genos.sidebar.noMatches : t.genos.sidebar.empty}
+                        data-empty="genos-sessions"
+                        size="xs"
+                    />
                 )}
 
                 {pinnedSessions.length > 0 && renderGroupLabel(t.genos.sidebar.pinned)}
