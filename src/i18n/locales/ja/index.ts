@@ -3518,7 +3518,7 @@ export const ja: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} シート / 月",
             plansHero: "Genos で、最高の仕事をもっと",
             plansHeroSub:
-                "無料で始めて、いつでもアップグレードできます。どのプランでも全機能が使えます — 有料プランでは AI の回数、メッセージ履歴、作成できる量が大きく広がります。",
+                "無料で始めて、いつでもアップグレードできます。有料プランでは、AI の回数、メッセージ履歴、Web 検索、MCP 接続、作成できる量が広がります。",
             currencyLabel: "価格を表示する",
             startForFree: "無料で始める",
             taglineFree: "チャット・タスク・ノートを 1 か所に",

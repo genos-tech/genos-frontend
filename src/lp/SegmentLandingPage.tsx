@@ -28,7 +28,7 @@ const SEGMENT_SHOTS: Record<
 > = {
     research: { hero: "note", features: ["note", "ask", "tasks"] },
     teams: { hero: "tasks", features: ["note", "approval", "tasks"] },
-    projects: { hero: "task", features: ["chat", "task", "board"] },
+    projects: { hero: "board", features: ["chat", "task", "tasks"] },
     students: { hero: "todo", features: ["note", "todo", "ask"] },
 };
 
@@ -80,7 +80,7 @@ function SegmentBody({
                         </div>
                         <p className="lp-small">{t.hero.footnote}</p>
                     </div>
-                    <div style={{ marginTop: 48 }}>
+                    <div style={{ marginTop: 48, maxWidth: 920 }}>
                         <Shot alt={alt[shots.hero]} lang={lang} name={shots.hero} priority />
                     </div>
                     <ul className="lp-points" style={{ marginTop: 32 }}>

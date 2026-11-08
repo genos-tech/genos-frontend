@@ -124,7 +124,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
         },
         heroAlt:
-            "Genosの回答画面。「いま止まっているタスクは何で、何を待っていますか？」に、プロジェクトごとにタスクをリンクつきで並べ、出典チップを添えて答えている",
+            "Genosの回答画面。「ホームページの作り直しを止めているものは何ですか？」に、リンクつきのタスクと出典チップを添えて答えている",
         works: {
             label: "連携",
             items: [
@@ -340,7 +340,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
         },
         heroAlt:
-            'A Genos answer to "What is blocked right now and what does it wait on?", with the tasks grouped by project, linked, and source chips underneath',
+            'A Genos answer to "What\'s blocking the homepage rebuild?", with linked tasks and source chips underneath',
         works: {
             label: "Works with",
             items: [

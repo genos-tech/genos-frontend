@@ -18,8 +18,7 @@
  * The Spotlight scenes (`ask`, `approval`) make one live AI call each on the
  * local api (a few cents); `--only` skips them.
  *
- * Sizes must agree with `src/lp/kit/shots.ts`; the script refuses to write a file
- * whose size does not.
+ * What each picture shows (and its size) is `src/lp/kit/shots.json`, shared with the pages.
  */
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
@@ -74,7 +73,7 @@ const UI = {
         note: /Design system inventory/,
         general: /^general/,
         task: /Migrate marketing pages/,
-        ask: "What is blocked right now and what does it wait on?",
+        ask: "What's blocking the homepage rebuild?",
         write: "Add a to-do for tomorrow: review the hero illustration variants with Carol",
         report: "What to do today",
         showTasks: "Show tasks",
@@ -93,7 +92,7 @@ const UI = {
         note: /Design system|design system|デザインシステム/,
         general: /^全体/,
         task: /マーケティングページ.*移行/,
-        ask: "いま止まっているタスクは何で、何を待っていますか？",
+        ask: "ホームページの作り直しを止めているものは何ですか？",
         write: "明日のTo-Doに追加：Carolとヒーロー画像のバリエーションをレビューする",
         report: "今日やること",
         showTasks: "タスクの表示",
@@ -174,6 +173,14 @@ const ensureTasks = async (page, lang) => {
     }
 };
 
+/**
+ * What makes an answer unfit for a public picture: a citation that failed to resolve (the leftovers
+ * print as "[,]", or "()" / "（）" in Japanese), the model giving up on part of the question, or the
+ * demo account's synthetic address showing in a tool step.
+ */
+const WEAK_ANSWER =
+    /\[\s*,?\s*\]|[（(]\s*[）)]|could not|couldn't|見つかりません|取得できません|demo\+[0-9a-f]+@/i;
+
 /** Ask Genos one question and wait for the finished answer; retry when the model gave a weak one. */
 const askGenos = async (page, lang, question, { expect, attempts = 3 }) => {
     const input = () =>
@@ -201,7 +208,7 @@ const askGenos = async (page, lang, question, { expect, attempts = 3 }) => {
         await settle(page, 2000);
         const text = await page.evaluate(() => document.body.innerText);
         // A citation that failed to resolve renders as "[,]"; "could not" means the model gave up on part of it.
-        if (!/\[\s*,?\s*\]|could not|couldn't|見つかりません|取得できません/i.test(text)) return;
+        if (!WEAK_ANSWER.test(text)) return;
     }
     throw new Error(
         `No clean answer to "${question}" after ${attempts} attempts; retake it, or pick another question.`
@@ -269,6 +276,8 @@ const SCENES = {
         await settle(page, 4500);
     },
     ask: async (page, lang) => {
+        // A taller window, so the whole answer (steps, text and source chips) fits one picture.
+        await page.setViewportSize({ width: 1440, height: 1100 });
         await rail(page, lang, "genos");
         await settle(page, 15000); // the post-signin reindex has to land before Genos can find anything
         await askGenos(page, lang, UI[lang].ask, { expect: "Answered in|で回答" });
@@ -325,13 +334,10 @@ const toWebp = (png, name, lang, size, scale) => {
     return file;
 };
 
-// `shots.ts` is what the pages render with: a shot must be taken at the size it declares.
-const declared = new Map();
-for (const m of readFileSync(new URL("../src/lp/kit/shots.ts", import.meta.url), "utf8").matchAll(
-    /^\s*"?([a-z-]+)"?: (DESKTOP|PHONE),/gm
-)) {
-    declared.set(m[1], m[2] === "PHONE" ? PHONE : DESKTOP);
-}
+// `shots.json` is what the pages render with and says which part of the window each shot shows.
+const SHOTS = JSON.parse(
+    readFileSync(new URL("../src/lp/kit/shots.json", import.meta.url), "utf8")
+);
 
 /** What to take, in which browser: desktop light, desktop dark, phone. */
 const PLAN = [
@@ -358,19 +364,20 @@ try {
                 run.dark
             );
             for (const name of wanted) {
-                const size = declared.get(name);
-                if (!size || size.width !== run.viewport.width) {
-                    throw new Error(
-                        `${name}: shots.ts declares ${JSON.stringify(size)}, taking it at ${run.viewport.width}px`
-                    );
-                }
+                const shot = SHOTS[name];
+                if (!shot) throw new Error(`${name} is not in src/lp/kit/shots.json`);
                 await SCENES[name](page, lang, session);
                 await page.mouse.move(run.viewport.width - 20, run.viewport.height - 5); // no hover tooltips in the picture
                 await settle(page, 700);
                 const png = join(workdir, `${lang}-${name}.png`);
-                await page.screenshot({ path: png });
-                toWebp(png, name, lang, size, 2);
-                toWebp(png, name, lang, size, 1);
+                // Cut at the browser (2x), so the picture is exact and never re-encoded twice.
+                await page.screenshot({
+                    path: png,
+                    clip: { x: shot.x, y: shot.y, width: shot.width, height: shot.height },
+                });
+                toWebp(png, name, lang, shot, 2);
+                toWebp(png, name, lang, shot, 1);
+                await page.setViewportSize(run.viewport);
                 console.log(`${lang}/${name}`);
             }
             await ctx.close();

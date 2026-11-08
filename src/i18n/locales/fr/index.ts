@@ -3564,7 +3564,7 @@ export const fr: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} sièges / mois",
             plansHero: "Faites-en plus avec Genos",
             plansHeroSub:
-                "Commencez gratuitement et changez de forfait à tout moment. Tous les forfaits incluent toutes les fonctionnalités — les forfaits payants débloquent plus d'IA, un historique illimité et plus d'espace pour créer.",
+                "Commencez gratuitement et changez de forfait à tout moment. Les forfaits payants débloquent plus d'IA, un historique illimité, la recherche web, les connexions MCP et plus d'espace pour créer.",
             currencyLabel: "Afficher les prix dans",
             startForFree: "Commencez gratuitement",
             taglineFree: "Chat, tâches et notes réunis au même endroit",
