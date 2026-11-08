@@ -2286,6 +2286,15 @@ export const fr: DeepPartial<Messages> = {
             todoReminder: "Rappel de tâche",
             genosReport: "Rapport Genos",
         },
+        report: {
+            showMore: "Afficher {count} de plus",
+            showLess: "Afficher moins",
+            emptyTitle: "Tout est à jour",
+            emptyBody: "Rien ne demande votre attention pour le moment.",
+            daysLate: "{days} j de retard",
+            statComments: "Commentaires",
+            statItems: "Éléments",
+        },
         messageReminder: {
             headline: "Vous avez demandé un rappel à propos de ce message.",
             headlineFrom: "Vous avez demandé un rappel à propos du message de {name}.",

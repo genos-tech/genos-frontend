@@ -3357,6 +3357,15 @@ export const es: DeepPartial<Messages> = {
             externalShare: "Compartido con tu equipo",
             genosReport: "Informe de Genos",
         },
+        report: {
+            showMore: "Mostrar {count} más",
+            showLess: "Mostrar menos",
+            emptyTitle: "Todo al día",
+            emptyBody: "Nada requiere tu atención ahora.",
+            daysLate: "{days} d de retraso",
+            statComments: "Comentarios",
+            statItems: "Elementos",
+        },
         messageReminder: {
             headline: "Pediste que te recordáramos este mensaje.",
             headlineFrom: "Pediste que te recordáramos el mensaje de {name}.",
