@@ -1,8 +1,8 @@
-import { Button, Sheet, Stack, Typography } from "@mui/joy";
+import { Sheet } from "@mui/joy";
 
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
-import { g } from "../../../theme/tokens";
 import { MemoryDeleteSection } from "./MemoryDeleteSection";
 import { MemoryNoticedSection } from "./MemoryNoticedSection";
 import { MemoryStoredSection } from "./MemoryStoredSection";
@@ -34,19 +34,12 @@ export const MemoryControlSections = ({ accessToken, teamId, refreshKey }: Props
                 {control.status === "loading" ? (
                     <SkeletonRows count={3} label={m.loading} />
                 ) : (
-                    <Stack alignItems="flex-start" spacing={1}>
-                        <Typography level="body-sm" role="alert" sx={{ color: g.danger.text }}>
-                            {m.loadFailed}
-                        </Typography>
-                        <Button
-                            color="neutral"
-                            size="sm"
-                            variant="outlined"
-                            onClick={control.reload}
-                        >
-                            {t.common.actions.retry}
-                        </Button>
-                    </Stack>
+                    <ErrorState
+                        data-error="genos-memory-control"
+                        size="xs"
+                        title={m.loadFailed}
+                        onRetry={control.reload}
+                    />
                 )}
             </Sheet>
         );
