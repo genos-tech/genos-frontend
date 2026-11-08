@@ -1,4 +1,10 @@
-import { ChangeEvent, KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+    ChangeEvent,
+    KeyboardEvent as ReactKeyboardEvent,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
@@ -242,7 +248,9 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         if (!uploadChannelId) return;
         const accepted = filterFiles(queued);
         if (accepted.length === 0) return;
-        void insertFiles(accepted, (file) => channelService.uploadInlineFile(uploadChannelId, file));
+        void insertFiles(accepted, (file) =>
+            channelService.uploadInlineFile(uploadChannelId, file)
+        );
         // eslint-disable-next-line react-hooks/exhaustive-deps -- re-run per queue, as before
     }, [dropFiles]);
 
