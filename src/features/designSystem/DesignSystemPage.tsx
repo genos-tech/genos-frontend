@@ -1123,10 +1123,13 @@ const Components = () => (
                         title="No flagged messages"
                     />
                 </Panel>
+                <Panel sx={{ background: g.bg.default, mt: 1.5, maxWidth: 280, px: 1.5 }}>
+                    <EmptyState body="No favorites yet. Star notes to add them here." size="xs" />
+                </Panel>
             </Labelled>
 
             <Labelled
-                note="Skeleton rows take the user's row height, so nothing jumps when the data lands. The spinner is only for a small inline wait."
+                note="In a button: its own loading prop. A list: skeleton rows (they take the user's row height, so nothing jumps). A block of text: skeleton lines. A field or one value: the spinner. A page or an AI wait: the spinner with a caption."
                 title="Loading"
             >
                 <Panel sx={{ background: g.bg.default }}>
@@ -1137,6 +1140,9 @@ const Components = () => (
                     <Text level="body-sm" tone="secondary">
                         Inline spinner
                     </Text>
+                </Box>
+                <Box sx={{ p: 1.5 }}>
+                    <Spinner caption="Finishing sign-in…" size="lg" stacked />
                 </Box>
             </Labelled>
 

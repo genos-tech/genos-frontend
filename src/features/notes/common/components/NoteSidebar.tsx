@@ -1175,11 +1175,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 </Box>
             )}
             {ownRootFolders.length === 0 ? (
-                <EmptyState
-                    body={t.notes.teamNotes.emptySpace}
-                    data-empty="team-folders"
-                    size="xs"
-                />
+                <Box sx={{ px: 2 }}>
+                    <EmptyState
+                        body={t.notes.teamNotes.emptySpace}
+                        data-empty="team-folders"
+                        size="xs"
+                    />
+                </Box>
             ) : (
                 renderTeamFolderTrees(ownRootFolders, visibleTeamFolderIds)
             )}
@@ -1626,11 +1628,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             !hasChatNotes
         ) {
             return (
-                <EmptyState
-                    body={t.notes.sidebar.noFavorites}
-                    data-empty="note-favorites"
-                    size="xs"
-                />
+                <Box sx={{ px: 2 }}>
+                    <EmptyState
+                        body={t.notes.sidebar.noFavorites}
+                        data-empty="note-favorites"
+                        size="xs"
+                    />
+                </Box>
             );
         }
 
@@ -1784,7 +1788,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
         if (rows.length === 0) {
             return (
-                <EmptyState body={t.notes.sidebar.noRecents} data-empty="note-recents" size="xs" />
+                <Box sx={{ px: 2 }}>
+                    <EmptyState
+                        body={t.notes.sidebar.noRecents}
+                        data-empty="note-recents"
+                        size="xs"
+                    />
+                </Box>
             );
         }
 
