@@ -448,12 +448,12 @@ export const ja: DeepPartial<Messages> = {
         subtasksOf: "{task} のサブタスク",
         blockedBy: "{tasks} によってブロックされました",
         newPersonalNote: "「マイノート」の新しいノート",
-        newTaskNote: "新しいタスクのメモ",
+        newTaskNote: "新しいタスクのノート",
         newTeamNote: "「チームノート」の新しいノート",
         newChatNote: "新しいチャットノート",
         chat: "チャット",
         thread: "スレッド",
-        updateNote: "更新メモ: {note}",
+        updateNote: "ノートを更新: {note}",
         newTask: "新しいタスク",
         updateTask: "タスクを更新: {task}",
         commentOn: "{task} にコメント",
@@ -1061,8 +1061,8 @@ export const ja: DeepPartial<Messages> = {
                 failed: "タスクを作成できませんでした。もう一度お試しください。",
             },
             schedule: {
-                tooltip: "定期的な To-Do を作成",
-                heading: "定期的な To-Do を作成",
+                tooltip: "定期 To-Do",
+                heading: "定期 To-Do",
                 description:
                     "リピート設定した To-Do は今日のリストに自動で追加されるため、毎日手動で作成する必要はありません。",
                 titleLabel: "To-Do のタイトル",
@@ -1081,7 +1081,7 @@ export const ja: DeepPartial<Messages> = {
                 deleteTitle: "このスケジュールを削除しますか？",
                 deleteBody: "すでに追加された To-Do は残ります。",
                 edit: "編集",
-                editHeading: "定期的な To-Do を編集",
+                editHeading: "定期 To-Do を編集",
                 save: "変更を保存",
                 needsRepeat: "リピート頻度を選択してください。",
                 failed: "スケジュールを保存できませんでした。もう一度お試しください。",
@@ -1769,8 +1769,8 @@ export const ja: DeepPartial<Messages> = {
             hashNote: "ノート",
             hashTaskNote: "タスクノート",
             hashChatNote: "チャットノート",
-            hashSharedNote: "共有メモ",
-            hashTeamNote: "チームメモ",
+            hashSharedNote: "共有ノート",
+            hashTeamNote: "チームノート",
             hashMyNote: "マイノート",
             hashGroupChat: "グループチャット",
             hashProject: "プロジェクト",
@@ -1803,7 +1803,7 @@ export const ja: DeepPartial<Messages> = {
         hero: {
             badge: "デモガイド",
             title: "サンプルデータで Genos を試す",
-            lead: "Genos には、実際のチャット、タスク、メモを備えた小規模な製品チームである、既製のデモ ワークスペースが付属しています。デモ ユーザーとしてサインインし、以下のプロンプトを使用して、検索と Genos AI が実際にどのように機能するかを確認します。セットアップもサインアップも必要ありません。",
+            lead: "Genos には、実際のチャット、タスク、ノートを備えた小規模な製品チームである、既製のデモ ワークスペースが付属しています。デモ ユーザーとしてサインインし、以下のプロンプトを使用して、検索と Genos AI が実際にどのように機能するかを確認します。セットアップもサインアップも必要ありません。",
         },
         login: {
             eyebrow: "入場する",
@@ -1884,7 +1884,7 @@ export const ja: DeepPartial<Messages> = {
                 {
                     id: "search",
                     title: "すべてを横断して検索する",
-                    desc: "⌘K を押して入力するだけです。これらは質問ではなくキーワードです。入力すると、チャット、タスク、メモがライブで表示されます。 ↑ / ↓ を使用して結果を強調表示し、Enter を使用して結果を開きます。",
+                    desc: "⌘K を押して入力するだけです。これらは質問ではなくキーワードです。入力すると、チャット、タスク、ノートがライブで表示されます。 ↑ / ↓ を使用して結果を強調表示し、Enter を使用して結果を開きます。",
                     // These are literal search keywords, so they must match the
                     // seeded workspace verbatim. `framer-motion` / `Plausible` /
                     // `Cmd-K` are Latin in the Japanese seed data too (the
@@ -1907,7 +1907,7 @@ export const ja: DeepPartial<Messages> = {
                 {
                     id: "reason",
                     title: "ソースを横断して推論してみましょう",
-                    desc: "一部の回答には複数回の検索が必要です。回答の下にあるアクティビティ ストリップに、Genosがチャット、タスク、メモを連鎖させていく各ステップが表示されます。",
+                    desc: "一部の回答には複数回の検索が必要です。回答の下にあるアクティビティ ストリップに、Genosがチャット、タスク、ノートを連鎖させていく各ステップが表示されます。",
                     prompts: [
                         "framer-motion を除外したのはなぜですか?",
                         "ホームページの再構築を妨げているものは何ですか?",
@@ -1948,13 +1948,13 @@ export const ja: DeepPartial<Messages> = {
                     id: "agent",
                     headline: true,
                     title: "Genosを働かせる",
-                    desc: "見出し。面倒な作業を一文で説明すると、Genos はタスクのマイルストーン、既存の作業の下にあるサブタスク、優先順位の再設定、またはメモの作成など、全体を提案します。ワンクリックで承認するまでは何も保存されません。",
+                    desc: "見出し。面倒な作業を一文で説明すると、Genos はタスクのマイルストーン、既存の作業の下にあるサブタスク、優先順位の再設定、またはノートの作成など、全体を提案します。ワンクリックで承認するまでは何も保存されません。",
                     prompts: [
                         "グループ チャットでのモバイル速度のディスカッションからタスクを含むマイルストーンを作成します。",
                         "コメントに基づいて、「モバイル Safari でホームページの読み込みが遅いことを調査する」タスクをサブタスクに分割します。",
                         "「請求とプランの刷新」マイルストーンのタスクの優先順位を再設定します。障害となるものを最初に修正し、依存関係の順序と矛盾する期日を修正し、それぞれの変更について説明します。",
-                        "アクセスしやすい色のコントラストに関するベスト プラクティスを調査し、「コントラスト調査」という名前のメモとして保存します。",
-                        "モバイル Safari タスクの計画文書を作成し、そのタスクのメモとして保存します。",
+                        "アクセスしやすい色のコントラストに関するベスト プラクティスを調査し、「コントラスト調査」という名前のノートとして保存します。",
+                        "モバイル Safari タスクの計画文書を作成し、そのタスクのノートとして保存します。",
                         "私の「Spotlight を最大限に活用する方法」ノートを改良し、構造を強化しますが、すべてのコンテンツは保持します。",
                     ],
                 },
@@ -1974,7 +1974,7 @@ export const ja: DeepPartial<Messages> = {
         hero: {
             badge: "Genosガイド",
             title: "Genosでできることすべて",
-            lead: "Genos は、チームのチャット、タスク、メモを 1 か所に保管し、Genos AI によって独自のページまたは独自のツールから検索できるようにする、接続されたワークスペースです。ここは新しいですか？ 「使い方」から始めて、それを高速化する機能とショートカットを調べてください。",
+            lead: "Genos は、チームのチャット、タスク、ノートを 1 か所に保管し、Genos AI によって独自のページまたは独自のツールから検索できるようにする、接続されたワークスペースです。ここは新しいですか？ 「使い方」から始めて、それを高速化する機能とショートカットを調べてください。",
         },
         gettingStarted: {
             eyebrow: "使用方法",
@@ -1987,15 +1987,15 @@ export const ja: DeepPartial<Messages> = {
                 },
                 {
                     title: "チームやワークスペースに参加する",
-                    body: "あなたの仕事はチーム内で生きます。選択または作成し、チームメイトを招待すると、共有チャット、タスク、メモで共同作業する準備が整います。",
+                    body: "あなたの仕事はチーム内で生きます。選択または作成し、チームメイトを招待すると、共有チャット、タスク、ノートで共同作業する準備が整います。",
                 },
                 {
                     title: "サービス間を移動する",
-                    body: "Genos は、受信トレイ、チャット、タスク、メモ、および Genos AI ページで構成されています。サイドバーからこれらを切り替えるか、⌘ を押したまま Ctrl をタップして瞬時に切り替えます。",
+                    body: "Genos は、受信箱、チャット、タスク、ノート、および Genos AI ページで構成されています。サイドバーからこれらを切り替えるか、⌘ を押したまま Ctrl をタップして瞬時に切り替えます。",
                 },
                 {
                     title: "作業をキャプチャして AI に接続させる",
-                    body: "チャットで話し合い、作業をタスクに分割し、メモに仕様を書きます。次に、⌘K を押すと、すべてを一度に検索したり、Genos AI に質問したり、作業を計画および整理したりできます。",
+                    body: "チャットで話し合い、作業をタスクに分割し、ノートに仕様を書きます。次に、⌘K を押すと、すべてを一度に検索したり、Genos AI に質問したり、作業を計画および整理したりできます。",
                 },
             ],
         },
@@ -2031,7 +2031,7 @@ export const ja: DeepPartial<Messages> = {
                         "スラッシュメニューを備えた豊富なブロックエディター",
                         "リアルタイムの共同編集と自動保存",
                         "表示および復元できるバージョン履歴",
-                        "ネストされたツリー内の個人メモ、タスクノート、チャットノート",
+                        "ネストされたツリー内の個人ノート、タスクノート、チャットノート",
                     ],
                 },
                 inbox: {
@@ -2062,9 +2062,9 @@ export const ja: DeepPartial<Messages> = {
                     title: "スポットライトAI",
                     desc: "キーボード ショートカット 1 つからすべてを検索し、Genos AI に質問します。",
                     bullets: [
-                        "チャット、タスク、メモを瞬時に検索",
+                        "チャット、タスク、ノートを瞬時に検索",
                         "「AIに聞く」は出典を引用して回答します",
-                        "スレッドやメモを要約し、フォローアップを依頼します",
+                        "スレッドやノートを要約し、フォローアップを依頼します",
                         "履歴とのマルチターン会話",
                     ],
                 },
@@ -2074,7 +2074,7 @@ export const ja: DeepPartial<Messages> = {
                     bullets: [
                         "チャット スレッドをタスクのマイルストーンに変える",
                         "作業をサブタスクに分割し、依存関係によって優先順位を再設定する",
-                        "メモを調査、下書き、改良します",
+                        "ノートを調査、下書き、改良します",
                         "すべての変更をワンクリックで承認 - 何も通知せずに起動することはありません",
                     ],
                 },
@@ -2085,7 +2085,7 @@ export const ja: DeepPartial<Messages> = {
                         "ワークスペース全体に質問して、答えを全文読んでください",
                         "サイドバーの過去のセッション — セッションを再度開き、停止したところから続行します",
                         "1 つのセッションでスレッドを失うことなく複数のトピックを処理します",
-                        "引用により、引用元のチャット、タスク、またはメモが​​開きます",
+                        "引用により、引用元のチャット、タスク、またはノートが​​開きます",
                     ],
                 },
                 notifications: {
@@ -2135,7 +2135,7 @@ export const ja: DeepPartial<Messages> = {
                 },
                 {
                     keys: "⌘ を押しながら Ctrl をタップします",
-                    label: "受信トレイ → チャット → タスク → メモ → Genos (シフトを逆にします) をサイクルします。",
+                    label: "受信箱 → チャット → タスク → ノート → Genos (シフトを逆にします) をサイクルします。",
                 },
                 {
                     keys: "Ctrl + ⌘ + T",
@@ -2180,7 +2180,7 @@ export const ja: DeepPartial<Messages> = {
     genos: {
         hero: {
             title: "Genosに何でも聞いてください",
-            subtitle: "チャット、タスク、メモを検索したり、Genos に作業を依頼したりできます。",
+            subtitle: "チャット、タスク、ノートを検索したり、Genos に作業を依頼したりできます。",
         },
         sidebar: {
             header: "履歴",
@@ -2215,8 +2215,8 @@ export const ja: DeepPartial<Messages> = {
             myNote: "マイノート",
             taskNote: "タスクノート",
             chatNote: "チャットノート",
-            sharedNote: "共有メモ",
-            teamNote: "チームメモ",
+            sharedNote: "共有ノート",
+            teamNote: "チームノート",
         },
         relative: {
             justNow: "今",
@@ -2571,14 +2571,14 @@ export const ja: DeepPartial<Messages> = {
     noteAsk: {
         headerButton: {
             label: "聞く",
-            tooltip: "このメモについて AI に質問する",
+            tooltip: "このノートについて AI に質問する",
         },
         modal: {
-            title: "このメモについて質問する",
+            title: "このノートについて質問する",
             close: "閉じる",
         },
         summary: {
-            loading: "まとめメモ…",
+            loading: "ノートを要約中…",
             regenerating: "再要約中…",
             sectionTitle: "まとめ",
             refresh: "概要を更新する",
@@ -2586,15 +2586,15 @@ export const ja: DeepPartial<Messages> = {
             updatedMinutes: "{count, plural, one {# 分前に更新} other {# 分前に更新}}",
             updatedHours: "{count, plural, one {# 時間前に更新} other {# 時間前に更新}}",
             updatedDays: "{count, plural, one {# 日前に更新} other {# 日前に更新}}",
-            empty: "このメモにはまだ内容がありません。",
+            empty: "このノートにはまだ内容がありません。",
             stale: {
-                banner: "この概要が生成されてから、メモが更新されました。",
+                banner: "この概要が生成されてから、ノートが更新されました。",
                 refreshAction: "概要を更新する",
             },
         },
         conversation: {
             header: "フォローアップQ&A",
-            empty: "以下でフォローアップを依頼してください。AI は上記のメモの概要をコンテキストとして持っています。",
+            empty: "以下でフォローアップを依頼してください。AI は上記のノートの概要をコンテキストとして持っています。",
             turnLabelQ: "Q",
             turnLabelA: "A",
             placeholder: "このノートについて何でも聞いてください…",
@@ -2621,9 +2621,9 @@ export const ja: DeepPartial<Messages> = {
             titleWithTool: "承認が必要です: {toolName}",
         },
         errors: {
-            loadFailed: "メモの概要を読み込めませんでした。",
+            loadFailed: "ノートの概要を読み込めませんでした。",
             retry: "リトライ",
-            forbidden: "このメモにはアクセスできません。",
+            forbidden: "このノートにはアクセスできません。",
         },
     },
     notes: {
@@ -2640,15 +2640,15 @@ export const ja: DeepPartial<Messages> = {
                 newChatNote: "新しいチャットノート ({count})",
                 childChatNote: "子チャットノート ({count})",
                 newTaskNote: "新しいタスクノート ({count})",
-                childTaskNote: "子タスクのメモ ({count})",
+                childTaskNote: "子タスクのノート ({count})",
                 newMyNote: "新しいマイノート ({count})",
                 childMyNote: "チャイルドマイノート({count})",
                 newTeamNote: "新しいチームノート ({count})",
-                childTeamNote: "子チームのメモ ({count})",
+                childTeamNote: "子チームのノート ({count})",
             },
         },
         labels: {
-            backToNotesList: "メモリストに戻る",
+            backToNotesList: "ノート一覧に戻る",
             close: "閉じる",
             teamNotes: "チームノート",
             source: "ソース",
@@ -2712,7 +2712,7 @@ export const ja: DeepPartial<Messages> = {
         },
         teamNotes: {
             newFolder: "新しいチームフォルダー",
-            emptySpace: "チームフォルダーはまだありません。メモを作成して全員と共有します。",
+            emptySpace: "チームフォルダーはまだありません。ノートを作成して全員と共有します。",
             public: "チームの誰もが表示および編集できます",
             private: "招待された人のみがこれを開くことができます",
             publicInherited: "チームに公開、親フォルダーから継承",
@@ -2955,7 +2955,7 @@ export const ja: DeepPartial<Messages> = {
         accessRequest: {
             privateBadge: "プライベートノート",
             heading: "このノートへのアクセス権がありません",
-            body: "ノートのオーナーに共有をリクエストできます。リクエストはオーナーの受信トレイに届き、ワンクリックで承認できます。",
+            body: "ノートのオーナーに共有をリクエストできます。リクエストはオーナーの受信箱に届き、ワンクリックで承認できます。",
             sendButton: "アクセスをリクエスト",
             sentTitle: "リクエストを送信しました",
             sentBody: "オーナーが承認すると通知されます。",
@@ -3101,7 +3101,7 @@ export const ja: DeepPartial<Messages> = {
                     "ミュート中のチャットはありません。各チャットヘッダーのベルアイコンからミュートできます。",
                 mutedTargetsHeading: "ミュートされたアイテム ({count})",
                 noMutedTargets:
-                    "ミュートされたアイテムはありません。ヘッダーまたは ⋮ メニューから特定のスレッド、タスク、またはメモをミュートします。",
+                    "ミュートされたアイテムはありません。ヘッダーまたは ⋮ メニューから特定のスレッド、タスク、またはノートをミュートします。",
                 unmuteAriaLabel: "{name} のミュートを解除",
                 fallbackChatName: "名前のない会話",
                 fallbackThreadName: "無題のスレッド",
@@ -3129,11 +3129,11 @@ export const ja: DeepPartial<Messages> = {
                     mentionNoteTask: "誰かがタスクノートであなたを @-メンションしたとき。",
                     mentionNoteChat: "誰かがチャットノートであなたを@メンションしたとき。",
                     agentRunDone:
-                        "Spotlight、スレッド、またはメモ ウィンドウを閉じた後に AI 回答が終了したとき。",
+                        "Spotlight、スレッド、またはノート ウィンドウを閉じた後に AI 回答が終了したとき。",
                     messageReminder:
-                        "メッセージに設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信トレイに残ります。",
+                        "メッセージに設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信箱に残ります。",
                     todoReminder:
-                        "To-Do に設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信トレイに残ります。",
+                        "To-Do に設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信箱に残ります。",
                 },
             },
             agentRun: {
@@ -3143,7 +3143,7 @@ export const ja: DeepPartial<Messages> = {
                 bodyNoQuery: "もう一度開いて完全な回答を読んでください。",
                 surfaceSpotlight: "スポットライト",
                 surfaceThread: "このスレッドについて質問する",
-                surfaceNote: "このメモについて質問する",
+                surfaceNote: "このノートについて質問する",
             },
             reminder: {
                 messageTitle: "{name}さんのメッセージのリマインダー",
@@ -3539,7 +3539,7 @@ export const ja: DeepPartial<Messages> = {
             matrixRowMcp: "AI コーディング エージェント (MCP) を接続する",
             matrixRowHistory: "メッセージ履歴",
             matrixRowTasks: "月ごとのタスク",
-            matrixRowNotes: "毎月のメモ",
+            matrixRowNotes: "毎月のノート",
             matrixRowUpload: "ファイルアップロードサイズ",
             matrixRowWeb: "ウェブ検索",
             matrixRowCalendar: "Googleカレンダー",
@@ -3650,7 +3650,7 @@ export const ja: DeepPartial<Messages> = {
         },
         schedules: {
             title: "スケジュール",
-            blurb: "Genos は、あなたが決めた時刻にレポートを用意します。レポートは受信トレイに届きます。",
+            blurb: "Genos は、あなたが決めた時刻にレポートを用意します。レポートは受信箱に届きます。",
             loading: "スケジュールを読み込み中…",
             loadFailed: "スケジュールを読み込めませんでした。",
             retry: "もう一度試す",
@@ -3689,7 +3689,7 @@ export const ja: DeepPartial<Messages> = {
             lastResult: "{title}、{count, plural, one {#件} other {#件}}",
             runNow: "今すぐ実行",
             running: "実行中…",
-            ranOk: "実行しました: {title}、{count, plural, one {#件} other {#件}}。レポートは受信トレイにあります。",
+            ranOk: "実行しました: {title}、{count, plural, one {#件} other {#件}}。レポートは受信箱にあります。",
             ranFailed: "実行に失敗しました: {error}",
             edit: "編集",
             delete: "削除",
@@ -4335,7 +4335,7 @@ export const ja: DeepPartial<Messages> = {
                 body: "この操作は取り消せません",
                 destroyedTitle: "完全に削除されました:",
                 destroyedMilestones: "すべてのマイルストーン",
-                destroyedTasks: "すべてのタスクとそのコメント、添付ファイル、メモ",
+                destroyedTasks: "すべてのタスクとそのコメント、添付ファイル、ノート",
                 destroyedSprints: "すべてのスプリントとスプリント スケジュール",
                 destroyedMembersTags: "プロジェクトのメンバーとタグ",
                 chatNote:
@@ -4685,7 +4685,7 @@ export const ja: DeepPartial<Messages> = {
         filterHelp: {
             title: "フィルタリングの仕組み",
             combine:
-                "フィルタを結合します。行は、絞り込んだすべてのカテゴリ (ステータス、タグ、優先度、作業量、スプリント、マイルストーン、メンバー) と一致する必要があります。",
+                "フィルタを結合します。行は、絞り込んだすべてのカテゴリ (ステータス、タグ、優先度、Effortレベル、スプリント、マイルストーン、メンバー) と一致する必要があります。",
             rootRows:
                 "リストには、最上位の行、つまりルート タスクとマイルストーンが表示されます。行を展開すると、その下にある内容が表示されます。",
             milestoneRescue:
@@ -4721,7 +4721,7 @@ export const ja: DeepPartial<Messages> = {
             status: "ステータス: {value}",
             tags: "タグ: {value}",
             priority: "優先度: {value}",
-            effort: "労力: {value}",
+            effort: "Effortレベル: {value}",
         },
         activity: {
             empty: "まだ活動はありません",
@@ -5420,7 +5420,7 @@ export const ja: DeepPartial<Messages> = {
             success: "チャットノートとして保存されます。",
             openNote: "ノートを開く",
             nothingToSave: "まだ保存するものはありません。まず質問してください。",
-            failed: "メモとして保存できませんでした。もう一度お試しください。",
+            failed: "ノートとして保存できませんでした。もう一度お試しください。",
             noteTitle: "スレッドの概要 — {chatName} ({date})",
         },
         errors: {

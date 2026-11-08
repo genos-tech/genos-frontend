@@ -610,12 +610,12 @@ export const fr: DeepPartial<Messages> = {
             asProposed: "{value} (tel que proposé)",
             rejected:
                 "Certaines de vos modifications ne peuvent pas être appliquées. Rien n'a été approuvé ni exécuté : corrigez-les, puis approuvez à nouveau.",
-            tagPlaceholder: "Ajouter une étiquette",
+            tagPlaceholder: "Ajouter une balise",
             addTag: "Ajouter",
-            removeTag: "Retirer l'étiquette {tag}",
-            noTags: "Aucune étiquette (elles seront toutes retirées)",
+            removeTag: "Retirer la balise {tag}",
+            noTags: "Aucune balise (elles seront toutes retirées)",
             tagsNote:
-                "Chaque étiquette doit déjà exister dans le projet. Si l'une d'elles n'existe pas, la modification est refusée à l'exécution.",
+                "Chaque balise doit déjà exister dans le projet. Si l'une d'elles n'existe pas, la modification est refusée à l'exécution.",
             edited: "Modifié",
             row: "Ligne {n}",
             fields: {
@@ -1072,17 +1072,17 @@ export const fr: DeepPartial<Messages> = {
                 failed: "Impossible de créer la tâche. Veuillez réessayer.",
             },
             schedule: {
-                tooltip: "Tâches programmées",
-                heading: "Tâches programmées",
+                tooltip: "Tâches planifiées",
+                heading: "Tâches planifiées",
                 description:
                     "Les tâches récurrentes sont ajoutées automatiquement à la liste du jour — pas besoin de commencer aujourd'hui à la main.",
                 titleLabel: "Titre de la tâche",
                 titlePlaceholder: "par ex. Standup quotidien",
                 categoryLabel: "Balise (facultatif)",
                 noCategory: "Aucune balise",
-                add: "Ajouter un horaire",
+                add: "Ajouter une planification",
                 adding: "Ajout…",
-                listHeading: "Vos plannings",
+                listHeading: "Vos planifications",
                 empty: "Aucune tâche planifiée pour l'instant. Ajoutez-en un ci-dessus.",
                 active: "Actif",
                 paused: "En pause",
@@ -1092,10 +1092,10 @@ export const fr: DeepPartial<Messages> = {
                 deleteTitle: "Supprimer cette planification ?",
                 deleteBody: "Les tâches déjà ajoutées resteront.",
                 edit: "Modifier",
-                editHeading: "Modifier la tâche programmée",
+                editHeading: "Modifier la tâche planifiée",
                 save: "Enregistrer les modifications",
                 needsRepeat: "Choisissez la fréquence à laquelle cela se répète.",
-                failed: "Impossible d'enregistrer le planning. Veuillez réessayer.",
+                failed: "Impossible d'enregistrer la planification. Veuillez réessayer.",
                 summaryDaily: "Quotidiennement",
                 summaryEveryNDays: "Tous les {n} jours",
                 summaryWeekly: "Hebdomadaire",
@@ -1256,7 +1256,7 @@ export const fr: DeepPartial<Messages> = {
             swapChats: "Permuter les conversations",
             addMembers: "Ajouter des membres",
             close: "Fermer",
-            thread: "Sujet",
+            thread: "Fil",
             openTask: "Ouvrir la tâche",
             newTaskTooltip: "Nouvelle tâche liée à ce fil",
             newTaskAria: "Créer une nouvelle tâche liée à ce fil",
@@ -1596,7 +1596,7 @@ export const fr: DeepPartial<Messages> = {
         memberRoles: {
             owner: "Propriétaire",
             editor: "Éditeur",
-            viewer: "Visionneuse",
+            viewer: "Lecteur",
             guest: "Invité",
             sectionLabel: "Rôle",
             changeFailed: "Impossible de modifier le rôle de ce membre.",
@@ -2230,7 +2230,7 @@ export const fr: DeepPartial<Messages> = {
             notes: "Notes",
         },
         types: {
-            thread: "Sujet",
+            thread: "Fil",
             milestone: "Jalon",
             myNote: "Ma note",
             taskNote: "Note de tâche",
@@ -2827,7 +2827,7 @@ export const fr: DeepPartial<Messages> = {
             myNotesLabel: "Mes notes",
             taskNotesLabel: "Notes de tâches",
             chatNotesLabel: "Notes de conversation",
-            threadCrumb: "Sujet",
+            threadCrumb: "Fil",
             showHiddenCrumbs: "Afficher le fil d'Ariane caché {count}",
             newNote: "Nouvelle note",
             share: "Partager",
@@ -3146,7 +3146,7 @@ export const fr: DeepPartial<Messages> = {
                 fallbackNoteName: "Remarque n° {id}",
                 targetTypeLabels: {
                     chat: "Chat",
-                    thread: "Sujet",
+                    thread: "Fil",
                     task: "Tâche",
                     note: "Remarque",
                 },
@@ -3314,7 +3314,7 @@ export const fr: DeepPartial<Messages> = {
         },
         developer: {
             keys: {
-                title: "Touches API",
+                title: "Clés API",
                 blurb: "Utilisez une touche pour appeler le Genos API à partir de vos propres scripts et outils. Une clé agit comme vous, elle ne peut donc voir que ce que vous pouvez voir.",
                 namePlaceholder: "A quoi sert cette clé ? par ex. Bot CI",
                 scopeRead: "Lire",
@@ -4066,8 +4066,8 @@ export const fr: DeepPartial<Messages> = {
                 windows: "Historique · Ctrl+Alt+H",
             },
             todoShortcut: {
-                mac: "Tâche · Ctrl+⌘+O",
-                windows: "Tâche · Ctrl+Alt+O",
+                mac: "À faire · Ctrl+⌘+O",
+                windows: "À faire · Ctrl+Alt+O",
             },
         },
         signOutConfirm: {
@@ -4126,7 +4126,7 @@ export const fr: DeepPartial<Messages> = {
             chat: "Discussions",
             task: "Tâches",
             note: "Notes",
-            todo: "Toutes les tâches",
+            todo: "À faire",
             answer: "Réponses Genos",
             projectAriaLabel: "Filtrer les résultats par projet",
             projectPlaceholder: "Tous les projets",
@@ -4471,7 +4471,7 @@ export const fr: DeepPartial<Messages> = {
                 defaultLabel: "Valeur par défaut",
                 alwaysRequired: "Toujours obligatoire",
                 statusAuto: "Défini automatiquement à la création",
-                noTagsHint: "Ajoutez des étiquettes au projet pour rendre ce champ obligatoire",
+                noTagsHint: "Ajoutez des balises au projet pour rendre ce champ obligatoire",
                 creatorOption: "Créateur",
                 noneOption: "Aucun",
                 dueOffsetPrefix: "Aujourd'hui +",
@@ -5092,7 +5092,7 @@ export const fr: DeepPartial<Messages> = {
             assignedMilestones: {
                 title: "Jalons assignés",
                 help: "Jalons en cours dans ce projet auquel vous êtes affecté ou pour lesquels une tâche vous est assignée. Cliquez sur une carte pour ouvrir son graphique de tâches : vos propres tâches et sous-tâches sont mises en surbrillance.",
-                empty: "Aucune étape en cours dans ce projet ne vous est assignée.",
+                empty: "Aucun jalon en cours dans ce projet ne vous est assigné.",
                 progress: "{closed}/{total} terminé",
                 openDiagram: "Ouvrir le graphique des tâches",
             },
@@ -5107,8 +5107,7 @@ export const fr: DeepPartial<Messages> = {
                 nothingAssignedTitle: "Rien n'est attribué à ce membre",
                 nothingAssignedBody:
                     "Les tâches assignées à ce membre dans ce projet s'afficheront ici.",
-                milestonesEmpty:
-                    "Aucune étape en cours dans ce projet n'est attribuée à ce membre.",
+                milestonesEmpty: "Aucun jalon en cours dans ce projet n'est attribué à ce membre.",
                 milestonesHelp:
                     "Jalons en cours dans ce projet auquel ce membre est affecté ou auxquels une tâche lui est assignée. Cliquez sur une carte pour ouvrir son graphique de tâches : les tâches et sous-tâches de ce membre sont mises en surbrillance.",
             },
