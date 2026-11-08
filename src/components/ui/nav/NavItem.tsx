@@ -175,6 +175,13 @@ export const NavItem = ({
                         display: "flex",
                         alignItems: "center",
                         ...(variant === "dashed" && { border: `1px dashed ${g.border.default}` }),
+                        // The icon's own colour, set on the icon (Joy's neutral ListItemButton
+                        // inside the row resets `--Icon-color`, so the row's tone never reached
+                        // it, MIP-1188). One rest tone for every sidebar row, tertiary: quieter
+                        // than the label, as it always looked. It then follows the row's
+                        // states: the label's colour on hover, the accent when selected.
+                        "& .NavItem-icon": { "--Icon-color": g.text.tertiary },
+                        '&[data-selected="true"] .NavItem-icon': { "--Icon-color": g.accent.text },
                         ...(!overlay && { "&:focus-within .NavItem-actions > *": { opacity: 1 } }),
                         ...(overlay && {
                             // The keyboard ring on the row button, an action's own focus ring, or
@@ -198,6 +205,10 @@ export const NavItem = ({
                         }),
                         // ONE hover key: a second `[NAV_HOVER_MEDIA]` would replace this one.
                         [NAV_HOVER_MEDIA]: {
+                            "&:hover .NavItem-icon": { "--Icon-color": g.text.primary },
+                            '&[data-selected="true"]:hover .NavItem-icon': {
+                                "--Icon-color": g.accent.text,
+                            },
                             ...(!overlay && { "&:hover .NavItem-actions > *": { opacity: 1 } }),
                             ...(overlay && {
                                 "&:hover .NavItem-actions button": {

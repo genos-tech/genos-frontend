@@ -11,18 +11,17 @@ import {
     Dropdown,
     IconButton,
     Input,
-    ListDivider,
-    Menu,
     MenuButton,
-    MenuItem,
     Stack,
     Typography,
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { useOptionalAvatarContext } from "../../../../../components/ui/avatars/AvatarContext";
+import { PRESENCE_COLOR } from "../../../../../components/ui/misc/presenceColor";
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
+import { MenuDivider, MenuRow, MenuSurface } from "../../../../../components/ui/MoreMenu";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserRepository } from "../../../../../db/repositories/user";
 import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
@@ -63,9 +62,6 @@ const PRESET_STATUSES = [
     "⛔ OOO",
     "🚫 Do Not Disturb",
 ];
-
-const PRESENCE_GREEN = "#4caf50";
-const PRESENCE_GREY = "#999";
 
 type Props = {
     myself: UserProps;
@@ -114,7 +110,7 @@ export const UserProfileStatus = ({
     const isOffline = isSelfView
         ? myself.isOfflineForced === "true"
         : profileUser?.isOnline !== true || profileUser?.isOfflineForced === "true";
-    const presenceColor = isOffline ? PRESENCE_GREY : PRESENCE_GREEN;
+    const presenceColor = isOffline ? PRESENCE_COLOR.offline : PRESENCE_COLOR.online;
     const presenceLabel = isOffline
         ? isSelfView
             ? t.admin.status.offlineForced
@@ -400,20 +396,24 @@ export const UserProfileStatus = ({
                                 </Chip>
                             </MenuButton>
                             {isSelfView && (
-                                <Menu sx={{ zIndex: 10010 }}>
+                                <MenuSurface zIndex={10010}>
                                     {/* Presence only — the pause presets moved
                                         to their own dedicated button next to
                                         this chip (they are a separate concern
                                         from online/offline). */}
-                                    <MenuItem onClick={() => persistPresence("false")}>
-                                        <PulseDot color={PRESENCE_GREEN} />
+                                    <MenuRow
+                                        icon={<PulseDot color={PRESENCE_COLOR.online} />}
+                                        onClick={() => persistPresence("false")}
+                                    >
                                         {t.admin.status.setOnline}
-                                    </MenuItem>
-                                    <MenuItem onClick={() => persistPresence("true")}>
-                                        <PulseDot color={PRESENCE_GREY} />
+                                    </MenuRow>
+                                    <MenuRow
+                                        icon={<PulseDot color={PRESENCE_COLOR.offline} />}
+                                        onClick={() => persistPresence("true")}
+                                    >
                                         {t.admin.status.setAlwaysOffline}
-                                    </MenuItem>
-                                </Menu>
+                                    </MenuRow>
+                                </MenuSurface>
                             )}
                         </Dropdown>
 
@@ -448,7 +448,7 @@ export const UserProfileStatus = ({
                                         <NotificationsPausedRoundedIcon />
                                     </MenuButton>
                                 </AppTooltip>
-                                <Menu placement="bottom-end" sx={{ zIndex: 10010 }}>
+                                <MenuSurface placement="bottom-end" zIndex={10010}>
                                     <NotificationPausePresetItems
                                         isPausedNow={notif.isPausedNow}
                                         pauseFor={notif.pauseFor}
@@ -457,7 +457,7 @@ export const UserProfileStatus = ({
                                         resume={notif.resume}
                                         onCustom={openPauseCustom}
                                     />
-                                </Menu>
+                                </MenuSurface>
                             </Dropdown>
                         )}
 
@@ -536,16 +536,16 @@ export const UserProfileStatus = ({
                                     >
                                         <ArrowDropDown />
                                     </MenuButton>
-                                    <Menu sx={{ zIndex: 10010 }}>
+                                    <MenuSurface zIndex={10010}>
                                         {PRESET_STATUSES.map((template) => (
-                                            <MenuItem
+                                            <MenuRow
                                                 key={template}
                                                 onClick={() => setNewStatus(template)}
                                             >
                                                 {template}
-                                            </MenuItem>
+                                            </MenuRow>
                                         ))}
-                                    </Menu>
+                                    </MenuSurface>
                                 </Dropdown>
                                 <Input
                                     placeholder={t.admin.status.setStatusPlaceholder}
@@ -569,51 +569,49 @@ export const UserProfileStatus = ({
                                             ? formatStatusExpiry(newExpiry)
                                             : seT.clearAfterLabel}
                                     </MenuButton>
-                                    <Menu placement="bottom-end" sx={{ zIndex: 10010 }}>
-                                        <MenuItem onClick={() => setNewExpiry(null)}>
+                                    <MenuSurface placement="bottom-end" zIndex={10010}>
+                                        <MenuRow onClick={() => setNewExpiry(null)}>
                                             {seT.clearNever}
-                                        </MenuItem>
-                                        <ListDivider />
-                                        <MenuItem
+                                        </MenuRow>
+                                        <MenuDivider />
+                                        <MenuRow
                                             onClick={() =>
                                                 setNewExpiry(statusExpiryIn(STATUS_EXPIRY_30M))
                                             }
                                         >
                                             {seT.for30m}
-                                        </MenuItem>
-                                        <MenuItem
+                                        </MenuRow>
+                                        <MenuRow
                                             onClick={() =>
                                                 setNewExpiry(statusExpiryIn(STATUS_EXPIRY_1H))
                                             }
                                         >
                                             {seT.for1h}
-                                        </MenuItem>
-                                        <MenuItem
+                                        </MenuRow>
+                                        <MenuRow
                                             onClick={() =>
                                                 setNewExpiry(statusExpiryIn(STATUS_EXPIRY_4H))
                                             }
                                         >
                                             {seT.for4h}
-                                        </MenuItem>
-                                        <MenuItem
+                                        </MenuRow>
+                                        <MenuRow
                                             onClick={() =>
                                                 setNewExpiry(statusExpiryEndOfToday(zone))
                                             }
                                         >
                                             {seT.today}
-                                        </MenuItem>
-                                        <MenuItem
+                                        </MenuRow>
+                                        <MenuRow
                                             onClick={() =>
                                                 setNewExpiry(statusExpiryEndOfThisWeek(zone))
                                             }
                                         >
                                             {seT.thisWeek}
-                                        </MenuItem>
-                                        <ListDivider />
-                                        <MenuItem onClick={openExpiryCustom}>
-                                            {seT.custom}
-                                        </MenuItem>
-                                    </Menu>
+                                        </MenuRow>
+                                        <MenuDivider />
+                                        <MenuRow onClick={openExpiryCustom}>{seT.custom}</MenuRow>
+                                    </MenuSurface>
                                 </Dropdown>
                             </Stack>
                         )}

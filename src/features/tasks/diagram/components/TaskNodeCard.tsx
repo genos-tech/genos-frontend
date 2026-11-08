@@ -1,12 +1,13 @@
-import { KeyboardEvent, memo, useState } from "react";
+import { memo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import { Box, Dropdown, Input, Menu, MenuButton, MenuItem } from "@mui/joy";
+import { Box, Dropdown, Input, MenuButton } from "@mui/joy";
 import { NodeProps } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import {
@@ -186,33 +187,11 @@ export const TaskNodeView = ({
                         >
                             <StatusLabel status={task.status} />
                         </MenuButton>
-                        <Menu
-                            placement="bottom-start"
-                            size="sm"
-                            sx={{ minWidth: 140 }}
-                            slotProps={{
-                                // `slotProps.root` here spreads onto the Popper
-                                // `<ul>` directly. Joy's `sx` is not processed
-                                // on that slot (it serialises as
-                                // `sx="[object Object]"` in the DOM): use plain
-                                // `style` so the z-index lands inline and
-                                // out-ranks the diagram modal's stacking
-                                // context.
-                                root: {
-                                    style: { zIndex: popupZIndex },
-                                    // Escape closes the menu and stops there: it
-                                    // must not go on to close the graph dialog the
-                                    // menu is rendered in.
-                                    onKeyDown: (e: KeyboardEvent<HTMLElement>) => {
-                                        if (e.key !== "Escape") return;
-                                        e.stopPropagation();
-                                        setStatusMenuOpen(false);
-                                    },
-                                },
-                            }}
-                        >
+                        {/* Escape closes the menu and stops there (MenuSurface keeps
+                            keys from reaching the graph dialog it is rendered in). */}
+                        <MenuSurface placement="bottom-start" zIndex={popupZIndex}>
                             {statuses.map((s) => (
-                                <MenuItem
+                                <MenuRow
                                     key={s.status}
                                     selected={s.status === task.status}
                                     onClick={() => {
@@ -221,9 +200,9 @@ export const TaskNodeView = ({
                                     }}
                                 >
                                     <StatusLabel status={s.status} />
-                                </MenuItem>
+                                </MenuRow>
                             ))}
-                        </Menu>
+                        </MenuSurface>
                     </Dropdown>
                 )}
                 {openBlockerCount > 0 && !isExternal && (

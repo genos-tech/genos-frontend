@@ -6,28 +6,15 @@ import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import {
-    Badge,
-    Box,
-    Chip,
-    Divider,
-    Dropdown,
-    IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Sheet,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Badge, Box, Chip, Divider, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { MoreMenu } from "../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -584,143 +571,58 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 }}
                                 onClick={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
                             >
-                                Unread
+                                {t.chat.sidebar.unreadFilter}
                             </Chip>
 
-                            {/* Menu */}
-                            <Dropdown>
-                                <MenuButton
-                                    slots={{ root: IconButton }}
-                                    slotProps={{
-                                        root: {
-                                            size: "sm",
-                                            sx: {
-                                                borderRadius: "8px",
-                                                color: isDark
-                                                    ? "rgba(255,255,255,0.5)"
-                                                    : "rgba(0,0,0,0.45)",
-                                                "&:hover": {
-                                                    background: isDark
-                                                        ? "rgba(255,255,255,0.06)"
-                                                        : "rgba(0,0,0,0.04)",
-                                                },
-                                            },
+                            {/* Menu. The two view actions below the creates show only on
+                                their own pane. */}
+                            <MoreMenu
+                                placement="bottom-end"
+                                triggerSize={32}
+                                items={[
+                                    {
+                                        id: "new-group",
+                                        label: t.chat.sidebar.newGroupMessageMenu,
+                                        icon: <GroupsIcon />,
+                                        onClick: () => setOpenCreateGM(true),
+                                    },
+                                    {
+                                        id: "new-dm-friends",
+                                        label: t.chat.sidebar.newDmWithFriendsMenu,
+                                        icon: <PeopleRoundedIcon />,
+                                        onClick: () => setOpenCreateMDM(true),
+                                    },
+                                    // Mark all currently-filtered activities as read. Only
+                                    // meaningful on the Activity tab: the visible feed is
+                                    // what gets cleared.
+                                    {
+                                        id: "mark-activity-read",
+                                        label: t.chat.sidebar.markFilteredActivitiesReadMenu,
+                                        icon: <DoneAllRoundedIcon />,
+                                        divider: true,
+                                        visible:
+                                            useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY,
+                                        onClick: handleMarkFilteredActivityRead,
+                                    },
+                                    // Toggle the Flagged pane between active and completed
+                                    // ("past") flags.
+                                    {
+                                        id: "toggle-past-flagged",
+                                        label: showPastFlagged
+                                            ? t.chat.sidebar.viewActiveFlaggedMenu
+                                            : t.chat.sidebar.viewPastFlaggedMenu,
+                                        icon: <HistoryRoundedIcon />,
+                                        divider: true,
+                                        visible:
+                                            useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED,
+                                        onClick: () => {
+                                            const next = !showPastFlagged;
+                                            setShowPastFlagged(next);
+                                            if (next) void useCM.funcSetPastFlaggedMessages();
                                         },
-                                    }}
-                                >
-                                    <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
-                                </MenuButton>
-                                <Menu
-                                    placement="bottom-end"
-                                    size="sm"
-                                    sx={{
-                                        borderRadius: "12px",
-                                        boxShadow: isDark
-                                            ? "0 8px 32px rgba(0,0,0,0.5)"
-                                            : "0 8px 32px rgba(0,0,0,0.12)",
-                                    }}
-                                >
-                                    <MenuItem
-                                        sx={{
-                                            borderRadius: "8px",
-                                            gap: 1.5,
-                                            fontSize: "0.85rem",
-                                        }}
-                                        onClick={() => setOpenCreateGM(true)}
-                                    >
-                                        <GroupsIcon
-                                            sx={{
-                                                fontSize: 18,
-                                                color: isDark
-                                                    ? "var(--gp-brandalt-400)"
-                                                    : "var(--gp-brand-700)",
-                                            }}
-                                        />
-                                        {t.chat.sidebar.newGroupMessageMenu}
-                                    </MenuItem>
-                                    <MenuItem
-                                        sx={{
-                                            borderRadius: "8px",
-                                            gap: 1.5,
-                                            fontSize: "0.85rem",
-                                        }}
-                                        onClick={() => setOpenCreateMDM(true)}
-                                    >
-                                        <PeopleRoundedIcon
-                                            sx={{
-                                                fontSize: 18,
-                                                color: isDark
-                                                    ? "var(--gp-brandalt-400)"
-                                                    : "var(--gp-brand-700)",
-                                            }}
-                                        />
-                                        {t.chat.sidebar.newDmWithFriendsMenu}
-                                    </MenuItem>
-                                    {/* Mark all currently-filtered activities
-                                        as read. Only meaningful on the
-                                        Activity tab — the visible feed is what
-                                        gets cleared. Rendered as two separate
-                                        direct children (not a Fragment) so Joy's
-                                        Menu registers the MenuItem for roving
-                                        keyboard focus. */}
-                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
-                                        <Divider sx={{ my: 0.5 }} />
-                                    )}
-                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
-                                        <MenuItem
-                                            sx={{
-                                                borderRadius: "8px",
-                                                gap: 1.5,
-                                                fontSize: "0.85rem",
-                                            }}
-                                            onClick={handleMarkFilteredActivityRead}
-                                        >
-                                            <DoneAllRoundedIcon
-                                                sx={{
-                                                    fontSize: 18,
-                                                    color: isDark
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)",
-                                                }}
-                                            />
-                                            {t.chat.sidebar.markFilteredActivitiesReadMenu}
-                                        </MenuItem>
-                                    )}
-                                    {/* Toggle the Flagged pane between active and
-                                        completed ("past") flags. Same separate-
-                                        children shape as the Activity item above
-                                        for Joy roving focus. */}
-                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
-                                        <Divider sx={{ my: 0.5 }} />
-                                    )}
-                                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
-                                        <MenuItem
-                                            sx={{
-                                                borderRadius: "8px",
-                                                gap: 1.5,
-                                                fontSize: "0.85rem",
-                                            }}
-                                            onClick={() => {
-                                                const next = !showPastFlagged;
-                                                setShowPastFlagged(next);
-                                                if (next) void useCM.funcSetPastFlaggedMessages();
-                                            }}
-                                        >
-                                            <HistoryRoundedIcon
-                                                sx={{
-                                                    fontSize: 18,
-                                                    color: isDark
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)",
-                                                }}
-                                            />
-                                            {showPastFlagged
-                                                ? t.chat.sidebar.viewActiveFlaggedMenu
-                                                : t.chat.sidebar.viewPastFlaggedMenu}
-                                        </MenuItem>
-                                    )}
-                                </Menu>
-                            </Dropdown>
+                                    },
+                                ]}
+                            />
                         </Stack>
                     </Stack>
 

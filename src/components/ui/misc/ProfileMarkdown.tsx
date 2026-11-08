@@ -24,6 +24,8 @@ import { Box } from "@mui/joy";
 import ReactMarkdown, { defaultUrlTransform, type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { g } from "../../../theme/tokens";
+
 /** Render children in place, dropping the wrapper element entirely. */
 const Unwrap = ({ children }: { children?: ReactNode }) => <>{children}</>;
 
@@ -64,10 +66,9 @@ const components: Components = {
 
 type Props = {
     text: string;
-    isDark: boolean;
 };
 
-export const ProfileMarkdown = ({ text, isDark }: Props) => (
+export const ProfileMarkdown = ({ text }: Props) => (
     <Box
         sx={{
             fontSize: "14px",
@@ -79,7 +80,7 @@ export const ProfileMarkdown = ({ text, isDark }: Props) => (
             // profile card whose wrapper has carried a 500 before, and
             // 500-against-700 reads as "not bold".
             fontWeight: 400,
-            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+            color: g.text.secondary,
             // Someone will paste a URL with no spaces in it, and without
             // this the card grows a horizontal scrollbar on every viewport.
             overflowWrap: "anywhere",
@@ -109,10 +110,10 @@ export const ProfileMarkdown = ({ text, isDark }: Props) => (
                 fontSize: "0.85em",
                 px: 0.5,
                 borderRadius: "4px",
-                background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                background: g.hover,
             },
             "& a": {
-                color: isDark ? "#a5b4fc" : "#6366f1",
+                color: g.accent.text,
                 textDecoration: "underline",
                 textUnderlineOffset: "2px",
             },

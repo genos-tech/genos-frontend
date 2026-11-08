@@ -13,23 +13,14 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
-import {
-    Box,
-    Dropdown,
-    IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
-import { MoreMenu } from "../../../../components/ui/MoreMenu";
+import { MenuRow, MenuSurface, MoreMenu } from "../../../../components/ui/MoreMenu";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -467,49 +458,36 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     >
                         <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
                     </MenuButton>
-                    <Menu
-                        size="sm"
+                    <MenuSurface
                         placement="bottom-end"
-                        sx={{ minWidth: 200, zIndex: popupZIndex }}
+                        sx={{ minWidth: 200 }}
+                        zIndex={popupZIndex}
                     >
-                        <MenuItem onClick={openThreadAsk}>
-                            <AutoAwesomeRoundedIcon
-                                sx={{ fontSize: 18, color: styles.accentColor }}
-                            />
+                        <MenuRow onClick={openThreadAsk} icon={<AutoAwesomeRoundedIcon />}>
                             {t.threadAsk.headerButton.label}
-                        </MenuItem>
+                        </MenuRow>
                         {/* Same order as the desktop MoreMenu (moreMenuOrder.ts). */}
                         {hasTask && (
-                            <MenuItem onClick={openTaskHandler}>
-                                <AssignmentRoundedIcon
-                                    sx={{ fontSize: 18, color: styles.accentColor }}
-                                />
+                            <MenuRow onClick={openTaskHandler} icon={<AssignmentRoundedIcon />}>
                                 {t.chat.headers.openTask}
-                            </MenuItem>
+                            </MenuRow>
                         )}
                         {chatType !== 3 && (
-                            <MenuItem onClick={openNoteHandler}>
-                                <NoteAltRoundedIcon
-                                    sx={{ fontSize: 18, color: styles.accentColor }}
-                                />
+                            <MenuRow onClick={openNoteHandler} icon={<NoteAltRoundedIcon />}>
                                 {t.chat.headers.threadNoteMenuItem}
-                            </MenuItem>
+                            </MenuRow>
                         )}
                         {chatType !== 3 && (
-                            <MenuItem onClick={copyThreadLink}>
-                                <ContentCopyRoundedIcon
-                                    sx={{ fontSize: 18, color: styles.accentColor }}
-                                />
+                            <MenuRow onClick={copyThreadLink} icon={<ContentCopyRoundedIcon />}>
                                 {t.chat.headers.copyThreadLink}
-                            </MenuItem>
+                            </MenuRow>
                         )}
                         {!hasTask && chatType !== 3 && (
-                            <MenuItem onClick={createTaskHandler}>
-                                <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
+                            <MenuRow onClick={createTaskHandler} icon={<AddTaskRoundedIcon />}>
                                 {t.chat.headers.threadTaskMenuItem}
-                            </MenuItem>
+                            </MenuRow>
                         )}
-                    </Menu>
+                    </MenuSurface>
                 </Dropdown>
                 <ThreadAskModal
                     state={threadAsk}

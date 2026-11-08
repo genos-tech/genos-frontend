@@ -3,16 +3,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
-import {
-    Box,
-    Dropdown,
-    IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
@@ -23,6 +14,7 @@ import { TaskDashboard } from "./components/dashboard/TaskDashboard";
 import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 
 import { MobileOverlay } from "../../components/layout/MobileOverlay";
+import { MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -246,8 +238,8 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         >
                             <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
                         </MenuButton>
-                        <Menu placement="bottom-end" size="sm" sx={{ minWidth: 180 }}>
-                            <MenuItem
+                        <MenuSurface placement="bottom-end">
+                            <MenuRow
                                 onClick={async () => {
                                     if (usePM.currentProject?.projectId) {
                                         await usePM.refreshProjectTasks(
@@ -257,14 +249,14 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                                 }}
                             >
                                 {t.tasks.mobile.refreshTasks}
-                            </MenuItem>
-                            <MenuItem onClick={() => useTM.setOpenManageTags(true)}>
+                            </MenuRow>
+                            <MenuRow onClick={() => useTM.setOpenManageTags(true)}>
                                 {t.tasks.mobile.manageTags}
-                            </MenuItem>
-                            <MenuItem onClick={() => usePM.setOpenCreateProject(true)}>
+                            </MenuRow>
+                            <MenuRow onClick={() => usePM.setOpenCreateProject(true)}>
                                 {t.tasks.mobile.newProject}
-                            </MenuItem>
-                        </Menu>
+                            </MenuRow>
+                        </MenuSurface>
                     </Dropdown>
                 </Stack>
             )}

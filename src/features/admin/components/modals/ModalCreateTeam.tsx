@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Alert, Button, Input } from "@mui/joy";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
@@ -28,12 +28,19 @@ export const ModalCreateTeam: React.FC<Props> = ({
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [teamName, setTeamName] = useState("");
+    // One create at a time (MIP-1189, the same family as MIP-1184): a second Enter or click
+    // while the request runs used to create a second team. The ref answers at once, the
+    // state shows it and keeps the dialog from being dismissed meanwhile.
+    const creatingRef = useRef(false);
+    const [isCreating, setIsCreating] = useState(false);
     const handleCreateTeam = () => {
-        if (teamName.trim()) {
-            createTeam();
+        if (teamName.trim() && !creatingRef.current) {
+            void createTeam();
         }
     };
     async function createTeam(): Promise<void> {
+        creatingRef.current = true;
+        setIsCreating(true);
         try {
             const createTeamResponse = await fetch(`${base_url}/team/create/`, {
                 method: "POST",
@@ -62,11 +69,15 @@ export const ModalCreateTeam: React.FC<Props> = ({
             const err_msg = `${error}`;
             console.error(err_msg);
             setErrorMessage(err_msg);
+        } finally {
+            creatingRef.current = false;
+            setIsCreating(false);
         }
     }
 
     return (
         <ModalFrame
+            dismissible={!isCreating}
             open={openCreateTeam}
             size="sm"
             title={t.admin.createTeamModal.title}
@@ -75,12 +86,17 @@ export const ModalCreateTeam: React.FC<Props> = ({
                 <>
                     <Button
                         color="neutral"
+                        disabled={isCreating}
                         variant="plain"
                         onClick={() => setOpenCreateTeam(false)}
                     >
                         {t.admin.createTeamModal.cancel}
                     </Button>
-                    <Button disabled={!teamName.trim()} onClick={handleCreateTeam}>
+                    <Button
+                        disabled={!teamName.trim()}
+                        loading={isCreating}
+                        onClick={handleCreateTeam}
+                    >
                         {t.admin.createTeamModal.create}
                     </Button>
                 </>

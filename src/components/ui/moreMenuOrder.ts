@@ -12,9 +12,10 @@
  * Position in the table is the whole rule: the groups run top to bottom, and
  * inside a group the kinds run in the order listed. Delete is always last.
  *
- * Menus that are not built on `MoreMenu` (the Joy `<Menu>`s in the headers,
- * TodoItemMoreMenu, ChatListItemActions) cannot use this, so their JSX is
- * ordered by hand to match — move an entry here and move those with it.
+ * Menus that compose `MenuSurface` / `MenuRow` themselves instead of passing an
+ * `items` array to `MoreMenu` (the mobile pane headers, TodoItemMoreMenu,
+ * ChatListItemActions) cannot use this, so their JSX is ordered by hand to
+ * match — move an entry here and move those with it.
  */
 export const MORE_MENU_GROUPS = [
     // Go to, or respond to, the thing itself.

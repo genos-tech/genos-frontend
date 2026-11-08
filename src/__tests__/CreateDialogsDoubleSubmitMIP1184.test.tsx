@@ -1,11 +1,12 @@
 /**
- * MIP-1184: Enter, or a second click, while a create is still running must not create the
- * project / group twice, and the dialog must not be dismissible while it runs.
+ * MIP-1184 (and MIP-1189 for teams): Enter, or a second click, while a create is still running
+ * must not create the project / group / team twice, and the dialog must not be dismissible while it runs.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ModalCreateTeam } from "../features/admin/components/modals/ModalCreateTeam";
 import { ModalCreateGM } from "../features/chat/components/modals/ModalCreateGM";
 import { createChatGroup } from "../features/chat/services/createChatGroup";
 import { ModalCreateProject } from "../features/tasks/components/modals/ModalCreateProject";
@@ -105,5 +106,44 @@ describe("ModalCreateGM", () => {
         });
         fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
         expect(setOpen).toHaveBeenCalledWith(false);
+    });
+});
+
+describe("ModalCreateTeam", () => {
+    beforeEach(() => {
+        vi.stubGlobal("fetch", vi.fn());
+    });
+
+    it("two quick Enters make one team, and the dialog cannot be closed meanwhile", async () => {
+        const first = deferred<Response>();
+        vi.mocked(fetch).mockReturnValue(first.promise);
+        const setOpen = vi.fn();
+        render(
+            <CssVarsProvider>
+                <ModalCreateTeam
+                    myself={myself}
+                    openCreateTeam
+                    setIsNewTeamCreated={vi.fn()}
+                    setMyself={vi.fn()}
+                    setOpenCreateTeam={setOpen}
+                />
+            </CssVarsProvider>
+        );
+        const input = screen.getByPlaceholderText(en.admin.createTeamModal.teamNamePlaceholder);
+        fireEvent.change(input, { target: { value: "Apollo" } });
+        fireEvent.keyDown(input, { key: "Enter" });
+        fireEvent.keyDown(input, { key: "Enter" });
+        fireEvent.click(screen.getByRole("button", { name: en.admin.createTeamModal.create }));
+        expect(fetch).toHaveBeenCalledTimes(1);
+        fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+        expect(setOpen).not.toHaveBeenCalled();
+        await act(async () => {
+            first.resolve({ ok: false, status: 400, json: async () => ({}) } as Response);
+            await first.promise;
+        });
+        // Refused: usable again, and a new attempt is allowed.
+        fireEvent.keyDown(input, { key: "Enter" });
+        expect(fetch).toHaveBeenCalledTimes(2);
+        fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
     });
 });

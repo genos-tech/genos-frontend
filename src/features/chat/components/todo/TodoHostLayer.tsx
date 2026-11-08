@@ -18,8 +18,3 @@ export const useTodoDialogLayer = (fallback?: number): number | undefined => {
     const host = useContext(TodoHostLayerContext);
     return host != null ? host + 10 : fallback;
 };
-
-/** Joy pins the pickers a dialog opens (Select, Autocomplete) to a fixed 1301;
- *  re-stamp the variable so they render above the raised dialog. */
-export const popupLayerSx = (layer: number | undefined) =>
-    layer != null ? { "--unstable_popup-zIndex": layer + 10 } : {};

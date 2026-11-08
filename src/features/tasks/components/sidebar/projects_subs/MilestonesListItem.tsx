@@ -7,7 +7,6 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import {
-    Avatar,
     AvatarGroup,
     Box,
     Chip,
@@ -19,6 +18,7 @@ import {
 } from "@mui/joy";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
+import { BaseAvatar } from "../../../../../components/ui/avatars/BaseAvatar";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { NAV_OVERLAY_BG, NAV_OVERLAY_FADE } from "../../../../../components/ui/nav/navStyles";
 import { useTranslation } from "../../../../../i18n";
@@ -414,28 +414,28 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                             showPulseDot={false}
                                         />
                                     ) : (
-                                        <Avatar
+                                        <BaseAvatar
                                             key={userIdKey || `idx-${a.username}`}
-                                            sx={{ fontSize: 10 }}
+                                            name={a.username}
+                                            size={18}
                                             src={
                                                 a.profileImageUrl
                                                     ? `${media_url}/${a.profileImageUrl}`
                                                     : undefined
                                             }
-                                        >
-                                            {(a.username?.[0] || "?").toUpperCase()}
-                                        </Avatar>
+                                        />
                                     );
                                 })}
                                 {/* Narrow rows show the first avatar plus this
                                     count of everyone else (hidden otherwise). */}
                                 {m.assignees.length > 1 && (
-                                    <Avatar
+                                    <BaseAvatar
                                         className={SURPLUS_CLASS}
+                                        size={18}
                                         sx={{ display: "none", fontSize: 10 }}
                                     >
                                         +{m.assignees.length - 1}
-                                    </Avatar>
+                                    </BaseAvatar>
                                 )}
                             </AvatarGroup>
                         </Stack>

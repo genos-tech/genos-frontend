@@ -1,30 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import {
-    Box,
-    Divider,
-    Dropdown,
-    IconButton,
-    ListItemDecorator,
-    Menu,
-    MenuItem,
-    Typography,
-} from "@mui/joy";
+import { Box, Dropdown, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
+import {
+    MenuDivider,
+    MenuGroupLabel,
+    MenuRow,
+    MenuSurface,
+} from "../../../components/ui/MoreMenu";
 import { TeamDropdownStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import { Team, TeamProfileProps, UserProps } from "../../../types/admin";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
@@ -194,174 +190,54 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     </IconButton>
                 </AppTooltip>
 
-                <Menu
+                <MenuSurface
                     ref={dropdownRef}
                     anchorEl={anchorEl}
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     open={Boolean(anchorEl)}
-                    size="sm"
-                    sx={{
-                        zIndex: 10001,
-                        overflow: "auto",
-                        maxHeight: "350px",
-                        minWidth: 240,
-                        background: styles.menuBg,
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "14px",
-                        boxShadow: styles.menuShadow,
-                        backdropFilter: "blur(16px)",
-                        p: 1,
-                        "--ListItemDecorator-size": "32px",
-                    }}
+                    sx={{ maxHeight: "350px", minWidth: 240 }}
+                    zIndex={10001}
                     onClose={handleClose}
                 >
-                    {/* Header */}
-                    <Box sx={{ px: 1.5, py: 1, mb: 0.5 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                color: styles.subtitleColor,
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                            }}
-                        >
-                            {t.admin.teamDropdown.management}
-                        </Typography>
-                    </Box>
+                    <MenuGroupLabel>{t.admin.teamDropdown.management}</MenuGroupLabel>
 
                     {/* Show Team Profile */}
-                    <MenuItem
-                        sx={{
-                            borderRadius: "10px",
-                            py: 1.25,
-                            px: 1.5,
-                            transition: "all 0.15s ease",
-                            "&:hover": {
-                                background: styles.menuItemHover,
-                            },
-                        }}
-                        onClick={handleShowTeamProfileClick}
-                    >
-                        <ListItemDecorator>
-                            <Box
-                                sx={{
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "8px",
-                                    background: styles.accentGradient,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <VisibilityRoundedIcon sx={{ color: "#fff", fontSize: 16 }} />
-                            </Box>
-                        </ListItemDecorator>
-                        <Typography level="body-sm" sx={{ fontWeight: 500 }}>
-                            {t.admin.teamDropdown.showTeamProfile}
-                        </Typography>
-                    </MenuItem>
+                    <MenuRow icon={<VisibilityRoundedIcon />} onClick={handleShowTeamProfileClick}>
+                        {t.admin.teamDropdown.showTeamProfile}
+                    </MenuRow>
 
-                    <Divider sx={{ my: 1, background: styles.dividerColor }} />
+                    <MenuDivider />
 
-                    {/* Teams Header */}
-                    <Box sx={{ px: 1.5, py: 0.75 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                color: styles.subtitleColor,
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}
-                        >
-                            <GroupsRoundedIcon sx={{ fontSize: 14 }} />
+                    <MenuGroupLabel>
+                        <Box sx={{ alignItems: "center", display: "flex", gap: 0.75 }}>
+                            <GroupsRoundedIcon sx={{ fontSize: 12 }} />
                             {fmt(t.admin.teamDropdown.yourTeams, { count: teams.length })}
-                        </Typography>
-                    </Box>
+                        </Box>
+                    </MenuGroupLabel>
 
                     {/* Team List */}
                     {teams.map((team) => {
                         const isCurrentTeam = team.teamId === myself.teamId;
                         return (
-                            <MenuItem
+                            <MenuRow
                                 key={team.teamName}
-                                sx={{
-                                    borderRadius: "10px",
-                                    py: 1.25,
-                                    px: 1.5,
-                                    background: isCurrentTeam
-                                        ? styles.menuItemActive
-                                        : "transparent",
-                                    border: isCurrentTeam
-                                        ? `1px solid rgba(${styles.iconColorRgb}, 0.188)`
-                                        : "1px solid transparent",
-                                    transition: "all 0.15s ease",
-                                    "&:hover": {
-                                        background: isCurrentTeam
-                                            ? styles.menuItemActive
-                                            : styles.menuItemHover,
-                                        transform: "translateX(4px)",
-                                    },
-                                }}
+                                icon={isCurrentTeam ? undefined : <OpenInNewRoundedIcon />}
+                                selected={isCurrentTeam}
                                 onClick={() => handleClicked(team)}
                             >
-                                <ListItemDecorator>
-                                    <Box
-                                        sx={{
-                                            width: 28,
-                                            height: 28,
-                                            borderRadius: "8px",
-                                            background: isCurrentTeam
-                                                ? styles.accentGradient
-                                                : `rgba(${styles.iconColorRgb}, 0.125)`,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                        }}
-                                    >
-                                        {isCurrentTeam ? (
-                                            <CheckCircleRoundedIcon
-                                                sx={{ color: "#fff", fontSize: 16 }}
-                                            />
-                                        ) : (
-                                            <OpenInNewRoundedIcon
-                                                sx={{ color: styles.iconColor, fontSize: 16 }}
-                                            />
-                                        )}
-                                    </Box>
-                                </ListItemDecorator>
-                                <Box sx={{ flex: 1 }}>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: isCurrentTeam ? 600 : 500,
-                                            color: isCurrentTeam
-                                                ? styles.iconColor
-                                                : styles.textColor,
-                                        }}
-                                    >
-                                        {team.teamName}
-                                    </Typography>
+                                <Box
+                                    sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}
+                                >
+                                    {team.teamName}
                                     {isCurrentTeam && (
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ color: styles.successColor, fontWeight: 500 }}
-                                        >
+                                        <Typography level="body-xs" sx={{ color: g.success.text }}>
                                             {t.admin.teamDropdown.currentTeam}
                                         </Typography>
                                     )}
                                 </Box>
-                            </MenuItem>
+                            </MenuRow>
                         );
                     })}
-
-                    <Divider sx={{ my: 1, background: styles.dividerColor }} />
-                </Menu>
+                </MenuSurface>
             </Dropdown>
         </Box>
     );

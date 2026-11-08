@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { ProfileMarkdown } from "../components/ui/misc/ProfileMarkdown";
 
-const renderMd = (text: string) => render(<ProfileMarkdown isDark={false} text={text} />);
+const renderMd = (text: string) => render(<ProfileMarkdown text={text} />);
 
 describe("ProfileMarkdown — the sentence-level grammar it keeps", () => {
     it("renders emphasis", () => {
@@ -51,7 +51,7 @@ describe("ProfileMarkdown — formatting that survives the app's resets", () => 
         reset = document.createElement("style");
         reset.textContent = `ol, ul, menu { list-style: none; margin: 0; padding: 0; }`;
         document.head.appendChild(reset);
-        return render(<ProfileMarkdown isDark={false} text={text} />);
+        return render(<ProfileMarkdown text={text} />);
     };
 
     afterEach(() => {
@@ -71,7 +71,7 @@ describe("ProfileMarkdown — formatting that survives the app's resets", () => 
     // Preflight lives in `@layer base` and unlayered styles beat layered
     // ones outright, before specificity is even consulted.
     it("keeps a hanging indent so nested items read as nested", () => {
-        const { container } = render(<ProfileMarkdown isDark={false} text={"- one\n    - two"} />);
+        const { container } = render(<ProfileMarkdown text={"- one\n    - two"} />);
         const outer = container.querySelector("ul") as HTMLElement;
         expect(getComputedStyle(outer).paddingLeft).not.toBe("0px");
     });

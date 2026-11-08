@@ -7,18 +7,10 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
 import SplitscreenIcon from "@mui/icons-material/Splitscreen";
-import {
-    Badge,
-    Dropdown,
-    IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Badge, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import {
     NAV_HIDE_ON_ACTIONS_CLASS,
     NAV_KEEP_CLASS,
@@ -110,9 +102,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     className={chat.isPinned ? NAV_KEEP_CLASS : undefined}
                     color={chat.isPinned ? "danger" : "neutral"}
                     size="sm"
-                    // AppTooltip's own surface style (a 1px border) reaches its child;
-                    // the pin is a plain icon button.
-                    sx={{ border: "none", borderRadius: g.radius.sm }}
+                    sx={{ borderRadius: g.radius.sm }}
                     variant="plain"
                     onClick={onPinClick}
                 >
@@ -138,92 +128,36 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                 >
                     <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
                 </MenuButton>
-                <Menu
-                    placement="bottom-end"
-                    size="sm"
-                    sx={{
-                        zIndex: 10010,
-                        borderRadius: g.radius.md,
-                        minWidth: 160,
-                        boxShadow: g.shadow.md,
-                        background: g.surface.raised,
-                        border: `1px solid ${g.border.subtle}`,
-                    }}
-                >
+                <MenuSurface placement="bottom-end" zIndex={10010}>
                     {/* Split View Option — opening leads (moreMenuOrder.ts). Members and
                         Tags below never both show, so their relative order is moot. */}
-                    <MenuItem
-                        sx={{
-                            borderRadius: "6px",
-                            mx: 0.5,
-                            gap: 1.5,
-                            fontSize: "0.85rem",
-                            py: 1,
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onSplitClick(e as unknown as React.MouseEvent);
-                        }}
+                    <MenuRow
+                        icon={<SplitscreenIcon />}
+                        onClick={(e) => onSplitClick(e as unknown as React.MouseEvent)}
                     >
-                        <SplitscreenIcon
-                            sx={{
-                                fontSize: 18,
-                                color: g.accent.text,
-                            }}
-                        />
                         {t.chat.listItem.openInSplitView}
-                    </MenuItem>
+                    </MenuRow>
 
                     {/* Add Members Option (for DM and MDM chats) */}
                     {showAddMembers && (
-                        <MenuItem
-                            sx={{
-                                borderRadius: "6px",
-                                mx: 0.5,
-                                gap: 1.5,
-                                fontSize: "0.85rem",
-                                py: 1,
-                            }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onAddMembersClick?.(e as unknown as React.MouseEvent);
-                            }}
+                        <MenuRow
+                            icon={<PersonAddRoundedIcon />}
+                            onClick={(e) => onAddMembersClick?.(e as unknown as React.MouseEvent)}
                         >
-                            <PersonAddRoundedIcon
-                                sx={{
-                                    fontSize: 18,
-                                    color: g.accent.text,
-                                }}
-                            />
                             {t.chat.listItem.addMembersMenu}
-                        </MenuItem>
+                        </MenuRow>
                     )}
 
                     {/* Personal Tags Option (GM chats only) */}
                     {showManageTags && (
-                        <MenuItem
-                            sx={{
-                                borderRadius: "6px",
-                                mx: 0.5,
-                                gap: 1.5,
-                                fontSize: "0.85rem",
-                                py: 1,
-                            }}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onManageTagsClick?.(e as unknown as React.MouseEvent);
-                            }}
+                        <MenuRow
+                            icon={<SellOutlinedIcon />}
+                            onClick={(e) => onManageTagsClick?.(e as unknown as React.MouseEvent)}
                         >
-                            <SellOutlinedIcon
-                                sx={{
-                                    fontSize: 18,
-                                    color: g.accent.text,
-                                }}
-                            />
                             {t.chat.listItem.manageTagsMenu}
-                        </MenuItem>
+                        </MenuRow>
                     )}
-                </Menu>
+                </MenuSurface>
             </Dropdown>
         </>
     );

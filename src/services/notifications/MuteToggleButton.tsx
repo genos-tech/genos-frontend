@@ -1,8 +1,10 @@
 import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRounded from "@mui/icons-material/NotificationsOffRounded";
-import { IconButton, MenuItem } from "@mui/joy";
+import { IconButton } from "@mui/joy";
+import type { SxProps } from "@mui/joy/styles/types";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { MenuRow } from "../../components/ui/MoreMenu";
 import { useTranslation } from "../../i18n";
 import { useNotificationsContext } from "./NotificationsContext";
 
@@ -17,6 +19,8 @@ interface MuteToggleButtonProps {
     color?: "neutral" | "primary" | "danger" | "success" | "warning";
     /** Optional size override; defaults to "sm". */
     size?: "sm" | "md" | "lg";
+    /** Extra styling, e.g. the desktop header's boxed action-button look. */
+    sx?: SxProps;
 }
 
 /**
@@ -30,6 +34,7 @@ export const MuteToggleButton = ({
     chatName,
     color = "neutral",
     size = "sm",
+    sx,
 }: MuteToggleButtonProps) => {
     const ctx = useNotificationsContext();
     const { t } = useTranslation();
@@ -57,6 +62,7 @@ export const MuteToggleButton = ({
                 aria-label={label}
                 color={color}
                 size={size}
+                sx={sx}
                 variant="plain"
                 onClick={handleClick}
             >
@@ -68,7 +74,7 @@ export const MuteToggleButton = ({
 
 /**
  * Same per-chat mute toggle as `MuteToggleButton`, rendered as a
- * `<MenuItem>` for an overflow menu instead of a standalone icon button.
+ * `<MenuRow>` for an overflow menu instead of a standalone icon button.
  * Used on the mobile chat header, where the ToDo action takes the visible
  * icon slot and mute moves into the overflow "…" menu.
  */
@@ -97,13 +103,12 @@ export const MuteMenuItem = ({
     };
 
     return (
-        <MenuItem aria-label={label} onClick={handleClick}>
-            {muted ? (
-                <NotificationsOffRounded sx={{ fontSize: 18 }} />
-            ) : (
-                <NotificationsActiveRounded sx={{ fontSize: 18 }} />
-            )}
+        <MenuRow
+            aria-label={label}
+            icon={muted ? <NotificationsOffRounded /> : <NotificationsActiveRounded />}
+            onClick={handleClick}
+        >
             {label}
-        </MenuItem>
+        </MenuRow>
     );
 };
