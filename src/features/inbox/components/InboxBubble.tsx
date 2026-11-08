@@ -541,6 +541,12 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     fontSize: "0.85rem",
                                     color: g.text.primary,
                                 },
+                                // Each paragraph takes its own direction from its first strong
+                                // letter: server-written English in an Arabic UI kept its period
+                                // at the line start (MIP-1180).
+                                "& .inbox-preview p, & .inbox-preview li": {
+                                    unicodeBidi: "plaintext",
+                                },
                             }}
                         >
                             <MessageBody

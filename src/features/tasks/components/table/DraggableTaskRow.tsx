@@ -695,7 +695,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         {isExpanded ? (
                             <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18 }} />
                         ) : (
-                            <KeyboardArrowRightRoundedIcon sx={{ fontSize: 18 }} />
+                            <KeyboardArrowRightRoundedIcon
+                                sx={{ fontSize: 18, '[dir="rtl"] &': { transform: "scaleX(-1)" } }}
+                            />
                         )}
                     </IconButton>
                 );
