@@ -3,7 +3,7 @@
  *
  * genos-api stores `{version: 2, title, text, stats?, sections: [{heading, key?, emoji?,
  * items: [{text, link?, kind?, project?, display_id?, title?, status?, priority?, due_date?,
- * overdue_days?, detail?}]}]}`. See genos-docs `operations/SCHEDULER.md`, "The body a card
+ * overdue_days?, detail?, task_id?, why?, can_answer?}]}]}`. See genos-docs `operations/SCHEDULER.md`, "The body a card
  * reads". The server whitelists every field, but a stored row can predate a rule and a client
  * that trusts the server's cleaning has one line of defence, so each field is checked again
  * here: a value that fails its check is dropped (the line keeps its `text`), never repaired.
@@ -57,6 +57,18 @@ export type ReportItemV2 = {
     dueDate: string | null;
     overdueDays: number | null;
     detail: string;
+    /** The task's id, a positive integer. Used for one thing only: the URL of the answer
+     *  request (`PUT /user/memory/marks/<task_id>/`). null when absent or not an integer. */
+    taskId: number | null;
+    /** Why the server put the line in the report (`due_soon`, `sprint`, `blocked`, `overdue`,
+     *  `activity`, `important`, `new`, `changed`), as a plain string; "" when it did not say.
+     *  The card does not draw it (a report is short); it is parsed for the day a surface needs it. */
+    why: string;
+    /** The server allows the "On it" / "Not important" answers on this line. It is sent as a
+     *  JSON `true` and nothing else counts (a string "true" does not), and only on a task line
+     *  that also has a valid `taskId`. A report with recording off, or one stored before the
+     *  buttons, never has it. */
+    canAnswer: boolean;
 };
 
 export type ReportStat = { key: string; count: number; emoji: string };
@@ -81,6 +93,7 @@ const MAX_ITEMS = 31; // 30 lines and the closing "and N more" line
 const MAX_STATS = 8;
 const MAX_TEXT = 240;
 const MAX_HEADING = 120;
+const MAX_WHY = 120;
 const MAX_PROJECT_NAME = 100;
 const MAX_PROJECT_CODE = 6;
 const MAX_DISPLAY_ID = 24;
@@ -114,6 +127,8 @@ export const REPORT_EMOJI: Readonly<Record<string, string>> = {
     where_it_stands: "📊",
     ready: "🚀",
     blocked: "🚧",
+    still_same: "🔁",
+    quieted: "🔕",
     comments: "💭",
     items: "📋",
 };
@@ -181,6 +196,8 @@ const parseItem = (entry: unknown): ReportItemV2 | null => {
     const text = asText(raw.text, MAX_TEXT) || [displayId, title].filter(Boolean).join(" · ");
     if (text === "") return null;
     const status = isTask ? oneOf(REPORT_STATUSES, raw.status) : null;
+    // Positive and a safe integer: the id goes into a URL, so nothing else may reach it.
+    const taskId = isTask ? asInt(raw.task_id, 1, Number.MAX_SAFE_INTEGER) : null;
     return {
         text,
         link: safeReportLink(raw.link),
@@ -194,6 +211,9 @@ const parseItem = (entry: unknown): ReportItemV2 | null => {
         dueDate: isTask ? asDate(raw.due_date) : null,
         overdueDays: isTask ? asInt(raw.overdue_days, 1, MAX_OVERDUE_DAYS) : null,
         detail: isTask ? asText(raw.detail, MAX_TEXT) : "",
+        taskId,
+        why: isTask ? asText(raw.why, MAX_WHY) : "",
+        canAnswer: isTask && taskId !== null && raw.can_answer === true,
     };
 };
 

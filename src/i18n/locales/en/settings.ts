@@ -813,6 +813,7 @@ export const settings = {
             markNames: {
                 not_important: "Not important",
                 priority_is_right: "Priority is right",
+                on_it: "On it",
             },
             signals: {
                 others: {

@@ -2286,6 +2286,25 @@ export const ja: DeepPartial<Messages> = {
             daysLate: "{days}日遅れ",
             statComments: "コメント",
             statItems: "項目",
+            statUnchanged: "前回のレポートから変更なし",
+            statQuieted: "あなたが静かにしたもの",
+            answersFor: "{task} への回答",
+            answerOnIt: "対応中",
+            answerNotImportant: "重要ではない",
+            answerOnItNamed: "対応中: {task}",
+            answerNotImportantNamed: "{task} を重要ではないにする",
+            answerOnItTip: "対応中: 7日間レポートに出しません",
+            answerNotImportantTip:
+                "重要ではない: 解除するまで上位の項目に出しません。変更があるとレポートに戻ります。",
+            answerQuietedOnIt: "7日間は表示しません。",
+            answerQuietedNotImportant: "重要ではないにしました。",
+            answerUndo: "元に戻す",
+            answerUndoNamed: "{task} への回答を元に戻す",
+            answerRecordingOff:
+                "Genos があなたの操作を記録していないため、これを覚えておけません。",
+            answerGone: "そのタスクはもうありません。",
+            answerFailed: "保存できませんでした。もう一度お試しください。",
+            answerUndoFailed: "元に戻せませんでした。もう一度お試しください。",
         },
         aiUsage: {
             used: "使用した AI クレジット: {credits}",
@@ -3974,6 +3993,7 @@ export const ja: DeepPartial<Messages> = {
                 markNames: {
                     not_important: "重要ではない",
                     priority_is_right: "優先度は適切",
+                    on_it: "対応中",
                 },
                 signals: {
                     others: {

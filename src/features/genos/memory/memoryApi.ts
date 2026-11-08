@@ -3,7 +3,7 @@
  *
  *   GET    /user/memory/?team_id=                   the whole page in one cheap request
  *   GET    /user/memory/top/?team_id=&limit=        what Genos noticed (ranks tasks: lazy)
- *   PUT    /user/memory/marks/<task_id>/?team_id=   {mark}
+ *   PUT    /user/memory/marks/<task_id>/?team_id=   {mark} -> {previous}: the mark it replaced
  *   DELETE /user/memory/marks/<task_id>/?team_id=   clear it
  *   PATCH  /user/memory/tuning/?team_id=            {weights: {signal: level}}
  *   DELETE /user/memory/tuning/?team_id=            every signal back to normal
@@ -36,7 +36,7 @@ export type SignalKey = (typeof SIGNALS)[number];
 export const LEVELS = ["off", "low", "normal", "high"] as const;
 export type LevelKey = (typeof LEVELS)[number];
 
-export const MARKS = ["not_important", "priority_is_right"] as const;
+export const MARKS = ["not_important", "priority_is_right", "on_it"] as const;
 export type MarkKey = (typeof MARKS)[number];
 
 export type ForgetWhat = "importance" | "summaries" | "events" | "everything";
@@ -307,20 +307,37 @@ export const fetchTop = async (
     }
 };
 
-/** Set (`mark`) or clear (`null`) the member's mark on one task. */
+/** A mark this client knows, or null: the server's `previous` is read as untrusted. */
+const asMark = (v: unknown): MarkKey | null =>
+    typeof v === "string" && (MARKS as readonly string[]).includes(v) ? (v as MarkKey) : null;
+
+/** Set (`mark`) or clear (`null`) the member's mark on one task. A set resolves to the mark it
+ *  replaced (`previous`, null when there was none or this client does not know it), so a caller
+ *  can offer an honest Undo. */
 export const writeMark = async (
     accessToken: string | null,
     teamId: string,
     taskId: number,
-    mark: MarkKey | null
-): Promise<Result<null>> => {
+    mark: MarkKey | null,
+    /** Where the answer came from (`report`: a report row's button), kept with the mark. */
+    source?: "report" | "settings"
+): Promise<Result<{ previous: MarkKey | null }>> => {
     const api = authApi(accessToken);
     if (!api) return { ok: false, reason: "error" };
+    // The id goes into the URL: only a positive integer may.
+    if (!Number.isSafeInteger(taskId) || taskId < 1) return { ok: false, reason: "bad_input" };
     const url = `/user/memory/marks/${taskId}/`;
     try {
-        if (mark === null) await api.delete(url, { ...OPTIONS, params: { team_id: teamId } });
-        else await api.put(url, { mark }, { ...OPTIONS, params: { team_id: teamId } });
-        return { ok: true, data: null };
+        if (mark === null) {
+            await api.delete(url, { ...OPTIONS, params: { team_id: teamId } });
+            return { ok: true, data: { previous: null } };
+        }
+        const res = await api.put(url, source ? { mark, source } : { mark }, {
+            ...OPTIONS,
+            params: { team_id: teamId },
+        });
+        const previous = rec(res?.data)?.previous;
+        return { ok: true, data: { previous: asMark(rec(previous)?.mark ?? previous) } };
     } catch (error) {
         return failure(error);
     }

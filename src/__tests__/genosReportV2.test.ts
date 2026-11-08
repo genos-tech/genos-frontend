@@ -304,3 +304,62 @@ describe("parseGenosReportV2: item fields", () => {
         expect(item.detail).toBe("<script>x()</script>");
     });
 });
+
+describe("parseGenosReportV2: answer fields (MIP-1211)", () => {
+    it("reads task_id, why and can_answer from a task line", () => {
+        const item = firstItem([task({ task_id: 2195, why: "due_soon", can_answer: true })]);
+        expect(item.taskId).toBe(2195);
+        expect(item.why).toBe("due_soon");
+        expect(item.canAnswer).toBe(true);
+    });
+
+    it("an old line has none of them: no id, no why, no buttons", () => {
+        const item = firstItem([task()]);
+        expect(item.taskId).toBeNull();
+        expect(item.why).toBe("");
+        expect(item.canAnswer).toBe(false);
+    });
+
+    it.each([
+        ["a string", "7"],
+        ["a float", 7.5],
+        ["zero", 0],
+        ["negative", -3],
+        ["beyond a safe integer", 2 ** 60],
+        ["a boolean", true],
+        ["null", null],
+        ["an object", { id: 7 }],
+        ["a path-like string", "7/../../x"],
+    ])("drops a task_id that is %s, and with it can_answer", (_name, task_id) => {
+        const item = firstItem([task({ task_id, can_answer: true })]);
+        expect(item.taskId).toBeNull();
+        expect(item.canAnswer).toBe(false);
+    });
+
+    it.each([["true"], [1], ["yes"], [{}], [null]])(
+        "only a JSON true is can_answer, not %j",
+        (can_answer) => {
+            expect(firstItem([task({ task_id: 5, can_answer })]).canAnswer).toBe(false);
+        }
+    );
+
+    it("a line that is not a task never carries them", () => {
+        const item = firstItem([
+            { text: "Standup", kind: "event", task_id: 5, can_answer: true, why: "new" },
+        ]);
+        expect(item.taskId).toBeNull();
+        expect(item.canAnswer).toBe(false);
+        expect(item.why).toBe("");
+    });
+
+    it("keeps why as plain text, capped", () => {
+        expect(firstItem([task({ why: "<b>x</b>" })]).why).toBe("<b>x</b>");
+        expect(firstItem([task({ why: "x".repeat(500) })]).why.length).toBe(120);
+        expect(firstItem([task({ why: 7 })]).why).toBe("");
+    });
+
+    it("has an emoji for the two stats the server adds", () => {
+        expect(REPORT_EMOJI.still_same).toBe("🔁");
+        expect(REPORT_EMOJI.quieted).toBe("🔕");
+    });
+});

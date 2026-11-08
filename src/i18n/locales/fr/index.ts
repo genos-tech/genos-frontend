@@ -2304,6 +2304,25 @@ export const fr: DeepPartial<Messages> = {
             daysLate: "{days} j de retard",
             statComments: "Commentaires",
             statItems: "Éléments",
+            statUnchanged: "inchangées depuis ton dernier rapport",
+            statQuieted: "mises en sourdine par toi",
+            answersFor: "Réponses pour {task}",
+            answerOnIt: "Je m'en occupe",
+            answerNotImportant: "Pas important",
+            answerOnItNamed: "Je m'en occupe : {task}",
+            answerNotImportantNamed: "Marquer {task} comme pas important",
+            answerOnItTip: "Je m'en occupe : en sourdine dans les rapports pendant 7 jours",
+            answerNotImportantTip:
+                "Pas important : hors des éléments principaux jusqu'à ce que tu l'annules. Revient dans les rapports s'il change.",
+            answerQuietedOnIt: "En sourdine pendant 7 jours.",
+            answerQuietedNotImportant: "Marquée comme pas importante.",
+            answerUndo: "Annuler",
+            answerUndoNamed: "Annuler la réponse pour {task}",
+            answerRecordingOff:
+                "Genos n'enregistre pas ton activité, il ne peut donc pas s'en souvenir.",
+            answerGone: "Cette tâche n'existe plus.",
+            answerFailed: "Impossible d'enregistrer. Réessaie.",
+            answerUndoFailed: "Impossible d'annuler. Réessaie.",
         },
         aiUsage: {
             used: "Crédits IA utilisés : {credits}",
@@ -4031,6 +4050,7 @@ export const fr: DeepPartial<Messages> = {
                 markNames: {
                     not_important: "Pas important",
                     priority_is_right: "La priorité est bonne",
+                    on_it: "Je m'en occupe",
                 },
                 signals: {
                     others: {

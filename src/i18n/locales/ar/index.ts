@@ -977,6 +977,7 @@ export const ar: DeepPartial<Messages> = {
                 markNames: {
                     not_important: "غير مهمة",
                     priority_is_right: "الأولوية صحيحة",
+                    on_it: "أعمل عليه",
                 },
                 signals: {
                     others: {
@@ -3518,6 +3519,24 @@ export const ar: DeepPartial<Messages> = {
             daysLate: "متأخر {days} يوم",
             statComments: "التعليقات",
             statItems: "العناصر",
+            statUnchanged: "دون تغيير منذ تقريرك الأخير",
+            statQuieted: "أسكتَّها أنت",
+            answersFor: "الإجابات عن {task}",
+            answerOnIt: "أعمل عليه",
+            answerNotImportant: "غير مهم",
+            answerOnItNamed: "أعمل عليه: {task}",
+            answerNotImportantNamed: "تحديد {task} كغير مهم",
+            answerOnItTip: "أعمل عليه: هادئ في التقارير لمدة 7 أيام",
+            answerNotImportantTip:
+                "غير مهم: خارج العناصر الأولى حتى تزيل ذلك. يعود إلى التقارير إذا تغيّر.",
+            answerQuietedOnIt: "هادئ لمدة 7 أيام.",
+            answerQuietedNotImportant: "تم تحديده كغير مهم.",
+            answerUndo: "تراجع",
+            answerUndoNamed: "التراجع عن الإجابة عن {task}",
+            answerRecordingOff: "لا يسجّل Genos نشاطك، لذلك لا يستطيع تذكّر هذا.",
+            answerGone: "هذه المهمة لم تعد موجودة.",
+            answerFailed: "تعذّر الحفظ. حاول مرة أخرى.",
+            answerUndoFailed: "تعذّر التراجع. حاول مرة أخرى.",
         },
         aiUsage: {
             used: "رصيد الذكاء الاصطناعي المستخدم: {credits}",

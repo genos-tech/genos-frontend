@@ -2208,6 +2208,24 @@ export const zh: DeepPartial<Messages> = {
             daysLate: "逾期 {days} 天",
             statComments: "评论",
             statItems: "条目",
+            statUnchanged: "自上次报告以来无变化",
+            statQuieted: "已被你静音",
+            answersFor: "对 {task} 的回应",
+            answerOnIt: "处理中",
+            answerNotImportant: "不重要",
+            answerOnItNamed: "处理中：{task}",
+            answerNotImportantNamed: "将 {task} 标为不重要",
+            answerOnItTip: "处理中：7 天内不在报告中提醒",
+            answerNotImportantTip:
+                "不重要：在你清除之前不会出现在重点事项中。有变化时会重新出现在报告里。",
+            answerQuietedOnIt: "7 天内不再提醒。",
+            answerQuietedNotImportant: "已标为不重要。",
+            answerUndo: "撤销",
+            answerUndoNamed: "撤销对 {task} 的回应",
+            answerRecordingOff: "Genos 没有记录你的活动，因此无法记住这个操作。",
+            answerGone: "该任务已不存在。",
+            answerFailed: "无法保存，请重试。",
+            answerUndoFailed: "无法撤销，请重试。",
         },
         aiUsage: {
             used: "已使用的 AI 积分：{credits}",
@@ -3834,6 +3852,7 @@ export const zh: DeepPartial<Messages> = {
                 markNames: {
                     not_important: "不重要",
                     priority_is_right: "优先级合适",
+                    on_it: "处理中",
                 },
                 signals: {
                     others: {

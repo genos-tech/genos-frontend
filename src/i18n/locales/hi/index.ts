@@ -1196,6 +1196,7 @@ export const hi: DeepPartial<Messages> = {
                 markNames: {
                     not_important: "महत्वपूर्ण नहीं",
                     priority_is_right: "प्राथमिकता सही है",
+                    on_it: "मैं देख रहा हूँ",
                 },
                 signals: {
                     others: {
@@ -3550,6 +3551,24 @@ export const hi: DeepPartial<Messages> = {
             daysLate: "{days} दिन की देरी",
             statComments: "टिप्पणियाँ",
             statItems: "आइटम",
+            statUnchanged: "आपकी पिछली रिपोर्ट के बाद से अपरिवर्तित",
+            statQuieted: "आपने शांत किए",
+            answersFor: "{task} के लिए जवाब",
+            answerOnIt: "मैं देख रहा हूँ",
+            answerNotImportant: "ज़रूरी नहीं",
+            answerOnItNamed: "मैं देख रहा हूँ: {task}",
+            answerNotImportantNamed: "{task} को ज़रूरी नहीं चिह्नित करें",
+            answerOnItTip: "मैं देख रहा हूँ: 7 दिन तक रिपोर्ट में शांत",
+            answerNotImportantTip:
+                "ज़रूरी नहीं: आपके हटाने तक शीर्ष आइटम में नहीं। बदलाव होने पर रिपोर्ट में लौटेगा।",
+            answerQuietedOnIt: "7 दिन तक शांत।",
+            answerQuietedNotImportant: "ज़रूरी नहीं चिह्नित किया।",
+            answerUndo: "पूर्ववत करें",
+            answerUndoNamed: "{task} का जवाब पूर्ववत करें",
+            answerRecordingOff: "Genos आपकी गतिविधि दर्ज नहीं कर रहा, इसलिए यह याद नहीं रख सकता।",
+            answerGone: "वह कार्य अब नहीं है।",
+            answerFailed: "सहेजा नहीं जा सका। फिर कोशिश करें।",
+            answerUndoFailed: "पूर्ववत नहीं हो सका। फिर कोशिश करें।",
         },
         aiUsage: {
             used: "उपयोग किए गए AI क्रेडिट: {credits}",

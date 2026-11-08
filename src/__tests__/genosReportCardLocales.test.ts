@@ -20,6 +20,21 @@ describe("inbox.report", () => {
     it("has the keys the card reads", () => {
         expect(KEYS.sort()).toEqual(
             [
+                "answerFailed",
+                "answerGone",
+                "answerNotImportant",
+                "answerNotImportantNamed",
+                "answerNotImportantTip",
+                "answerOnIt",
+                "answerOnItNamed",
+                "answerOnItTip",
+                "answerQuietedNotImportant",
+                "answerQuietedOnIt",
+                "answerRecordingOff",
+                "answerUndo",
+                "answerUndoFailed",
+                "answerUndoNamed",
+                "answersFor",
                 "daysLate",
                 "emptyBody",
                 "emptyTitle",
@@ -27,6 +42,8 @@ describe("inbox.report", () => {
                 "showMore",
                 "statComments",
                 "statItems",
+                "statQuieted",
+                "statUnchanged",
             ].sort()
         );
     });
@@ -41,6 +58,15 @@ describe("inbox.report", () => {
             // The placeholders the card fills in.
             expect(block?.showMore).toContain("{count}");
             expect(block?.daysLate).toContain("{days}");
+            // The answer buttons name the task they act on (MIP-1211).
+            for (const key of [
+                "answersFor",
+                "answerOnItNamed",
+                "answerNotImportantNamed",
+                "answerUndoNamed",
+            ]) {
+                expect(block?.[key], `${locale}.${key}`).toContain("{task}");
+            }
             if (locale === "ar")
                 for (const key of KEYS) expect(block?.[key]).not.toBe(en.inbox.report[key]);
         }
