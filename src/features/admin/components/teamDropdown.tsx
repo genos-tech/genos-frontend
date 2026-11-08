@@ -3,7 +3,6 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import { Box, Dropdown, IconButton, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
@@ -14,13 +13,12 @@ import {
     MenuRow,
     MenuSurface,
 } from "../../../components/ui/MoreMenu";
-import { TeamDropdownStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../i18n";
-import { g } from "../../../theme/tokens";
+import { focusRing, g } from "../../../theme/tokens";
 import { Team, TeamProfileProps, UserProps } from "../../../types/admin";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
@@ -55,10 +53,8 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [teamProfile, setTeamProfile] = useState<TeamProfileProps | null>(null);
     const [openModalTeamProfile, setOpenModalTeamProfile] = useState<boolean>(false);
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const styles = isDark ? TeamDropdownStyles.dark : TeamDropdownStyles.light;
+    const teamName = (useTEM.currentTeam.teamName || myself.teamName || "").trim();
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         if (accessToken !== null) {
@@ -140,53 +136,28 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     title={t.admin.teamDropdown.openMenu}
                 >
                     <IconButton
+                        aria-label={t.admin.teamDropdown.openMenu}
                         sx={{
                             p: 0.5,
-                            borderRadius: "12px",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            "&:hover": {
-                                background: "transparent",
-                                transform: "scale(1.05)",
-                            },
+                            borderRadius: g.radius.md,
+                            // The tile is the button's whole look: no glow, no scale. Hover is the
+                            // shared tint; the keyboard ring is the app's.
+                            "&:focus-visible": focusRing,
                         }}
                         onClick={handleClick}
                     >
-                        <Box
-                            sx={{
-                                position: "relative",
-                                "&::before": {
-                                    content: '""',
-                                    position: "absolute",
-                                    inset: -3,
-                                    borderRadius: "14px",
-                                    background: styles.accentGradient,
-                                    opacity: 0.3,
-                                    filter: "blur(8px)",
-                                    transition: "opacity 0.2s ease",
-                                },
-                                "&:hover::before": {
-                                    opacity: 0.5,
-                                },
-                            }}
+                        {/* The team's picture, else its first letter, else a team icon: the tile is
+                            never blank (it was, when the session had no team name in storage). */}
+                        <BaseAvatar
+                            name={teamName || undefined}
+                            shape="rounded"
+                            size="lg"
+                            src={buildAvatarSrc(useTEM.currentTeam.teamImgPath)}
+                            tone="accent"
+                            variant="soft"
                         >
-                            <BaseAvatar
-                                shape="rounded"
-                                size="lg"
-                                src={buildAvatarSrc(useTEM.currentTeam.teamImgPath)}
-                                variant="outlined"
-                                sx={{
-                                    borderRadius: "10px",
-                                    border: `2px solid ${styles.avatarBorder}`,
-                                    boxShadow: styles.avatarShadow,
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        boxShadow: styles.avatarHoverShadow,
-                                    },
-                                }}
-                            >
-                                {myself.teamName.slice(0, 2).toUpperCase()}
-                            </BaseAvatar>
-                        </Box>
+                            {teamName ? undefined : <GroupsRoundedIcon />}
+                        </BaseAvatar>
                     </IconButton>
                 </AppTooltip>
 
