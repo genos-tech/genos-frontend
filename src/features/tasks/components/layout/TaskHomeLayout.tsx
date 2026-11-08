@@ -88,7 +88,9 @@ export const TaskHomeLayout = ({
     // The table and the board sit under the page header, which runs edge to edge
     // like every other page's: the panel's own padding moves to the box under it.
     const hasPageHeader = useTM.isTaskTableVisible || useTM.isSprintBoardVisible;
-    const mainPanelSx = hasPageHeader
+    // The dashboard draws its own PageHeader inside its scroller, so it is flush too.
+    const flushMainPanel = hasPageHeader || useTM.isTaskDashboardVisible;
+    const mainPanelSx = flushMainPanel
         ? { ...ls.mainPanel, px: 0, pt: 0, pb: 0, gap: 0 }
         : ls.mainPanel;
     const underHeaderSx = {

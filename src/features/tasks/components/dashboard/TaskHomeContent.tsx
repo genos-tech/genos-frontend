@@ -50,7 +50,7 @@ import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
-import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
+import { PageHeader } from "../../../../components/ui/page/PageHeader";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -345,7 +345,6 @@ export const TaskHomeContent = ({
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const { accessToken } = useAuth();
-    const headerStyles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"overall" | "sprint" | "mytasks" | "members">(
@@ -1206,73 +1205,46 @@ export const TaskHomeContent = ({
                         : "linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,1) 100%)",
                 }}
             >
+                {/* The title is the shared PageHeader (MIP-1220), the frame every other page wears, not a
+                    heading inside the content. It bleeds over the container's padding and stays at the
+                    top while the cards scroll under it. */}
+                <Box
+                    sx={{
+                        position: "sticky",
+                        top: { xs: -16, md: -32 },
+                        zIndex: 2,
+                        mx: { xs: -2, md: -4 },
+                        mt: { xs: -2, md: -4 },
+                        mb: 3,
+                    }}
+                >
+                    <PageHeader
+                        data-testid="task-dashboard-header"
+                        title={t.tasks.dashboard.taskStats}
+                        actions={
+                            <>
+                                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+                                    {fmt(t.tasks.dashboard.projectsCount, { count: projectCount })}
+                                </Typography>
+                                {(useTM.isTaskPreviewVisible === true ||
+                                    useTM.isCreatingTask.flag === true) && (
+                                    <AppTooltip title={t.tasks.dashboard.closePanel}>
+                                        <IconButton
+                                            aria-label={t.tasks.dashboard.closePanel}
+                                            color="danger"
+                                            size="sm"
+                                            variant="plain"
+                                            onClick={onCloseTaskHome}
+                                        >
+                                            <CancelIcon sx={{ fontSize: 20 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                )}
+                            </>
+                        }
+                    />
+                </Box>
                 <Stack spacing={3} sx={{ maxWidth: 1200, mx: "auto" }}>
-                    {/* ════════ Dashboard Title ════════ */}
-                    <Stack alignItems="center" direction="row" justifyContent="space-between">
-                        <Stack alignItems="center" direction="row" spacing={1.5}>
-                            <Box
-                                sx={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: "10px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    background: isDark
-                                        ? "linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(var(--gp-brand-700-rgb), 0.2) 100%)"
-                                        : "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)",
-                                }}
-                            >
-                                <TrendingUpRoundedIcon
-                                    sx={{ fontSize: 20, color: isDark ? "#60a5fa" : "#3b82f6" }}
-                                />
-                            </Box>
-                            <Typography
-                                level="h2"
-                                sx={{
-                                    fontWeight: 700,
-                                    color: textPrimary,
-                                    letterSpacing: "-0.02em",
-                                }}
-                            >
-                                {t.tasks.dashboard.taskStats}
-                            </Typography>
-                        </Stack>
-                        <Stack alignItems="center" direction="row" spacing={1.5}>
-                            <Typography level="body-sm" sx={{ color: textMuted }}>
-                                {fmt(t.tasks.dashboard.projectsCount, { count: projectCount })}
-                            </Typography>
-                            {(useTM.isTaskPreviewVisible === true ||
-                                useTM.isCreatingTask.flag === true) && (
-                                <AppTooltip title={t.tasks.dashboard.closePanel}>
-                                    <IconButton
-                                        size="sm"
-                                        sx={{
-                                            background: headerStyles.dangerBg,
-                                            border: `1px solid ${headerStyles.dangerBorder}`,
-                                            borderRadius: "10px",
-                                            width: "36px",
-                                            height: "36px",
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
-                                                background: headerStyles.dangerHover,
-                                                transform: "translateY(-1px)",
-                                            },
-                                        }}
-                                        onClick={onCloseTaskHome}
-                                    >
-                                        <CancelIcon
-                                            sx={{
-                                                fontSize: "20px",
-                                                color: isDark ? "#f87171" : "#dc2626",
-                                            }}
-                                        />
-                                    </IconButton>
-                                </AppTooltip>
-                            )}
-                        </Stack>
-                    </Stack>
-
                     {/* ════════ Section A: Sprint Summary Header ════════ */}
                     {usePM.currentProject ? (
                         <Card

@@ -111,6 +111,14 @@ const renderDashboard = () =>
         </CssVarsProvider>
     );
 
+describe("TaskDashboard header (MIP-1220)", () => {
+    it("shows its title in the shared page header, as the page's h1", () => {
+        renderDashboard();
+        const header = screen.getByTestId("task-dashboard-header");
+        expect(within(header).getByRole("heading", { level: 1 }).textContent).toBe("Task Stats");
+    });
+});
+
 describe("TaskDashboard tabs + Tag Insights", () => {
     it("renders the three section tabs", () => {
         renderDashboard();
