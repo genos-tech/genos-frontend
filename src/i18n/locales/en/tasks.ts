@@ -181,13 +181,6 @@ export const tasks = {
             body: "It disappears from every list, board and dashboard. To bring it back, switch the table to the Deleted view and give it another status.",
             bodyMilestone: "It disappears from every list and board.",
         },
-        deleteComment: {
-            title: "Delete Comment?",
-            body: "This action cannot be undone",
-            confirmButton: "Delete Comment",
-            cancelButton: "Cancel",
-            error: "Failed to delete the comment.",
-        },
         createProject: {
             heading: "Create New Project",
             namePlaceholder: "Enter project name...",
@@ -792,6 +785,8 @@ export const tasks = {
         wrapAll: "Wrap content",
         unwrapCode: "Unwrap code blocks",
         wrapCode: "Wrap code blocks",
+        deleted: "Comment deleted",
+        deleteFailedRestored: "Couldn’t delete the comment. It is back.",
     },
 
     // Title block.
@@ -908,24 +903,20 @@ export const tasks = {
         saveHelper: "Shared with everyone in this project.",
         renameTitle: "Rename saved filter",
         renameHelper: "Everyone in the project sees the new name.",
-        deleteTitle: "Delete saved filter",
-        // Names the blast radius, which is the whole reason this asks at all:
-        // the row is project-shared, so deleting takes it away from teammates.
-        deleteHelper: "This removes “{name}” for everyone in the project.",
         namePlaceholder: "e.g. My blocked work",
         saveConfirm: "Save",
         overwriteConfirm: "Overwrite",
         renameConfirm: "Rename",
-        deleteConfirm: "Delete",
         cancel: "Cancel",
         overwriteTooltip: "Replace with the current filters",
         renameTooltip: "Rename",
         deleteTooltip: "Delete",
+        deleted: "“{name}” deleted for everyone in the project.",
+        errorDeleteRestored: "Couldn’t delete “{name}”. It is back.",
         overwriteWarning: "“{name}” already exists — saving replaces it for everyone.",
         errorNameRequired: "Give the filter a name.",
         errorNameTaken: "Another saved filter already uses that name.",
         errorSaveFailed: "Couldn’t save. Please try again.",
-        errorDeleteFailed: "Couldn’t delete. Please try again.",
     },
 
     // Table-row interactions.

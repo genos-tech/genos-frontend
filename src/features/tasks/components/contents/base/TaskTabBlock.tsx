@@ -37,6 +37,7 @@ import { ChatManagementState } from "../../../../../hooks/chats/useChatManagemen
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { useUndoHidden } from "../../../../../hooks/common/useUndoableAction";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../../i18n";
@@ -56,6 +57,7 @@ import { isImportableTextFile } from "../../../../notes/common/services/importab
 import { useAttachmentClientIds } from "../../../hooks/useAttachmentClientIds";
 import { useAttachmentPreviews } from "../../../hooks/useAttachmentPreviews";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
+import { taskCommentKey } from "../../../services/deleteTaskComment";
 import { TaskActivityFeed } from "./sub/TaskActivityFeed";
 import { TaskCommentEditorBlock } from "./sub/TaskCommentEditorBlock";
 import { TaskCommentList } from "./sub/TaskCommentList";
@@ -287,11 +289,16 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     // existing 0/1/2 indices that other components reference (e.g.
     // direct setTabIndex calls when opening notes from the sidebar)
     // keep their meaning.
+    // A comment in its Undo window is already out of the list; the count follows.
+    const hiddenKeys = useUndoHidden();
+    const commentCount = taskComments.filter(
+        (c) => !hiddenKeys.has(taskCommentKey(c.taskId, c.commentId))
+    ).length;
     const tabs = [
         {
             label: t.tasks.tabs.comments,
             icon: <CommentRoundedIcon sx={{ fontSize: 16 }} />,
-            count: taskComments.length,
+            count: commentCount,
         },
         {
             label: t.tasks.tabs.notes,

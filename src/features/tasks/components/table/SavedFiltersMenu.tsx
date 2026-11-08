@@ -23,7 +23,7 @@
 // without it crashed under the Joy theme alone (`Fade` -> `Backdrop` -> `Modal`
 // read `theme.transitions.duration`); nothing here needs a Material theme now.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BookmarksRoundedIcon from "@mui/icons-material/BookmarksRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRenameOutlineRounded";
@@ -34,14 +34,15 @@ import { useColorScheme } from "@mui/joy/styles";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
-import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
+import { useUndoableAction, useUndoHidden } from "../../../../hooks/common/useUndoableAction";
 import { fmt, useTranslation } from "../../../../i18n";
 import {
     createProjectSavedFilter,
     deleteProjectSavedFilter,
+    deleteProjectSavedFilterOnExit,
     loadProjectSavedFilters,
     updateProjectSavedFilter,
     type ProjectSavedFilter,
@@ -70,12 +71,7 @@ type DialogState =
     | { kind: "closed" }
     | { kind: "save" }
     // Rename targets one row; `name` seeds the input with the current one.
-    | { kind: "rename"; id: number; name: string }
-    // Delete targets one row too. The id is carried HERE rather than in a
-    // separate "pending row" state so the confirm can only ever act on the row
-    // whose button opened it — the menu lists every saved filter, and the
-    // dialog is shared.
-    | { kind: "delete"; id: number; name: string };
+    | { kind: "rename"; id: number; name: string };
 
 type SavedFiltersMenuProps = {
     teamId: string | null | undefined;
@@ -115,12 +111,24 @@ export const SavedFiltersMenu = ({
     const accent = isDark ? SAVED_ACCENT_DARK : SAVED_ACCENT;
 
     const [menuOpen, setMenuOpen] = useState(false);
-    const [saved, setSaved] = useState<ProjectSavedFilter[]>([]);
+    const [fetched, setSaved] = useState<ProjectSavedFilter[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [dialog, setDialog] = useState<DialogState>({ kind: "closed" });
     const [nameDraft, setNameDraft] = useState("");
     const [dialogError, setDialogError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // A deleted filter leaves the list at once, but the real DELETE is sent only
+    // when the Undo window ends (`useUndoableAction`). Until then the server
+    // still has it: the refetch on every menu open would bring it back, so the
+    // list is `fetched` minus what is waiting to be deleted (or already is).
+    const hiddenKeys = useUndoHidden();
+    const runUndoable = useUndoableAction();
+    const filterKey = useCallback((id: number) => `saved-filter:${projectId}:${id}`, [projectId]);
+    const saved = useMemo(
+        () => fetched.filter((row) => !hiddenKeys.has(filterKey(row.id))),
+        [fetched, hiddenKeys, filterKey]
+    );
 
     // Which saved filter is in effect — DERIVED from the bar's live
     // selection every render, never stored.
@@ -159,6 +167,23 @@ export const SavedFiltersMenu = ({
     useEffect(() => {
         void refresh();
     }, [refresh]);
+
+    // The delete outlives this component (the Undo window can end after a
+    // project switch unmounted it), so its follow-up must check.
+    const aliveRef = useRef(true);
+    useEffect(() => {
+        aliveRef.current = true;
+        return () => {
+            aliveRef.current = false;
+        };
+    }, []);
+
+    const nameWaitingToBeDeleted = (name: string) =>
+        fetched.some(
+            (f) =>
+                hiddenKeys.has(filterKey(f.id)) &&
+                f.filterName.toLowerCase() === name.toLowerCase()
+        );
 
     const closeMenu = () => setMenuOpen(false);
     const closeDialog = () => {
@@ -208,6 +233,12 @@ export const SavedFiltersMenu = ({
             setDialogError(ts.errorNameRequired);
             return;
         }
+        // The name of a filter whose delete is still waiting out its Undo
+        // window is taken on the server until the DELETE is sent.
+        if (nameWaitingToBeDeleted(name)) {
+            setDialogError(ts.errorNameTaken);
+            return;
+        }
         setIsSubmitting(true);
         setDialogError(null);
         const filters = getCurrentFilters();
@@ -238,9 +269,10 @@ export const SavedFiltersMenu = ({
         // A rename onto another filter's name is a 400 from the unique
         // constraint. Catch it here so the user gets the real reason
         // instead of a generic failure.
-        const clash = saved.some(
-            (f) => f.id !== dialog.id && f.filterName.toLowerCase() === name.toLowerCase()
-        );
+        const clash =
+            saved.some(
+                (f) => f.id !== dialog.id && f.filterName.toLowerCase() === name.toLowerCase()
+            ) || nameWaitingToBeDeleted(name);
         if (clash) {
             setDialogError(ts.errorNameTaken);
             return;
@@ -262,28 +294,29 @@ export const SavedFiltersMenu = ({
         void refresh();
     };
 
-    // Shared project-wide, so deleting takes it away from teammates too — worth
-    // a confirm even though it destroys no task data.
-    const openDeleteDialog = (row: ProjectSavedFilter) => {
+    // Shared project-wide, so deleting takes it away from teammates too. That used
+    // to be a confirm; it is now an Undo toast that says so ("... for everyone in
+    // the project"), and nothing reaches the server until the window ends, so
+    // Undo is not a restore, it is "never deleted". The row goes at once (`saved`
+    // hides it); a failed DELETE brings it back and says so.
+    const handleDelete = (row: ProjectSavedFilter) => {
         closeMenu();
-        setDialogError(null);
-        setDialog({ kind: "delete", id: row.id, name: row.filterName });
-    };
-
-    const handleSubmitDelete = async () => {
-        if (!projectId || dialog.kind !== "delete") return;
-        setIsSubmitting(true);
-        setDialogError(null);
-        const ok = await deleteProjectSavedFilter(projectId, dialog.id, accessToken);
-        setIsSubmitting(false);
-        if (!ok) {
-            // Keep the dialog open on failure — the service fails soft, so
-            // closing here would look like the delete had succeeded.
-            setDialogError(ts.errorDeleteFailed);
-            return;
-        }
-        closeDialog();
-        void refresh();
+        if (!projectId) return;
+        const name = row.filterName;
+        runUndoable({
+            key: filterKey(row.id),
+            message: fmt(ts.deleted, { name }),
+            errorMessage: fmt(ts.errorDeleteRestored, { name }),
+            commit: async () => {
+                if (!(await deleteProjectSavedFilter(projectId, row.id, accessToken))) {
+                    throw new Error("saved filter delete failed");
+                }
+            },
+            onExit: () => deleteProjectSavedFilterOnExit(projectId, row.id, accessToken),
+            onCommitted: () => {
+                if (aliveRef.current) void refresh();
+            },
+        });
     };
 
     // No project resolved yet (or no team) → nothing to scope filters to.
@@ -454,7 +487,7 @@ export const SavedFiltersMenu = ({
                                             }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                openDeleteDialog(row);
+                                                handleDelete(row);
                                             }}
                                         >
                                             <DeleteOutlineRoundedIcon sx={{ fontSize: 15 }} />
@@ -491,24 +524,8 @@ export const SavedFiltersMenu = ({
                 </Box>
             </FilterMenu>
 
-            {/* The name form (save / rename) is a ModalFrame; delete is the shared
-                ConfirmDialog (destructive, busy while it runs). The three are mutually
-                exclusive by construction (`dialog.kind`), so they share one close path and
-                one `isSubmitting`. */}
-            <ConfirmDialog
-                busy={isSubmitting}
-                cancelLabel={ts.cancel}
-                confirmLabel={ts.deleteConfirm}
-                error={dialogError}
-                open={dialog.kind === "delete"}
-                title={ts.deleteTitle}
-                description={
-                    dialog.kind === "delete" ? fmt(ts.deleteHelper, { name: dialog.name }) : ""
-                }
-                destructive
-                onClose={closeDialog}
-                onConfirm={() => void handleSubmitDelete()}
-            />
+            {/* The name form (save / rename) is a ModalFrame. Delete has no dialog: it
+                is an Undo toast (`handleDelete`). */}
             <ModalFrame
                 description={dialog.kind === "rename" ? ts.renameHelper : ts.saveHelper}
                 dismissible={!isSubmitting}

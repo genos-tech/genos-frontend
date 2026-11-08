@@ -15,6 +15,7 @@ import {
     DEFAULT_DURATION,
     toast,
     ToastAction,
+    ToastDismissReason,
     ToastItem,
     ToastTone,
     useToasts,
@@ -148,7 +149,7 @@ const TONE_ICON: Record<ToastTone, ReactNode> = {
     danger: <ErrorOutlineRoundedIcon />,
 };
 
-export type ToastCloseReason = "timeout" | "dismiss" | "action";
+export type ToastCloseReason = Extract<ToastDismissReason, "timeout" | "dismiss" | "action">;
 
 type CardProps = {
     tone: ToastTone;
@@ -360,7 +361,7 @@ const HostedToast = ({ item }: { item: ToastItem }) => {
             action={action}
             duration={item.duration}
             tone={item.tone}
-            onClose={() => toast.dismiss(item.id)}
+            onClose={(reason) => toast.dismiss(item.id, reason)}
         >
             {item.message}
         </ToastCard>

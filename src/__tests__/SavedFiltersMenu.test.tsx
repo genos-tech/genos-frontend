@@ -17,9 +17,11 @@
 
 import { useState } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ToastHost } from "../components/ui/feedback/Toast";
+import { __resetToasts } from "../components/ui/feedback/toastStore";
 import { SavedFiltersMenu } from "../features/tasks/components/table/SavedFiltersMenu";
 import {
     createProjectSavedFilter,
@@ -29,9 +31,14 @@ import {
     type ProjectSavedFilter,
     type SavedFilterPayload,
 } from "../features/tasks/services/projectSavedFilters";
+import { __resetUndoables, flushUndoables } from "../hooks/common/useUndoableAction";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../features/tasks/services/projectSavedFilters", () => ({
+vi.mock("../features/tasks/services/projectSavedFilters", async (importActual) => ({
+    // The keepalive variant is the real one: its fetch is what the page-close test reads.
+    deleteProjectSavedFilterOnExit: (
+        await importActual<typeof import("../features/tasks/services/projectSavedFilters")>()
+    ).deleteProjectSavedFilterOnExit,
     loadProjectSavedFilters: vi.fn(),
     createProjectSavedFilter: vi.fn(),
     updateProjectSavedFilter: vi.fn(),
@@ -121,6 +128,7 @@ const renderMenu = (props: Partial<React.ComponentProps<typeof SavedFiltersMenu>
     const getCurrentFilters = vi.fn();
     const result = render(
         <CssVarsProvider>
+            <ToastHost />
             <Host getCurrentSpy={getCurrentFilters} onApplySpy={onApply} {...props} />
         </CssVarsProvider>
     );
@@ -137,12 +145,21 @@ const openMenu = async () => {
     fireEvent.click(await trigger());
 };
 
-// Each row's Delete icon carries "Delete" as its accessible name (AppTooltip again), so
-// the confirm button is looked up inside the confirmation dialog.
-const deleteConfirm = async () =>
-    within(await screen.findByRole("alertdialog")).findByRole("button", {
-        name: en.tasks.savedFilters.deleteConfirm,
-    });
+// Delete is an Undo toast, not a dialog (MIP-1274): the DELETE is sent only when the Undo
+// window ends. `flushUndoables` is "the window ended" without waiting 8 s.
+const UNDO = en.common.feedback.toast.undo;
+const deletedToast = (name: string) => en.tasks.savedFilters.deleted.replace("{name}", name);
+const windowEnds = () => act(() => flushUndoables("navigate"));
+
+afterEach(() => {
+    cleanup();
+    __resetUndoables();
+    __resetToasts();
+    document.getElementById("genos-toast-region")?.remove();
+    document.getElementById("genos-banner-region")?.remove();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+});
 
 describe("SavedFiltersMenu", () => {
     beforeEach(() => {
@@ -300,7 +317,7 @@ describe("SavedFiltersMenu", () => {
         // And the third row's action really fires — proof they aren't
         // pointer-events: none.
         fireEvent.click((await screen.findAllByLabelText("Delete"))[2]);
-        expect(await screen.findByText("Delete saved filter")).toBeTruthy();
+        expect(await screen.findByText(deletedToast("Third"))).toBeTruthy();
     });
 
     it("refetches when the dropdown opens, so a teammate's new filter shows up", async () => {
@@ -441,57 +458,92 @@ describe("SavedFiltersMenu", () => {
         expect(updateProjectSavedFilter).not.toHaveBeenCalled();
     });
 
-    it("deletes behind an in-app confirm and refetches", async () => {
-        const confirmSpy = vi.spyOn(window, "confirm");
+    it("delete takes the row away at once, says who it affects, and sends nothing yet", async () => {
         renderMenu();
         await openMenu();
         fireEvent.click(await screen.findByLabelText("Delete"));
 
-        // Nothing happens on the icon click alone — and it must be OUR modal,
-        // not the browser's `genosai.dev says…` dialog.
+        // No confirm dialog (and not the browser's): a toast with Undo.
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+        // Shared project-wide, so the toast still names the blast radius AND the row.
+        const toastText = await screen.findByText(/everyone in the project/);
+        expect(toastText.textContent).toBe(deletedToast("My blocked work"));
+        expect(screen.getByRole("button", { name: UNDO })).toBeTruthy();
         expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
-        expect(confirmSpy).not.toHaveBeenCalled();
-        expect(await screen.findByText("Delete saved filter")).toBeTruthy();
-        // Shared project-wide, so the confirm names the blast radius AND the row.
-        const body = await screen.findByText(/everyone in the project/);
-        expect(body.textContent).toContain("My blocked work");
 
-        fireEvent.click(await deleteConfirm());
+        // The row is gone from the list.
+        await openMenu();
+        await waitFor(() => expect(screen.queryByText("My blocked work")).toBeNull());
+        expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
+    });
+
+    it("the DELETE is sent when the window ends, once, and the list is refetched", async () => {
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByLabelText("Delete"));
+        expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
+
+        await windowEnds();
         await waitFor(() => expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 1, "tok"));
+        expect(deleteProjectSavedFilter).toHaveBeenCalledTimes(1);
         // mount + open + post-delete refresh.
         await waitFor(() => expect(loadProjectSavedFilters).toHaveBeenCalledTimes(3));
-        confirmSpy.mockRestore();
     });
 
-    it("does not delete when the confirm is dismissed", async () => {
+    it("the toast times out after 8 s and then sends the DELETE", async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
         renderMenu();
         await openMenu();
         fireEvent.click(await screen.findByLabelText("Delete"));
-        fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
-
-        await waitFor(() => expect(screen.queryByText("Delete saved filter")).toBeNull());
+        await act(async () => void (await vi.advanceTimersByTimeAsync(7000)));
         expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
+        await act(async () => void (await vi.advanceTimersByTimeAsync(1500)));
+        expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 1, "tok");
     });
 
-    it("keeps the delete dialog open and says so when the request fails", async () => {
-        // The service fails soft (resolves false), so closing on failure would
-        // look exactly like a successful delete.
-        vi.mocked(deleteProjectSavedFilter).mockResolvedValue(false);
+    it("Undo sends nothing and the row is back", async () => {
         renderMenu();
         await openMenu();
         fireEvent.click(await screen.findByLabelText("Delete"));
-        fireEvent.click(await deleteConfirm());
+        fireEvent.click(await screen.findByRole("button", { name: UNDO }));
+        await windowEnds();
 
-        expect(await screen.findByText("Couldn’t delete. Please try again.")).toBeTruthy();
-        expect(screen.getByText("Delete saved filter")).toBeTruthy();
-        // No refetch — mount + open only.
-        expect(loadProjectSavedFilters).toHaveBeenCalledTimes(2);
+        expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
+        await openMenu();
+        expect(await screen.findByText("My blocked work")).toBeTruthy();
+    });
+
+    it("a refetch while the delete is pending does not bring the row back", async () => {
+        // The server still has it until the DELETE is sent, and every menu open refetches.
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByLabelText("Delete"));
+        await openMenu();
+        await waitFor(() => expect(loadProjectSavedFilters).toHaveBeenCalledTimes(3));
+        expect(screen.queryByText("My blocked work")).toBeNull();
+    });
+
+    it("puts the row back and says so when the DELETE fails", async () => {
+        // The service fails soft (resolves false): the row was hidden on the promise
+        // that the delete worked.
+        vi.mocked(deleteProjectSavedFilter).mockResolvedValue(false);
+        const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByLabelText("Delete"));
+        await windowEnds();
+
+        expect(
+            await screen.findByText(
+                en.tasks.savedFilters.errorDeleteRestored.replace("{name}", "My blocked work")
+            )
+        ).toBeTruthy();
+        await openMenu();
+        expect(await screen.findByText("My blocked work")).toBeTruthy();
+        spy.mockRestore();
     });
 
     it("deletes the row whose button was pressed, not the first one", async () => {
-        // The dialog is shared across rows, so the target id has to travel with
-        // it. A `pendingDelete` that lost the id would pass the single-row test
-        // above and silently delete the wrong filter here.
         vi.mocked(loadProjectSavedFilters).mockResolvedValue([
             row(),
             row({ id: 2, filterName: "Second" }),
@@ -501,11 +553,55 @@ describe("SavedFiltersMenu", () => {
         await openMenu();
         fireEvent.click((await screen.findAllByLabelText("Delete"))[2]);
 
-        expect((await screen.findByText(/everyone in the project/)).textContent).toContain(
-            "Third"
+        expect((await screen.findByText(/everyone in the project/)).textContent).toBe(
+            deletedToast("Third")
         );
-        fireEvent.click(await deleteConfirm());
+        await windowEnds();
         await waitFor(() => expect(deleteProjectSavedFilter).toHaveBeenCalledWith(7, 3, "tok"));
+        expect(deleteProjectSavedFilter).toHaveBeenCalledTimes(1);
+        // The others are untouched.
+        await openMenu();
+        expect(await screen.findByText("My blocked work")).toBeTruthy();
+        expect(screen.getByText("Second")).toBeTruthy();
+        expect(screen.queryByText("Third")).toBeNull();
+    });
+
+    it("closing the tab inside the window still deletes (a keepalive fetch, not axios)", async () => {
+        const fetchSpy = vi.fn(() => Promise.resolve(new Response(null, { status: 204 })));
+        vi.stubGlobal("fetch", fetchSpy);
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByLabelText("Delete"));
+
+        window.dispatchEvent(new Event("pagehide"));
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
+        const [url, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+        expect(url).toMatch(/\/project\/saved-task-filters\/$/);
+        expect(init.method).toBe("DELETE");
+        expect(init.keepalive).toBe(true);
+        expect(JSON.parse(String(init.body))).toEqual({ project_id: 7, id: 1 });
+        expect((init.headers as Record<string, string>).Authorization).toBe("Bearer tok");
+        expect(deleteProjectSavedFilter).not.toHaveBeenCalled();
+    });
+
+    it("saving under the name of a filter that is waiting to be deleted says the name is taken", async () => {
+        // The name is still taken on the server (unique per project) until the DELETE is sent.
+        renderMenu();
+        await openMenu();
+        fireEvent.click(await screen.findByLabelText("Delete"));
+        await openMenu();
+        fireEvent.click(await screen.findByText(en.tasks.savedFilters.saveCurrent));
+        fireEvent.change(
+            await screen.findByPlaceholderText(en.tasks.savedFilters.namePlaceholder),
+            {
+                target: { value: "my blocked work" },
+            }
+        );
+        fireEvent.click(screen.getByRole("button", { name: en.tasks.savedFilters.saveConfirm }));
+
+        expect(await screen.findByText(en.tasks.savedFilters.errorNameTaken)).toBeTruthy();
+        expect(createProjectSavedFilter).not.toHaveBeenCalled();
+        expect(updateProjectSavedFilter).not.toHaveBeenCalled();
     });
 
     it("a row action does not also apply the row's filter", async () => {

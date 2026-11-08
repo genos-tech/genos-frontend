@@ -15,7 +15,7 @@
 //                    row comes back with status "Deleted" and the open preview
 //                    reloads onto it, the same road any remote delete takes.
 //   comment, deleted undoing `add_comment`. `emitTaskTouched(id, "comment")`, what
-//                    `ModalDeleteTaskComment` emits: the open task re-reads its
+//                    `deleteTaskComment` emits: the open task re-reads its
 //                    comments and activity.
 //   note             `emitNoteChanged` with the ref an approved note write sends:
 //                    `deleted: true` for undoing `create_note` (the sidebar and open

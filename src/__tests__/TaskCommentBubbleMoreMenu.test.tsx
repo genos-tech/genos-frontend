@@ -4,13 +4,16 @@
 // that don't wire routing; Delete stays own-comments-only.
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ToastHost } from "../components/ui/feedback/Toast";
+import { __resetToasts } from "../components/ui/feedback/toastStore";
 import { TaskCommentBubble } from "../features/tasks/components/contents/base/sub/TaskCommentBubble";
 import { ChatManagementState } from "../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../hooks/common/useUIStateManagement";
+import { __resetUndoables } from "../hooks/common/useUndoableAction";
 import { UserProps } from "../types/admin";
 import { TaskCommentProps } from "../types/tasks";
 
@@ -34,11 +37,8 @@ vi.mock("../components/ui/emoji/EmojiPicker", () => ({
     EmojiPicker: () => null,
 }));
 
-// The confirm dialog owns the socket DELETE emit; here we only assert
-// the menu item opens it.
-vi.mock("../features/tasks/components/modals/ModalDeleteTaskComment", () => ({
-    ModalDeleteTaskComment: ({ open }: { open: boolean }) =>
-        open ? <div data-testid="delete-confirm-open" /> : null,
+vi.mock("../context/AuthContext", () => ({
+    useAuth: () => ({ accessToken: "tok" }),
 }));
 
 vi.mock("../components/ui/avatars/UserAvatar", () => ({
@@ -63,6 +63,7 @@ const makeComment = (overrides: Partial<TaskCommentProps> = {}): TaskCommentProp
 const renderBubble = (comment: TaskCommentProps, props: Partial<{ commentLink: string }> = {}) =>
     render(
         <CssVarsProvider>
+            <ToastHost />
             <TaskCommentBubble
                 comment={comment}
                 myself={myself}
@@ -97,6 +98,12 @@ const openMoreMenu = (container: HTMLElement) => {
 
 describe("TaskCommentBubble — ⋮ more-options menu", () => {
     beforeEach(() => vi.clearAllMocks());
+    afterEach(() => {
+        cleanup();
+        __resetUndoables();
+        __resetToasts();
+        document.getElementById("genos-toast-region")?.remove();
+    });
 
     it("copies the comment's absolute deep link", async () => {
         const writeText = vi.fn().mockResolvedValue(undefined);
@@ -125,11 +132,12 @@ describe("TaskCommentBubble — ⋮ more-options menu", () => {
         expect(screen.queryByText("Copy comment link")).not.toBeInTheDocument();
     });
 
-    it("opens the delete confirm from the menu on own comments only", async () => {
+    it("deletes from the menu on own comments only, with no confirm (an Undo toast; see TaskCommentDeleteUndo)", async () => {
         const { container } = renderBubble(makeComment());
         openMoreMenu(container);
         fireEvent.click(await screen.findByText("Delete"));
-        expect(screen.getByTestId("delete-confirm-open")).toBeInTheDocument();
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+        expect(await screen.findByText("Comment deleted")).toBeInTheDocument();
     });
 
     it("offers no delete on someone else's comment", async () => {
