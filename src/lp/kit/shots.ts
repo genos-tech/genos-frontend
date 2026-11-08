@@ -13,8 +13,19 @@ import shots from "./shots.json";
  * in them stays readable at the width the page shows them. Retake the set whenever the app's UI
  * changes: see the header of the script.
  */
-export const SHOTS = shots;
-
 export type ShotName = keyof typeof shots;
+
+/** The rectangle of one shot; a language may override parts of it (an answer can run longer in Japanese). */
+export type ShotRect = { width: number; height: number; x: number; y: number };
+
+export const SHOTS = shots as Record<
+    ShotName,
+    ShotRect & Partial<Record<"ja" | "en", Partial<ShotRect>>>
+>;
+
+export const shotRect = (name: ShotName, lang: "ja" | "en"): ShotRect => {
+    const { width, height, x, y } = SHOTS[name];
+    return { width, height, x, y, ...SHOTS[name][lang] };
+};
 
 export const SHOT_NAMES = Object.keys(shots) as ShotName[];

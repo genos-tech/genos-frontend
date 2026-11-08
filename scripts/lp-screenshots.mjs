@@ -182,7 +182,7 @@ const WEAK_ANSWER =
     /\[\s*,?\s*\]|[（(]\s*[）)]|could not|couldn't|見つかりません|取得できません|demo\+[0-9a-f]+@/i;
 
 /** Ask Genos one question and wait for the finished answer; retry when the model gave a weak one. */
-const askGenos = async (page, lang, question, { expect, attempts = 3 }) => {
+const askGenos = async (page, lang, question, { expect, attempts = 5 }) => {
     const input = () =>
         page
             .getByPlaceholder(
@@ -250,7 +250,18 @@ const SCENES = {
     note: async (page, lang) => {
         await rail(page, lang, "notes");
         await page.getByText(UI[lang].priorities, { exact: true }).first().click();
-        await settle(page, 4500);
+        // The body comes from the collab server; an empty editor means it is not running.
+        await page
+            .waitForFunction(
+                () =>
+                    (document.querySelector(".ProseMirror")?.textContent ?? "").trim().length > 80,
+                null,
+                { timeout: 30000 }
+            )
+            .catch(() => {
+                throw new Error("The note body did not load: is the collab server running?");
+            });
+        await settle(page, 1500);
     },
     chat: async (page, lang) => {
         await rail(page, lang, "chat");
@@ -260,6 +271,9 @@ const SCENES = {
         await settle(page, 4000);
         await page.keyboard.press("Escape");
         await settle(page, 800);
+        // The conversation starts where the composer starts, wherever the list column ended up.
+        const composer = await page.locator('[class*="bn-chat-editor-box"]').first().boundingBox();
+        return composer ? { x: Math.max(0, Math.round(composer.x) - 18) } : undefined;
     },
     "tasks-dark": async (page, lang) => SCENES.tasks(page, lang),
     // Phone: no rail, so go by URL; the table becomes a list.
@@ -298,7 +312,7 @@ const SCENES = {
             .click()
             .catch(() => {});
         await settle(page, 1500);
-        await askGenos(page, lang, UI[lang].write, { expect: "Approve|承認する", attempts: 2 });
+        await askGenos(page, lang, UI[lang].write, { expect: "Approve|承認する", attempts: 5 });
     },
     todo: async (page, lang) => {
         await rail(page, lang, "todo");
@@ -364,9 +378,12 @@ try {
                 run.dark
             );
             for (const name of wanted) {
-                const shot = SHOTS[name];
-                if (!shot) throw new Error(`${name} is not in src/lp/kit/shots.json`);
-                await SCENES[name](page, lang, session);
+                if (!SHOTS[name]) throw new Error(`${name} is not in src/lp/kit/shots.json`);
+                const { width, height, x, y } = SHOTS[name];
+                const shot = { width, height, x, y, ...SHOTS[name][lang] };
+                // A scene may say where its picture starts (a pane that moves with the layout).
+                const staged = await SCENES[name](page, lang, session);
+                if (staged && typeof staged.x === "number") shot.x = staged.x;
                 await page.mouse.move(run.viewport.width - 20, run.viewport.height - 5); // no hover tooltips in the picture
                 await settle(page, 700);
                 const png = join(workdir, `${lang}-${name}.png`);

@@ -1,9 +1,12 @@
 {
     "ask": {
         "width": 1100,
-        "height": 720,
+        "height": 580,
         "x": 340,
-        "y": 0
+        "y": 0,
+        "ja": {
+            "height": 740
+        }
     },
     "approval": {
         "width": 860,

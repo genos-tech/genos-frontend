@@ -1,5 +1,5 @@
 import type { Lang } from "../lpLang";
-import { SHOTS, type ShotName } from "./shots";
+import { shotRect, type ShotName } from "./shots";
 
 /**
  * A real product screenshot from the demo workspace, in the visitor's language.
@@ -26,7 +26,7 @@ export function Shot({
     phone?: boolean;
     caption?: string;
 }) {
-    const shot = SHOTS[name];
+    const shot = shotRect(name, lang);
     const base = `/lp/shots/${lang}/${name}`;
     return (
         <figure className="lp-shot-wrap" style={{ margin: 0 }}>
