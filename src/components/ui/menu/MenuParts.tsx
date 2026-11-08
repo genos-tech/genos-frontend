@@ -92,9 +92,12 @@ export type MenuRowProps = Omit<MenuItemProps, "color" | "variant"> & {
     icon?: ReactNode;
     /** Red text, red hover. The item for a destructive action. */
     danger?: boolean;
-    /** What marks `selected`: a check (a choice among several, the default) or
-     *  a dot (an item that is switched on). */
-    mark?: "check" | "dot";
+    /** Accent text and hover for an action that should stand out ("Clear filter").
+     *  Use this, not `sx.color`: Joy's hover color would win over `sx`. */
+    accent?: boolean;
+    /** What marks `selected`: a check (a choice among several, the default), a dot
+     *  (an item that is switched on) or nothing (the row draws its own mark). */
+    mark?: "check" | "dot" | "none";
     /** Content at the end of the row, after the selected mark. */
     trailing?: ReactNode;
     /** Joy closes a menu when an item is clicked. A multi-select picker sets this
@@ -123,6 +126,7 @@ export const MenuRow = forwardRef<HTMLDivElement, MenuRowProps>(function MenuRow
     {
         icon,
         danger = false,
+        accent = false,
         mark = "check",
         trailing,
         keepOpen,
@@ -139,7 +143,10 @@ export const MenuRow = forwardRef<HTMLDivElement, MenuRowProps>(function MenuRow
             {...rest}
             ref={ref}
             selected={selected}
-            sx={[menuRowSx(danger), ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
+            sx={[
+                menuRowSx(danger ? "danger" : accent ? "accent" : "default"),
+                ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+            ]}
             onClick={(event) => {
                 if (keepOpen) {
                     // `useMenuItem` checks this flag before it dispatches its close.
@@ -163,7 +170,7 @@ export const MenuRow = forwardRef<HTMLDivElement, MenuRowProps>(function MenuRow
                 </Box>
             )}
             {children}
-            {(selected || trailing != null) && (
+            {((selected && mark !== "none") || trailing != null) && (
                 <Box
                     component="span"
                     sx={{
@@ -176,7 +183,7 @@ export const MenuRow = forwardRef<HTMLDivElement, MenuRowProps>(function MenuRow
                     }}
                 >
                     {trailing}
-                    {selected && <SelectedMark mark={mark} />}
+                    {selected && mark !== "none" && <SelectedMark mark={mark} />}
                 </Box>
             )}
         </MenuItem>
