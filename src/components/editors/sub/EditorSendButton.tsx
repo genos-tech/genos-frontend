@@ -89,41 +89,6 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                     endDecorator={<SendRoundedIcon sx={{ fontSize: 15 }} />}
                     size="sm"
                     variant="solid"
-                    sx={{
-                        borderRadius: "10px",
-                        fontSize: "0.8125rem",
-                        fontWeight: 600,
-                        letterSpacing: "0.01em",
-                        minHeight: 30,
-                        px: 1.5,
-                        py: 0.5,
-                        gap: 0.6,
-                        background:
-                            "linear-gradient(135deg, rgba(34,197,94,1) 0%, rgba(22,163,74,1) 100%)",
-                        boxShadow:
-                            "0 2px 8px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255,255,255,0.18)",
-                        transition:
-                            "transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease, background 0.12s ease",
-                        "&:hover:not(.Mui-disabled)": {
-                            transform: "translateY(-1px)",
-                            boxShadow:
-                                "0 4px 14px rgba(34, 197, 94, 0.42), inset 0 1px 0 rgba(255,255,255,0.22)",
-                            background:
-                                "linear-gradient(135deg, rgba(34,197,94,1) 0%, rgba(21,128,61,1) 100%)",
-                        },
-                        "&:active:not(.Mui-disabled)": {
-                            transform: "translateY(0)",
-                            boxShadow:
-                                "0 1px 4px rgba(34, 197, 94, 0.25), inset 0 1px 0 rgba(255,255,255,0.12)",
-                        },
-                        "&.Mui-disabled": {
-                            opacity: 0.45,
-                            boxShadow: "none",
-                            background:
-                                "linear-gradient(135deg, rgba(34,197,94,0.6) 0%, rgba(22,163,74,0.6) 100%)",
-                            color: "rgba(255,255,255,0.85)",
-                        },
-                    }}
                     onClick={onSend}
                 >
                     {t.common.editor.send}

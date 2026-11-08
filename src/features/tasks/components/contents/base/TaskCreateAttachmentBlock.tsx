@@ -3,7 +3,7 @@ import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
-import { Box, IconButton, Typography, useColorScheme } from "@mui/joy";
+import { Box, Button, IconButton, Typography, useColorScheme } from "@mui/joy";
 
 import { ImageZoomModal } from "../../../../../components/messageBody/ImageZoomModal";
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
@@ -354,37 +354,16 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                     type="file"
                     onChange={handleSelectedFiles}
                 />
-                <IconButton
+                <Button
+                    color="primary"
                     disabled={isUploading}
                     size="sm"
-                    sx={{
-                        borderRadius: "10px",
-                        px: 2,
-                        py: 0.8,
-                        gap: 1,
-                        background: isDark
-                            ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)",
-                        border: "1px solid",
-                        borderColor: isDark
-                            ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
-                            : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        transition: "all 0.2s ease",
-                        "&:hover": {
-                            background: isDark
-                                ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.18) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)"
-                                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)",
-                        },
-                        "&.Mui-disabled": { opacity: 0.5 },
-                    }}
+                    startDecorator={<FolderRoundedIcon />}
+                    variant="soft"
                     onClick={() => inputRef.current?.click()}
                 >
-                    <FolderRoundedIcon sx={{ fontSize: 18 }} />
-                    <Typography level="body-sm" sx={{ fontWeight: 600, color: "inherit" }}>
-                        Select Files
-                    </Typography>
-                </IconButton>
+                    Select Files
+                </Button>
             </Box>
 
             <ImageZoomModal

@@ -626,23 +626,10 @@ export const SignUpForm = () => {
                                 </FormControl>
 
                                 <Button
+                                    size="lg"
                                     startDecorator={<PersonAddRoundedIcon />}
+                                    sx={{ mt: 1 }}
                                     type="submit"
-                                    sx={{
-                                        mt: 1,
-                                        py: 1.5,
-                                        background: styles.buttonBg,
-                                        borderRadius: "12px",
-                                        fontWeight: 600,
-                                        fontSize: "15px",
-                                        boxShadow: styles.buttonShadow,
-                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        "&:hover": {
-                                            background: styles.buttonHover,
-                                            transform: "translateY(-2px)",
-                                            boxShadow: `${styles.buttonShadow}, 0 8px 24px ${palette.glow}`,
-                                        },
-                                    }}
                                     fullWidth
                                 >
                                     {t.admin.auth.signUp.submit}

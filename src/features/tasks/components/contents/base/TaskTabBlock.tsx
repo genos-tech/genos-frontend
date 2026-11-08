@@ -10,6 +10,7 @@ import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import {
     Box,
+    Button,
     IconButton,
     List,
     ListItem,
@@ -324,29 +325,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         // item's padding. With two side by side that is what made them
         // overlap and the first one taller.
         m: 0,
-        borderRadius: "10px",
-        px: 1.5,
-        py: 1,
         justifyContent: "center",
         gap: 1,
-        background: isDark
-            ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)"
-            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.08) 0%, rgba(var(--gp-brand-700-rgb), 0.06) 100%)",
-        border: "1px solid",
-        borderColor: isDark
-            ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
-            : "rgba(var(--gp-brand-700-rgb), 0.15)",
-        color: isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-        fontWeight: 600,
-        transition: "all 0.2s ease",
-        "&:hover": {
-            background: isDark
-                ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)"
-                : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)",
-            borderColor: isDark
-                ? "rgba(var(--gp-brandalt-500-rgb), 0.3)"
-                : "rgba(var(--gp-brand-700-rgb), 0.25)",
-        },
     } as const;
 
     const [importNoteOpen, setImportNoteOpen] = useState(false);
@@ -398,11 +378,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                               }
                             : null
                     }
+                    onTaskNoteCreated={handleImportedNote}
                     onClose={() => {
                         setImportNoteOpen(false);
                         setImportAttachment(null);
                     }}
-                    onTaskNoteCreated={handleImportedNote}
                 />
             )}
             <Tabs
@@ -699,7 +679,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     be hidden there entirely. */}
                                 <ListItem sx={{ p: 0, mt: 0.5, gap: 1, alignItems: "stretch" }}>
                                     <ListItemButton
+                                        color="primary"
                                         sx={addNoteButtonSx}
+                                        variant="soft"
                                         onClick={async () => {
                                             if (!taskContent.project) return;
                                             if (isModalHosted && urlLinkModal) {
@@ -736,9 +718,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     >
                                         <AddRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
                                         <Typography
-                                            noWrap
                                             level="body-sm"
                                             sx={{ fontWeight: 600 }}
+                                            noWrap
                                         >
                                             New Note
                                         </Typography>
@@ -747,7 +729,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         task (MIP-850). Same dialog as the notes
                                         header's "Import Markdown…". */}
                                     <ListItemButton
+                                        color="primary"
                                         sx={addNoteButtonSx}
+                                        variant="soft"
                                         onClick={() => {
                                             if (taskContent.project) setImportNoteOpen(true);
                                         }}
@@ -756,9 +740,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             sx={{ fontSize: 18, flexShrink: 0 }}
                                         />
                                         <Typography
-                                            noWrap
                                             level="body-sm"
                                             sx={{ fontWeight: 600 }}
+                                            noWrap
                                         >
                                             {t.notes.importMd.importNote}
                                         </Typography>
@@ -1077,40 +1061,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 type="file"
                                 onChange={handleSelectedFiles}
                             />
-                            <IconButton
+                            <Button
+                                color="primary"
                                 size="sm"
-                                sx={{
-                                    borderRadius: "10px",
-                                    px: 2,
-                                    py: 0.8,
-                                    gap: 1,
-                                    background: isDark
-                                        ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.12) 0%, rgba(var(--gp-brand-700-rgb), 0.1) 100%)"
-                                        : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.1) 0%, rgba(var(--gp-brand-700-rgb), 0.08) 100%)",
-                                    border: "1px solid",
-                                    borderColor: isDark
-                                        ? "rgba(var(--gp-brandalt-500-rgb), 0.2)"
-                                        : "rgba(var(--gp-brand-700-rgb), 0.15)",
-                                    color: isDark
-                                        ? "var(--gp-brandalt-400)"
-                                        : "var(--gp-brand-700)",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "linear-gradient(135deg, rgba(var(--gp-brandalt-500-rgb), 0.18) 0%, rgba(var(--gp-brand-700-rgb), 0.15) 100%)"
-                                            : "linear-gradient(135deg, rgba(var(--gp-brand-700-rgb), 0.15) 0%, rgba(var(--gp-brand-700-rgb), 0.12) 100%)",
-                                    },
-                                }}
+                                startDecorator={<FolderRoundedIcon />}
+                                variant="soft"
                                 onClick={() => inputRef.current?.click()}
                             >
-                                <FolderRoundedIcon sx={{ fontSize: 18 }} />
-                                <Typography
-                                    level="body-sm"
-                                    sx={{ fontWeight: 600, color: "inherit" }}
-                                >
-                                    Select Files
-                                </Typography>
-                            </IconButton>
+                                Select Files
+                            </Button>
                         </Box>
 
                         {/* Image Preview Modal */}

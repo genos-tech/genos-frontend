@@ -174,18 +174,8 @@ export const VerifyEmailHandler = () => {
                             {t.admin.auth.emailVerification.successBody}
                         </Alert>
                         <Button
+                            size="lg"
                             startDecorator={<LoginRoundedIcon />}
-                            sx={{
-                                py: 1.5,
-                                background: styles.buttonBg,
-                                borderRadius: "12px",
-                                fontWeight: 600,
-                                fontSize: "15px",
-                                boxShadow: styles.buttonShadow,
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                },
-                            }}
                             fullWidth
                             onClick={() => navigate("/signin")}
                         >
@@ -240,17 +230,7 @@ export const VerifyEmailHandler = () => {
                         {resendStatus !== "sent" && (
                             <Button
                                 disabled={resendStatus === "sending" || !resendEmail}
-                                sx={{
-                                    py: 1.5,
-                                    background: styles.buttonBg,
-                                    borderRadius: "12px",
-                                    fontWeight: 600,
-                                    fontSize: "15px",
-                                    boxShadow: styles.buttonShadow,
-                                    "&:hover": {
-                                        background: styles.buttonHover,
-                                    },
-                                }}
+                                size="lg"
                                 fullWidth
                                 onClick={_resend}
                             >

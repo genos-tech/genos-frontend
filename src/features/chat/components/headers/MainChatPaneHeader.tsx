@@ -46,6 +46,7 @@ import {
     MuteMenuItem,
     MuteToggleButton,
 } from "../../../../services/notifications/MuteToggleButton";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { isMac } from "../../../../utils/platform";
@@ -109,52 +110,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             myself,
             useTEM.teamMemberProfiles
         ) || undefined;
-
-    // Action button style
-    const actionButtonStyle = {
-        background: styles.buttonBg,
-        border: `1px solid ${styles.buttonBorder}`,
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.buttonHover,
-            transform: "translateY(-1px)",
-            boxShadow: `0 4px 12px ${styles.glowColor}`,
-        },
-    };
-
-    // Primary button style
-    const primaryButtonStyle = {
-        background: styles.primaryButtonBg,
-        border: "none",
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        boxShadow: `0 2px 8px ${styles.glowColor}`,
-        "&:hover": {
-            background: styles.primaryButtonHover,
-            transform: "translateY(-2px)",
-            boxShadow: `0 6px 16px ${styles.glowColor}`,
-        },
-    };
-
-    // Danger button style
-    const dangerButtonStyle = {
-        background: styles.dangerBg,
-        border: `1px solid ${styles.dangerBorder}`,
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.dangerHover,
-            transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(var(--gp-tint-danger-rgb), 0.2)",
-        },
-    };
 
     const [openAddMembers, setOpenAddMembers] = useState(false);
 
@@ -621,7 +576,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     chatType={chat.chatType}
                     chatId={chat.chatId}
                     chatName={muteLabel}
-                    sx={actionButtonStyle}
                 />
 
                 {/* Mark all activity in this chat as read */}
@@ -630,7 +584,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         <IconButton
                             size="sm"
                             variant="plain"
-                            sx={actionButtonStyle}
                             onClick={() => markAllAsRead(chat.chatType, chatIdLegacy)}
                             aria-label={t.chat.headers.markAllReadAria}
                         >
@@ -646,7 +599,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             size="sm"
                             variant="plain"
                             disabled={quickMeetLoading}
-                            sx={actionButtonStyle}
                             onClick={handleQuickMeet}
                             aria-label={t.chat.headers.quickMeetTooltip}
                         >
@@ -669,8 +621,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     <AppTooltip size="sm" title={t.chat.headers.createNewTaskTooltip}>
                         <IconButton
                             size="sm"
-                            variant="plain"
-                            sx={primaryButtonStyle}
+                            color="primary"
+                            variant="solid"
                             onClick={() => {
                                 useCM.setIsMainChatVisible(true);
                                 useCM.setIsThreadVisible(false);
@@ -697,7 +649,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 <IconButton
                                     size="sm"
                                     variant="plain"
-                                    sx={actionButtonStyle}
                                     onClick={() => setIsToDoVisible(false)}
                                 >
                                     <QuestionAnswerRoundedIcon
@@ -715,7 +666,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                     sx={{
                                         "& .MuiBadge-badge": {
                                             zIndex: 1,
-                                            background: styles.primaryButtonBg,
+                                            background: g.accent.solid,
                                             border: "2px solid",
                                             borderColor: isDark ? "#1e2028" : "#fff",
                                         },
@@ -724,7 +675,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                     <IconButton
                                         size="sm"
                                         variant="plain"
-                                        sx={actionButtonStyle}
                                         onClick={() => setIsToDoVisible(true)}
                                     >
                                         <ChecklistRoundedIcon
@@ -752,7 +702,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 <IconButton
                                     size="sm"
                                     variant="plain"
-                                    sx={actionButtonStyle}
                                     onClick={calendarModal.open}
                                     aria-label={t.calendar.openTooltip}
                                 >
@@ -768,12 +717,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {/* Swap Chat Button */}
                 {useCM.isSubChatVisible && (
                     <AppTooltip size="sm" title={t.chat.headers.swapChats}>
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={actionButtonStyle}
-                            onClick={() => swapChat()}
-                        >
+                        <IconButton size="sm" variant="plain" onClick={() => swapChat()}>
                             <SwapVertRoundedIcon
                                 sx={{ fontSize: 18, color: styles.accentColor }}
                             />
@@ -787,7 +731,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         <IconButton
                             size="sm"
                             variant="plain"
-                            sx={actionButtonStyle}
                             onClick={() => setOpenAddMembers(true)}
                         >
                             <PersonAddRoundedIcon
@@ -801,8 +744,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 <AppTooltip size="sm" title={t.chat.headers.close}>
                     <IconButton
                         size="sm"
+                        color="danger"
                         variant="plain"
-                        sx={dangerButtonStyle}
                         onClick={() => switchSubToMain()}
                     >
                         <CloseRoundedIcon

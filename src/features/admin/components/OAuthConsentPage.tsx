@@ -421,10 +421,6 @@ export const OAuthConsentPage = () => {
                                     !!noTeams ||
                                     teamIds.length === 0
                                 }
-                                sx={{
-                                    background: styles.buttonBg,
-                                    "&:hover": { background: styles.buttonHover },
-                                }}
                                 fullWidth
                                 onClick={() => void decide(true)}
                             >

@@ -389,31 +389,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             (taskContent.status.status === "Open" ||
                                 taskContent.status.status === "Pending") && (
                                 <Button
+                                    color="warning"
                                     size="sm"
                                     startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
                                     variant="soft"
-                                    sx={{
-                                        fontWeight: 600,
-                                        fontSize: "12px",
-                                        borderRadius: "8px",
-                                        px: 1.5,
-                                        py: 0.5,
-                                        background:
-                                            "linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)",
-                                        color: "white",
-                                        boxShadow: "0 2px 8px rgba(255, 140, 0, 0.25)",
-                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        "&:hover": {
-                                            background:
-                                                "linear-gradient(135deg, #ffa726 0%, #ff7043 100%)",
-                                            boxShadow: "0 4px 12px rgba(255, 140, 0, 0.35)",
-                                            transform: "translateY(-1px)",
-                                        },
-                                        "&:active": {
-                                            transform: "translateY(0)",
-                                            boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
-                                        },
-                                    }}
                                     onClick={() =>
                                         handleStatusChange("WIP", statusSolid("WIP").color)
                                     }
@@ -424,31 +403,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                         {isPreviewMode && taskContent.status.status === "WIP" && (
                             <Button
+                                color="success"
                                 size="sm"
                                 startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
                                 variant="soft"
-                                sx={{
-                                    fontWeight: 600,
-                                    fontSize: "12px",
-                                    borderRadius: "8px",
-                                    px: 1.5,
-                                    py: 0.5,
-                                    background:
-                                        "linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)",
-                                    color: "white",
-                                    boxShadow: "0 2px 8px rgba(76, 175, 80, 0.25)",
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    "&:hover": {
-                                        background:
-                                            "linear-gradient(135deg, #66bb6a 0%, #388e3c 100%)",
-                                        boxShadow: "0 4px 12px rgba(76, 175, 80, 0.35)",
-                                        transform: "translateY(-1px)",
-                                    },
-                                    "&:active": {
-                                        transform: "translateY(0)",
-                                        boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
-                                    },
-                                }}
                                 onClick={() =>
                                     handleStatusChange("Closed", statusSolid("Closed").color)
                                 }
@@ -548,23 +506,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         taskContent.chatType !== null &&
                         taskContent.chatId !== null && (
                             <AppTooltip title={t.tasks.titleBlock.checkThread}>
-                                <IconButton
-                                    size="sm"
-                                    variant="plain"
-                                    sx={{
-                                        background: styles.buttonBg,
-                                        border: `1px solid ${styles.buttonBorder}`,
-                                        borderRadius: "10px",
-                                        width: "36px",
-                                        height: "36px",
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: styles.buttonHover,
-                                            transform: "translateY(-1px)",
-                                        },
-                                    }}
-                                    onClick={openTaskThread}
-                                >
+                                <IconButton size="sm" variant="plain" onClick={openTaskThread}>
                                     <QuestionAnswerRoundedIcon
                                         sx={{ fontSize: 20, color: styles.textColor }}
                                     />
@@ -587,18 +529,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 <IconButton
                                     size="sm"
                                     variant="plain"
-                                    sx={{
-                                        background: styles.buttonBg,
-                                        border: `1px solid ${styles.buttonBorder}`,
-                                        borderRadius: "10px",
-                                        width: "36px",
-                                        height: "36px",
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: styles.buttonHover,
-                                            transform: "translateY(-1px)",
-                                        },
-                                    }}
                                     onClick={() => setOpenTaskDiagram(true)}
                                 >
                                     <AccountTreeRoundedIcon
@@ -823,12 +753,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     iconFontSize={20}
                                     items={items}
                                     placement="bottom-end"
-                                    triggerSize={36}
-                                    triggerSx={{
-                                        background: styles.buttonBg,
-                                        border: `1px solid ${styles.buttonBorder}`,
-                                        borderRadius: "10px",
-                                    }}
+                                    triggerSize={32}
                                     // Modal-hosted: the dropdown portal
                                     // defaults to 9999, which sits BEHIND
                                     // the UrlLinkModal (10020) — lift it
@@ -843,20 +768,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     {!isModalHosted && (
                         <AppTooltip title={t.tasks.titleBlock.closeTooltip}>
                             <IconButton
+                                color="danger"
                                 size="sm"
                                 variant="plain"
-                                sx={{
-                                    background: styles.dangerBg,
-                                    border: `1px solid ${styles.dangerBorder}`,
-                                    borderRadius: "10px",
-                                    width: "36px",
-                                    height: "36px",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: styles.dangerHover,
-                                        transform: "translateY(-1px)",
-                                    },
-                                }}
                                 onClick={handleCloseClick}
                             >
                                 <CancelIcon

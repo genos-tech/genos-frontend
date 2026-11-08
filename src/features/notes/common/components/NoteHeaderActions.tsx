@@ -31,6 +31,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
@@ -263,57 +264,6 @@ export const NoteHeaderActions = ({
         }
     };
 
-    // Common action button style
-    const actionButtonStyle = {
-        background: styles.buttonBg,
-        border: `1px solid ${styles.buttonBorder}`,
-        borderRadius: "10px",
-        color: styles.textColor,
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.buttonHover,
-            transform: "translateY(-1px)",
-            boxShadow: `0 4px 12px ${styles.glowColor}`,
-        },
-    };
-
-    // Primary action button (New Note)
-    const primaryButtonStyle = {
-        background: styles.primaryButtonBg,
-        color: "#fff",
-        fontWeight: 600,
-        fontSize: "13px",
-        borderRadius: "10px",
-        border: "none",
-        px: 1.5,
-        py: 0.75,
-        gap: 0.5,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        boxShadow: `0 2px 8px ${styles.glowColor}, inset 0 1px 0 rgba(255,255,255,0.15)`,
-        "&:hover": {
-            background: styles.primaryButtonHover,
-            transform: "translateY(-2px)",
-            boxShadow: `0 6px 16px ${styles.glowColor}, inset 0 1px 0 rgba(255,255,255,0.2)`,
-        },
-    };
-
-    // Danger button style
-    const dangerButtonStyle = {
-        background: styles.dangerBg,
-        border: `1px solid ${styles.dangerBorder}`,
-        borderRadius: "10px",
-        width: "36px",
-        height: "36px",
-        transition: "all 0.2s ease",
-        "&:hover": {
-            background: styles.dangerHover,
-            transform: "translateY(-1px)",
-        },
-    };
-
     return (
         <Stack
             alignItems="center"
@@ -375,9 +325,9 @@ export const NoteHeaderActions = ({
                     }
                 >
                     <IconButton
+                        color="primary"
                         size="sm"
-                        sx={primaryButtonStyle}
-                        variant="plain"
+                        variant="solid"
                         onClick={onCreateNewNote}
                     >
                         <NoteAddRoundedIcon sx={{ fontSize: 18 }} />
@@ -395,13 +345,12 @@ export const NoteHeaderActions = ({
                 <Stack alignItems="center" direction="row" spacing={1}>
                     {/* Project Avatar with container. Tooltip names it as
                         the note's owning project; opening it (click) shows
-                        the project profile. Shares `actionButtonStyle` with
-                        the Ask-AI / member buttons so the hover lift + glow
-                        matches the rest of the header row. */}
+                        the project profile. Framed like the Ask-AI / member buttons. */}
                     <AppTooltip title={t.notes.header.ownerProjectTooltip}>
                         <Box
                             sx={{
-                                ...actionButtonStyle,
+                                border: `1px solid ${g.border.default}`,
+                                borderRadius: g.radius.md,
                                 display: "inline-flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -458,12 +407,8 @@ export const NoteHeaderActions = ({
                                 pl: 0.75,
                                 pr: overflowCount > 0 ? 1 : 0.75,
                                 borderRadius: "10px",
-                                background: styles.buttonBg,
-                                border: `1px solid ${styles.buttonBorder}`,
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                },
+                                border: `1px solid ${g.border.default}`,
+                                "&:hover": { background: g.hover },
                             }}
                         >
                             {visibleMembers.map((m, idx) => (
@@ -552,7 +497,8 @@ export const NoteHeaderActions = ({
                                 aria-label={t.notes.header.shareNoteAria}
                                 onClick={openShareModal}
                                 sx={{
-                                    ...actionButtonStyle,
+                                    border: `1px solid ${g.border.default}`,
+                                borderRadius: g.radius.md,
                                     display: "inline-flex",
                                     alignItems: "center",
                                     gap: 0.5,
@@ -590,7 +536,6 @@ export const NoteHeaderActions = ({
                     <IconButton
                         aria-label={t.noteAsk.headerButton.tooltip}
                         size="sm"
-                        sx={actionButtonStyle}
                         variant="plain"
                         onClick={openNoteAsk}
                     >
@@ -749,8 +694,7 @@ export const NoteHeaderActions = ({
                         iconFontSize={20}
                         items={items}
                         placement="bottom-end"
-                        triggerSize={36}
-                        triggerSx={actionButtonStyle}
+                        triggerSize={32}
                         // Modal-hosted note preview: lift the dropdown above
                         // the UrlLinkModal (default 9999 renders behind it).
                         zIndex={hostZIndex != null ? hostZIndex + 1 : undefined}
@@ -792,12 +736,7 @@ export const NoteHeaderActions = ({
             {/* Close Button (only in task page) */}
             {isInTaskPage && (
                 <AppTooltip size="sm" title={t.notes.header.close}>
-                    <IconButton
-                        size="sm"
-                        sx={dangerButtonStyle}
-                        variant="plain"
-                        onClick={onCloseNotes}
-                    >
+                    <IconButton color="danger" size="sm" variant="plain" onClick={onCloseNotes}>
                         <CancelIcon
                             sx={{
                                 fontSize: "20px",

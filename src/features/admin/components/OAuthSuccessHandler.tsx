@@ -186,16 +186,7 @@ export const OAuthSuccessHandler = () => {
                         >
                             {error}
                         </Alert>
-                        <Button
-                            sx={{
-                                py: 1.25,
-                                borderRadius: "12px",
-                                fontWeight: 600,
-                                background: styles.buttonBg,
-                                "&:hover": { background: styles.buttonHover },
-                            }}
-                            onClick={() => navigate("/signin", { replace: true })}
-                        >
+                        <Button size="lg" onClick={() => navigate("/signin", { replace: true })}>
                             {oauth.backToSignIn}
                         </Button>
                     </Stack>

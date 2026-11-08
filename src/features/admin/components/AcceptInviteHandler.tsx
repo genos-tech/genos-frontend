@@ -220,16 +220,8 @@ export const AcceptInviteHandler = () => {
                             {t.admin.acceptInvite.mismatchShort}
                         </Alert>
                         <Button
+                            size="lg"
                             startDecorator={<LogoutRoundedIcon />}
-                            sx={{
-                                py: 1.5,
-                                background: styles.buttonBg,
-                                borderRadius: "12px",
-                                fontWeight: 600,
-                                fontSize: "15px",
-                                boxShadow: styles.buttonShadow,
-                                "&:hover": { background: styles.buttonHover },
-                            }}
                             fullWidth
                             onClick={handleSignOutAndContinue}
                         >

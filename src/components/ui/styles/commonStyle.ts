@@ -169,45 +169,6 @@ export const JoinTeamFormStyles = {
     },
 };
 
-export const ActionButtonStyles = {
-    dark: {
-        containerBg: D.surfaceElevated,
-        containerBorder: D.border,
-        titleGradient: D.titleGradient,
-        buttonBg: D.buttonBg,
-        buttonHover: D.buttonBgHover,
-        buttonBorder: D.buttonBorder,
-        createButtonBg: D.primaryButtonBg,
-        createButtonHover: D.primaryButtonHover,
-        dangerBg: D.dangerTintBg,
-        dangerHover: D.dangerTintBgHover,
-        dangerBorder: D.dangerTintBorder,
-        menuBg: D.menuBg,
-        menuBorder: D.menuBorder,
-        textColor: D.text,
-        mutedText: D.textMuted,
-        lockColor: D.warningTint,
-    },
-    light: {
-        containerBg: L.surfaceElevated,
-        containerBorder: L.border,
-        titleGradient: L.titleGradient,
-        buttonBg: L.buttonBg,
-        buttonHover: L.buttonBgHover,
-        buttonBorder: L.buttonBorder,
-        createButtonBg: L.primaryButtonBg,
-        createButtonHover: L.primaryButtonHover,
-        dangerBg: L.dangerTintBg,
-        dangerHover: L.dangerTintBgHover,
-        dangerBorder: L.dangerTintBorder,
-        menuBg: L.menuBg,
-        menuBorder: L.menuBorder,
-        textColor: L.text,
-        mutedText: L.textMuted,
-        lockColor: L.warningTint,
-    },
-};
-
 export const HeaderStyles = {
     dark: {
         logoBg: D.primaryButtonBg,

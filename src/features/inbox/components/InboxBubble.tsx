@@ -802,26 +802,6 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     size="sm"
                                     startDecorator={<CheckRoundedIcon sx={{ fontSize: 16 }} />}
                                     variant="solid"
-                                    sx={{
-                                        borderRadius: "10px",
-                                        fontWeight: 600,
-                                        fontSize: "0.75rem",
-                                        px: 2.5,
-                                        py: 0.75,
-                                        background: palette.primaryButtonBg,
-                                        boxShadow: palette.primaryButtonShadow,
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: palette.primaryButtonHover,
-                                            transform: "translateY(-1px)",
-                                            boxShadow: isDark
-                                                ? "0 6px 16px rgba(var(--gp-brand-700-rgb), 0.5)"
-                                                : "0 6px 16px rgba(var(--gp-brand-700-rgb), 0.4)",
-                                        },
-                                        "&:active": {
-                                            transform: "translateY(0)",
-                                        },
-                                    }}
                                     onClick={handleApprove}
                                 >
                                     {t.inbox.bubble.approve}

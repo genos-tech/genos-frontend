@@ -178,36 +178,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         return snippet || dmDisplayName || undefined;
     })();
 
-    // Action button style
-    const actionButtonStyle = {
-        background: styles.buttonBg,
-        border: `1px solid ${styles.buttonBorder}`,
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.buttonHover,
-            transform: "translateY(-1px)",
-            boxShadow: `0 4px 12px ${styles.glowColor}`,
-        },
-    };
-
-    // Danger button style
-    const dangerButtonStyle = {
-        background: styles.dangerBg,
-        border: `1px solid ${styles.dangerBorder}`,
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.dangerHover,
-            transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(var(--gp-tint-danger-rgb), 0.2)",
-        },
-    };
-
     const dummyThreadChat: ThreadProps = {
         chatId: useCM.currentThreadChat?.chatId as number,
         chatName: useCM.currentThreadChat?.chatName as string,
@@ -648,7 +618,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         size="sm"
                         variant="plain"
                         aria-label={t.threadAsk.headerButton.tooltip}
-                        sx={actionButtonStyle}
                         onClick={openThreadAsk}
                     >
                         <AutoAwesomeRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
@@ -677,15 +646,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     return (
                         <MoreMenu
                             placement="bottom-end"
-                            triggerSize={36}
+                            triggerSize={32}
                             // Modal-hosted: lift the dropdown above the
                             // UrlLinkModal (default 9999 renders behind it).
                             zIndex={popupZIndex}
-                            triggerSx={{
-                                borderRadius: "10px",
-                                background: styles.buttonBg,
-                                border: `1px solid ${styles.buttonBorder}`,
-                            }}
                             items={[
                                 {
                                     id: "copy-thread-link",
@@ -732,8 +696,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 <AppTooltip size="sm" title={t.chat.headers.close}>
                     <IconButton
                         size="sm"
+                        color="danger"
                         variant="plain"
-                        sx={dangerButtonStyle}
                         onClick={closeThreadByUser}
                     >
                         <CloseRoundedIcon

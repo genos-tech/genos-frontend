@@ -15,6 +15,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { HeaderUserName } from "./HeaderUserName";
@@ -98,52 +99,6 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
 
     const isYou: boolean = myself.userId === useCM.currentSubChat?.dmPartnerUser.userId;
 
-    // Action button style
-    const actionButtonStyle = {
-        background: styles.buttonBg,
-        border: `1px solid ${styles.buttonBorder}`,
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.buttonHover,
-            transform: "translateY(-1px)",
-            boxShadow: `0 4px 12px ${styles.glowColor}`,
-        },
-    };
-
-    // Primary button style
-    const primaryButtonStyle = {
-        background: styles.primaryButtonBg,
-        border: "none",
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        boxShadow: `0 2px 8px ${styles.glowColor}`,
-        "&:hover": {
-            background: styles.primaryButtonHover,
-            transform: "translateY(-2px)",
-            boxShadow: `0 6px 16px ${styles.glowColor}`,
-        },
-    };
-
-    // Danger button style
-    const dangerButtonStyle = {
-        background: styles.dangerBg,
-        border: `1px solid ${styles.dangerBorder}`,
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        "&:hover": {
-            background: styles.dangerHover,
-            transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(var(--gp-tint-danger-rgb), 0.2)",
-        },
-    };
-
     const swapChat = () => {
         if (useCM.currentMainChat && useCM.currentSubChat) {
             useCM.setCurrentMainChat(useCM.currentSubChat);
@@ -209,7 +164,6 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         <IconButton
                             aria-label={t.chat.headers.markAllReadAria}
                             size="sm"
-                            sx={actionButtonStyle}
                             variant="plain"
                             onClick={() => markAllAsRead(subChat.chatType, subChatIdLegacy!)}
                         >
@@ -224,9 +178,9 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         useCM.currentSubChat.chatType === 4) && (
                         <AppTooltip size="sm" title={t.chat.headers.createNewTaskTooltip}>
                             <IconButton
+                                color="primary"
                                 size="sm"
-                                sx={primaryButtonStyle}
-                                variant="plain"
+                                variant="solid"
                                 onClick={() => {
                                     useCM.setIsMainChatVisible(true);
                                     useCM.setIsThreadVisible(false);
@@ -247,12 +201,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
 
                 {/* Swap Chat Button */}
                 <AppTooltip size="sm" title={t.chat.headers.swapChats}>
-                    <IconButton
-                        size="sm"
-                        sx={actionButtonStyle}
-                        variant="plain"
-                        onClick={() => swapChat()}
-                    >
+                    <IconButton size="sm" variant="plain" onClick={() => swapChat()}>
                         <SwapVertRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                     </IconButton>
                 </AppTooltip>
@@ -264,7 +213,6 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             <AppTooltip size="sm" title={t.chat.headers.backToDM}>
                                 <IconButton
                                     size="sm"
-                                    sx={actionButtonStyle}
                                     variant="plain"
                                     onClick={() => setIsToDoVisible(false)}
                                 >
@@ -283,7 +231,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                     sx={{
                                         "& .MuiBadge-badge": {
                                             zIndex: 1,
-                                            background: styles.primaryButtonBg,
+                                            background: g.accent.solid,
                                             border: "2px solid",
                                             borderColor: isDark ? "#1e2028" : "#fff",
                                         },
@@ -291,7 +239,6 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                 >
                                     <IconButton
                                         size="sm"
-                                        sx={actionButtonStyle}
                                         variant="plain"
                                         onClick={() => setIsToDoVisible(true)}
                                     >
@@ -308,8 +255,8 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 {/* Close Button */}
                 <AppTooltip size="sm" title={t.chat.headers.close}>
                     <IconButton
+                        color="danger"
                         size="sm"
-                        sx={dangerButtonStyle}
                         variant="plain"
                         onClick={() => useCM.setIsSubChatVisible(false)}
                     >

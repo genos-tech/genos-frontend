@@ -392,6 +392,8 @@ export const ResetPasswordForm = () => {
 
                             <Button
                                 disabled={submitting}
+                                size="lg"
+                                sx={{ mt: 1 }}
                                 type="submit"
                                 startDecorator={
                                     submitting ? (
@@ -400,21 +402,6 @@ export const ResetPasswordForm = () => {
                                         <SaveRoundedIcon />
                                     )
                                 }
-                                sx={{
-                                    mt: 1,
-                                    py: 1.5,
-                                    background: styles.buttonBg,
-                                    borderRadius: "12px",
-                                    fontWeight: 600,
-                                    fontSize: "15px",
-                                    boxShadow: styles.buttonShadow,
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    "&:hover": {
-                                        background: styles.buttonHover,
-                                        transform: "translateY(-2px)",
-                                        boxShadow: `${styles.buttonShadow}, 0 8px 24px ${palette.glow}`,
-                                    },
-                                }}
                                 fullWidth
                             >
                                 {t.admin.auth.passwordReset.submit}

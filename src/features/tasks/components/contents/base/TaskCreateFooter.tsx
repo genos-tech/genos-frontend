@@ -278,48 +278,6 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                         size="sm"
                         startDecorator={<AddTaskRoundedIcon sx={{ fontSize: 16 }} />}
                         variant="solid"
-                        sx={{
-                            fontWeight: 600,
-                            fontSize: "13px",
-                            borderRadius: "10px",
-                            px: 2.5,
-                            py: 0.75,
-                            background: isDisabled
-                                ? isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.08)"
-                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)",
-                            color: isDisabled
-                                ? isDark
-                                    ? "rgba(255,255,255,0.3)"
-                                    : "rgba(0,0,0,0.3)"
-                                : "white",
-                            boxShadow: isDisabled
-                                ? "none"
-                                : "0 2px 8px rgba(var(--gp-brand-700-rgb), 0.3)",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            "&:hover": {
-                                background: isDisabled
-                                    ? isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.08)"
-                                    : "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)",
-                                boxShadow: isDisabled
-                                    ? "none"
-                                    : "0 4px 12px rgba(var(--gp-brand-700-rgb), 0.4)",
-                                transform: isDisabled ? "none" : "translateY(-1px)",
-                            },
-                            "&:active": {
-                                transform: isDisabled ? "none" : "translateY(0)",
-                                boxShadow: isDisabled
-                                    ? "none"
-                                    : "0 2px 6px rgba(var(--gp-brand-700-rgb), 0.25)",
-                            },
-                            "&:disabled": {
-                                background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                                color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
-                            },
-                        }}
                         onClick={triggerSubmit}
                     >
                         {isCreatingTask ? "Creating…" : "Create Task"}

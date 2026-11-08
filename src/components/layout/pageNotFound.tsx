@@ -145,31 +145,7 @@ const PageNotFoundContent: React.FC = () => {
             </Typography>
 
             {/* Button */}
-            <Button
-                startDecorator={<HomeRoundedIcon />}
-                sx={{
-                    px: 3,
-                    py: 1.25,
-                    borderRadius: "12px",
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    background: palette.primaryButtonBg,
-                    boxShadow: palette.shadowSoft,
-                    border: "none",
-                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    "&:hover": {
-                        background: palette.primaryButtonHover,
-                        transform: "translateY(-2px)",
-                        boxShadow: isDark
-                            ? "0 8px 28px rgba(var(--gp-brand-700-rgb), 0.45)"
-                            : "0 8px 28px rgba(var(--gp-brand-700-rgb), 0.35)",
-                    },
-                    "&:active": {
-                        transform: "translateY(0)",
-                    },
-                }}
-                onClick={handleBackHome}
-            >
+            <Button size="lg" startDecorator={<HomeRoundedIcon />} onClick={handleBackHome}>
                 {t.layout.pageNotFound.backHome}
             </Button>
         </Box>
