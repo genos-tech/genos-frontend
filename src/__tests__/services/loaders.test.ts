@@ -11,6 +11,7 @@ import {
     loadV3SpecificMessages,
     readV3CachedMessages,
 } from "../../features/chat/services/loadV3SpecificMessages";
+import { INBOX_FOCUS_RESYNC_MS, inboxSyncAgeMs } from "../../features/inbox/inboxResyncEvent";
 import { channelService } from "../../services/channel/channelService";
 import { loadInitialData } from "../../services/loadInitialData";
 import { refreshAllData } from "../../services/refreshAllData";
@@ -193,6 +194,24 @@ describe("refreshAllData", () => {
         // null project id => no tasks load
         expect(tasksReq).not.toHaveBeenCalled();
         expect(onIDBRefreshed).toHaveBeenCalledTimes(1);
+    });
+
+    it("stamps the inbox sync clock as it starts, so the focus resync does not repeat it", async () => {
+        // The focus resync (`useInboxResync`) syncs only when the last sync is a
+        // minute old. The wake refresh is a sync too, and it begins in the same
+        // event, so the stamp has to be synchronous with the request.
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(Date.now() + 24 * 60 * 60_000);
+        expect(inboxSyncAgeMs()).toBeGreaterThan(INBOX_FOCUS_RESYNC_MS);
+
+        const run = refreshAllData({
+            myself,
+            accessToken: "tok",
+            currentProjectId: null,
+            onIDBRefreshed,
+        });
+        expect(inboxSyncAgeMs()).toBeLessThan(1);
+        await run;
     });
 
     it("loads project tasks only for a positive project id", async () => {
