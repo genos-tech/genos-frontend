@@ -7,26 +7,26 @@ The terms were chosen as follows: the one the app already uses most (a count ove
 file), unless that one is wrong in the language. Where a column differs from the plain count the
 reason is in the notes below the table.
 
-| Concept              | en        | ja             | zh       | es           | fr            | hi         | ar                |
-| -------------------- | --------- | -------------- | -------- | ------------ | ------------- | ---------- | ----------------- |
-| Task                 | Task      | タスク         | 任务     | Tarea        | Tâche         | टास्क      | مهمة              |
-| Project              | Project   | プロジェクト   | 项目     | Proyecto     | Projet        | प्रोजेक्ट  | مشروع             |
-| Sprint               | Sprint    | スプリント     | 冲刺     | Sprint       | Sprint        | स्प्रिंट   | سبرنت             |
-| Milestone            | Milestone | マイルストーン | 里程碑   | Hito         | Jalon         | माइलस्टोन  | معلم (pl. معالم)  |
-| Backlog (no sprint)  | Backlog   | バックログ     | 待办清单 | Backlog      | Backlog       | बैकलॉग     | الأعمال المتراكمة |
-| Status               | Status    | ステータス     | 状态     | Estado       | Statut        | स्थिति     | الحالة            |
-| Priority             | Priority  | 優先度         | 优先级   | Prioridad    | Priorité      | प्राथमिकता | الأولوية          |
-| Effort (task)        | Effort    | Effort         | 工作量   | Esfuerzo     | Effort        | प्रयास     | الجهد             |
-| Inbox                | Inbox     | 受信箱         | 收件箱   | Bandeja      | Réception     | इनबॉक्स    | الوارد            |
-| Schedule (recurring) | Schedule  | スケジュール   | 定时任务 | Programación | Planification | शेड्यूल    | الجدول الزمني     |
-| To-Do (feature)      | To-Do     | To-Do          | 待办事项 | Pendientes   | À faire       | टू-डू      | قائمة المهام      |
-| Note                 | Note      | ノート         | 笔记     | Nota         | Note          | नोट        | ملاحظة            |
-| Thread               | Thread    | スレッド       | 话题     | Hilo         | Fil           | थ्रेड      | موضوع             |
-| Tag                  | Tag       | タグ           | 标签     | Etiqueta     | Balise        | टैग        | علامة             |
-| Project label        | Label     | ラベル         | 标签     | Etiqueta     | Libellé       | लेबल       | تسمية             |
-| Comment              | Comment   | コメント       | 评论     | Comentario   | Commentaire   | टिप्पणी    | تعليق             |
-| Revoke (key, app)    | Revoke    | 取り消す       | 撤销     | Revocar      | Révoquer      | रद्द करें  | إبطال             |
-| API key              | API key   | API キー       | API 密钥 | Clave de API | Clé API       | API कुंजी  | مفتاح API         |
+| Concept              | en        | ja             | zh       | es           | fr            | hi         | ar                                     |
+| -------------------- | --------- | -------------- | -------- | ------------ | ------------- | ---------- | -------------------------------------- |
+| Task                 | Task      | タスク         | 任务     | Tarea        | Tâche         | टास्क      | مهمة                                   |
+| Project              | Project   | プロジェクト   | 项目     | Proyecto     | Projet        | प्रोजेक्ट  | مشروع                                  |
+| Sprint               | Sprint    | スプリント     | 冲刺     | Sprint       | Sprint        | स्प्रिंट   | سبرنت                                  |
+| Milestone            | Milestone | マイルストーン | 里程碑   | Hito         | Jalon         | माइलस्टोन  | معلم (pl. معالم)                       |
+| Backlog (no sprint)  | Backlog   | バックログ     | 待办清单 | Backlog      | Backlog       | बैकलॉग     | الأعمال المتراكمة                      |
+| Status               | Status    | ステータス     | 状态     | Estado       | Statut        | स्थिति     | الحالة                                 |
+| Priority             | Priority  | 優先度         | 优先级   | Prioridad    | Priorité      | प्राथमिकता | الأولوية                               |
+| Effort (task)        | Effort    | Effort         | 工作量   | Esfuerzo     | Effort        | प्रयास     | الجهد                                  |
+| Inbox                | Inbox     | 受信箱         | 收件箱   | Bandeja      | Réception     | इनबॉक्स    | الوارد                                 |
+| Schedule (recurring) | Schedule  | スケジュール   | 定时任务 | Programación | Planification | शेड्यूल    | الجدول الزمني                          |
+| To-Do (feature)      | To-Do     | To-Do          | 待办事项 | Por hacer    | À faire       | टू-डू      | مهام اليوم (rail), قائمة المهام (pane) |
+| Note                 | Note      | ノート         | 笔记     | Nota         | Note          | नोट        | ملاحظة                                 |
+| Thread               | Thread    | スレッド       | 话题     | Hilo         | Fil           | थ्रेड      | موضوع                                  |
+| Tag                  | Tag       | タグ           | 标签     | Etiqueta     | Balise        | टैग        | علامة                                  |
+| Project label        | Label     | ラベル         | 标签     | Etiqueta     | Libellé       | लेबल       | تسمية                                  |
+| Comment              | Comment   | コメント       | 评论     | Comentario   | Commentaire   | टिप्पणी    | تعليق                                  |
+| Revoke (key, app)    | Revoke    | 取り消す       | 撤销     | Revocar      | Révoquer      | रद्द करें  | إبطال                                  |
+| API key              | API key   | API キー       | API 密钥 | Clave de API | Clé API       | API कुंजी  | مفتاح API                              |
 
 Brand and code tokens stay in English in every locale: Genos, GitHub, Google, MCP, OAuth, API,
 webhook ids, tool ids (`create_task`), shortcuts.
@@ -36,9 +36,12 @@ webhook ids, tool ids (`create_task`), shortcuts.
 - **Arabic milestone is `معلم`.** `معلم`/`المعالم` was already the most used form (the sidebar's section is `المعالم`); the old
   catalog also had `منعطف`, `مرحلة`, `الحدث الرئيسي` and `المراحل الرئيسية` for the same thing. Do not add a
   fifth. Arabic sprint is `سبرنت` (not `سباق`, `عدو` or `سبرينت`).
-- **Arabic To-Do is `قائمة المهام`**, so the rail no longer shows `المهام` for both To-Do and
-  Tasks. It is also the title of the To-Do pane, so the rail and the pane agree. It is 39 px of
-  the rail's 61 px at the 0.65rem rail label size (measured).
+- **The rail uses a short To-Do label; the pane keeps the full term.** `GlobalRail.test.tsx` caps a
+  rail label at 53px (the 68px rail minus padding), so a label here must pass `labelWidth()` in that test,
+  and no two rail buttons may share a word. Arabic: rail `مهام اليوم` (it was `المهام`, the same word as
+  Tasks; the first replacement tried, `قائمة المهام`, is the pane title and is too wide for the rail).
+  Spanish: `Por hacer` (the pane's own title; `Pendientes` was too wide). The label is the same in
+  the rail, the service switcher and Settings > Sidebar (`serviceSwitcherTodoLocales.test.ts`).
 - **Chinese sprint is `冲刺`** (the Scrum term; `短跑` is a footrace and the file's earlier
   `迭代` was a software "iteration"). `状态` is status (`地位` is social standing). Effort is
   `工作量`, never `努力`/`努力程度`. Backlog is `待办清单` and To-Do is `待办`/`待办事项`:
@@ -49,7 +52,7 @@ webhook ids, tool ids (`create_task`), shortcuts.
 - **Japanese note is `ノート`** (the sidebar's word); `メモ` is kept only for "meeting notes"
   and for the task's own notes field. Inbox is `受信箱` (not `受信トレイ`). Effort stays
   `Effortレベル`, as the table column and the form already show it.
-- **Spanish To-Do is `Pendientes`** (the item: `pendiente`). Sprint is never `carrera`.
+- **Spanish To-Do is `Por hacer`** (an item is a `pendiente`). Sprint is never `carrera`.
   A recurring schedule is a `programación`; `horario` is only for hours of the day (quiet
   hours).
 - **French milestone is `jalon`** (never `étape`, which is a step). A recurring schedule is a

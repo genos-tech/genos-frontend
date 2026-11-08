@@ -139,12 +139,14 @@ describe("the rail never shows one word on two buttons", () => {
         });
     }
 
-    it("the Arabic To-Do label still fits the 68px rail (two short words at most)", () => {
-        const todo = L.ar["sidebar.actions.todo"];
-        // Measured in a browser at the rail's 0.65rem label size: 39px of 61px.
-        expect(todo).toBe("قائمة المهام");
-        expect(todo.length).toBeLessThanOrEqual(13);
-        expect(L.ar["layout.serviceSwitcher.todo"]).toBe(todo);
+    it("the To-Do label is the same in the rail, the switcher and Settings > Sidebar", () => {
+        // Width is owned by GlobalRail.test.tsx (53px budget per label); this only keeps the
+        // three places that name the same button in step.
+        for (const name of Object.keys(L) as (keyof typeof L)[]) {
+            const todo = L[name]["sidebar.actions.todo"];
+            expect(L[name]["layout.serviceSwitcher.todo"], `${name} switcher`).toBe(todo);
+            expect(L[name]["settings.sidebar.items.todo"], `${name} settings`).toBe(todo);
+        }
     });
 });
 
@@ -159,7 +161,8 @@ describe("ja / es / fr", () => {
             "chat.todoPane.createTask.description",
         ]);
     });
-    it("es: sprint is never a 'carrera' (race)", () => {
+    it("es: To-Do is Por hacer (the pane's title), sprint is never a 'carrera' (race)", () => {
+        expect(L.es["sidebar.actions.todo"]).toBe("Por hacer");
         expect(L.es["tasks.fields.noSprint"]).toBe("Sin sprint");
         expect(using("es", /carrera/i)).toEqual([]);
     });

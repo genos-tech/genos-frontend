@@ -407,12 +407,12 @@ export const es: DeepPartial<Messages> = {
                 windows: "Historia · Ctrl+Alt+H",
             },
             todoShortcut: {
-                mac: "Pendientes · Ctrl+⌘+O",
-                windows: "Pendientes · Ctrl+Alt+O",
+                mac: "Por hacer · Ctrl+⌘+O",
+                windows: "Por hacer · Ctrl+Alt+O",
             },
         },
         actions: {
-            todo: "Pendientes",
+            todo: "Por hacer",
             history: "Historia",
             settings: "Ajustes",
             signOut: "Salir",
@@ -445,7 +445,7 @@ export const es: DeepPartial<Messages> = {
             hintMac: "Mantén ⌘  ·  Pulsa Ctrl para navegar  ·  Suelta ⌘ para cambiar",
             hintOther: "Mantén Alt  ·  Pulsa Ctrl para navegar  ·  Suelta Alt para cambiar",
             search: "Genos",
-            todo: "Pendientes",
+            todo: "Por hacer",
         },
         mobile: {
             close: "Cerca",
@@ -1141,7 +1141,7 @@ export const es: DeepPartial<Messages> = {
                 chats: "Chats",
                 tasks: "Tareas",
                 notes: "Notas",
-                todo: "Pendientes",
+                todo: "Por hacer",
             },
         },
         quickReactions: {

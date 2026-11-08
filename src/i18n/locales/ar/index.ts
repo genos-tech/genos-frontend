@@ -399,12 +399,12 @@ export const ar: DeepPartial<Messages> = {
                 windows: "التاريخ · Ctrl+Alt+H",
             },
             todoShortcut: {
-                mac: "قائمة المهام · Ctrl+⌘+O",
-                windows: "قائمة المهام · Ctrl+Alt+O",
+                mac: "مهام اليوم · Ctrl+⌘+O",
+                windows: "مهام اليوم · Ctrl+Alt+O",
             },
         },
         actions: {
-            todo: "قائمة المهام",
+            todo: "مهام اليوم",
             history: "تاريخ",
             settings: "إعدادات",
             signOut: "خروج",
@@ -437,7 +437,7 @@ export const ar: DeepPartial<Messages> = {
             hintMac: "استمر بالضغط على ⌘  ·  اضغط على Ctrl للتنقل  ·  حرّر ⌘ للتبديل",
             hintOther: "استمر بالضغط على Alt  ·  اضغط على Ctrl للتنقل  ·  حرّر Alt للتبديل",
             search: "Genos",
-            todo: "قائمة المهام",
+            todo: "مهام اليوم",
         },
         mobile: {
             close: "إغلاق",
@@ -1124,7 +1124,7 @@ export const ar: DeepPartial<Messages> = {
                 chats: "الدردشات",
                 tasks: "المهام",
                 notes: "الملاحظات",
-                todo: "قائمة المهام",
+                todo: "مهام اليوم",
             },
         },
         quickReactions: {

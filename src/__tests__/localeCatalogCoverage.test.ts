@@ -91,7 +91,7 @@ const TRANSLATABLE = Object.keys(EN).filter((k) => !BLANK_IN_EN.has(k));
  * string like `{subtitle}{sep}`, `GitHub`, `Genos AI`, `Ctrl+⌘+O`).
  */
 const BRAND =
-    /\b(Genos|GitHub|Google|Calendar|Gemini|Anthropic|Claude|OpenAI|GPT|MCP|GIF|MDM|Spotlight|AI|Ctrl|Cmd|Alt)\b/g;
+    /\b(Genos AI|Genos|GitHub|Google Calendar|Google Gemini|Google|Anthropic Claude|OpenAI GPT|MCP|GIF|MDM|Spotlight AI|Spotlight|Ctrl|Cmd|Alt)\b/g;
 const isOnlyTokens = (en: string) =>
     !/[A-Za-z]{3,}/.test(en.replace(/\{[^}]*\}/g, "").replace(BRAND, ""));
 
