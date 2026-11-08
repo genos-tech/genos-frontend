@@ -3,13 +3,14 @@
  *
  * They used to sit at the bottom of Settings > Developer, where nobody looked.
  * Now: they are a section of Settings > Genos (and Developer no longer carries
- * them), and the Genos page opens the SAME `SchedulesSection` from its
- * sidebar. `SchedulesSection` is stubbed so these tests pin WHERE it is
+ * them), and the Genos page opens the SAME `SchedulesSection` from an
+ * icon-only button (MIP-1218: top right on desktop, next to the history button
+ * on a phone; no row in the session sidebar). `SchedulesSection` is stubbed so these tests pin WHERE it is
  * mounted and that both hosts mount one component, not what it fetches
  * (`SchedulesSection.test.tsx` covers that).
  *
- * jsdom has no layout engine: the placement on the page (footer outside the
- * scrolling list, phone width) was checked in a browser, see the PR.
+ * jsdom has no layout engine: the placement on the page (top-right corner, phone
+ * width, no shift of the conversation) was checked in a browser, see the PR.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render, screen, within } from "@testing-library/react";
@@ -67,7 +68,7 @@ vi.mock("../components/layout/TeamEmojiPanel", () => ({
     TeamEmojiPanel: () => <div />,
 }));
 // The Genos page: its conversation column and session feed are other
-// features; the entry under test lives in the sidebar the page owns.
+// features; the entry under test lives in the button the page owns.
 vi.mock("../features/spotlight/SpotlightContent", () => ({
     SpotlightContent: () => <div data-testid="spotlight-content" />,
     hasAskContent: () => false,
@@ -158,47 +159,56 @@ describe("Settings > Genos > Genos Assist Schedules", () => {
     });
 });
 
-describe("Genos page schedules entry", () => {
-    it("sidebar shows an entry only when the host can open schedules", async () => {
-        const props = {
-            sessions: [],
-            isLoading: false,
-            loadFailed: false,
-            activeSessionId: null,
-            resumeError: null,
-            search: "",
-            pinError: null,
-            onSearchChange: vi.fn(),
-            onTogglePin: vi.fn(),
-            onSelectSession: vi.fn(),
-            onNewChat: vi.fn(),
-            onRetry: vi.fn(),
-        };
-        const onOpen = vi.fn();
-        const { rerender } = render(
-            <CssVarsProvider>
-                <GenosSessionSidebar {...props} />
-            </CssVarsProvider>
-        );
-        expect(screen.queryByTestId("genos-schedules-entry")).toBeNull();
-        rerender(
-            <CssVarsProvider>
-                <GenosSessionSidebar {...props} onOpenSchedules={onOpen} />
-            </CssVarsProvider>
-        );
-        const entry = screen.getByRole("button", { name: en.settings.schedules.title });
-        // Short on the row, the long name as the accessible name.
-        expect(entry).toHaveTextContent("Assist schedules");
-        await userEvent.click(entry);
-        expect(onOpen).toHaveBeenCalledTimes(1);
+describe("Genos page schedules entry (MIP-1218)", () => {
+    const NAME = en.settings.schedules.shortTitle;
+
+    it("is the short name everywhere it shows: Assist schedules", () => {
+        expect(NAME).toBe("Assist schedules");
     });
 
-    it("opens the shared schedules component in a dialog, with the Genos page's team", async () => {
+    it("desktop: one icon-only button with the tooltip text and no visible label", async () => {
+        renderGenos();
+        const entry = screen.getByRole("button", { name: NAME });
+        expect(screen.getAllByRole("button", { name: NAME })).toHaveLength(1);
+        // Icon only: the words are the accessible name and the tooltip, never on the page.
+        expect(entry).toHaveTextContent("");
+        expect(entry.querySelector("svg")).toBeTruthy();
+        expect(screen.queryByText(NAME)).toBeNull();
+        await userEvent.hover(entry);
+        expect(await screen.findByRole("tooltip")).toHaveTextContent(NAME);
+    });
+
+    it("the session sidebar carries no schedules row any more", () => {
+        render(
+            <CssVarsProvider>
+                <GenosSessionSidebar
+                    activeSessionId={null}
+                    isLoading={false}
+                    loadFailed={false}
+                    pinError={null}
+                    resumeError={null}
+                    search=""
+                    sessions={[]}
+                    onNewChat={vi.fn()}
+                    onRetry={vi.fn()}
+                    onSearchChange={vi.fn()}
+                    onSelectSession={vi.fn()}
+                    onTogglePin={vi.fn()}
+                />
+            </CssVarsProvider>
+        );
+        expect(screen.queryByText(/assist schedules/i)).toBeNull();
+        expect(screen.queryByTestId("genos-schedules-entry")).toBeNull();
+        expect(screen.queryByRole("button", { name: /schedules/i })).toBeNull();
+    });
+
+    it("desktop: opens the shared schedules component in a dialog, with the Genos page's team", async () => {
         renderGenos();
         expect(screen.queryByTestId("schedules-section")).toBeNull();
-        await userEvent.click(screen.getByRole("button", { name: en.settings.schedules.title }));
+        await userEvent.click(screen.getByRole("button", { name: NAME }));
         const dialog = await screen.findByRole("dialog");
         const title = document.getElementById(dialog.getAttribute("aria-labelledby")!)!;
+        // The dialog keeps the full name.
         expect(title.textContent).toBe("Genos Assist Schedules");
         expect(within(dialog).getByTestId("schedules-section")).toHaveTextContent("team-7");
         // The dialog is already titled: the section must not repeat the heading.
@@ -220,7 +230,7 @@ describe("Genos page schedules entry", () => {
                 />
             </CssVarsProvider>
         );
-        await userEvent.click(screen.getByRole("button", { name: en.settings.schedules.title }));
+        await userEvent.click(screen.getByRole("button", { name: NAME }));
         const dialog = await screen.findByRole("dialog");
         expect(within(dialog).getByRole("status")).toHaveTextContent(
             en.settings.schedules.loading
@@ -228,14 +238,24 @@ describe("Genos page schedules entry", () => {
         expect(within(dialog).queryByTestId("schedules-section")).toBeNull();
     });
 
-    it("on a phone the entry is in the history drawer, and opening schedules closes the drawer", async () => {
+    it("phone: the entry sits right next to the history button, visible without opening the drawer", async () => {
         isMobileViewport = true;
         renderGenos();
-        expect(screen.queryByRole("button", { name: en.settings.schedules.title })).toBeNull();
-        await userEvent.click(screen.getByRole("button", { name: en.genos.sidebar.openLabel }));
-        await userEvent.click(screen.getByRole("button", { name: en.settings.schedules.title }));
+        const history = screen.getByRole("button", { name: en.genos.sidebar.openLabel });
+        const entry = screen.getByRole("button", { name: NAME });
+        expect(screen.getAllByRole("button", { name: NAME })).toHaveLength(1);
+        // Adjacent siblings in one row: history first, the entry beside it.
+        expect(entry.parentElement).toBe(history.parentElement);
+        expect(history.nextElementSibling).toBe(entry);
+        expect(entry).toHaveTextContent("");
+        await userEvent.click(entry);
         expect(await screen.findByTestId("schedules-section")).toBeInTheDocument();
-        // Drawer closed: the entry button is gone from the page behind the dialog.
-        expect(screen.queryByTestId("genos-schedules-entry")).toBeNull();
+    });
+
+    it("phone: the history drawer has no second schedules entry", async () => {
+        isMobileViewport = true;
+        renderGenos();
+        await userEvent.click(screen.getByRole("button", { name: en.genos.sidebar.openLabel }));
+        expect(screen.getAllByRole("button", { name: NAME })).toHaveLength(1);
     });
 });

@@ -25,7 +25,7 @@ import { ProjectLabelChips } from "../../admin/components/projectLabels/ProjectL
  * Autocomplete option `<li>` in the pickers) and any emphasis.
  */
 
-type ProjectIdentity = Pick<
+export type ProjectIdentity = Pick<
     ProjectProps,
     "projectId" | "projectName" | "projectLabels" | "isPrivate" | "isExternal" | "hostTeamName"
 >;

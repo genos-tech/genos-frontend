@@ -5,7 +5,9 @@
 // projects are a per-team list that can run to dozens — so this is a
 // multi-select dropdown with type-to-filter, not more chips.
 //
-// The option row is `ProjectIdentityRow`, the same component the task
+// The option row, list and matching rules come from `ProjectPickerParts`,
+// shared with the schedule form's project picker; the row itself is
+// `ProjectIdentityRow`, the same component the task
 // pickers (`ACTeamProjects`) and the task sidebar render, so a project
 // looks like itself everywhere: avatar, labels, then the name. Avatars
 // live on a project's PM chat, which this overlay can't reach (it mounts
@@ -14,10 +16,15 @@
 // missing from that map falls back to the generic project icon, the
 // documented `avatarSrc`-absent path in `ProjectIdentityRow`.
 
-import { Autocomplete, AutocompleteOption, Box, Chip, Typography } from "@mui/joy";
+import { Autocomplete, Box, Chip, Typography } from "@mui/joy";
 
 import { ProjectProps } from "../../types/tasks";
-import { ProjectIdentityRow } from "../tasks/components/ProjectIdentityRow";
+import {
+    isSameProject,
+    projectListboxSlotProps,
+    projectOptionLabel,
+    renderProjectOption,
+} from "../tasks/components/autocompletes/ProjectPickerParts";
 
 // The listbox is portaled to <body>, so it needs to clear the Spotlight
 // sheet (13100) or it renders behind the surface that owns it. Same
@@ -57,10 +64,10 @@ export const SpotlightProjectFilter = ({
     const selected = projects.filter((p) => selectedIds.includes(p.projectId));
 
     return (
-        <Autocomplete
+        <Autocomplete<ProjectProps, true, false, false>
             aria-label={ariaLabel}
-            getOptionLabel={(option) => option.projectName}
-            isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
+            getOptionLabel={(option) => projectOptionLabel(option)}
+            isOptionEqualToValue={(option, value) => isSameProject(option, value)}
             // One tag inline, the rest collapse to "+N" — the filter row
             // must stay one line tall no matter how many projects are
             // scoped, or it pushes the results list down as you pick.
@@ -69,22 +76,7 @@ export const SpotlightProjectFilter = ({
             placeholder={selected.length === 0 ? placeholder : ""}
             size="sm"
             value={selected}
-            renderOption={(optionProps, option) => (
-                // Joy's own option component (not a bare <li>) brings the
-                // padding, hover, focus and selected states — the same
-                // reasoning as ACTeamProjects.
-                <AutocompleteOption
-                    {...optionProps}
-                    key={option.projectId}
-                    sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
-                >
-                    <ProjectIdentityRow
-                        avatarSrc={projectAvatars?.get(option.projectId)}
-                        maxLabels={2}
-                        project={option}
-                    />
-                </AutocompleteOption>
-            )}
+            renderOption={renderProjectOption(projectAvatars)}
             renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                     <Chip
@@ -107,15 +99,7 @@ export const SpotlightProjectFilter = ({
                     </Chip>
                 ))
             }
-            slotProps={{
-                listbox: {
-                    sx: {
-                        zIndex: LISTBOX_Z_INDEX,
-                        maxHeight: 280,
-                        "--ListItem-minHeight": "32px",
-                    },
-                },
-            }}
+            slotProps={projectListboxSlotProps(LISTBOX_Z_INDEX)}
             sx={{
                 // Mobile: take the whole width so the picker wraps onto a
                 // deliberate line of its own BELOW the service chips,
