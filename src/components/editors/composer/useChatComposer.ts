@@ -9,6 +9,7 @@ import { PartialBlock } from "@blocknote/core";
 
 import { useEditorDraft } from "../../../hooks/common/useEditorDraft";
 import { channelService } from "../../../services/channel/channelService";
+import { matchesShortcut, type KeyLike } from "../../../shortcuts";
 import { useFileSizeGuard } from "../../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../../ui/feedback/useUploadCounter";
 import { useBlockNoteDictionary } from "../blockNoteI18n";
@@ -45,8 +46,7 @@ import { hasSendableContent } from "../utils/messageBlocks";
  */
 
 /** Cmd/Ctrl+Enter, the send chord of every composer. */
-export const isSendShortcut = (event: { key: string; metaKey: boolean; ctrlKey: boolean }) =>
-    event.key === "Enter" && (event.metaKey || event.ctrlKey);
+export const isSendShortcut = (event: KeyLike) => matchesShortcut("composer.send", event);
 
 /** Rough height of a document in lines, reported to hosts that size around the editor. */
 export const countEditorLines = (nodes: any[]): number => {

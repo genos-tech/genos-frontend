@@ -2,7 +2,7 @@ import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { Box, Button, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
-import { isMac } from "../../../utils/platform";
+import { shortcutParts } from "../../../shortcuts";
 import { AppTooltip } from "../../ui/AppTooltip";
 
 type EditorSendButtonProps = {
@@ -29,7 +29,7 @@ type EditorSendButtonProps = {
  */
 export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) => {
     const { t } = useTranslation();
-    const modKey = isMac() ? "⌘" : "Ctrl";
+    const [modKey] = shortcutParts("composer.send");
 
     return (
         <AppTooltip

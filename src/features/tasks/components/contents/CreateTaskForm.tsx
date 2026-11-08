@@ -35,9 +35,9 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
+import { shortcutText, useShortcut } from "../../../../shortcuts";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
-import { isMac } from "../../../../utils/platform";
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { statusSolid } from "../../meta/taskTone";
@@ -1079,7 +1079,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // a ref so a single stable `keydown` listener can call the latest
     // closure without re-binding on every render.
     const taskFooterRef = useRef<TaskCreateFooterHandle>(null);
-    const shortcutLabel = isMac() ? "⌘ + Enter" : "Ctrl + Enter";
+    const shortcutLabel = shortcutText("taskCreate.submit");
     const isMilestoneSubmitDisabled =
         isCreatingMilestone ||
         !taskTitle.trim() ||
@@ -1098,17 +1098,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             taskFooterRef.current?.submit();
         }
     };
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key !== "Enter") return;
-            const modifier = isMac() ? e.metaKey : e.ctrlKey;
-            if (!modifier) return;
+    useShortcut(
+        "taskCreate.submit",
+        (e) => {
             e.preventDefault();
             shortcutHandlerRef.current();
-        };
-        window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, []);
+        },
+        { target: "window" }
+    );
 
     // "Has the user actually entered anything worth confirming before
     // discarding?" The Cancel buttons short-circuit straight to teardown

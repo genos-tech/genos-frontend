@@ -41,10 +41,10 @@ import {
     MuteMenuItem,
     MuteToggleButton,
 } from "../../../../services/notifications/MuteToggleButton";
+import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
-import { isMac } from "../../../../utils/platform";
 import { createEvent, deleteEvent, getEvent } from "../../../integrations/services/calendar";
 import { redirectToOAuthConnect } from "../../../integrations/services/oauth";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
@@ -685,11 +685,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         {calendarModal && (
                             <AppTooltip
                                 size="sm"
-                                title={`${t.calendar.openTooltip} (${
-                                    isMac()
-                                        ? t.calendar.openShortcut.mac
-                                        : t.calendar.openShortcut.windows
-                                })`}
+                                title={`${t.calendar.openTooltip} (${shortcutText("global.calendar")})`}
                             >
                                 <IconButton
                                     size="sm"

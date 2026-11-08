@@ -59,7 +59,7 @@ import {
 } from "../../services/notifications/agentRunNotice";
 import type { NotificationManager } from "../../services/notifications/notificationManager";
 import { searchSpotlight } from "../../services/searchApi";
-import { isMac } from "../../utils/platform";
+import { useShortcut } from "../../shortcuts";
 import {
     deletionCoversSession,
     MAX_TURNS_IN_HISTORY,
@@ -367,28 +367,27 @@ export const useSpotlight = ({
     const { ask, turns, sessionId, reset: resetConversation } = qa;
 
     // ---- Global keyboard shortcut: Cmd-K / Ctrl-K toggles. ----
-    useEffect(() => {
-        const mac = isMac();
+    // The chord comes from the shortcut registry ("global.spotlight").
+    useShortcut("global.spotlight", (e) => {
+        // Don't fight system-level Cmd-K behaviors inside text
+        // inputs that explicitly handle it (e.g. some editors),
+        // but for the app shell this is what we want.
+        e.preventDefault();
+        // On the Genos page the same surface is already on
+        // screen full-page — opening the overlay on top of it
+        // would show the conversation twice. Hand focus to the
+        // page's input instead. (With the overlay somehow open
+        // anyway, fall through so Cmd-K still closes it.)
+        if (isPageActiveRef.current && !isOpenRef.current) {
+            pageInputFocusRef.current?.();
+            return;
+        }
+        setIsOpen((prev) => !prev);
+    });
 
+    // Escape closes the overlay (not a shortcut anyone looks up: every popup does it).
+    useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            const isToggle = e.key.toLowerCase() === "k" && (mac ? e.metaKey : e.ctrlKey);
-            if (isToggle) {
-                // Don't fight system-level Cmd-K behaviors inside text
-                // inputs that explicitly handle it (e.g. some editors),
-                // but for the app shell this is what we want.
-                e.preventDefault();
-                // On the Genos page the same surface is already on
-                // screen full-page — opening the overlay on top of it
-                // would show the conversation twice. Hand focus to the
-                // page's input instead. (With the overlay somehow open
-                // anyway, fall through so Cmd-K still closes it.)
-                if (isPageActiveRef.current && !isOpenRef.current) {
-                    pageInputFocusRef.current?.();
-                    return;
-                }
-                setIsOpen((prev) => !prev);
-                return;
-            }
             if (e.key === "Escape" && isOpenRef.current) {
                 // When a Joy Modal is layered on top of Spotlight (e.g.
                 // the inline-citation preview), the modal handles Esc

@@ -24,8 +24,8 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { useShortcut } from "../../../../shortcuts";
 import { UserProps } from "../../../../types/admin";
-import { isMac } from "../../../../utils/platform";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { useMarkFilteredActivityRead } from "../../hooks/useMarkFilteredActivityRead";
 import { useWarmRecentChannels } from "../../hooks/useWarmRecentChannels";
@@ -308,42 +308,18 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     // Cmd/Alt + Shift + ArrowLeft/Right cycles between NAV_ITEMS tabs.
     // The matching ArrowUp/Down (next/prev chat list item) lives in
     // `ChatList.tsx` because that component owns the per-tab list state.
-    // We deliberately bail out when the event target is an editable
-    // element so the platform Cmd+Shift+Arrow text-selection shortcut
-    // keeps working in the composer / search box.
-    useEffect(() => {
-        const mac = isMac();
+    // The registry entry ("chat.switchTab") matches the chord and bails out
+    // on editable targets, so the platform Cmd+Shift+Arrow text-selection
+    // shortcut keeps working in the composer / search box.
+    useShortcut("chat.switchTab", (e) => {
+        const currentIdx = NAV_ITEMS.findIndex((item) => item.type === useCM.currentChatPaneType);
+        if (currentIdx === -1) return;
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-            const holdHeld = mac ? e.metaKey : e.altKey;
-            const wrongModifierHeld = mac ? e.altKey : e.metaKey;
-            if (!holdHeld || !e.shiftKey || wrongModifierHeld || e.ctrlKey) return;
-            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-
-            const target = e.target as HTMLElement | null;
-            if (
-                target &&
-                (target.matches?.("input, textarea, [contenteditable=true]") ||
-                    target.closest?.("[contenteditable=true]"))
-            ) {
-                return;
-            }
-
-            const currentIdx = NAV_ITEMS.findIndex(
-                (item) => item.type === useCM.currentChatPaneType
-            );
-            if (currentIdx === -1) return;
-
-            e.preventDefault();
-            const delta = e.key === "ArrowRight" ? 1 : -1;
-            const nextIdx = (currentIdx + delta + NAV_ITEMS.length) % NAV_ITEMS.length;
-            handleNavClick(NAV_ITEMS[nextIdx].type);
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [useCM.currentChatPaneType]);
+        e.preventDefault();
+        const delta = e.key === "ArrowRight" ? 1 : -1;
+        const nextIdx = (currentIdx + delta + NAV_ITEMS.length) % NAV_ITEMS.length;
+        handleNavClick(NAV_ITEMS[nextIdx].type);
+    });
 
     return (
         <Box

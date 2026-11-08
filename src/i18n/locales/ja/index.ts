@@ -866,10 +866,6 @@ export const ja: DeepPartial<Messages> = {
             "Google カレンダーの接続が期限切れになりました。再接続してイベントを表示および管理します。",
         reconnectButton: "Google カレンダーを再接続する",
         openTooltip: "カレンダーを開く",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "前",
         next: "次",
         views: {
@@ -4198,6 +4194,15 @@ export const ja: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "キーボードショートカット",
+            editing: {
+                title: "入力中",
+                description:
+                    "メッセージを書いているとき、または新しいタスクのフォームを開いているときに使えます。",
+                rows: {
+                    send: "メッセージやコメントを送信",
+                    createTask: "タスクを作成",
+                },
+            },
             global: {
                 title: "グローバル",
                 description:
@@ -4214,9 +4219,9 @@ export const ja: DeepPartial<Messages> = {
                     cycle: "サービスを順に切り替え",
                 },
                 cycleCombo: {
-                    hold: "⌘ を長押し",
+                    hold: "{key} を長押し",
                     tap: "Ctrl をタップして切り替え",
-                    release: "⌘ を離して確定",
+                    release: "{key} を離して確定",
                 },
             },
             chat: {
@@ -4316,28 +4321,12 @@ export const ja: DeepPartial<Messages> = {
             settings: "設定",
             signOut: "サインアウト",
             openProfile: "マイプロフィールを開く",
-            switchServiceMac: "⌘ を長押し ＋ Ctrl をタップ",
-            switchServiceOther: "Ctrl を長押し ＋ Alt をタップ",
-            spotlightShortcut: {
-                mac: "Genos クイック質問 · ⌘+K",
-                windows: "Genos クイック質問 · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "タスク · Ctrl+⌘+T",
-                windows: "タスク · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "ノート · Ctrl+⌘+N",
-                windows: "ノート · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "履歴 · Ctrl+⌘+H",
-                windows: "履歴 · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "To-Do · Ctrl+⌘+O",
-                windows: "To-Do · Ctrl+Alt+O",
-            },
+            switchService: "{hold} を長押し ＋ {tap} をタップ",
+            spotlightShortcut: "Genos クイック質問 · {shortcut}",
+            tasksShortcut: "タスク · {shortcut}",
+            notesShortcut: "ノート · {shortcut}",
+            historyShortcut: "履歴 · {shortcut}",
+            todoShortcut: "To-Do · {shortcut}",
         },
         signOutConfirm: {
             title: "このワークスペースからサインアウトしますか?",

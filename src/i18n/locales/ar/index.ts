@@ -384,28 +384,12 @@ export const ar: DeepPartial<Messages> = {
             settings: "الإعدادات",
             signOut: "تسجيل الخروج",
             openProfile: "فتح ملفي الشخصي",
-            switchServiceMac: "استمر بالضغط على ⌘ + اضغط على Ctrl",
-            switchServiceOther: "استمر بالضغط على Ctrl + اضغط على Alt",
-            spotlightShortcut: {
-                mac: "Genos سؤال سريع · ⌘+K",
-                windows: "Genos سؤال سريع · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "المهام · Ctrl+⌘+T",
-                windows: "المهام · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "ملاحظات · Ctrl+⌘+N",
-                windows: "ملاحظات · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "التاريخ · Ctrl+⌘+H",
-                windows: "التاريخ · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "مهام اليوم · Ctrl+⌘+O",
-                windows: "مهام اليوم · Ctrl+Alt+O",
-            },
+            switchService: "استمر بالضغط على {hold} + اضغط على {tap}",
+            spotlightShortcut: "Genos سؤال سريع · {shortcut}",
+            tasksShortcut: "المهام · {shortcut}",
+            notesShortcut: "ملاحظات · {shortcut}",
+            historyShortcut: "التاريخ · {shortcut}",
+            todoShortcut: "مهام اليوم · {shortcut}",
         },
         actions: {
             todo: "مهام اليوم",
@@ -1111,6 +1095,14 @@ export const ar: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "اختصارات لوحة المفاتيح",
+            editing: {
+                title: "أثناء الكتابة",
+                description: "نشطة أثناء كتابة رسالة أو ملء نموذج المهمة الجديدة.",
+                rows: {
+                    send: "إرسال رسالة أو تعليق",
+                    createTask: "إنشاء المهمة",
+                },
+            },
             global: {
                 title: "عام",
                 description:
@@ -1127,9 +1119,9 @@ export const ar: DeepPartial<Messages> = {
                     openTodo: "افتح قائمة المهام",
                 },
                 cycleCombo: {
-                    hold: "استمر بالضغط على ⌘",
+                    hold: "استمر بالضغط على {key}",
                     tap: "اضغط على Ctrl للتنقّل",
-                    release: "حرّر ⌘ للتبديل",
+                    release: "حرّر {key} للتبديل",
                 },
             },
             chat: {
@@ -4973,10 +4965,6 @@ export const ar: DeepPartial<Messages> = {
             "انتهت صلاحية اتصال التقويم Google الخاص بك. أعد الاتصال لرؤية الأحداث الخاصة بك وإدارتها.",
         reconnectButton: "أعد الاتصال Google التقويم",
         openTooltip: "افتح التقويم",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+ج",
-        },
         prev: "سابق",
         next: "التالي",
         views: {
