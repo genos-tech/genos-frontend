@@ -243,9 +243,10 @@ describe("project picker", () => {
         await user.click(screen.getByRole("combobox", { name: "Project" }));
         await user.click(await screen.findByRole("option", { name: "Apollo" }));
         await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
-        expect(screen.getByRole("combobox", { name: "Project" })).toHaveTextContent("Apollo");
+        expect(screen.getByRole("combobox", { name: "Project" })).toHaveValue("Apollo");
         await user.click(screen.getByRole("combobox", { name: "Project" }));
         await user.click(await screen.findByRole("option", { name: "All projects" }));
+        expect(screen.getByRole("combobox", { name: "Project" })).toHaveValue("All projects");
         const name = screen.getByLabelText("Name");
         await user.clear(name);
         await user.type(name, "Everything");
@@ -264,8 +265,8 @@ describe("project picker", () => {
         const user = userEvent.setup();
         await user.click(await screen.findByRole("button", { name: "Edit" }));
         const picker = screen.getByRole("combobox", { name: "Project" });
-        expect(picker).toHaveTextContent("(unavailable)");
-        expect(picker).not.toHaveTextContent("999");
+        expect(picker).toHaveValue("(unavailable)");
+        expect((picker as HTMLInputElement).value).not.toContain("999");
     });
 
     it("shows a stored project by its name", async () => {
@@ -273,7 +274,7 @@ describe("project picker", () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
         await user.click(await screen.findByRole("button", { name: "Edit" }));
-        expect(screen.getByRole("combobox", { name: "Project" })).toHaveTextContent("Apollo");
+        expect(screen.getByRole("combobox", { name: "Project" })).toHaveValue("Apollo");
     });
 });
 
@@ -351,8 +352,8 @@ describe("milestone picker", () => {
         const edits = await screen.findAllByRole("button", { name: "Edit" });
         await user.click(edits[0]);
         const picker = await screen.findByRole("combobox", { name: /Milestone/ });
-        await waitFor(() => expect(picker).toHaveTextContent("(unavailable)"));
-        expect(picker).not.toHaveTextContent("9999");
+        await waitFor(() => expect(picker).toHaveValue("(unavailable)"));
+        expect((picker as HTMLInputElement).value).not.toContain("9999");
     });
 });
 

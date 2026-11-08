@@ -17,6 +17,7 @@
 // both hosts of SpotlightContent.
 
 import { useCallback, useEffect, useState } from "react";
+import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -83,7 +84,8 @@ export const GenosHome = ({
     // Mobile: the session sidebar is an overlay drawer, toggled from a
     // floating history button. Desktop always shows it.
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-    // The schedules dialog (MIP-1200), opened from the sidebar footer.
+    // The schedules dialog (MIP-1200), opened from the entry button: beside the
+    // history button on a phone, in the top-right corner on desktop (MIP-1218).
     const [schedulesOpen, setSchedulesOpen] = useState(false);
 
     // Session list refresh: `turns.length` changes exactly when a turn
@@ -120,10 +122,7 @@ export const GenosHome = ({
         [spotlight]
     );
 
-    const handleOpenSchedules = useCallback(() => {
-        setSchedulesOpen(true);
-        setMobileSidebarOpen(false);
-    }, []);
+    const handleOpenSchedules = useCallback(() => setSchedulesOpen(true), []);
 
     const handleNewChat = useCallback(() => {
         spotlight.onNewConversation();
@@ -144,12 +143,32 @@ export const GenosHome = ({
             search={sessionSearch}
             sessions={sessions}
             onNewChat={handleNewChat}
-            onOpenSchedules={handleOpenSchedules}
             onRetry={reloadSessions}
             onSearchChange={setSessionSearch}
             onSelectSession={handleSelectSession}
             onTogglePin={toggleSessionPin}
         />
+    );
+
+    // Icon only (no visible text): the short name is the tooltip and the accessible
+    // name. One button per breakpoint, so this element is placed in exactly one spot.
+    const schedulesEntry = (
+        <AppTooltip
+            placement={isMobile ? "bottom" : "bottom-end"}
+            size="sm"
+            title={t.settings.schedules.shortTitle}
+        >
+            <IconButton
+                aria-label={t.settings.schedules.shortTitle}
+                color="neutral"
+                data-testid="genos-schedules-entry"
+                size="sm"
+                variant={isMobile ? "soft" : "plain"}
+                onClick={handleOpenSchedules}
+            >
+                <EventRepeatRoundedIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+        </AppTooltip>
     );
 
     return (
@@ -236,30 +255,36 @@ export const GenosHome = ({
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    px: { xs: 1, sm: 3 },
+                    // Desktop leaves a 40px side gutter (the 24px it had, plus room) so
+                    // the schedules button in the top-right corner always sits in the
+                    // gutter and never over the card's own top-right "Back to search".
+                    // The content is centered, so nothing moves at wide widths.
+                    px: { xs: 1, sm: 3, md: 5 },
                     py: { xs: 1, sm: 2 },
                 }}
             >
                 {isMobile && (
-                    <AppTooltip
-                        placement="right"
-                        size="sm"
-                        title={
-                            mobileSidebarOpen
-                                ? t.genos.sidebar.closeLabel
-                                : t.genos.sidebar.openLabel
-                        }
-                    >
-                        <IconButton
-                            color="neutral"
+                    <Box sx={{ alignSelf: "flex-start", display: "flex", gap: 0.5, mb: 0.5 }}>
+                        <AppTooltip
+                            placement="right"
                             size="sm"
-                            sx={{ alignSelf: "flex-start", mb: 0.5 }}
-                            variant="soft"
-                            onClick={() => setMobileSidebarOpen((v) => !v)}
+                            title={
+                                mobileSidebarOpen
+                                    ? t.genos.sidebar.closeLabel
+                                    : t.genos.sidebar.openLabel
+                            }
                         >
-                            <HistoryRoundedIcon sx={{ fontSize: 18 }} />
-                        </IconButton>
-                    </AppTooltip>
+                            <IconButton
+                                color="neutral"
+                                size="sm"
+                                variant="soft"
+                                onClick={() => setMobileSidebarOpen((v) => !v)}
+                            >
+                                <HistoryRoundedIcon sx={{ fontSize: 18 }} />
+                            </IconButton>
+                        </AppTooltip>
+                        {schedulesEntry}
+                    </Box>
                 )}
                 <Box
                     sx={{
@@ -358,6 +383,15 @@ export const GenosHome = ({
                     />
                 </Box>
             </Box>
+
+            {/* Desktop: icon-only entry in the top-right corner. Absolutely placed in
+                the main column's side gutter, so it takes no room from the
+                conversation, the hero or the pinned input. */}
+            {!isMobile && (
+                <Box sx={{ position: "absolute", top: 8, right: 4, zIndex: 1 }}>
+                    {schedulesEntry}
+                </Box>
+            )}
         </Box>
     );
 };
