@@ -26,6 +26,7 @@ reason is in the notes below the table.
 | Project label        | Label     | ラベル         | 标签     | Etiqueta     | Libellé       | लेबल       | تسمية                                  |
 | Comment              | Comment   | コメント       | 评论     | Comentario   | Commentaire   | टिप्पणी    | تعليق                                  |
 | Revoke (key, app)    | Revoke    | 取り消す       | 撤销     | Revocar      | Révoquer      | रद्द करें  | إبطال                                  |
+| Delete               | Delete    | 削除           | 删除     | Eliminar     | Supprimer     | हटाएँ      | حذف                                    |
 | API key              | API key   | API キー       | API 密钥 | Clave de API | Clé API       | API कुंजी  | مفتاح API                              |
 
 Brand and code tokens stay in English in every locale: Genos, GitHub, Google, MCP, OAuth, API,
@@ -59,6 +60,9 @@ webhook ids, tool ids (`create_task`), shortcuts.
 - **French milestone is `jalon`** (never `étape`, which is a step). A recurring schedule is a
   `planification`; `horaire` is only for hours of the day. Tags are `balise` (labels on a
   project are `libellé`).
+- **Arabic delete is `حذف`** (`حذف؟` as a question), never `يمسح`: that is "wipes", the verb for cleaning a
+  surface. It had been used on eight bare "Delete" labels (task comment, saved filter, chat message,
+  note folder, to-do, tag, custom field). `مسح` stays for "Clear" (a search box, a filter).
 - **Quiet hours and the schedule are different things.** "Pause notifications on a schedule"
   uses the word for a time window (`horario`, `horaire`, `定时`), not the recurring-job noun.
 - Placeholders (`{name}`, `{count, plural, ...}`) are never translated. The coverage test

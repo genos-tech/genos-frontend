@@ -107,6 +107,16 @@ describe("ar", () => {
         expect(using("ar", /سبرينت|سباق|العدو/)).toEqual([]);
     });
 
+    it("delete is حذف, never يمسح (that one means wipes)", () => {
+        // Every key whose English is the bare action ("Delete", "Delete?") says it with حذف.
+        // Eight of them said يمسح (task comment, saved filter, chat message, note folder ...).
+        const bare = Object.keys(EN).filter((k) => /^Delete\??$/.test(EN[k]) && k in L.ar);
+        expect(bare.length).toBeGreaterThan(5);
+        expect(bare.filter((k) => !L.ar[k].startsWith("حذف")).map((k) => k)).toEqual([]);
+        expect(using("ar", /يمسح/)).toEqual([]);
+        expect(L.ar["tasks.comment.deleteTooltip"]).toBe("حذف");
+    });
+
     it("effort is الجهد (not المجهود) and a thread is موضوع (not خيط)", () => {
         expect(using("ar", /المجهود|خيط/)).toEqual([]);
     });
