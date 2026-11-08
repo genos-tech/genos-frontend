@@ -95,9 +95,9 @@ describe("ErrorState / DataState", () => {
         render(
             wrap(
                 <DataState
+                    empty={{ title: "EMPTY" }}
                     error={false}
                     errorState={{ title: "FAILED", onRetry: () => {} }}
-                    empty={{ title: "EMPTY" }}
                     hasData={false}
                     loading={false}
                     skeleton={<span>SKELETON</span>}
@@ -255,12 +255,12 @@ describe("Note editor panels (useNoteData + NoteLoadState)", () => {
             wrap(<NoteLoadState error={false} isActive isLoading onRetry={onRetry} />)
         );
         expect(container.textContent).toBe("");
-        rerender(wrap(<NoteLoadState error isActive isLoading={false} onRetry={onRetry} />));
+        rerender(wrap(<NoteLoadState isLoading={false} error isActive onRetry={onRetry} />));
         expect(screen.getByText(en.notes.editor.loadFailed)).toBeTruthy();
         fireEvent.click(retry());
         expect(onRetry).toHaveBeenCalledTimes(1);
         rerender(
-            wrap(<NoteLoadState error isActive={false} isLoading={false} onRetry={onRetry} />)
+            wrap(<NoteLoadState isActive={false} isLoading={false} error onRetry={onRetry} />)
         );
         const host = screen
             .getByText(en.notes.editor.loadFailed)
