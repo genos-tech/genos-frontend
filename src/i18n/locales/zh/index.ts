@@ -4115,7 +4115,7 @@ export const zh: DeepPartial<Messages> = {
             chats: "聊天",
             tasks: "任务",
             notes: "笔记",
-            account: "账户",
+            more: "更多",
             integrations: "集成",
             search: "Genos",
         },

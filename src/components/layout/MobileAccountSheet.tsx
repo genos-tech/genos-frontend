@@ -1,7 +1,9 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
@@ -17,6 +19,7 @@ import { loadMyTeams, membershipTeams } from "../../features/admin/services/load
 import { switchTeam } from "../../features/admin/services/switchTeam";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { useSidebarVisibility } from "../../hooks/common/useSidebarVisibility";
 import { useSignOut } from "../../hooks/common/useSignOut";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -37,6 +40,10 @@ type MobileAccountSheetProps = {
     useCM: ChatManagementState;
     useTEM: TeamManagementState;
     useUISM: UIStateManagementState;
+    // The rail's To-Do and History buttons, which the phone has no other
+    // way to reach (MIP-1277). Each closes this sheet first.
+    onOpenTodo: () => void;
+    onOpenHistory: () => void;
 };
 
 const RowButton = ({
@@ -82,15 +89,18 @@ const RowButton = ({
 );
 
 /**
- * Account surface for mobile.
+ * The "More" sheet for mobile.
  *
  * Everything in here lives only in the desktop sidebar, which renders
  * `null` below 900px — so before this existed a phone user had no way to
- * reach settings, notification preferences, the theme toggle, their team
- * list, or sign-out. Opened from the BottomTabBar's Account tab.
+ * reach To-Do, History, settings, notification preferences, the theme
+ * toggle, their team list, or sign-out. Opened from the BottomTabBar's
+ * More tab.
  */
 export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
     const { open, onClose, myself, setMyself, socket, useCM, useTEM, useUISM } = props;
+    const { onOpenTodo, onOpenHistory } = props;
+    const sidebarVisibility = useSidebarVisibility();
     const { accessToken } = useAuth();
     const { mode, setMode } = useColorScheme();
     const { t } = useTranslation();
@@ -191,6 +201,29 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                     <Divider sx={{ my: 1 }} />
 
                     <Stack spacing={0.5}>
+                        {/* The rail's two action buttons, in the rail's order.
+                            To-Do follows the Settings → Sidebar toggle like
+                            the rail does; History has none. They open over
+                            the current page, so this sheet closes first. */}
+                        {sidebarVisibility.isVisible("todo") && (
+                            <RowButton
+                                icon={<ChecklistRoundedIcon />}
+                                label={t.sidebar.actions.todo}
+                                onClick={() => {
+                                    onClose();
+                                    onOpenTodo();
+                                }}
+                            />
+                        )}
+                        <RowButton
+                            icon={<HistoryRoundedIcon />}
+                            label={t.sidebar.actions.history}
+                            onClick={() => {
+                                onClose();
+                                onOpenHistory();
+                            }}
+                        />
+                        <Divider sx={{ my: 0.5 }} />
                         {/* Same label and order as the desktop team
                             dropdown, which opens this modal from the row
                             above its team list. Disabled until the fetch

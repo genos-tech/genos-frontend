@@ -4269,7 +4269,7 @@ export const ja: DeepPartial<Messages> = {
             chats: "チャット",
             tasks: "タスク",
             notes: "ノート",
-            account: "アカウント",
+            more: "その他",
             integrations: "連携",
             search: "Genos",
         },
