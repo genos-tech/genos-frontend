@@ -256,6 +256,19 @@ describe("the graph modal header", () => {
         expect(chipWithText(document.body, word)).toHaveLength(0);
     });
 
+    it("the health label still carries its explanation tooltip (the label is not a ref target)", async () => {
+        renderGraph(OVERVIEW);
+        const health = Array.from(document.querySelectorAll("[data-tone]")).find(
+            (l) => (l.textContent ?? "").trim() === "Behind"
+        )!;
+        fireEvent.mouseOver(health.parentElement!);
+        fireEvent.focus(health.parentElement!);
+        const tip = await screen.findByRole("tooltip");
+        // "actualPct% done, expectedPct% expected" in the locale's words: both numbers.
+        expect(tip.textContent).toMatch(/20/);
+        expect(tip.textContent).toMatch(/60/);
+    });
+
     it("overdue, due soon and blocked are tone labels with their glyph, not Chips", () => {
         renderGraph(OVERVIEW);
         const byTone = (tone: string) =>

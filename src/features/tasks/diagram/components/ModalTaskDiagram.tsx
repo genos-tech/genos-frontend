@@ -159,9 +159,12 @@ export const ModalTaskDiagram = ({
                         expectedPct: Math.round(overview.health.expectedPct),
                     })}
                 >
-                    <ToneLabel size="sm" tone={HEALTH_TONE[overview.health.tone]} dot>
-                        {healthLabel}
-                    </ToneLabel>
+                    {/* A plain element for the tooltip to anchor on: ToneLabel is not a ref target. */}
+                    <Box component="span" sx={{ display: "inline-flex", cursor: "help" }}>
+                        <ToneLabel size="sm" tone={HEALTH_TONE[overview.health.tone]} dot>
+                            {healthLabel}
+                        </ToneLabel>
+                    </Box>
                 </AppTooltip>
             )}
 
