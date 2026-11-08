@@ -615,15 +615,22 @@ describe.each([
         });
 
         describe("BlockNote's own inserts", () => {
-            it("uses the upload target of the FIRST render (useCreateBlockNote freezes its options)", async () => {
+            // MIP-1223: this used to pin the bug (BlockNote keeps its options of the first render, so a
+            // paste or drag after switching chats uploaded to the channel of the chat opened first).
+            it("uploads to the CURRENT chat's channel after the target changes (not the first one)", async () => {
                 const view = mount();
                 const frozen = lastEditor().options.uploadFile;
                 remount(view, otherTarget);
-                expect(lastEditor().options.uploadFile).toBe(frozen);
+                // The function BlockNote holds is the one from the first render...
+                expect(lastEditor().options.uploadFile).toBeDefined();
                 await act(async () => {
                     await frozen(image());
                 });
-                expect(uploadInline).toHaveBeenLastCalledWith(channelId, expect.any(File));
+                // ...and it reaches the channel of the chat that is open NOW.
+                const currentChannel = isChat ? "chat-b" : channelId;
+                expect(uploadInline).toHaveBeenLastCalledWith(currentChannel, expect.any(File));
+                if (isChat)
+                    expect(uploadInline).not.toHaveBeenCalledWith(channelId, expect.any(File));
             });
         });
     }

@@ -172,14 +172,26 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
           )
         : undefined;
 
-    // `useCreateBlockNote` keeps the options of the FIRST render, so BlockNote's own inserts use
-    // the `uploadFile` (channel id, permissive pre-tier guard) of the mount; the drop loop and
-    // the file picker below use the current render's. Preserved as it was in every composer.
+    // `useCreateBlockNote` keeps the options of the FIRST render, and the composer is not keyed
+    // per chat, so a paste or drag after switching chats used to upload to the channel of the
+    // chat opened FIRST (MIP-1223). BlockNote therefore gets a thin function that calls the
+    // CURRENT render's `uploadFile` through a ref; whether BlockNote has one at all is still
+    // decided at mount (no channel at mount: its own file inserts stay inert, as before).
+    const latestUpload = useRef(uploadFile);
+    latestUpload.current = uploadFile;
+    const editorUploadFile = uploadFile
+        ? (file: File) => {
+              const upload = latestUpload.current;
+              return upload
+                  ? upload(file)
+                  : Promise.reject(new Error("There is no chat to upload this file to."));
+          }
+        : undefined;
     const editor = useGenosEditor({
         surface: "composer",
         schema,
         dictionary,
-        uploadFile,
+        uploadFile: editorUploadFile,
         initialContent,
     });
 
