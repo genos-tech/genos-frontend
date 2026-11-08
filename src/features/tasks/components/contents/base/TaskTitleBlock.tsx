@@ -51,10 +51,7 @@ import { StatusLabel } from "../../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
-
-// What `UrlLinkModal`'s floating chrome takes from the top-right corner of its dialog:
-// 12px from the edge + a 36px Close + 8px + a 36px "Move to page", plus a little air.
-const MODAL_CHROME_CLEARANCE = "112px";
+import { MODAL_CHROME_CLEARANCE } from "../modalChrome";
 
 type TaskTitleBlockProps = {
     myself: UserProps;

@@ -96,6 +96,7 @@ import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { LinkedPrSection } from "./LinkedPrSection";
+import { MODAL_CHROME_CLEARANCE } from "./modalChrome";
 import { SectionDivider, SectionHeader } from "./PreviewSection";
 
 type TaskPreviewProps = {
@@ -2159,7 +2160,14 @@ const MilestonePreviewInner = ({
                     <Stack
                         alignItems="center"
                         direction="row"
-                        sx={{ mb: 1.5, flexWrap: "wrap", gap: 1 }}
+                        sx={{
+                            mb: 1.5,
+                            flexWrap: "wrap",
+                            gap: 1,
+                            // Hosted in UrlLinkModal: keep clear of its floating Move to
+                            // page / Close, which sit in this corner (MIP-1169).
+                            ...(hostZIndex != null && { pr: MODAL_CHROME_CLEARANCE }),
+                        }}
                     >
                         <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />
                         <Typography level="body-xs" sx={{ color: "neutral.500" }}>
@@ -2516,61 +2524,64 @@ const MilestonePreviewInner = ({
                             );
                         })()}
 
-                        <AppTooltip title={t.tasks.preview.closeTooltip}>
-                            <IconButton
-                                size="sm"
-                                variant="plain"
-                                sx={{
-                                    background: styles.dangerBg,
-                                    border: `1px solid ${styles.dangerBorder}`,
-                                    borderRadius: "10px",
-                                    width: "36px",
-                                    height: "36px",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: styles.dangerHover,
-                                        transform: "translateY(-1px)",
-                                    },
-                                }}
-                                onClick={() => {
-                                    useTM.setIsTaskPreviewVisible(false);
-                                    useTM.setCurrentPreviewKind("task");
-                                    useTM.setCurrentPreviewMilestoneId(-1);
-                                    // Do NOT clear the table's milestone SCOPE here.
-                                    // Clicking a milestone in the sidebar sets both the
-                                    // preview AND the scope; tying the scope's lifetime
-                                    // to the preview meant closing the preview silently
-                                    // reset the filter (most visibly for a past
-                                    // milestone, whose tasks are hidden by default and
-                                    // so vanished). The scope is an explicit filter —
-                                    // cleared via the "Milestone: …" chip in the filter
-                                    // bar, not by closing the preview.
-                                    if (isNoMainPanelVisible(useTM)) {
-                                        useTM.setIsTaskTableVisible(true);
-                                    }
-
-                                    // When the milestone preview was opened from a
-                                    // task note (NoteHeaderActions → onOpenTask
-                                    // flips `useNM.isTaskVisibleInNote=true`), the
-                                    // surrounding `TaskPreviewPanel` is gated by
-                                    // that NM flag rather than by `useTM`. So the
-                                    // `setIsTaskPreviewVisible(false)` above has no
-                                    // visible effect — the panel only unmounts
-                                    // when we also clear the NM flag. Mirror the
-                                    // close path in `TaskTitleBlock.tsx`.
-                                    if (useNM.setIsTaskVisibleInNote) {
-                                        useNM.setIsTaskVisibleInNote(false);
-                                    }
-                                }}
-                            >
-                                <CancelIcon
+                        {/* In a modal the dialog's own ✕ closes (MIP-1169). */}
+                        {hostZIndex == null && (
+                            <AppTooltip title={t.tasks.preview.closeTooltip}>
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
                                     sx={{
-                                        fontSize: "20px",
-                                        color: isDark ? "#f87171" : "#dc2626",
+                                        background: styles.dangerBg,
+                                        border: `1px solid ${styles.dangerBorder}`,
+                                        borderRadius: "10px",
+                                        width: "36px",
+                                        height: "36px",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: styles.dangerHover,
+                                            transform: "translateY(-1px)",
+                                        },
                                     }}
-                                />
-                            </IconButton>
-                        </AppTooltip>
+                                    onClick={() => {
+                                        useTM.setIsTaskPreviewVisible(false);
+                                        useTM.setCurrentPreviewKind("task");
+                                        useTM.setCurrentPreviewMilestoneId(-1);
+                                        // Do NOT clear the table's milestone SCOPE here.
+                                        // Clicking a milestone in the sidebar sets both the
+                                        // preview AND the scope; tying the scope's lifetime
+                                        // to the preview meant closing the preview silently
+                                        // reset the filter (most visibly for a past
+                                        // milestone, whose tasks are hidden by default and
+                                        // so vanished). The scope is an explicit filter —
+                                        // cleared via the "Milestone: …" chip in the filter
+                                        // bar, not by closing the preview.
+                                        if (isNoMainPanelVisible(useTM)) {
+                                            useTM.setIsTaskTableVisible(true);
+                                        }
+
+                                        // When the milestone preview was opened from a
+                                        // task note (NoteHeaderActions → onOpenTask
+                                        // flips `useNM.isTaskVisibleInNote=true`), the
+                                        // surrounding `TaskPreviewPanel` is gated by
+                                        // that NM flag rather than by `useTM`. So the
+                                        // `setIsTaskPreviewVisible(false)` above has no
+                                        // visible effect — the panel only unmounts
+                                        // when we also clear the NM flag. Mirror the
+                                        // close path in `TaskTitleBlock.tsx`.
+                                        if (useNM.setIsTaskVisibleInNote) {
+                                            useNM.setIsTaskVisibleInNote(false);
+                                        }
+                                    }}
+                                >
+                                    <CancelIcon
+                                        sx={{
+                                            fontSize: "20px",
+                                            color: isDark ? "#f87171" : "#dc2626",
+                                        }}
+                                    />
+                                </IconButton>
+                            </AppTooltip>
+                        )}
                     </Stack>
 
                     {/* Per-status task progress for this milestone.

@@ -15,12 +15,14 @@ const read = (rel: string) => readFileSync(join(SRC, rel), "utf8");
 describe("task header in a modal host", () => {
     const modal = read("components/modals/UrlLinkModal.tsx");
     const header = read("features/tasks/components/contents/base/TaskTitleBlock.tsx");
+    const milestone = read("features/tasks/components/contents/TaskPreview.tsx");
+    const chrome = read("features/tasks/components/contents/modalChrome.ts");
 
     it("reserves at least the width of the dialog's two floating buttons", () => {
         // Move to page sits at `right: 56`, 36px wide: its outer edge is 92px from the corner.
         expect(modal).toMatch(/right: 56,/);
         expect(modal).toMatch(/size="md"/);
-        const clearance = Number(header.match(/MODAL_CHROME_CLEARANCE = "(\d+)px"/)![1]);
+        const clearance = Number(chrome.match(/MODAL_CHROME_CLEARANCE = "(\d+)px"/)![1]);
         expect(clearance).toBeGreaterThanOrEqual(56 + 36);
         expect(header).toMatch(/isModalHosted && \{ pr: MODAL_CHROME_CLEARANCE \}/);
     });
@@ -28,6 +30,13 @@ describe("task header in a modal host", () => {
     it("draws no second Close of its own while hosted", () => {
         expect(header).toMatch(
             /\{!isModalHosted && \(\s*<AppTooltip title=\{t\.tasks\.titleBlock\.closeTooltip\}>/
+        );
+    });
+
+    it("the milestone header does the same (it had the same two Close buttons)", () => {
+        expect(milestone).toMatch(/hostZIndex != null && \{ pr: MODAL_CHROME_CLEARANCE \}/);
+        expect(milestone).toMatch(
+            /\{hostZIndex == null && \(\s*<AppTooltip title=\{t\.tasks\.preview\.closeTooltip\}>/
         );
     });
 });
