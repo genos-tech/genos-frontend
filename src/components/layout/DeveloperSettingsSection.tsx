@@ -48,6 +48,12 @@ import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { SecurityLogSection } from "./SecurityLogSection";
 
+/** What a revoke / delete is waiting on a yes for (MIP-1301). One dialog serves all three. */
+type PendingRemoval =
+    | { kind: "key"; id: string; name: string }
+    | { kind: "teamKey"; id: string; name: string }
+    | { kind: "webhook"; id: string; name: string };
+
 type Props = {
     /** Team the webhook half operates on. API keys are per-user, so the
      *  two halves deliberately have different scopes. */
@@ -69,12 +75,6 @@ type Props = {
  * people to expect them back, so they get a distinct, alarming,
  * copy-first treatment that has to be dismissed deliberately.
  */
-/** What a revoke / delete is waiting on a yes for (MIP-1301). One dialog serves all three. */
-type PendingRemoval =
-    | { kind: "key"; id: string; name: string }
-    | { kind: "teamKey"; id: string; name: string }
-    | { kind: "webhook"; id: string; name: string };
-
 export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();

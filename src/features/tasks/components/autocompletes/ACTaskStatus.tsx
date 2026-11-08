@@ -34,7 +34,12 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
     const { t } = useTranslation();
     // "Deleted" waits for a yes (MIP-1301). Until then the working copy keeps its
     // status, so the autosave (every PUT carries `status`) never sees it.
-    const [pendingDeleted, setPendingDeleted] = useState<TaskStatusProps | null>(null);
+    // Tied to the task it was asked about: a different task showing in this picker
+    // never inherits the question.
+    const [pending, setPending] = useState<{ taskId: unknown; status: TaskStatusProps } | null>(
+        null
+    );
+    const pendingDeleted = pending && pending.taskId === taskContent.id ? pending.status : null;
 
     const applyStatus = (status: TaskStatusProps) => {
         setTaskContent({ ...taskContent, status });
@@ -75,7 +80,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                     if (value !== null && value.length > 0) {
                         const next = value.slice(-1)[0];
                         if (isDeletingStatus(next.status, taskContent.status?.status)) {
-                            setPendingDeleted(next);
+                            setPending({ taskId: taskContent.id, status: next });
                             return;
                         }
                         applyStatus(next);
@@ -88,7 +93,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                     hostZIndex={hostZIndex}
                     isMilestone={taskContent.isMilestone === true}
                     open
-                    onClose={() => setPendingDeleted(null)}
+                    onClose={() => setPending(null)}
                     onConfirm={() => applyStatus(pendingDeleted)}
                 />
             )}

@@ -69,12 +69,13 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         [data]
     );
 
-    const handleDisconnect = async (accountId: string) => {
+    const handleDisconnect = async (accountId: string): Promise<boolean> => {
         setError(null);
         setDisconnecting(accountId);
         const ok = await disconnectAccount(accessToken, accountId, setError);
         setDisconnecting(null);
         if (ok) void reload();
+        return ok;
     };
 
     const startConnect = (provider: "google" | "github") => {
@@ -190,7 +191,11 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                     open
                     onClose={() => setPendingDisconnect(null)}
                     onConfirm={async () => {
-                        await handleDisconnect(pendingDisconnect.id);
+                        // A refusal stays in the dialog with a message; closing it would
+                        // leave the reason only in the page's alert, behind the overlay.
+                        if (!(await handleDisconnect(pendingDisconnect.id))) {
+                            throw new Error(t.integrations.errors.disconnectFailed);
+                        }
                     }}
                 />
             )}

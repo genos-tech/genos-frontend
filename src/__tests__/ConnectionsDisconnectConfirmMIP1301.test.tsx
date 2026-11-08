@@ -82,6 +82,16 @@ describe("disconnecting an account", () => {
         await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
     });
 
+    it("a refused disconnect stays in the dialog and says so", async () => {
+        disconnectAccount.mockResolvedValue(false);
+        setup();
+        fireEvent.click((await screen.findAllByRole("button", { name: "Disconnect" }))[0]);
+        const dialog = await screen.findByRole("alertdialog");
+        fireEvent.click(within(dialog).getByRole("button", { name: "Disconnect" }));
+        expect(await within(dialog).findByText("Disconnect failed.")).toBeTruthy();
+        expect(screen.getByRole("alertdialog")).toBeTruthy();
+    });
+
     it("the account you sign in with cannot be disconnected, so nothing opens", async () => {
         listConnections.mockResolvedValue({
             primary_auth_provider: "google",
