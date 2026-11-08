@@ -747,6 +747,170 @@ export const settings = {
                 "Everything Genos has noted about which items your AI apps opened or changed, and about the collaborators, dependencies, to-dos and note shares you changed, is deleted now, and nothing new is noted. Your tasks, notes and messages are not affected. If you turn this on again, it starts fresh.",
             offConfirm: "Turn off and delete",
         },
+        control: {
+            stored: {
+                heading: "What Genos has stored",
+                description:
+                    "What Genos has saved about your activity, across all your teams. It's counts and dates, never text you wrote, and only you can see it.",
+                recordingOn: "Recording is on: Genos keeps adding to this.",
+                recordingOff:
+                    "Recording is off: nothing new is saved. You can turn it on with “Note my activity” above.",
+                loading: "Loading what Genos has stored…",
+                loadFailed: "Couldn't load this. Please try again.",
+                empty: "Nothing is stored.",
+                activityLabel: "Activity record",
+                activityValue:
+                    "Entries: {count} (from your AI apps: {aiApp}; your own changes: {own}). Since {from}. Kept {days} days.",
+                summariesLabel: "Daily summaries",
+                summariesValue:
+                    "Saved: {rows}. Tasks covered: {items}. Since {from}. Kept {days} days.",
+                importanceLabel: "Importance settings",
+                importanceValue: "Tasks you marked: {marks}. Signals you changed: {tuned}.",
+            },
+            noticed: {
+                heading: "What Genos noticed",
+                description:
+                    "The tasks Genos thinks matter most to you right now, and why. It's worked out from your activity and never changes a task.",
+                show: "Show what Genos noticed",
+                hide: "Hide",
+                recordingOff:
+                    "Recording is off, so Genos isn't noticing anything. Turn on “Note my activity” above to see this.",
+                loading: "Working out what stands out…",
+                loadFailed: "Couldn't load this. Please try again.",
+                empty: "Nothing stands out yet.",
+                thin: "Genos has only a little history so far, so this is a rough guess.",
+                notImportant: "Not important",
+                notImportantAria: "Mark as not important: {task}",
+                markedNote: "Marked not important. Genos won't offer it again.",
+                undo: "Undo",
+                undoAria: "Undo: {task}",
+                markFailed: "Couldn't save that. Please try again.",
+                markGone: "You can't open that task any more, so it can't be marked.",
+                markRecordingOff:
+                    "Recording is off, so this can't be saved. Turn it on above first.",
+                stale: "The list is out of date after your changes.",
+                refresh: "Refresh the list",
+                suggestionsHeading: "Suggestions",
+                suggestionsNote:
+                    "These are only suggestions. Genos never changes a task by itself.",
+                raise: "Busy this week, but its priority is {priority}. Raise it?",
+                review: "Its priority is {priority}, but nothing has happened on it in the last 7 days. Still that important?",
+                marksHeading: "Tasks you marked",
+                clear: "Clear",
+                clearAria: "Clear the mark on {task}",
+            },
+            why: {
+                others: "From others: {count}",
+                mine: "Your own: {count}",
+                chat: "Chat: {count}",
+                notes: "Notes: {count}",
+                prs: "Pull requests: {count}",
+                days: "Active on {days} of the last 7 days",
+                rising: "Heating up",
+                cooling: "Cooling down",
+                people: "People involved: {count}",
+            },
+            markNames: {
+                not_important: "Not important",
+                priority_is_right: "Priority is right",
+            },
+            signals: {
+                others: {
+                    name: "Other people",
+                    means: "What other people do on it: comments, changes, reactions.",
+                },
+                mine: {
+                    name: "You",
+                    means: "What you do on it: your changes and comments.",
+                },
+                chat: {
+                    name: "Chat",
+                    means: "Messages in the chat thread linked to it.",
+                },
+                notes: {
+                    name: "Notes",
+                    means: "Edits of its notes.",
+                },
+                prs: {
+                    name: "Pull requests",
+                    means: "Pull-request events on it.",
+                },
+                spread: {
+                    name: "Busy days",
+                    means: "How many of the last seven days it was busy on.",
+                },
+                trend: {
+                    name: "Heating up or cooling down",
+                    means: "Whether it is heating up or cooling down.",
+                },
+                hints: {
+                    name: "Due date, priority, Blocked",
+                    means: "Its due date, priority and Blocked status (weak hints).",
+                },
+            },
+            levels: {
+                off: {
+                    name: "Don't count",
+                    means: "Genos ignores this signal.",
+                },
+                low: {
+                    name: "Count less",
+                    means: "This signal counts half as much.",
+                },
+                normal: {
+                    name: "Normal",
+                    means: "The default.",
+                },
+                high: {
+                    name: "Count more",
+                    means: "This signal counts twice as much.",
+                },
+            },
+            tuning: {
+                heading: "How Genos weighs things",
+                description:
+                    "Genos ranks your tasks using eight signals. Choose how much each one counts for you in this team. Changes apply to the next ranking.",
+                levelAria: "How much “{signal}” counts",
+                reset: "Reset to default",
+                recordingOff:
+                    "Recording is off, so these can't be changed. Turn on “Note my activity” above first.",
+                failed: "Couldn't save that. Please try again.",
+            },
+            remove: {
+                heading: "Delete what Genos stored",
+                description:
+                    "Each button deletes one kind of what Genos saved about you, in all your teams. You'll be asked to confirm first.",
+                stays: "Never deleted by these buttons: your tasks, notes, chat, Genos conversations, Inbox, schedules and the recording switch.",
+                deleted: "Deleted {count}.",
+                nothing: "Nothing was stored, so nothing was deleted.",
+                failed: "Couldn't delete. Please try again.",
+                ack: "I understand this can't be undone",
+                importance: {
+                    button: "Delete importance settings",
+                    title: "Delete your importance settings?",
+                    body: "This deletes the tasks you marked and the levels you set for each signal, in all your teams. Genos goes back to its default ranking. Your daily summaries and activity record stay. This can't be undone.",
+                    confirm: "Delete importance settings",
+                },
+                summaries: {
+                    button: "Delete daily summaries",
+                    title: "Delete your daily summaries?",
+                    body: "This deletes the saved daily counts of how busy each task was, in all your teams. If recording is on, Genos does not rebuild any day up to and including today; it records again from tomorrow. Your marks, levels and activity record stay. This can't be undone.",
+                    confirm: "Delete daily summaries",
+                },
+                events: {
+                    button: "Delete activity record",
+                    title: "Delete your activity record?",
+                    body: "This deletes the record of which items your AI apps opened or changed, and of your own changes that nothing else saves, in all your teams. Your daily summaries, marks and levels stay. This can't be undone.",
+                    confirm: "Delete activity record",
+                },
+                everything: {
+                    button: "Delete everything",
+                    title: "Delete everything Genos stored?",
+                    body: "This deletes your importance settings, daily summaries and activity record, in all your teams. Recording stays as it is, on or off. Your tasks, notes, chat and Genos conversations are not affected. This can't be undone.",
+                    confirm: "Delete everything",
+                },
+            },
+        },
         settingsUsed: {
             heading: "Settings Genos uses",
             description: "Genos reads these two settings when it answers you.",

@@ -3771,6 +3771,166 @@ export const zh: DeepPartial<Messages> = {
                     "Genos已记录的、关于你的AI应用打开或修改了哪些项目,以及你更改过的协作者、依赖、待办和笔记共享的内容,现在会全部删除,也不会再记录新的内容。你的任务、笔记和消息不受影响。再次开启后,将从头开始记录。",
                 offConfirm: "关闭并删除",
             },
+            control: {
+                stored: {
+                    heading: "Genos 已保存的内容",
+                    description:
+                        "Genos 在你所有团队中保存的关于你活动的内容。只有数量和日期，绝不包含你写的文字，只有你自己能看到。",
+                    recordingOn: "记录已开启：Genos 会继续添加。",
+                    recordingOff: "记录已关闭：不会保存新内容。你可以用上方的“记录我的活动”开启。",
+                    loading: "正在加载 Genos 已保存的内容…",
+                    loadFailed: "无法加载，请重试。",
+                    empty: "没有保存任何内容。",
+                    activityLabel: "活动记录",
+                    activityValue:
+                        "条目：{count}（来自你的 AI 应用：{aiApp}；你自己的更改：{own}）。自 {from} 起。保留 {days} 天。",
+                    summariesLabel: "每日汇总",
+                    summariesValue:
+                        "已保存：{rows}。涉及任务：{items}。自 {from} 起。保留 {days} 天。",
+                    importanceLabel: "重要性设置",
+                    importanceValue: "你标记的任务：{marks}。你调整的信号：{tuned}。",
+                },
+                noticed: {
+                    heading: "Genos 注意到的内容",
+                    description:
+                        "Genos 认为现在对你最重要的任务，以及原因。依据你的活动计算，绝不会更改任何任务。",
+                    show: "显示 Genos 注意到的内容",
+                    hide: "隐藏",
+                    recordingOff:
+                        "记录已关闭，所以 Genos 没有注意到任何内容。开启上方的“记录我的活动”即可查看。",
+                    loading: "正在找出突出的任务…",
+                    loadFailed: "无法加载，请重试。",
+                    empty: "目前没有突出的任务。",
+                    thin: "Genos 目前的历史记录还很少，所以这只是粗略的估计。",
+                    notImportant: "不重要",
+                    notImportantAria: "标记为不重要：{task}",
+                    markedNote: "已标记为不重要。Genos 不会再推荐它。",
+                    undo: "撤销",
+                    undoAria: "撤销：{task}",
+                    markFailed: "无法保存，请重试。",
+                    markGone: "你已无法打开该任务，所以无法标记。",
+                    markRecordingOff: "记录已关闭，所以无法保存。请先在上方开启。",
+                    stale: "更改后，列表已过期。",
+                    refresh: "刷新列表",
+                    suggestionsHeading: "建议",
+                    suggestionsNote: "这些只是建议。Genos 绝不会自行更改任务。",
+                    raise: "本周很活跃，但优先级是 {priority}。要调高吗？",
+                    review: "优先级是 {priority}，但最近 7 天没有任何动静。还那么重要吗？",
+                    marksHeading: "你标记的任务",
+                    clear: "取消标记",
+                    clearAria: "取消标记：{task}",
+                },
+                why: {
+                    others: "来自他人：{count}",
+                    mine: "你自己：{count}",
+                    chat: "聊天：{count}",
+                    notes: "笔记：{count}",
+                    prs: "拉取请求：{count}",
+                    days: "最近 7 天中有 {days} 天活跃",
+                    rising: "升温中",
+                    cooling: "降温中",
+                    people: "涉及人数：{count}",
+                },
+                markNames: {
+                    not_important: "不重要",
+                    priority_is_right: "优先级合适",
+                },
+                signals: {
+                    others: {
+                        name: "其他人",
+                        means: "其他人对它所做的事：评论、更改、表情回应。",
+                    },
+                    mine: {
+                        name: "你",
+                        means: "你对它所做的事：你的更改和评论。",
+                    },
+                    chat: {
+                        name: "聊天",
+                        means: "与它关联的聊天线程中的消息。",
+                    },
+                    notes: {
+                        name: "笔记",
+                        means: "它的笔记的编辑。",
+                    },
+                    prs: {
+                        name: "拉取请求",
+                        means: "与它相关的拉取请求事件。",
+                    },
+                    spread: {
+                        name: "活跃天数",
+                        means: "最近七天中有几天有动静。",
+                    },
+                    trend: {
+                        name: "升温或降温",
+                        means: "它是在升温还是在降温。",
+                    },
+                    hints: {
+                        name: "截止日期、优先级、已阻塞",
+                        means: "它的截止日期、优先级和已阻塞状态（较弱的提示）。",
+                    },
+                },
+                levels: {
+                    off: {
+                        name: "不计入",
+                        means: "Genos 会忽略这个信号。",
+                    },
+                    low: {
+                        name: "少计",
+                        means: "这个信号的权重减半。",
+                    },
+                    normal: {
+                        name: "正常",
+                        means: "默认值。",
+                    },
+                    high: {
+                        name: "多计",
+                        means: "这个信号的权重加倍。",
+                    },
+                },
+                tuning: {
+                    heading: "Genos 如何权衡",
+                    description:
+                        "Genos 用八个信号为你的任务排序。你可以在此团队中选择每个信号对你的分量。更改将在下次排序时生效。",
+                    levelAria: "“{signal}”的分量",
+                    reset: "恢复默认",
+                    recordingOff: "记录已关闭，所以无法更改。请先开启上方的“记录我的活动”。",
+                    failed: "无法保存，请重试。",
+                },
+                remove: {
+                    heading: "删除 Genos 已保存的内容",
+                    description:
+                        "每个按钮会删除 Genos 保存的关于你的一类内容，涉及你所有的团队。删除前会先请你确认。",
+                    stays: "这些按钮绝不会删除：你的任务、笔记、聊天、与 Genos 的对话、收件箱、日程以及记录开关。",
+                    deleted: "已删除 {count} 项。",
+                    nothing: "没有保存任何内容，所以什么也没有删除。",
+                    failed: "无法删除，请重试。",
+                    ack: "我明白此操作无法撤销",
+                    importance: {
+                        button: "删除重要性设置",
+                        title: "删除你的重要性设置？",
+                        body: "这会删除你标记的任务和为每个信号设置的分量，涉及你所有的团队。Genos 会恢复默认排序。你的每日汇总和活动记录会保留。此操作无法撤销。",
+                        confirm: "删除重要性设置",
+                    },
+                    summaries: {
+                        button: "删除每日汇总",
+                        title: "删除你的每日汇总？",
+                        body: "这会删除已保存的每个任务每天活跃程度的统计，涉及你所有的团队。如果记录已开启，Genos 不会重建截至今天（含今天）的任何一天，而是从明天起重新记录。你的标记、分量和活动记录会保留。此操作无法撤销。",
+                        confirm: "删除每日汇总",
+                    },
+                    events: {
+                        button: "删除活动记录",
+                        title: "删除你的活动记录？",
+                        body: "这会删除你的 AI 应用打开或更改过哪些项目的记录，以及没有其他地方保存的你自己的更改记录，涉及你所有的团队。你的每日汇总、标记和分量会保留。此操作无法撤销。",
+                        confirm: "删除活动记录",
+                    },
+                    everything: {
+                        button: "全部删除",
+                        title: "删除 Genos 已保存的全部内容？",
+                        body: "这会删除你的重要性设置、每日汇总和活动记录，涉及你所有的团队。记录开关保持原状，无论开启还是关闭。你的任务、笔记、聊天和与 Genos 的对话不受影响。此操作无法撤销。",
+                        confirm: "全部删除",
+                    },
+                },
+            },
             settingsUsed: {
                 heading: "Genos 使用的设置",
                 description: "Genos 回答你时会读取这两项设置。",

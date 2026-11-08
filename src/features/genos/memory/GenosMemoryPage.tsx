@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "../../../i18n";
 import { ConversationsSection } from "./ConversationsSection";
 import { McpUseSection } from "./McpUseSection";
+import { MemoryControlSections } from "./MemoryControlSections";
 import { SettingsGenosUsesSection } from "./SettingsGenosUsesSection";
 import { SharedAnswersSection } from "./SharedAnswersSection";
 
@@ -28,7 +29,9 @@ interface Props {
  *   2. the answers of theirs that teammates may see,
  *   3. a note of which items their connected AI apps opened (one switch; references only,
  *      and NOT something Genos's own answers use),
- *   4. the settings Genos reads.
+ *   4. what that note and the daily summaries hold, what Genos noticed from them, how it
+ *      weighs things, and delete (MIP-1088),
+ *   5. the settings Genos reads.
  *
  * Sections are independent siblings that share only `teamId` and the token.
  * That is the seam a further section (a profile Genos is allowed to use)
@@ -41,6 +44,9 @@ export const GenosMemoryPage = ({ teamId, onOpenLanguageSettings }: Props) => {
     // Deleting a conversation also deletes the answer built from it, so the
     // shared-answers list refetches rather than guess which rows went.
     const [sharedRefreshKey, setSharedRefreshKey] = useState(0);
+    // The recording switch deletes what was stored when it goes off: the sections that show it
+    // read again when the switch moves.
+    const [recordingKey, setRecordingKey] = useState(0);
 
     return (
         <Stack spacing={2} sx={{ minWidth: 0 }}>
@@ -62,7 +68,12 @@ export const GenosMemoryPage = ({ teamId, onOpenLanguageSettings }: Props) => {
                 refreshKey={sharedRefreshKey}
                 teamId={teamId}
             />
-            <McpUseSection />
+            <McpUseSection onChanged={() => setRecordingKey((k) => k + 1)} />
+            <MemoryControlSections
+                accessToken={accessToken}
+                refreshKey={recordingKey}
+                teamId={teamId}
+            />
             <SettingsGenosUsesSection
                 accessToken={accessToken}
                 onOpenLanguageSettings={onOpenLanguageSettings}
