@@ -765,9 +765,11 @@ export const ar: DeepPartial<Messages> = {
             errorRunDate: "اختر تاريخًا.",
             shortTitle: "جداول Assist",
             paramChangedHours: "الرجوع إلى الوراء (ساعات)",
-            paramChangedHoursHint: "اعرض التغييرات خلال آخر N ساعة{range}. اتركه فارغًا لآخر 24 ساعة.",
+            paramChangedHoursHint:
+                "اعرض التغييرات خلال آخر N ساعة{range}. اتركه فارغًا لآخر 24 ساعة.",
             paramProject: "المشروع",
-            paramProjectHint: "قصر التقرير على مشروع واحد. اتركه على «كل المشاريع» لتشمل كل ما يمكنك رؤيته.",
+            paramProjectHint:
+                "قصر التقرير على مشروع واحد. اتركه على «كل المشاريع» لتشمل كل ما يمكنك رؤيته.",
             paramDay: "اليوم",
             paramDayHint: "أي يوم تريد تلخيصه. اتركه فارغًا لليوم.",
             paramDays: "الرجوع إلى الوراء (أيام)",
@@ -775,7 +777,8 @@ export const ar: DeepPartial<Messages> = {
             paramMilestone: "المعلم",
             paramMilestoneHint: "المعلم الذي يتابعه هذا التقرير. مطلوب.",
             paramHours: "الرجوع إلى الوراء (ساعات)",
-            paramHoursHint: "اعرض التغييرات خلال آخر N ساعة{range}. اتركه فارغًا لآخر 168 ساعة (أسبوع).",
+            paramHoursHint:
+                "اعرض التغييرات خلال آخر N ساعة{range}. اتركه فارغًا لآخر 168 ساعة (أسبوع).",
             paramRangeNote: " ({min} إلى {max})",
             paramDayToday: "اليوم",
             paramDayYesterday: "أمس",

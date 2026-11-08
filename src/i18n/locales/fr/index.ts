@@ -3271,17 +3271,21 @@ export const fr: DeepPartial<Messages> = {
             errorRunDate: "Choisissez une date.",
             shortTitle: "Planifications Assist",
             paramChangedHours: "Remonter dans le temps (heures)",
-            paramChangedHoursHint: "Affiche les changements des N dernières heures{range}. Laissez vide pour les 24 dernières.",
+            paramChangedHoursHint:
+                "Affiche les changements des N dernières heures{range}. Laissez vide pour les 24 dernières.",
             paramProject: "Projet",
-            paramProjectHint: "Limite le rapport à un projet. Laissez sur Tous les projets pour inclure tout ce que vous pouvez voir.",
+            paramProjectHint:
+                "Limite le rapport à un projet. Laissez sur Tous les projets pour inclure tout ce que vous pouvez voir.",
             paramDay: "Jour",
             paramDayHint: "Quel jour résumer. Laissez vide pour aujourd’hui.",
             paramDays: "Remonter dans le temps (jours)",
-            paramDaysHint: "Inclut ce que vous avez fait ces N derniers jours{range}. Laissez vide pour les 7 derniers.",
+            paramDaysHint:
+                "Inclut ce que vous avez fait ces N derniers jours{range}. Laissez vide pour les 7 derniers.",
             paramMilestone: "Jalon",
             paramMilestoneHint: "Le jalon que suit ce rapport. Obligatoire.",
             paramHours: "Remonter dans le temps (heures)",
-            paramHoursHint: "Affiche les changements des N dernières heures{range}. Laissez vide pour les 168 dernières (une semaine).",
+            paramHoursHint:
+                "Affiche les changements des N dernières heures{range}. Laissez vide pour les 168 dernières (une semaine).",
             paramRangeNote: " ({min} à {max})",
             paramDayToday: "Aujourd’hui",
             paramDayYesterday: "Hier",
@@ -3291,8 +3295,10 @@ export const fr: DeepPartial<Messages> = {
             milestoneLoading: "Chargement des jalons…",
             milestoneNone: "Aucun jalon à choisir.",
             errorMilestone: "Choisissez un jalon.",
-            duplicateSame: "Vous avez déjà une planification qui fait la même chose à la même heure : {name}.",
-            duplicateName: "Vous avez déjà une planification nommée {name}. Donnez un autre nom à celle-ci.",
+            duplicateSame:
+                "Vous avez déjà une planification qui fait la même chose à la même heure : {name}.",
+            duplicateName:
+                "Vous avez déjà une planification nommée {name}. Donnez un autre nom à celle-ci.",
             suggestExists: "Vous avez déjà celle-ci : {name}.",
         },
         genosMemory: {

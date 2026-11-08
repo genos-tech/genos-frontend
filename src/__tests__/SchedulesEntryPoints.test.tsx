@@ -22,6 +22,9 @@ import { GenosHome } from "../features/genos/GenosHome";
 import { GenosSessionSidebar } from "../features/genos/GenosSessionSidebar";
 import { en } from "../i18n/locales/en";
 
+// Big dialogs rendered through Joy: slow when the whole suite shares the machine.
+vi.setConfig({ testTimeout: 30000 });
+
 const sectionProps = vi.fn();
 vi.mock("../components/layout/schedules/SchedulesSection", () => ({
     SchedulesSection: (props: { teamId: string; showHeading?: boolean }) => {

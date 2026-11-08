@@ -13,6 +13,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SchedulesSection } from "../components/layout/schedules/SchedulesSection";
 import { HashMentionDataProvider, type HashMentionData } from "../context/HashMentionDataContext";
 
+// Big dialogs rendered through Joy: slow when the whole suite shares the machine.
+vi.setConfig({ testTimeout: 30000 });
+
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));

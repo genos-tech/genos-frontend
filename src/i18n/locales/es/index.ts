@@ -779,17 +779,21 @@ export const es: DeepPartial<Messages> = {
             errorRunDate: "Elige una fecha.",
             shortTitle: "Programaciones Assist",
             paramChangedHours: "Mirar atrás (horas)",
-            paramChangedHoursHint: "Muestra los cambios de las últimas N horas{range}. Déjalo vacío para las últimas 24.",
+            paramChangedHoursHint:
+                "Muestra los cambios de las últimas N horas{range}. Déjalo vacío para las últimas 24.",
             paramProject: "Proyecto",
-            paramProjectHint: "Limita el informe a un proyecto. Déjalo en Todos los proyectos para incluir todo lo que puedes ver.",
+            paramProjectHint:
+                "Limita el informe a un proyecto. Déjalo en Todos los proyectos para incluir todo lo que puedes ver.",
             paramDay: "Día",
             paramDayHint: "Qué día resumir. Déjalo vacío para hoy.",
             paramDays: "Mirar atrás (días)",
-            paramDaysHint: "Incluye lo que hiciste en los últimos N días{range}. Déjalo vacío para los últimos 7.",
+            paramDaysHint:
+                "Incluye lo que hiciste en los últimos N días{range}. Déjalo vacío para los últimos 7.",
             paramMilestone: "Hito",
             paramMilestoneHint: "El hito que sigue este informe. Obligatorio.",
             paramHours: "Mirar atrás (horas)",
-            paramHoursHint: "Muestra los cambios de las últimas N horas{range}. Déjalo vacío para las últimas 168 (una semana).",
+            paramHoursHint:
+                "Muestra los cambios de las últimas N horas{range}. Déjalo vacío para las últimas 168 (una semana).",
             paramRangeNote: " ({min} a {max})",
             paramDayToday: "Hoy",
             paramDayYesterday: "Ayer",

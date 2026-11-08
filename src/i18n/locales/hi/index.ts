@@ -879,17 +879,21 @@ export const hi: DeepPartial<Messages> = {
             errorRunDate: "एक तारीख़ चुनें।",
             shortTitle: "Assist शेड्यूल",
             paramChangedHours: "कितना पीछे देखें (घंटे)",
-            paramChangedHoursHint: "पिछले N घंटों{range} के बदलाव दिखाएँ। खाली छोड़ने पर पिछले 24 घंटे।",
+            paramChangedHoursHint:
+                "पिछले N घंटों{range} के बदलाव दिखाएँ। खाली छोड़ने पर पिछले 24 घंटे।",
             paramProject: "प्रोजेक्ट",
-            paramProjectHint: "रिपोर्ट को एक प्रोजेक्ट तक सीमित करें। सभी प्रोजेक्ट पर छोड़ने से वह सब शामिल होगा जो आप देख सकते हैं।",
+            paramProjectHint:
+                "रिपोर्ट को एक प्रोजेक्ट तक सीमित करें। सभी प्रोजेक्ट पर छोड़ने से वह सब शामिल होगा जो आप देख सकते हैं।",
             paramDay: "दिन",
             paramDayHint: "किस दिन का सार चाहिए। खाली छोड़ने पर आज।",
             paramDays: "कितना पीछे देखें (दिन)",
-            paramDaysHint: "पिछले N दिनों{range} में आपने जो किया, उसे शामिल करें। खाली छोड़ने पर पिछले 7 दिन।",
+            paramDaysHint:
+                "पिछले N दिनों{range} में आपने जो किया, उसे शामिल करें। खाली छोड़ने पर पिछले 7 दिन।",
             paramMilestone: "माइलस्टोन",
             paramMilestoneHint: "यह रिपोर्ट जिस माइलस्टोन को फ़ॉलो करती है। ज़रूरी।",
             paramHours: "कितना पीछे देखें (घंटे)",
-            paramHoursHint: "पिछले N घंटों{range} के बदलाव दिखाएँ। खाली छोड़ने पर पिछले 168 घंटे (एक सप्ताह)।",
+            paramHoursHint:
+                "पिछले N घंटों{range} के बदलाव दिखाएँ। खाली छोड़ने पर पिछले 168 घंटे (एक सप्ताह)।",
             paramRangeNote: " ({min} से {max})",
             paramDayToday: "आज",
             paramDayYesterday: "कल",

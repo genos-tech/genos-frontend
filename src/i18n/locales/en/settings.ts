@@ -171,17 +171,21 @@ export const settings = {
         errorRunDate: "Choose a date.",
         shortTitle: "Assist schedules",
         paramChangedHours: "Look back (hours)",
-        paramChangedHoursHint: "Show changes from the last N hours{range}. Leave empty for the last 24.",
+        paramChangedHoursHint:
+            "Show changes from the last N hours{range}. Leave empty for the last 24.",
         paramProject: "Project",
-        paramProjectHint: "Limit the report to one project. Leave it on All projects to include everything you can see.",
+        paramProjectHint:
+            "Limit the report to one project. Leave it on All projects to include everything you can see.",
         paramDay: "Day",
         paramDayHint: "Which day to recap. Leave empty for today.",
         paramDays: "Look back (days)",
-        paramDaysHint: "Include what you did in the last N days{range}. Leave empty for the last 7.",
+        paramDaysHint:
+            "Include what you did in the last N days{range}. Leave empty for the last 7.",
         paramMilestone: "Milestone",
         paramMilestoneHint: "The milestone this report follows. Required.",
         paramHours: "Look back (hours)",
-        paramHoursHint: "Show changes from the last N hours{range}. Leave empty for the last 168 (one week).",
+        paramHoursHint:
+            "Show changes from the last N hours{range}. Leave empty for the last 168 (one week).",
         paramRangeNote: " ({min} to {max})",
         paramDayToday: "Today",
         paramDayYesterday: "Yesterday",
@@ -191,7 +195,8 @@ export const settings = {
         milestoneLoading: "Loading milestones…",
         milestoneNone: "There are no milestones to choose from.",
         errorMilestone: "Choose a milestone.",
-        duplicateSame: "You already have a schedule that does the same thing at the same time: {name}.",
+        duplicateSame:
+            "You already have a schedule that does the same thing at the same time: {name}.",
         duplicateName: "You already have a schedule named {name}. Give this one another name.",
         suggestExists: "You already have this one: {name}.",
     },
