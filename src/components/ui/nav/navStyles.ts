@@ -38,6 +38,15 @@ export const NAV_KEEP_CLASS = "NavItem-keep";
  *  while they show, in a row with `actionsInPlace`. */
 export const NAV_HIDE_ON_ACTIONS_CLASS = "NavItem-hide-on-actions";
 
+/** The row's hover colour, OPAQUE: an overlaid action (`actionsOverlay`) has to hide
+ *  what is under it. Joy's `neutral.plainHoverBg` is translucent since the theme moved to
+ *  the tokens, so a button over a title showed the title through it (MIP-1156). The hover
+ *  tint (`--g-hover`, ink at 4.5%) laid over the sidebar surface. */
+export const NAV_OVERLAY_BG = "color-mix(in srgb, var(--g-bg-subtle) 95.5%, var(--g-text))";
+/** The same colour as a shadow fading out to the left of an overlaid action, so a chip
+ *  under the button's edge fades instead of being cut off. */
+export const NAV_OVERLAY_FADE = `-10px 0 8px 0 ${NAV_OVERLAY_BG}`;
+
 /** The list that holds a folder's children: one tree level in, with a hairline
  *  guide. Joy's own nested inset is switched off, the row owns its indent. */
 export const navNestedListSx = {

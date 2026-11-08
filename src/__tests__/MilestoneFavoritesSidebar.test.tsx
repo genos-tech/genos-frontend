@@ -308,7 +308,7 @@ describe("the star on a milestone row", () => {
         mountTree([2]);
         const menuOf = (title: string) =>
             liOf(title).querySelector(
-                '.MuiListItem-endAction button[aria-haspopup="menu"]'
+                '.NavItem-actions button[aria-haspopup="menu"]'
             ) as HTMLElement;
         fireEvent.click(menuOf("Launch"));
         fireEvent.click(screen.getByText("Add to favorites"));
