@@ -1174,6 +1174,9 @@ export class ChannelService {
     }
 
     private _setSyncFailed(channelId: string, failed: boolean): void {
+        // A sync that settles after its channel was dropped (left, deleted, team
+        // switch, sign-out) must not leave a flag behind for the next session.
+        if (failed && !this._channels.has(channelId)) return;
         if (this._syncFailedByChannel.has(channelId) === failed) return;
         if (failed) this._syncFailedByChannel.add(channelId);
         else this._syncFailedByChannel.delete(channelId);

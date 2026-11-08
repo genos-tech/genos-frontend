@@ -135,6 +135,28 @@ describe("channelService records a failed history sync per channel", () => {
     });
 });
 
+describe("a sync that settles after its channel was dropped", () => {
+    it("leaves no failure flag behind", async () => {
+        let rejectFetch: (e: Error) => void = () => undefined;
+        vi.spyOn(svc, "fetchMessagesDelta").mockReturnValue(
+            new Promise((_, reject) => {
+                rejectFetch = reject;
+            })
+        );
+        vi.spyOn(svc, "fetchThreadsDelta").mockResolvedValue(envelope());
+        const pending = channelService.syncChannel(CH).catch(() => undefined);
+        channelService.handleChannelMemberRemoved({
+            channelId: CH,
+            channelKind: ChannelKind.GM,
+            userId: "test-self",
+        });
+        rejectFetch(new Error("401"));
+        await pending;
+        await Promise.resolve();
+        expect(channelService.getSnapshot().syncFailedByChannel.has(CH)).toBe(false);
+    });
+});
+
 describe("MessagesPaneV3", () => {
     it("empty + failed history -> ErrorState with Retry, not 'No messages yet'; Retry reloads", async () => {
         const msgs = vi

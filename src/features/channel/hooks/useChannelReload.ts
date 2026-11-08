@@ -13,7 +13,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { channelService } from "../../../services/channel/channelService";
 
 export function useChannelReload(channelId: string): { reloading: boolean; reload: () => void } {
-    const [reloading, setReloading] = useState(false);
+    // Keyed by channel: panes stay mounted across a channel switch, and a retry
+    // of channel A must not paint B's pane as "reloading".
+    const [reloadingId, setReloadingId] = useState<string | null>(null);
     const alive = useRef(true);
     useEffect(() => {
         alive.current = true;
@@ -22,15 +24,15 @@ export function useChannelReload(channelId: string): { reloading: boolean; reloa
         };
     }, []);
     const reload = useCallback(() => {
-        setReloading(true);
+        setReloadingId(channelId);
         channelService
             .syncChannel(channelId)
             .catch(() => {
                 /* recorded in the snapshot (`syncFailedByChannel`) */
             })
             .finally(() => {
-                if (alive.current) setReloading(false);
+                if (alive.current) setReloadingId((cur) => (cur === channelId ? null : cur));
             });
     }, [channelId]);
-    return { reloading, reload };
+    return { reloading: reloadingId === channelId, reload };
 }
