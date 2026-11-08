@@ -3852,6 +3852,18 @@ export const ja: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "マイルストーンを読み込めませんでした。このフォームを閉じて、もう一度お試しください。",
             errorMilestone: "マイルストーンを選択してください。",
+            paramAiSentences: "AI による一文",
+            paramAiSentencesHint:
+                "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用します。通常のレポートにするにはオフにしてください。",
+            effortLabel: "AI の Effort",
+            effortDefaultMark: "{level}（既定）",
+            effortCostAbout: "1 回の実行あたり約 {credits} クレジット。これは見積もりです。",
+            effortCostRange: "1 回の実行あたり約 {from}〜{to} クレジット。これは見積もりです。",
+            effortCostTiny: "1 回の実行あたり 0.01 クレジット未満。これは見積もりです。",
+            effortHint:
+                "このレポートで AI がどれだけ深く考えるかです。見積もりはタスク約 10 件のレポートの場合で、実際の数値は各レポートに表示されます。",
+            effortHeld: "ご利用のプランでは、このスケジュールは「{level}」で実行されます。",
+            rowEffort: "AI の Effort：{level}",
             duplicateSame: "同じ時刻に同じ内容を行うスケジュールがすでにあります：{name}。",
             duplicateName:
                 "「{name}」という名前のスケジュールがすでにあります。別の名前を付けてください。",

@@ -839,6 +839,18 @@ export const ar: DeepPartial<Messages> = {
             milestoneNone: "لا توجد معالم للاختيار منها.",
             milestoneLoadFailed: "تعذّر تحميل المعالم. أغلق هذا النموذج وحاول مرة أخرى.",
             errorMilestone: "اختر معلمًا.",
+            paramAiSentences: "جمل الذكاء الاصطناعي",
+            paramAiSentencesHint:
+                "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي. أوقفه للحصول على تقرير عادي.",
+            effortLabel: "جهد الذكاء الاصطناعي",
+            effortDefaultMark: "{level} (افتراضي)",
+            effortCostAbout: "نحو {credits} رصيد لكل تشغيل. هذا تقدير.",
+            effortCostRange: "نحو {from} إلى {to} رصيد لكل تشغيل. هذا تقدير.",
+            effortCostTiny: "أقل من 0.01 رصيد لكل تشغيل. هذا تقدير.",
+            effortHint:
+                "مقدار جهد الذكاء الاصطناعي في هذا التقرير. التقدير لتقرير من نحو 10 مهام؛ ويظهر الرقم الفعلي في كل تقرير.",
+            effortHeld: "تشغّل باقتك هذا الجدول بمستوى «{level}».",
+            rowEffort: "جهد الذكاء الاصطناعي: {level}",
             duplicateSame: "لديك بالفعل جدول يفعل الشيء نفسه في الوقت نفسه: {name}.",
             duplicateName: "لديك بالفعل جدول باسم {name}. أعطِ هذا الجدول اسمًا آخر.",
             suggestExists: "لديك هذا بالفعل: {name}.",

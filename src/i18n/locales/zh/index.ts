@@ -3718,6 +3718,18 @@ export const zh: DeepPartial<Messages> = {
             milestoneNone: "没有可选择的里程碑。",
             milestoneLoadFailed: "无法加载里程碑。请关闭此表单后重试。",
             errorMilestone: "请选择一个里程碑。",
+            paramAiSentences: "AI 一句话说明",
+            paramAiSentencesHint:
+                "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI。关闭后为普通报告。",
+            effortLabel: "AI 推理强度",
+            effortDefaultMark: "{level}(默认)",
+            effortCostAbout: "每次运行约 {credits} 积分。这只是估算。",
+            effortCostRange: "每次运行约 {from} 至 {to} 积分。这只是估算。",
+            effortCostTiny: "每次运行不到 0.01 积分。这只是估算。",
+            effortHint:
+                "AI 在这份报告上投入的程度。估算按约 10 个任务的报告计算;实际数字会显示在每份报告上。",
+            effortHeld: "你的套餐以“{level}”运行此定时任务。",
+            rowEffort: "AI 推理强度:{level}",
             duplicateSame: "你已经有一个在相同时间做相同事情的定时任务:{name}。",
             duplicateName: "你已经有一个名为“{name}”的定时任务。请换一个名称。",
             suggestExists: "你已经有这一项了:{name}。",
