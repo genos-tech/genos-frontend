@@ -212,14 +212,13 @@ describe("inventory: where a hand-built dialog frame may still exist", () => {
     // section 4: it is the preview host, its content brings its own header and floats the
     // chrome). The rest are owned by other PRs of the milestone and are removed from this list
     // by them: the task table pilot (saved filters, column settings), the tag manager
-    // (`ModalManageTags`), the graph node card and the "no access to this note" card.
+    // (`ModalManageTags`) and the "no access to this note" card.
     const ALLOWED = new Set([
         "components/ui/modal/ModalFrame.tsx",
         "components/modals/UrlLinkModal.tsx",
         "features/tasks/components/table/SavedFiltersMenu.tsx",
         "features/tasks/components/table/TaskTableColumnSettings.tsx",
         "features/tasks/components/modals/ModalManageTags.tsx",
-        "features/tasks/diagram/components/TaskNodeCard.tsx",
         "features/chat/components/sidebar/activity/chatListItemForActivity.tsx",
         // two bottom sheets, not dialogs
         "components/layout/MobileAccountSheet.tsx",
