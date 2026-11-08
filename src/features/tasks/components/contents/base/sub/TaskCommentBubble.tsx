@@ -16,11 +16,13 @@ import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { TaskCommentEmojiReaction } from "../../../../../../components/ui/emoji/TaskCommentEmojiReaction";
 import { MoreMenu, MoreMenuItem } from "../../../../../../components/ui/MoreMenu";
+import { useAuth } from "../../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/useDoubleClickTodoPreference";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
+import { useUndoableAction } from "../../../../../../hooks/common/useUndoableAction";
 import { useTranslation } from "../../../../../../i18n";
 import { g } from "../../../../../../theme/tokens";
 import { UserProps } from "../../../../../../types/admin";
@@ -32,7 +34,11 @@ import {
     extractYYYYMMDDHHMM,
     getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
-import { ModalDeleteTaskComment } from "../../../modals/ModalDeleteTaskComment";
+import {
+    deleteTaskComment,
+    deleteTaskCommentOnExit,
+    taskCommentKey,
+} from "../../../../services/deleteTaskComment";
 
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
@@ -101,6 +107,8 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     } = props;
 
     const { t } = useTranslation();
+    const { accessToken } = useAuth();
+    const runUndoable = useUndoableAction();
     const { style } = useBubbleStylePreference();
     const isCompact = style === "compact";
     const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
@@ -123,9 +131,6 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
-    // Delete-confirm dialog (own comments only; the button below is
-    // gated on `isSent`).
-    const [openDeleteComment, setOpenDeleteComment] = useState<boolean>(false);
     // Per-bubble wrap toggles. Same CSS-class approach as the chat
     // message bubbles — class lives on a wrapper Box around the
     // preview, App.css drives the actual wrap/scroll behaviour.
@@ -339,14 +344,40 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     };
 
     // Everything except edit lives in the ⋮ menu to keep the hover
-    // toolbar down to two buttons. Delete stays own-comments-only; the
-    // menu item just opens the confirm dialog — the dialog owns the
-    // socket DELETE emit (mirroring how `ModalDeleteMessage` owns the
-    // chat-message delete), so no callback is threaded down from
-    // `TaskPreview`. The delete is a soft-delete server-side, and the
-    // `wsType: "task"` broadcast it triggers is what refreshes every
-    // mounted list (host preview, chat-thread Comments tab, modal) via
-    // the scoped `task-touched` bus.
+    // toolbar down to two buttons. Delete stays own-comments-only. It has
+    // no confirm: the comment leaves the list at once (`TaskCommentList`
+    // hides `taskCommentKey`), a toast offers Undo, and only when that
+    // window ends does the socket DELETE go out (`deleteTaskComment`). The
+    // delete is a soft-delete server-side, and the `wsType: "task"`
+    // broadcast it triggers is what refreshes every mounted list (host
+    // preview, chat-thread Comments tab, modal) via the scoped
+    // `task-touched` bus. The commit closes over the socket and the token,
+    // not over this bubble, which unmounts the moment its row is hidden.
+    const handleDeleteComment = () => {
+        runUndoable({
+            key: taskCommentKey(comment.taskId, comment.commentId),
+            message: t.tasks.comment.deleted,
+            errorMessage: t.tasks.comment.deleteFailedRestored,
+            commit: () =>
+                deleteTaskComment({
+                    socket,
+                    myself,
+                    accessToken,
+                    taskId: Number(comment.taskId),
+                    commentId: Number(comment.commentId),
+                    projectId: currentProjectId,
+                    projectName: currentProjectName,
+                    displayId: currentTaskDisplayId,
+                }),
+            onExit: () =>
+                deleteTaskCommentOnExit(
+                    accessToken,
+                    Number(comment.taskId),
+                    Number(comment.commentId)
+                ),
+        });
+    };
+
     // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     const moreMenuItems: MoreMenuItem[] = [
         {
@@ -379,7 +410,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
             id: "delete",
             kind: "delete",
             label: t.tasks.comment.deleteTooltip,
-            onClick: () => setOpenDeleteComment(true),
+            onClick: handleDeleteComment,
             visible: isSent,
         },
     ];
@@ -395,22 +426,6 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
             onOpenChange={setIsMoreMenuOpen}
         />
     );
-
-    // Rendered in both layout branches (like the EmojiPicker) so the
-    // dialog survives the hover toolbar unmounting when the pointer
-    // moves off the bubble and onto the dialog.
-    const deleteCommentModal = isSent ? (
-        <ModalDeleteTaskComment
-            comment={comment}
-            currentProjectId={currentProjectId}
-            currentProjectName={currentProjectName}
-            currentTaskDisplayId={currentTaskDisplayId}
-            hostZIndex={hostZIndex}
-            open={openDeleteComment}
-            setOpen={setOpenDeleteComment}
-            socket={socket}
-        />
-    ) : null;
 
     const reactionsDisplay = (
         <Box onClick={(e) => e.stopPropagation()}>
@@ -502,7 +517,6 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                             useFixedPosition={true}
                         />
                     )}
-                    {deleteCommentModal}
                 </>
             }
             onClick={handleCommentClick}

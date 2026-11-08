@@ -2145,13 +2145,6 @@ export const hi: DeepPartial<Messages> = {
                 confirmButton: "टास्क हटाएँ",
                 cancelButton: "रद्द करें",
             },
-            deleteComment: {
-                title: "टिप्पणी हटाएं?",
-                body: "इस एक्शन को वापस नहीं किया जा सकता",
-                confirmButton: "टिप्पणी हटाएँ",
-                cancelButton: "रद्द करना",
-                error: "टिप्पणी हटाने में विफल.",
-            },
             createProject: {
                 heading: "नया प्रोजेक्ट बनाएँ",
                 namePlaceholder: "प्रोजेक्ट का नाम डालें…",
@@ -2675,6 +2668,8 @@ export const hi: DeepPartial<Messages> = {
             wrapAll: "सामग्री लपेटें",
             unwrapCode: "कोड ब्लॉक खोलें",
             wrapCode: "कोड ब्लॉक लपेटें",
+            deleted: "टिप्पणी हटा दी गई",
+            deleteFailedRestored: "टिप्पणी हटाई नहीं जा सकी। इसे वापस रख दिया गया है।",
         },
         titleBlock: {
             titlePlaceholder: "टास्क का शीर्षक डालें…",

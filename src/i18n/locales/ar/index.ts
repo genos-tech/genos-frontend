@@ -2230,13 +2230,6 @@ export const ar: DeepPartial<Messages> = {
                 no: "لا",
                 closeButton: "إغلاق",
             },
-            deleteComment: {
-                title: "هل تريد حذف التعليق؟",
-                body: "لا يمكن التراجع عن هذا الإجراء",
-                confirmButton: "حذف التعليق",
-                cancelButton: "إلغاء",
-                error: "فشل في حذف التعليق.",
-            },
         },
         picker: {
             noSprintLabel: "بدون سبرنت",
@@ -2497,6 +2490,8 @@ export const ar: DeepPartial<Messages> = {
             wrapAll: "التفاف المحتوى",
             unwrapCode: "قم بفك كتل التعليمات البرمجية",
             wrapCode: "التفاف كتل التعليمات البرمجية",
+            deleted: "تم حذف التعليق",
+            deleteFailedRestored: "تعذّر حذف التعليق. تمت إعادته.",
         },
         titleBlock: {
             titlePlaceholder: "أدخل عنوان المهمة...",

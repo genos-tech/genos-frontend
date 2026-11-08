@@ -4659,13 +4659,6 @@ export const fr: DeepPartial<Messages> = {
                 confirmButton: "Supprimer la tâche",
                 cancelButton: "Annuler",
             },
-            deleteComment: {
-                title: "Supprimer le commentaire ?",
-                body: "Cette action est irréversible",
-                confirmButton: "Supprimer le commentaire",
-                cancelButton: "Annuler",
-                error: "Échec de la suppression du commentaire.",
-            },
             createProject: {
                 heading: "Créer un nouveau projet",
                 namePlaceholder: "Saisir le nom du projet…",
@@ -5199,6 +5192,8 @@ export const fr: DeepPartial<Messages> = {
             wrapAll: "Envelopper le contenu",
             unwrapCode: "Déballer les blocs de code",
             wrapCode: "Envelopper les blocs de code",
+            deleted: "Commentaire supprimé",
+            deleteFailedRestored: "Impossible de supprimer le commentaire. Il a été rétabli.",
         },
         titleBlock: {
             titlePlaceholder: "Saisir le titre de la tâche…",

@@ -175,13 +175,6 @@ export const tasks = {
             confirmButton: "Delete Task",
             cancelButton: "Cancel",
         },
-        deleteComment: {
-            title: "Delete Comment?",
-            body: "This action cannot be undone",
-            confirmButton: "Delete Comment",
-            cancelButton: "Cancel",
-            error: "Failed to delete the comment.",
-        },
         createProject: {
             heading: "Create New Project",
             namePlaceholder: "Enter project name...",
@@ -775,6 +768,8 @@ export const tasks = {
         wrapAll: "Wrap content",
         unwrapCode: "Unwrap code blocks",
         wrapCode: "Wrap code blocks",
+        deleted: "Comment deleted",
+        deleteFailedRestored: "Couldn’t delete the comment. It is back.",
     },
 
     // Title block.

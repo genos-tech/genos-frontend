@@ -2263,13 +2263,6 @@ export const es: DeepPartial<Messages> = {
                 no: "No",
                 closeButton: "Cerrar",
             },
-            deleteComment: {
-                title: "¿Eliminar comentario?",
-                body: "Esta acción no se puede deshacer.",
-                confirmButton: "Eliminar comentario",
-                cancelButton: "Cancelar",
-                error: "No se pudo eliminar el comentario.",
-            },
         },
         picker: {
             noSprintLabel: "Sin sprint",
@@ -2532,6 +2525,8 @@ export const es: DeepPartial<Messages> = {
             wrapAll: "Ajustar contenido",
             unwrapCode: "Desenvolver bloques de código",
             wrapCode: "Envolver bloques de código",
+            deleted: "Comentario eliminado",
+            deleteFailedRestored: "No se pudo eliminar el comentario. Se ha restaurado.",
         },
         titleBlock: {
             titlePlaceholder: "Introduce el título de la tarea…",

@@ -4441,13 +4441,6 @@ export const zh: DeepPartial<Messages> = {
                 confirmButton: "删除任务",
                 cancelButton: "取消",
             },
-            deleteComment: {
-                title: "删除评论？",
-                body: "此操作无法撤消",
-                confirmButton: "删除评论",
-                cancelButton: "取消",
-                error: "删除评论失败。",
-            },
             createProject: {
                 heading: "新建项目",
                 namePlaceholder: "请输入项目名称…",
@@ -4962,6 +4955,8 @@ export const zh: DeepPartial<Messages> = {
             wrapAll: "换行内容",
             unwrapCode: "解开代码块",
             wrapCode: "包裹代码块",
+            deleted: "评论已删除",
+            deleteFailedRestored: "无法删除评论，已恢复。",
         },
         titleBlock: {
             titlePlaceholder: "请输入任务标题…",

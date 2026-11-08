@@ -4597,13 +4597,6 @@ export const ja: DeepPartial<Messages> = {
                 confirmButton: "タスクを削除",
                 cancelButton: "キャンセル",
             },
-            deleteComment: {
-                title: "コメントを削除しますか？",
-                body: "この操作は取り消せません",
-                confirmButton: "コメントを削除",
-                cancelButton: "キャンセル",
-                error: "コメントの削除に失敗しました。",
-            },
             createProject: {
                 heading: "新規プロジェクトを作成",
                 namePlaceholder: "プロジェクト名を入力…",
@@ -5133,6 +5126,8 @@ export const ja: DeepPartial<Messages> = {
             wrapAll: "折り返して表示",
             unwrapCode: "コードの折り返しを解除",
             wrapCode: "コードを折り返して表示",
+            deleted: "コメントを削除しました",
+            deleteFailedRestored: "コメントを削除できませんでした。元に戻しました。",
         },
         titleBlock: {
             titlePlaceholder: "タスクのタイトルを入力…",
