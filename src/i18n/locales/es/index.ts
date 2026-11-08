@@ -392,28 +392,12 @@ export const es: DeepPartial<Messages> = {
             settings: "Ajustes",
             signOut: "Cerrar sesión",
             openProfile: "Abrir mi perfil",
-            switchServiceMac: "Mantén ⌘ + pulsa Ctrl",
-            switchServiceOther: "Mantén Ctrl + pulsa Alt",
-            spotlightShortcut: {
-                mac: "Pregunta rápida Genos · ⌘+K",
-                windows: "Pregunta rápida Genos · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "Tareas · Ctrl+⌘+T",
-                windows: "Tareas · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "Notas · Ctrl+⌘+N",
-                windows: "Notas · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "Historia · Ctrl+⌘+H",
-                windows: "Historia · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "Por hacer · Ctrl+⌘+O",
-                windows: "Por hacer · Ctrl+Alt+O",
-            },
+            switchService: "Mantén {hold} + pulsa {tap}",
+            spotlightShortcut: "Pregunta rápida Genos · {shortcut}",
+            tasksShortcut: "Tareas · {shortcut}",
+            notesShortcut: "Notas · {shortcut}",
+            historyShortcut: "Historia · {shortcut}",
+            todoShortcut: "Por hacer · {shortcut}",
         },
         actions: {
             todo: "Por hacer",
@@ -1122,6 +1106,15 @@ export const es: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Atajos de teclado",
+            editing: {
+                title: "Al escribir",
+                description:
+                    "Activos mientras escribes un mensaje o rellenas el formulario de nueva tarea.",
+                rows: {
+                    send: "Enviar un mensaje o comentario",
+                    createTask: "Crear la tarea",
+                },
+            },
             global: {
                 title: "Globales",
                 description:
@@ -1138,9 +1131,9 @@ export const es: DeepPartial<Messages> = {
                     openTodo: "Abrir la lista de tareas pendientes",
                 },
                 cycleCombo: {
-                    hold: "Mantén ⌘",
+                    hold: "Mantén {key}",
                     tap: "Pulsa Ctrl para navegar",
-                    release: "Suelta ⌘ para cambiar",
+                    release: "Suelta {key} para cambiar",
                 },
             },
             chat: {
@@ -5243,10 +5236,6 @@ export const es: DeepPartial<Messages> = {
             "Tu conexión con Google Calendar ha caducado. Vuelve a conectarla para consultar y gestionar tus eventos.",
         reconnectButton: "Reconectar Google Calendar",
         openTooltip: "Abrir calendario",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "Anterior",
         next: "Siguiente",
         views: {

@@ -824,10 +824,6 @@ export const zh: DeepPartial<Messages> = {
         reauthPrompt: "Google Calendar 连接已过期。请重新连接以查看和管理日程。",
         reconnectButton: "重新连接 Google Calendar",
         openTooltip: "打开日历",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "上一个",
         next: "下一个",
         views: {
@@ -4019,6 +4015,14 @@ export const zh: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "键盘快捷键",
+            editing: {
+                title: "编写时",
+                description: "在撰写消息或填写新建任务表单时可用。",
+                rows: {
+                    send: "发送消息或评论",
+                    createTask: "创建任务",
+                },
+            },
             global: {
                 title: "全局",
                 description:
@@ -4035,9 +4039,9 @@ export const zh: DeepPartial<Messages> = {
                     cycle: "在各服务间循环切换",
                 },
                 cycleCombo: {
-                    hold: "按住 ⌘",
+                    hold: "按住 {key}",
                     tap: "点按 Ctrl 切换",
-                    release: "松开 ⌘ 确认",
+                    release: "松开 {key} 确认",
                 },
             },
             chat: {
@@ -4129,28 +4133,12 @@ export const zh: DeepPartial<Messages> = {
             settings: "设置",
             signOut: "退出登录",
             openProfile: "打开我的资料",
-            switchServiceMac: "按住 ⌘ + 点按 Ctrl",
-            switchServiceOther: "按住 Ctrl + 点按 Alt",
-            spotlightShortcut: {
-                mac: "Genos 快问·⌘+K",
-                windows: "Genos 快问·Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "任务·Ctrl+⌘+T",
-                windows: "任务·Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "笔记·Ctrl+⌘+N",
-                windows: "注·Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "历史 · Ctrl+⌘+H",
-                windows: "历史 · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "待办事项·Ctrl+⌘+O",
-                windows: "待办事项·Ctrl+Alt+O",
-            },
+            switchService: "按住 {hold} + 点按 {tap}",
+            spotlightShortcut: "Genos 快问 · {shortcut}",
+            tasksShortcut: "任务 · {shortcut}",
+            notesShortcut: "笔记 · {shortcut}",
+            historyShortcut: "历史 · {shortcut}",
+            todoShortcut: "待办事项 · {shortcut}",
         },
         signOutConfirm: {
             title: "退出此工作区？",

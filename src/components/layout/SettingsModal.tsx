@@ -93,7 +93,6 @@ import { NotificationSettingsPanel } from "../../services/notifications/Notifica
 import { useColorTheme } from "../../theme/ColorThemeProvider";
 import { THEME_IDS, themeSwatch } from "../../theme/themePalettes";
 import { g } from "../../theme/tokens";
-import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
@@ -112,6 +111,7 @@ import { DeveloperSettingsSection } from "./DeveloperSettingsSection";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { SchedulesSection } from "./schedules/SchedulesSection";
 import { CreditUsageSection } from "./settings/CreditBalance";
+import { KeyboardShortcutsSection } from "./settings/KeyboardShortcutsSection";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
 import { TeamEmojiPanel } from "./TeamEmojiPanel";
 
@@ -130,36 +130,6 @@ type Props = {
     useCM?: import("../../hooks/chats/useChatManagement").ChatManagementState;
     useUISM?: import("../../hooks/common/useUIStateManagement").UIStateManagementState;
 };
-
-/**
- * Tiny inline `<kbd>` chip — Joy doesn't ship one, so we style a native
- * element to keep semantics for screen readers / a11y tooling.
- */
-const Kbd = ({ children }: { children: React.ReactNode }) => (
-    <Box
-        component="kbd"
-        sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minWidth: 22,
-            px: 0.75,
-            py: 0.1,
-            fontFamily: "monospace",
-            fontSize: "0.72rem",
-            fontWeight: 600,
-            lineHeight: 1.3,
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: "sm",
-            bgcolor: "background.level1",
-            color: "text.primary",
-            boxShadow: "0 1px 0 rgba(0,0,0,0.08)",
-        }}
-    >
-        {children}
-    </Box>
-);
 
 // The vertical rail's tab (a Joy `Tab`, so arrow keys, roles and the
 // horizontal mobile strip keep working) wearing the shared sidebar-row look
@@ -1549,144 +1519,6 @@ const AutoSyncCalendarSection = () => {
                     </Stack>
                 </>
             )}
-        </Sheet>
-    );
-};
-
-type ShortcutGroup = {
-    title: string;
-    description: string;
-    rows: Array<{ label: string; combo: string[] }>;
-};
-
-const KeyboardShortcutsSection = () => {
-    const { t } = useTranslation();
-    // Modifier display reflects what `useGlobalServiceShortcut` actually
-    // listens to: Ctrl+Cmd on Mac, Ctrl+Alt elsewhere.
-    const modifierKeys = useMemo(getServiceShortcutModifierKeys, []);
-    const cmdLabel = isMac() ? "⌘" : "Alt";
-
-    const groups: ShortcutGroup[] = [
-        {
-            title: t.settings.shortcuts.global.title,
-            description: t.settings.shortcuts.global.description,
-            rows: [
-                {
-                    label: t.settings.shortcuts.global.rows.spotlight,
-                    combo: [isMac() ? "⌘" : "Ctrl", "K"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.tasksNew,
-                    combo: [...modifierKeys, "T"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.notesNew,
-                    combo: [...modifierKeys, "N"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.calendar,
-                    combo: [...modifierKeys, "C"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.meetClipboard,
-                    combo: [...modifierKeys, "M"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.openHistory,
-                    combo: [...modifierKeys, "H"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.openTaskDiagram,
-                    combo: [...modifierKeys, "G"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.openTodo,
-                    combo: [...modifierKeys, "O"],
-                },
-                {
-                    label: t.settings.shortcuts.global.rows.cycle,
-                    combo: [
-                        t.settings.shortcuts.global.cycleCombo.hold,
-                        t.settings.shortcuts.global.cycleCombo.tap,
-                        t.settings.shortcuts.global.cycleCombo.release,
-                    ],
-                },
-            ],
-        },
-        {
-            title: t.settings.shortcuts.chat.title,
-            description: t.settings.shortcuts.chat.description,
-            rows: [
-                {
-                    label: t.settings.shortcuts.chat.rows.switchTab,
-                    combo: [cmdLabel, "Shift", "← / →"],
-                },
-                {
-                    label: t.settings.shortcuts.chat.rows.moveSelection,
-                    combo: [cmdLabel, "Shift", "↑ / ↓"],
-                },
-                {
-                    label: t.settings.shortcuts.chat.rows.openThread,
-                    combo: [cmdLabel, t.settings.shortcuts.chat.clickMessage],
-                },
-            ],
-        },
-    ];
-
-    return (
-        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
-            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
-                <KeyboardRoundedIcon />
-                <Typography level="title-md">{t.settings.shortcuts.heading}</Typography>
-            </Stack>
-
-            <Stack spacing={2}>
-                {groups.map((group, gIdx) => (
-                    <Box key={group.title}>
-                        <Typography level="title-sm" sx={{ mt: gIdx === 0 ? 0.5 : 0 }}>
-                            {group.title}
-                        </Typography>
-                        <Typography level="body-xs" sx={{ mb: 1 }}>
-                            {group.description}
-                        </Typography>
-                        <Stack spacing={0.75}>
-                            {group.rows.map((row, idx) => (
-                                <Box key={row.label}>
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        justifyContent="space-between"
-                                        spacing={2}
-                                    >
-                                        <Typography level="body-sm">{row.label}</Typography>
-                                        <Stack alignItems="center" direction="row" spacing={0.5}>
-                                            {row.combo.map((key, i) => (
-                                                <Stack
-                                                    key={`${key}-${i}`}
-                                                    alignItems="center"
-                                                    direction="row"
-                                                    spacing={0.5}
-                                                >
-                                                    <Kbd>{key}</Kbd>
-                                                    {i < row.combo.length - 1 && (
-                                                        <Typography
-                                                            level="body-xs"
-                                                            sx={{ color: "text.tertiary" }}
-                                                        >
-                                                            +
-                                                        </Typography>
-                                                    )}
-                                                </Stack>
-                                            ))}
-                                        </Stack>
-                                    </Stack>
-                                    {idx < group.rows.length - 1 && <Divider sx={{ mt: 0.75 }} />}
-                                </Box>
-                            ))}
-                        </Stack>
-                    </Box>
-                ))}
-            </Stack>
         </Sheet>
     );
 };

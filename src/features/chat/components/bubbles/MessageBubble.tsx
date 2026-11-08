@@ -23,13 +23,13 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { notifyActionError } from "../../../../services/requestErrorNotifier";
+import { threadClickModifier } from "../../../../shortcuts";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
-import { isMac } from "../../../../utils/platform";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
@@ -558,7 +558,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 <>
                     {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
                     {chat.chatType === 3 ? <br /> : null}
-                    {fmt(t.chat.bubble.clickToOpenThread, { modKey: isMac() ? "⌘" : "Alt" })}
+                    {fmt(t.chat.bubble.clickToOpenThread, { modKey: threadClickModifier() })}
                 </>
             }
         >

@@ -396,28 +396,12 @@ export const hi: DeepPartial<Messages> = {
             settings: "सेटिंग्स",
             signOut: "साइन आउट",
             openProfile: "मेरी प्रोफाइल खोलें",
-            switchServiceMac: "⌘ दबाए रखें + Ctrl टैप करें",
-            switchServiceOther: "Ctrl दबाए रखें + Alt टैप करें",
-            spotlightShortcut: {
-                mac: "Genos त्वरित प्रश्न · ⌘+K",
-                windows: "Genos त्वरित प्रश्न · Ctrl+K",
-            },
-            tasksShortcut: {
-                mac: "कार्य · Ctrl+⌘+T",
-                windows: "कार्य · Ctrl+Alt+T",
-            },
-            notesShortcut: {
-                mac: "नोट्स · Ctrl+⌘+N",
-                windows: "नोट्स · Ctrl+Alt+N",
-            },
-            historyShortcut: {
-                mac: "हिस्ट्री · Ctrl+⌘+H",
-                windows: "हिस्ट्री · Ctrl+Alt+H",
-            },
-            todoShortcut: {
-                mac: "टू-डू · Ctrl+⌘+O",
-                windows: "टू-डू · Ctrl+Alt+O",
-            },
+            switchService: "{hold} दबाए रखें + {tap} टैप करें",
+            spotlightShortcut: "Genos त्वरित प्रश्न · {shortcut}",
+            tasksShortcut: "कार्य · {shortcut}",
+            notesShortcut: "नोट्स · {shortcut}",
+            historyShortcut: "हिस्ट्री · {shortcut}",
+            todoShortcut: "टू-डू · {shortcut}",
         },
         signOutConfirm: {
             title: "इस कार्यक्षेत्र से साइन आउट करें?",
@@ -1367,6 +1351,14 @@ export const hi: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "कीबोर्ड शॉर्टकट",
+            editing: {
+                title: "लिखते समय",
+                description: "संदेश लिखते समय या नया टास्क फ़ॉर्म भरते समय सक्रिय।",
+                rows: {
+                    send: "संदेश या टिप्पणी भेजें",
+                    createTask: "टास्क बनाएँ",
+                },
+            },
             global: {
                 title: "ग्लोबल",
                 description:
@@ -1383,9 +1375,9 @@ export const hi: DeepPartial<Messages> = {
                     cycle: "सेवाओं के बीच साइकल करें",
                 },
                 cycleCombo: {
-                    hold: "⌘ दबाए रखें",
+                    hold: "{key} दबाए रखें",
                     tap: "साइकल के लिए Ctrl टैप करें",
-                    release: "बदलने के लिए ⌘ छोड़ें",
+                    release: "बदलने के लिए {key} छोड़ें",
                 },
             },
             chat: {
@@ -5214,10 +5206,6 @@ export const hi: DeepPartial<Messages> = {
             "आपका Google Calendar कनेक्शन समाप्त हो गया। अपने ईवेंट देखने और प्रबंधित करने के लिए पुनः कनेक्ट करें।",
         reconnectButton: "Google Calendar को पुनः कनेक्ट करें",
         openTooltip: "कैलेंडर खोलें",
-        openShortcut: {
-            mac: "Ctrl+⌘+C",
-            windows: "Ctrl+Alt+C",
-        },
         prev: "पिछला",
         next: "अगला",
         views: {

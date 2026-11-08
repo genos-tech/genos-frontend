@@ -12,9 +12,9 @@ import { ChatManagementState } from "../../../../../hooks/chats/useChatManagemen
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { getMessages } from "../../../../../i18n";
+import { shortcutText } from "../../../../../shortcuts";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
-import { isMac } from "../../../../../utils/platform";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { uploadNewTask } from "../../../services/uploadNewTask";
 
@@ -176,7 +176,7 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
             submit: triggerSubmit,
         }));
 
-        const shortcutLabel = isMac() ? "⌘ + Enter" : "Ctrl + Enter";
+        const shortcutLabel = shortcutText("taskCreate.submit");
 
         const handleCancel = () => {
             // Cancel = "throw away anything in progress" — wipe the persisted

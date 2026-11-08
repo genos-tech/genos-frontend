@@ -23,11 +23,11 @@ import { useSignOut } from "../../hooks/common/useSignOut";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation } from "../../i18n";
 import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
+import { cycleKeys, shortcutText } from "../../shortcuts";
 import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
-import { isMac } from "../../utils/platform";
 import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
@@ -47,37 +47,32 @@ const RAIL_BUTTON_PX = 0.5;
 const RAIL_LABEL_SIZE = "0.65rem";
 const RAIL_ICON_SIZE = 20;
 
-// Navigation item configuration. `shortcutKey` mirrors `SERVICE_BY_KEY` in
-// `hooks/common/useGlobalServiceShortcut.ts` — keep them in sync so the
-// tooltip displays the combo the listener actually responds to.
+// Navigation item configuration. The shortcut each item's tooltip prints comes
+// from the registry (`src/shortcuts`), not from this table.
 const NAV_ITEMS = [
     {
         id: 0,
         icon: AllInboxRoundedIcon,
         labelKey: "inbox" as const,
         path: "/workspace/inbox",
-        shortcutKey: "I",
     },
     {
         id: 1,
         icon: QuestionAnswerRoundedIcon,
         labelKey: "chats" as const,
         path: "/workspace/chat",
-        shortcutKey: "C",
     },
     {
         id: 2,
         icon: AssignmentRoundedIcon,
         labelKey: "tasks" as const,
         path: "/workspace/tasks",
-        shortcutKey: "T",
     },
     {
         id: 3,
         icon: NoteAltRoundedIcon,
         labelKey: "notes" as const,
         path: "/workspace/notes",
-        shortcutKey: "N",
     },
     // Integrations is no longer surfaced from the sidebar — the
     // Connect/Disconnect surface lives in Settings → Integrations
@@ -252,6 +247,7 @@ export const Sidebar = (props: SidebarProps) => {
     } = props;
     const handleLogout = useSignOut();
     const { t } = useTranslation();
+    const cycle = cycleKeys();
     const isMobile = useIsMobile();
     const sidebarVisibility = useSidebarVisibility();
     const navigate = useNavigate();
@@ -381,11 +377,9 @@ export const Sidebar = (props: SidebarProps) => {
                         icon={<AutoAwesomeRoundedIcon />}
                         label={t.sidebar.nav.search}
                         selected={genosActive}
-                        tooltip={
-                            isMac()
-                                ? t.sidebar.tooltips.spotlightShortcut.mac
-                                : t.sidebar.tooltips.spotlightShortcut.windows
-                        }
+                        tooltip={fmt(t.sidebar.tooltips.spotlightShortcut, {
+                            shortcut: shortcutText("global.spotlight"),
+                        })}
                         onClick={() => {
                             markPending("/workspace/genos");
                             onOpenGenos();
@@ -400,17 +394,18 @@ export const Sidebar = (props: SidebarProps) => {
                             // gesture (which IS their only global way in).
                             let tooltipText: string;
                             if (item.labelKey === "tasks") {
-                                tooltipText = isMac()
-                                    ? t.sidebar.tooltips.tasksShortcut.mac
-                                    : t.sidebar.tooltips.tasksShortcut.windows;
+                                tooltipText = fmt(t.sidebar.tooltips.tasksShortcut, {
+                                    shortcut: shortcutText("global.tasksNew"),
+                                });
                             } else if (item.labelKey === "notes") {
-                                tooltipText = isMac()
-                                    ? t.sidebar.tooltips.notesShortcut.mac
-                                    : t.sidebar.tooltips.notesShortcut.windows;
+                                tooltipText = fmt(t.sidebar.tooltips.notesShortcut, {
+                                    shortcut: shortcutText("global.notesNew"),
+                                });
                             } else {
-                                tooltipText = isMac()
-                                    ? t.sidebar.tooltips.switchServiceMac
-                                    : t.sidebar.tooltips.switchServiceOther;
+                                tooltipText = fmt(t.sidebar.tooltips.switchService, {
+                                    hold: cycle.hold,
+                                    tap: cycle.tap,
+                                });
                             }
 
                             return (
@@ -448,22 +443,18 @@ export const Sidebar = (props: SidebarProps) => {
                         <RailButton
                             icon={<ChecklistRoundedIcon />}
                             label={t.sidebar.actions.todo}
-                            tooltip={
-                                isMac()
-                                    ? t.sidebar.tooltips.todoShortcut.mac
-                                    : t.sidebar.tooltips.todoShortcut.windows
-                            }
+                            tooltip={fmt(t.sidebar.tooltips.todoShortcut, {
+                                shortcut: shortcutText("global.todo"),
+                            })}
                             onClick={onOpenTodo}
                         />
                     )}
                     <RailButton
                         icon={<HistoryRoundedIcon />}
                         label={t.sidebar.actions.history}
-                        tooltip={
-                            isMac()
-                                ? t.sidebar.tooltips.historyShortcut.mac
-                                : t.sidebar.tooltips.historyShortcut.windows
-                        }
+                        tooltip={fmt(t.sidebar.tooltips.historyShortcut, {
+                            shortcut: shortcutText("global.history"),
+                        })}
                         onClick={onOpenHistory}
                     />
                     <RailButton

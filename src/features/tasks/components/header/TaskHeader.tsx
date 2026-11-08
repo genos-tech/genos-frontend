@@ -21,10 +21,10 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
-import { isMac } from "../../../../utils/platform";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
 import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
@@ -206,7 +206,7 @@ export const TaskHeader = ({
                                         whiteSpace: "nowrap",
                                     }}
                                 >
-                                    {isMac() ? "⌘ + Ctrl + T" : "Alt + Ctrl + T"}
+                                    {shortcutText("global.tasksNew")}
                                 </Typography>
                             }
                         >

@@ -1010,6 +1010,14 @@ export const settings = {
     },
     shortcuts: {
         heading: "Keyboard shortcuts",
+        editing: {
+            title: "Writing",
+            description: "Active while you write a message or fill in the new-task form.",
+            rows: {
+                send: "Send a message or comment",
+                createTask: "Create the task",
+            },
+        },
         global: {
             title: "Global",
             description:
@@ -1026,9 +1034,9 @@ export const settings = {
                 cycle: "Cycle through services",
             },
             cycleCombo: {
-                hold: "Hold ⌘",
+                hold: "Hold {key}",
                 tap: "Tap Ctrl to cycle",
-                release: "Release ⌘ to switch",
+                release: "Release {key} to switch",
             },
         },
         chat: {

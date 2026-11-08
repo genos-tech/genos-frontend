@@ -13,16 +13,6 @@ export const calendar = {
         "Your Google Calendar connection expired. Reconnect to see and manage your events.",
     reconnectButton: "Reconnect Google Calendar",
     openTooltip: "Open calendar",
-    // Keyboard chord for the global shortcut handled by
-    // `useGlobalServiceShortcut` (letter "C" + the platform modifier
-    // set returned by `getServiceShortcutModifierKeys`). Split per
-    // platform so the tooltip composer can pick the right one at
-    // render time. Symbols (Ctrl, ⌘, Alt, +) are universal across
-    // locales — no translation needed.
-    openShortcut: {
-        mac: "Ctrl+⌘+C",
-        windows: "Ctrl+Alt+C",
-    },
     prev: "Previous",
     next: "Next",
     views: {
