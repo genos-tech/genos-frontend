@@ -20,7 +20,7 @@ import { purplePalette } from "../../theme/purplePalette";
 import { g } from "../../theme/tokens";
 import type { ProjectProps } from "../../types/tasks";
 import { ProjectLabelChips } from "../admin/components/projectLabels/ProjectLabelChips";
-import { TaskStatusChip } from "../tasks/components/TaskStatusChip";
+import { StatusLabel } from "../tasks/components/meta/StatusLabel";
 import type { SpotlightResult } from "./types";
 
 type SpotlightMessages = Messages["spotlight"];
@@ -506,7 +506,7 @@ const SpotlightResultItemInner = ({
                             }}
                         >
                             {showsStatus(result) && result.task_status && (
-                                <TaskStatusChip status={result.task_status} />
+                                <StatusLabel iconSize={12} status={result.task_status} />
                             )}
                             {project && (
                                 <ProjectLabelChips labels={project.projectLabels ?? []} max={2} />
