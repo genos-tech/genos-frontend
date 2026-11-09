@@ -1,15 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
     addMentionGroupMembers,
     createMentionGroup,
     deleteMentionGroup,
+    deleteMentionGroupOnExit,
     listMentionGroups,
     MentionGroup,
     removeMentionGroupMember,
     updateMentionGroup,
 } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
+import { runUndoable, useUndoHidden } from "./useUndoableAction";
+
+const mentionGroupKey = (groupId: number) => `mention-group:${groupId}`;
+
+/** Toast texts for deleting a group. The hook lives above the i18n provider, so
+ *  the caller brings the translated strings. */
+export type MentionGroupDeleteLabels = { message: ReactNode; errorMessage: ReactNode };
 
 export interface MentionGroupsApi {
     mentionGroups: MentionGroup[];
@@ -20,7 +28,9 @@ export interface MentionGroupsApi {
         groupId: number,
         patch: { groupName?: string; description?: string }
     ) => Promise<MentionGroup | null>;
-    deleteGroup: (groupId: number) => Promise<boolean>;
+    /** Delete with an Undo window (MIP-1300): the group leaves `mentionGroups` at
+     *  once, the DELETE is sent when the window ends, Undo sends nothing. */
+    deleteGroup: (groupId: number, labels: MentionGroupDeleteLabels) => void;
     addMembers: (groupId: number, userIds: string[]) => Promise<boolean>;
     removeMember: (groupId: number, userId: string) => Promise<boolean>;
 }
@@ -36,7 +46,17 @@ export const useMentionGroups = (
     myself: UserProps,
     accessToken: string | null
 ): MentionGroupsApi => {
-    const [mentionGroups, setMentionGroups] = useState<MentionGroup[]>([]);
+    const [rawGroups, setMentionGroups] = useState<MentionGroup[]>([]);
+    const undoHidden = useUndoHidden();
+    const mentionGroups = useMemo(
+        () =>
+            undoHidden.size === 0
+                ? rawGroups
+                : rawGroups.filter((g) => !undoHidden.has(mentionGroupKey(g.groupId))),
+        [rawGroups, undoHidden]
+    );
+    const tokenRef = useRef(accessToken);
+    tokenRef.current = accessToken;
     const [loading, setLoading] = useState(false);
     const teamId = myself?.teamId ?? "";
 
@@ -87,13 +107,24 @@ export const useMentionGroups = (
     );
 
     const deleteGroup = useCallback(
-        async (groupId: number) => {
-            if (!accessToken) return false;
-            const ok = await deleteMentionGroup(accessToken, groupId);
-            if (ok) await refresh();
-            return ok;
+        (groupId: number, labels: MentionGroupDeleteLabels) => {
+            runUndoable({
+                key: mentionGroupKey(groupId),
+                message: labels.message,
+                errorMessage: labels.errorMessage,
+                commit: async () => {
+                    const token = tokenRef.current;
+                    if (!token || !(await deleteMentionGroup(token, groupId))) {
+                        throw new Error("mention group delete failed");
+                    }
+                },
+                onExit: () => {
+                    if (tokenRef.current) deleteMentionGroupOnExit(tokenRef.current, groupId);
+                },
+                onCommitted: () => void refresh(),
+            });
         },
-        [accessToken, refresh]
+        [refresh]
     );
 
     const addMembers = useCallback(

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { TodoService } from "../db/services/todo.service";
@@ -15,6 +15,7 @@ import {
     createTodoItem,
     CreateTodoItemInput,
     deleteTodoItem,
+    deleteTodoItemOnExit,
     updateTodoItem,
     UpdateTodoItemPatch,
 } from "../features/chat/components/todo/services/todoItems";
@@ -43,6 +44,7 @@ import {
     TodoScheduleProps,
 } from "../types/chat";
 import { getLocalCurrentDate } from "../utils/dateUtils";
+import { runUndoable, useUndoHidden } from "./common/useUndoableAction";
 
 const todoService = new TodoService();
 
@@ -55,10 +57,20 @@ const recomputeGroupCompletion = (group: TodoGroupProps): TodoGroupProps => {
     };
 };
 
+/** Identity of a to-do in the Undo store (`useUndoableAction`). */
+const todoItemKey = (itemId: number) => `todo-item:${itemId}`;
+
+/** Toast texts for deleting a to-do. The hook lives above the i18n provider, so
+ *  the caller (a component) brings the translated strings. */
+export type TodoDeleteLabels = { message: ReactNode; errorMessage: ReactNode };
+
 export type UseTodoGroupsState = ReturnType<typeof useTodoGroups>;
 
 export const useTodoGroups = (myself: UserProps, accessToken: string | null) => {
-    const [groups, setGroups] = useState<TodoGroupProps[]>([]);
+    // `rawGroups` is what the server last said (and the materializer, the refetch
+    // and the item mutators work on). `groups`, further down, is what the screen
+    // sees: raw minus the to-dos whose delete is waiting out its Undo window.
+    const [rawGroups, setGroups] = useState<TodoGroupProps[]>([]);
     const [categories, setCategories] = useState<TodoCategoryProps[]>([]);
     const [schedules, setSchedules] = useState<TodoScheduleProps[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -75,7 +87,10 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
 
     // Ref so handlers always see the latest groups without re-binding.
     const groupsRef = useRef<TodoGroupProps[]>([]);
-    groupsRef.current = groups;
+    groupsRef.current = rawGroups;
+    // Same for the token: an Undo window outlives a render.
+    const accessTokenRef = useRef(accessToken);
+    accessTokenRef.current = accessToken;
     // Same for schedules — the materializer reads them from a ref so the
     // effects that call it don't need `schedules` in their dep arrays.
     const schedulesRef = useRef<TodoScheduleProps[]>([]);
@@ -143,7 +158,48 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [myself.userId, myself.teamId, accessToken]);
 
-    // Persist any non-empty state to IDB.
+    // A to-do deleted with Undo (MIP-1300) leaves the screen at once, but the
+    // server still has it until the window ends. So the hide sits HERE, at the
+    // hook's output, and never in `rawGroups`: the refetch on `todoChanged` and
+    // the schedule materializer read the raw rows (a raw row is also what keeps
+    // the materializer from re-creating a schedule's item whose delete is still
+    // pending), and an Undo is then just "stop hiding".
+    const undoHidden = useUndoHidden();
+    const hiddenItemIds = useMemo(() => {
+        const ids = new Set<number>();
+        if (undoHidden.size === 0) return ids;
+        const all = rawGroups.flatMap((g) => g.items ?? []);
+        for (const i of all) {
+            if (undoHidden.has(todoItemKey(i.itemId))) ids.add(i.itemId);
+        }
+        // Sub-items leave with their parent (the server deletes them with it).
+        for (const i of all) {
+            if (i.parentItemId != null && ids.has(i.parentItemId)) ids.add(i.itemId);
+        }
+        return ids;
+    }, [rawGroups, undoHidden]);
+    const hiddenItemIdsRef = useRef(hiddenItemIds);
+    hiddenItemIdsRef.current = hiddenItemIds;
+
+    const groups = useMemo(() => {
+        if (hiddenItemIds.size === 0) return rawGroups;
+        return rawGroups.map((g) =>
+            (g.items ?? []).some((i) => hiddenItemIds.has(i.itemId))
+                ? recomputeGroupCompletion({
+                      ...g,
+                      items: g.items.filter((i) => !hiddenItemIds.has(i.itemId)),
+                  })
+                : g
+        );
+    }, [rawGroups, hiddenItemIds]);
+
+    const visibleReminders = useMemo(() => {
+        if (hiddenItemIds.size === 0) return reminderByItemId;
+        return new Map([...reminderByItemId].filter(([itemId]) => !hiddenItemIds.has(itemId)));
+    }, [reminderByItemId, hiddenItemIds]);
+
+    // Persist any non-empty state to IDB: what the screen shows, so a reload in
+    // the middle of an Undo window does not paint the deleted to-do from cache.
     useEffect(() => {
         if (groups.length > 0) {
             todoService.cacheGroups(groups, myself.userId);
@@ -341,7 +397,10 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                     g.items.some((i) => i.itemId === itemId)
                 );
                 const openChildren = (group?.items ?? []).filter(
-                    (i) => i.parentItemId === itemId && !i.isCompleted
+                    (i) =>
+                        i.parentItemId === itemId &&
+                        !i.isCompleted &&
+                        !hiddenItemIdsRef.current.has(i.itemId)
                 );
                 for (const child of openChildren) {
                     void patchOneItem(child.itemId, { isCompleted: true });
@@ -420,33 +479,36 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         [accessToken, myself]
     );
 
+    // Delete a to-do with an Undo window (MIP-1300): it (and its sub-items and
+    // reminders) leaves the screen now, the real DELETE is sent when the window
+    // ends, and Undo sends nothing. A refused DELETE puts everything back: the raw
+    // rows and reminders were never touched, so showing them again is enough.
     const removeItem = useCallback(
-        async (itemId: number): Promise<boolean> => {
-            // Read the children BEFORE they are removed: their reminders go too.
-            const childIds = groupsRef.current
-                .flatMap((g) => g.items)
-                .filter((i) => i.parentItemId === itemId)
-                .map((i) => i.itemId);
-            removeItemLocally(itemId);
-            // The server cascades the reminder away with the row; without
-            // this the map would keep a reminder for a to-do that no longer
-            // exists, and its sweep timer would keep re-arming for it.
-            dropReminderLocally(itemId);
-            for (const childId of childIds) dropReminderLocally(childId);
-            const ok = await deleteTodoItem(accessToken, itemId);
-            if (!ok) {
-                // Reload on failure since we have no snapshot for revert. The reminders
-                // dropped above (the row's and its children's) come back with it.
-                const [fresh, reminders] = await Promise.all([
-                    loadTodoGroups(myself, accessToken),
-                    loadTodoReminders(accessToken),
-                ]);
-                if (fresh) setGroups(fresh);
-                if (reminders) setReminderByItemId(new Map(reminders.map((r) => [r.itemId, r])));
-            }
-            return ok;
+        (itemId: number, labels: TodoDeleteLabels): void => {
+            runUndoable({
+                key: todoItemKey(itemId),
+                message: labels.message,
+                errorMessage: labels.errorMessage,
+                commit: async () => {
+                    if (!(await deleteTodoItem(accessTokenRef.current, itemId))) {
+                        throw new Error("to-do delete failed");
+                    }
+                },
+                onExit: () => deleteTodoItemOnExit(accessTokenRef.current, itemId),
+                onCommitted: () => {
+                    // Gone for good: drop the raw row, its children and every
+                    // reminder the server cascaded away with them.
+                    const childIds = groupsRef.current
+                        .flatMap((g) => g.items)
+                        .filter((i) => i.parentItemId === itemId)
+                        .map((i) => i.itemId);
+                    removeItemLocally(itemId);
+                    dropReminderLocally(itemId);
+                    for (const childId of childIds) dropReminderLocally(childId);
+                },
+            });
         },
-        [accessToken, dropReminderLocally, myself, removeItemLocally]
+        [dropReminderLocally, removeItemLocally]
     );
 
     const refreshReminders = useCallback(async () => {
@@ -732,7 +794,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         updateSchedule,
         removeSchedule,
         refresh,
-        reminderByItemId,
+        reminderByItemId: visibleReminders,
         setItemReminder,
         cancelItemReminder,
         refreshReminders,

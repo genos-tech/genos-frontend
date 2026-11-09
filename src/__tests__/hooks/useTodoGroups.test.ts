@@ -6,9 +6,14 @@
  * propagate upward from children. The cascade fires only on completion —
  * re-opening a parent leaves children as they are.
  */
-import { act, renderHook } from "@testing-library/react";
+import { createElement } from "react";
+import { CssVarsProvider } from "@mui/joy/styles";
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ToastHost } from "../../components/ui/feedback/Toast";
+import { __resetToasts } from "../../components/ui/feedback/toastStore";
+import { TODO_CHANGED_EVENT } from "../../features/agentQA/todoWriteTools";
 import { loadTodoGroups } from "../../features/chat/components/todo/services/loadTodoGroups";
 import {
     createTodoCategory,
@@ -25,10 +30,13 @@ import {
     loadTodoReminders,
 } from "../../features/chat/components/todo/services/todoReminders";
 import {
+    createTodoSchedule,
     loadTodoSchedules,
     updateTodoSchedule,
 } from "../../features/chat/components/todo/services/todoSchedules";
+import { __resetUndoables, flushUndoables } from "../../hooks/common/useUndoableAction";
 import { useTodoGroups } from "../../hooks/useTodoGroups";
+import { en } from "../../i18n/locales/en";
 import { UserProps } from "../../types/admin";
 import {
     TodoCategoryProps,
@@ -45,6 +53,7 @@ vi.mock("../../features/chat/components/todo/services/todoItems", () => ({
     createTodoItem: vi.fn(),
     updateTodoItem: vi.fn(),
     deleteTodoItem: vi.fn(),
+    deleteTodoItemOnExit: vi.fn(),
 }));
 vi.mock("../../features/chat/components/todo/services/todoCategories", () => ({
     loadTodoCategories: vi.fn().mockResolvedValue([]),
@@ -79,6 +88,7 @@ const updateTodoCategoryMock = updateTodoCategory as unknown as ReturnType<typeo
 const loadTodoGroupsMock = loadTodoGroups as unknown as ReturnType<typeof vi.fn>;
 const updateTodoItemMock = updateTodoItem as unknown as ReturnType<typeof vi.fn>;
 const createTodoItemMock = createTodoItem as unknown as ReturnType<typeof vi.fn>;
+const createTodoScheduleMock = createTodoSchedule as unknown as ReturnType<typeof vi.fn>;
 const loadTodoSchedulesMock = loadTodoSchedules as unknown as ReturnType<typeof vi.fn>;
 const updateTodoScheduleMock = updateTodoSchedule as unknown as ReturnType<typeof vi.fn>;
 const deleteTodoItemMock = deleteTodoItem as unknown as ReturnType<typeof vi.fn>;
@@ -142,7 +152,21 @@ const flush = () =>
 const completionById = (items: TodoItemProps[]): Record<number, boolean> =>
     Object.fromEntries(items.map((i) => [i.itemId, i.isCompleted]));
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+    __resetUndoables();
+    __resetToasts();
+    vi.clearAllMocks();
+});
+
+// Deleting a to-do is an Undo toast (MIP-1300): the DELETE is sent when the window ends.
+// `windowEnds` is "the window ended" without waiting 8 s.
+const renderToasts = () => render(createElement(CssVarsProvider, null, createElement(ToastHost)));
+const LABELS = { message: "To-do deleted", errorMessage: "Couldn't delete" };
+const deleteItem = (
+    result: { current: { removeItem: (id: number, l: typeof LABELS) => void } },
+    id: number
+) => act(() => result.current.removeItem(id, LABELS));
+const windowEnds = () => act(async () => flushUndoables("navigate"));
 
 describe("useTodoGroups — identity guard", () => {
     // Regression: since the App-root lift the hook can mount before
@@ -320,9 +344,8 @@ describe("useTodoGroups — reminders follow the to-do they are about", () => {
     it("drops it when the row is deleted, so its sweep can't re-arm forever", async () => {
         deleteTodoItemMock.mockResolvedValue(true);
         const { result } = await bootWithReminder();
-        await act(async () => {
-            await result.current.removeItem(2);
-        });
+        deleteItem(result, 2);
+        await windowEnds();
         expect(result.current.reminderByItemId.has(2)).toBe(false);
     });
 
@@ -334,9 +357,8 @@ describe("useTodoGroups — reminders follow the to-do they are about", () => {
         await flush();
         expect(result.current.reminderByItemId.size).toBe(2);
 
-        await act(async () => {
-            await result.current.removeItem(1);
-        });
+        deleteItem(result, 1);
+        await windowEnds();
 
         // Parent 1 and its sub-items 2 and 3 are gone; the unrelated item 4 stays.
         expect(result.current.groups[0].items.map((i) => i.itemId)).toEqual([4]);
@@ -353,9 +375,8 @@ describe("useTodoGroups — reminders follow the to-do they are about", () => {
         const { result } = renderHook(() => useTodoGroups(myself, "token"));
         await flush();
 
-        await act(async () => {
-            await result.current.removeItem(1);
-        });
+        deleteItem(result, 1);
+        await windowEnds();
 
         expect(result.current.groups[0].items.map((i) => i.itemId)).toEqual([1, 2, 3, 4]);
         expect([...result.current.reminderByItemId.keys()].sort()).toEqual([2, 3]);
@@ -366,9 +387,8 @@ describe("useTodoGroups — reminders follow the to-do they are about", () => {
         loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
         const { result } = renderHook(() => useTodoGroups(myself, "token"));
         await flush();
-        await act(async () => {
-            await result.current.removeItem(2);
-        });
+        deleteItem(result, 2);
+        await windowEnds();
         expect(result.current.groups[0].items.map((i) => i.itemId)).toEqual([1, 3, 4]);
     });
 
@@ -712,5 +732,128 @@ describe("useTodoGroups — tag colours (MIP-759)", () => {
 
         expect(saved).toBeUndefined();
         expect(result.current.categories[0].name).toBe("Work");
+    });
+});
+
+describe("useTodoGroups — delete with Undo (MIP-1300)", () => {
+    const reminder = {
+        id: "r-1",
+        itemId: 2,
+        remindAt: "2099-01-01T09:00:00Z",
+        tsCreated: "2026-01-01T00:00:00Z",
+    };
+    const boot = async (groups: TodoGroupProps[] = [seedGroup()]) => {
+        loadTodoGroupsMock.mockResolvedValue(groups);
+        loadTodoRemindersMock.mockResolvedValue([reminder]);
+        const hook = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        return hook;
+    };
+    const ids = (r: { current: { groups: TodoGroupProps[] } }) =>
+        r.current.groups.flatMap((g) => g.items.map((i) => i.itemId));
+
+    it("hides the item (and its children) at once and sends nothing while the toast is up", async () => {
+        const { result } = await boot();
+        deleteItem(result, 1);
+        expect(ids(result)).toEqual([4]);
+        expect(deleteTodoItemMock).not.toHaveBeenCalled();
+    });
+
+    it("keeps derived values off the hidden rows: todayGroup, incompleteCount, reminders", async () => {
+        const today = getLocalCurrentDate();
+        const { result } = await boot([{ ...seedGroup(), localDate: today }]);
+        expect(result.current.incompleteCount).toBe(4);
+        deleteItem(result, 1);
+        expect(result.current.incompleteCount).toBe(1);
+        expect(result.current.todayGroup?.items.map((i) => i.itemId)).toEqual([4]);
+        // Item 2 is a child of the deleted parent: its reminder leaves too.
+        expect(result.current.reminderByItemId.has(2)).toBe(false);
+    });
+
+    it("Undo brings everything back and never calls the server", async () => {
+        const { result } = await boot();
+        renderToasts();
+        deleteItem(result, 1);
+        fireEvent.click(screen.getByText(en.common.feedback.toast.undo));
+        expect(ids(result)).toEqual([1, 2, 3, 4]);
+        expect(result.current.reminderByItemId.has(2)).toBe(true);
+        await windowEnds();
+        expect(deleteTodoItemMock).not.toHaveBeenCalled();
+    });
+
+    it("a todoChanged refetch during the window does not bring the item back", async () => {
+        const { result } = await boot();
+        deleteItem(result, 4);
+        loadTodoGroupsMock.mockResolvedValue([seedGroup()]);
+        window.dispatchEvent(new Event(TODO_CHANGED_EVENT));
+        await flush();
+        expect(ids(result)).toEqual([1, 2, 3]);
+    });
+
+    it("the schedule materializer still sees the pending row, so it does not re-create it", async () => {
+        const today = getLocalCurrentDate();
+        const group = {
+            ...seedGroup(),
+            localDate: today,
+            items: [{ ...mkItem(4, null), title: "Standup" }],
+        };
+        const sched = {
+            scheduleId: 9,
+            title: "Standup",
+            isActive: true,
+            rrule: "RRULE:FREQ=DAILY",
+            startDate: "2020-01-01",
+            lastMaterializedDate: null,
+            categoryId: null,
+        } as unknown as TodoScheduleProps;
+        loadTodoGroupsMock.mockResolvedValue([group]);
+        loadTodoRemindersMock.mockResolvedValue([]);
+        createTodoScheduleMock.mockResolvedValue(sched);
+        updateTodoScheduleMock.mockResolvedValue({ ...sched, lastMaterializedDate: today });
+        createTodoItemMock.mockResolvedValue(undefined);
+        const { result } = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        deleteItem(result, 4);
+        // A schedule due today is added while the delete of its to-do is still pending.
+        await act(async () => {
+            await result.current.addSchedule({ title: "Standup" } as never);
+        });
+        await flush();
+        expect(createTodoScheduleMock).toHaveBeenCalled();
+        expect(createTodoItemMock).not.toHaveBeenCalled();
+    });
+
+    it("sends one DELETE when the window ends and the row stays gone", async () => {
+        deleteTodoItemMock.mockResolvedValue(true);
+        const { result } = await boot();
+        deleteItem(result, 4);
+        await windowEnds();
+        expect(deleteTodoItemMock).toHaveBeenCalledTimes(1);
+        expect(deleteTodoItemMock.mock.calls[0][1]).toBe(4);
+        loadTodoGroupsMock.mockResolvedValue([
+            { ...seedGroup(), items: seedGroup().items.slice(0, 3) },
+        ]);
+        expect(ids(result)).toEqual([1, 2, 3]);
+    });
+
+    it("a refused DELETE shows the rows again and says so", async () => {
+        deleteTodoItemMock.mockResolvedValue(false);
+        const { result } = await boot();
+        renderToasts();
+        deleteItem(result, 4);
+        await windowEnds();
+        expect(ids(result)).toEqual([1, 2, 3, 4]);
+        expect(screen.getByText("Couldn't delete")).toBeInTheDocument();
+    });
+
+    it("completing a parent does not cascade into a child that is being deleted", async () => {
+        echoUpdate();
+        const { result } = await boot();
+        deleteItem(result, 2);
+        await act(async () => {
+            await result.current.patchItem(1, { isCompleted: true });
+        });
+        const patched = updateTodoItemMock.mock.calls.map((c) => c[1]).sort();
+        expect(patched).toEqual([1, 3]);
     });
 });

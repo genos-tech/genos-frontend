@@ -27,7 +27,8 @@ export const settings = {
         modalHeading: "Mention group",
         notFound: "Group not found.",
         deleteGroup: "Delete group",
-        deleteConfirm: "Delete @{name}? This cannot be undone.",
+        deleted: "@{name} deleted",
+        deleteFailed: "Couldn’t delete @{name}. It is back.",
         addDescription: "Add a description…",
         membersCount: "Members ({count})",
         noMembers: "No members yet. Add some below.",
@@ -50,6 +51,8 @@ export const settings = {
         invalidName: "Names are 1-50 chars of a-z, 0-9, _, + or -.",
         empty: "No custom emoji yet. Add the first one!",
         deleteEmoji: "Delete (old messages keep it)",
+        deleted: "Emoji :{name}: deleted",
+        deleteFailed: "Couldn’t delete :{name}:. It is back.",
     },
     // Settings → Developer → Connected apps: AI apps allowed to use Genos as you (MIP-1079).
     connectedApps: {

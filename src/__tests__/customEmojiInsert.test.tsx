@@ -148,7 +148,7 @@ describe("TeamEmojiPanel", () => {
                         loading: false,
                         refresh: async () => {},
                         create: async () => null,
-                        remove: async () => true,
+                        remove: () => {},
                         ...api,
                     }}
                 >
@@ -164,7 +164,7 @@ describe("TeamEmojiPanel", () => {
         );
 
     it("shows the delete button only on my own uploads and calls remove", () => {
-        const remove = vi.fn(() => Promise.resolve(true));
+        const remove = vi.fn();
         renderPanel({
             teamEmoji: [
                 partyBlob, // createdBy u1 = mine
@@ -177,7 +177,11 @@ describe("TeamEmojiPanel", () => {
         expect(screen.queryByTestId("delete-team-emoji-other-blob")).toBeNull();
 
         fireEvent.click(screen.getByTestId("delete-team-emoji-party-blob"));
-        expect(remove).toHaveBeenCalledWith(1);
+        // The caller brings the translated toast texts (the hook sits above i18n).
+        expect(remove).toHaveBeenCalledWith(1, {
+            message: "Emoji :party-blob: deleted",
+            errorMessage: "Couldn’t delete :party-blob:. It is back.",
+        });
     });
 
     it("hides server-seeded defaults — they aren't user-managed custom emoji", () => {

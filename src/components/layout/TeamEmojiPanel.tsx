@@ -6,7 +6,7 @@ import { Box, Button, IconButton, Input, Sheet, Stack, Typography } from "@mui/j
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTeamEmojiContext } from "../../context/TeamEmojiContext";
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { CustomEmojiImg } from "../editors/CustomEmojiImg";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -226,7 +226,17 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                                             data-testid={`delete-team-emoji-${e.name}`}
                                             size="sm"
                                             variant="plain"
-                                            onClick={() => void remove(e.emojiId)}
+                                            onClick={() =>
+                                                remove(e.emojiId, {
+                                                    message: fmt(t.settings.customEmoji.deleted, {
+                                                        name: e.name,
+                                                    }),
+                                                    errorMessage: fmt(
+                                                        t.settings.customEmoji.deleteFailed,
+                                                        { name: e.name }
+                                                    ),
+                                                })
+                                            }
                                         >
                                             <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>

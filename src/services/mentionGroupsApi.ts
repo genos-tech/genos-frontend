@@ -82,6 +82,24 @@ export const deleteMentionGroup = async (
     }
 };
 
+/**
+ * The same DELETE for a page that is going away (the Undo window had not ended
+ * when the tab closed): axios is abandoned with the page, a `fetch` with
+ * `keepalive` is not. Fire and forget.
+ */
+export const deleteMentionGroupOnExit = (accessToken: string, groupId: number): void => {
+    if (!accessToken || typeof fetch !== "function") return;
+    try {
+        void fetch(`${import.meta.env.VITE_API_BASE_URL}/mention-group/?group_id=${groupId}`, {
+            method: "DELETE",
+            keepalive: true,
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch(() => undefined);
+    } catch {
+        // Never let this break a page transition.
+    }
+};
+
 export const addMentionGroupMembers = async (
     accessToken: string,
     payload: { group_id: number; user_ids: string[]; added_by: string }
