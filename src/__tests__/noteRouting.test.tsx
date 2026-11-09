@@ -69,6 +69,7 @@ const stubNM = (overrides: Partial<Record<string, unknown>> = {}) =>
         currentChatNote: undefined,
         setCurrentNoteType: vi.fn(),
         loadNote: vi.fn(() => Promise.resolve()),
+        clearNoteOpenFailure: vi.fn(),
         tabsApi: { activeTab: undefined },
         ...overrides,
     }) as unknown as NoteManagementState;
@@ -246,5 +247,26 @@ describe("useNoteRouting with a folder URL", () => {
             wrapper: at("/workspace/notes"),
         });
         expect(result.current.revealFolder).not.toHaveBeenCalled();
+    });
+});
+
+// MIP-1307: a failed open belongs to the URL that asked for it, so every route change
+// clears it (a slow answer for the previous URL must not revive it either).
+describe("useNoteRouting and a failed open", () => {
+    it("clears the kept failure on every pathname change", () => {
+        const useNM = stubNM();
+        const { result } = renderHook(
+            () => ({
+                nav: useNavigate(),
+                routing: useNoteRouting({ useNM, isActiveRoute: true }),
+            }),
+            { wrapper: routerAt("/workspace/notes/my/5") }
+        );
+        const first = (useNM.clearNoteOpenFailure as ReturnType<typeof vi.fn>).mock.calls.length;
+        expect(first).toBeGreaterThan(0);
+        act(() => result.current.nav("/workspace/notes/my/6"));
+        expect(
+            (useNM.clearNoteOpenFailure as ReturnType<typeof vi.fn>).mock.calls.length
+        ).toBeGreaterThan(first);
     });
 });
