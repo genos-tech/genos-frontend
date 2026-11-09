@@ -104,6 +104,24 @@ export const onTasksBulkChanged = (cb: (detail: TasksBulkChangedDetail) => void)
     return () => window.removeEventListener(BULK_EVENT_NAME, handler);
 };
 
+// "The live connection came back, or the tab was left for a while: anything
+// announced in the meantime was missed." A comment broadcast while the socket
+// is down is never replayed, so the open task's comments and activity have to
+// be asked for again (MIP-1349). No id: whichever comment views are mounted
+// refetch for the task they show, and the request caches are dropped so the
+// refetch is a real one. Emitted by `commentsResync.ts`.
+
+const COMMENTS_RESYNC_EVENT = "genos:comments-resync";
+
+export const emitCommentsResync = (): void => {
+    window.dispatchEvent(new CustomEvent(COMMENTS_RESYNC_EVENT));
+};
+
+export const onCommentsResync = (cb: () => void): (() => void) => {
+    window.addEventListener(COMMENTS_RESYNC_EVENT, cb);
+    return () => window.removeEventListener(COMMENTS_RESYNC_EVENT, cb);
+};
+
 // "The user just opened a task" (MIP-1063). Emitted once the server has
 // recorded the open, so the sidebar's Recents reloads and sees it. The sidebar
 // is not mounted on every surface that opens a task (modals, mobile), so the

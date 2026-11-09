@@ -69,7 +69,7 @@ import { isStatusName, statusSolid, toneSolid } from "../../meta/taskTone";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
-import { emitTasksBulkChanged, onTaskTouched } from "../../services/taskEvents";
+import { emitTasksBulkChanged, onCommentsResync, onTaskTouched } from "../../services/taskEvents";
 import { createOpenLanding, OpenLanding } from "../../services/taskOpenLanding";
 import {
     updateProjectOptions,
@@ -577,6 +577,16 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             }
         });
     }, [taskEditState.currentTaskId, useTM.currentPreviewTask?.id]);
+    // The connection came back (or the tab was left for a while): a comment
+    // announced meanwhile was missed, so ask again (MIP-1349).
+    useEffect(
+        () =>
+            onCommentsResync(() => {
+                setCommentRefreshNonce((n) => n + 1);
+                setActivityRefreshNonce((n) => n + 1);
+            }),
+        []
+    );
     // Does `MilestonePreviewInner` own the pane? Computed HERE, above the
     // effects, even though the early return that uses it is far below —
     // the loaders need to know, and it's a pure read of useTM/useSM.
@@ -1590,6 +1600,14 @@ const MilestonePreviewInner = ({
             }
         });
     }, [milestone?.taskId]);
+    useEffect(
+        () =>
+            onCommentsResync(() => {
+                setCommentRefreshNonce((n) => n + 1);
+                setActivityRefreshNonce((n) => n + 1);
+            }),
+        []
+    );
     const taskComments = useTM.taskComments;
     const setTaskComments = useTM.setTaskComments;
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);

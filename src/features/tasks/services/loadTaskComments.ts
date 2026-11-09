@@ -4,7 +4,7 @@ import { authApi } from "../../../services/api";
 import { createRequestCache } from "../../../services/requestCache";
 import { UserProps } from "../../../types/admin";
 import { TaskCommentProps } from "../../../types/tasks";
-import { onTaskTouched } from "./taskEvents";
+import { onCommentsResync, onTaskTouched } from "./taskEvents";
 
 // Local posts/edits and socket broadcasts all emit a scoped "comment"
 // event, so the TTL only covers signal gaps; dedup absorbs the
@@ -15,6 +15,10 @@ onTaskTouched(({ taskId, kind }) => {
         commentsCache.invalidate(`comments:${taskId}:`);
     }
 });
+
+// A reconnect or a return to the tab: whatever is cached may predate a comment
+// that was announced while we were not listening.
+onCommentsResync(() => commentsCache.clear());
 
 export const loadTaskComments = async (
     myself: UserProps,
