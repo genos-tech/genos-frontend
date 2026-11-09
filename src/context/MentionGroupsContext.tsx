@@ -31,7 +31,7 @@ export const useMentionGroupsContext = (): MentionGroupsApi => {
         refresh: async () => {},
         createGroup: async () => null,
         updateGroup: async () => null,
-        deleteGroup: async () => false,
+        deleteGroup: () => {},
         addMembers: async () => false,
         removeMember: async () => false,
     };

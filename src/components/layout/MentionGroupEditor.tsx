@@ -30,7 +30,6 @@ import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { InlineTitleEdit } from "../ui/fields/InlineTitleEdit";
 import { SearchField } from "../ui/fields/SearchField";
-import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { plainButtonSx } from "../ui/plainButtonStyles";
 
 type Props = {
@@ -71,7 +70,6 @@ export const MentionGroupEditor = ({
 
     const [editingDescription, setEditingDescription] = useState<string | null>(null);
     const [memberPickerQuery, setMemberPickerQuery] = useState("");
-    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     const group: MentionGroup | undefined = useMemo(
         () => mentionGroups.find((g) => g.groupId === groupId),
@@ -127,24 +125,18 @@ export const MentionGroupEditor = ({
         setEditingDescription(null);
     };
 
-    // The trash button only ASKS; the confirm dialog (below) deletes.
-    const handleDelete = async () => {
-        await deleteGroup(group.groupId);
+    // Delete is an Undo toast, not a question (MIP-1300): the group leaves at once
+    // and the DELETE is sent when the window ends.
+    const handleDelete = () => {
+        deleteGroup(group.groupId, {
+            message: fmt(t.settings.mentionGroups.deleted, { name: group.groupName }),
+            errorMessage: fmt(t.settings.mentionGroups.deleteFailed, { name: group.groupName }),
+        });
         onDeleted?.();
     };
 
     return (
         <Stack spacing={1.5}>
-            <ConfirmDialog
-                cancelLabel={t.common.actions.cancel}
-                confirmLabel={t.common.actions.delete}
-                open={confirmingDelete}
-                title={fmt(t.settings.mentionGroups.deleteConfirm, { name: group.groupName })}
-                closeOnConfirm
-                destructive
-                onClose={() => setConfirmingDelete(false)}
-                onConfirm={handleDelete}
-            />
             {/* Name + delete */}
             <Stack alignItems="center" direction="row" spacing={1}>
                 <InlineTitleEdit
@@ -156,12 +148,7 @@ export const MentionGroupEditor = ({
                     onCommit={(next) => void updateGroup(group.groupId, { groupName: next })}
                 />
                 <AppTooltip size="sm" title={t.settings.mentionGroups.deleteGroup}>
-                    <IconButton
-                        color="danger"
-                        size="sm"
-                        variant="plain"
-                        onClick={() => setConfirmingDelete(true)}
-                    >
+                    <IconButton color="danger" size="sm" variant="plain" onClick={handleDelete}>
                         <DeleteOutlineRoundedIcon />
                     </IconButton>
                 </AppTooltip>
