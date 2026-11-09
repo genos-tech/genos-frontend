@@ -4914,6 +4914,16 @@ export const zh: DeepPartial<Messages> = {
             hoursAgo: "{count} 小时前",
             dayAgo: "{count} 1天前",
             daysAgo: "{count} 几天前",
+            progress: {
+                scopeLabel: "显示",
+                scopeOwn: "自身的更改",
+                scopeUnder: "下级更改",
+                empty: "下级暂无更改",
+                emptyBody: "其子任务的更改会显示在这里。",
+                loadFailed: "无法加载下级更改",
+                loadMore: "加载更多",
+                deleted: "已删除",
+            },
             verbs: {
                 created: "创建了这个",
                 titleChanged: "将此重命名为",

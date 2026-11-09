@@ -159,6 +159,27 @@ export type TaskActivityProps = {
         avatarImgPath: string | null;
     } | null;
     tsCreatedAt: string;
+    // Only on a row from the PROGRESS feed (`GET /task/progress/`, MIP-1351):
+    // the task the change happened to, and how far below the one asked about
+    // (1 = a direct child's, 2 = a grandchild's...).
+    factId?: number;
+    depth?: number;
+    sourceTask?: TaskProgressSourceProps;
+};
+
+export type TaskProgressSourceProps = {
+    id: string;
+    displayId: string;
+    title: string | null;
+    isMilestone: boolean;
+    isDeleted: boolean;
+};
+
+/** One page of `GET /task/progress/`: what changed at or under a task. */
+export type TaskProgressPage = {
+    entries: TaskActivityProps[];
+    /** Pass back as `cursor` for the next page; null on the last. */
+    nextCursor: string | null;
 };
 
 /** Does this history row hold the description it replaced, so it can be put

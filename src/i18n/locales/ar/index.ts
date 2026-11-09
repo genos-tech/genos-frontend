@@ -2892,6 +2892,16 @@ export const ar: DeepPartial<Messages> = {
             hoursAgo: "{count} منذ ساعات",
             dayAgo: "{count} منذ يوم",
             daysAgo: "{count} منذ أيام",
+            progress: {
+                scopeLabel: "عرض",
+                scopeOwn: "تغييراته",
+                scopeUnder: "ما تحته",
+                empty: "لم يتغير شيء تحته بعد",
+                emptyBody: "تظهر هنا تغييرات المهام الفرعية.",
+                loadFailed: "تعذّر تحميل التغييرات التي تحته",
+                loadMore: "تحميل المزيد",
+                deleted: "محذوفة",
+            },
             verbs: {
                 created: "خلق هذا",
                 titleChanged: "إعادة تسمية هذا من",

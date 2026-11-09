@@ -5101,6 +5101,16 @@ export const ja: DeepPartial<Messages> = {
             hoursAgo: "{count} 時間前",
             dayAgo: "{count} 1 日前",
             daysAgo: "{count} 日前",
+            progress: {
+                scopeLabel: "表示",
+                scopeOwn: "このタスク自体",
+                scopeUnder: "配下の変更",
+                empty: "配下にはまだ変更がありません",
+                emptyBody: "サブタスクの変更がここに表示されます。",
+                loadFailed: "配下の変更を読み込めませんでした",
+                loadMore: "さらに読み込む",
+                deleted: "削除済み",
+            },
             verbs: {
                 created: "これを作成しました",
                 titleChanged: "これをから名前変更しました",

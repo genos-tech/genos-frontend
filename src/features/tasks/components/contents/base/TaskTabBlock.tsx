@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -61,6 +61,7 @@ import { taskCommentKey } from "../../../services/deleteTaskComment";
 import { TaskActivityFeed } from "./sub/TaskActivityFeed";
 import { TaskCommentEditorBlock } from "./sub/TaskCommentEditorBlock";
 import { TaskCommentList } from "./sub/TaskCommentList";
+import { TaskProgressFeed } from "./sub/TaskProgressFeed";
 
 type TaskTabBlockProps = {
     socket: Socket | null;
@@ -152,6 +153,31 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     } = props;
     const urlLinkModal = useUrlLinkModal();
     const isModalHosted = hostZIndex != null;
+
+    // Activity tab, two views (MIP-1351): the item's OWN changes, and what changed
+    // UNDER it (its sub-tasks, and a milestone's tasks). The second is offered only
+    // when it has something under it: for a task with no sub-tasks it would repeat
+    // the first. A milestone is shown through its backing task, so one test covers both.
+    const itemId = taskContent.id ?? null;
+    const hasChildren = useMemo(
+        () =>
+            itemId != null &&
+            useTM.allTasks.some(
+                (row) => row.parentTaskId != null && String(row.parentTaskId) === String(itemId)
+            ),
+        [useTM.allTasks, itemId]
+    );
+    const progressVersion = useMemo(
+        () =>
+            useTM.allTasks.find((row) => itemId != null && String(row.id) === String(itemId))
+                ?.lastProgressAt ?? "",
+        [useTM.allTasks, itemId]
+    );
+    const [activityScope, setActivityScope] = useState<"own" | "under">("own");
+    useEffect(() => {
+        setActivityScope("own");
+    }, [itemId]);
+    const showUnder = hasChildren && activityScope === "under";
 
     const attachments = taskContent.attachments ?? [];
     const previews = useAttachmentPreviews(attachments);
@@ -1100,20 +1126,57 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         so switching into this tab does not refetch and
                         flash the feed every time. */}
                     <TabPanel sx={{ p: 0 }} value={3}>
-                        <TaskActivityFeed
-                            activities={taskActivities}
-                            allTasks={useTM.allTasks}
-                            isLoading={isLoadingTaskActivities}
-                            loadFailed={taskActivitiesFailed}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            taskId={taskContent.id ?? null}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            onRetry={onRetryTaskActivities}
-                        />
+                        {hasChildren && (
+                            <Box
+                                aria-label={t.tasks.activity.progress.scopeLabel}
+                                role="group"
+                                sx={{ display: "flex", gap: 0.5, px: 1, pt: 1 }}
+                            >
+                                {(["own", "under"] as const).map((scope) => (
+                                    <Button
+                                        key={scope}
+                                        aria-pressed={activityScope === scope}
+                                        data-testid={`activity-scope-${scope}`}
+                                        size="sm"
+                                        variant={activityScope === scope ? "soft" : "plain"}
+                                        onClick={() => setActivityScope(scope)}
+                                    >
+                                        {scope === "own"
+                                            ? t.tasks.activity.progress.scopeOwn
+                                            : t.tasks.activity.progress.scopeUnder}
+                                    </Button>
+                                ))}
+                            </Box>
+                        )}
+                        {showUnder && itemId != null ? (
+                            <TaskProgressFeed
+                                allTasks={useTM.allTasks}
+                                myself={myself}
+                                projectId={projectId ?? null}
+                                setMyself={setMyself}
+                                socket={socket}
+                                taskId={Number(itemId)}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                                version={progressVersion}
+                            />
+                        ) : (
+                            <TaskActivityFeed
+                                activities={taskActivities}
+                                allTasks={useTM.allTasks}
+                                isLoading={isLoadingTaskActivities}
+                                loadFailed={taskActivitiesFailed}
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                taskId={taskContent.id ?? null}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                                onRetry={onRetryTaskActivities}
+                            />
+                        )}
                     </TabPanel>
                 </Box>
             </Tabs>
