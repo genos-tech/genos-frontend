@@ -65,6 +65,21 @@ export const useProjectManagement = (
     // (and therefore another `getProjectTasks` fetch).
     const tsLastLoadProjectAndTasks = useRef<number | undefined>(undefined);
 
+    // Load the latest tasks of the project just picked and announce them (the table
+    // reads them from IndexedDB). A failed load must not escape: `loadProjectsAndTasks`
+    // is awaited by an un-awaited IIFE in the `[myself]` effect, so a rejection was an
+    // unhandled promise rejection (MIP-1324). `loadProjectTasks` has already told the
+    // sync status (`report("tasks", false)`, so the banner and Retry exist); this only
+    // logs, and still announces, so the table shows the rows IndexedDB already has.
+    const loadPickedProjectTasks = async (pickedProjectId: number) => {
+        try {
+            await loadProjectTasks(myself, pickedProjectId, accessToken);
+        } catch (error) {
+            console.error(`Failed to load the tasks of project ${pickedProjectId}`, error);
+        }
+        setTsTasksLoadedToIDB({ ts: Date.now(), projectId: pickedProjectId });
+    };
+
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] | undefined = await loadTeamProjects(
@@ -133,12 +148,7 @@ export const useProjectManagement = (
                                 isPrivate: loadedTeamProjects[i].isPrivate,
                                 systemUserId: loadedTeamProjects[i].systemUserId,
                             });
-                            // Load the latest tasks and insert into the indexedDB
-                            await loadProjectTasks(myself, pickedProjectId, accessToken);
-                            setTsTasksLoadedToIDB({
-                                ts: Date.now(),
-                                projectId: pickedProjectId,
-                            });
+                            await loadPickedProjectTasks(pickedProjectId);
                             break;
                         }
                     } else {
@@ -154,12 +164,7 @@ export const useProjectManagement = (
                                     isPrivate: loadedTeamProjects[i].isPrivate,
                                     systemUserId: loadedTeamProjects[i].systemUserId,
                                 });
-                                // Load the latest tasks and insert into the indexedDB
-                                await loadProjectTasks(myself, pickedProjectId, accessToken);
-                                setTsTasksLoadedToIDB({
-                                    ts: Date.now(),
-                                    projectId: pickedProjectId,
-                                });
+                                await loadPickedProjectTasks(pickedProjectId);
                                 break;
                             }
                         } else if (
@@ -175,12 +180,7 @@ export const useProjectManagement = (
                                 isPrivate: loadedTeamProjects[i].isPrivate,
                                 systemUserId: loadedTeamProjects[i].systemUserId,
                             });
-                            // Load the latest tasks and insert into the indexedDB
-                            await loadProjectTasks(myself, pickedProjectId, accessToken);
-                            setTsTasksLoadedToIDB({
-                                ts: Date.now(),
-                                projectId: pickedProjectId,
-                            });
+                            await loadPickedProjectTasks(pickedProjectId);
                             break;
                         }
                     }
