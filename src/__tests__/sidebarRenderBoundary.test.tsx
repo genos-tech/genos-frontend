@@ -84,6 +84,8 @@ vi.mock("../features/tasks/components/ProjectIdentityRow", () => ({
         counts.projectRows += 1;
         return <span>{project.projectName}</span>;
     },
+    // The Favorites rows draw a project's avatar (MIP-1352); not counted here.
+    ProjectAvatar: () => <span data-testid="project-avatar" />,
 }));
 
 vi.mock("../features/tasks/components/sidebar/projects_subs/MilestoneFolderMenus", async () => {

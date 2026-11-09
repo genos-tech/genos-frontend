@@ -35,7 +35,13 @@ export type ProjectIdentity = Pick<
 // negative margin tightens the glyph against its neighbours inside a
 // `gap: 1` flex parent, which is what both callers lay out with.
 
-const ProjectAvatar = ({ avatarSrc, iconColor }: { avatarSrc?: string; iconColor?: string }) => {
+export const ProjectAvatar = ({
+    avatarSrc,
+    iconColor,
+}: {
+    avatarSrc?: string;
+    iconColor?: string;
+}) => {
     return (
         <BaseAvatar size="xs" src={avatarSrc}>
             <AssignmentIcon

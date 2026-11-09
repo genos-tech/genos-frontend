@@ -1,8 +1,9 @@
 // MIP-1053: milestone favorites in the task sidebar.
-//   - a "Favorites" folder above Recents, most recent first, that does what a
+//   - a "Favorites" folder above Recents, most recent progress first, that does what a
 //     click on the milestone in its project does;
 //   - a star on every milestone row (and a menu item) that toggles it;
-//   - a favorite moves to the top whenever its milestone is opened.
+//   - the list is ordered by each milestone's last progress (MIP-1352), and an
+//     open is still reported to the store (it breaks ties).
 
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, within } from "@testing-library/react";
@@ -15,7 +16,12 @@ import type { Milestone, MilestoneFavorite } from "../features/tasks/sprint-mile
 const ALPHA = { projectId: 1, projectName: "Alpha" };
 const BETA = { projectId: 2, projectName: "Beta" };
 
-const fav = (milestoneId: number, projectId: number, title: string): MilestoneFavorite => ({
+const fav = (
+    milestoneId: number,
+    projectId: number,
+    title: string,
+    lastProgressAt?: string | null
+): MilestoneFavorite => ({
     milestoneId,
     taskId: null,
     displayId: null,
@@ -26,6 +32,7 @@ const fav = (milestoneId: number, projectId: number, title: string): MilestoneFa
     teamId: null,
     tsFavorited: "",
     tsLastOpened: null,
+    ...(lastProgressAt === undefined ? {} : { lastProgressAt }),
 });
 const ms = (milestoneId: number, title: string, over: Partial<Milestone> = {}): Milestone =>
     ({
@@ -64,11 +71,13 @@ type FavProps = {
     currentProjectId?: number;
     milestones?: Record<number, Milestone[]>;
     tm?: Record<string, unknown>;
+    chats?: unknown[];
 };
 const mountFavorites = (p: FavProps = {}) =>
     render(
         <CssVarsProvider>
             <FavoritesListItem
+                useCM={{ allChats: p.chats ?? [] } as never}
                 usePM={
                     {
                         teamProjects: p.projects ?? [ALPHA, BETA],
@@ -100,6 +109,11 @@ const mountFavorites = (p: FavProps = {}) =>
             />
         </CssVarsProvider>
     );
+// The milestone ids of the rows, top to bottom.
+const order = () =>
+    screen
+        .getAllByTestId(/^favorite-milestone-/)
+        .map((li) => Number(li.getAttribute("data-testid")?.replace("favorite-milestone-", "")));
 const rowButton = (title: string) =>
     screen.getByText(title).closest(".MuiListItemButton-root") as HTMLElement;
 
@@ -140,6 +154,113 @@ describe("the Favorites folder", () => {
         // MIP-1157, the two lists drew the same status differently.
         expect(within(row).getByRole("img", { name: "WIP" })).toBeTruthy();
         expect(within(row).queryByText("WIP")).toBeNull();
+    });
+
+    it("puts the milestone with the most recent progress first (MIP-1352)", () => {
+        mountFavorites({
+            favorites: [
+                fav(1, 1, "Quiet", "2026-11-01 10:00:00+00:00"),
+                fav(2, 2, "Moving", "2026-11-09 10:00:00+00:00"),
+                fav(3, 1, "Middle", "2026-11-05 10:00:00+00:00"),
+            ],
+        });
+        expect(order()).toEqual([2, 3, 1]);
+    });
+
+    it("puts a milestone with no recorded progress after those that have some, and keeps the given order among ties", () => {
+        mountFavorites({
+            favorites: [
+                fav(1, 1, "None A", null),
+                fav(2, 2, "Old", "2026-01-01 00:00:00+00:00"),
+                fav(3, 1, "None B"),
+                fav(4, 2, "Same as old", "2026-01-01 00:00:00+00:00"),
+            ],
+        });
+        expect(order()).toEqual([2, 4, 1, 3]);
+    });
+
+    it("compares the instants, not the strings (the server form has a space where ISO has a T)", () => {
+        mountFavorites({
+            favorites: [
+                fav(1, 1, "Earlier", "2026-11-09T05:00:00Z"),
+                fav(2, 2, "Later", "2026-11-09 06:00:00+00:00"),
+            ],
+        });
+        expect(order()).toEqual([2, 1]);
+    });
+
+    it("uses the live milestone's progress when it is newer, so the list follows a project's reload", () => {
+        const favorites = [
+            fav(1, 1, "Was moving", "2026-11-09 10:00:00+00:00"),
+            fav(2, 2, "Was quiet", "2026-11-01 10:00:00+00:00"),
+        ];
+        const view = mountFavorites({ favorites });
+        expect(order()).toEqual([1, 2]);
+        view.unmount();
+        mountFavorites({
+            favorites,
+            milestones: {
+                2: [
+                    ms(2, "Was quiet", {
+                        projectId: 2,
+                        lastProgressAt: "2026-11-10 09:00:00+00:00",
+                    }),
+                ],
+            },
+        });
+        expect(order()).toEqual([2, 1]);
+    });
+
+    it("does not let an older live value pull a milestone down", () => {
+        mountFavorites({
+            favorites: [
+                fav(1, 1, "A", "2026-11-09 10:00:00+00:00"),
+                fav(2, 2, "B", "2026-11-05 10:00:00+00:00"),
+            ],
+            milestones: {
+                1: [ms(1, "A", { lastProgressAt: "2026-10-01 00:00:00+00:00" })],
+            },
+        });
+        expect(order()).toEqual([1, 2]);
+    });
+
+    it("opening a milestone does not move it above one with newer progress", () => {
+        mountFavorites({
+            favorites: [
+                fav(1, 1, "Older", "2026-11-01 10:00:00+00:00"),
+                fav(2, 2, "Newer", "2026-11-09 10:00:00+00:00"),
+            ],
+            tm: { currentPreviewKind: "milestone", currentPreviewMilestoneId: 1 },
+        });
+        expect(f.noteMilestoneOpened).toHaveBeenCalledWith(1);
+        expect(order()).toEqual([2, 1]);
+    });
+
+    it("shows each milestone's project image next to the project's name", () => {
+        mountFavorites({
+            favorites: [fav(1, 1, "Alpha launch"), fav(2, 2, "Beta launch")],
+            chats: [
+                {
+                    chatType: 3,
+                    project: { projectId: 1 },
+                    profileImagePath: "https://media.test/projects/alpha.png",
+                },
+            ],
+        });
+        const img = screen
+            .getByTestId("favorite-project-icon-1")
+            .querySelector("img") as HTMLImageElement;
+        expect(img.getAttribute("src")).toBe("https://media.test/projects/alpha.png");
+        // No image for Beta: the generic project icon, not an empty gap.
+        const beta = screen.getByTestId("favorite-project-icon-2");
+        expect(beta.querySelector("img")).toBeNull();
+        expect(beta.querySelector("svg")).not.toBeNull();
+        // ...and it sits in the row that names the project.
+        expect(
+            within(screen.getByTestId("favorite-milestone-1")).getByTestId(
+                "favorite-project-icon-1"
+            )
+        ).toBeTruthy();
     });
 
     it("hides a favorite whose project this sidebar does not list", () => {
