@@ -3213,6 +3213,8 @@ export const zh: DeepPartial<Messages> = {
             invalidName: "名称为 1-50 个字符的 a-z、0-9、_、+ 或 -。",
             empty: "还没有自定义表情符号。添加第一个！",
             deleteEmoji: "删除（旧消息保留）",
+            deleted: "已删除表情 :{name}:",
+            deleteFailed: "无法删除表情 :{name}:，已恢复。",
         },
         connectedApps: {
             title: "已连接的应用",

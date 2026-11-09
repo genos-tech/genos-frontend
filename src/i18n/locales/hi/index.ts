@@ -500,6 +500,8 @@ export const hi: DeepPartial<Messages> = {
             invalidName: "नाम a-z, 0-9, _, + या - के 1-50 वर्ण हैं।",
             empty: "अभी तक कोई कस्टम इमोजी नहीं. पहला जोड़ें!",
             deleteEmoji: "हटाएं (पुराने संदेश रखें)",
+            deleted: "इमोजी :{name}: हटाया गया",
+            deleteFailed: "इमोजी :{name}: हटाया नहीं जा सका। इसे वापस रख दिया गया है।",
         },
         connectedApps: {
             title: "कनेक्टेड ऐप",

@@ -65,3 +65,21 @@ export const deleteTeamEmoji = async (accessToken: string, emojiId: number): Pro
         return false;
     }
 };
+
+/**
+ * The same DELETE for a page that is going away (the Undo window had not ended
+ * when the tab closed): axios is abandoned with the page, a `fetch` with
+ * `keepalive` is not. Fire and forget.
+ */
+export const deleteTeamEmojiOnExit = (accessToken: string, emojiId: number): void => {
+    if (!accessToken || typeof fetch !== "function") return;
+    try {
+        void fetch(`${import.meta.env.VITE_API_BASE_URL}/team-emoji/?emoji_id=${emojiId}`, {
+            method: "DELETE",
+            keepalive: true,
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch(() => undefined);
+    } catch {
+        // Never let this break a page transition.
+    }
+};

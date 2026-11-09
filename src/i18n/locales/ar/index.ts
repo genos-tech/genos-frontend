@@ -1219,6 +1219,8 @@ export const ar: DeepPartial<Messages> = {
             invalidName: "تتكون الأسماء من 1 إلى 50 حرفًا من a-z أو 0-9 أو _ أو + أو -.",
             empty: "لا توجد رموز تعبيرية مخصصة حتى الآن. أضف أول واحد!",
             deleteEmoji: "حذف (الرسائل القديمة احتفظ بها)",
+            deleted: "تم حذف الرمز التعبيري :{name}:",
+            deleteFailed: "تعذّر حذف الرمز التعبيري :{name}:. تمت إعادته.",
         },
         connectedApps: {
             title: "التطبيقات المتصلة",

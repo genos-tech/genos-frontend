@@ -3365,6 +3365,8 @@ export const fr: DeepPartial<Messages> = {
             invalidName: "Les noms comportent de 1 à 50 caractères de a à z, 0 à 9, _, + ou -.",
             empty: "Aucun emoji personnalisé pour l'instant. Ajoutez le premier !",
             deleteEmoji: "Supprimer (les anciens messages le conservent)",
+            deleted: "Émoji :{name}: supprimé",
+            deleteFailed: "Impossible de supprimer :{name}:. Il a été rétabli.",
         },
         connectedApps: {
             title: "Apps connectées",

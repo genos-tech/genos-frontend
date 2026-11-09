@@ -1,20 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
     createTeamEmoji,
     deleteTeamEmoji,
+    deleteTeamEmojiOnExit,
     listTeamEmoji,
     TeamEmoji,
 } from "../../services/teamEmojiApi";
 import { setTeamEmojiList } from "../../services/teamEmojiStore";
 import { UserProps } from "../../types/admin";
+import { runUndoable, useUndoHidden } from "./useUndoableAction";
+
+const emojiKey = (emojiId: number) => `team-emoji:${emojiId}`;
+
+/** Toast texts for deleting an emoji. The hook lives above the i18n provider, so
+ *  the caller (the settings panel) brings the translated strings. */
+export type TeamEmojiDeleteLabels = { message: ReactNode; errorMessage: ReactNode };
 
 export interface TeamEmojiApi {
     teamEmoji: TeamEmoji[];
     loading: boolean;
     refresh: () => Promise<void>;
     create: (name: string, file: File) => Promise<TeamEmoji | null>;
-    remove: (emojiId: number) => Promise<boolean>;
+    /** Delete with an Undo window (MIP-1300): the emoji leaves `teamEmoji` at once,
+     *  the DELETE is sent when the window ends. The catalog every picker and chip
+     *  reads (`teamEmojiStore`) keeps it until then, because the server does too. */
+    remove: (emojiId: number, labels: TeamEmojiDeleteLabels) => void;
 }
 
 /**
@@ -25,7 +36,17 @@ export interface TeamEmojiApi {
  * `:` suggestion resolver, insert helpers) get synchronous lookups.
  */
 export const useTeamEmoji = (myself: UserProps, accessToken: string | null): TeamEmojiApi => {
-    const [teamEmoji, setTeamEmoji] = useState<TeamEmoji[]>([]);
+    const [rawEmoji, setTeamEmoji] = useState<TeamEmoji[]>([]);
+    const undoHidden = useUndoHidden();
+    const teamEmoji = useMemo(
+        () =>
+            undoHidden.size === 0
+                ? rawEmoji
+                : rawEmoji.filter((e) => !undoHidden.has(emojiKey(e.emojiId))),
+        [rawEmoji, undoHidden]
+    );
+    const tokenRef = useRef(accessToken);
+    tokenRef.current = accessToken;
     const [loading, setLoading] = useState(false);
     const teamId = myself?.teamId ?? "";
 
@@ -63,13 +84,25 @@ export const useTeamEmoji = (myself: UserProps, accessToken: string | null): Tea
     );
 
     const remove = useCallback(
-        async (emojiId: number) => {
-            if (!accessToken) return false;
-            const ok = await deleteTeamEmoji(accessToken, emojiId);
-            if (ok) await refresh();
-            return ok;
+        (emojiId: number, labels: TeamEmojiDeleteLabels) => {
+            runUndoable({
+                key: emojiKey(emojiId),
+                message: labels.message,
+                errorMessage: labels.errorMessage,
+                commit: async () => {
+                    const token = tokenRef.current;
+                    // Rejects on a refusal (the server lets only the uploader delete).
+                    if (!token || !(await deleteTeamEmoji(token, emojiId))) {
+                        throw new Error("team emoji delete failed");
+                    }
+                },
+                onExit: () => {
+                    if (tokenRef.current) deleteTeamEmojiOnExit(tokenRef.current, emojiId);
+                },
+                onCommitted: () => void refresh(),
+            });
         },
-        [accessToken, refresh]
+        [refresh]
     );
 
     return useMemo(

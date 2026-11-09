@@ -3323,6 +3323,8 @@ export const ja: DeepPartial<Messages> = {
             invalidName: "名前は、a ～ z、0 ～ 9、_、+、または - の 1 ～ 50 文字です。",
             empty: "カスタム絵文字はまだありません。最初の 1 つを追加します。",
             deleteEmoji: "削除（古いメッセージは保持されます）",
+            deleted: "絵文字 :{name}: を削除しました",
+            deleteFailed: "絵文字 :{name}: を削除できませんでした。元に戻しました。",
         },
         connectedApps: {
             title: "接続済みアプリ",
