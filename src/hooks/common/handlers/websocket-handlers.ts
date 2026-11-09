@@ -7,7 +7,8 @@ import {
     v3MessageToLegacyThreadPayload,
 } from "../../../features/chat/adapters/v3MessageToNotification";
 import { inboxItemNamesAMissingChat } from "../../../features/inbox/utils/resolveInboxTarget";
-import { emitTaskTouched } from "../../../features/tasks/services/taskEvents";
+import { noteSocketConnected } from "../../../features/tasks/services/commentsResync";
+import { emitCommentsResync, emitTaskTouched } from "../../../features/tasks/services/taskEvents";
 import { NotificationManager } from "../../../services/notifications/notificationManager";
 import {
     buildActivityIntent,
@@ -36,6 +37,14 @@ export const setupWebSocketHandlers = (
 ) => {
     socket.on("connect_error", (err) => {
         console.error("WS connection error", err.message);
+    });
+
+    // A comment announced while this socket was down is never replayed, so when
+    // it connects AGAIN the open task asks for its comments once more (MIP-1349).
+    // `socket.connected` covers a setup that runs after the first connect.
+    if (socket.connected) noteSocketConnected(socket);
+    socket.on("connect", () => {
+        if (noteSocketConnected(socket)) emitCommentsResync();
     });
 
     socket.on("auth_error", (data) => {

@@ -15,6 +15,7 @@ import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
 import { TaskCommentEditorBlock } from "../../../tasks/components/contents/base/sub/TaskCommentEditorBlock";
 import { TaskCommentList } from "../../../tasks/components/contents/base/sub/TaskCommentList";
 import { loadTaskComments } from "../../../tasks/services/loadTaskComments";
+import { onCommentsResync } from "../../../tasks/services/taskEvents";
 
 type ThreadCommentsViewProps = {
     socket: Socket | null;
@@ -65,6 +66,8 @@ export const ThreadCommentsView = ({
     // Independent load — TaskPreview / MilestonePreview may not be
     // mounted when only the chat thread is visible. Refetch on the
     // socket-flag flips that the rest of the app already uses.
+    const [resyncNonce, setResyncNonce] = useState(0);
+    useEffect(() => onCommentsResync(() => setResyncNonce((n) => n + 1)), []);
     useEffect(() => {
         if (!threadTaskId || threadTaskId <= 0) return;
         let cancelled = false;
@@ -77,7 +80,7 @@ export const ThreadCommentsView = ({
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [threadTaskId, useTM.isTaskCommentUpdated, accessToken]);
+    }, [threadTaskId, useTM.isTaskCommentUpdated, accessToken, resyncNonce]);
 
     // The editor needs a `task` shape. Prefer the fully-hydrated
     // `currentPreviewTask` (set by message-bubble click), otherwise

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+import { installCommentsWakeResync } from "../../features/tasks/services/commentsResync";
 import { isSnoozedNow } from "../../services/notifications/snooze";
 import { PAUSE_CHANGED_EVENT, readSnoozeMirror } from "../../services/notifications/snoozeMirror";
 import { UserProps } from "../../types/admin";
@@ -120,6 +121,12 @@ export const useWebSocket = (
             window.removeEventListener(PRESENCE_CHANGED_EVENT, beatNow);
         };
     }, [sendHeartBeat]);
+
+    // Coming back to a tab that was hidden for a while: a comment announced
+    // meanwhile was missed, so the open task asks for its comments again
+    // (MIP-1349). Not tied to the socket: the connection may look fine to the
+    // browser after a long sleep and still have missed events.
+    useEffect(() => installCommentsWakeResync(), []);
 
     // Initialize WebSocket connection.
     //

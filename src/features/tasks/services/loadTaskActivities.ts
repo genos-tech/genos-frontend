@@ -4,7 +4,7 @@ import { authApi } from "../../../services/api";
 import { createRequestCache } from "../../../services/requestCache";
 import { UserProps } from "../../../types/admin";
 import { TaskActivityProps } from "../../../types/tasks";
-import { onTaskTouched } from "./taskEvents";
+import { onCommentsResync, onTaskTouched } from "./taskEvents";
 
 // Short-TTL cache + in-flight dedup. The task id leads the key so a
 // scoped `genos:task-touched` event can invalidate every variant
@@ -18,6 +18,8 @@ onTaskTouched(({ taskId, kind }) => {
         activityCache.invalidate(`activity:${taskId}:`);
     }
 });
+
+onCommentsResync(() => activityCache.clear());
 
 /**
  * Fetch the audit log for a single task in reverse chronological
