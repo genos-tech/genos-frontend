@@ -14,6 +14,7 @@ import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { DataState } from "../../../components/ui/feedback/DataState";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { channelService, ChannelServiceError } from "../../../services/channel/channelService";
@@ -329,8 +330,12 @@ export function ThreadPanelV3({
                         </ul>
                     </>
                 )}
-                {!isLoading && !root && (
-                    <div style={{ opacity: 0.5 }}>{t.chat.channel.thread.rootMissing}</div>
+                {!isLoading && !root && !loadFailed && !reloading && (
+                    <EmptyState
+                        data-empty="channel-thread-root"
+                        size="sm"
+                        title={t.chat.channel.thread.rootMissing}
+                    />
                 )}
             </div>
 

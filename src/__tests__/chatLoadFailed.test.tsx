@@ -244,6 +244,86 @@ describe("ThreadPanelV3", () => {
     });
 });
 
+// MIP-1325: `isLoading` was `!hydrated || root === null`, so a root that is genuinely absent
+// after a sync that SUCCEEDED (deleted, outside the tier's retention window, a bad id in the
+// URL) showed the skeleton for good, and the panel's own "root missing" line was dead code.
+describe("ThreadPanelV3: a root that is missing after a SUCCESSFUL sync", () => {
+    const panel = () =>
+        render(wrap(<ThreadPanelV3 channelId={CH} rootMessageId={ROOT} onClose={() => {}} />));
+
+    it("says the root is not there instead of loading for ever", async () => {
+        vi.spyOn(svc, "fetchMessagesDelta").mockResolvedValue(envelope());
+        vi.spyOn(svc, "fetchThreadsDelta").mockResolvedValue(envelope());
+        await act(async () => {
+            await channelService.syncChannel(CH);
+        });
+        panel();
+        expect(document.querySelector('[data-skeleton="rows"]')).toBeNull();
+        expect(document.querySelector('[data-empty="channel-thread-root"]')).not.toBeNull();
+        expect(screen.getByText(ch.thread.rootMissing)).toBeInTheDocument();
+        expect(screen.queryByRole("alert")).toBeNull();
+    });
+
+    it("still loads (skeleton) until the first sync lands", () => {
+        panel();
+        expect(document.querySelector('[data-skeleton="rows"]')).not.toBeNull();
+        expect(document.querySelector('[data-empty="channel-thread-root"]')).toBeNull();
+    });
+
+    it("a failed sync is the error state, not 'missing'; Retry that succeeds without the root says 'missing'", async () => {
+        const msgs = vi
+            .spyOn(svc, "fetchMessagesDelta")
+            .mockRejectedValueOnce(new Error("Network Error"));
+        vi.spyOn(svc, "fetchThreadsDelta").mockResolvedValue(envelope());
+        await act(async () => {
+            await channelService.syncChannel(CH).catch(() => undefined);
+        });
+        panel();
+        expect(screen.getByRole("alert")).toHaveTextContent(ch.thread.loadFailed);
+        expect(document.querySelector('[data-empty="channel-thread-root"]')).toBeNull();
+
+        msgs.mockResolvedValue(envelope());
+        await act(async () => {
+            fireEvent.click(retry());
+        });
+        await waitFor(() =>
+            expect(document.querySelector('[data-empty="channel-thread-root"]')).not.toBeNull()
+        );
+        expect(screen.queryByRole("alert")).toBeNull();
+        expect(document.querySelector('[data-skeleton="rows"]')).toBeNull();
+    });
+
+    it("a later failed sync after a good one shows the error alone (not also 'missing')", async () => {
+        const msgs = vi.spyOn(svc, "fetchMessagesDelta").mockResolvedValue(envelope());
+        vi.spyOn(svc, "fetchThreadsDelta").mockResolvedValue(envelope());
+        await act(async () => {
+            await channelService.syncChannel(CH);
+        });
+        msgs.mockRejectedValue(new Error("Network Error"));
+        await act(async () => {
+            await channelService.syncChannel(CH).catch(() => undefined);
+        });
+        panel();
+        expect(screen.getByRole("alert")).toHaveTextContent(ch.thread.loadFailed);
+        expect(document.querySelector('[data-empty="channel-thread-root"]')).toBeNull();
+    });
+
+    it("the synced-OK flag goes with the channel (left / team switch), so a re-added channel loads again", async () => {
+        vi.spyOn(svc, "fetchMessagesDelta").mockResolvedValue(envelope());
+        vi.spyOn(svc, "fetchThreadsDelta").mockResolvedValue(envelope());
+        await act(async () => {
+            await channelService.syncChannel(CH);
+        });
+        expect(channelService.getSnapshot().syncedOkByChannel.has(CH)).toBe(true);
+        channelService.handleChannelMemberRemoved({
+            channelId: CH,
+            channelKind: ChannelKind.GM,
+            userId: "test-self",
+        });
+        expect(channelService.getSnapshot().syncedOkByChannel.has(CH)).toBe(false);
+    });
+});
+
 describe("ChatHistoryLoadFailed (the live chat's empty message list)", () => {
     it("renders nothing while the sync is fine, ErrorState with Retry once it failed", async () => {
         const { ChatHistoryLoadFailed } = await import(
