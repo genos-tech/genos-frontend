@@ -1540,6 +1540,8 @@ export const ar: DeepPartial<Messages> = {
                 updateFailed: "تعذّر حفظ هذا التغيير. ربما يكون الاسم مستخدمًا بالفعل.",
             },
             delete: "حذف",
+            itemDeleted: "تم حذف المهمة",
+            itemDeleteFailed: "تعذّر حذف المهمة. تمت إعادتها.",
             completedTodayEmptyTitle: "لا شيء انتهى بعد اليوم",
             completedTodayEmptySubtitle: "أكمل عنصرًا لتراه هنا.",
             incompleteEmptySubtitle: "لا توجد عناصر غير مكتملة في مجموعاتك المرئية.",

@@ -59,6 +59,8 @@ export const chat = {
             updateFailed: "Could not save that change. The name may already be in use.",
         },
         delete: "Delete",
+        itemDeleted: "To-do deleted",
+        itemDeleteFailed: "Couldn’t delete the to-do. It is back.",
         completedTodayEmptyTitle: "Nothing finished yet today",
         completedTodayEmptySubtitle: "Check off an item to see it here.",
         incompleteEmptySubtitle: "No incomplete items in your visible groups.",

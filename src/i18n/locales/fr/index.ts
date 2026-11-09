@@ -1023,6 +1023,8 @@ export const fr: DeepPartial<Messages> = {
                     "Impossible d'enregistrer cette modification. Le nom est peut-être déjà utilisé.",
             },
             delete: "Supprimer",
+            itemDeleted: "Tâche supprimée",
+            itemDeleteFailed: "Impossible de supprimer la tâche. Elle a été rétablie.",
             completedTodayEmptyTitle: "Rien n'est encore terminé aujourd'hui",
             completedTodayEmptySubtitle: "Cochez un élément pour le voir ici.",
             incompleteEmptySubtitle: "Aucun élément incomplet dans vos groupes visibles.",

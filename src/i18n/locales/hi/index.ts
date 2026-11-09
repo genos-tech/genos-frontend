@@ -1549,6 +1549,8 @@ export const hi: DeepPartial<Messages> = {
                     "वह बदलाव सहेजा नहीं जा सका। हो सकता है नाम पहले से इस्तेमाल में हो।",
             },
             delete: "मिटाना",
+            itemDeleted: "टू-डू हटाया गया",
+            itemDeleteFailed: "टू-डू हटाया नहीं जा सका। इसे वापस रख दिया गया है।",
             completedTodayEmptyTitle: "आज तक कुछ भी ख़त्म नहीं हुआ",
             completedTodayEmptySubtitle: "यहाँ देखने के लिए किसी आइटम को पूरा करें।",
             incompleteEmptySubtitle: "आपके दृश्यमान समूहों में कोई भी अपूर्ण आइटम नहीं है.",

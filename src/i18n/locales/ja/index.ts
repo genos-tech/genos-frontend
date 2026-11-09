@@ -1013,6 +1013,8 @@ export const ja: DeepPartial<Messages> = {
                     "変更を保存できませんでした。名前がすでに使われている可能性があります。",
             },
             delete: "消去",
+            itemDeleted: "To-Do を削除しました",
+            itemDeleteFailed: "To-Do を削除できませんでした。元に戻しました。",
             completedTodayEmptyTitle: "今日はまだ何も終わっていない",
             completedTodayEmptySubtitle: "アイテムにチェックを入れると、ここに記録されます。",
             incompleteEmptySubtitle: "表示されているグループに不完全な項目はありません。",

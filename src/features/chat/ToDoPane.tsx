@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
@@ -140,6 +140,17 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         setItemReminder,
         cancelItemReminder,
     } = useTG;
+
+    // Delete is an Undo toast, not a question (MIP-1300): the to-do leaves at once
+    // and the real DELETE is sent when the window ends.
+    const handleDeleteItem = useCallback(
+        (itemId: number) =>
+            removeItem(itemId, {
+                message: t.chat.todoPane.itemDeleted,
+                errorMessage: t.chat.todoPane.itemDeleteFailed,
+            }),
+        [removeItem, t]
+    );
 
     // Scheduled-todos modal (recurring rules that auto-populate today).
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
@@ -634,7 +645,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                             onAddSubitem={handleAddSubitem}
                                             onCancelReminder={cancelItemReminder}
                                             onCategoryCreate={addCategory}
-                                            onDeleteItem={removeItem}
+                                            onDeleteItem={handleDeleteItem}
                                             onMoveToTomorrow={handleMoveToTomorrow}
                                             onPatchItem={patchItem}
                                             onSetReminder={setItemReminder}

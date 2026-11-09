@@ -968,6 +968,8 @@ export const zh: DeepPartial<Messages> = {
                 updateFailed: "无法保存该更改。该名称可能已被使用。",
             },
             delete: "删除",
+            itemDeleted: "已删除待办",
+            itemDeleteFailed: "无法删除待办，已恢复。",
             completedTodayEmptyTitle: "今天还没完事",
             completedTodayEmptySubtitle: "勾选一个项目，它就会记录在这里。",
             incompleteEmptySubtitle: "可见组中没有不完整的项目。",

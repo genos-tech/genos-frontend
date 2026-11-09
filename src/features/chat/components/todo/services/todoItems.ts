@@ -115,3 +115,22 @@ export const deleteTodoItem = async (
         return false;
     }
 };
+
+/**
+ * The same DELETE for a page that is going away (the Undo window had not ended
+ * when the tab closed). Axios is abandoned with the page; a `fetch` with
+ * `keepalive` is not. Fire and forget: the person left, so there is nobody to
+ * tell if it fails.
+ */
+export const deleteTodoItemOnExit = (accessToken: string | null, itemId: number): void => {
+    if (!accessToken || typeof fetch !== "function") return;
+    try {
+        void fetch(`${import.meta.env.VITE_API_BASE_URL}/todo/items/${itemId}/`, {
+            method: "DELETE",
+            keepalive: true,
+            headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch(() => undefined);
+    } catch {
+        // Never let this break a page transition.
+    }
+};

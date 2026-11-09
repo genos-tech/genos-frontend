@@ -1568,6 +1568,8 @@ export const es: DeepPartial<Messages> = {
                 updateFailed: "No se pudo guardar ese cambio. Puede que el nombre ya esté en uso.",
             },
             delete: "Borrar",
+            itemDeleted: "Pendiente eliminado",
+            itemDeleteFailed: "No se pudo eliminar el pendiente. Se ha restaurado.",
             completedTodayEmptyTitle: "Nada terminado todavía hoy",
             completedTodayEmptySubtitle: "Marca un elemento como hecho para verlo aquí.",
             incompleteEmptySubtitle: "No hay elementos incompletos en tus grupos visibles.",
