@@ -24,6 +24,7 @@ import {
     applyTreePositionToDescendants,
     resolveRootTaskId,
 } from "../../features/tasks/utils/cascadeTreePosition";
+import { buildConcatTags } from "../../features/tasks/utils/concatTags";
 import { mergeProjectRows } from "../../features/tasks/utils/mergeProjectRows";
 import {
     NO_ROWS,
@@ -871,7 +872,13 @@ export const useTaskManagement = (
                     rootTaskId: loadedTask[0].rootTaskId ?? null,
                     threadId: loadedTask[0].threadId || null,
                     tags: loadedTask[0].tags || [],
-                    concatTags: loadedTask[0].concatTags || "//",
+                    // The loaded task usually carries its tags but no `concatTags`.
+                    // "//" then made a tagged task invisible to the tag filters
+                    // (they match `/<name>/` against it) until the next reload.
+                    concatTags:
+                        loadedTask[0].concatTags ||
+                        buildConcatTags(loadedTask[0].tags ?? []) ||
+                        "//",
                     teamId: myself.teamId || null,
                     projectId: loadedTask[0].project?.projectId || null,
                     isMilestone: loadedTask[0].isMilestone ?? false,

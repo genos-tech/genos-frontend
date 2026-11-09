@@ -29,7 +29,12 @@ import { TaskProps } from "../../../../../types/tasks";
 import { joinOpenLanding, useTaskOpenLanding } from "../../../hooks/TaskOpenLandingContext";
 import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
-import { emitTaskTouched, onTasksBulkChanged, onTaskTouched } from "../../../services/taskEvents";
+import {
+    emitTasksBulkChanged,
+    emitTaskTouched,
+    onTasksBulkChanged,
+    onTaskTouched,
+} from "../../../services/taskEvents";
 import { TaskIdText } from "../../card";
 import { StatusLabel } from "../../meta/StatusLabel";
 
@@ -241,10 +246,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             // manual snake→camel map — and any other mounted sub-task
             // block for the same parent refreshes too.
             emitTaskTouched(currentTaskContent.id, "children");
-            // Trigger the project-wide refresh so an open table/board picks
-            // up the new row too. Now cheap thanks to the Redis-cached
-            // GetProjectTasksView + signal-driven invalidation.
-            useTM.setIsNewTaskCreated(true);
+            // Refresh the task's own project so an open table/board picks up
+            // the new row too (cheap: the Redis-cached GetProjectTasksView is
+            // invalidated by signal). Not through `isNewTaskCreated`: that
+            // reload follows `localStorage.lastProjectId`, which can name
+            // another project (MIP-1335).
+            emitTasksBulkChanged(currentTaskContent.project.projectId);
             // Clear the input but keep it open + focused for the next
             // rapid add. Power-user pattern.
             setQuickTitle("");

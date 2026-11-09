@@ -20,7 +20,7 @@ import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { STATUS_TONE, statusSolid, toneSoftBg } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
-import { emitTaskTouched } from "../../services/taskEvents";
+import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { milestonesByTaskIdWithLiveProgress } from "../../utils/boardMilestoneProgress";
@@ -642,7 +642,10 @@ export const SprintBoard = (props: SprintBoardProps) => {
                 : [...prev, optimistic]
         );
         if (parent) emitTaskTouched(Number(parent.id), "children");
-        useTM.setIsNewTaskCreated(true);
+        // Reconcile the open project's rows (see the table's quick-add: the
+        // `isNewTaskCreated` reload can switch the project away and lose this
+        // card, MIP-1335).
+        emitTasksBulkChanged(Number(projectId));
 
         // Tag, member and sprint filters can hide the card that was just
         // made, which reads as "nothing happened". Once the filter pipeline
