@@ -275,6 +275,12 @@ export interface ChannelStoreSnapshot {
      *  with its id here could not load: it is not "no messages". Cleared by the
      *  next successful sync (Retry). */
     syncFailedByChannel: ReadonlySet<string>;
+    /** Channels whose history sync has SUCCEEDED at least once this session
+     *  (MIP-1325). A thread root missing from the store while its channel is
+     *  here is genuinely absent (deleted, past the retention window, a bad id
+     *  in the URL), not "not here yet". Cleared with the channel's other
+     *  per-session state (team / user switch, channel dropped). */
+    syncedOkByChannel: ReadonlySet<string>;
 }
 
 /** correlation_id generator — uses uuidv4-ish style without adding a dep. */
@@ -401,6 +407,7 @@ export class ChannelService {
     /** Tier retention per channel — see the snapshot field's doc. */
     private _retentionByChannel = new Map<string, ChannelRetention>();
     private _syncFailedByChannel = new Set<string>();
+    private _syncedOkByChannel = new Set<string>();
     /**
      * Resolver callbacks for in-flight `send()` Promises, keyed by
      * `correlationId`. NOT exposed on the snapshot (functions don't
@@ -453,6 +460,7 @@ export class ChannelService {
             pendingByChannel: this._pendingByChannel,
             retentionByChannel: this._retentionByChannel,
             syncFailedByChannel: this._syncFailedByChannel,
+            syncedOkByChannel: this._syncedOkByChannel,
         };
     }
 
@@ -577,6 +585,7 @@ export class ChannelService {
         this._members.clear();
         this._messages.clear();
         this._syncFailedByChannel.clear();
+        this._syncedOkByChannel.clear();
         this._cursors.clear();
         this._pins.clear();
         this._flags.clear();
@@ -660,6 +669,7 @@ export class ChannelService {
         this._members.clear();
         this._messages.clear();
         this._syncFailedByChannel.clear();
+        this._syncedOkByChannel.clear();
         this._cursors.clear();
         this._pins.clear();
         this._pinByChannelId.clear();
@@ -949,6 +959,7 @@ export class ChannelService {
             this._channels.delete(channel.id);
             this._messages.delete(channel.id);
             this._syncFailedByChannel.delete(channel.id);
+            this._syncedOkByChannel.delete(channel.id);
             this._cursors.delete(channel.id);
             this._members.delete(channel.id);
             this._pinByChannelId.delete(channel.id);
@@ -1183,6 +1194,14 @@ export class ChannelService {
         return this._inflightSyncByChannel.has(channelId);
     }
 
+    private _markSyncedOk(channelId: string): void {
+        // Same guard as `_setSyncFailed`: a sync that settles after its channel was
+        // dropped must not leave a flag behind.
+        if (!this._channels.has(channelId) || this._syncedOkByChannel.has(channelId)) return;
+        this._syncedOkByChannel.add(channelId);
+        this._notify();
+    }
+
     private _setSyncFailed(channelId: string, failed: boolean): void {
         // A sync that settles after its channel was dropped (left, deleted, team
         // switch, sign-out) must not leave a flag behind for the next session.
@@ -1203,7 +1222,10 @@ export class ChannelService {
         // that is empty can say "couldn't load" instead of "no messages". Notifies
         // only on a CHANGE: a healthy sync adds no store traffic.
         promise.then(
-            () => this._setSyncFailed(channelId, false),
+            () => {
+                this._setSyncFailed(channelId, false);
+                this._markSyncedOk(channelId);
+            },
             () => this._setSyncFailed(channelId, true)
         );
         // Release the mutex once the work settles, regardless of outcome.
@@ -2962,6 +2984,7 @@ export class ChannelService {
             this._channels.delete(event.channelId);
             this._messages.delete(event.channelId);
             this._syncFailedByChannel.delete(event.channelId);
+            this._syncedOkByChannel.delete(event.channelId);
             this._cursors.delete(event.channelId);
             void this._persistChannelDelete(event.channelId);
         }

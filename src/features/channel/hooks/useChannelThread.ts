@@ -102,11 +102,14 @@ export function useChannelThread(
         replies,
         replyInThread,
         // The thread root may not be in the store on first nav (e.g. a
-        // deep link that arrived before the channel's main delta).
-        // Once the snapshot is hydrated AND the root is missing, the
-        // consumer should fetch the channel detail or fall back to a
-        // "thread not loaded" empty state.
-        isLoading: !snapshot.hydrated || root === null,
+        // deep link that arrived before the channel's main delta), so a missing
+        // root is "loading" until the channel's history sync has SUCCEEDED this
+        // session. After that it is genuinely absent (deleted, past the retention
+        // window, a bad id in the URL): `isLoading` is false and the panel says so
+        // (MIP-1325; it used to be `root === null` alone, a skeleton for good). A
+        // sync that FAILED keeps `isLoading` true: `loadFailed` takes over.
+        isLoading:
+            !snapshot.hydrated || (root === null && !snapshot.syncedOkByChannel.has(channelId)),
         loadFailed: snapshot.syncFailedByChannel.has(channelId),
         reload,
         reloading,
