@@ -7,6 +7,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { g, type } from "../../../theme/tokens";
 import { TagListProps } from "../../../types/tasks";
 import { Milestone, MilestoneAssignee } from "../sprint-milestone/types";
+import { formatRelativeAge } from "../utils/relativeAge";
 import {
     AssigneeAvatar,
     DueText,
@@ -82,6 +83,8 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
           })
         : null;
     const small = { ...type("body-xs"), color: g.text.tertiary } as const;
+    // Empty when the server has recorded none yet (old milestones before the backfill).
+    const lastProgress = formatRelativeAge(milestone.lastProgressAt, t.tasks.activity);
 
     return (
         <>
@@ -124,6 +127,16 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
                     {fmt(t.tasks.dashboard.assignedMilestones.progress, { closed, total })}
                 </Box>
             </Box>
+
+            {/* When anything in the milestone last moved (MIP-1351): the answer to
+                "is this one alive?" that the closed count alone does not give. */}
+            {lastProgress !== "" && (
+                <Box data-testid="milestone-card-last-progress" sx={{ ...small }}>
+                    {fmt(t.tasks.dashboard.assignedMilestones.lastProgress, {
+                        when: lastProgress,
+                    })}
+                </Box>
+            )}
 
             {/* Tags — right under the progress bar (MIP-1048). */}
             {tags.length > 0 && (

@@ -35,6 +35,7 @@ import {
     TaskTableProps,
 } from "../../../../../../types/tasks";
 import { isPriorityName, isStatusName } from "../../../../meta/taskTone";
+import { formatRelativeAge } from "../../../../utils/relativeAge";
 import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
 import { PriorityIcon } from "../../../meta/PriorityIcon";
@@ -592,32 +593,10 @@ const PrUnlinkedRef = ({
     );
 };
 
-// Smaller-than-Intl.RelativeTimeFormat formatter so we don't pull in a
-// new dep. Returns "just now" / "5 minutes ago" / "2 hours ago" /
-// "May 1, 2026".
-const formatRelative = (iso: string, messages: ActivityMessages): string => {
-    const ts = new Date(iso).getTime();
-    if (Number.isNaN(ts)) return "";
-    const diff = Date.now() - ts;
-    const minutes = Math.floor(diff / 60_000);
-    if (minutes < 1) return messages.justNow;
-    if (minutes < 60) {
-        return fmt(minutes === 1 ? messages.minuteAgo : messages.minutesAgo, { count: minutes });
-    }
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) {
-        return fmt(hours === 1 ? messages.hourAgo : messages.hoursAgo, { count: hours });
-    }
-    const days = Math.floor(hours / 24);
-    if (days < 7) {
-        return fmt(days === 1 ? messages.dayAgo : messages.daysAgo, { count: days });
-    }
-    return new Date(iso).toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    });
-};
+// "just now" / "5 minutes ago" / "2 hours ago" / "May 1, 2026" - the shared formatter
+// (also the Last Progress column's), kept under the name this file already uses.
+const formatRelative = (iso: string, messages: ActivityMessages): string =>
+    formatRelativeAge(iso, messages);
 
 // Best-effort label formatter for old/new value chips. Numbers that
 // look like user ids get resolved against `teamMemberProfiles`;

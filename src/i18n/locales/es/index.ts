@@ -2655,6 +2655,7 @@ export const es: DeepPartial<Messages> = {
                 dueDate: "Fecha de vencimiento",
                 sprint: "Sprint",
                 updatedAt: "Última actualización",
+                lastProgressAt: "Último avance",
                 createdDate: "Fecha de creación",
                 weight: "Peso",
             },
@@ -2743,6 +2744,7 @@ export const es: DeepPartial<Messages> = {
                 empty: "No se le han asignado hitos en curso en este proyecto.",
                 progress: "{closed}/{total} hecho",
                 openDiagram: "Abrir gráfico de tareas",
+                lastProgress: "Último avance {when}",
             },
             memberTasks: {
                 pickLabel: "Miembro",

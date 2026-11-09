@@ -99,6 +99,9 @@ export type Milestone = {
     isDeleted: boolean;
     tsCreatedAt: string;
     tsUpdatedAt: string;
+    // When the milestone, or any task under it, last had real progress
+    // (MIP-1351). Null until recorded.
+    lastProgressAt?: string | null;
     assignees: MilestoneAssignee[];
     tasksTotal?: number;
     tasksClosed?: number;

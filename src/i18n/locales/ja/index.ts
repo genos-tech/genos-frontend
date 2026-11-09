@@ -5333,6 +5333,7 @@ export const ja: DeepPartial<Messages> = {
                 dueDate: "締切",
                 sprint: "スプリント",
                 updatedAt: "最終更新",
+                lastProgressAt: "最終進捗",
                 createdDate: "作成日",
                 weight: "重さ",
             },
@@ -5380,6 +5381,7 @@ export const ja: DeepPartial<Messages> = {
                 empty: "このプロジェクトには、自分が担当する進行中のマイルストーンがありません。",
                 progress: "{closed}/{total} 完了",
                 openDiagram: "タスク図を開く",
+                lastProgress: "最終進捗 {when}",
             },
             memberTasks: {
                 pickLabel: "メンバー",

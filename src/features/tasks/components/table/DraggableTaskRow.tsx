@@ -44,6 +44,7 @@ import {
 import { deriveDaysLeft } from "../../utils/daysLeft";
 import { isDeletingStatus } from "../../utils/deletedStatus";
 import { TASK_ROW_CLASS } from "../../utils/familyFocusCss";
+import { formatRelativeAge } from "../../utils/relativeAge";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
@@ -1299,6 +1300,32 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         {task.updatedAt ? dayjs(task.updatedAt).format("YYYY-MM-DD HH:mm") : "-"}
                     </Typography>
                 );
+
+            case "lastProgressAt": {
+                // Null until the server has recorded any. Shown as an age, with
+                // the exact time on hover: "Last Updated" is the exact time, and
+                // this one is read as "is it moving?".
+                const age = formatRelativeAge(task.lastProgressAt, t.tasks.activity);
+                return (
+                    <AppTooltip
+                        title={
+                            task.lastProgressAt
+                                ? dayjs(task.lastProgressAt).format("YYYY-MM-DD HH:mm")
+                                : ""
+                        }
+                    >
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                color: g.text.tertiary,
+                                fontSize: "var(--g-type-body-sm-size)",
+                            }}
+                        >
+                            {age || "-"}
+                        </Typography>
+                    </AppTooltip>
+                );
+            }
 
             case "createdDate":
                 return (

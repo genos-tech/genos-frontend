@@ -14,10 +14,13 @@ import { TaskTableProps } from "../../../types/tasks";
  *   (or are new) render again. A row that is gone from the read is gone from
  *   the result.
  *
- * Rows match on `id` + `updatedAt` only, the rule the old all-or-nothing
- * check already used: a field the server changes without stamping `updatedAt`
- * is not seen by either, and a row patched locally keeps its patch until the
- * server's `updatedAt` for it moves.
+ * Rows match on `id` + `updatedAt` + `lastProgressAt`: the first two are the
+ * rule the old all-or-nothing check already used (a field the server changes
+ * without stamping `updatedAt` is not seen, and a row patched locally keeps its
+ * patch until the server's `updatedAt` for it moves). `lastProgressAt` is the
+ * exception that matters (MIP-1351): a parent or milestone whose CHILD changed
+ * has a new `lastProgressAt` and the same `updatedAt`, and without it here the
+ * old row would be kept and the new value never drawn.
  */
 export const mergeProjectRows = (
     prev: TaskTableProps[],
@@ -32,7 +35,11 @@ export const mergeProjectRows = (
         if (row.id == null) return row;
         const key = String(row.id);
         const old = prevById.get(key);
-        if (old !== undefined && old.updatedAt === row.updatedAt) {
+        if (
+            old !== undefined &&
+            old.updatedAt === row.updatedAt &&
+            (old.lastProgressAt ?? null) === (row.lastProgressAt ?? null)
+        ) {
             matched.add(key);
             return old;
         }

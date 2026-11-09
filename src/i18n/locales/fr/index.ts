@@ -5399,6 +5399,7 @@ export const fr: DeepPartial<Messages> = {
                 dueDate: "Échéance",
                 sprint: "Sprint",
                 updatedAt: "Dernière mise à jour",
+                lastProgressAt: "Dernière progression",
                 createdDate: "Date de création",
                 weight: "Poids",
             },
@@ -5446,6 +5447,7 @@ export const fr: DeepPartial<Messages> = {
                 empty: "Aucun jalon en cours dans ce projet ne vous est assigné.",
                 progress: "{closed}/{total} terminé",
                 openDiagram: "Ouvrir le graphique des tâches",
+                lastProgress: "Dernière progression {when}",
             },
             memberTasks: {
                 pickLabel: "Membre",

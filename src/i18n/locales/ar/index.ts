@@ -2617,6 +2617,7 @@ export const ar: DeepPartial<Messages> = {
                 dueDate: "تاريخ الاستحقاق",
                 sprint: "السبرنت",
                 updatedAt: "آخر تحديث",
+                lastProgressAt: "آخر تقدّم",
                 createdDate: "تاريخ الإنشاء",
                 weight: "وزن",
             },
@@ -2704,6 +2705,7 @@ export const ar: DeepPartial<Messages> = {
                 empty: "لم يتم تعيين أي معالم مستمرة في هذا المشروع لك.",
                 progress: "{closed}/{total} تم",
                 openDiagram: "فتح الرسم البياني للمهمة",
+                lastProgress: "آخر تقدّم {when}",
             },
             memberTasks: {
                 pickLabel: "عضو",

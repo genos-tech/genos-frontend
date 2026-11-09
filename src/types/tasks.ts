@@ -293,6 +293,12 @@ export type TaskTableProps = {
     effortLevel: string | null;
     createdDate: string | null;
     updatedAt: string | null;
+    // When this task, or anything under it, last had real progress (MIP-1351):
+    // the later of its own last change and its descendants' (a milestone's row
+    // carries the milestone's). Unlike `updatedAt` it moves when only a CHILD
+    // changed. Null until the server has recorded any (the backfill has not run
+    // for old tasks, or a row from before this field).
+    lastProgressAt?: string | null;
     dueDate: string | null;
     daysLeft: number | null;
     // Optional planning start date — paired with dueDate.
