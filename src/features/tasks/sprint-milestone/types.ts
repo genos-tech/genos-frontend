@@ -132,6 +132,10 @@ export type MilestoneFavorite = {
     /** Empty on a star just added in this tab, until the list is re-read. */
     projectName: string;
     teamId: string | null;
+    /** When the milestone, or any task under it, last had progress (MIP-1351);
+     *  the Favorites list is ordered by it (MIP-1352). Null until recorded, and
+     *  absent on a star just added in this tab, until the list is re-read. */
+    lastProgressAt?: string | null;
     tsFavorited: string;
     /** Null until the user opens it after starring. */
     tsLastOpened: string | null;

@@ -304,6 +304,7 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                     <SectionHeader as="div" label={t.tasks.sidebar.tasksHeader} sx={{ mt: 1.5 }} />
 
                     <FavoritesListItem
+                        useCM={slices.tree.cm}
                         usePM={slices.tree.pm}
                         useSM={slices.tree.sm}
                         useTM={slices.tree.tm}
