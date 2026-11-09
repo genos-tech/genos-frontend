@@ -2865,6 +2865,7 @@ export const hi: DeepPartial<Messages> = {
                 dueDate: "ड्यू तारीख",
                 sprint: "स्प्रिंट",
                 updatedAt: "आख़िरी अपडेट",
+                lastProgressAt: "आख़िरी प्रगति",
                 createdDate: "बनाए जाने की तारीख",
                 weight: "वज़न",
             },
@@ -2911,6 +2912,7 @@ export const hi: DeepPartial<Messages> = {
                 empty: "इस प्रोजेक्ट में कोई भी चालू माइलस्टोन आपको नहीं सौंपा गया है।",
                 progress: "{closed}/{total} हो गया",
                 openDiagram: "कार्य ग्राफ़ खोलें",
+                lastProgress: "आख़िरी प्रगति {when}",
             },
             memberTasks: {
                 pickLabel: "सदस्य",

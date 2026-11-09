@@ -954,6 +954,7 @@ export const tasks = {
             dueDate: "Due Date",
             sprint: "Sprint",
             updatedAt: "Last Updated",
+            lastProgressAt: "Last Progress",
             createdDate: "Created Date",
             weight: "Weight",
         },
@@ -1014,6 +1015,9 @@ export const tasks = {
             // {closed}/{total} completed sub-tasks.
             progress: "{closed}/{total} done",
             openDiagram: "Open task graph",
+            // {when}: how long ago the milestone, or any task under it, last
+            // had real progress ("3 days ago").
+            lastProgress: "Last progress {when}",
         },
         // "Member's Tasks" tab — the same stats as My Tasks, for a picked member.
         memberTasks: {

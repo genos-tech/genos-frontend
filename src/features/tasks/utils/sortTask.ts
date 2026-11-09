@@ -135,6 +135,7 @@ export const fieldValue = (task: TaskTableProps, field: string): number | string
             return task.sprintId ?? null;
         case "dueDate":
         case "updatedAt":
+        case "lastProgressAt":
         case "createdDate":
             return parseTs((task as unknown as Record<string, string | null | undefined>)[field]);
         default: {
@@ -344,6 +345,7 @@ export const SORT_FIELD_OPTIONS: ReadonlyArray<{
         | "dueDate"
         | "assignee"
         | "updatedAt"
+        | "lastProgressAt"
         | "createdDate";
 }> = [
     { value: "priority", labelKey: "priority" },
@@ -352,6 +354,7 @@ export const SORT_FIELD_OPTIONS: ReadonlyArray<{
     { value: "status", labelKey: "status" },
     { value: "effortLevel", labelKey: "effortLevel" },
     { value: "updatedAt", labelKey: "updatedAt" },
+    { value: "lastProgressAt", labelKey: "lastProgressAt" },
     { value: "createdDate", labelKey: "createdDate" },
     { value: "title", labelKey: "title" },
     { value: "assigneeId", labelKey: "assignee" },

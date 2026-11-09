@@ -5153,6 +5153,7 @@ export const zh: DeepPartial<Messages> = {
                 dueDate: "截止日期",
                 sprint: "冲刺",
                 updatedAt: "最近更新",
+                lastProgressAt: "最近进展",
                 createdDate: "创建日期",
                 weight: "重量",
             },
@@ -5199,6 +5200,7 @@ export const zh: DeepPartial<Messages> = {
                 empty: "该项目中没有任何正在进行的里程碑分配给你。",
                 progress: "{closed}/{total} 完成",
                 openDiagram: "打开任务图",
+                lastProgress: "最近进展 {when}",
             },
             memberTasks: {
                 pickLabel: "成员",

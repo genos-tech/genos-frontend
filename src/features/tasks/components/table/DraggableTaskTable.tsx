@@ -246,6 +246,18 @@ export const defaultColumns: ColumnDef[] = [
         resizable: true,
     },
     {
+        // When the task, or anything under it, last had real progress
+        // (MIP-1351). Differs from "Last Updated" only for a parent or
+        // milestone whose CHILD changed. Read-only; shown as an age.
+        field: "lastProgressAt",
+        headerName: "Last Progress",
+        headerLabelKey: "lastProgressAt",
+        width: 130,
+        minWidth: 100,
+        align: "center",
+        resizable: true,
+    },
+    {
         field: "createdDate",
         headerName: "Created Date",
         headerLabelKey: "createdDate",
