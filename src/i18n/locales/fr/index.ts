@@ -5152,6 +5152,16 @@ export const fr: DeepPartial<Messages> = {
             hoursAgo: "{count} il y a heures",
             dayAgo: "{count} il y a un jour",
             daysAgo: "{count} il y a jours",
+            progress: {
+                scopeLabel: "Afficher",
+                scopeOwn: "Ses modifications",
+                scopeUnder: "Dessous",
+                empty: "Rien n'a encore changé en dessous",
+                emptyBody: "Les modifications de ses sous-tâches apparaissent ici.",
+                loadFailed: "Impossible de charger les modifications en dessous",
+                loadMore: "Charger plus",
+                deleted: "supprimée",
+            },
             verbs: {
                 created: "a créé ceci",
                 titleChanged: "l'a renommé de",

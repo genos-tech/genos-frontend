@@ -2621,6 +2621,16 @@ export const hi: DeepPartial<Messages> = {
             hoursAgo: "{count} घंटे पहले",
             dayAgo: "{count} दिन पहले",
             daysAgo: "{count} दिन पहले",
+            progress: {
+                scopeLabel: "दिखाएँ",
+                scopeOwn: "अपने बदलाव",
+                scopeUnder: "इसके नीचे",
+                empty: "इसके नीचे अभी कुछ नहीं बदला",
+                emptyBody: "उप-कार्यों के बदलाव यहाँ दिखेंगे।",
+                loadFailed: "नीचे के बदलाव लोड नहीं हो सके",
+                loadMore: "और लोड करें",
+                deleted: "हटाया गया",
+            },
             verbs: {
                 created: "इसे बनाया",
                 titleChanged: "से इसका नाम बदल दिया गया",

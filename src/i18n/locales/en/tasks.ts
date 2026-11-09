@@ -674,6 +674,16 @@ export const tasks = {
         hoursAgo: "{count} hours ago",
         dayAgo: "{count} day ago",
         daysAgo: "{count} days ago",
+        progress: {
+            scopeLabel: "Show",
+            scopeOwn: "Own changes",
+            scopeUnder: "Under it",
+            empty: "Nothing has changed under this yet",
+            emptyBody: "Changes to its sub-tasks show up here.",
+            loadFailed: "Couldn't load the changes under this",
+            loadMore: "Load more",
+            deleted: "deleted",
+        },
         // Restoring the description an agent, an API key or MCP replaced
         // (MIP-738). Offered on the history row that kept the old body.
         restore: {
