@@ -235,8 +235,15 @@ export const useProjectTaskManagement = ({
     ]);
 
     // Handle new task creation
+    //
+    // One-shot: the flag is spent as soon as this has taken it. `loadUpdatedTask`
+    // spends it too, but only while a TASK is open, so with a milestone open it
+    // stayed `true` and the next task opened was rebuilt as if it were new
+    // (MIP-1335). The effect above and `loadUpdatedTask` read the value from this
+    // same render, so clearing it here does not starve either of them.
     useEffect(() => {
         if (useTM.isNewTaskCreated === true) {
+            useTM.setIsNewTaskCreated(false);
             setTimeout(() => {
                 (async () => {
                     await usePM.loadProjectsAndTasks(

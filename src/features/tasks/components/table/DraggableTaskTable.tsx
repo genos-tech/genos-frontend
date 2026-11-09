@@ -36,7 +36,7 @@ import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import type { TaskGraphScope } from "../../diagram/types";
 import { statusSolid } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
-import { emitTaskTouched } from "../../services/taskEvents";
+import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
 import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
@@ -1379,9 +1379,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
 
         // Refresh any open TaskSubTasksBlock for the same parent, and
-        // kick the project-wide reconciliation reload.
+        // reconcile the OPEN project's rows with the server's. Not through
+        // `isNewTaskCreated`: that reload goes to `localStorage.lastProjectId`,
+        // which another tab can have pointed elsewhere, and the open project
+        // then flipped away and back with this row lost (MIP-1335).
         emitTaskTouched(Number(parent.id), "children");
-        useTM.setIsNewTaskCreated(true);
+        emitTasksBulkChanged(Number(projectId));
     };
 
     // Rapid row-click coalescing. Mirrors SprintBoard.handleTaskClick:

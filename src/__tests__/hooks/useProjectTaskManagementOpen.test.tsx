@@ -262,3 +262,70 @@ describe("useProjectTaskManagement — one load per open", () => {
         expect(view.result.current.useTM.currentPreviewTask).toBeUndefined();
     });
 });
+
+/**
+ * MIP-1335: the "a task was just created" flag is one-shot.
+ *
+ * It used to be reset only by `loadUpdatedTask`, which does nothing unless a
+ * TASK is open. A quick-add made with a milestone open (no task previewed) left
+ * the flag `true` for the rest of the session, and the next task opened then
+ * ran the brand-new-task upsert on its existing row, rebuilding it from the
+ * loaded task: `concatTags` came out "//" for a task that has tags, so the
+ * tag filters stopped matching it.
+ */
+describe("useProjectTaskManagement — the new-task flag (MIP-1335)", () => {
+    const tagged = (id: number, updatedAt: string): TaskTableProps =>
+        ({
+            ...row(id, updatedAt),
+            tags: [{ tagName: "Research" }],
+            concatTags: "/Research/",
+        }) as TaskTableProps;
+
+    // The loaded task carries its tags but, as the real one does, no `concatTags`.
+    const loadedWithTags = (id: number, updatedAt: string): TaskProps =>
+        ({
+            ...taskFor(id, updatedAt),
+            tags: [{ tagName: "Research" }],
+            concatTags: undefined,
+        }) as unknown as TaskProps;
+
+    it("is consumed even when no task is previewed", async () => {
+        const view = await setup([row(5, T10)]);
+        // A milestone is open, so no task is previewed.
+        expect(view.result.current.useTM.currentPreviewTaskId).toBe(-1);
+
+        act(() => view.result.current.useTM.setIsNewTaskCreated(true));
+        await flush();
+
+        expect(view.result.current.useTM.isNewTaskCreated).toBe(false);
+    });
+
+    it("does not rebuild the next task you open", async () => {
+        const view = await setup([tagged(5, T10), row(6, T10)]);
+        loader.mockImplementation((async (_me: unknown, _p: number, taskId: number) =>
+            taskId === 5 ? [loadedWithTags(5, T10)] : []) as never);
+
+        // A quick-add sets the flag with nothing previewed...
+        act(() => view.result.current.useTM.setIsNewTaskCreated(true));
+        await flush();
+        // ...then the user opens a task that is already in the table.
+        await open(view, 5);
+
+        const opened = view.result.current.useTM.allTasks.find((t) => t.id === "5");
+        expect(opened?.concatTags).toBe("/Research/");
+    });
+
+    it("a brand-new task with tags gets a concatTags the tag filters can match", async () => {
+        const view = await setup([row(5, T10)]);
+        server[99] = T12;
+        loader.mockImplementation((async (_me: unknown, _p: number, taskId: number) =>
+            taskId === 99 ? [loadedWithTags(99, T12)] : []) as never);
+        await open(view, 99);
+
+        act(() => view.result.current.useTM.setIsNewTaskCreated(true));
+        await flush();
+
+        const created = view.result.current.useTM.allTasks.find((t) => t.id === "99");
+        expect(created?.concatTags).toBe("/Research/");
+    });
+});

@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 
 import { UserProps } from "../../../types/admin";
 import { TaskTableProps } from "../../../types/tasks";
+import { buildConcatTags } from "./concatTags";
 import { QuickAddDraft } from "./quickAddDraft";
 
 type OptimisticQuickTaskArgs = {
@@ -58,10 +59,7 @@ export const buildOptimisticQuickTask = ({
         // The server's format ("/a/b/"): the tag filters match `/<name>/`
         // against it, so a different separator would hide this row from a
         // matching tag filter until the reload.
-        concatTags:
-            draft.tags.length > 0
-                ? "/" + draft.tags.map((tag) => tag.tagName).join("/") + "/"
-                : null,
+        concatTags: buildConcatTags(draft.tags),
         teamId: teamId ?? null,
         projectId,
         isMilestone: false,
