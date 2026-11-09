@@ -138,6 +138,21 @@ export interface NoteCreateOverrides {
     skipOpenTab?: boolean;
 }
 
+/**
+ * A note the route (or a click) asked for that could not be opened while nothing
+ * else is open (MIP-1307). The toast for it lasts 8 s; this is what the note
+ * pane keeps saying afterwards instead of "No Note Selected".
+ */
+export type NoteOpenFailure = {
+    /** The type as the caller passed it (1 my, 2 task, 3 chat, 4 shared, 8 team). */
+    noteType: number;
+    noteId: number;
+    /** `not_found`: the API answered 404, so Retry could never succeed. */
+    reason: "failed" | "not_found";
+    /** A Retry is in flight. */
+    retrying: boolean;
+};
+
 export interface NoteManagementState {
     // New tab strip API (synchronous; replaces the legacy
     // tabItems/selectedTabIndex/loadNote dance).
@@ -359,6 +374,10 @@ export interface NoteManagementState {
 
     // Note loading function
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
+    // The last open that failed with no tab to show (MIP-1307), its Retry, and its reset.
+    noteOpenFailure: NoteOpenFailure | null;
+    retryNoteOpen: () => void;
+    clearNoteOpenFailure: () => void;
 
     // Initialize note states
     initializeNoteStates: () => void;
@@ -388,6 +407,23 @@ export const useNoteManagement = (
     // `tabItems`/`selectedTabIndex` above are kept temporarily for
     // unmigrated consumers and will be removed in a follow-up cleanup.
     const tabsApi = useNoteTabs({ myself, accessToken });
+    // MIP-1307: with a tab open the toast is enough (the pane still shows a note);
+    // with none, the failure has to outlive the toast or the pane reads as "nothing
+    // was asked for". The ref lets `loadNote` (a plain closure) see the live count.
+    const [noteOpenFailure, setNoteOpenFailure] = useState<NoteOpenFailure | null>(null);
+    const tabCountRef = useRef(0);
+    tabCountRef.current = tabsApi.tabs.length;
+    useEffect(() => {
+        if (tabsApi.tabs.length > 0) setNoteOpenFailure(null);
+    }, [tabsApi.tabs.length]);
+    // Every open (and every clear) bumps this; a result only reports if it is still the
+    // latest ask, so a slow request for a note the user has since left cannot put an
+    // error up for it.
+    const openSeqRef = useRef(0);
+    const clearNoteOpenFailure = useCallback(() => {
+        openSeqRef.current += 1;
+        setNoteOpenFailure(null);
+    }, []);
 
     // Chat notes
     const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
@@ -2199,17 +2235,47 @@ export const useNoteManagement = (
         // resolves undefined on a failed request (403 is `{ error: "forbidden" }`
         // and is not a failure: the access-request panel handles it).
         const requestedType = noteType;
+        const openSeq = ++openSeqRef.current;
+        // `loadSpecificNote`: undefined = request failed, { error: "not_found" } = 404,
+        // { error: "forbidden" } = 403, which is not a failure here.
         const reportOpenFailed = (fetched: { error?: string } | undefined) => {
-            if (fetched) return;
+            if (openSeq !== openSeqRef.current) return;
+            if (fetched && fetched.error !== "not_found") {
+                // 403: the access-request panel owns it; a Retry in flight is over.
+                setNoteOpenFailure(null);
+                return;
+            }
+            const reason = fetched ? "not_found" : "failed";
+            if (tabCountRef.current === 0) {
+                setNoteOpenFailure({
+                    noteType: requestedType,
+                    noteId,
+                    reason,
+                    retrying: false,
+                });
+                return;
+            }
             const msgs = getMessages();
-            toast.error(msgs.notes.editor.loadFailed, {
-                id: `note-open-failed-${requestedType}-${noteId}`,
-                action: {
-                    label: msgs.common.actions.retry,
-                    onClick: () => void loadNote(requestedType, noteId, _nextTabIndex),
-                },
-            });
+            toast.error(
+                reason === "not_found"
+                    ? msgs.notes.placeholder.noteNotFoundTitle
+                    : msgs.notes.editor.loadFailed,
+                {
+                    id: `note-open-failed-${requestedType}-${noteId}`,
+                    action:
+                        reason === "not_found"
+                            ? undefined
+                            : {
+                                  label: msgs.common.actions.retry,
+                                  onClick: () =>
+                                      void loadNote(requestedType, noteId, _nextTabIndex),
+                              },
+                }
+            );
         };
+        setNoteOpenFailure((f) =>
+            f && f.noteType === requestedType && f.noteId === noteId ? { ...f, retrying: true } : f
+        );
         try {
             // Shared (4) and team (8) notes live in note_type=1 on the
             // backend; those codes exist only to drive the sidebar bucket
@@ -2286,7 +2352,12 @@ export const useNoteManagement = (
             }
         } catch (error) {
             console.error("Error loading note:", error);
+            setNoteOpenFailure((f) => (f ? { ...f, retrying: false } : f));
         }
+    };
+
+    const retryNoteOpen = () => {
+        if (noteOpenFailure) void loadNote(noteOpenFailure.noteType, noteOpenFailure.noteId, -1);
     };
 
     // No-op kept for backwards compatibility with `useServiceInitialization`.
@@ -2670,6 +2741,9 @@ export const useNoteManagement = (
 
         // Note loading function
         loadNote,
+        noteOpenFailure,
+        retryNoteOpen,
+        clearNoteOpenFailure,
 
         // Initialize and reset functions
         initializeNoteStates,

@@ -2776,6 +2776,8 @@ export const zh: DeepPartial<Messages> = {
             chooseNoteToEdit: "从侧边栏选择一篇笔记开始编辑",
             newMyNote: "新建我的笔记",
             sharedNotesTitle: "从侧边栏选择一篇共享笔记",
+            noteNotFoundTitle: "此笔记已不存在",
+            noteNotFoundBody: "它可能已被删除，或链接有误。",
         },
         header: {
             myNotesLabel: "我的笔记",

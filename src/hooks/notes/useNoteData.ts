@@ -33,6 +33,9 @@ export interface UseNoteDataResult<T extends ResolvedNote = ResolvedNote> {
     // "request access" panel instead of a blank editor. Never cached, so
     // a granted request takes effect on the next open without a reload.
     accessDenied: boolean;
+    // True when the backend answered 404: the note was deleted, so a Retry
+    // could never succeed (MIP-1307). `error` is set too.
+    notFound: boolean;
     /**
      * Run the load again after `error` (the Retry of the panel's error state,
      * MIP-1276). A no-op while a load is in flight is not needed: the effect
@@ -45,6 +48,8 @@ export interface UseNoteDataResult<T extends ResolvedNote = ResolvedNote> {
 // Sentinel distinguishing "no access" from "not found" in fetchForTab's
 // return channel.
 const FORBIDDEN = Symbol("note-access-forbidden");
+// The API answered 404: the note was deleted. Retry cannot help (MIP-1307).
+const NOT_FOUND = Symbol("note-not-found");
 
 interface UseNoteDataOptions {
     myself: UserProps;
@@ -111,7 +116,7 @@ const fetchForTab = async (
     tab: NoteTab,
     myself: UserProps,
     accessToken: string | null
-): Promise<ResolvedNote | typeof FORBIDDEN | null> => {
+): Promise<ResolvedNote | typeof FORBIDDEN | typeof NOT_FOUND | null> => {
     const ns = getNoteService();
     try {
         if (tab.kind === "my") {
@@ -127,6 +132,7 @@ const fetchForTab = async (
                 accessToken
             );
             if (fetched?.error === "forbidden") return FORBIDDEN;
+            if (fetched?.error === "not_found") return NOT_FOUND;
             if (fetched && !fetched.error && fetched.noteType === 1) {
                 return cacheFetchedNote(fetched);
             }
@@ -145,6 +151,7 @@ const fetchForTab = async (
                 accessToken
             );
             if (fetched?.error === "forbidden") return FORBIDDEN;
+            if (fetched?.error === "not_found") return NOT_FOUND;
             if (fetched && !fetched.error && fetched.noteType === 2) {
                 return cacheFetchedNote(fetched);
             }
@@ -157,6 +164,7 @@ const fetchForTab = async (
         if (!accessToken) return null;
         const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, tab.noteId, accessToken);
         if (fetched?.error === "forbidden") return FORBIDDEN;
+        if (fetched?.error === "not_found") return NOT_FOUND;
         if (fetched && !fetched.error && fetched.noteType === 3) {
             return cacheFetchedNote(fetched);
         }
@@ -180,6 +188,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
     const [accessDenied, setAccessDenied] = useState<boolean>(false);
+    const [notFound, setNotFound] = useState<boolean>(false);
     // Bumped by `reload` so a failed open can be tried again without the tab changing.
     const [reloadKey, setReloadKey] = useState(0);
     const reload = useCallback(() => setReloadKey((k) => k + 1), []);
@@ -194,6 +203,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
             setIsLoading(false);
             setError(null);
             setAccessDenied(false);
+            setNotFound(false);
             lastFetchedKeyRef.current = null;
             return;
         }
@@ -204,6 +214,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
             setNote(cached);
             setError(null);
             setAccessDenied(false);
+            setNotFound(false);
             // Do not refetch when we have a cached copy; mutations write
             // through `update()` and IDB writes go via addNote inside the
             // editor save path. Skipping the refetch is what makes tab
@@ -215,6 +226,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         setIsLoading(true);
         setError(null);
         setAccessDenied(false);
+        setNotFound(false);
         (async () => {
             const resolved = await fetchForTab(tab, myself, accessToken);
             if (cancelled) return;
@@ -222,7 +234,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
                 // Deliberately NOT cached: once the owner approves the
                 // request, the next open refetches and succeeds.
                 setAccessDenied(true);
-            } else if (resolved) {
+            } else if (resolved && resolved !== NOT_FOUND) {
                 // This fetch was started on a cache MISS, but a save may
                 // have published a newer copy of the note while it was in
                 // flight — that copy wins (see `fillNoteCache`).
@@ -233,6 +245,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
                     onFirstResolveRef.current?.(effective);
                 }
             } else {
+                setNotFound(resolved === NOT_FOUND);
                 setError(new Error("note not found"));
             }
             setIsLoading(false);
@@ -268,7 +281,7 @@ export function useNoteData<T extends ResolvedNote = ResolvedNote>(
         [tab]
     );
 
-    return { note, isLoading, error, accessDenied, reload, update };
+    return { note, isLoading, error, accessDenied, notFound, reload, update };
 }
 
 export const noteCacheKind = (noteType: number): "my" | "task" | "chat" =>

@@ -2,6 +2,7 @@ import { Box } from "@mui/joy";
 
 import { DataState } from "../../../../components/ui/feedback/DataState";
 import { useTranslation } from "../../../../i18n";
+import { NoteGoneState } from "./NoteGoneState";
 
 /**
  * What a note editor panel shows until its note has resolved (MIP-1276).
@@ -21,6 +22,8 @@ type NoteLoadStateProps = {
     fillHeight?: boolean;
     isLoading: boolean;
     error: boolean;
+    /** The API said 404: the note was deleted, so there is no Retry (MIP-1307). */
+    notFound?: boolean;
     onRetry: () => void;
 };
 
@@ -29,6 +32,7 @@ export const NoteLoadState = ({
     fillHeight = false,
     isLoading,
     error,
+    notFound = false,
     onRetry,
 }: NoteLoadStateProps) => {
     const { t } = useTranslation();
@@ -42,18 +46,22 @@ export const NoteLoadState = ({
                 ...(fillHeight ? { flex: 1, minHeight: 0 } : { minHeight: 240 }),
             }}
         >
-            <DataState
-                hasData={false}
-                loading={false}
-                skeleton={null}
-                errorState={{
-                    title: t.notes.editor.loadFailed,
-                    onRetry,
-                    "data-error": "note-editor",
-                }}
-                error
-                fill
-            />
+            {notFound ? (
+                <NoteGoneState />
+            ) : (
+                <DataState
+                    hasData={false}
+                    loading={false}
+                    skeleton={null}
+                    errorState={{
+                        title: t.notes.editor.loadFailed,
+                        onRetry,
+                        "data-error": "note-editor",
+                    }}
+                    error
+                    fill
+                />
+            )}
         </Box>
     );
 };

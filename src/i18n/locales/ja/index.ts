@@ -2875,6 +2875,8 @@ export const ja: DeepPartial<Messages> = {
             chooseNoteToEdit: "サイドバーからノートを選んで編集を始めましょう",
             newMyNote: "新規マイノート",
             sharedNotesTitle: "サイドバーから共有ノートを選んでください",
+            noteNotFoundTitle: "このノートは存在しません",
+            noteNotFoundBody: "削除されたか、リンクが正しくない可能性があります。",
         },
         header: {
             myNotesLabel: "マイノート",

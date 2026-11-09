@@ -34,6 +34,12 @@ export const loadSpecificNote = async (
             if (error.response?.status === 403) {
                 return { error: "forbidden" };
             }
+            // 404 = the note was deleted (or the id is wrong). A typed marker, not
+            // the `undefined` of a network failure: a Retry on it can never
+            // succeed, so callers show "no longer exists" instead (MIP-1307).
+            if (error.response?.status === 404) {
+                return { error: "not_found" };
+            }
             console.error("API error:", error.response?.status, error.response?.data);
         } else {
             console.error("Unexpected error:", error);

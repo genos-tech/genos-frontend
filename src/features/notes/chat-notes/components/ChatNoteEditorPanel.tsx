@@ -48,10 +48,13 @@ export const ChatNoteEditorPanel = ({
     useCM,
     useNM,
 }: ChatNoteEditorPanelProps) => {
-    const { note, accessDenied, isLoading, error, reload } = useNoteData<ChatNoteProps>(tab, {
-        myself,
-        accessToken,
-    });
+    const { note, accessDenied, isLoading, error, notFound, reload } = useNoteData<ChatNoteProps>(
+        tab,
+        {
+            myself,
+            accessToken,
+        }
+    );
 
     const chatNoteEditor = useChatNoteEditor({
         currentChatNote: note,
@@ -118,6 +121,7 @@ export const ChatNoteEditorPanel = ({
                 fillHeight={fillHeight}
                 isActive={isActive}
                 isLoading={isLoading}
+                notFound={notFound}
                 onRetry={reload}
             />
         );

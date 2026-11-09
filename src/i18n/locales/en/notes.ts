@@ -174,6 +174,8 @@ export const notes = {
         chooseNoteToEdit: "Choose a note from the sidebar to start editing",
         newMyNote: "New My Note",
         sharedNotesTitle: "Choose a shared note from the sidebar",
+        noteNotFoundTitle: "This note no longer exists",
+        noteNotFoundBody: "It may have been deleted, or the link may be wrong.",
     },
     header: {
         myNotesLabel: "My Notes",

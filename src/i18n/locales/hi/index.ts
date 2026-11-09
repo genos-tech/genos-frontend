@@ -3375,6 +3375,8 @@ export const hi: DeepPartial<Messages> = {
             chooseNoteToEdit: "एडिट करने के लिए साइडबार से एक नोट चुनें",
             newMyNote: "नया My Note",
             sharedNotesTitle: "साइडबार से एक साझा नोट चुनें",
+            noteNotFoundTitle: "यह नोट अब मौजूद नहीं है",
+            noteNotFoundBody: "हो सकता है इसे हटा दिया गया हो, या लिंक गलत हो।",
         },
         header: {
             myNotesLabel: "मेरे नोट",
