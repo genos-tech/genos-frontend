@@ -78,6 +78,7 @@ import { resolveIdleThresholdMs, useIdleAutoReload } from "./hooks/common/useIdl
 import { useKeyboardInset } from "./hooks/common/useKeyboardInset";
 import { useNotifications } from "./hooks/common/useNotifications";
 import { PersonalGMTagsBootstrap } from "./hooks/common/usePersonalGMTags";
+import { useProjectRoomSync } from "./hooks/common/useProjectRoomSync";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { QuickAddRequiredFieldsPreferenceProvider } from "./hooks/common/useQuickAddRequiredFieldsPreference";
 import { QuickReactionsPreferenceProvider } from "./hooks/common/useQuickReactionsPreference";
@@ -1282,6 +1283,10 @@ const AppBody = () => {
         useTM.currentPreviewTaskId,
         useNotif,
     ]);
+
+    // Ask the socket server to re-check my project rooms when the projects I belong
+    // to change (approved, added, created, removed): MIP-1350.
+    useProjectRoomSync(socketInstance, usePM.teamProjects);
 
     // WebSocket synchronization. Keys sorted per `sort-keys`.
     webSocketSync({
