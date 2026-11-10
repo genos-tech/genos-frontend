@@ -5407,6 +5407,8 @@ export const ja: DeepPartial<Messages> = {
             emptyHint: "フィルターを調整してみてください",
             addTagsPlaceholder: "タグを追加…",
             addTagsMenuItem: "+ タグを追加",
+            setPriority: "優先度を設定",
+            setEffort: "Effortレベルを設定",
         },
         dueLabel: {
             noDueDate: "締切なし",

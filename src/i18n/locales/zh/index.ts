@@ -5226,6 +5226,8 @@ export const zh: DeepPartial<Messages> = {
             emptyHint: "试试调整筛选条件",
             addTagsPlaceholder: "添加标签…",
             addTagsMenuItem: "+ 添加标签",
+            setPriority: "设置优先级",
+            setEffort: "设置工作量",
         },
         dueLabel: {
             noDueDate: "无截止日期",

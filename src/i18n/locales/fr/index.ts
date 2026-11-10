@@ -5475,6 +5475,8 @@ export const fr: DeepPartial<Messages> = {
             emptyHint: "Essayez d'ajuster vos filtres",
             addTagsPlaceholder: "Ajouter des tags…",
             addTagsMenuItem: "+ Ajouter des tags",
+            setPriority: "Définir la priorité",
+            setEffort: "Définir le niveau d'effort",
         },
         dueLabel: {
             noDueDate: "Pas d'échéance",
