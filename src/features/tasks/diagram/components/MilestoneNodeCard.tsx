@@ -59,6 +59,7 @@ export const MilestoneNodeView = ({
     const {
         task,
         isCurrentPreview,
+        isInLineage,
         closedDescendantCount,
         totalDescendantCount,
         sprint,
@@ -99,7 +100,7 @@ export const MilestoneNodeView = ({
     return (
         <TaskCardFrame
             clickable={false}
-            emphasis={isCurrentPreview ? "current" : undefined}
+            emphasis={isInLineage ? "lineage" : isCurrentPreview ? "current" : undefined}
             width={NODE_WIDTH}
             prominent
         >

@@ -21,6 +21,7 @@ import {
     ReactFlow,
     ReactFlowProvider,
     reconnectEdge,
+    useConnection,
     useNodesInitialized,
     useReactFlow,
 } from "@xyflow/react";
@@ -64,6 +65,7 @@ import {
 } from "../types";
 import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
 import { layoutDiagramNodes } from "../utils/layoutDiagram";
+import { applyLineage } from "../utils/lineage";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
 import { DependencyEdge } from "./DependencyEdge";
 import { DiagramLegend } from "./DiagramLegend";
@@ -583,6 +585,10 @@ const CanvasInner = ({
 
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
+    // The card under the pointer (MIP-1278): its parents and children light up
+    // and the rest of the graph dims. Not part of `nodes`/`edges`, so a hover never
+    // rewrites the stored graph; `drawn` below layers it on.
+    const [hoveredId, setHoveredId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -1107,6 +1113,19 @@ const CanvasInner = ({
         });
     }, [refresh, assembleAndLayout]);
 
+    // Dragging a new line across other cards would flash the highlight at every card
+    // it passes, so no card is lit while React Flow is drawing a connection (its own
+    // state, so it can't be left stale by a drag that ends off the canvas).
+    const connecting = useConnection((c) => c.inProgress);
+    const drawn = useMemo(
+        () => applyLineage(nodes, edges, connecting ? null : hoveredId),
+        [nodes, edges, hoveredId, connecting]
+    );
+    const onNodeMouseEnter = useCallback((_: unknown, node: Node) => {
+        setHoveredId(Number(node.id));
+    }, []);
+    const onNodeMouseLeave = useCallback(() => setHoveredId(null), []);
+
     // React Flow events.
     const onNodesChange = useCallback(
         (changes: NodeChange[]) => setNodes((prev) => applyNodeChanges(changes, prev)),
@@ -1344,7 +1363,7 @@ const CanvasInner = ({
                 colorMode={isDark ? "dark" : "light"}
                 defaultEdgeOptions={{ animated: false }}
                 deleteKeyCode={["Backspace", "Delete"]}
-                edges={edges}
+                edges={drawn.edges}
                 edgeTypes={edgeTypes}
                 // Padding matches the deferred fit effect so React Flow's
                 // own init-fit and that effect frame the graph identically
@@ -1353,12 +1372,14 @@ const CanvasInner = ({
                 fitViewOptions={{ padding: 0.15 }}
                 maxZoom={2}
                 minZoom={0.25}
-                nodes={nodes}
+                nodes={drawn.nodes}
                 nodeTypes={nodeTypes}
                 proOptions={{ hideAttribution: true }}
                 fitView
                 onConnect={onConnectFresh}
                 onEdgesChange={onEdgesChange}
+                onNodeMouseEnter={onNodeMouseEnter}
+                onNodeMouseLeave={onNodeMouseLeave}
                 onNodesChange={onNodesChange}
                 onReconnect={onReconnect}
             >

@@ -15,7 +15,7 @@ import type { TaskCardTask } from "./types";
  *  from ("current"), a card just added from the graph ("new"), a card assigned
  *  to the person the graph was opened for ("assigned"). Each is a border and a
  *  halo in a role color, never a re-skin of the card. */
-export type CardEmphasis = "current" | "new" | "assigned";
+export type CardEmphasis = "current" | "new" | "assigned" | "lineage";
 
 /** Left-edge urgency stripe: overdue is danger, due soon is warning. */
 export type CardStripe = "danger" | "warning";
@@ -24,6 +24,8 @@ const EMPHASIS: Record<CardEmphasis, { border: string; halo: string; fill: strin
     current: { border: g.accent.solid, halo: g.accent.border, fill: g.accent.subtle },
     new: { border: g.info.solid, halo: g.info.border, fill: g.info.subtle },
     assigned: { border: g.warning.solid, halo: g.warning.border, fill: null },
+    // The task graph's hover (MIP-1278): the hovered card and its parents and children.
+    lineage: { border: g.accent.solid, halo: g.accent.border, fill: null },
 };
 
 const STRIPE: Record<CardStripe, string> = {

@@ -4,6 +4,7 @@ import { BaseEdge, EdgeLabelRenderer, EdgeProps, getBezierPath } from "@xyflow/r
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../../../i18n";
 import { DEPENDENCY_COLOR, DEPENDENCY_COLOR_ACTIVE } from "../types";
+import { DIMMED_OPACITY } from "../utils/lineage";
 
 // Edge data carries the source/target titles so we can name the edge
 // for assistive tech (via `<title>` on the SVG group) and label the
@@ -11,6 +12,8 @@ import { DEPENDENCY_COLOR, DEPENDENCY_COLOR_ACTIVE } from "../types";
 type DependencyEdgeData = {
     sourceTitle?: string | null;
     targetTitle?: string | null;
+    /** While a card is hovered (MIP-1278): "dim" = not between two lit cards. */
+    lineage?: "dim";
 };
 
 // Dashed amber bezier with an arrow head pointing blocker → blocked.
@@ -44,6 +47,7 @@ export const DependencyEdge = memo(
         const stroke = active ? DEPENDENCY_COLOR_ACTIVE : DEPENDENCY_COLOR;
 
         const d = (data as DependencyEdgeData | undefined) ?? {};
+        const dimmed = d.lineage === "dim";
         const tooltipText =
             d.sourceTitle && d.targetTitle
                 ? fmt(t.tasks.diagram.tooltips.dependencyBlocks, {
@@ -74,8 +78,9 @@ export const DependencyEdge = memo(
                             stroke,
                             strokeWidth: active ? 2.5 : 1.75,
                             strokeDasharray: "6 4",
-                            opacity: 0.9,
-                            transition: "stroke 0.15s ease, stroke-width 0.15s ease",
+                            opacity: dimmed ? DIMMED_OPACITY : 0.9,
+                            transition:
+                                "stroke 0.15s ease, stroke-width 0.15s ease, opacity 0.15s ease",
                             pointerEvents: "none",
                         }}
                     />
@@ -103,8 +108,9 @@ export const DependencyEdge = memo(
                                     active ? "rgba(249,115,22,0.45)" : "rgba(249,115,22,0.18)"
                                 }`,
                                 transition:
-                                    "background 0.15s ease, color 0.15s ease, border-color 0.15s ease",
+                                    "background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease",
                                 userSelect: "none",
+                                opacity: dimmed ? DIMMED_OPACITY : undefined,
                             }}
                             onMouseEnter={() => setHovered(true)}
                             onMouseLeave={() => setHovered(false)}

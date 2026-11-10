@@ -70,6 +70,7 @@ export const TaskNodeView = ({
         isRoot,
         isCurrentPreview,
         isNewlyCreated,
+        isInLineage,
         isAssignedToViewer,
         isExternal: isGhost,
         isDimmed,
@@ -100,13 +101,15 @@ export const TaskNodeView = ({
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
     const scheduleLabel = useScheduleLabel(schedule, task.status);
 
-    const emphasis: CardEmphasis | undefined = isCurrentPreview
-        ? "current"
-        : isNewlyCreated
-          ? "new"
-          : isAssignedToViewer
-            ? "assigned"
-            : undefined;
+    const emphasis: CardEmphasis | undefined = isInLineage
+        ? "lineage"
+        : isCurrentPreview
+          ? "current"
+          : isNewlyCreated
+            ? "new"
+            : isAssignedToViewer
+              ? "assigned"
+              : undefined;
     // The schedule tone owns the leading edge (red on overdue) so urgency still
     // pops; a closed or unscheduled task has none.
     const stripe =
