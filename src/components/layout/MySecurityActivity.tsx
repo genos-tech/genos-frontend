@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
@@ -29,14 +29,19 @@ export const MySecurityActivity = () => {
     const [failed, setFailed] = useState(false);
     const [busy, setBusy] = useState(false);
 
+    // Bumped whenever the list is reset (token change, unmount): an answer that started
+    // before that, including one from an inline Retry, must not write into the new list.
+    const generationRef = useRef(0);
+
     // One path for the first page, a retry of it, and every older page.
     // `cursor` is null for the first page.
     const load = useCallback(
-        async (cursor: number | null, isLive: () => boolean = () => true) => {
+        async (cursor: number | null) => {
+            const generation = generationRef.current;
             setBusy(true);
             setFailed(false);
             const page = await listMySecurityEvents(accessToken, cursor);
-            if (!isLive()) return;
+            if (generation !== generationRef.current) return;
             setBusy(false);
             if (!page) {
                 setFailed(true);
@@ -51,12 +56,12 @@ export const MySecurityActivity = () => {
     );
 
     useEffect(() => {
-        let live = true;
+        generationRef.current += 1;
         setEvents(null);
         setNextBefore(null);
-        void load(null, () => live);
+        void load(null);
         return () => {
-            live = false;
+            generationRef.current += 1;
         };
     }, [load]);
 

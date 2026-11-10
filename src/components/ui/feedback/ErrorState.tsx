@@ -35,7 +35,7 @@ export type ErrorStateProps = {
      * start; "Open on GitHub" on a card that could not load). `href` makes it a
      * link that opens in a new tab; otherwise it runs `onClick`.
      */
-    secondary?: { label: string; onClick?: () => void; href?: string };
+    secondary?: { label: string } & ({ onClick: () => void } | { href: string });
     icon?: ReactNode;
     size?: "md" | "sm" | "xs";
     /** Center in the parent's full height instead of sitting at the top. */
@@ -63,14 +63,14 @@ export const ErrorState = ({
             {secondary && (
                 <Button
                     color="neutral"
-                    component={secondary.href ? "a" : "button"}
-                    href={secondary.href}
-                    rel={secondary.href ? "noreferrer" : undefined}
+                    component={"href" in secondary ? "a" : "button"}
+                    href={"href" in secondary ? secondary.href : undefined}
+                    rel={"href" in secondary ? "noreferrer" : undefined}
                     size="sm"
                     sx={{ "&:focus-visible": focusRing }}
-                    target={secondary.href ? "_blank" : undefined}
+                    target={"href" in secondary ? "_blank" : undefined}
                     variant="plain"
-                    onClick={secondary.onClick}
+                    onClick={"onClick" in secondary ? secondary.onClick : undefined}
                 >
                     {secondary.label}
                 </Button>
