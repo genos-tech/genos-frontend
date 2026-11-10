@@ -2934,6 +2934,8 @@ export const hi: DeepPartial<Messages> = {
             emptyHint: "अपने फ़िल्टर बदलकर देखें",
             addTagsPlaceholder: "टैग जोड़ें…",
             addTagsMenuItem: "+ टैग जोड़ें",
+            setPriority: "प्राथमिकता चुनें",
+            setEffort: "प्रयास स्तर चुनें",
         },
         dueLabel: {
             noDueDate: "कोई ड्यू तारीख नहीं",

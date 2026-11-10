@@ -942,6 +942,8 @@ export const tasks = {
         searchMembersPlaceholder: "Search members...",
         addTagsPlaceholder: "Add tags…",
         addTagsMenuItem: "+ Add tags",
+        setPriority: "Set priority",
+        setEffort: "Set effort level",
         dragToReorder: "Drag to reorder",
         dragToResizeColumn: "Drag to resize column",
         dropToNest: "↳ Drop to nest",

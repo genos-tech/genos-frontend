@@ -2676,6 +2676,8 @@ export const ar: DeepPartial<Messages> = {
             emptyHint: "جرّب تعديل عوامل التصفية",
             addTagsPlaceholder: "إضافة علامات…",
             addTagsMenuItem: "+ إضافة علامات",
+            setPriority: "تحديد الأولوية",
+            setEffort: "تحديد مستوى الجهد",
         },
         dueLabel: {
             noDueDate: "بدون تاريخ استحقاق",

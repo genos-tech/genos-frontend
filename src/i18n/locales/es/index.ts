@@ -2714,6 +2714,8 @@ export const es: DeepPartial<Messages> = {
             emptyHint: "Prueba a ajustar los filtros",
             addTagsPlaceholder: "Añadir etiquetas…",
             addTagsMenuItem: "+ Añadir etiquetas",
+            setPriority: "Definir prioridad",
+            setEffort: "Definir nivel de esfuerzo",
         },
         dueLabel: {
             noDueDate: "Sin fecha de vencimiento",
