@@ -106,6 +106,12 @@ describe("@theme inline maps the design tokens into Tailwind", () => {
             "--g-brand-gradient-hover",
             "--g-ink-rgb",
             "--g-shadow-lg",
+            // Link inks and quote text of the chat bubbles (MIP-1317): App.css only. A
+            // `--color-link` would collide with the one index.css already defines.
+            "--g-link",
+            "--g-link-visited",
+            "--g-link-hover",
+            "--g-text-quote",
         ]);
         const roleNames = [...defined].filter(
             (v) => !/^--g-(type|space|control|row|motion|ease|font|radius)/.test(v)

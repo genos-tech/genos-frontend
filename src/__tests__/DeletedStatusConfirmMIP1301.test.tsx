@@ -160,6 +160,7 @@ describe("the table's status cell", () => {
 
     const renderRow = () => {
         const onRowUpdate = vi.fn(async (t: TaskTableProps) => t);
+        const onDeleteTask = vi.fn();
         render(
             <AvatarContextProvider
                 value={{
@@ -200,6 +201,7 @@ describe("the table's status cell", () => {
                                             useUISM={{} as never}
                                             onOpenDiagram={vi.fn()}
                                             onQuickAddChild={vi.fn()}
+                                            onDeleteTask={onDeleteTask}
                                             onRequestPreview={vi.fn()}
                                             onRowUpdate={onRowUpdate}
                                         />
@@ -212,7 +214,7 @@ describe("the table's status cell", () => {
                 </CssVarsProvider>
             </AvatarContextProvider>
         );
-        return onRowUpdate;
+        return { onRowUpdate, onDeleteTask };
     };
     const pick = (name: string) => {
         // The status cell is the button that shows the current status's word.
@@ -223,32 +225,23 @@ describe("the table's status cell", () => {
         fireEvent.click(screen.getByRole("option", { name: new RegExp(name) }));
     };
 
-    it("asks before sending Deleted, and sends nothing on Cancel", async () => {
-        const onRowUpdate = renderRow();
+    it("Deleted goes to the delete handler (an Undo toast), not to the save and not to a dialog", () => {
+        const { onRowUpdate, onDeleteTask } = renderRow();
         pick("Deleted");
-        const dialog = screen.getByRole("alertdialog");
-        expect(within(dialog).getByText("Task 1")).toBeTruthy();
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+        expect(onDeleteTask).toHaveBeenCalledTimes(1);
+        expect(onDeleteTask.mock.calls[0][0].id).toBe("1");
+        // The row keeps its status until the delete is committed.
         expect(onRowUpdate).not.toHaveBeenCalled();
-
-        fireEvent.click(within(dialog).getByText("Cancel"));
-        await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
-        expect(onRowUpdate).not.toHaveBeenCalled();
-    });
-
-    it("sends the update once, on Confirm", async () => {
-        const onRowUpdate = renderRow();
-        pick("Deleted");
-        fireEvent.click(within(screen.getByRole("alertdialog")).getByText("Delete"));
-        await waitFor(() => expect(onRowUpdate).toHaveBeenCalledTimes(1));
-        expect(onRowUpdate.mock.calls[0][0].status).toBe("Deleted");
     });
 
     it("another status is sent straight away", async () => {
-        const onRowUpdate = renderRow();
+        const { onRowUpdate, onDeleteTask } = renderRow();
         pick("Closed");
         expect(screen.queryByRole("alertdialog")).toBeNull();
         await waitFor(() => expect(onRowUpdate).toHaveBeenCalledTimes(1));
         expect(onRowUpdate.mock.calls[0][0].status).toBe("Closed");
+        expect(onDeleteTask).not.toHaveBeenCalled();
     });
 });
 

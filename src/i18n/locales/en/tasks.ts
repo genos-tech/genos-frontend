@@ -468,9 +468,7 @@ export const tasks = {
     createForm: {
         taskDetails: "Task Details",
         preparing: "Preparing task…",
-        bootstrapFailed: "Couldn't prepare a new task. Check your connection and try again.",
-        bootstrapRetry: "Try again",
-        bootstrapCancel: "Cancel",
+        bootstrapFailed: "Couldn't prepare a new task",
         discardTaskTitle: "Discard this draft?",
         discardTaskBody: "Your title, body, and attachments will be lost. This can't be undone.",
         discardMilestoneTitle: "Discard this milestone draft?",
@@ -897,6 +895,15 @@ export const tasks = {
         all: "All",
         allMembers: "All members",
         noAssignee: "No assignee",
+    },
+
+    // Deleting a task or milestone: no question, an Undo toast instead (MIP-1303).
+    // The delete is sent when the toast has gone.
+    deleteUndo: {
+        deleted: "Task deleted",
+        milestoneDeleted: "Milestone deleted",
+        errorRestored: "Couldn’t delete the task. It is back.",
+        milestoneErrorRestored: "Couldn’t delete the milestone. It is back.",
     },
 
     // Named, project-shared filter selections in the filter bar. Called

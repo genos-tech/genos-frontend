@@ -32,6 +32,7 @@ import {
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { modalChromeEndPadding } from "../../components/ui/modal/modalChrome";
+import { chipRowTouchSx, touchTargetSx } from "../../components/ui/touchTargets";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -363,14 +364,18 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             // phone the row does not fit beside the title and the
                             // clearance together, so there the actions wrap to their own
                             // line and only the title line keeps the corner free
-                            // (MIP-1296). On the page nothing changes.
+                            // (MIP-1296). The page header wraps on a phone too (MIP-1319):
+                            // 44px actions beside the title squeeze it to two lines ("My" /
+                            // "Todos") where the row is narrow, so there the actions drop
+                            // under it only when they do not fit. On a desktop page
+                            // nothing changes.
                             data-todo-header-row
                             sx={
-                                hostedInModal
-                                    ? isMobile
-                                        ? { flexWrap: "wrap", rowGap: 1 }
-                                        : modalChromeEndPadding()
-                                    : undefined
+                                isMobile
+                                    ? { flexWrap: "wrap", rowGap: 1 }
+                                    : hostedInModal
+                                      ? modalChromeEndPadding()
+                                      : undefined
                             }
                         >
                             <Stack
@@ -378,12 +383,17 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 direction="row"
                                 spacing={1.5}
                                 sx={
-                                    hostedInModal && isMobile
-                                        ? {
-                                              flexBasis: "100%",
-                                              minWidth: 0,
-                                              ...modalChromeEndPadding(),
-                                          }
+                                    isMobile
+                                        ? hostedInModal
+                                            ? {
+                                                  flexBasis: "100%",
+                                                  minWidth: 0,
+                                                  ...modalChromeEndPadding(),
+                                              }
+                                            : // On the page the title shares the line with the actions
+                                              // while it fits, and the actions drop below it when it
+                                              // does not (a longer locale, a narrower phone).
+                                              { minWidth: 0 }
                                         : undefined
                                 }
                             >
@@ -452,19 +462,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 alignItems="center"
                                 direction="row"
                                 spacing={1}
-                                sx={
-                                    hostedInModal
-                                        ? {
-                                              // 44px touch targets in the modal (MIP-1296).
-                                              "& .MuiIconButton-root, & .MuiButton-root": {
-                                                  "@media (pointer: coarse)": {
-                                                      minWidth: 44,
-                                                      minHeight: 44,
-                                                  },
-                                              },
-                                          }
-                                        : undefined
-                                }
+                                // 44px touch targets, in the dialog (MIP-1296) and on the page
+                                // (MIP-1319); the Start today button too.
+                                sx={touchTargetSx("& .MuiIconButton-root, & .MuiButton-root")}
                             >
                                 <AppTooltip title={t.chat.todoPane.tags.manageTooltip}>
                                     <IconButton
@@ -581,7 +581,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
                         {/* Filter row */}
                         <Stack alignItems="center" direction="row" justifyContent="space-between">
-                            <Stack alignItems="center" direction="row" spacing={1}>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={1}
+                                sx={chipRowTouchSx}
+                            >
                                 <Chip
                                     size="sm"
                                     sx={{ cursor: "pointer", borderRadius: "6px" }}

@@ -50,7 +50,6 @@ import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
 import { PriorityIcon } from "../meta/PriorityIcon";
 import { StatusLabel } from "../meta/StatusLabel";
-import { ConfirmDeletedStatus } from "../modals/ConfirmDeletedStatus";
 import { ProjectTagChip } from "../ProjectTagChip";
 import {
     CellButton,
@@ -164,6 +163,9 @@ export type DraggableTaskRowProps = {
      *  reference in `areEqual` like `projectTags`. */
     customFieldDefs: ProjectCustomFieldDef[];
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;
+    /** Picking "Deleted" in the status cell: the parent hides the row behind an
+     *  Undo toast and sends the delete when the toast is gone (MIP-1303). */
+    onDeleteTask: (task: TaskTableProps) => void;
     // Parent-owned debounced preview switch. Replaces the older
     // `onRowDoubleClick(taskId)` callback — the parent now coalesces
     // rapid clicks so the heavy TaskPreview fetch cascade only fires
@@ -241,6 +243,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         myself,
         teamMembers,
         onRowUpdate,
+        onDeleteTask,
         onRequestPreview,
         isSelected,
         isGhost = false,
@@ -356,10 +359,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         const updatedTask = { ...task, [field]: value };
         await onRowUpdate(updatedTask);
     };
-
-    // Picking "Deleted" asks first (MIP-1301); the dialog is mounted only while a
-    // choice is pending, so a table of rows carries no closed dialogs.
-    const [pendingDeleted, setPendingDeleted] = useState(false);
 
     const handleStartEditTags = () => {
         setEditingField("tags");
@@ -783,7 +782,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             open
                             onClose={handleCancelEdit}
                             onChange={(next) => {
-                                if (isDeletingStatus(next, task.status)) setPendingDeleted(true);
+                                if (isDeletingStatus(next, task.status)) onDeleteTask(task);
                                 else handleSelectChange("status", next);
                                 handleCancelEdit();
                             }}
@@ -795,15 +794,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         <CellButton onClick={() => handleStartEdit("status", value as string)}>
                             <StatusLabel status={statusOption.value} />
                         </CellButton>
-                        {pendingDeleted && (
-                            <ConfirmDeletedStatus
-                                entityName={task.title ?? undefined}
-                                isMilestone={task.isMilestone === true}
-                                open
-                                onClose={() => setPendingDeleted(false)}
-                                onConfirm={() => void handleSelectChange("status", "Deleted")}
-                            />
-                        )}
                     </>
                 ) : null;
 

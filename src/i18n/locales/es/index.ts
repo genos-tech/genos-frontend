@@ -498,7 +498,6 @@ export const es: DeepPartial<Messages> = {
             activityEmpty: "Aún no hay nada registrado.",
             activityLoadFailed: "No se pudo cargar tu actividad de seguridad.",
             activityLoadMore: "Mostrar anteriores",
-            activityRetry: "Reintentar",
             teamsHeading: "Tus equipos",
             teamsDescription:
                 "Salir de un equipo termina tu acceso a sus chats, proyectos y notas. Tu cuenta y tus demás equipos no cambian, y alguien puede volver a invitarte más adelante.",
@@ -1254,6 +1253,7 @@ export const es: DeepPartial<Messages> = {
             everyoneAlreadyMember: "Todos ya son miembros.",
         },
         customEmoji: {
+            loadFailed: "No se pudieron cargar los emojis personalizados",
             heading: "Emojis personalizados",
             description:
                 "Se aceptan emojis para todo el equipo y GIF animados. Escribe :nombre: en cualquier editor, selecciónalos del selector de emojis o úsalos como reacciones. Cualquier miembro del equipo puede agregar uno; Sólo quien subió el archivo puede eliminarlo.",
@@ -1593,6 +1593,7 @@ export const es: DeepPartial<Messages> = {
             tag: "Etiqueta",
             general: "General",
             newTagPlaceholder: "Nueva etiqueta",
+            addTag: "Añadir etiqueta",
             tags: {
                 manageTitle: "Gestionar etiquetas",
                 manageTooltip: "Gestionar etiquetas",
@@ -1981,6 +1982,7 @@ export const es: DeepPartial<Messages> = {
             reactedLabel: "reaccionó",
         },
         gmTags: {
+            loadFailed: "No se pudieron cargar tus etiquetas",
             assignTitle: "Etiquetas para {name}",
             cancelButton: "Cancelar",
             createButton: "Agregar",
@@ -2471,10 +2473,7 @@ export const es: DeepPartial<Messages> = {
             taskProgressOther: "Otros",
         },
         createForm: {
-            bootstrapFailed:
-                "No se pudo preparar una nueva tarea. Comprueba tu conexión e inténtalo de nuevo.",
-            bootstrapRetry: "Reintentar",
-            bootstrapCancel: "Cancelar",
+            bootstrapFailed: "No se pudo preparar una nueva tarea",
             discardTaskTitle: "¿Descartar este borrador?",
             discardTaskBody:
                 "Se perderán el título, el cuerpo y los adjuntos. Esta acción no se puede deshacer.",
@@ -3101,6 +3100,12 @@ export const es: DeepPartial<Messages> = {
             allMembers: "Todos los miembros",
             noAssignee: "Sin cesionario",
         },
+        deleteUndo: {
+            deleted: "Tarea eliminada",
+            milestoneDeleted: "Hito eliminado",
+            errorRestored: "No se pudo eliminar la tarea. Ha vuelto.",
+            milestoneErrorRestored: "No se pudo eliminar el hito. Ha vuelto.",
+        },
         savedFilters: {
             button: "Filtros guardados",
             tooltip:
@@ -3425,6 +3430,8 @@ export const es: DeepPartial<Messages> = {
             },
         },
         history: {
+            detailLoadFailed: "No se pudo cargar esta versión",
+            listLoadFailed: "No se pudo cargar el historial de versiones",
             chipTooltip: "Ver historial de versiones",
             viewVersions: "Ver versiones",
             chipSummary: "Editado por {name} · {time}",
@@ -4464,6 +4471,7 @@ export const es: DeepPartial<Messages> = {
             loading: "Cargando…",
         },
         connectedTeams: {
+            loadFailed: "No se pudieron cargar los equipos conectados",
             title: "Equipos conectados",
             explainer:
                 "Una conexión te permite compartir más adelante un chat, proyecto o carpeta de notas con otra organización. Por sí sola no concede acceso a nada.",
@@ -4572,6 +4580,7 @@ export const es: DeepPartial<Messages> = {
             },
         },
         projectLabels: {
+            loadFailed: "No se pudieron cargar las etiquetas de proyecto",
             sectionLabel: "Etiquetas",
             manageTooltip: "Editar etiquetas",
             manageHeading: "Etiquetas de proyecto",
@@ -4796,8 +4805,7 @@ export const es: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "Conecta GitHub para ver el estado de la PR",
                 connectButton: "Conectar GitHub",
-                privateOrDeleted:
-                    "Esta PR pertenece a un repo privado al que no tienes acceso o se ha eliminado.",
+                loadFailed: "No se pudo cargar esta PR. Puede ser privada o haberse eliminado.",
                 state: {
                     merged: "Fusionado",
                     draft: "Borrador",
@@ -4931,7 +4939,6 @@ export const es: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "No se pudo cargar el resumen del hilo.",
-            retry: "Reintentar",
             forbidden: "No tienes acceso a este hilo.",
         },
     },
@@ -4992,7 +4999,6 @@ export const es: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "No se pudo cargar el resumen de la nota.",
-            retry: "Reintentar",
             forbidden: "No tienes acceso a esta nota.",
         },
     },
@@ -5351,6 +5357,7 @@ export const es: DeepPartial<Messages> = {
         },
     },
     calendar: {
+        eventsLoadFailed: "No se pudieron cargar tus eventos",
         title: "Calendario",
         today: "Hoy",
         prevMonth: "Mes anterior",
@@ -5412,6 +5419,7 @@ export const es: DeepPartial<Messages> = {
                 "Editar todos los eventos no desplaza la serie; el cambio de fecha solo se aplica a este evento.",
         },
         sources: {
+            loadFailed: "No se pudieron cargar tus calendarios",
             title: "Calendarios",
             addAccount: "Añadir cuenta de Google",
             showAllFrom: "Mostrar todos los calendarios de esta cuenta",

@@ -38,7 +38,9 @@ const mount = async (urls: string[], hideOnNotConnected = true) => {
     return view;
 };
 
-const placeholders = () => screen.queryAllByRole("button");
+// The failed card has its own Retry button; a placeholder is the one that names its PR.
+const placeholders = () =>
+    screen.queryAllByRole("button").filter((b) => b.hasAttribute("aria-label"));
 
 beforeEach(() => {
     mockStatus.mockReset();

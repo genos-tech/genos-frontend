@@ -1,11 +1,14 @@
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import { Box, IconButton } from "@mui/joy";
+import type { Socket } from "socket.io-client";
 
 import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import type { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { toBackendNoteType } from "../utils/noteTypeAlias";
+import { NoteAccessRequestPanel } from "./NoteAccessRequestPanel";
 import { NoteGoneState } from "./NoteGoneState";
 
 /**
@@ -15,7 +18,10 @@ import { NoteGoneState } from "./NoteGoneState";
  *  - a failed request: `ErrorState` with Retry (the toast that said so lasts 8 s;
  *    this stays until it is retried or another note opens),
  *  - a 404: "This note no longer exists" and NO Retry, which could never succeed,
- *  - a Retry in flight: a spinner, so a second failure is not a silent no-op.
+ *  - a Retry in flight: a spinner, so a second failure is not a silent no-op,
+ *  - a 403: the note exists and the user has no role on it (the shared-URL case), so the
+ *    access-request panel. A tab's editor panel shows it for a note that was read; none
+ *    opens for one that was not, which is this case (MIP-1330).
  *
  * On a phone the pane has no header of its own to hold a back button, so this
  * brings one (the same one an open note's header has).
@@ -23,9 +29,11 @@ import { NoteGoneState } from "./NoteGoneState";
 type NoteOpenFailureProps = {
     useNM: Pick<NoteManagementState, "noteOpenFailure" | "retryNoteOpen">;
     onMobileBack?: () => void;
+    /** Carries the access request of a 403. */
+    socket?: Socket | null;
 };
 
-export const NoteOpenFailure = ({ useNM, onMobileBack }: NoteOpenFailureProps) => {
+export const NoteOpenFailure = ({ useNM, onMobileBack, socket = null }: NoteOpenFailureProps) => {
     const { t } = useTranslation();
     const isMobile = useIsMobile();
     const failure = useNM.noteOpenFailure;
@@ -59,6 +67,15 @@ export const NoteOpenFailure = ({ useNM, onMobileBack }: NoteOpenFailureProps) =
                     </Box>
                 ) : failure.reason === "not_found" ? (
                     <NoteGoneState />
+                ) : failure.reason === "forbidden" ? (
+                    <NoteAccessRequestPanel
+                        // A new note is a new request ("sent" must not carry over).
+                        key={`${failure.noteType}-${failure.noteId}`}
+                        noteId={failure.noteId}
+                        // Shared (4) and team (8) notes live in note type 1 on the backend.
+                        noteType={toBackendNoteType(failure.noteType)}
+                        socket={socket}
+                    />
                 ) : (
                     <ErrorState
                         data-error="note-open"
