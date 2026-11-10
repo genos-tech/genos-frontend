@@ -2,10 +2,14 @@ import { memo } from "react";
 import { BaseEdge, EdgeProps, getSmoothStepPath } from "@xyflow/react";
 
 import { fmt, useTranslation } from "../../../../i18n";
+import { g } from "../../../../theme/tokens";
+import { DIMMED_OPACITY } from "../utils/lineage";
 
 type ParentChildEdgeData = {
     sourceTitle?: string | null;
     targetTitle?: string | null;
+    /** While a card is hovered (MIP-1278): "active" = on its lineage, "dim" = not. */
+    lineage?: "active" | "dim";
 };
 
 // Solid purple smooth-step with no arrow head. Parent-child has no
@@ -38,6 +42,7 @@ export const ParentChildEdge = memo(
         });
 
         const d = (data as ParentChildEdgeData | undefined) ?? {};
+        const active = selected || d.lineage === "active";
         const tooltipText =
             d.sourceTitle && d.targetTitle
                 ? fmt(t.tasks.diagram.tooltips.parentChild, {
@@ -60,10 +65,20 @@ export const ParentChildEdge = memo(
                 <BaseEdge
                     path={path}
                     style={{
-                        stroke: selected ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)",
-                        strokeWidth: selected ? 2.5 : 1.75,
-                        opacity: 0.85,
-                        transition: "stroke 0.15s ease, stroke-width 0.15s ease",
+                        stroke: selected
+                            ? "var(--gp-brandalt-400)"
+                            : d.lineage === "active"
+                              ? g.accent.solid
+                              : "var(--gp-brand-700)",
+                        strokeWidth: active ? 2.5 : 1.75,
+                        opacity:
+                            d.lineage === "dim"
+                                ? DIMMED_OPACITY
+                                : d.lineage === "active"
+                                  ? 1
+                                  : 0.85,
+                        transition:
+                            "stroke 0.15s ease, stroke-width 0.15s ease, opacity 0.15s ease",
                         pointerEvents: "none",
                         ...style,
                     }}

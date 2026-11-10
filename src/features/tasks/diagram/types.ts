@@ -43,6 +43,12 @@ export type TaskNodeData = {
      */
     isNewlyCreated?: boolean;
     /**
+     * True while a card is hovered and this one is in its lineage: the card
+     * itself, its ancestors up to the root and all its descendants (MIP-1278).
+     * Drives the `lineage` look. Set by the canvas, never stored.
+     */
+    isInLineage?: boolean;
+    /**
      * True when this node's task is assigned to the "viewer" the diagram was
      * opened to highlight (see `ModalTaskDiagram.highlightAssigneeId`). Opt-in:
      * only the dashboard's "Assigned Milestones" section sets it, so every
