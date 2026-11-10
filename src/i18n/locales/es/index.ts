@@ -1173,6 +1173,17 @@ export const es: DeepPartial<Messages> = {
                     lift: "Levantar una tarjeta (las flechas la mueven, Espacio la suelta, Esc cancela)",
                 },
             },
+            calendar: {
+                title: "Calendario",
+                description:
+                    "Activo mientras un día o un evento del calendario tiene el foco. Tab entra y sale de la cuadrícula (el mes es una parada; las vistas de semana y día, una por día); estas teclas se mueven dentro de ella.",
+                rows: {
+                    move: "Moverse entre días y semanas (mes) o entre eventos y días (vistas de semana y día)",
+                    edges: "Primer / último día de la semana (mes), primer / último evento del día (vistas de semana y día)",
+                    page: "Mes anterior / siguiente (vista de mes)",
+                    open: "Abrir los eventos del día o el evento; un día vacío crea un evento nuevo",
+                },
+            },
             editing: {
                 title: "Al escribir",
                 description:

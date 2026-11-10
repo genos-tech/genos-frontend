@@ -4335,6 +4335,17 @@ export const fr: DeepPartial<Messages> = {
                     lift: "Soulever une carte (les flèches la déplacent, Espace la dépose, Échap annule)",
                 },
             },
+            calendar: {
+                title: "Calendrier",
+                description:
+                    "Actif tant qu'un jour ou un événement du calendrier a le focus. Tab entre dans la grille et en sort (le mois est un seul arrêt, les vues semaine et jour un par jour) ; ces touches se déplacent à l'intérieur.",
+                rows: {
+                    move: "Se déplacer entre les jours et les semaines (mois), ou entre les événements et les jours (vues semaine et jour)",
+                    edges: "Premier / dernier jour de la semaine (mois), premier / dernier événement du jour (vues semaine et jour)",
+                    page: "Mois précédent / suivant (vue mois)",
+                    open: "Ouvrir les événements du jour ou l'événement ; un jour vide crée un nouvel événement",
+                },
+            },
             editing: {
                 title: "Pendant la rédaction",
                 description:

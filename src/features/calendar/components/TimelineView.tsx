@@ -6,11 +6,19 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
+import {
+    columnMove,
+    ROVING_GROUP_ATTR,
+    ROVING_ITEM_ATTR,
+    ROVING_SORT_ATTR,
+    useRovingNav,
+    type RovingConfig,
+} from "../../../hooks/common/roving";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
-import { CalendarView, timelineDays } from "../utils/monthGrid";
+import { CalendarView, formatCalendarDate, timelineDays } from "../utils/monthGrid";
 import { isMultiDaySpan, layoutSpanSegments } from "../utils/multiDay";
 import { paletteForEvent } from "../utils/sourceColors";
 import {
@@ -61,6 +69,25 @@ const hourLabel = (h: number): string => {
     return `${disp} ${suffix}`;
 };
 
+/**
+ * The roving tab stops of the week / 3-day / day views (MIP-1402): ONE Tab stop per day
+ * column, the active event of that day. Up / Down move between the day's events (all-day
+ * first, then by start time), Left / Right between days, Home / End the first / last event
+ * of the day. An event belongs to the column of its first visible day (a bar over three days
+ * is reached from the first), and a day with nothing on it has no stop.
+ */
+const TIMELINE_NAV: RovingConfig = { move: columnMove, groupOrder: "sorted" };
+
+/** The nav's id of an event: ids are unique per calendar, not globally (see `CalendarEvent`). */
+const itemId = (kind: "bar" | "all-day" | "timed", e: CalendarEvent): string =>
+    `${kind}|${e._source?.account_id ?? ""}|${e._source?.calendar_id ?? ""}|${e.id}`;
+
+const navAttrs = (day: Dayjs, id: string, sort: number) => ({
+    [ROVING_GROUP_ATTR]: day.format("YYYY-MM-DD"),
+    [ROVING_ITEM_ATTR]: id,
+    [ROVING_SORT_ATTR]: String(sort),
+});
+
 /** True if the timed event's start lands on `day` (compared in
  *  the user's local TZ). Multi-day timed events render only on
  *  their start day per the plan. */
@@ -109,9 +136,10 @@ export const TimelineView = ({
     busyLabel,
 }: TimelineViewProps) => {
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const isDark = mode === "dark";
     const isMobile = useIsMobile();
+    const { ref: navRef } = useRovingNav(TIMELINE_NAV);
 
     const days = useMemo(() => timelineDays(view, anchor), [view, anchor]);
 
@@ -154,6 +182,7 @@ export const TimelineView = ({
 
     return (
         <Box
+            ref={navRef}
             sx={{
                 display: "flex",
                 flexDirection: "column",
@@ -299,6 +328,11 @@ export const TimelineView = ({
                                 }
                             >
                                 <Clickable
+                                    {...navAttrs(
+                                        days[segment.startIndex],
+                                        itemId("bar", segment.event),
+                                        -2
+                                    )}
                                     sx={{
                                         gridColumn: `${segment.startIndex + 1} / ${segment.endIndex + 2}`,
                                         gridRow: segment.lane + 1,
@@ -377,6 +411,7 @@ export const TimelineView = ({
                                             }
                                         >
                                             <Clickable
+                                                {...navAttrs(d, itemId("all-day", e), -1)}
                                                 sx={{
                                                     cursor: "pointer",
                                                     backgroundColor: palette.fill,
@@ -454,6 +489,13 @@ export const TimelineView = ({
                         return (
                             <Box
                                 key={d.toString()}
+                                aria-label={formatCalendarDate(d, locale, {
+                                    weekday: "long",
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                })}
+                                role="group"
                                 sx={{
                                     position: "relative",
                                     borderLeft: `1px solid ${gridLine}`,
@@ -512,6 +554,11 @@ export const TimelineView = ({
                                             title={`${event.summary || "(no title)"} · ${start.format("h:mm A")}–${end.format("h:mm A")}${event._source?.account_email ? ` — ${event._source.account_email}` : ""}`}
                                         >
                                             <Clickable
+                                                {...navAttrs(
+                                                    d,
+                                                    itemId("timed", event),
+                                                    start.valueOf()
+                                                )}
                                                 sx={{
                                                     position: "absolute",
                                                     top,

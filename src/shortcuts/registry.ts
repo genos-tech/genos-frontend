@@ -51,10 +51,11 @@ export type ShortcutScope =
     | "composer"
     | "taskCreate"
     | "taskTable"
-    | "taskBoard";
+    | "taskBoard"
+    | "calendar";
 
 /** The Settings group a shortcut is listed under. */
-export type ShortcutGroup = "global" | "chat" | "editing" | "table" | "board";
+export type ShortcutGroup = "global" | "chat" | "editing" | "table" | "board" | "calendar";
 
 /** What a handler may do when the key is pressed inside a text field. */
 export type EditablePolicy = "allow" | "skip";
@@ -360,6 +361,46 @@ export const SHORTCUTS = {
         keys: NONE,
         parts: ["Space"],
         label: (t) => t.settings?.shortcuts?.board?.rows?.lift,
+        editable: "allow",
+    },
+    // The calendar's keys (MIP-1402): the month view is a date grid with ONE Tab stop, the week /
+    // 3-day / day views have one per day. Their code is `monthMove` / `columnMove` and
+    // `useRovingNav` (`hooks/common/roving`), listed here so Settings can show them, not matched
+    // through the registry. Same keys on both platforms. A test pins them to those functions.
+    "calendar.move": {
+        kind: "gesture",
+        scope: "calendar",
+        group: "calendar",
+        keys: NONE,
+        parts: ["← ↑ ↓ →"],
+        label: (t) => t.settings?.shortcuts?.calendar?.rows?.move,
+        editable: "allow",
+    },
+    "calendar.edges": {
+        kind: "gesture",
+        scope: "calendar",
+        group: "calendar",
+        keys: NONE,
+        parts: ["Home / End"],
+        label: (t) => t.settings?.shortcuts?.calendar?.rows?.edges,
+        editable: "allow",
+    },
+    "calendar.page": {
+        kind: "gesture",
+        scope: "calendar",
+        group: "calendar",
+        keys: NONE,
+        parts: ["PageUp / PageDown"],
+        label: (t) => t.settings?.shortcuts?.calendar?.rows?.page,
+        editable: "allow",
+    },
+    "calendar.open": {
+        kind: "gesture",
+        scope: "calendar",
+        group: "calendar",
+        keys: NONE,
+        parts: ["Enter"],
+        label: (t) => t.settings?.shortcuts?.calendar?.rows?.open,
         editable: "allow",
     },
 } as const satisfies Record<string, ShortcutDef>;
