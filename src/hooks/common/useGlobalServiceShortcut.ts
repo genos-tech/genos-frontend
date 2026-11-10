@@ -125,7 +125,7 @@ export type GlobalServiceShortcutOptions = {
      */
     onOpenTaskDiagram?: () => void;
     /**
-     * Fired on `Ctrl+Cmd+O` (mac) / `Ctrl+Alt+O` (other). Opens the user's
+     * Fired on `Ctrl+Cmd+D` (mac) / `Ctrl+Alt+D` (other). Opens the user's
      * ToDo pane (a sub-pane of the self-DM chat). The handler owns
      * resolving the self-DM, navigating to it and revealing the pane; this
      * hook just dispatches the keypress.

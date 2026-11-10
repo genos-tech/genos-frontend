@@ -213,12 +213,19 @@ describe("clicking a tile", () => {
 });
 
 describe("the letter shortcut is unchanged", () => {
-    it("Ctrl+Cmd+O calls onOpenTodo and cancels a cycle in progress", () => {
+    it("Ctrl+Cmd+D calls onOpenTodo and cancels a cycle in progress", () => {
         const onOpenTodo = vi.fn();
         const { result } = setup("/workspace/tasks", { onOpenTodo });
         tapCtrl(1);
-        key("keydown", { key: "o", ctrlKey: true, metaKey: true });
+        key("keydown", { key: "d", ctrlKey: true, metaKey: true });
         expect(onOpenTodo).toHaveBeenCalledTimes(1);
         expect(result.current.hook.previewIndex).toBeNull();
+    });
+
+    it("the old Ctrl+Cmd+O no longer opens the to-do list (MIP-1355)", () => {
+        const onOpenTodo = vi.fn();
+        setup("/workspace/tasks", { onOpenTodo });
+        key("keydown", { key: "o", ctrlKey: true, metaKey: true });
+        expect(onOpenTodo).not.toHaveBeenCalled();
     });
 });

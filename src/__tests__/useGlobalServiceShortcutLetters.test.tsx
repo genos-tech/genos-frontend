@@ -39,7 +39,7 @@ const CASES: Array<[string, keyof GlobalServiceShortcutOptions]> = [
     ["m", "onQuickMeetClipboard"],
     ["h", "onOpenHistory"],
     ["g", "onOpenTaskDiagram"],
-    ["o", "onOpenTodo"],
+    ["d", "onOpenTodo"],
 ];
 
 beforeEach(() => {
