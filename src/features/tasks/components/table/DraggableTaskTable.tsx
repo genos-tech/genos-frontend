@@ -45,6 +45,7 @@ import {
     collectDescendantIds,
     TreePosition,
 } from "../../utils/cascadeTreePosition";
+import { selectChildrenByParent } from "../../utils/childrenByParent";
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
 import {
     DND_ACTIVE_ATTR,
@@ -598,19 +599,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         // is `null` the filter pass hasn't run yet — fall through to a
         // permissive build to avoid blanking out children on the very
         // first render before TaskFilterMenu's `useEffect` fires.
-        const map = new Map<string, TaskTableProps[]>();
-        for (const task of useTM.allTasks) {
-            if (task.parentTaskId == null) continue;
-            if (visibleChildTaskIds === null) {
-                if (task.status === "Deleted") continue;
-            } else if (task.id == null || !visibleChildTaskIds.has(String(task.id))) {
-                continue;
-            }
-            const parentId = String(task.parentTaskId);
-            const arr = map.get(parentId) || [];
-            arr.push(task);
-            map.set(parentId, arr);
-        }
+        const map = selectChildrenByParent(useTM.allTasks, visibleChildTaskIds);
         // Subtasks obey the user's sort condition too. Without this the
         // groups render in raw `allTasks` order, so changing the sort
         // reorders the root rows while every expanded subtask group sits
