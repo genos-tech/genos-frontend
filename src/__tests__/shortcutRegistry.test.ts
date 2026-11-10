@@ -291,17 +291,24 @@ describe("no silent clashes", () => {
 
     /**
      * Chords the rich-text editor binds itself. Both run for one keypress (nothing checks
-     * `defaultPrevented`): Cmd/Ctrl+K opens Spotlight over the link popover, and on Windows
-     * Ctrl+Alt+C opens the calendar and makes a code block. Documented, not fixed here.
+     * `defaultPrevented`). Cmd/Ctrl+K is settled by a claim: Spotlight wins and BlockNote's link
+     * popover never sees the key (MIP-1310), so it is not listed here; a shortcut that
+     * `claimsEditor` is skipped below. Windows Ctrl+Alt+C (calendar + code block) is still open.
      */
     const KNOWN_EDITOR_OVERLAPS: Record<Platform, string[]> = {
-        mac: ["global.spotlight|blocknote.link"],
-        other: ["global.calendar|blocknote.codeBlock", "global.spotlight|blocknote.link"],
+        mac: [],
+        other: ["global.calendar|blocknote.codeBlock"],
     };
+
+    it("Spotlight claims Cmd/Ctrl+K from the editor (the only claim)", () => {
+        const claiming = SHORTCUT_IDS.filter((id) => "claimsEditor" in SHORTCUTS[id]);
+        expect(claiming).toEqual(["global.spotlight"]);
+    });
 
     it.each(PLATFORMS)("every overlap with an editor chord is a known one (%s)", (platform) => {
         const found: string[] = [];
         for (const id of SHORTCUT_IDS) {
+            if ("claimsEditor" in SHORTCUTS[id]) continue;
             const mine = new Set(chordsOf(id, platform));
             for (const ec of EDITOR_CHORDS.filter((c) => c.platform === platform)) {
                 if (sig(ec.chord).some((s) => mine.has(s))) found.push(`${id}|${ec.id}`);

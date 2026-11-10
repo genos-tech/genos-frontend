@@ -69,6 +69,13 @@ export type ShortcutDef = {
     label: (t: ShortcutCatalog) => string | undefined;
     /** Fire while the focus is in an input, textarea or contenteditable? */
     editable: EditablePolicy;
+    /**
+     * This shortcut wins over an editor chord on the same keys (Cmd/Ctrl+K: Spotlight,
+     * not BlockNote's link popover, MIP-1310). `useShortcut` then listens in the capture
+     * phase and stops the event after the handler runs, so the editor never sees the key.
+     * The overlap test lets a claiming shortcut share keys with `EDITOR_CHORDS`.
+     */
+    claimsEditor?: true;
 };
 
 const NONE: Record<Platform, readonly Chord[]> = { mac: [], other: [] };
@@ -100,6 +107,7 @@ export const SHORTCUTS = {
         },
         label: (t) => t.settings?.shortcuts?.global?.rows?.spotlight,
         editable: "allow",
+        claimsEditor: true,
     },
     "global.tasksNew": {
         kind: "chord",
@@ -230,7 +238,10 @@ export type ShortcutId = keyof typeof SHORTCUTS;
  * Chords the rich-text editor binds itself, which can fire together with ours.
  * BlockNote listens on the editor, we listen on `document`, and neither checks
  * `defaultPrevented`, so both run (MIP-1275 evidence, items 1 and 2). They are
- * written down so the test can name every overlap instead of hiding it.
+ * written down so the test can name every overlap instead of hiding it. An
+ * overlap is resolved either by listing it as known, or by the registry
+ * shortcut `claimsEditor` (Cmd/Ctrl+K, MIP-1310: BlockNote's link popover never
+ * sees the key; the link button still opens it).
  */
 export const EDITOR_CHORDS: ReadonlyArray<{ id: string; platform: Platform; chord: Chord }> = [
     { id: "blocknote.link", platform: "mac", chord: { key: "k", mods: ["meta"] } },

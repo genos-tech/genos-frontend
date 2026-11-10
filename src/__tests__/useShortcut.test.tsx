@@ -126,4 +126,30 @@ describe("useShortcut", () => {
         press({ key: "Enter", metaKey: true }, window);
         expect(handler).toHaveBeenCalledTimes(2);
     });
+
+    it("a shortcut that claims its keys reaches the handler before the editor and ends the event (Cmd+K, MIP-1310)", () => {
+        const handler = vi.fn();
+        renderHook(() => useShortcut("global.spotlight", handler));
+        const editor = document.body.appendChild(document.createElement("div"));
+        editor.setAttribute("contenteditable", "true");
+        // BlockNote's CreateLinkButton listens on the editor element, in the bubble phase.
+        const editorOwn = vi.fn((e: Event) => e.preventDefault());
+        editor.addEventListener("keydown", editorOwn);
+        const e = press({ key: "k", metaKey: true }, editor);
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(editorOwn).not.toHaveBeenCalled();
+        expect(e.defaultPrevented).toBe(false); // the handler decides preventDefault, not the editor
+    });
+
+    it("a shortcut that does not claim leaves the editor's own listener running", () => {
+        const handler = vi.fn();
+        renderHook(() => useShortcut("global.tasksNew", handler));
+        const editor = document.body.appendChild(document.createElement("div"));
+        const editorOwn = vi.fn();
+        editor.addEventListener("keydown", editorOwn);
+        mac = true;
+        press({ key: "t", ctrlKey: true, metaKey: true }, editor);
+        expect(handler).toHaveBeenCalledTimes(1);
+        expect(editorOwn).toHaveBeenCalledTimes(1);
+    });
 });
