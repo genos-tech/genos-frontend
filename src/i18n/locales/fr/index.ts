@@ -207,6 +207,17 @@ export const fr: DeepPartial<Messages> = {
             comingSoon: "Bientôt disponible",
         },
         teamProfile: {
+            pendingInvites: {
+                title: "Invitations en attente ({count})",
+                detail: "Invité par {name} · expire le {date}",
+                guestOf: "Invité de {project}",
+                cancelNamed: "Annuler l’invitation de {email}",
+                confirmTitle: "Annuler l’invitation de {email} ?",
+                confirmBody:
+                    "Le lien de son e-mail cesse de fonctionner immédiatement. Vous pourrez l’inviter à nouveau plus tard.",
+                confirm: "Annuler l’invitation",
+                keep: "Garder",
+            },
             title: "Profil d'équipe - {teamName}",
             editTeamImage: "Modifier l'image de l'équipe",
             teamName: "Nom de l'équipe",
@@ -1605,6 +1616,27 @@ export const fr: DeepPartial<Messages> = {
         personPicker: {
             youSuffix: "(Vous)",
             noMatches: "Aucune correspondance",
+        },
+        memberRemoval: {
+            remove: "Retirer",
+            removeNamed: "Retirer {name}",
+            failed: "Impossible de retirer ce membre. Réessayez.",
+            titleTeam: "Retirer {name} de {scope} ?",
+            titleProject: "Retirer {name} de {scope} ?",
+            titleChat: "Retirer {name} de {scope} ?",
+            bodyTeam:
+                "{name} perdra l’accès à {scope} et à tous les projets et conversations qu’elle contient. Ses clés d’API d’équipe cesseront de fonctionner et ses applications d’IA connectées perdront cette équipe. Ses messages et son travail passés sont conservés. Vous pourrez l’inviter à nouveau plus tard.",
+            bodyProject:
+                "{name} perdra l’accès à {scope} et à sa conversation. La personne reste dans l’équipe et garde ses autres projets. Vous pourrez l’ajouter à nouveau plus tard.",
+            bodyChat:
+                "{name} ne verra plus et ne recevra plus les messages de {scope}. Les messages passés sont conservés. Vous pourrez l’ajouter à nouveau plus tard.",
+            unassign: "Désassigner son travail en cours",
+            unassignCount:
+                "{tasks, plural, one {# tâche ouverte} other {# tâches ouvertes}} et {milestones, plural, one {# jalon} other {# jalons}}",
+            unassignHint: "Le travail terminé garde son responsable.",
+            loadingWork: "Vérification de son travail en cours…",
+            confirm: "Retirer",
+            cancel: "Annuler",
         },
         memberRoles: {
             owner: "Propriétaire",
@@ -3427,6 +3459,21 @@ export const fr: DeepPartial<Messages> = {
                         "Tout ce qui utilise cette clé d'équipe cesse de fonctionner immédiatement, et une clé révoquée ne peut pas être réactivée. Son créateur devra en créer une nouvelle.",
                     confirm: "Révoquer la clé",
                 },
+            },
+            teamApps: {
+                title: "Apps d’IA connectées",
+                blurb: "Claude, ChatGPT et autres apps d’IA que des membres ont connectées et qui peuvent travailler dans cette équipe. Le propriétaire peut mettre fin à n’importe laquelle ; un éditeur, à celles d’un lecteur. Cela retire seulement cette équipe : les autres équipes de la personne continuent de fonctionner.",
+                empty: "Aucune app d’IA n’est connectée à cette équipe.",
+                connectedBy: "Connectée par {name}",
+                otherTeams:
+                    "aussi dans {count, plural, one {# autre équipe} other {# autres équipes}}",
+                end: "Mettre fin à l’accès à cette équipe",
+                endNamed: "Mettre fin à {app} pour {name}",
+                confirmTitle: "Mettre fin à {app} pour {name} ?",
+                confirmBody:
+                    "{app} cesse de fonctionner dans cette équipe pour {name}. Ses autres équipes ne sont pas touchées et la personne peut la reconnecter elle-même.",
+                confirm: "Mettre fin à l’accès",
+                cancel: "Annuler",
             },
             teamKeys: {
                 title: "Clés API de l'équipe",

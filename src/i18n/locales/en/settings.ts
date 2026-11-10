@@ -278,9 +278,23 @@ export const settings = {
         },
         // Owner-only. Lists every live key bound to the team, including
         // the ones editors made, which the list above never shows.
+        teamApps: {
+            title: "Connected AI apps",
+            blurb: "Claude, ChatGPT and other AI apps that members connected and that can work in this team. The owner can end any of them; an editor can end a viewer's. Ending one removes only this team: that person's other teams keep working.",
+            empty: "No AI apps are connected to this team.",
+            connectedBy: "Connected by {name}",
+            otherTeams: "also {count, plural, one {# other team} other {# other teams}}",
+            end: "End access to this team",
+            endNamed: "End {app} for {name}",
+            confirmTitle: "End {app} for {name}?",
+            confirmBody:
+                "{app} stops working in this team for {name}. Their other teams are not affected, and they can connect it again themselves.",
+            confirm: "End access",
+            cancel: "Cancel",
+        },
         teamKeys: {
             title: "Team API keys",
-            blurb: "Every key that can act on this team, whoever made it. As the owner, you can revoke any of them. A key also stops working when its creator leaves the team.",
+            blurb: "Every key that can act on this team, whoever made it. The owner can revoke any of them; an editor can revoke a viewer's, or their own. A key also stops working when its creator leaves the team.",
             empty: "No team keys right now.",
             createdBy: "Made by {name}",
             revokeNamed: "Revoke {name}",

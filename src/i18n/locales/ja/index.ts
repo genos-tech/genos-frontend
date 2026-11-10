@@ -202,6 +202,16 @@ export const ja: DeepPartial<Messages> = {
             comingSoon: "近日公開",
         },
         teamProfile: {
+            pendingInvites: {
+                title: "保留中の招待 ({count})",
+                detail: "招待者: {name} · 有効期限 {date}",
+                guestOf: "{project} のゲスト",
+                cancelNamed: "{email} への招待を取り消す",
+                confirmTitle: "{email} への招待を取り消しますか？",
+                confirmBody: "メールのリンクはすぐに使えなくなります。後からまた招待できます。",
+                confirm: "招待を取り消す",
+                keep: "そのままにする",
+            },
             title: "チームプロフィール - {teamName}",
             editTeamImage: "チーム画像を編集",
             teamName: "チーム名",
@@ -1586,6 +1596,27 @@ export const ja: DeepPartial<Messages> = {
         personPicker: {
             youSuffix: "（あなた）",
             noMatches: "一致しません",
+        },
+        memberRemoval: {
+            remove: "削除",
+            removeNamed: "{name} を削除",
+            failed: "メンバーを削除できませんでした。もう一度お試しください。",
+            titleTeam: "{name} を {scope} から削除しますか？",
+            titleProject: "{name} を {scope} から削除しますか？",
+            titleChat: "{name} を {scope} から削除しますか？",
+            bodyTeam:
+                "{name} は {scope} と、その中のすべてのプロジェクトとチャットにアクセスできなくなります。チームの API キーは使えなくなり、接続済みの AI アプリからもこのチームが外れます。過去のメッセージや作業は残ります。後からまた招待できます。",
+            bodyProject:
+                "{name} は {scope} とそのチャットにアクセスできなくなります。チームには残り、ほかのプロジェクトも引き続き使えます。後からまた追加できます。",
+            bodyChat:
+                "{name} は {scope} のメッセージを見ることも受け取ることもできなくなります。過去のメッセージは残ります。後からまた追加できます。",
+            unassign: "未完了の作業の担当を外す",
+            unassignCount:
+                "{tasks, plural, one {# 件の未完了タスク} other {# 件の未完了タスク}}と{milestones, plural, one {# 件のマイルストーン} other {# 件のマイルストーン}}",
+            unassignHint: "完了済みの作業の担当者はそのまま残ります。",
+            loadingWork: "未完了の作業を確認しています…",
+            confirm: "削除",
+            cancel: "キャンセル",
         },
         memberRoles: {
             owner: "オーナー",
@@ -3385,6 +3416,20 @@ export const ja: DeepPartial<Messages> = {
                         "このチームキーを使っているものはすぐに動作しなくなり、取り消したキーを元に戻すことはできません。作成者は新しいキーを作成する必要があります。",
                     confirm: "キーを取り消す",
                 },
+            },
+            teamApps: {
+                title: "接続済みの AI アプリ",
+                blurb: "メンバーが接続した、このチームで動作できる Claude や ChatGPT などの AI アプリです。オーナーはすべて、編集者は閲覧者のものを終了できます。終了するとこのチームだけが外れ、その人のほかのチームはそのまま使えます。",
+                empty: "このチームに接続されている AI アプリはありません。",
+                connectedBy: "接続した人: {name}",
+                otherTeams: "ほか {count, plural, one {# チーム} other {# チーム}}でも使用",
+                end: "このチームへのアクセスを終了",
+                endNamed: "{name} の {app} を終了",
+                confirmTitle: "{name} の {app} を終了しますか？",
+                confirmBody:
+                    "{name} の {app} は、このチームで動作しなくなります。ほかのチームには影響せず、本人がもう一度接続することもできます。",
+                confirm: "アクセスを終了",
+                cancel: "キャンセル",
             },
             teamKeys: {
                 title: "チームの API キー",

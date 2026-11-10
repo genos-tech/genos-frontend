@@ -47,6 +47,7 @@ import { AppTooltip } from "../ui/AppTooltip";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { SecurityLogSection } from "./SecurityLogSection";
+import { TeamConnectedAppsSection } from "./TeamConnectedAppsSection";
 
 /** What a revoke / delete is waiting on a yes for (MIP-1301). One dialog serves all three. */
 type PendingRemoval =
@@ -81,8 +82,8 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const d = t.settings.developer;
 
     const [keys, setKeys] = useState<ApiKey[]>([]);
-    // `null` = not the team's owner (or no team): the section is hidden,
-    // not shown empty — an editor seeing "no team keys" would read it as
+    // `null` = not a manager of the team (or no team): the section is hidden,
+    // not shown empty — a plain member seeing "no team keys" would read it as
     // a fact about the team rather than about their access.
     const [teamKeys, setTeamKeys] = useState<TeamApiKey[] | null>(null);
     const [hooks, setHooks] = useState<WebhookEndpoint[]>([]);
@@ -397,7 +398,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 ))}
             </Stack>
 
-            {/* ── Team keys (owner only) ───────────────────────────── */}
+            {/* ── Team keys (owner or editor) ──────────────────────── */}
             {/* Every live key bound to this team, whoever minted it. An
                 editor's team key acts on the team for up to a year, and
                 the list above shows the caller's own keys only, so
@@ -450,28 +451,38 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                 <Chip size="sm" variant="soft">
                                     {k.scope === "write" ? d.keys.scopeWrite : d.keys.scopeRead}
                                 </Chip>
-                                <AppTooltip title={d.keys.revoke}>
-                                    <IconButton
-                                        size="sm"
-                                        variant="plain"
-                                        color="danger"
-                                        aria-label={fmt(d.teamKeys.revokeNamed, { name: k.name })}
-                                        onClick={() =>
-                                            setPendingRemoval({
-                                                kind: "teamKey",
-                                                id: k.id,
+                                {/* An editor sees every key but ends only a viewer's or their
+                                    own; the server decides, this only hides the button. */}
+                                {k.revocable !== false && (
+                                    <AppTooltip title={d.keys.revoke}>
+                                        <IconButton
+                                            size="sm"
+                                            variant="plain"
+                                            color="danger"
+                                            aria-label={fmt(d.teamKeys.revokeNamed, {
                                                 name: k.name,
-                                            })
-                                        }
-                                    >
-                                        <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                </AppTooltip>
+                                            })}
+                                            onClick={() =>
+                                                setPendingRemoval({
+                                                    kind: "teamKey",
+                                                    id: k.id,
+                                                    name: k.name,
+                                                })
+                                            }
+                                        >
+                                            <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                )}
                             </Stack>
                         </Sheet>
                     ))}
                 </Stack>
             )}
+
+            {/* The AI apps connected by members that can work in this team (MIP-1371):
+                renders nothing unless the caller is the owner or an editor. */}
+            {teamId && <TeamConnectedAppsSection teamId={teamId} />}
 
             {/* ── Security log (owner only; hides itself otherwise) ── */}
             {teamId && <SecurityLogSection teamId={teamId} />}

@@ -35,6 +35,7 @@ import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/Fi
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
+import { useMemberRemoval } from "../../../../components/ui/memberRoles/useMemberRemoval";
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
@@ -160,6 +161,21 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     // row to viewer, and the FK is what decides here too.
     const myRole = resolveMyRole(myself.userId, gmProfile?.ownerUserId, gmProfile?.gmMembers);
     const canManage = !!gmProfile && canManageMembers(myRole);
+
+    // Removing someone else (MIP-1371): owner removes anyone, an editor only viewers. Over the
+    // same socket rail Leave uses; the server broadcasts `channel.member_removed`, so this
+    // roster (re-derived from the snapshot) drops them without a local patch, and a chat has
+    // no tasks to unassign.
+    const removal = useMemberRemoval({
+        kind: "chat",
+        scopeName: gmProfile?.gmName ?? gmChat.chatName ?? "",
+        ownerUserId: gmProfile?.ownerUserId,
+        myRole,
+        myUserId: myself.userId,
+        zIndex: PROFILE_MODAL_Z_INDEX + 2,
+        remove: (userId) => channelService.removeMember(gmChat.chatId, ChannelKind.GM, userId),
+        onRemoved: () => {},
+    });
 
     const handleMemberRoleChange = async (
         userId: string,
@@ -907,7 +923,20 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             useCM={useCM}
                                                             useUISM={useUISM}
                                                         />
-                                                        <Box sx={{ ml: "auto", pl: 1 }}>
+                                                        <Box
+                                                            sx={{
+                                                                ml: "auto",
+                                                                pl: 1,
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                gap: 0.5,
+                                                            }}
+                                                        >
+                                                            {removal.button({
+                                                                userId: member.userId,
+                                                                memberRole: member.memberRole,
+                                                                name: member.userName,
+                                                            })}
                                                             <MemberRoleControl
                                                                 canManage={canManage}
                                                                 memberRole={member.memberRole}
@@ -1081,6 +1110,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                     </Card>
                 </Stack>
             </ModalFrame>
+            {removal.dialog}
             <ModalLeaveConfirm
                 description={t.common.leaveConfirm.gmDescription}
                 entityName={gmChat.chatName}

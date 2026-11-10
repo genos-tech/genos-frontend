@@ -192,6 +192,17 @@ export const admin = {
         comingSoon: "Coming soon",
     },
     teamProfile: {
+        pendingInvites: {
+            title: "Pending invites ({count})",
+            detail: "Invited by {name} · expires {date}",
+            guestOf: "Guest of {project}",
+            cancelNamed: "Cancel the invite for {email}",
+            confirmTitle: "Cancel the invite for {email}?",
+            confirmBody:
+                "The link in their email stops working at once. You can invite them again later.",
+            confirm: "Cancel invite",
+            keep: "Keep invite",
+        },
         title: "Team Profile - {teamName}",
         editTeamImage: "Edit Team Image",
         teamName: "Team Name",

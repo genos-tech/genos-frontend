@@ -169,11 +169,14 @@ export interface TeamApiKey extends ApiKey {
     userId: string;
     userName: string;
     userEmail: string;
+    /** May THIS caller revoke it? The owner any key; an editor a viewer's, their own (MIP-1371).
+     *  Absent from an older server: treated as revocable, and the server decides. */
+    revocable?: boolean;
 }
 
-/** Every live key bound to `teamId`. Owner only: the server answers 404
- *  to everyone else (editors included), and that is `null` here, which
- *  the panel reads as "don't show the section" rather than an error. */
+/** Every live key bound to `teamId`. Owner or editor: the server answers 404
+ *  to everyone else, and that is `null` here, which the panel reads as
+ *  "don't show the section" rather than an error. */
 export const listTeamApiKeys = async (
     accessToken: string | null,
     teamId: string

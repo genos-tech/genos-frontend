@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
 import { channelService } from "../../services/channel/channelService";
+import { handleMembershipRemoved } from "../../services/channel/membershipRemoved";
 import { registerSocketRouter, V3_NAMESPACE } from "../../services/channel/socketRouter";
 import { ChannelKind } from "../../types/channel";
 import { fakeChannel, fakeMessage, fakeReaction } from "../helpers/factories";
@@ -29,6 +30,11 @@ vi.mock("../../features/chat/services/handleV3Activity", () => ({
 // readActivityIds list.
 vi.mock("../../features/chat/services/handleV3ActivitiesRead", () => ({
     handleV3ActivitiesRead: vi.fn(),
+}));
+
+// The removal notice reloads the page for a lost team, so it is mocked here and tested on its own.
+vi.mock("../../services/channel/membershipRemoved", () => ({
+    handleMembershipRemoved: vi.fn(),
 }));
 
 /**
@@ -112,7 +118,7 @@ describe("registerSocketRouter", () => {
         expect(V3_NAMESPACE).toBe("/v3");
     });
 
-    it("registers exactly one handler per server event (20 events)", () => {
+    it("registers exactly one handler per server event (21 events)", () => {
         const expected = [
             "message.created",
             "message.updated",
@@ -125,6 +131,7 @@ describe("registerSocketRouter", () => {
             "channel.updated",
             "channel.member_added",
             "channel.member_removed",
+            "membership.removed",
             "resync.batch",
             "pin.added",
             "pin.removed",
@@ -137,7 +144,7 @@ describe("registerSocketRouter", () => {
         ];
         expect([...env.handlers.keys()].sort()).toEqual([...expected].sort());
         expect(env.socket.on).toHaveBeenCalledTimes(expected.length);
-        expect(expected).toHaveLength(20);
+        expect(expected).toHaveLength(21);
     });
 
     // ---- message.* --------------------------------------------------------
@@ -286,6 +293,12 @@ describe("registerSocketRouter", () => {
         expect(channelService.handleChannelMemberAdded).toHaveBeenCalledWith(e);
     });
 
+    it("membership.removed (MIP-1371) routes to the removal handler with the whole notice", () => {
+        const notice = { scope: "project", teamId: "t1", projectIds: [7], channels: [] };
+        env.fire("membership.removed", notice);
+        expect(handleMembershipRemoved).toHaveBeenCalledWith(notice);
+    });
+
     it("channel.member_removed routes to handleChannelMemberRemoved with the full event", () => {
         const e = { channelId: "c1", channelKind: ChannelKind.GM, userId: "u-bob" };
         env.fire("channel.member_removed", e);
@@ -397,13 +410,13 @@ describe("registerSocketRouter", () => {
         }
     });
 
-    it("a second registerSocketRouter call is independent: its teardown removes only its own 20 handlers", () => {
+    it("a second registerSocketRouter call is independent: its teardown removes only its own 21 handlers", () => {
         // Sanity: registering twice produces independent handler sets; the
         // second registration's teardown only removes its own handlers.
         const env2 = makeFakeSocket();
         const teardown2 = registerSocketRouter(env2.socket);
-        expect(env2.socket.on).toHaveBeenCalledTimes(20);
+        expect(env2.socket.on).toHaveBeenCalledTimes(21);
         teardown2();
-        expect(env2.socket.off).toHaveBeenCalledTimes(20);
+        expect(env2.socket.off).toHaveBeenCalledTimes(21);
     });
 });

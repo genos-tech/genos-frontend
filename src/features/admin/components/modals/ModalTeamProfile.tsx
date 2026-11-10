@@ -28,6 +28,7 @@ import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/Fi
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
+import { useMemberRemoval } from "../../../../components/ui/memberRoles/useMemberRemoval";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
@@ -44,6 +45,7 @@ import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
 import { withoutDeletedUsers } from "../../../../utils/teamRoster";
 import { leaveTeam } from "../../services/leaveTeam";
+import { loadOpenWork, removeMember } from "../../services/removeMember";
 import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
 import { ConnectedTeamsPanel } from "../team/ConnectedTeamsPanel";
@@ -52,6 +54,7 @@ import { TeamOwnershipClaimPanel } from "../team/TeamOwnershipClaimPanel";
 import { useOwnershipClaim } from "../team/useOwnershipClaim";
 import { useTeamConnections } from "../team/useTeamConnections";
 import { ModalInviteMembers } from "./ModalInviteMembers";
+import { PendingInvitesSection } from "./PendingInvitesSection";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -112,6 +115,26 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // Role edits are written straight to the server; mirror the result
     // into `teamProfile` so the chip/picker re-renders without refetching
     // the whole team.
+    // Removing someone else (MIP-1371): owner removes anyone, an editor only viewers.
+    const removal = useMemberRemoval({
+        kind: "team",
+        scopeName: teamProfile.teamName,
+        ownerUserId: teamProfile.teamOwnerId,
+        myRole,
+        myUserId: myself.userId,
+        zIndex: PROFILE_MODAL_Z_INDEX + 2,
+        loadOpenWork: (userId) => loadOpenWork(accessToken, "team", teamProfile.teamId, userId),
+        remove: (userId, unassign) =>
+            removeMember(accessToken, "team", teamProfile.teamId, userId, unassign),
+        onRemoved: (userId) =>
+            setTeamProfile({
+                ...teamProfile,
+                teamMembers: teamProfile.teamMembers.filter(
+                    (m) => String(m.userId) !== String(userId)
+                ),
+            }),
+    });
+
     const handleMemberRoleChange = async (
         userId: string,
         nextRole: MemberRole
@@ -141,6 +164,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     // Invite-by-email flow (owner-only). The button + sub-modal are gated
     // by isTeamOwner; the backend re-checks ownership on /team/invite/.
     const [openInvite, setOpenInvite] = useState(false);
+    // Bumped when the invite dialog closes, so the pending list shows what was just sent.
+    const [inviteRefresh, setInviteRefresh] = useState(0);
 
     // Break-glass ownership recovery. One fetch feeds two places: the
     // "Request ownership" button in the action row above, and the status
@@ -761,6 +786,13 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 )}
                                             </Box>
                                         )}
+                                        {canManage && (
+                                            <PendingInvitesSection
+                                                refreshKey={inviteRefresh}
+                                                teamId={teamProfile.teamId}
+                                                zIndex={PROFILE_MODAL_Z_INDEX + 2}
+                                            />
+                                        )}
                                         {/* Recovery for an absent owner. Sits under
                                                     the owner's details because that's where
                                                     you look when you realise the person
@@ -876,7 +908,20 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                         renders as a chip — their
                                                                         role changes by transfer,
                                                                         not by this control. */}
-                                                            <Box sx={{ ml: "auto", pl: 1 }}>
+                                                            <Box
+                                                                sx={{
+                                                                    ml: "auto",
+                                                                    pl: 1,
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    gap: 0.5,
+                                                                }}
+                                                            >
+                                                                {removal.button({
+                                                                    userId: member.userId,
+                                                                    memberRole: member.memberRole,
+                                                                    name: member.userName,
+                                                                })}
                                                                 <MemberRoleControl
                                                                     canManage={canManage}
                                                                     memberRole={member.memberRole}
@@ -1010,6 +1055,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                     </Card>
                 </Stack>
             </ModalFrame>
+            {removal.dialog}
             <ModalLeaveConfirm
                 description={t.common.leaveConfirm.teamDescription}
                 entityName={teamProfile.teamName}
@@ -1029,7 +1075,10 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
             <ModalInviteMembers
                 open={openInvite}
                 teamId={teamProfile.teamId}
-                onClose={() => setOpenInvite(false)}
+                onClose={() => {
+                    setOpenInvite(false);
+                    setInviteRefresh((n) => n + 1);
+                }}
             />
             <ModalRequestOwnership
                 open={openClaimRequest}

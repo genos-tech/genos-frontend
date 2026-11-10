@@ -266,6 +266,27 @@ export const ar: DeepPartial<Messages> = {
             youSuffix: "(أنت)",
             noMatches: "لا توجد مباريات",
         },
+        memberRemoval: {
+            remove: "إزالة",
+            removeNamed: "إزالة {name}",
+            failed: "تعذّرت إزالة هذا العضو. حاول مرة أخرى.",
+            titleTeam: "إزالة {name} من {scope}؟",
+            titleProject: "إزالة {name} من {scope}؟",
+            titleChat: "إزالة {name} من {scope}؟",
+            bodyTeam:
+                "سيفقد {name} الوصول إلى {scope} وإلى كل المشاريع والمحادثات فيه. ستتوقف مفاتيح API الخاصة بالفريق عن العمل، وستفقد تطبيقات الذكاء الاصطناعي المتصلة هذا الفريق. تبقى رسائله وأعماله السابقة. يمكنك دعوته مرة أخرى لاحقًا.",
+            bodyProject:
+                "سيفقد {name} الوصول إلى {scope} ومحادثته. يبقى في الفريق ويحتفظ بمشاريعه الأخرى. يمكنك إضافته مرة أخرى لاحقًا.",
+            bodyChat:
+                "لن يرى {name} رسائل {scope} ولن يتلقاها بعد الآن. تبقى الرسائل السابقة. يمكنك إضافته مرة أخرى لاحقًا.",
+            unassign: "إلغاء إسناد عمله المفتوح",
+            unassignCount:
+                "{tasks, plural, one {# مهمة مفتوحة} other {# مهام مفتوحة}} و{milestones, plural, one {# معلم} other {# معالم}}",
+            unassignHint: "يحتفظ العمل المغلق بالمسؤول عنه.",
+            loadingWork: "جارٍ التحقق من عمله المفتوح…",
+            confirm: "إزالة",
+            cancel: "إلغاء",
+        },
         memberRoles: {
             owner: "مالك",
             editor: "محرر",
@@ -1279,6 +1300,20 @@ export const ar: DeepPartial<Messages> = {
                         "يتوقف كل ما يستخدم مفتاح الفريق هذا عن العمل فورًا، ولا يمكن إعادة تفعيل مفتاح تم إبطاله. سيحتاج من أنشأه إلى إنشاء مفتاح جديد.",
                     confirm: "إبطال المفتاح",
                 },
+            },
+            teamApps: {
+                title: "تطبيقات الذكاء الاصطناعي المتصلة",
+                blurb: "تطبيقات مثل Claude وChatGPT التي ربطها الأعضاء ويمكنها العمل في هذا الفريق. يمكن للمالك إنهاء أيٍّ منها، وللمحرر إنهاء تطبيقات المشاهدين. الإنهاء يزيل هذا الفريق فقط: تبقى فرق الشخص الأخرى تعمل.",
+                empty: "لا توجد تطبيقات ذكاء اصطناعي متصلة بهذا الفريق.",
+                connectedBy: "ربطه {name}",
+                otherTeams: "وفي {count, plural, one {فريق آخر} other {# فرق أخرى}}",
+                end: "إنهاء الوصول إلى هذا الفريق",
+                endNamed: "إنهاء {app} لـ {name}",
+                confirmTitle: "إنهاء {app} لـ {name}؟",
+                confirmBody:
+                    "سيتوقف {app} عن العمل في هذا الفريق لـ {name}. لا تتأثر فرقه الأخرى، ويمكنه ربطه مرة أخرى بنفسه.",
+                confirm: "إنهاء الوصول",
+                cancel: "إلغاء",
             },
             teamKeys: {
                 title: "مفاتيح API للفريق",
@@ -4236,6 +4271,16 @@ export const ar: DeepPartial<Messages> = {
             comingSoon: "قريبًا",
         },
         teamProfile: {
+            pendingInvites: {
+                title: "الدعوات المعلّقة ({count})",
+                detail: "دعاه {name} · تنتهي في {date}",
+                guestOf: "ضيف في {project}",
+                cancelNamed: "إلغاء دعوة {email}",
+                confirmTitle: "إلغاء دعوة {email}؟",
+                confirmBody: "يتوقف الرابط في بريده فورًا. يمكنك دعوته مرة أخرى لاحقًا.",
+                confirm: "إلغاء الدعوة",
+                keep: "إبقاء",
+            },
             title: "ملف الفريق - {teamName}",
             editTeamImage: "تعديل صورة الفريق",
             teamName: "اسم الفريق",

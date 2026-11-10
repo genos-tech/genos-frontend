@@ -33,6 +33,7 @@ import type {
     ReadAdvancedPayload,
 } from "../../types/channel";
 import { channelService } from "./channelService";
+import { handleMembershipRemoved, type MembershipRemovedNotice } from "./membershipRemoved";
 
 export const V3_NAMESPACE = "/v3";
 
@@ -117,6 +118,9 @@ export function registerSocketRouter(socket: Socket): () => void {
         channelKind: ChannelKind;
         userId: string;
     }>("channel.member_removed", (e) => channelService.handleChannelMemberRemoved(e));
+    // Removed from a team / project / chat by its owner or an editor (MIP-1371): the server
+    // has already taken this socket out of those rooms; this updates the app's own state.
+    on<MembershipRemovedNotice>("membership.removed", (n) => handleMembershipRemoved(n));
 
     on<{
         // The connect-time auto-replay (connect_handlers.py) pushes ONE

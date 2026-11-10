@@ -34,6 +34,7 @@ import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/Fi
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { MemberRoleControl } from "../../../../components/ui/memberRoles/MemberRoleControl";
+import { useMemberRemoval } from "../../../../components/ui/memberRoles/useMemberRemoval";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
@@ -58,6 +59,7 @@ import { withoutDeletedUsers } from "../../../../utils/teamRoster";
 import { ModalAddMembers } from "../../../chat/components/modals/ModalAddMembers";
 import { resolveLegacyChatId } from "../../../chat/utils/channelIdResolvers";
 import { leaveProject } from "../../services/leaveProject";
+import { loadOpenWork, removeMember } from "../../services/removeMember";
 import { setProjectMemberRole } from "../../services/setProjectMemberRole";
 import { updateProjectProfile } from "../../services/updateProjectProfile";
 import { ModalManageProjectLabels } from "../projectLabels/ModalManageProjectLabels";
@@ -172,6 +174,32 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     // refuses, against a list of connections that are not the host's.
     const hostTeamId = projectProfile?.teamId ? String(projectProfile.teamId) : myself.teamId;
     const isExternalProject = hostTeamId !== myself.teamId;
+
+    // Removing someone else (MIP-1371): owner removes anyone, an editor only viewers and guests.
+    // The server cleans up that person's open work in THIS project when asked.
+    const removal = useMemberRemoval({
+        kind: "project",
+        scopeName: projectProfile?.projectName ?? "",
+        ownerUserId: projectProfile?.ownerUserId,
+        myRole,
+        myUserId: myself.userId,
+        zIndex: PROFILE_MODAL_Z_INDEX + 2,
+        loadOpenWork: (userId) =>
+            projectProfile?.projectId
+                ? loadOpenWork(accessToken, "project", projectProfile.projectId, userId)
+                : Promise.resolve(null),
+        remove: (userId, unassign) =>
+            removeMember(accessToken, "project", projectProfile?.projectId ?? 0, userId, unassign),
+        onRemoved: (userId) => {
+            if (!projectProfile) return;
+            setProjectProfile({
+                ...projectProfile,
+                projectMembers: projectProfile.projectMembers.filter(
+                    (m) => String(m.userId) !== String(userId)
+                ),
+            });
+        },
+    });
 
     const handleMemberRoleChange = async (
         userId: string,
@@ -1016,7 +1044,20 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             socket={socket}
                                                             useUISM={useUISM}
                                                         />
-                                                        <Box sx={{ ml: "auto", pl: 1 }}>
+                                                        <Box
+                                                            sx={{
+                                                                ml: "auto",
+                                                                pl: 1,
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                gap: 0.5,
+                                                            }}
+                                                        >
+                                                            {removal.button({
+                                                                userId: member.userId,
+                                                                memberRole: member.memberRole,
+                                                                name: member.userName,
+                                                            })}
                                                             <MemberRoleControl
                                                                 canManage={canManage}
                                                                 isSelf={
@@ -1402,6 +1443,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                     </Card>
                 </Stack>
             </ModalFrame>
+            {removal.dialog}
             <ModalLeaveConfirm
                 open={openLeaveConfirm}
                 title={t.common.leaveConfirm.projectTitle}
