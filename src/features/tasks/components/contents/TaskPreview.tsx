@@ -81,7 +81,10 @@ import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sen
 import { Milestone } from "../../sprint-milestone/types";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
-import { countMilestoneTaskStatuses } from "../../utils/milestoneTaskProgress";
+import {
+    countMilestoneTaskStatuses,
+    milestoneTaskStatuses,
+} from "../../utils/milestoneTaskProgress";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
@@ -1349,16 +1352,13 @@ const MilestonePreviewInner = ({
     // / `tasksClosed`, not the per-status breakdown). The chips always add
     // up to the total: a status without a chip of its own falls into
     // "Other" (see countMilestoneTaskStatuses). Excludes the milestone's own
-    // backing task row.
+    // backing task row; a task under a Closed ancestor counts as Closed, one
+    // under a Deleted ancestor is left out (milestoneTaskStatuses, MIP-1389).
     const milestoneTaskCounts = useMemo(() => {
         if (!milestone) return null;
-        const statuses: (string | null)[] = [];
-        for (const task of useTM.allTasks) {
-            if (task.milestoneId !== milestone.milestoneId) continue;
-            if (task.isMilestone) continue;
-            statuses.push(task.status);
-        }
-        return countMilestoneTaskStatuses(statuses);
+        return countMilestoneTaskStatuses(
+            milestoneTaskStatuses(useTM.allTasks, milestone.milestoneId)
+        );
     }, [milestone, useTM.allTasks]);
 
     // Pull the latest copy from the server when this milestone is
