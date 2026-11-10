@@ -18,3 +18,13 @@ export const depthRowLeftBorder = (rowDepth: number): string =>
     `3px solid ${depthRowTone(rowDepth)?.guide ?? "transparent"}`;
 export const depthRowBackground = (rowDepth: number): string =>
     depthRowTone(rowDepth)?.wash ?? "transparent";
+
+// The row whose preview is open (MIP-1354). `accent.subtle` is the shared "selected" tint
+// (10% in light, 20% in dark), and on a table row it was too quiet to find among 40 rows
+// (much more so in light). The row keeps the theme's accent and the same family of tint,
+// just firmer: 8% more of the accent mixed into `accent.subtle` (about 17% in light, 26% in
+// dark), so every theme and both modes follow their own accent. A hairline of the accent's
+// border colour bounds the row above and below, so its edge reads even where the tint sits
+// next to a depth wash. The 3px accent guide on the left stays (see `getTableRowStyles`).
+export const selectedRowBackground = `color-mix(in srgb, ${g.accent.solid} 8%, ${g.accent.subtle})`;
+export const selectedRowRing = `inset 0 1px 0 ${g.accent.border}, inset 0 -1px 0 ${g.accent.border}`;

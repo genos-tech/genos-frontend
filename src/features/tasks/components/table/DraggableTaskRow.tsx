@@ -65,7 +65,12 @@ import {
     statusSelectNode,
     TagAutocomplete,
 } from "./cellEditors";
-import { depthRowBackground, depthRowLeftBorder } from "./depthTone";
+import {
+    depthRowBackground,
+    depthRowLeftBorder,
+    selectedRowBackground,
+    selectedRowRing,
+} from "./depthTone";
 import { ColumnDef, LEADING_GUTTER_WIDTH, statusOptions } from "./DraggableTaskTable";
 import { GRID_COL_ATTR, GRID_ROW_ATTR, useGridNav } from "./useGridNav";
 
@@ -90,9 +95,13 @@ const getTableRowStyles = (
     // A min-height, so a row whose tags wrap still grows.
     minHeight: g.row.current,
     borderBottom: isDragging ? "none" : `1px solid ${g.border.subtle}`,
-    backgroundColor: isDragging || isSelected ? g.accent.subtle : depthRowBackground(rowDepth),
+    backgroundColor: isDragging
+        ? g.accent.subtle
+        : isSelected
+          ? selectedRowBackground
+          : depthRowBackground(rowDepth),
     borderLeft: isSelected ? `3px solid ${g.accent.solid}` : depthRowLeftBorder(rowDepth),
-    boxShadow: isDragging ? g.shadow.lg : "none",
+    boxShadow: isDragging ? g.shadow.lg : isSelected ? selectedRowRing : "none",
     borderRadius: isDragging ? 6 : 0,
     // Don't use transitions when dragging - it interferes with drag positioning
     //
