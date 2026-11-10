@@ -147,8 +147,10 @@ export type NoteOpenFailure = {
     /** The type as the caller passed it (1 my, 2 task, 3 chat, 4 shared, 8 team). */
     noteType: number;
     noteId: number;
-    /** `not_found`: the API answered 404, so Retry could never succeed. */
-    reason: "failed" | "not_found";
+    /** `not_found`: the API answered 404, so Retry could never succeed. `forbidden`: 403, the
+     *  note exists and the user has no role on it: the pane offers the access request
+     *  (MIP-1330), which no tab can because none opens for a note that could not be read. */
+    reason: "failed" | "not_found" | "forbidden";
     /** A Retry is in flight. */
     retrying: boolean;
 };
@@ -2232,20 +2234,25 @@ export const useNoteManagement = (
         if (!accessToken) return;
         // A click on a note whose body is not cached and whose request FAILED used
         // to do nothing at all (MIP-1276): no tab, no message. `loadSpecificNote`
-        // resolves undefined on a failed request (403 is `{ error: "forbidden" }`
-        // and is not a failure: the access-request panel handles it).
+        // resolves undefined on a failed request; a 403 is `{ error: "forbidden" }` and, with no
+        // tab open, ends on the pane's access-request panel (MIP-1330).
         const requestedType = noteType;
         const openSeq = ++openSeqRef.current;
         // `loadSpecificNote`: undefined = request failed, { error: "not_found" } = 404,
-        // { error: "forbidden" } = 403, which is not a failure here.
+        // { error: "forbidden" } = 403.
         const reportOpenFailed = (fetched: { error?: string } | undefined) => {
             if (openSeq !== openSeqRef.current) return;
-            if (fetched && fetched.error !== "not_found") {
-                // 403: the access-request panel owns it; a Retry in flight is over.
+            if (fetched && fetched.error !== "not_found" && fetched.error !== "forbidden") {
+                // Some other answer that is not this note: nothing to report; a Retry in
+                // flight is over.
                 setNoteOpenFailure(null);
                 return;
             }
-            const reason = fetched ? "not_found" : "failed";
+            const reason = !fetched
+                ? "failed"
+                : fetched.error === "forbidden"
+                  ? "forbidden"
+                  : "not_found";
             if (tabCountRef.current === 0) {
                 setNoteOpenFailure({
                     noteType: requestedType,
@@ -2256,14 +2263,18 @@ export const useNoteManagement = (
                 return;
             }
             const msgs = getMessages();
+            // A note is open already, so the pane keeps showing it; the toast says why this
+            // click did nothing. 403 has no Retry (a new request, not a retry, gets access).
             toast.error(
-                reason === "not_found"
-                    ? msgs.notes.placeholder.noteNotFoundTitle
-                    : msgs.notes.editor.loadFailed,
+                reason === "forbidden"
+                    ? msgs.notes.accessRequest.heading
+                    : reason === "not_found"
+                      ? msgs.notes.placeholder.noteNotFoundTitle
+                      : msgs.notes.editor.loadFailed,
                 {
                     id: `note-open-failed-${requestedType}-${noteId}`,
                     action:
-                        reason === "not_found"
+                        reason !== "failed"
                             ? undefined
                             : {
                                   label: msgs.common.actions.retry,
