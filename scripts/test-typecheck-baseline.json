@@ -100,7 +100,6 @@
     "src/__tests__/taskMetaComponents.test.tsx": 3,
     "src/__tests__/taskNotePanelEmptyState.test.tsx": 1,
     "src/__tests__/taskSaveRefusalPreview.test.ts": 1,
-    "src/__tests__/testTypecheckRatchet.test.ts": 1,
     "src/__tests__/uptimeProbe.test.ts": 8,
     "src/__tests__/useCollaborativeBlockNoteBinding.test.tsx": 1,
     "src/__tests__/useWarmRecentChannels.test.ts": 1,

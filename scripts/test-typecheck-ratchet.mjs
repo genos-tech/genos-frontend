@@ -20,6 +20,11 @@
 // new error in another. A file that is not in the baseline starts at 0, so a new test file
 // must be clean, and a file that was fixed to 0 leaves the baseline.
 //
+// KNOWN LIMITS (it counts, it does not diff): a file that swaps one error for another (fixes two,
+// adds two) keeps its count and passes; a renamed or moved test file reads as a new file with
+// its old errors (a rise): fix them, or `--update --allow-raise` with the reason in the PR. Both
+// are the price of a count that merges textually; the sweeps are what lower the baseline.
+//
 // FILE FORMAT: flat, sorted, one `"<path>": <count>` per line, zeros omitted, no totals or
 // dates, like the design ratchet: parallel sweep PRs each lower a few lines and merge
 // textually. If two PRs touch neighbouring lines, take either side and re-run the update.
@@ -107,13 +112,20 @@ function runTsc() {
         { cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 }
     );
     if (result.error) throw result.error;
-    // tsc exits 2 when it reports errors: that is the normal case here. Anything that
-    // printed NO error and still failed (a crash, a bad config) must not read as "0 errors".
     const out = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-    if (result.status !== 0 && result.status !== 2 && parseTscOutput(out).size === 0) {
-        throw new Error(`tsc did not run (exit ${result.status}):\n${out.slice(0, 2000)}`);
-    }
+    assertTscRan(result.status, result.signal, out);
     return out;
+}
+
+/** tsc exits 0 (no errors) or 2 (errors reported, nothing emitted): that is a run. Anything else
+ *  (1 = a config problem, 134 / 137 = it died, a signal) may have printed a few error lines
+ *  before it stopped, and a partial count must never read as "fewer errors": it is a failure to
+ *  run, and `--update` must not write it down. */
+export function assertTscRan(status, signal, out) {
+    if (status === 0 || status === 2) return;
+    throw new Error(
+        `tsc did not complete (exit ${status}${signal ? `, ${signal}` : ""}):\n${out.slice(0, 2000)}`
+    );
 }
 
 function report(delta) {
@@ -140,9 +152,18 @@ export function main(
         return 1;
     }
     const current = parseTscOutput(output);
-    const baseline = fs.existsSync(baselinePath)
-        ? parseBaseline(fs.readFileSync(baselinePath, "utf8"))
-        : new Map();
+    let baseline;
+    try {
+        baseline = fs.existsSync(baselinePath)
+            ? parseBaseline(fs.readFileSync(baselinePath, "utf8"))
+            : new Map();
+    } catch (e) {
+        // A bad merge (conflict markers, a trailing comma) is not "the count rose".
+        err(
+            `the baseline ${path.relative(REPO_ROOT, baselinePath)} cannot be read: ${e instanceof Error ? e.message : e}`
+        );
+        return 1;
+    }
     const delta = compare(baseline, current);
 
     if (update) {

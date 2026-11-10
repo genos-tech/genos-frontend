@@ -10,7 +10,7 @@
         "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
         // The tests run on Node 22 (and Chromium-grade jsdom), not on the app's ES2020 floor:
         // `.at()`, `Object.hasOwn` and friends are fine there and were 56 false errors.
-        "lib": ["ES2020", "ES2022", "DOM", "DOM.Iterable"],
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
         // vitest's globals (`describe`, `it`, `vi`, ...) and node's (`process`, `Buffer`)
         "types": ["vitest/globals", "node"]
     },

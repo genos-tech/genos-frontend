@@ -20,6 +20,7 @@ import ts from "typescript";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+    assertTscRan,
     compare,
     DEFAULT_BASELINE,
     GLOBAL_KEY,
@@ -177,6 +178,20 @@ describe("the check and the update (CLI, tsc output read from a file)", () => {
         const fell = setup(fs.readFileSync(lower.baselinePath, "utf8"), "");
         expect(main(["--update", "--from", fell.out], fell)).toBe(0);
         expect(fs.readFileSync(fell.baselinePath, "utf8")).toBe("{}\n");
+    });
+
+    it("a corrupt baseline (a bad merge) is a failure with a message, not a stack trace", () => {
+        const t = setup("{\n<<<<<<< HEAD\n}\n", TSC);
+        expect(main(["--from", t.out], t)).toBe(1);
+        expect(t.err.mock.calls[0][0]).toContain("cannot be read");
+    });
+
+    it("only tsc's exit 0 and 2 are a run: a crash that printed a few errors is not 'fewer errors'", () => {
+        expect(() => assertTscRan(0, null, "")).not.toThrow();
+        expect(() => assertTscRan(2, null, TSC)).not.toThrow();
+        expect(() => assertTscRan(1, null, TSC)).toThrow(/did not complete \(exit 1\)/);
+        expect(() => assertTscRan(134, null, TSC)).toThrow(/exit 134/);
+        expect(() => assertTscRan(null, "SIGKILL", TSC)).toThrow(/SIGKILL/);
     });
 
     it("a tsc output that cannot be read is a failure, not '0 errors'", () => {
