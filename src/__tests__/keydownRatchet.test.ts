@@ -36,6 +36,10 @@ const ALLOWED: Record<string, { count: number; why: string }> = {
         count: 2,
         why: "the task table's grid keys (MIP-1230), listed in Settings as display-only entries",
     },
+    "hooks/common/roving/useRovingNav.ts": {
+        count: 1,
+        why: "the task board's and the calendar's roving tab stops (MIP-1402), listed in Settings as display-only entries",
+    },
     "features/tasks/components/table/cellEditors.tsx": {
         count: 1,
         why: "Escape in a table cell editor",

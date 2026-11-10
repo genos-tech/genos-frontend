@@ -44,7 +44,7 @@ const Kbd = ({ children }: { children: ReactNode }) => (
 );
 
 /** Settings groups, in the order they are listed. */
-const GROUP_ORDER: readonly ShortcutGroup[] = ["global", "chat", "editing", "table"];
+const GROUP_ORDER: readonly ShortcutGroup[] = ["global", "chat", "editing", "table", "board"];
 
 /**
  * Settings → Shortcuts, generated from the shortcut registry: every entry

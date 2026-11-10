@@ -4116,6 +4116,18 @@ export const zh: DeepPartial<Messages> = {
                     cancel: "不保存并关闭单元格编辑器",
                 },
             },
+            board: {
+                title: "任务看板",
+                description:
+                    "看板上的卡片获得焦点时生效。Tab 在各列之间移动（每列一个停靠点），这些按键在看板内部移动。",
+                rows: {
+                    move: "在卡片和列之间移动",
+                    columnEdges: "跳到该列的第一张 / 最后一张卡片",
+                    boardEdges: "跳到看板的第一张 / 最后一张卡片",
+                    open: "打开卡片预览",
+                    lift: "拿起卡片（方向键移动，空格放下，Esc 取消）",
+                },
+            },
             editing: {
                 title: "编写时",
                 description: "在撰写消息或填写新建任务表单时可用。",

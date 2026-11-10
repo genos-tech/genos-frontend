@@ -51,6 +51,14 @@ describe("KeyboardShortcutsSection", () => {
         ).toBeTruthy();
     });
 
+    it("lists the task board's keys in their own group, the same caps on every system (MIP-1402)", () => {
+        const { container, getByTestId } = view();
+        expect(within(getByTestId("shortcut-group-board")).getByText("Task board")).toBeTruthy();
+        expect(keys(container, "board.move")).toEqual(["← ↑ ↓ →"]);
+        expect(keys(container, "board.boardEdges")).toEqual(["Ctrl", "Home / End"]);
+        expect(keys(container, "board.lift")).toEqual(["Space"]);
+    });
+
     it("prints the Mac chords", () => {
         const { container } = view();
         expect(keys(container, "global.tasksNew")).toEqual(["Ctrl", "⌘", "T"]);
