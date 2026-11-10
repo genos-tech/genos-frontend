@@ -2646,8 +2646,9 @@ export const ja: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "GitHub に接続して PR ステータスを確認する",
                 connectButton: "GitHubに接続する",
-                loadFailed:
-                    "この PR を読み込めませんでした。非公開か、削除された可能性があります。",
+                privateOrDeleted:
+                    "この PR は、アクセス権のないリポジトリに対してプライベートになっているか、削除されています。",
+                loadFailed: "この PR を読み込めませんでした。",
                 state: {
                     merged: "マージ済み",
                     draft: "下書き",
@@ -5411,10 +5412,14 @@ export const ja: DeepPartial<Messages> = {
             },
             loadingTasks: "タスクの読み込みを待っています…",
             gridLabel: "タスク一覧",
+            rowActionsHeader: "行の操作",
+            expandHeader: "展開",
             emptyTitle: "表示するタスクがありません",
             emptyHint: "フィルターを調整してみてください",
             addTagsPlaceholder: "タグを追加…",
             addTagsMenuItem: "+ タグを追加",
+            setPriority: "優先度を設定",
+            setEffort: "Effortレベルを設定",
         },
         dueLabel: {
             noDueDate: "締切なし",

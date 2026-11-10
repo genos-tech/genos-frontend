@@ -425,11 +425,15 @@ const SpotlightResultItemInner = ({
                         }}
                     >
                         {result.title ? (
-                            <HighlightedText
-                                extraTerms={result.matched_terms}
-                                query={query}
-                                text={result.title}
-                            />
+                            // An island, so a Latin title in an RTL row truncates at ITS end
+                            // ("Test the search…") and not at its start (MIP-1387, App.css).
+                            <bdi className="g-bidi-island">
+                                <HighlightedText
+                                    extraTerms={result.matched_terms}
+                                    query={query}
+                                    text={result.title}
+                                />
+                            </bdi>
                         ) : (
                             t.spotlight.states.untitled
                         )}

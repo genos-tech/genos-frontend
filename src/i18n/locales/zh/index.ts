@@ -2553,7 +2553,8 @@ export const zh: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "连接 GitHub 以查看 PR 状态",
                 connectButton: "连接 GitHub",
-                loadFailed: "无法加载此 PR。它可能是私有的，或已被删除。",
+                privateOrDeleted: "此 PR 所在仓库对你不可见，或 PR 已被删除。",
+                loadFailed: "无法加载此 PR。",
                 state: {
                     merged: "已合并",
                     draft: "草稿",
@@ -5231,10 +5232,14 @@ export const zh: DeepPartial<Messages> = {
             },
             loadingTasks: "正在等待加载任务…",
             gridLabel: "任务表格",
+            rowActionsHeader: "行操作",
+            expandHeader: "展开",
             emptyTitle: "没有可显示的任务",
             emptyHint: "试试调整筛选条件",
             addTagsPlaceholder: "添加标签…",
             addTagsMenuItem: "+ 添加标签",
+            setPriority: "设置优先级",
+            setEffort: "设置工作量",
         },
         dueLabel: {
             noDueDate: "无截止日期",

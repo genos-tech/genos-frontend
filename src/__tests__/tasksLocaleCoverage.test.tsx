@@ -111,6 +111,8 @@ const PR_KEYS = [
     "table.emptyHint",
     "table.addTagsPlaceholder",
     "table.addTagsMenuItem",
+    "table.setPriority",
+    "table.setEffort",
     "board.quickAddTooltip",
     "board.quickAddPlaceholder",
     "board.quickAddHiddenByFilters",

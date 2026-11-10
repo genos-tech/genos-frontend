@@ -162,9 +162,50 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
         );
     }
 
+    if (result.kind === "unavailable") {
+        // GitHub refused this account the PR (404/403): deleted, or private to a
+        // repo it cannot see. Retry cannot help, so the card is the link itself.
+        return (
+            <Card
+                component="a"
+                href={url}
+                rel="noreferrer"
+                target="_blank"
+                variant="outlined"
+                sx={{
+                    p: 1.5,
+                    textDecoration: "none",
+                    color: "inherit",
+                    "&:hover": { borderColor: "primary.500" },
+                }}
+            >
+                <Stack alignItems="center" direction="row" spacing={1.25}>
+                    <GitHubIcon sx={{ color: "neutral.500" }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography level="body-sm" sx={{ color: "text.secondary" }}>
+                            {t.integrations.pullRequest.linkedCard.privateOrDeleted}
+                        </Typography>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: "text.tertiary",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {url}
+                        </Typography>
+                    </Box>
+                    <OpenInNewRoundedIcon sx={{ color: "text.tertiary", fontSize: 18 }} />
+                </Stack>
+            </Card>
+        );
+    }
+
     if (result.kind === "error") {
-        // A lookup that failed is NOT "this PR is gone": a dropped connection
-        // looks the same as a private repo from here, so the card says what
+        // A lookup that failed for any other reason (a dropped connection, a
+        // 5xx, a rate limit) is NOT "this PR is gone": the card says what
         // failed, offers Retry, and still lets the person open the PR on GitHub.
         return (
             <Card sx={{ p: 1.5 }} variant="outlined">

@@ -2670,10 +2670,14 @@ export const ar: DeepPartial<Messages> = {
             },
             loadingTasks: "في انتظار تحميل المهام…",
             gridLabel: "جدول المهام",
+            rowActionsHeader: "إجراءات الصف",
+            expandHeader: "توسيع",
             emptyTitle: "لا توجد مهام لعرضها",
             emptyHint: "جرّب تعديل عوامل التصفية",
             addTagsPlaceholder: "إضافة علامات…",
             addTagsMenuItem: "+ إضافة علامات",
+            setPriority: "تحديد الأولوية",
+            setEffort: "تحديد مستوى الجهد",
         },
         dueLabel: {
             noDueDate: "بدون تاريخ استحقاق",
@@ -5603,7 +5607,8 @@ export const ar: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "اربط GitHub لعرض حالة PR",
                 connectButton: "ربط GitHub",
-                loadFailed: "تعذّر تحميل هذا PR. قد يكون خاصًا أو محذوفًا.",
+                privateOrDeleted: "هذا PR خاص بمستودع لا يمكنك الوصول إليه، أو تم حذفه.",
+                loadFailed: "تعذّر تحميل هذا PR.",
                 state: {
                     merged: "تم الدمج",
                     draft: "مسودة",

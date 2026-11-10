@@ -2708,10 +2708,14 @@ export const es: DeepPartial<Messages> = {
             },
             loadingTasks: "Esperando a cargar las tareas…",
             gridLabel: "Tabla de tareas",
+            rowActionsHeader: "Acciones de fila",
+            expandHeader: "Expandir",
             emptyTitle: "No hay tareas que mostrar",
             emptyHint: "Prueba a ajustar los filtros",
             addTagsPlaceholder: "Añadir etiquetas…",
             addTagsMenuItem: "+ Añadir etiquetas",
+            setPriority: "Definir prioridad",
+            setEffort: "Definir nivel de esfuerzo",
         },
         dueLabel: {
             noDueDate: "Sin fecha de vencimiento",
@@ -4805,7 +4809,9 @@ export const es: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "Conecta GitHub para ver el estado de la PR",
                 connectButton: "Conectar GitHub",
-                loadFailed: "No se pudo cargar esta PR. Puede ser privada o haberse eliminado.",
+                privateOrDeleted:
+                    "Esta PR pertenece a un repo privado al que no tienes acceso o se ha eliminado.",
+                loadFailed: "No se pudo cargar esta PR.",
                 state: {
                     merged: "Fusionado",
                     draft: "Borrador",

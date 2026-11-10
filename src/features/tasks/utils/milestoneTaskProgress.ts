@@ -1,3 +1,6 @@
+import { TaskTableProps } from "../../../types/tasks";
+import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
+
 /**
  * Per-status task counts behind the "Task progress" chips of the milestone
  * preview (MIP-1017).
@@ -50,4 +53,26 @@ export const countMilestoneTaskStatuses = (
         .filter((status) => counts[status] > 0)
         .map((status) => ({ status, count: counts[status] }));
     return { entries, total };
+};
+
+/**
+ * The status of each task of one milestone, as the chips should count it: the milestone's
+ * own backing row is not one of its tasks, and a task under a Closed ancestor (a parent at
+ * any depth, or the milestone itself) reads Closed, one under a Deleted ancestor reads
+ * Deleted (which `countMilestoneTaskStatuses` leaves out), whatever its own row says
+ * (MIP-1389). `tasks` is the whole loaded list: the ancestors are looked up in it.
+ */
+export const milestoneTaskStatuses = (
+    tasks: ReadonlyArray<
+        Pick<TaskTableProps, "id" | "status" | "parentTaskId" | "milestoneId" | "isMilestone">
+    >,
+    milestoneId: number
+): Array<string | null | undefined> => {
+    const verdicts = selectAncestorVerdicts(tasks);
+    const statuses: Array<string | null | undefined> = [];
+    for (const task of tasks) {
+        if (task.milestoneId !== milestoneId || task.isMilestone) continue;
+        statuses.push(effectiveStatusOf(task, verdicts));
+    }
+    return statuses;
 };

@@ -6,10 +6,12 @@
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { AxiosError } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ErrorState } from "../components/ui/feedback/ErrorState";
 import { LinkedPrCard } from "../features/integrations/components/LinkedPrCard";
+import { getPullDetail } from "../features/integrations/services/github";
 import { clearPrStatusCache } from "../features/integrations/services/prStatusCache";
 import { TaskPaneError } from "../features/tasks/components/contents/base/TaskPaneError";
 import { en } from "../i18n/locales/en";
@@ -156,5 +158,63 @@ describe("LinkedPrCard", () => {
         await waitFor(() =>
             expect(calls.urls.filter((u) => u.includes("/github/pulls/"))).toHaveLength(2)
         );
+    });
+
+    // GitHub's refusal reaches the browser as the api's 502 carrying
+    // `upstream_status`; a bare 404/403 is read the same way.
+    const httpError = (status: number, data: unknown = {}) =>
+        new AxiosError("failed", "ERR_BAD_RESPONSE", undefined, undefined, {
+            status,
+            data,
+        } as never);
+    const refused = (upstream: number) =>
+        httpError(502, { detail: "github_api_error", upstream_status: upstream });
+
+    it.each([
+        ["GitHub 404 (deleted, or a private repo it hides)", refused(404)],
+        ["GitHub 403 (not allowed)", refused(403)],
+        ["a bare 404", httpError(404)],
+    ])("%s: says private or deleted, links to the PR, offers no Retry", async (_name, err) => {
+        answers.queue.push({ match: "/github/pulls/", out: err });
+        render(wrap(<LinkedPrCard accessToken="tok" url={PR_URL} />));
+
+        expect(
+            await screen.findByText(en.integrations.pullRequest.linkedCard.privateOrDeleted)
+        ).toBeTruthy();
+        expect(screen.queryByRole("button", { name: en.common.actions.retry })).toBeNull();
+        expect(screen.queryByText(en.integrations.pullRequest.linkedCard.loadFailed)).toBeNull();
+        const link = screen.getByText(PR_URL).closest("a");
+        expect(link?.getAttribute("href")).toBe(PR_URL);
+        expect(calls.urls.filter((u) => u.includes("/github/pulls/"))).toHaveLength(1);
+    });
+
+    it.each([
+        ["a dropped connection", new Error("Network Error")],
+        ["GitHub 5xx", refused(503)],
+        ["a GitHub rate limit", refused(429)],
+        ["the api itself failing", httpError(500)],
+    ])("%s: says the lookup failed and Retry asks again", async (_name, err) => {
+        answers.queue.push({ match: "/github/pulls/", out: err });
+        render(wrap(<LinkedPrCard accessToken="tok" url={PR_URL} />));
+
+        expect(
+            await screen.findByText(en.integrations.pullRequest.linkedCard.loadFailed)
+        ).toBeTruthy();
+        expect(
+            screen.queryByText(en.integrations.pullRequest.linkedCard.privateOrDeleted)
+        ).toBeNull();
+        expect(retry()).toBeTruthy();
+    });
+
+    it("getPullDetail tells a refusal from a failure and still reports 'not connected'", async () => {
+        answers.queue.push({ match: "/github/pulls/", out: refused(404) });
+        answers.queue.push({ match: "/github/pulls/", out: new Error("Network Error") });
+        answers.queue.push({
+            match: "/github/pulls/",
+            out: httpError(400, { detail: "github_not_connected" }),
+        });
+        expect(await getPullDetail("tok", "acme", "rocket", 7)).toBe("unavailable");
+        expect(await getPullDetail("tok", "acme", "rocket", 7)).toBeNull();
+        expect(await getPullDetail("tok", "acme", "rocket", 7)).toBe("github_not_connected");
     });
 });

@@ -2928,10 +2928,14 @@ export const hi: DeepPartial<Messages> = {
             },
             loadingTasks: "टास्क लोड होने की प्रतीक्षा है…",
             gridLabel: "टास्क तालिका",
+            rowActionsHeader: "पंक्ति की क्रियाएँ",
+            expandHeader: "विस्तार करें",
             emptyTitle: "दिखाने के लिए कोई टास्क नहीं",
             emptyHint: "अपने फ़िल्टर बदलकर देखें",
             addTagsPlaceholder: "टैग जोड़ें…",
             addTagsMenuItem: "+ टैग जोड़ें",
+            setPriority: "प्राथमिकता चुनें",
+            setEffort: "प्रयास स्तर चुनें",
         },
         dueLabel: {
             noDueDate: "कोई ड्यू तारीख नहीं",
@@ -3968,7 +3972,9 @@ export const hi: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "PR स्थिति देखने के लिए GitHub कनेक्ट करें",
                 connectButton: "GitHub कनेक्ट करें",
-                loadFailed: "यह PR लोड नहीं हो सका। यह निजी हो सकता है या हटाया जा चुका हो।",
+                privateOrDeleted:
+                    "यह PR एक रेपो के लिए निजी है जिस तक आपकी पहुंच नहीं है, या इसे हटा दिया गया था।",
+                loadFailed: "यह PR लोड नहीं हो सका।",
                 state: {
                     merged: "मर्ज किया गया",
                     draft: "ड्राफ़्ट",

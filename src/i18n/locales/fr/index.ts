@@ -2670,8 +2670,9 @@ export const fr: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "Connectez GitHub pour voir l'état de la PR",
                 connectButton: "Connecter GitHub",
-                loadFailed:
-                    "Impossible de charger cette PR. Elle est peut-être privée ou supprimée.",
+                privateOrDeleted:
+                    "Ce PR est privé d'un dépôt auquel vous n'avez pas accès, ou il a été supprimé.",
+                loadFailed: "Impossible de charger cette PR.",
                 state: {
                     merged: "Fusionné",
                     draft: "Brouillon",
@@ -5479,10 +5480,14 @@ export const fr: DeepPartial<Messages> = {
             },
             loadingTasks: "En attente du chargement des tâches…",
             gridLabel: "Tableau des tâches",
+            rowActionsHeader: "Actions de la ligne",
+            expandHeader: "Développer",
             emptyTitle: "Aucune tâche à afficher",
             emptyHint: "Essayez d'ajuster vos filtres",
             addTagsPlaceholder: "Ajouter des tags…",
             addTagsMenuItem: "+ Ajouter des tags",
+            setPriority: "Définir la priorité",
+            setEffort: "Définir le niveau d'effort",
         },
         dueLabel: {
             noDueDate: "Pas d'échéance",
