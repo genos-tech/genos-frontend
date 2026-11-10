@@ -2670,8 +2670,9 @@ export const fr: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "Connectez GitHub pour voir l'état de la PR",
                 connectButton: "Connecter GitHub",
-                loadFailed:
-                    "Impossible de charger cette PR. Elle est peut-être privée ou supprimée.",
+                privateOrDeleted:
+                    "Ce PR est privé d'un dépôt auquel vous n'avez pas accès, ou il a été supprimé.",
+                loadFailed: "Impossible de charger cette PR.",
                 state: {
                     merged: "Fusionné",
                     draft: "Brouillon",

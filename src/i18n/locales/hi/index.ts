@@ -3968,7 +3968,9 @@ export const hi: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "PR स्थिति देखने के लिए GitHub कनेक्ट करें",
                 connectButton: "GitHub कनेक्ट करें",
-                loadFailed: "यह PR लोड नहीं हो सका। यह निजी हो सकता है या हटाया जा चुका हो।",
+                privateOrDeleted:
+                    "यह PR एक रेपो के लिए निजी है जिस तक आपकी पहुंच नहीं है, या इसे हटा दिया गया था।",
+                loadFailed: "यह PR लोड नहीं हो सका।",
                 state: {
                     merged: "मर्ज किया गया",
                     draft: "ड्राफ़्ट",
