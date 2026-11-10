@@ -1512,6 +1512,8 @@ export const ja: DeepPartial<Messages> = {
                 inboxFailed: "受信箱を読み込めませんでした",
                 tasksFailed: "タスクを読み込めませんでした",
                 projectsFailed: "プロジェクトを読み込めませんでした",
+                notesFailed: "ノートを読み込めませんでした",
+                flagsFailed: "完了したフラグを読み込めませんでした",
             },
             toast: {
                 region: "通知",

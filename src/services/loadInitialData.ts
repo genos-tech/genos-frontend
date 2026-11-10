@@ -266,7 +266,7 @@ export const loadInitialData = (
             // A cold boot whose first refresh FAILED fetched nothing: marking the
             // team hydrated would make the next boot "warm" (an instant, empty
             // shell) instead of waiting for a refresh that can work (MIP-1298).
-            if (!warm && syncStatus.getSnapshot().failed.length === 0) {
+            if (!warm && !syncStatus.bootFailed()) {
                 markTeamHydrated(myself.teamId);
             }
         }

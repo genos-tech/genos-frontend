@@ -6,7 +6,7 @@ import {
 } from "../../features/agentQA/approvedProjectWrites";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
-import { syncStatus } from "../../services/syncStatus";
+import { syncStatus, tasksScope } from "../../services/syncStatus";
 import { UserProps } from "../../types/admin";
 import { ProjectProps } from "../../types/tasks";
 import { keepIfEqual } from "../../utils/keepIfEqual";
@@ -102,6 +102,10 @@ export const useProjectManagement = (
             return;
         }
         syncStatus.report("projects", true);
+        // A project the list no longer holds (deleted, left, access lost) has no
+        // task load worth retrying: its failure must not hold the banner up for a
+        // stale `lastProjectId` (MIP-1323).
+        syncStatus.retainProjects(loadedTeamProjects.map((p) => p.projectId));
         tsLastLoadProjectAndTasks.current = Date.now();
 
         // When the user has just switched teams, any caller-supplied
@@ -240,6 +244,7 @@ export const useProjectManagement = (
         const onProjectDeleted = (event: Event) => {
             const projectId = (event as CustomEvent<ProjectDeletedDetail>).detail?.projectId;
             if (typeof projectId !== "number") return;
+            syncStatus.forget(tasksScope(projectId));
             setCurrentProject((current) => (current?.projectId === projectId ? null : current));
             setTeamProjectsRaw((projects) => projects.filter((p) => p.projectId !== projectId));
         };

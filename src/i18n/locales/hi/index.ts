@@ -20,6 +20,8 @@ export const hi: DeepPartial<Messages> = {
                 inboxFailed: "आपका इनबॉक्स लोड नहीं हो सका",
                 tasksFailed: "आपके टास्क लोड नहीं हो सके",
                 projectsFailed: "आपके प्रोजेक्ट लोड नहीं हो सके",
+                notesFailed: "आपके नोट लोड नहीं हो सके",
+                flagsFailed: "आपके पूरे किए गए फ्लैग लोड नहीं हो सके",
             },
             toast: {
                 region: "सूचनाएँ",

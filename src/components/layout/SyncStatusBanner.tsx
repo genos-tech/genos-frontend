@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useTranslation } from "../../i18n";
-import { syncStatus, useSyncStatus } from "../../services/syncStatus";
+import { syncStatus, useSyncBanner } from "../../services/syncStatus";
 import { Toast } from "../ui/feedback/Toast";
 
 /**
@@ -24,7 +24,7 @@ import { Toast } from "../ui/feedback/Toast";
  */
 export const SyncStatusBanner = ({ hidden = false }: { hidden?: boolean }) => {
     const { t } = useTranslation();
-    const { failed, syncing, episode } = useSyncStatus();
+    const { failed, syncing, episode } = useSyncBanner();
     const [dismissedEpisode, setDismissedEpisode] = useState(0);
     const s = t.common.feedback.sync;
 
@@ -32,7 +32,7 @@ export const SyncStatusBanner = ({ hidden = false }: { hidden?: boolean }) => {
         <Toast
             action={{ label: t.common.actions.retry, onClick: syncStatus.retry }}
             duration={null}
-            open={!hidden && failed.length > 0 && dismissedEpisode !== episode}
+            open={!hidden && failed && dismissedEpisode !== episode}
             placement="top"
             tone="warning"
             onClose={(reason) => {

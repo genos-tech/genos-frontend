@@ -16,7 +16,7 @@ import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPref
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { useSyncFailure } from "../../../../services/syncStatus";
+import { useTasksSyncFailure } from "../../../../services/syncStatus";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
@@ -148,7 +148,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     // The first read of the project's tasks: in flight, or failed (MIP-1298's shared sync state).
-    const syncFailure = useSyncFailure("tasks");
+    const syncFailure = useTasksSyncFailure(usePM.currentProject?.projectId);
 
     // Normalize mode
     const mode: "light" | "dark" | undefined =
@@ -773,7 +773,12 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         useTM.allTasks.length > 0 ||
                         COLUMNS.some((column) => (boardTasks[column.id] ?? []).length > 0)
                     }
-                    loading={(useTM.isLoadingTasks || syncFailure.retrying) && !isQuickAddOpen}
+                    loading={
+                        (useTM.isLoadingTasks ||
+                            (syncFailure.loading && useTM.allTasks.length === 0) ||
+                            syncFailure.retrying) &&
+                        !isQuickAddOpen
+                    }
                     size="md"
                     errorState={{
                         "data-error": "sprint-board",

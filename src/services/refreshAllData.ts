@@ -76,7 +76,10 @@ export const refreshAllData = async ({
     markInboxSyncing();
     // `scopes[i]` names what `tasks[i]` loads, for `syncStatus` (MIP-1298); the
     // channel list reports itself from `listChannels`.
-    const scopes: SyncScope[] = ["inbox", "activity", "members"];
+    // The project's task load is `null`: `loadProjectTasks` reports itself, under
+    // the project's own scope, and a project that is gone must not be re-marked as
+    // failed here (MIP-1323).
+    const scopes: (SyncScope | null)[] = ["inbox", "activity", "members"];
     const tasks: Array<Promise<unknown>> = [
         withTimeout(inboxChannel.request("loadInbox", { myself, accessToken }), "loadInbox"),
         withTimeout(
@@ -99,7 +102,7 @@ export const refreshAllData = async ({
         ),
     ];
     if (currentProjectId != null && currentProjectId > 0) {
-        scopes.push("tasks");
+        scopes.push(null);
         // Go through the `loadProjectTasks` wrapper (not `tasksChannel`
         // directly) so this shares the wrapper's in-flight dedup keyed on
         // `teamId:projectId` — on boot `useProjectManagement` fetches the same
@@ -123,7 +126,8 @@ export const refreshAllData = async ({
             if (r.status === "rejected") {
                 console.warn("[refreshAllData] channel call failed", r.reason);
             }
-            syncStatus.report(scopes[i], r.status === "fulfilled");
+            const scope = scopes[i];
+            if (scope) syncStatus.report(scope, r.status === "fulfilled");
         });
 
         // Step 2: push the freshly-cached IDB data into React state. The

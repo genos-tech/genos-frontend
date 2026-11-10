@@ -2383,14 +2383,22 @@ export class ChannelService {
     // them into `_flags` (map split keeps them out of the active index)
     // and back-fill any host messages not synced this session so the
     // adapter can resolve the row (mirrors funcSetFlaggedMessages).
+    //
+    // The sync status tracks it (MIP-1323): the past list says "loading" while the read is
+    // in flight and "couldn't load" when it failed, never "No completed flags" for a
+    // read nothing answered. Never rejects, as before; no token, no read, no report.
     async fetchCompletedFlags(): Promise<void> {
-        let flags: Flag[];
+        if (!this.hasAccessToken()) return;
         try {
-            const res = await this.api().get<{ flags: Flag[] }>("/api/v3/flags/?status=completed");
-            flags = res.data?.flags ?? [];
+            await syncStatus.track("flags", this._fetchCompletedFlags());
         } catch {
-            return;
+            /* reported to the sync status; the past list keeps what it has */
         }
+    }
+
+    private async _fetchCompletedFlags(): Promise<void> {
+        const res = await this.api().get<{ flags: Flag[] }>("/api/v3/flags/?status=completed");
+        const flags: Flag[] = res.data?.flags ?? [];
         for (const f of flags) this._upsertFlag(f);
         const hasMessage = (messageId: string): boolean => {
             for (const msgs of this._messages.values()) {

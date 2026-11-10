@@ -21,6 +21,8 @@ export const ar: DeepPartial<Messages> = {
                 inboxFailed: "تعذّر تحميل صندوق الوارد",
                 tasksFailed: "تعذّر تحميل مهامك",
                 projectsFailed: "تعذّر تحميل مشاريعك",
+                notesFailed: "تعذّر تحميل ملاحظاتك",
+                flagsFailed: "تعذّر تحميل الأعلام المكتملة",
             },
             toast: {
                 region: "الإشعارات",

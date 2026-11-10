@@ -34,6 +34,8 @@ const KEYS = [
     "common.feedback.sync.inboxFailed",
     "common.feedback.sync.tasksFailed",
     "common.feedback.sync.projectsFailed",
+    "common.feedback.sync.notesFailed",
+    "common.feedback.sync.flagsFailed",
     "notes.editor.loadFailed",
     "tasks.activity.loadFailed",
     "tasks.dashboard.velocity.loadFailed",

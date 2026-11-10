@@ -61,7 +61,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { useSyncFailure } from "../../../../services/syncStatus";
+import { useSyncFailure, useTasksSyncFailure } from "../../../../services/syncStatus";
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -348,6 +348,9 @@ export const TaskHomeContent = ({
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const projectsSync = useSyncFailure("projects");
+    // The open project's rows: the cards below are computed from them, so a read that
+    // is still running or failed must not draw as "no tasks / nothing assigned" (MIP-1323).
+    const tasksSync = useTasksSyncFailure(usePM.currentProject?.projectId);
     const { accessToken } = useAuth();
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
@@ -408,6 +411,8 @@ export const TaskHomeContent = ({
     }, [selectedSprint?.sprintId]);
     // ── All-project stats ──
     const allTasks = useTM.allTasks || [];
+    const tasksUnread =
+        allTasks.length === 0 && (tasksSync.failed || tasksSync.loading || tasksSync.retrying);
 
     // Index every task by id so we can walk the parent chain efficiently.
     const taskById = useMemo(() => {
@@ -869,6 +874,11 @@ export const TaskHomeContent = ({
     const selectedMember = selectedMemberId
         ? (projectMembers.find((m) => m.id === selectedMemberId) ?? null)
         : null;
+
+    // The shared My Tasks / Member's Tasks body (hidden while the rows are unread).
+    const showFocusBody =
+        !tasksUnread &&
+        (activeTab === "mytasks" || (activeTab === "members" && selectedMember != null));
 
     // The user the shared tasks-body renders stats for: me on "My Tasks", the
     // resolved member on "Member's Tasks" (null → the body isn't shown).
@@ -1772,8 +1782,26 @@ export const TaskHomeContent = ({
                                 </Stack>
                             </Stack>
 
+                            {/* The cards are counted from the project's rows. While the first read
+                            is in flight, or failed with nothing cached, say so instead of
+                            "No tasks" / "Nothing assigned" / zeroed charts. The member picker
+                            below needs no rows and stays. */}
+                            {tasksUnread && (
+                                <DataState
+                                    error={tasksSync.failed}
+                                    hasData={false}
+                                    loading={tasksSync.loading || tasksSync.retrying}
+                                    skeleton={<SkeletonRows count={4} />}
+                                    errorState={{
+                                        "data-error": "home-tasks",
+                                        onRetry: tasksSync.retry,
+                                        title: t.common.feedback.sync.tasksFailed,
+                                    }}
+                                />
+                            )}
+
                             {/* ════════ TAB: Sprint Insights ════════ */}
-                            {activeTab === "sprint" && (
+                            {!tasksUnread && activeTab === "sprint" && (
                                 <>
                                     {/* Sprint progress summary — moved here out of
                                     the pinned header so the header stays compact. */}
@@ -2304,8 +2332,7 @@ export const TaskHomeContent = ({
                             )}
 
                             {/* ════════ TAB: My Tasks / Member's Tasks (shared body) ════════ */}
-                            {(activeTab === "mytasks" ||
-                                (activeTab === "members" && selectedMember != null)) && (
+                            {showFocusBody && (
                                 <>
                                     {/* ════════ Section MY: My Tasks ════════ */}
                                     {/* Big "nothing assigned" card only when there's truly
@@ -2697,7 +2724,7 @@ export const TaskHomeContent = ({
                             )}
 
                             {/* ════════ TAB: Overall Insights ════════ */}
-                            {activeTab === "overall" && (
+                            {!tasksUnread && activeTab === "overall" && (
                                 <>
                                     {/* ════════ Section B: Status Distribution ════════ */}
                                     <Box>

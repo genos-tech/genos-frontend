@@ -20,7 +20,7 @@ import { TaskSubTasksBlock } from "../features/tasks/components/contents/base/Ta
 import { ProjectsListItem } from "../features/tasks/components/sidebar/ProjectsListItem";
 import { SavedFiltersMenu } from "../features/tasks/components/table/SavedFiltersMenu";
 import { en } from "../i18n/locales/en";
-import { syncStatus } from "../services/syncStatus";
+import { syncStatus, tasksScope } from "../services/syncStatus";
 import type { TaskProps, TaskTableProps } from "../types/tasks";
 
 // ---- HTTP, faked at axios (same shape as loadStates.test.tsx) ---------------
@@ -308,10 +308,10 @@ describe("Sprint board", () => {
 
     it("is the error with Retry when the read failed and nothing is cached; Retry re-runs the sync", async () => {
         const rerun = vi.fn(() => {
-            syncStatus.report("tasks", true);
+            syncStatus.report("tasks:1", true);
         });
         syncStatus.setRetry(rerun);
-        act(() => syncStatus.report("tasks", false));
+        act(() => syncStatus.report("tasks:1", false));
         board({});
 
         expect(await screen.findByText(en.common.feedback.sync.tasksFailed)).toBeTruthy();
@@ -321,6 +321,28 @@ describe("Sprint board", () => {
 
         await waitFor(() => expect(screen.getByTestId("column-open")).toBeTruthy());
         expect(rerun).toHaveBeenCalledTimes(1);
+        expect(screen.queryByText(en.common.feedback.sync.tasksFailed)).toBeNull();
+    });
+
+    it("MIP-1323: stays a skeleton while the project's first read is in flight, past the 8 s isLoadingTasks timeout", async () => {
+        let answer!: () => void;
+        const read = syncStatus.track(tasksScope(1), new Promise<void>((r) => (answer = r)));
+        // `isLoadingTasks` already timed out (false), the read is still running.
+        board({ isLoadingTasks: false });
+        expect(screen.getByRole("status", { name: en.tasks.table.loadingTasks })).toBeTruthy();
+        expect(screen.queryByTestId("column-open")).toBeNull();
+
+        await act(async () => {
+            answer();
+            await read;
+        });
+        expect(screen.getByTestId("column-open")).toBeTruthy();
+    });
+
+    it("MIP-1323: another project's failed load does not turn this board into an error", () => {
+        act(() => syncStatus.report("tasks:2", false));
+        board({});
+        expect(screen.getByTestId("column-open")).toBeTruthy();
         expect(screen.queryByText(en.common.feedback.sync.tasksFailed)).toBeNull();
     });
 
@@ -366,7 +388,7 @@ describe("Sprint board", () => {
     });
 
     it("cached cards stay on screen when a refresh failed or is in flight", () => {
-        act(() => syncStatus.report("tasks", false));
+        act(() => syncStatus.report("tasks:1", false));
         board({ allTasks: [row], isLoadingTasks: true });
         expect(screen.getByTestId("card-42")).toBeTruthy();
         expect(screen.queryByText(en.common.feedback.sync.tasksFailed)).toBeNull();
