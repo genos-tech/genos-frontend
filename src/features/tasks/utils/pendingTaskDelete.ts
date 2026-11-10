@@ -1,5 +1,6 @@
 import { TaskTableProps } from "../../../types/tasks";
 import type { TaskGraph } from "../diagram/types";
+import type { Milestone } from "../sprint-milestone/types";
 
 /**
  * A task delete waits behind an Undo toast (MIP-1303, `useDeleteTask`). While it
@@ -69,4 +70,37 @@ export const overlayGraphDeletes = (graph: TaskGraph, hidden: ReadonlySet<string
     return tasks === graph.tasks && externalTasks === graph.externalTasks
         ? graph
         : { ...graph, tasks, externalTasks };
+};
+
+/**
+ * The project -> milestones map with every pending delete shown as Deleted. A
+ * milestone's delete is keyed by its backing task (`task:<taskId>`, see
+ * `useDeleteTask`), so the match is on `taskId`. The sidebar, the pickers, the
+ * filter and the dashboard already leave a "Deleted" milestone out, which is all
+ * the overlay has to say. The SAME object when nothing applies, and a bucket
+ * nothing applies to keeps its array (a new identity re-runs every selector).
+ */
+export const overlayPendingMilestoneDeletes = (
+    byProject: Record<number, Milestone[]>,
+    hidden: ReadonlySet<string>
+): Record<number, Milestone[]> => {
+    if (hidden.size === 0) return byProject;
+    let changed = false;
+    const next: Record<number, Milestone[]> = {};
+    for (const [projectId, list] of Object.entries(byProject)) {
+        let bucketChanged = false;
+        const overlaid = list.map((m) => {
+            if (
+                m.taskId == null ||
+                m.status === "Deleted" ||
+                !isTaskDeletePending(hidden, m.taskId)
+            )
+                return m;
+            bucketChanged = true;
+            return { ...m, status: "Deleted" };
+        });
+        if (bucketChanged) changed = true;
+        next[Number(projectId)] = bucketChanged ? overlaid : list;
+    }
+    return changed ? next : byProject;
 };
