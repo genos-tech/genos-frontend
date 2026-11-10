@@ -26,9 +26,10 @@ export const FAB_SIZE = 38;
 export const FAB_EDGE_GAP = 16;
 
 /**
- * Attribute a bottom-pinned composer carries so the FAB can keep clear of it.
- * Put it on the box that holds the editor AND its Send button: that whole
- * box is a control (you tap it to type, and Send sits in its corner).
+ * Attribute a bottom-pinned composer (or a banner floating over the bottom
+ * of the page) carries so the FAB can keep clear of it. On a composer, put it
+ * on the box that holds the editor AND its Send button: that whole box is a
+ * control (you tap it to type, and Send sits in its corner).
  */
 export const FAB_AVOID_ATTR = "data-fab-avoid";
 

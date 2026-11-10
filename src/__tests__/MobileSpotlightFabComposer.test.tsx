@@ -154,4 +154,8 @@ describe("composers carry the marker", () => {
     ])("%s marks its composer box", (file) => {
         expect(src(file)).toContain('data-fab-avoid="composer"');
     });
+
+    it("the install banner (it floats over the composer's top edge) is avoided too", () => {
+        expect(src("components/layout/InstallBanner.tsx")).toContain('data-fab-avoid="banner"');
+    });
 });
