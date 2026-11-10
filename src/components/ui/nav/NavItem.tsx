@@ -102,7 +102,11 @@ export type NavItemProps = {
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
 // `actionsInPlace`: a hidden action leaves the layout (absolute, invisible, not
-// clickable) but stays focusable; showing it puts it back in the flow.
+// clickable) but stays focusable; showing it puts it back in the flow. Only ever applied
+// to an action WITHOUT `NAV_KEEP_CLASS`: a kept action (the to-do button with its count
+// badge) is never taken out of the flow, and a badge is `position: relative` so its chip
+// can sit on the button's corner. Forcing `static` on it on hover let the chip fly to the
+// row's corner (MIP-1199).
 const ACTION_OUT_OF_FLOW = { position: "absolute", pointerEvents: "none" } as const;
 const ACTION_IN_FLOW = { position: "static", pointerEvents: "auto" } as const;
 
@@ -197,7 +201,7 @@ export const NavItem = ({
                             },
                         }),
                         ...(actionsInPlace && {
-                            "&:focus-within .NavItem-actions > *": {
+                            [`&:focus-within .NavItem-actions > *:not(.${NAV_KEEP_CLASS})`]: {
                                 opacity: 1,
                                 ...ACTION_IN_FLOW,
                             },
@@ -217,7 +221,7 @@ export const NavItem = ({
                                 },
                             }),
                             ...(actionsInPlace && {
-                                "&:hover .NavItem-actions > *": {
+                                [`&:hover .NavItem-actions > *:not(.${NAV_KEEP_CLASS})`]: {
                                     opacity: 1,
                                     ...ACTION_IN_FLOW,
                                 },
@@ -497,10 +501,10 @@ export const NavItem = ({
                                       }),
                                   // No hover to reveal them on touch.
                                   "@media (hover: none)": {
-                                      "& > *": {
-                                          opacity: 1,
-                                          ...(actionsInPlace && ACTION_IN_FLOW),
-                                      },
+                                      "& > *": { opacity: 1 },
+                                      ...(actionsInPlace && {
+                                          [`& > *:not(.${NAV_KEEP_CLASS})`]: ACTION_IN_FLOW,
+                                      }),
                                   },
                               }
                     }

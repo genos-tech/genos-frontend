@@ -14,7 +14,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { cssOf } from "./utils/cssOf";
+import { cssOf, cssWithMediaOf } from "./utils/cssOf";
 
 import { NavItem, NavItemProps } from "../components/ui/nav/NavItem";
 import { NAV_INDENT_STEP, navIndentLength } from "../components/ui/nav/navStyles";
@@ -224,9 +224,13 @@ describe("NavItem", () => {
         it("hover and keyboard focus bring the actions back and hide what gives way", () => {
             mountInPlace();
             const css = cssOf(row());
-            expect(css).toMatch(/:focus-within \.NavItem-actions\s*>\s*\*[^}]*position: static/);
+            expect(css).toMatch(
+                /:focus-within \.NavItem-actions\s*>\s*\*:not\(\.NavItem-keep\)[^}]*position: static/
+            );
             expect(css).toMatch(/:focus-within \.NavItem-hide-on-actions[^}]*display: none/);
-            expect(css).toMatch(/:hover \.NavItem-actions\s*>\s*\*[^}]*position: static/);
+            expect(css).toMatch(
+                /:hover \.NavItem-actions\s*>\s*\*:not\(\.NavItem-keep\)[^}]*position: static/
+            );
             expect(css).toMatch(/:hover \.NavItem-hide-on-actions[^}]*display: none/);
         });
 
@@ -236,6 +240,24 @@ describe("NavItem", () => {
             expect(
                 cssOf(screen.getByRole("button", { name: "More" }).parentElement as Element)
             ).toContain(":not(.NavItem-keep)");
+        });
+
+        it("no rule ever sets the position of a kept action, so a badge keeps its anchor (MIP-1199)", () => {
+            // The to-do button wears a count badge (`position: relative`) whose chip is placed
+            // from it. On hover the other actions come into the flow and the button slides
+            // left; a `position: static` on the badge sent the chip to the row's corner.
+            mountInPlace();
+            const more = screen.getByRole("button", { name: "More" });
+            const rules =
+                cssWithMediaOf(row()) + "\n" + cssWithMediaOf(more.parentElement as Element);
+            const positioning = rules
+                .split("\n")
+                .filter((r) => /position:\s*(static|absolute)/.test(r));
+            expect(positioning.length).toBeGreaterThan(0);
+            for (const rule of positioning) {
+                const selector = rule.replace(/^@media[^{]*\{\s*/, "").split("{")[0];
+                expect(selector, rule).toMatch(/>\s*\*:not\(\.NavItem-keep\)/);
+            }
         });
 
         it("actionsVisible (a menu is open) keeps them in the flow and hides the time", () => {
