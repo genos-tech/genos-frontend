@@ -15,7 +15,7 @@ import {
 } from "../../services/notifications/pushSubscription";
 import {
     ActiveSurface,
-    MutedTargetRef,
+    MutedTargetInput,
     MutedTargetType,
     NotificationIntent,
     NotificationPreference,
@@ -65,7 +65,7 @@ export interface NotificationsState extends NotificationPauseState {
     unmute: (chatType: number, chatId: string) => void;
     isMuted: (chatType: number, chatId: string) => boolean;
     /** Add/replace a per-object mute (thread / task / note). */
-    muteTarget: (entry: MutedTargetRef) => void;
+    muteTarget: (entry: MutedTargetInput) => void;
     /** `noteType` (1 personal / 2 task / 3 chat) is part of a NOTE target's
      *  identity — pass the same value that was muted or the entry won't be
      *  found. Ignored for other target types. */
@@ -381,7 +381,7 @@ export const useNotifications = (
         [manager]
     );
     const muteTarget = useCallback(
-        (entry: MutedTargetRef) => manager.muteTarget(entry),
+        (entry: MutedTargetInput) => manager.muteTarget(entry),
         [manager]
     );
     const unmuteTarget = useCallback(

@@ -4,6 +4,7 @@ import {
     ActiveSurface,
     DEFAULT_NOTIFICATION_PREFERENCE,
     MutedChatRef,
+    MutedTargetInput,
     MutedTargetRef,
     MutedTargetType,
     NotificationDispatch,
@@ -426,7 +427,7 @@ export class NotificationManager {
      * Add (or replace, by `isSameTarget`) a per-object mute. `targetId` is
      * normalized to a string so stored and compared forms always match.
      */
-    muteTarget(entry: MutedTargetRef) {
+    muteTarget(entry: MutedTargetInput) {
         const targetId = String(entry.targetId);
         const next = this.prefs.mutedTargets.filter(
             (t) =>
@@ -442,7 +443,7 @@ export class NotificationManager {
                     t.noteType === undefined
                 )
         );
-        next.push({ ...entry, targetId });
+        next.push({ ...entry, targetId } satisfies MutedTargetRef);
         this.commitPatch({ mutedTargets: next });
     }
 
