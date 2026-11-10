@@ -17,11 +17,14 @@ import { describe, expect, it } from "vitest";
 import {
     CHAT_PALETTE,
     MILESTONE_PALETTE,
-    NOTE_PALETTE,
     TASK_PALETTE,
 } from "../components/editors/mentionPalettes";
 import { SpotlightResultItem } from "../features/spotlight/SpotlightResultItem";
 import type { SpotlightResult } from "../features/spotlight/types";
+import { hexToRgb } from "../theme/tokens/color";
+
+// jsdom serializes a hex color as rgb().
+const rgb = (hex: string): string => `rgb(${hexToRgb(hex).join(", ")})`;
 
 const FILE = "features/spotlight/SpotlightResultItem.tsx";
 const code = readFileSync(join(__dirname, "..", FILE), "utf8")
@@ -95,14 +98,17 @@ describe("the result row", () => {
     });
 
     it.each([
-        ["task", TASK_PALETTE],
-        ["milestone", MILESTONE_PALETTE],
-        ["note", NOTE_PALETTE],
-        ["chat", CHAT_PALETTE],
-    ] as const)("the %s icon tile is its identity palette, flat", (entity_type, palette) => {
+        ["task", rgb(TASK_PALETTE.text)],
+        ["milestone", rgb(MILESTONE_PALETTE.text)],
+        ["chat", rgb(CHAT_PALETTE.text)],
+        // The violet kinds resolve to the brand var in their palette: they take the accent role.
+        ["note", "var(--g-accent)"],
+        ["note_folder", "var(--g-accent)"],
+        // A past answer is a Genos moment.
+        ["spotlight_answer", "var(--g-brand-gradient)"],
+    ] as const)("the %s icon tile is its identity hue as one flat fill", (entity_type, fill) => {
         renderRow({ entity_type });
         const tile = screen.getByRole("button").firstElementChild as HTMLElement;
-        expect(getComputedStyle(tile).background).toBe(palette.bg);
-        expect(getComputedStyle(tile).backgroundImage).not.toMatch(/gradient/);
+        expect(getComputedStyle(tile).background).toBe(fill);
     });
 });

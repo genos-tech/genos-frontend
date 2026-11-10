@@ -16,7 +16,6 @@ import { Box, Chip, Typography } from "@mui/joy";
 
 import {
     CHAT_PALETTE,
-    mentionIconColor,
     MILESTONE_PALETTE,
     NOTE_PALETTE,
     PROJECT_PALETTE,
@@ -92,12 +91,15 @@ const ENTITY_ICON = {
     spotlight_answer: AutoAwesomeRoundedIcon,
 };
 
-// The icon tile's identity color per entity kind: the SAME palettes the `#` mentions and the
-// agent dropdown use (`mentionPalettes`), so a task is blue, a milestone orange, a note violet and
-// a chat teal in a message, in the mention menu and here. They are data (the entity's identity),
-// not theme colors. A flat tint behind the icon, never a gradient. A past answer is a Genos
-// moment: it takes the accent roles.
-const ENTITY_TILE: Record<string, MentionPalette> = {
+// The icon tile's identity color per entity kind: the SAME hues the `#` mentions and the agent
+// dropdown use (`mentionPalettes`), so a task is blue, a milestone orange, a note violet and a
+// chat teal in a message, in the mention menu and here. They are data (the entity's identity),
+// not theme colors. The tile is a FLAT solid of that hue with the white icon on it (it passes 3:1
+// in both modes: the palettes' own text hues do not on a tinted wash in dark). The violet kinds
+// (note, todo) resolve to the brand var in the palette, so they take the accent roles. A past
+// answer is a Genos moment: the brand gradient role.
+const isBrandVar = (p: MentionPalette) => p.text.startsWith("var(");
+const ENTITY_TILE: Record<string, MentionPalette | "genos"> = {
     chat: CHAT_PALETTE,
     task: TASK_PALETTE,
     milestone: MILESTONE_PALETTE,
@@ -105,12 +107,10 @@ const ENTITY_TILE: Record<string, MentionPalette> = {
     note_folder: NOTE_PALETTE,
     project: PROJECT_PALETTE,
     todo: TODO_PALETTE,
-    spotlight_answer: {
-        bg: g.accent.subtle,
-        bgHover: g.accent.subtle,
-        text: g.accent.text,
-    },
+    spotlight_answer: "genos",
 };
+const tileBackground = (tile: MentionPalette | "genos"): string =>
+    tile === "genos" ? g.brand.gradient : isBrandVar(tile) ? g.accent.solid : tile.text;
 
 // Friendly label shown next to the icon for context (e.g. "DM",
 // "Group chat", "Personal note"). Exported so the agent's source-chip
@@ -405,10 +405,10 @@ const SpotlightResultItemInner = ({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: tile.bg,
+                    background: tileBackground(tile),
                 }}
             >
-                <Icon sx={{ fontSize: 20, color: mentionIconColor(tile) }} />
+                <Icon sx={{ fontSize: 20, color: g.accent.fg }} />
             </Box>
 
             <Box sx={{ minWidth: 0, flex: 1 }}>
