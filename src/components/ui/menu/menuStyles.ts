@@ -127,3 +127,17 @@ export const menuTriggerSx = {
     },
     "&:focus-visible": focusRing,
 } as const;
+
+/**
+ * Keeps a menu inside the viewport on the cross axis too (MIP-1331).
+ *
+ * Popper only slides a menu along the edge it is attached to; if it fits neither
+ * above nor below its trigger it keeps the side with more room and runs off the
+ * screen. A tall menu opened from a row near the middle of a phone then had its last
+ * row (Delete) under the bottom edge. `altAxis` slides it up until it fits; the
+ * surface's `maxHeight` (100dvh - 16px) guarantees it can. Module-level so Joy's `useMemo`
+ * over `modifiers` stays stable.
+ */
+export const MENU_POPPER_MODIFIERS = [
+    { name: "preventOverflow", options: { altAxis: true, padding: 8, tether: false } },
+];
