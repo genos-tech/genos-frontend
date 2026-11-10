@@ -10,6 +10,9 @@ name: CI
 # findings are separately remediated. Report-only is achieved by leaving the
 # check out of branch protection's required list — NOT by
 # `continue-on-error` (which would mask a red baseline).
+# `frontend-test-types` (MIP-1315) is report-only the same way: it type-checks
+# the TESTS, which `frontend-build` leaves out on purpose, and goes red when the
+# error count rises above scripts/test-typecheck-baseline.json.
 #
 # Path filtering happens INSIDE the workflow (the `changes` job below +
 # job-level `if`), NOT via `on.pull_request.paths`. The CI checks are
@@ -258,6 +261,35 @@ jobs:
                   CI: "true"
                   # Node's default old-space heap (~2GB) OOMs during vite's
                   # chunk-rendering on this large app; GitHub runners have ~7GB.
+                  NODE_OPTIONS: --max-old-space-size=4096
+
+    # Type-checks the TESTS (MIP-1315). `frontend-build` (`tsc -b`) excludes
+    # `src/__tests__` and `*.test.ts(x)` on purpose, so that stale test-fixture type
+    # drift cannot block a deploy; the side effect is that a stale prop in a test is
+    # never type-checked. This job runs `tsc -p tsconfig.test.json` and compares the
+    # per-file error COUNT with the committed baseline
+    # (scripts/test-typecheck-baseline.json): the count may only fall. Report-only:
+    # it is not in the ruleset's required list, so a rise is a red check, not a
+    # blocked merge or a blocked deploy. `npm run typecheck:tests:update` lowers the
+    # baseline after a sweep. It rides the same `changes` filter as the build (a
+    # docs-only PR cannot change a type).
+    frontend-test-types:
+        name: frontend-test-types (report-only)
+        needs: changes
+        if: needs.changes.outputs.code == 'true'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+              with:
+                  node-version: 22
+                  cache: npm
+                  cache-dependency-path: package-lock.json
+            - run: npm ci
+            - name: Test type check (error-count ratchet)
+              run: npm run typecheck:tests
+              env:
+                  # Same heap headroom as the build: tsc on the whole of src/ plus the tests.
                   NODE_OPTIONS: --max-old-space-size=4096
 
     # Deliberately NOT gated on `changes`: prettier checks `.` — including

@@ -122,6 +122,7 @@ describe("api.ts response interceptor → request-error toast", () => {
     // error carrying `response.status`, so the real wired interceptor runs.
     const rejectingWith = (status: number) => {
         const instance = authApi("tok");
+        if (!instance) throw new Error("authApi gave no instance for a token");
         instance.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
             throw Object.assign(new Error(`HTTP ${status}`), {
                 isAxiosError: true,
@@ -186,6 +187,7 @@ describe("api.ts response interceptor → request-error toast", () => {
     it("stays silent on a network error (no response → the API-down banner owns it)", async () => {
         const { seen, unsub } = capture();
         const instance = authApi("tok");
+        if (!instance) throw new Error("authApi gave no instance for a token");
         instance.defaults.adapter = async () => {
             throw Object.assign(new Error("Network Error"), { isAxiosError: true });
         };
@@ -200,6 +202,7 @@ describe("api.ts → API-down reason", () => {
     // reaches the health listener.
     const failingWith = (extra: Record<string, unknown>) => {
         const instance = authApi("tok");
+        if (!instance) throw new Error("authApi gave no instance for a token");
         instance.defaults.adapter = async () => {
             throw Object.assign(new Error("Network Error"), { isAxiosError: true, ...extra });
         };
@@ -241,6 +244,7 @@ describe("api.ts → API-down reason", () => {
         const calls: Array<[boolean, string | undefined]> = [];
         registerApiHealthListener((isDown, reason) => calls.push([isDown, reason]));
         const instance = authApi("tok");
+        if (!instance) throw new Error("authApi gave no instance for a token");
         instance.defaults.adapter = async (config: InternalAxiosRequestConfig) => ({
             data: {},
             status: 200,
