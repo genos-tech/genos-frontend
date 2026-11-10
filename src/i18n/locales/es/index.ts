@@ -4792,7 +4792,9 @@ export const es: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "Conecta GitHub para ver el estado de la PR",
                 connectButton: "Conectar GitHub",
-                loadFailed: "No se pudo cargar esta PR. Puede ser privada o haberse eliminado.",
+                privateOrDeleted:
+                    "Esta PR pertenece a un repo privado al que no tienes acceso o se ha eliminado.",
+                loadFailed: "No se pudo cargar esta PR.",
                 state: {
                     merged: "Fusionado",
                     draft: "Borrador",

@@ -643,7 +643,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 console.error("[CreateTaskForm] empty-task bootstrap failed:", err);
                 // Plan-limit rejections carry a user-facing "why" —
                 // show it in the error pane instead of the generic
-                // bootstrap-failure copy (retry won't help there).
+                // bootstrap-failure copy. The pane still offers Retry: a
+                // plan-limit rejection can pass once a slot is freed or the
+                // plan changes.
                 setBootstrapError({
                     body:
                         err instanceof LimitReachedError && err.message ? err.message : undefined,

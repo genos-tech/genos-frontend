@@ -5588,7 +5588,8 @@ export const ar: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "اربط GitHub لعرض حالة PR",
                 connectButton: "ربط GitHub",
-                loadFailed: "تعذّر تحميل هذا PR. قد يكون خاصًا أو محذوفًا.",
+                privateOrDeleted: "هذا PR خاص بمستودع لا يمكنك الوصول إليه، أو تم حذفه.",
+                loadFailed: "تعذّر تحميل هذا PR.",
                 state: {
                     merged: "تم الدمج",
                     draft: "مسودة",

@@ -2640,8 +2640,9 @@ export const ja: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "GitHub に接続して PR ステータスを確認する",
                 connectButton: "GitHubに接続する",
-                loadFailed:
-                    "この PR を読み込めませんでした。非公開か、削除された可能性があります。",
+                privateOrDeleted:
+                    "この PR は、アクセス権のないリポジトリに対してプライベートになっているか、削除されています。",
+                loadFailed: "この PR を読み込めませんでした。",
                 state: {
                     merged: "マージ済み",
                     draft: "下書き",
