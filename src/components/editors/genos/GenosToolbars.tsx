@@ -37,16 +37,21 @@ type EditorForItems = Parameters<typeof getBlockTypeSelectItemsWithCodeBlock>[0]
  *
  *   `isEditable` false: only the comment button remains (`hasComments`), as before.
  *   `hasComments`:      the document has a thread store, so Comment is offered.
+ *   `media` false:      no GIF button (a to-do's notes, MIP-1334: nowhere to upload to). The
+ *                       file buttons stay: they only show on a file block, which the notes
+ *                       never get from this toolbar or the `/` menu.
  */
 export const GenosDocumentToolbar = ({
     editor,
     isEditable = true,
     hasComments = false,
+    media = true,
     setShowGifPicker,
 }: {
     editor: EditorForItems;
     isEditable?: boolean;
     hasComments?: boolean;
+    media?: boolean;
     setShowGifPicker: (value: boolean) => void;
 }) => {
     const { t } = useTranslation();
@@ -80,7 +85,9 @@ export const GenosDocumentToolbar = ({
                     <TextAlignButton key={"textAlignRightButton"} textAlignment={"right"} />
                     <ColorStyleButton key={"colorStyleButton"} />
                     <CreateLinkButton key={"createLinkButton"} />
-                    <GifToolbarButton key={"gifButton"} setShowGifPicker={setShowGifPicker} />
+                    {media && (
+                        <GifToolbarButton key={"gifButton"} setShowGifPicker={setShowGifPicker} />
+                    )}
                     <FileCaptionButton key={"fileCaptionButton"} />
                     <FileReplaceButton key={"fileReplaceButton"} />
                 </>
