@@ -1,11 +1,12 @@
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import WorkspacesRoundedIcon from "@mui/icons-material/WorkspacesRounded";
-import { Box, Button, Stack, Typography } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
 import { DataState } from "../../../../components/ui/feedback/DataState";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ResizeHandle } from "../../../../components/ui/ResizeHandle";
 import { LayoutStyles } from "../../../../components/ui/styles/commonStyle";
@@ -298,112 +299,25 @@ export const TaskHomeLayout = ({
                 </>
             );
         }
-        const isDark = mode === "dark";
-        // Sidebar nav items use this purple palette (var(--gp-brandalt-400) dark / var(--gp-brand-700)
-        // light); reuse it so the empty state feels native to the Tasks
-        // service.
-        const accent = isDark ? "var(--gp-brandalt-400)" : "var(--gp-brand-700)";
-        // Triplet companion: brand colors are CSS variables, so alpha is
-        // composed with rgba() — `rgba(${accentRgb}, 0.8)` would be invalid CSS.
-        const accentRgb = isDark ? "var(--gp-brandalt-400-rgb)" : "var(--gp-brand-700-rgb)";
-
+        // A new account's first screen: the shared EmptyState like every other
+        // empty pane (MIP-1329). It used to be a hand-built hero (brand wash,
+        // blurred glass card, glowing gradient tile, bold large button).
         return (
             <>
                 <ResizeHandle className="task-resize-handle" />
                 <Panel id={"6"} maxSize={100} minSize={70} order={6}>
-                    <Box
-                        sx={{
-                            height: "100%",
-                            width: "100%",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            p: 4,
-                            borderRight: "1px solid",
-                            borderColor: ls.sidebarPanel.borderColor,
-                            background: isDark
-                                ? `radial-gradient(1200px 600px at 50% 0%, rgba(${accentRgb}, 0.063) 0%, transparent 60%)`
-                                : `radial-gradient(1200px 600px at 50% 0%, rgba(${accentRgb}, 0.051) 0%, transparent 60%)`,
+                    <EmptyState
+                        action={{
+                            label: t.tasks.layout.createProject,
+                            icon: <AddRoundedIcon />,
+                            onClick: () => usePM.setOpenCreateProject(true),
                         }}
-                    >
-                        <Stack
-                            alignItems="center"
-                            spacing={2.5}
-                            sx={{
-                                width: "100%",
-                                maxWidth: 460,
-                                textAlign: "center",
-                                p: { xs: 3, sm: 5 },
-                                borderRadius: "xl",
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.06)",
-                                background: isDark
-                                    ? "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)"
-                                    : "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%)",
-                                backdropFilter: "blur(8px)",
-                                boxShadow: isDark
-                                    ? "0 12px 40px rgba(0,0,0,0.35)"
-                                    : "0 12px 40px rgba(var(--gp-brand-700-rgb), 0.08)",
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    position: "relative",
-                                    width: 72,
-                                    height: 72,
-                                    borderRadius: "20px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    background: isDark
-                                        ? `linear-gradient(135deg, rgba(${accentRgb}, 0.188) 0%, rgba(${accentRgb}, 0.082) 100%)`
-                                        : `linear-gradient(135deg, rgba(${accentRgb}, 0.125) 0%, rgba(${accentRgb}, 0.063) 100%)`,
-                                    border: "1px solid",
-                                    borderColor: isDark
-                                        ? `rgba(${accentRgb}, 0.251)`
-                                        : `rgba(${accentRgb}, 0.188)`,
-                                    boxShadow: isDark
-                                        ? `0 8px 24px rgba(${accentRgb}, 0.145)`
-                                        : `0 8px 24px rgba(${accentRgb}, 0.122)`,
-                                }}
-                            >
-                                <WorkspacesRoundedIcon
-                                    sx={{
-                                        fontSize: 32,
-                                        color: accent,
-                                    }}
-                                />
-                            </Box>
-
-                            <Stack alignItems="center" spacing={0.75}>
-                                <Typography level="h4" sx={{ fontWeight: 700 }}>
-                                    {t.tasks.layout.noProjectTitle}
-                                </Typography>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.65)"
-                                            : "rgba(0,0,0,0.6)",
-                                        maxWidth: 360,
-                                    }}
-                                >
-                                    {t.tasks.layout.noProjectBody}
-                                </Typography>
-                            </Stack>
-
-                            <Button
-                                size="lg"
-                                startDecorator={<AddRoundedIcon />}
-                                sx={{ mt: 0.5 }}
-                                onClick={() => usePM.setOpenCreateProject(true)}
-                            >
-                                {t.tasks.layout.createProject}
-                            </Button>
-                        </Stack>
-                    </Box>
+                        body={t.tasks.layout.noProjectBody}
+                        data-empty="no-project"
+                        icon={<WorkspacesRoundedIcon />}
+                        title={t.tasks.layout.noProjectTitle}
+                        fill
+                    />
                 </Panel>
             </>
         );

@@ -183,8 +183,6 @@ describe("feedback adoption", () => {
                 "fallback of a value",
             "features/tasks/components/dashboard/TaskHomeContent.tsx":
                 "value labels and the tiny 'no overdue / none due this week / no members' lines inside dashboard cards",
-            "features/tasks/components/layout/TaskHomeLayout.tsx":
-                "the first-run hero (brand gradient, large create-project button): kept until the look is decided (MIP-1329)",
             "features/tasks/components/modals/ModalCreateProject.tsx":
                 "no match in a member picker",
             "features/tasks/components/sidebar/ProjectsListItem.tsx": "one dense sidebar row",
@@ -226,6 +224,16 @@ describe("feedback adoption", () => {
         const flagged = files.filter(({ text }) => scan(text).length > 0).map(({ f }) => f);
         expect(flagged.filter((f) => !(f in ALLOWED))).toEqual([]);
         expect(Object.keys(ALLOWED).filter((f) => !flagged.includes(f))).toEqual([]);
+    });
+
+    it("MIP-1329: the Tasks first-run screen (no project yet) is the shared EmptyState, with no hand-built hero left", () => {
+        const text = files.find(
+            ({ f }) => f === "features/tasks/components/layout/TaskHomeLayout.tsx"
+        )?.text;
+        expect(text).toContain("ui/feedback/EmptyState");
+        expect(text).toContain('data-empty="no-project"');
+        // The hero was a radial brand wash, a blurred glass card and a glowing gradient tile.
+        expect(text).not.toMatch(/backdropFilter|radial-gradient|linear-gradient|rgba?\(/);
     });
 
     it("MIP-1173: HistoryModal uses the shared EmptyState, not a local copy", () => {
