@@ -4843,6 +4843,7 @@ export const zh: DeepPartial<Messages> = {
             quickAddDismiss: "关闭",
         },
         subTasks: {
+            loadFailed: "无法加载子任务",
             title: "子任务",
             buttonLabel: "子任务",
             emptyText: "暂无子任务",
@@ -5153,6 +5154,7 @@ export const zh: DeepPartial<Messages> = {
             noAssignee: "无受让人",
         },
         savedFilters: {
+            loadFailed: "无法加载已保存的筛选器",
             button: "已保存的过滤器",
             tooltip: "保存当前的过滤器组合，或应用项目已有的过滤器组合",
             loading: "加载中…",

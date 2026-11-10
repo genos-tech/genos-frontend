@@ -5080,6 +5080,7 @@ export const fr: DeepPartial<Messages> = {
             quickAddDismiss: "Fermer",
         },
         subTasks: {
+            loadFailed: "Impossible de charger les sous-tâches",
             title: "Sous-tâches",
             buttonLabel: "Sous-tâche",
             emptyText: "Aucune sous-tâche pour le moment",
@@ -5399,6 +5400,7 @@ export const fr: DeepPartial<Messages> = {
             noAssignee: "Aucun cessionnaire",
         },
         savedFilters: {
+            loadFailed: "Impossible de charger les filtres enregistrés",
             button: "Filtres enregistrés",
             tooltip:
                 "Enregistrez la combinaison de filtres actuelle ou appliquez-en une que le projet possède déjà.",

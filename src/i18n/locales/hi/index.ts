@@ -2539,6 +2539,7 @@ export const hi: DeepPartial<Messages> = {
             quickAddDismiss: "बंद करें",
         },
         subTasks: {
+            loadFailed: "सब टास्क लोड नहीं हो सके",
             title: "सब टास्क",
             buttonLabel: "सब टास्क",
             emptyText: "अभी कोई सब टास्क नहीं",
@@ -2853,6 +2854,7 @@ export const hi: DeepPartial<Messages> = {
             noAssignee: "कोई समनुदेशिती नहीं",
         },
         savedFilters: {
+            loadFailed: "सहेजे गए फ़िल्टर लोड नहीं हो सके",
             button: "सहेजे गए फ़िल्टर",
             tooltip:
                 "वर्तमान फ़िल्टर संयोजन सहेजें, या प्रोजेक्ट में पहले से मौजूद फ़िल्टर संयोजन लागू करें",

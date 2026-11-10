@@ -32,7 +32,7 @@ import { Alert, Box, Button, IconButton, Input, Stack, Typography } from "@mui/j
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
@@ -113,6 +113,11 @@ export const SavedFiltersMenu = ({
     const [menuOpen, setMenuOpen] = useState(false);
     const [fetched, setSaved] = useState<ProjectSavedFilter[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    // The last read of the list FAILED (null from the service). Not "no saved filters":
+    // that is the empty state, and it must not be said when nothing was read (MIP-1308).
+    const [loadFailed, setLoadFailed] = useState(false);
+    // Which project `saved` belongs to.
+    const savedOfRef = useRef<string | null>(null);
     const [dialog, setDialog] = useState<DialogState>({ kind: "closed" });
     const [nameDraft, setNameDraft] = useState("");
     const [dialogError, setDialogError] = useState<string | null>(null);
@@ -153,13 +158,21 @@ export const SavedFiltersMenu = ({
     const refresh = useCallback(async () => {
         if (!teamId || !projectId) {
             setSaved([]);
+            setLoadFailed(false);
             return;
         }
         const token = ++fetchTokenRef.current;
         setIsLoading(true);
         const rows = await loadProjectSavedFilters(teamId, projectId, accessToken);
         if (token !== fetchTokenRef.current) return;
-        setSaved(rows ?? []);
+        setLoadFailed(rows === null);
+        // A failed refresh keeps the rows on screen, unless they are another project's.
+        if (rows) {
+            savedOfRef.current = `${teamId}:${projectId}`;
+            setSaved(rows);
+        } else if (savedOfRef.current !== `${teamId}:${projectId}`) {
+            setSaved([]);
+        }
         setIsLoading(false);
     }, [teamId, projectId, accessToken]);
 
@@ -353,11 +366,19 @@ export const SavedFiltersMenu = ({
             </AppTooltip>
 
             <FilterMenu maxHeight="340px" minWidth="260px">
-                {isLoading && saved.length === 0 && <SkeletonRows count={3} label={ts.loading} />}
-
-                {!isLoading && saved.length === 0 && (
-                    <EmptyState body={ts.empty} data-empty="saved-filters" size="sm" />
-                )}
+                <DataState
+                    empty={{ body: ts.empty, "data-empty": "saved-filters" }}
+                    error={loadFailed}
+                    hasData={saved.length > 0}
+                    loading={isLoading}
+                    size="sm"
+                    skeleton={<SkeletonRows count={3} label={ts.loading} />}
+                    errorState={{
+                        title: ts.loadFailed,
+                        onRetry: () => void refresh(),
+                        "data-error": "saved-filters",
+                    }}
+                />
 
                 {saved.map((row) => {
                     // Compare by id, not name: two rows could momentarily

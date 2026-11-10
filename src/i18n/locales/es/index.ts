@@ -2549,6 +2549,7 @@ export const es: DeepPartial<Messages> = {
             quickAddDismiss: "Descartar",
         },
         subTasks: {
+            loadFailed: "No se pudieron cargar las subtareas",
             title: "Subtareas",
             buttonLabel: "Subtarea",
             emptyText: "Aún no hay subtareas",
@@ -3102,6 +3103,7 @@ export const es: DeepPartial<Messages> = {
             noAssignee: "Sin cesionario",
         },
         savedFilters: {
+            loadFailed: "No se pudieron cargar los filtros guardados",
             button: "Filtros guardados",
             tooltip:
                 "Guarde la combinación de filtros actual o aplique una que el proyecto ya tenga",

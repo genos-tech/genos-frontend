@@ -2510,6 +2510,7 @@ export const ar: DeepPartial<Messages> = {
             quickAddDismiss: "إغلاق",
         },
         subTasks: {
+            loadFailed: "تعذّر تحميل المهام الفرعية",
             title: "المهام الفرعية",
             buttonLabel: "مهمة فرعية",
             emptyText: "لا توجد مهام فرعية بعد",
@@ -3052,6 +3053,7 @@ export const ar: DeepPartial<Messages> = {
             noAssignee: "لا المكلف",
         },
         savedFilters: {
+            loadFailed: "تعذّر تحميل عوامل التصفية المحفوظة",
             button: "المرشحات المحفوظة",
             tooltip:
                 "احفظ مجموعة عوامل التصفية الحالية، أو قم بتطبيق مجموعة موجودة بالفعل في المشروع",

@@ -550,6 +550,7 @@ export const tasks = {
 
     // Sub-tasks block.
     subTasks: {
+        loadFailed: "Couldn't load the sub tasks",
         title: "Sub Tasks",
         buttonLabel: "Sub Task",
         emptyText: "No sub tasks yet",
@@ -905,6 +906,7 @@ export const tasks = {
     // sprint-board surfaces, so a "Views" dropdown here would mean two
     // different things by the same word.
     savedFilters: {
+        loadFailed: "Couldn't load saved filters",
         button: "Saved Filters",
         tooltip: "Save the current filter combination, or apply one the project already has",
         loading: "Loading…",

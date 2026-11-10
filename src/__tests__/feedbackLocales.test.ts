@@ -39,6 +39,8 @@ const KEYS = [
     "tasks.dashboard.velocity.loadFailed",
     "integrations.connections.loadFailed",
     "integrations.github.repoAccess.loadFailed",
+    "tasks.subTasks.loadFailed",
+    "tasks.savedFilters.loadFailed",
     "chat.channel.pane.loadFailed",
     "chat.channel.thread.loadFailed",
     "chat.threadTabs.ariaLabel",

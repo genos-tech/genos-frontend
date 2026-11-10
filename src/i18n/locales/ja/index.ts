@@ -5013,6 +5013,7 @@ export const ja: DeepPartial<Messages> = {
             quickAddDismiss: "閉じる",
         },
         subTasks: {
+            loadFailed: "サブタスクを読み込めませんでした",
             title: "サブタスク",
             buttonLabel: "サブタスク",
             emptyText: "まだサブタスクはありません",
@@ -5331,6 +5332,7 @@ export const ja: DeepPartial<Messages> = {
             noAssignee: "担当者なし",
         },
         savedFilters: {
+            loadFailed: "保存したフィルターを読み込めませんでした",
             button: "保存されたフィルター",
             tooltip:
                 "現在のフィルタの組み合わせを保存するか、プロジェクトにすでにあるフィルタの組み合わせを適用します",
