@@ -2188,18 +2188,6 @@ export const ar: DeepPartial<Messages> = {
             close: "إغلاق",
         },
         modals: {
-            deleteTask: {
-                title: "حذف المهمة؟",
-                body: "لا يمكن التراجع عن هذا الإجراء",
-                confirmButton: "حذف المهمة",
-                cancelButton: "إلغاء",
-            },
-            confirmDeletedStatus: {
-                title: "حذف المهمة؟",
-                titleMilestone: "حذف المعلم؟",
-                body: "تختفي من جميع القوائم واللوحات ولوحات المعلومات. لاستعادتها، بدّل الجدول إلى عرض «محذوفة» ثم امنحها حالة أخرى.",
-                bodyMilestone: "يختفي من جميع القوائم واللوحات.",
-            },
             createProject: {
                 heading: "إنشاء مشروع جديد",
                 namePlaceholder: "أدخل اسم المشروع...",
@@ -3097,9 +3085,6 @@ export const ar: DeepPartial<Messages> = {
             overdueCount: "{count} تأخرت",
             dueSoonCount: "{count} مستحق قريبا",
             blockedCount: "{count} محظور",
-            confirmDelete: "حذف هذه المهمة؟",
-            confirmDeleteBody:
-                "ستُوسَم المهمة كمحذوفة. تبقى مهامها الفرعية لكنها لن تُحتسب في الإحصاءات.",
             errors: {
                 load: "تعذر تحميل الرسم البياني للمهمة.",
                 update: "فشل التحديث.",

@@ -1,6 +1,7 @@
 /**
- * MIP-1302: the discard-draft dialogs (new task, new milestone) and the graph's delete
- * confirm have their words in all seven locales.
+ * MIP-1302: the discard-draft dialogs (new task, new milestone) have their words in all
+ * seven locales. (The graph's delete confirm is gone: a card's Deleted is an Undo toast,
+ * MIP-1303.)
  *
  * `DeepPartial<Messages>` lets a locale ship a catalog incrementally and the loader merges
  * every missing key onto English, so a locale that FORGOT a key type-checks and quietly shows
@@ -24,7 +25,6 @@ const OTHERS = { ja, es, fr, zh, ar, hi } as const;
 type Catalog = {
     tasks?: {
         createForm?: Record<string, string>;
-        diagram?: Record<string, string>;
     };
 };
 
@@ -39,14 +39,12 @@ const CREATE_FORM_KEYS = [
     "closeDraftBody",
     "closeDraftHide",
 ] as const;
-const DIAGRAM_KEYS = ["confirmDelete", "confirmDeleteBody"] as const;
 
 const strings = (c: Catalog): Record<string, string | undefined> => ({
     ...Object.fromEntries(CREATE_FORM_KEYS.map((k) => [k, c.tasks?.createForm?.[k]])),
-    ...Object.fromEntries(DIAGRAM_KEYS.map((k) => [`diagram.${k}`, c.tasks?.diagram?.[k]])),
 });
 
-describe("discard-draft and graph-delete strings", () => {
+describe("discard-draft strings", () => {
     it("English has all of them", () => {
         for (const [key, value] of Object.entries(strings(en as Catalog))) {
             expect(value, key).toBeTruthy();
@@ -66,33 +64,15 @@ describe("discard-draft and graph-delete strings", () => {
     it("titles are questions, bodies are statements, and no placeholder is left in", () => {
         for (const catalog of [en, ...Object.values(OTHERS)]) {
             const s = strings(catalog as Catalog);
-            for (const title of [
-                s.discardTaskTitle,
-                s.discardMilestoneTitle,
-                s.closeDraftTitle,
-                s["diagram.confirmDelete"],
-            ]) {
+            for (const title of [s.discardTaskTitle, s.discardMilestoneTitle, s.closeDraftTitle]) {
                 expect(title).toMatch(/[?？؟]$/);
                 expect(title).not.toMatch(/[{}]/);
             }
-            for (const body of [
-                s.discardTaskBody,
-                s.discardMilestoneBody,
-                s.closeDraftBody,
-                s["diagram.confirmDeleteBody"],
-            ]) {
+            for (const body of [s.discardTaskBody, s.discardMilestoneBody, s.closeDraftBody]) {
                 expect(body).not.toMatch(/[{}]/);
                 expect(body).not.toMatch(/[?？؟]/);
             }
         }
-    });
-
-    it("the graph confirm no longer promises to delete the sub-tasks (it does not)", () => {
-        // English read "Delete this task and all its sub-tasks?" before; the title now
-        // names the task alone and the body says what happens to the sub-tasks.
-        expect(en.tasks.diagram.confirmDelete).not.toMatch(/sub-?tasks/i);
-        expect(en.tasks.diagram.confirmDeleteBody).toMatch(/sub-tasks are kept/i);
-        expect(en.tasks.diagram.confirmDeleteBody).not.toMatch(/all its sub-tasks/i);
     });
 });
 

@@ -2222,18 +2222,6 @@ export const es: DeepPartial<Messages> = {
             close: "Cerrar",
         },
         modals: {
-            deleteTask: {
-                title: "¿Eliminar tarea?",
-                body: "Esta acción no se puede deshacer",
-                confirmButton: "Eliminar tarea",
-                cancelButton: "Cancelar",
-            },
-            confirmDeletedStatus: {
-                title: "¿Eliminar esta tarea?",
-                titleMilestone: "¿Eliminar este hito?",
-                body: "Desaparece de todas las listas, tableros y paneles. Para recuperarla, cambia la tabla a la vista Eliminadas y dale otro estado.",
-                bodyMilestone: "Desaparece de todas las listas y tableros.",
-            },
             createProject: {
                 heading: "Crear nuevo proyecto",
                 namePlaceholder: "Introduce el nombre del proyecto…",
@@ -3146,9 +3134,6 @@ export const es: DeepPartial<Messages> = {
             overdueCount: "{count} vencido",
             dueSoonCount: "{count} llegará pronto",
             blockedCount: "{count} bloqueado",
-            confirmDelete: "¿Eliminar esta tarea?",
-            confirmDeleteBody:
-                "Se marcará como eliminada. Sus subtareas se conservan, pero dejan de contar en las estadísticas.",
             errors: {
                 load: "No se pudo cargar el gráfico de tareas.",
                 update: "La actualización falló.",
