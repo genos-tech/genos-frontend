@@ -15,7 +15,11 @@
  *  - Buttons move only the properties that change (never `transition: all`),
  *    with the shared durations and curve, off under reduced motion.
  *  - `touch-action: manipulation` on buttons: no double-tap zoom delay.
+ *  - Select / Autocomplete listboxes and Joy menus are lifted above the toast and banner
+ *    regions (MIP-1393), the way `MenuSurface` is (MIP-1327).
  */
+
+import { POPUP_Z_INDEX_CSS } from "../../components/ui/feedback/toastLayers";
 
 const transition = {
     transitionProperty: "background-color, border-color, color, box-shadow, opacity",
@@ -52,4 +56,8 @@ export const joyComponents = {
             root: transition,
         },
     },
+    // A popup opened under the phone header starts where the persistent top banner is.
+    JoySelect: { styleOverrides: { listbox: { zIndex: POPUP_Z_INDEX_CSS } } },
+    JoyAutocomplete: { styleOverrides: { listbox: { zIndex: POPUP_Z_INDEX_CSS } } },
+    JoyMenu: { styleOverrides: { root: { zIndex: POPUP_Z_INDEX_CSS } } },
 };
