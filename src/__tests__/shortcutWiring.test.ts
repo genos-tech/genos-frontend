@@ -9,6 +9,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { SHORTCUTS, type ShortcutId } from "../shortcuts";
+
 const read = (rel: string) => fs.readFileSync(path.resolve(__dirname, "..", rel), "utf8");
 
 const USES_HOOK: Array<[string, string]> = [
@@ -31,6 +33,27 @@ describe("handlers read the registry", () => {
             expect(src, file).not.toMatch(/mac \? e\.metaKey/);
             expect(src, file).not.toMatch(/holdHeld/);
             expect(src, file).not.toContain("wrongModifierHeld");
+        }
+    });
+
+    it("the create-task submit is contained to its form, so the chat composer's Cmd/Ctrl+Enter only sends (MIP-1312)", () => {
+        expect(read("features/tasks/components/contents/CreateTaskForm.tsx")).toMatch(
+            /"taskCreate\.submit",[\s\S]*?within: formRootRef/
+        );
+    });
+
+    it("every `contained` shortcut is bound with `within` at its call site", () => {
+        const contained = (Object.keys(SHORTCUTS) as ShortcutId[]).filter(
+            (id) => "contained" in SHORTCUTS[id]
+        );
+        expect(contained.length).toBeGreaterThan(0);
+        for (const id of contained) {
+            const files = USES_HOOK.filter(([, hooked]) => hooked === id).map(([file]) => file);
+            expect(files.length, `${id} has no call site in USES_HOOK`).toBeGreaterThan(0);
+            for (const file of files)
+                expect(read(file), `${file} binds ${id}`).toMatch(
+                    new RegExp(`"${id.replace(".", "\\.")}",[\\s\\S]*?within:`)
+                );
         }
     });
 
