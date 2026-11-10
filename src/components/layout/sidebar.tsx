@@ -228,7 +228,7 @@ type SidebarProps = {
     onOpenGenos: () => void;
     onOpenHistory: () => void;
     // Opens the ToDo pane (self-DM sub-pane). Same flow as the global
-    // Ctrl+Cmd/Alt+D shortcut — see App.tsx `openTodo`.
+    // Ctrl+Cmd/Alt+X shortcut — see App.tsx `openTodo`.
     onOpenTodo: () => void;
 };
 

@@ -77,7 +77,7 @@ const LETTERS: Array<[ShortcutId, string]> = [
     ["global.meetClipboard", "m"],
     ["global.history", "h"],
     ["global.taskGraph", "g"],
-    ["global.todo", "d"],
+    ["global.todo", "x"],
 ];
 
 const event = (key: string, mods: (typeof COMBOS)[number]): Required<KeyLike> => ({

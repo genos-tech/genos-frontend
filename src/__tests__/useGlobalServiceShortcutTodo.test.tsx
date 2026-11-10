@@ -213,19 +213,23 @@ describe("clicking a tile", () => {
 });
 
 describe("the letter shortcut is unchanged", () => {
-    it("Ctrl+Cmd+D calls onOpenTodo and cancels a cycle in progress", () => {
+    it("Ctrl+Cmd+X calls onOpenTodo and cancels a cycle in progress", () => {
         const onOpenTodo = vi.fn();
         const { result } = setup("/workspace/tasks", { onOpenTodo });
         tapCtrl(1);
-        key("keydown", { key: "d", ctrlKey: true, metaKey: true });
+        key("keydown", { key: "x", ctrlKey: true, metaKey: true });
         expect(onOpenTodo).toHaveBeenCalledTimes(1);
         expect(result.current.hook.previewIndex).toBeNull();
     });
 
-    it("the old Ctrl+Cmd+O no longer opens the to-do list (MIP-1355)", () => {
+    it("the earlier chords no longer open the to-do list (MIP-1355)", () => {
+        // Ctrl+Cmd+O was the first default; Ctrl+Cmd+D was dropped because macOS answers it
+        // with the dictionary pop-up even after the page cancels the key.
         const onOpenTodo = vi.fn();
         setup("/workspace/tasks", { onOpenTodo });
-        key("keydown", { key: "o", ctrlKey: true, metaKey: true });
+        for (const letter of ["o", "d"]) {
+            key("keydown", { key: letter, ctrlKey: true, metaKey: true });
+        }
         expect(onOpenTodo).not.toHaveBeenCalled();
     });
 });
