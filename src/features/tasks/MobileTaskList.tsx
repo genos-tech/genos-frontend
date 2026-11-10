@@ -9,7 +9,7 @@ import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
-import { useSyncFailure } from "../../services/syncStatus";
+import { useSyncFailure, useTasksSyncFailure } from "../../services/syncStatus";
 import { TaskTableProps } from "../../types/tasks";
 
 type MobileTaskListProps = {
@@ -24,9 +24,9 @@ type MobileTaskListProps = {
 // opens the task preview overlay.
 export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
     const { t } = useTranslation();
-    const sync = useSyncFailure("tasks");
-    const projectsSync = useSyncFailure("projects");
     const projectId = usePM.currentProject?.projectId;
+    const sync = useTasksSyncFailure(projectId);
+    const projectsSync = useSyncFailure("projects");
 
     // Project-scoped, top-level rows. Closed and Deleted are hidden —
     // an "active work" view by default; reopening or re-listing is a
@@ -82,7 +82,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
             <DataState
                 error={sync.failed}
                 hasData={false}
-                loading={sync.retrying}
+                loading={sync.retrying || (sync.loading && useTM.allTasks.length === 0)}
                 skeleton={<SkeletonRows count={5} />}
                 empty={{
                     "data-empty": "mobile-tasks",

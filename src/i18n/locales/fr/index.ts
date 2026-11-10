@@ -1531,6 +1531,8 @@ export const fr: DeepPartial<Messages> = {
                 inboxFailed: "Impossible de charger votre boîte de réception",
                 tasksFailed: "Impossible de charger vos tâches",
                 projectsFailed: "Impossible de charger vos projets",
+                notesFailed: "Impossible de charger vos notes",
+                flagsFailed: "Impossible de charger vos indicateurs terminés",
             },
             toast: {
                 region: "Notifications",

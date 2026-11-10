@@ -76,21 +76,21 @@ afterEach(() => vi.restoreAllMocks());
 describe("syncStatus store", () => {
     it("records failures per scope and recovers them one by one", () => {
         syncStatus.report("inbox", false);
-        syncStatus.report("tasks", false);
-        syncStatus.report("tasks", false);
-        expect(syncStatus.getSnapshot().failed).toEqual(["inbox", "tasks"]);
+        syncStatus.report("tasks:5", false);
+        syncStatus.report("tasks:5", false);
+        expect(syncStatus.getSnapshot().failed).toEqual(["inbox", "tasks:5"]);
         syncStatus.report("inbox", true);
-        expect(syncStatus.getSnapshot().failed).toEqual(["tasks"]);
-        syncStatus.report("tasks", true);
+        expect(syncStatus.getSnapshot().failed).toEqual(["tasks:5"]);
+        syncStatus.report("tasks:5", true);
         expect(syncStatus.getSnapshot().failed).toEqual([]);
     });
 
     it("starts a new episode only when failures begin again from none", () => {
         syncStatus.report("inbox", false);
-        syncStatus.report("tasks", false);
+        syncStatus.report("tasks:5", false);
         expect(syncStatus.getSnapshot().episode).toBe(1);
         syncStatus.report("inbox", true);
-        syncStatus.report("tasks", true);
+        syncStatus.report("tasks:5", true);
         syncStatus.report("inbox", false);
         expect(syncStatus.getSnapshot().episode).toBe(2);
     });
@@ -135,7 +135,7 @@ describe("refreshAllData feeds the store", () => {
         const onIDBRefreshed = vi.fn();
 
         await run(onIDBRefreshed);
-        expect([...syncStatus.getSnapshot().failed].sort()).toEqual(["inbox", "tasks"]);
+        expect([...syncStatus.getSnapshot().failed].sort()).toEqual(["inbox", "tasks:5"]);
         expect(syncStatus.getSnapshot().syncing).toBe(false);
         // The cached rows are still pushed into React state.
         expect(onIDBRefreshed).toHaveBeenCalledTimes(1);
@@ -147,7 +147,7 @@ describe("refreshAllData feeds the store", () => {
     it("loadProjectTasks, the one door for every project-task load, reports its own failure and rethrows", async () => {
         tasksReq.mockRejectedValueOnce(new Error("Network Error"));
         await expect(loadProjectTasks(myself, 5, "tok")).rejects.toThrow("Network Error");
-        expect(syncStatus.getSnapshot().failed).toEqual(["tasks"]);
+        expect(syncStatus.getSnapshot().failed).toEqual(["tasks:5"]);
         await loadProjectTasks(myself, 5, "tok");
         expect(syncStatus.getSnapshot().failed).toEqual([]);
     });
@@ -192,12 +192,12 @@ describe("SyncStatusBanner", () => {
         fireEvent.click(screen.getByRole("button", { name: en.common.actions.close }));
         expect(screen.queryByText(s.banner)).toBeNull();
 
-        act(() => syncStatus.report("tasks", false)); // same outage
+        act(() => syncStatus.report("tasks:5", false)); // same outage
         expect(screen.queryByText(s.banner)).toBeNull();
 
         act(() => {
             syncStatus.report("inbox", true);
-            syncStatus.report("tasks", true);
+            syncStatus.report("tasks:5", true);
             syncStatus.report("inbox", false); // next outage
         });
         expect(screen.getByText(s.banner)).toBeInTheDocument();
@@ -261,7 +261,7 @@ describe("empty surfaces tell 'nothing here' from 'could not load'", () => {
     });
 
     it("inbox: a failure of ANOTHER scope does not turn the empty state into an error", () => {
-        syncStatus.report("tasks", false);
+        syncStatus.report("tasks:5", false);
         render(inbox());
         expect(document.querySelector('[data-empty="inbox"]')).not.toBeNull();
     });
@@ -307,7 +307,7 @@ describe("empty surfaces tell 'nothing here' from 'could not load'", () => {
         expect(document.querySelector('[data-empty="mobile-tasks"]')).not.toBeNull();
         unmount();
 
-        syncStatus.report("tasks", false);
+        syncStatus.report("tasks:5", false);
         render(wrap(<MobileTaskList {...props} />));
         expect(document.querySelector('[data-empty="mobile-tasks"]')).toBeNull();
         expect(screen.getByRole("alert")).toHaveTextContent(s.tasksFailed);
@@ -337,11 +337,16 @@ describe("adoption (source-level: the table and the dashboard are too big to mou
 
     it("the task table and the project dashboard read the sync status for their empty state", () => {
         expect(read("features/tasks/components/table/DraggableTaskTable.tsx")).toContain(
-            'useSyncFailure("tasks")'
+            "useTasksSyncFailure("
         );
-        expect(read("features/tasks/components/dashboard/TaskHomeContent.tsx")).toContain(
-            'useSyncFailure("projects")'
-        );
+        const home = read("features/tasks/components/dashboard/TaskHomeContent.tsx");
+        expect(home).toContain('useSyncFailure("projects")');
+        // MIP-1323: the home cards are counted from the project's rows; the three tab
+        // bodies are gated on "unread", the member picker is not.
+        expect(home).toContain("useTasksSyncFailure(");
+        expect(home).toContain('!tasksUnread && activeTab === "sprint"');
+        expect(home).toContain('!tasksUnread && activeTab === "overall"');
+        expect(home).toContain("showFocusBody");
     });
 
     it("App mounts the banner and registers the retry", () => {

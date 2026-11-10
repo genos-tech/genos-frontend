@@ -58,6 +58,7 @@ import { SpotlightSettingsModal } from "./features/spotlight/SpotlightSettingsMo
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
 import { LazyTaskDiagram } from "./features/tasks/diagram/components/LazyTaskDiagram";
+import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
 import { loadTeamTaskList } from "./features/tasks/services/loadTaskSearchList";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { projectAvatarSrcMap } from "./features/tasks/utils/projectAvatar";
@@ -567,15 +568,42 @@ const AppBody = () => {
         // `begin`/`end` here, not only inside `refreshAllData`: the project-list and
         // channel retries run outside it, and the empty surfaces show a skeleton
         // (not a stale error) for as long as the retry runs.
+        const openProjectId = usePM.currentProject?.projectId ?? lastProjectId;
+        // Every project whose task load failed, not only the open one: the failures are
+        // per project (MIP-1323), and a failed prefetch of another project would
+        // otherwise keep the banner up with a Retry that never touches it. A project
+        // that is gone answers 404 and is forgotten, so this cannot loop forever.
+        const otherFailedProjectIds = syncStatus
+            .failedProjectIds()
+            .filter((projectId) => projectId !== openProjectId);
+        const failedNow = syncStatus.getSnapshot().failed;
         syncStatus.begin();
         try {
             await Promise.all([
                 refreshAllData({
                     accessToken: accessToken || null,
-                    currentProjectId: usePM.currentProject?.projectId ?? lastProjectId,
+                    currentProjectId: openProjectId,
                     myself,
                     onIDBRefreshed,
                 }),
+                ...otherFailedProjectIds.map((projectId) =>
+                    loadProjectTasks(myself, projectId, accessToken || null).catch(() => {
+                        /* reported to the sync status by loadProjectTasks */
+                    })
+                ),
+                // The on-demand reads: the notes sidebar lists and the past flags.
+                failedNow.includes("notes:favorites")
+                    ? useNM.getFavoriteNotesMeta()
+                    : Promise.resolve(),
+                failedNow.includes("notes:recents")
+                    ? useNM.getRecentNotesMeta()
+                    : Promise.resolve(),
+                failedNow.includes("notes:teamFolders")
+                    ? useNM.getTeamNoteFolders()
+                    : Promise.resolve(),
+                failedNow.includes("flags")
+                    ? channelService.fetchCompletedFlags()
+                    : Promise.resolve(),
                 syncStatus.getSnapshot().failed.includes("projects")
                     ? usePM.loadProjectsAndTasks(lastProjectId ?? -1)
                     : Promise.resolve(),
@@ -589,7 +617,7 @@ const AppBody = () => {
         }
         // A boot that failed cold never marked the team hydrated (see
         // `loadInitialData`); a retry that put everything right does.
-        if (syncStatus.getSnapshot().failed.length === 0) markTeamHydrated(useTEM.currentTeamId);
+        if (!syncStatus.bootFailed()) markTeamHydrated(useTEM.currentTeamId);
     };
     useEffect(() => {
         syncStatus.setRetry(() => retrySyncRef.current());

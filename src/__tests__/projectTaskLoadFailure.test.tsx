@@ -62,7 +62,7 @@ describe("loadProjectsAndTasks when the project's tasks fail to load", () => {
         const callsAtBoot = request.mock.calls.length;
         await flushRejections();
         expect(unhandled).toEqual([]);
-        expect(syncStatus.getSnapshot().failed).toContain("tasks");
+        expect(syncStatus.getSnapshot().failed).toContain("tasks:5");
 
         // Retry (the banner's Retry re-runs the same loader): the request now succeeds.
         request.mockResolvedValueOnce("done");
@@ -70,7 +70,7 @@ describe("loadProjectsAndTasks when the project's tasks fail to load", () => {
             await result.current.refreshProjectTasks(5);
         });
         expect(request).toHaveBeenCalledTimes(callsAtBoot + 1);
-        expect(syncStatus.getSnapshot().failed).not.toContain("tasks");
+        expect(syncStatus.getSnapshot().failed).not.toContain("tasks:5");
     });
 
     it("resolves, logs, records the failure in the sync status, and still announces the project", async () => {
@@ -88,9 +88,32 @@ describe("loadProjectsAndTasks when the project's tasks fail to load", () => {
             expect.any(Error)
         );
         // The banner and its Retry exist because loadProjectTasks reported it.
-        expect(syncStatus.getSnapshot().failed).toContain("tasks");
+        expect(syncStatus.getSnapshot().failed).toContain("tasks:5");
         // The table still reads whatever IndexedDB holds for the picked project.
         expect(result.current.currentProject?.projectId).toBe(5);
         expect(result.current.tsTasksLoadedToIDB?.projectId).toBe(5);
+    });
+
+    // MIP-1323: a stale `lastProjectId` (a project deleted, left, or lost) fails its task load
+    // for good; that failure must not hold the banner up.
+    it("a failure of a project the project list no longer holds is dropped when the list loads", async () => {
+        syncStatus.report("tasks:99", false);
+        request.mockResolvedValueOnce("done");
+        const { result } = renderHook(() => useProjectManagement(myself, "tok", "team-1"));
+        await act(async () => {
+            await result.current.loadProjectsAndTasks(-1);
+        });
+        await flushRejections();
+        // 99 is not in the list ({5}): gone. Project 5's own load worked.
+        expect(syncStatus.getSnapshot().failed).toEqual([]);
+    });
+
+    it("a project deleted while the app is open drops its failure at once", () => {
+        syncStatus.report("tasks:5", false);
+        renderHook(() => useProjectManagement(myself, "tok", "team-1"));
+        act(() => {
+            window.dispatchEvent(new CustomEvent("projectDeleted", { detail: { projectId: 5 } }));
+        });
+        expect(syncStatus.getSnapshot().failed).not.toContain("tasks:5");
     });
 });

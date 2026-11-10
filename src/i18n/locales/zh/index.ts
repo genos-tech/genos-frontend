@@ -1458,6 +1458,8 @@ export const zh: DeepPartial<Messages> = {
                 inboxFailed: "无法加载你的收件箱",
                 tasksFailed: "无法加载你的任务",
                 projectsFailed: "无法加载你的项目",
+                notesFailed: "无法加载你的笔记",
+                flagsFailed: "无法加载你完成的标志",
             },
             toast: {
                 region: "通知",

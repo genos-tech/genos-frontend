@@ -20,6 +20,8 @@ export const es: DeepPartial<Messages> = {
                 inboxFailed: "No se pudo cargar tu bandeja de entrada",
                 tasksFailed: "No se pudieron cargar tus tareas",
                 projectsFailed: "No se pudieron cargar tus proyectos",
+                notesFailed: "No se pudieron cargar tus notas",
+                flagsFailed: "No se pudieron cargar tus banderas completadas",
             },
             toast: {
                 region: "Notificaciones",
