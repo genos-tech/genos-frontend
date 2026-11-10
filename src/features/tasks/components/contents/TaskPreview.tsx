@@ -63,6 +63,7 @@ import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
 import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
+import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
 import { isStatusName, statusSolid, toneSolid } from "../../meta/taskTone";
@@ -318,6 +319,40 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
 
     const isBodyDirty = (): boolean => {
         return JSON.stringify(currentBodyRef.current ?? []) !== lastLoadedBodyRef.current;
+    };
+
+    // Delete this task (the title menu, the status picker's "Deleted"), MIP-1303.
+    // The delete waits behind an Undo toast and is sent when the toast is gone,
+    // as `{task_id, status, status_code}` only. Three rules, each from MIP-1168:
+    //  - the working copy never holds "Deleted": every autosave sends it whole,
+    //    status included, and would delete at once;
+    //  - what is still unsaved (a body typed in the last seconds, a metadata edit
+    //    in flight) is saved FIRST, because closing the pane drops the working
+    //    copy;
+    //  - the commit is never built from this copy (an edit made in the window
+    //    would be overwritten): it is the minimal PUT.
+    const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    const handleDeleteTask = async () => {
+        const task = taskEditState.tmpCurrentTaskContent;
+        if (task?.id == null || task.project?.projectId == null) return;
+        if (taskEditState.taskUpdated || (taskEditState.taskBodyEdited && isBodyDirty())) {
+            await sendUpdatedTask(false);
+        }
+        deleteTask(
+            { id: task.id, projectId: Number(task.project.projectId) },
+            {
+                afterHide: () => {
+                    // The same close as the header's X. A modal-hosted preview closes
+                    // its modal; the global preview state is not its own.
+                    useTM.setIsTaskPreviewVisible(false);
+                    if (hostZIndex == null) {
+                        useTM.setCurrentPreviewTaskId(-1);
+                        if (isNoMainPanelVisible(useTM)) useTM.setIsTaskTableVisible(true);
+                    }
+                    useNM.setIsTaskVisibleInNote?.(false);
+                },
+            }
+        );
     };
 
     // Auto save task body every Nms if needed. The interval used to
@@ -920,6 +955,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                             useSM={useSM}
                             useTM={useTM}
                             useUISM={useUISM}
+                            onDeleteTask={handleDeleteTask}
                         />
                     }
                     mainContent={
@@ -969,6 +1005,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                     useTEM={useTEM}
                                     useTM={useTM}
                                     useUISM={useUISM}
+                                    onDeleteTask={handleDeleteTask}
                                 />
                             </Box>
 
@@ -2069,6 +2106,56 @@ const MilestonePreviewInner = ({
         }
     };
 
+    // Closes the milestone preview: the header's X, and the delete below.
+    const closeMilestonePreview = () => {
+        useTM.setIsTaskPreviewVisible(false);
+        useTM.setCurrentPreviewKind("task");
+        useTM.setCurrentPreviewMilestoneId(-1);
+        // Do NOT clear the table's milestone SCOPE here.
+        // Clicking a milestone in the sidebar sets both the
+        // preview AND the scope; tying the scope's lifetime
+        // to the preview meant closing the preview silently
+        // reset the filter (most visibly for a past
+        // milestone, whose tasks are hidden by default and
+        // so vanished). The scope is an explicit filter —
+        // cleared via the "Milestone: …" chip in the filter
+        // bar, not by closing the preview.
+        if (isNoMainPanelVisible(useTM)) {
+            useTM.setIsTaskTableVisible(true);
+        }
+
+        // When the milestone preview was opened from a
+        // task note (NoteHeaderActions → onOpenTask
+        // flips `useNM.isTaskVisibleInNote=true`), the
+        // surrounding `TaskPreviewPanel` is gated by
+        // that NM flag rather than by `useTM`. So the
+        // `setIsTaskPreviewVisible(false)` above has no
+        // visible effect — the panel only unmounts
+        // when we also clear the NM flag. Mirror the
+        // close path in `TaskTitleBlock.tsx`.
+        if (useNM.setIsTaskVisibleInNote) {
+            useNM.setIsTaskVisibleInNote(false);
+        }
+    };
+
+    // Picking "Deleted" in the status picker (MIP-1303): the milestone is hidden
+    // behind an Undo toast and `{milestoneId, status}` is sent when the toast is
+    // gone. The working copy never holds "Deleted": its autosave diffs the status
+    // and would write it at once.
+    const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    const handleDeleteMilestone = () => {
+        if (!milestone || milestone.taskId == null) return;
+        deleteTask(
+            {
+                id: milestone.taskId,
+                projectId: milestone.projectId,
+                isMilestone: true,
+                milestoneId: milestone.milestoneId,
+            },
+            { afterHide: closeMilestonePreview }
+        );
+    };
+
     // Auto-save body every 3s when edited (mirrors TaskPreview's loop).
     // Reads the body from `bodyDraftRef` at fire time — see the ref's
     // declaration for why the sync no longer flows through state.
@@ -2490,36 +2577,7 @@ const MilestonePreviewInner = ({
                                     color="danger"
                                     size="sm"
                                     variant="plain"
-                                    onClick={() => {
-                                        useTM.setIsTaskPreviewVisible(false);
-                                        useTM.setCurrentPreviewKind("task");
-                                        useTM.setCurrentPreviewMilestoneId(-1);
-                                        // Do NOT clear the table's milestone SCOPE here.
-                                        // Clicking a milestone in the sidebar sets both the
-                                        // preview AND the scope; tying the scope's lifetime
-                                        // to the preview meant closing the preview silently
-                                        // reset the filter (most visibly for a past
-                                        // milestone, whose tasks are hidden by default and
-                                        // so vanished). The scope is an explicit filter —
-                                        // cleared via the "Milestone: …" chip in the filter
-                                        // bar, not by closing the preview.
-                                        if (isNoMainPanelVisible(useTM)) {
-                                            useTM.setIsTaskTableVisible(true);
-                                        }
-
-                                        // When the milestone preview was opened from a
-                                        // task note (NoteHeaderActions → onOpenTask
-                                        // flips `useNM.isTaskVisibleInNote=true`), the
-                                        // surrounding `TaskPreviewPanel` is gated by
-                                        // that NM flag rather than by `useTM`. So the
-                                        // `setIsTaskPreviewVisible(false)` above has no
-                                        // visible effect — the panel only unmounts
-                                        // when we also clear the NM flag. Mirror the
-                                        // close path in `TaskTitleBlock.tsx`.
-                                        if (useNM.setIsTaskVisibleInNote) {
-                                            useNM.setIsTaskVisibleInNote(false);
-                                        }
-                                    }}
+                                    onClick={closeMilestonePreview}
                                 >
                                     <CancelIcon
                                         sx={{
@@ -2667,6 +2725,7 @@ const MilestonePreviewInner = ({
                                 setTaskContentLike(next);
                                 setTaskUpdated(true);
                             }}
+                            onDeleteTask={handleDeleteMilestone}
                         />
                     </Box>
 
