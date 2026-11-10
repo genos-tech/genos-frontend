@@ -109,14 +109,28 @@ const node = (id: number) =>
     document.querySelector(`.react-flow__node[data-id="${id}"]`) as HTMLElement;
 // keydown and keyup in separate renders (React batches a same-tick pair into no press at
 // all), then a beat for React Flow's async `deleteElements` to finish.
-const pressDelete = async (key: "Delete" | "Backspace") => {
+// The canvas handles the key itself (MIP-1390): the modal frame stops key events at its root,
+// so nothing listens on the document.
+const canvas = () => document.querySelector(".react-flow")!.parentElement as HTMLElement;
+const pressDelete = async (key: "Delete" | "Backspace", target: HTMLElement = canvas()) => {
     await act(async () => {
-        fireEvent.keyDown(document.body, { key, code: key });
-    });
-    await act(async () => {
-        fireEvent.keyUp(document.body, { key, code: key });
+        fireEvent.keyDown(target, { key, code: key });
         await new Promise((r) => setTimeout(r, 100));
     });
+};
+// Select edges the way a click does: through React Flow's change events.
+const selectEdges = async (...ids: string[]) => {
+    await waitFor(() =>
+        expect(flowProps.edges.map((e: { id: string }) => e.id)).toContain("d-77")
+    );
+    act(() => {
+        flowProps.onEdgesChange(ids.map((id) => ({ type: "select", id, selected: true })));
+    });
+    await waitFor(() =>
+        expect(flowProps.edges.filter((e: { selected?: boolean }) => e.selected).length).toBe(
+            ids.length
+        )
+    );
 };
 
 describe("graph delete key", () => {
@@ -183,5 +197,71 @@ describe("graph delete key", () => {
             { parent_task_id: null, milestone: null },
             "tok"
         );
+    });
+
+    // MIP-1390: the modal frame stops key events at its root, so React Flow never saw the
+    // key and a selected edge could not be deleted.
+    describe("a selected edge", () => {
+        it.each(["Delete", "Backspace"] as const)(
+            "%s removes a dependency edge on the server",
+            { timeout: 20000 },
+            async (key) => {
+                renderCanvas();
+                await screen.findByTestId("card-2");
+                await selectEdges("d-77");
+                await pressDelete(key);
+                expect(deleteTaskDependency).toHaveBeenCalledWith(77, "tok");
+                expect(patchTaskFields).not.toHaveBeenCalled();
+                expect(flowProps.edges.map((e: { id: string }) => e.id)).not.toContain("d-77");
+            }
+        );
+
+        it("removes a parent-child edge by re-parenting the child to nothing", async () => {
+            renderCanvas();
+            await screen.findByTestId("card-2");
+            await selectEdges("s-1-3");
+            await pressDelete("Delete");
+            expect(patchTaskFields).toHaveBeenCalledWith(
+                3,
+                { parent_task_id: null, milestone: null },
+                "tok"
+            );
+            expect(deleteTaskDependency).not.toHaveBeenCalled();
+        });
+
+        it("only the selected edge goes, and the selected card with it never does", async () => {
+            renderCanvas();
+            await screen.findByTestId("card-2");
+            fireEvent.click(node(2));
+            await waitFor(() => expect(node(2).className).toContain("selected"));
+            await selectEdges("d-77");
+            await pressDelete("Delete");
+            expect(deleteTaskDependency).toHaveBeenCalledTimes(1);
+            expect(patchTaskFields).not.toHaveBeenCalled();
+            expect(screen.getByTestId("card-2")).toBeTruthy();
+            expect(flowProps.edges.map((e: { id: string }) => e.id)).toContain("s-1-2");
+        });
+
+        it("typing Backspace in a field of the canvas deletes nothing", async () => {
+            renderCanvas();
+            await screen.findByTestId("card-2");
+            await selectEdges("d-77");
+            const input = document.createElement("input");
+            canvas().appendChild(input);
+            await pressDelete("Backspace", input);
+            expect(deleteTaskDependency).not.toHaveBeenCalled();
+            input.remove();
+        });
+
+        it("with nothing selected the key does nothing", async () => {
+            renderCanvas();
+            await screen.findByTestId("card-2");
+            await waitFor(() =>
+                expect(flowProps.edges.map((e: { id: string }) => e.id)).toContain("d-77")
+            );
+            await pressDelete("Delete");
+            expect(deleteTaskDependency).not.toHaveBeenCalled();
+            expect(patchTaskFields).not.toHaveBeenCalled();
+        });
     });
 });
