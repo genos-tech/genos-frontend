@@ -2515,6 +2515,10 @@ export const es: DeepPartial<Messages> = {
             createMilestone: "Crear hito",
             creating: "Creando…",
             withShortcut: "{label} ({shortcut})",
+            createLabel: "Crear:",
+            kindTask: "Tarea",
+            kindMilestone: "Hito",
+            selectFiles: "Seleccionar archivos",
             discardTaskTitle: "¿Descartar este borrador?",
             discardTaskBody:
                 "Se perderán el título, el cuerpo y los adjuntos. Esta acción no se puede deshacer.",
