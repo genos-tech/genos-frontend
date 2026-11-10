@@ -965,6 +965,7 @@ export const zh: DeepPartial<Messages> = {
             tag: "标签",
             general: "常规",
             newTagPlaceholder: "新标签",
+            addTag: "添加标签",
             tags: {
                 manageTitle: "管理标签",
                 manageTooltip: "管理标签",

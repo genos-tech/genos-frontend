@@ -1018,6 +1018,7 @@ export const fr: DeepPartial<Messages> = {
             tag: "Balise",
             general: "Général",
             newTagPlaceholder: "Nouvelle balise",
+            addTag: "Ajouter une balise",
             tags: {
                 manageTitle: "Gérer les balises",
                 manageTooltip: "Gérer les balises",

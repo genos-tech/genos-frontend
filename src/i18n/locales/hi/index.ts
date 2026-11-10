@@ -1572,6 +1572,7 @@ export const hi: DeepPartial<Messages> = {
             tag: "टैग",
             general: "सामान्य",
             newTagPlaceholder: "नया टैग",
+            addTag: "टैग जोड़ें",
             tags: {
                 manageTitle: "टैग प्रबंधित करें",
                 manageTooltip: "टैग प्रबंधित करें",
