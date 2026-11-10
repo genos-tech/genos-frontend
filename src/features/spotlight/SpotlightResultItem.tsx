@@ -13,11 +13,19 @@ import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Chip, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
+import {
+    CHAT_PALETTE,
+    mentionIconColor,
+    MILESTONE_PALETTE,
+    NOTE_PALETTE,
+    PROJECT_PALETTE,
+    TASK_PALETTE,
+    TODO_PALETTE,
+    type MentionPalette,
+} from "../../components/editors/mentionPalettes";
 import { fmt, useTranslation, type Messages } from "../../i18n";
-import { purplePalette } from "../../theme/purplePalette";
-import { g } from "../../theme/tokens";
+import { focusRing, g } from "../../theme/tokens";
 import type { ProjectProps } from "../../types/tasks";
 import { ProjectLabelChips } from "../admin/components/projectLabels/ProjectLabelChips";
 import { StatusLabel } from "../tasks/components/meta/StatusLabel";
@@ -84,19 +92,24 @@ const ENTITY_ICON = {
     spotlight_answer: AutoAwesomeRoundedIcon,
 };
 
-const ENTITY_ICON_GRADIENT: Record<string, string> = {
-    chat: "linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)",
-    task: "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
-    // Orange — matches the milestone identity color used elsewhere (e.g.
-    // the task diagram's milestone node border).
-    milestone: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)",
-    note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
-    note_folder: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
-    project: "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
-    todo: "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-700) 100%)",
-    // Distinct violet→pink so a "Previous answer" row reads differently
-    // from the live workspace entities above.
-    spotlight_answer: "linear-gradient(135deg, var(--gp-brand-400) 0%, #db2777 100%)",
+// The icon tile's identity color per entity kind: the SAME palettes the `#` mentions and the
+// agent dropdown use (`mentionPalettes`), so a task is blue, a milestone orange, a note violet and
+// a chat teal in a message, in the mention menu and here. They are data (the entity's identity),
+// not theme colors. A flat tint behind the icon, never a gradient. A past answer is a Genos
+// moment: it takes the accent roles.
+const ENTITY_TILE: Record<string, MentionPalette> = {
+    chat: CHAT_PALETTE,
+    task: TASK_PALETTE,
+    milestone: MILESTONE_PALETTE,
+    note: NOTE_PALETTE,
+    note_folder: NOTE_PALETTE,
+    project: PROJECT_PALETTE,
+    todo: TODO_PALETTE,
+    spotlight_answer: {
+        bg: g.accent.subtle,
+        bgHover: g.accent.subtle,
+        text: g.accent.text,
+    },
 };
 
 // Friendly label shown next to the icon for context (e.g. "DM",
@@ -276,7 +289,7 @@ export const HighlightedText = ({
         <>
             {parts.map((part, i) =>
                 i % 2 === 1 ? (
-                    <Box key={i} component="span" sx={{ fontWeight: 700, color: boldColor }}>
+                    <Box key={i} component="span" sx={{ fontWeight: 600, color: boldColor }}>
                         {part}
                     </Box>
                 ) : (
@@ -349,12 +362,9 @@ const SpotlightResultItemInner = ({
     noteScopes,
     onSelect,
 }: Props) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const Icon = ENTITY_ICON[result.entity_type] ?? QuestionAnswerRoundedIcon;
-    const iconGradient = ENTITY_ICON_GRADIENT[result.entity_type] ?? ENTITY_ICON_GRADIENT.chat;
+    const tile = ENTITY_TILE[result.entity_type] ?? CHAT_PALETTE;
 
     return (
         <Box
@@ -365,23 +375,22 @@ const SpotlightResultItemInner = ({
                 alignItems: "flex-start",
                 gap: 1.5,
                 width: "100%",
+                // A two-line result: the density row height is its floor, not its height.
+                minHeight: g.row.current,
                 px: 1.5,
                 py: 1.25,
-                borderRadius: "10px",
+                borderRadius: g.radius.md,
                 border: "1px solid transparent",
-                background: isHighlighted
-                    ? isDark
-                        ? "rgba(var(--gp-brand-700-rgb), 0.12)"
-                        : "rgba(var(--gp-brand-700-rgb), 0.06)"
-                    : "transparent",
+                background: isHighlighted ? g.accent.subtle : "transparent",
                 cursor: "pointer",
-                textAlign: "left",
+                textAlign: "start",
                 color: "inherit",
                 font: "inherit",
-                transition: "background 120ms ease",
+                transition: `background ${g.motion.fast} ${g.ease}`,
                 "&:hover": {
-                    background: palette.hoverBg,
+                    background: isHighlighted ? g.accent.subtle : g.hover,
                 },
+                "&:focus-visible": focusRing,
             }}
             onClick={(e: React.MouseEvent) =>
                 onSelect(result, { viaModifier: e.metaKey || e.ctrlKey })
@@ -392,15 +401,14 @@ const SpotlightResultItemInner = ({
                     width: 32,
                     height: 32,
                     flexShrink: 0,
-                    borderRadius: "8px",
+                    borderRadius: g.radius.md,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: iconGradient,
-                    opacity: 0.85,
+                    background: tile.bg,
                 }}
             >
-                <Icon sx={{ fontSize: 20, color: "#fff" }} />
+                <Icon sx={{ fontSize: 20, color: mentionIconColor(tile) }} />
             </Box>
 
             <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -408,7 +416,8 @@ const SpotlightResultItemInner = ({
                     <Typography
                         level="body-md"
                         sx={{
-                            fontWeight: 600,
+                            // 500, so the matched words (600) still stand out of the title.
+                            fontWeight: 500,
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -451,8 +460,8 @@ const SpotlightResultItemInner = ({
                         // Small uppercase pill that turns the otherwise-
                         // ambiguous "Direct message" / "Task" subtitle into
                         // an obvious "this is a thread reply / task comment"
-                        // signal. Colored from the purple palette to match
-                        // the rest of the overlay's accent treatment.
+                        // signal. The accent chip roles, like the rest of the
+                        // overlay.
                         return (
                             <Chip
                                 color="primary"
@@ -460,7 +469,7 @@ const SpotlightResultItemInner = ({
                                 variant="soft"
                                 sx={{
                                     fontSize: "0.6rem",
-                                    fontWeight: 700,
+                                    fontWeight: 600,
                                     letterSpacing: "0.06em",
                                     textTransform: "uppercase",
                                     flexShrink: 0,
