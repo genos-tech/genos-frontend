@@ -1074,6 +1074,7 @@ export const settings = {
                 openTaskDiagram: "Open task graph for the previewed task",
                 openTodo: "Open the To-Do list",
                 cycle: "Cycle through services",
+                undo: "Undo a deletion (while its Undo toast shows)",
             },
             cycleCombo: {
                 hold: "Hold {key}",

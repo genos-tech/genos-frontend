@@ -34,6 +34,12 @@ describe("handlers read the registry", () => {
         }
     });
 
+    it("undo's chord and editable policy are the registry's (MIP-1313)", () => {
+        const src = read("hooks/common/useUndoableAction.ts");
+        expect(src).toContain('matchesShortcut("global.undo"');
+        expect(src).not.toMatch(/e\.key\.toLowerCase\(\) !== "z"/);
+    });
+
     it("the composer's send chord is the registry's", () => {
         expect(read("components/editors/composer/useChatComposer.ts")).toContain(
             'matchesShortcut("composer.send"'

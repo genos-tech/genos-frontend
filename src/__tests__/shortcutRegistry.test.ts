@@ -169,10 +169,38 @@ describe("registry matches what the old handlers matched", () => {
     });
 });
 
+describe("global.undo matches what useUndoableAction's own check matched (MIP-1313)", () => {
+    // The predicate that listener used before it asked the registry, copied as it was.
+    const oldPredicate = (e: KeyLike) =>
+        !e.shiftKey && !e.altKey && !!(e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z";
+
+    it.each(PLATFORMS)("every modifier combination, upper and lower case (%s)", (platform) => {
+        for (const key of ["z", "Z", "y", "Enter"]) {
+            for (let bits = 0; bits < 16; bits++) {
+                const e: KeyLike = {
+                    key,
+                    ctrlKey: !!(bits & 1),
+                    metaKey: !!(bits & 2),
+                    altKey: !!(bits & 4),
+                    shiftKey: !!(bits & 8),
+                };
+                expect(matchesShortcut("global.undo", e, platform), `${key} ${bits}`).toBe(
+                    oldPredicate(e)
+                );
+            }
+        }
+    });
+
+    it("prints Cmd+Z on Mac and Ctrl+Z elsewhere", () => {
+        expect(shortcutText("global.undo", "mac")).toBe("⌘+Z");
+        expect(shortcutText("global.undo", "other")).toBe("Ctrl+Z");
+    });
+});
+
 describe("editable-target policy", () => {
-    it("only the two chat arrow shortcuts keep out of text fields (as before); everything else fires", () => {
+    it("only the two chat arrow shortcuts and undo keep out of text fields; everything else fires", () => {
         const skipping = SHORTCUT_IDS.filter((id) => SHORTCUTS[id].editable === "skip");
-        expect(skipping.sort()).toEqual(["chat.moveSelection", "chat.switchTab"]);
+        expect(skipping.sort()).toEqual(["chat.moveSelection", "chat.switchTab", "global.undo"]);
     });
 });
 

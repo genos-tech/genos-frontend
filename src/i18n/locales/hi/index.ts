@@ -465,8 +465,6 @@ export const hi: DeepPartial<Messages> = {
             notes: "नोट",
             search: "Genos",
             todo: "टू-डू",
-            hintMac: "⌘ दबाए रखें  ·  साइकल के लिए Ctrl टैप करें  ·  बदलने के लिए ⌘ छोड़ें",
-            hintOther: "Alt दबाए रखें  ·  साइकल के लिए Ctrl टैप करें  ·  बदलने के लिए Alt छोड़ें",
         },
     },
     settings: {
@@ -1446,6 +1444,7 @@ export const hi: DeepPartial<Messages> = {
                     openTaskDiagram: "पूर्वावलोकन किए गए कार्य के लिए कार्य ग्राफ़ खोलें",
                     openTodo: "टू-डू सूची खोलें",
                     cycle: "सेवाओं के बीच साइकल करें",
+                    undo: "हटाने को पूर्ववत करें (जब तक पूर्ववत वाला टोस्ट दिखे)",
                 },
                 cycleCombo: {
                     hold: "{key} दबाए रखें",

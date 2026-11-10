@@ -2705,10 +2705,6 @@ export const fr: DeepPartial<Messages> = {
             notes: "Notes",
             search: "Genos",
             todo: "À faire",
-            hintMac:
-                "Maintenir ⌘  ·  Appuyer sur Ctrl pour parcourir  ·  Relâcher ⌘ pour basculer",
-            hintOther:
-                "Maintenir Alt  ·  Appuyer sur Ctrl pour parcourir  ·  Relâcher Alt pour basculer",
         },
     },
     noteAsk: {
@@ -4345,6 +4341,7 @@ export const fr: DeepPartial<Messages> = {
                     openTaskDiagram: "Ouvrir le graphique de tâches pour la tâche prévisualisée",
                     openTodo: "Ouvrir la liste des tâches",
                     cycle: "Parcourir les services",
+                    undo: "Annuler une suppression (tant que la notification Annuler est affichée)",
                 },
                 cycleCombo: {
                     hold: "Maintenir {key}",

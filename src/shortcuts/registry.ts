@@ -168,6 +168,26 @@ export const SHORTCUTS = {
         label: (t) => t.settings?.shortcuts?.global?.rows?.cycle,
         editable: "allow",
     },
+    // Cmd/Ctrl+Z while an undo toast is up (MIP-1274). The listener lives in
+    // `useUndoableAction` (module-level, installed on the first undoable action); it asks
+    // the registry what matches. Cmd OR Ctrl on both platforms, as it has always been.
+    "global.undo": {
+        kind: "chord",
+        scope: "global",
+        group: "global",
+        keys: {
+            mac: [
+                { key: "z", mods: ["meta"], forbid: ["shift", "alt"] },
+                { key: "z", mods: ["ctrl"], forbid: ["shift", "alt"] },
+            ],
+            other: [
+                { key: "z", mods: ["ctrl"], forbid: ["shift", "alt"] },
+                { key: "z", mods: ["meta"], forbid: ["shift", "alt"] },
+            ],
+        },
+        label: (t) => t.settings?.shortcuts?.global?.rows?.undo,
+        editable: "skip",
+    },
     "chat.switchTab": {
         kind: "chord",
         scope: "chat",

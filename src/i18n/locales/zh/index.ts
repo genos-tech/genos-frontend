@@ -2587,8 +2587,6 @@ export const zh: DeepPartial<Messages> = {
             notes: "笔记",
             search: "Genos",
             todo: "待办事项",
-            hintMac: "按住 ⌘  ·  点按 Ctrl 切换  ·  松开 ⌘ 确认",
-            hintOther: "按住 Alt  ·  点按 Ctrl 切换  ·  松开 Alt 确认",
         },
     },
     noteAsk: {
@@ -4136,6 +4134,7 @@ export const zh: DeepPartial<Messages> = {
                     openTaskDiagram: "打开预览任务的任务图",
                     openTodo: "打开待办事项列表",
                     cycle: "在各服务间循环切换",
+                    undo: "撤销删除（撤销提示显示期间）",
                 },
                 cycleCombo: {
                     hold: "按住 {key}",

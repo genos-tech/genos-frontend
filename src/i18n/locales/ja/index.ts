@@ -2681,8 +2681,6 @@ export const ja: DeepPartial<Messages> = {
             notes: "ノート",
             search: "Genos",
             todo: "To-Do",
-            hintMac: "⌘ を長押し  ・  Ctrl をタップで切り替え  ・  ⌘ を離して確定",
-            hintOther: "Alt を長押し  ・  Ctrl をタップで切り替え  ・  Alt を離して確定",
         },
     },
     noteAsk: {
@@ -4284,6 +4282,7 @@ export const ja: DeepPartial<Messages> = {
                     openTaskDiagram: "プレビューされたタスクのタスク図を開く",
                     openTodo: "To-Doリストを開く",
                     cycle: "サービスを順に切り替え",
+                    undo: "削除を元に戻す（「元に戻す」の通知が出ている間）",
                 },
                 cycleCombo: {
                     hold: "{key} を長押し",

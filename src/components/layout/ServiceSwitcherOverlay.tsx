@@ -7,9 +7,9 @@ import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Box, Sheet, Typography } from "@mui/joy";
 
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation } from "../../i18n";
+import { cycleKeys } from "../../shortcuts";
 import { g, type } from "../../theme/tokens";
-import { isMac } from "../../utils/platform";
 import { Clickable } from "../ui/Clickable";
 
 // Visual metadata for the Cmd+Tab–style service switcher overlay. Indexed
@@ -65,12 +65,18 @@ export const ServiceSwitcherOverlay = ({
 }: ServiceSwitcherOverlayProps) => {
     const { t } = useTranslation();
 
-    // Hint matches the cycle gesture in `useGlobalServiceShortcut`: hold the
-    // platform "switcher" modifier (Cmd on mac, Alt elsewhere) and tap Ctrl
-    // to advance the highlight.
+    // The hint is the cycle gesture of `useGlobalServiceShortcut`, printed from the same
+    // words and keys as Settings -> Shortcuts: hold the platform's switcher key (Cmd on Mac,
+    // Alt elsewhere), tap Ctrl to advance, release to commit. The registry owns the key.
+    const cycleCombo = t.settings.shortcuts.global.cycleCombo;
     const shortcutHint = useMemo(() => {
-        return isMac() ? t.layout.serviceSwitcher.hintMac : t.layout.serviceSwitcher.hintOther;
-    }, [t.layout.serviceSwitcher.hintMac, t.layout.serviceSwitcher.hintOther]);
+        const { hold } = cycleKeys();
+        return [
+            fmt(cycleCombo.hold, { key: hold }),
+            cycleCombo.tap,
+            fmt(cycleCombo.release, { key: hold }),
+        ].join("  ·  ");
+    }, [cycleCombo.hold, cycleCombo.tap, cycleCombo.release]);
 
     if (previewIndex === null) return null;
 

@@ -27,7 +27,5 @@ export const layout = {
         search: "Genos",
         // The sidebar's own To-Do label (sidebar.actions.todo).
         todo: "To-Do",
-        hintMac: "Hold ⌘  ·  Tap Ctrl to cycle  ·  Release ⌘ to switch",
-        hintOther: "Hold Alt  ·  Tap Ctrl to cycle  ·  Release Alt to switch",
     },
 } as const;
