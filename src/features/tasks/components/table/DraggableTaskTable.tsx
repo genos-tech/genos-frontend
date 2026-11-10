@@ -1717,8 +1717,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         style={{ ...getTableHeaderStyles(mode), minWidth: totalTableWidth }}
                         {...{ [GRID_ROW_ATTR]: GRID_HEADER_ROW }}
                     >
-                        {/* Drag handle placeholder */}
-                        <div style={headerDragHandlePlaceholderStyles} aria-hidden />
+                        {/* The leading gutter (drag, graph, +) is one cell in every body row, so it
+                            is one header cell too: without it a screen reader counted one more
+                            column in a row than in the header (MIP-1239). Named, not marked as a
+                            grid column: there is nothing to sort or to stop on. */}
+                        <div
+                            role="columnheader"
+                            aria-label={t.tasks.table.rowActionsHeader}
+                            style={headerDragHandlePlaceholderStyles}
+                        />
 
                         {visibleColumns.map((column, index) => (
                             <div
@@ -1731,9 +1738,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             : "descending"
                                         : undefined
                                 }
-                                // The expand column has no name and nothing to sort by.
+                                // The expand column has no visible name and nothing to sort by: a
+                                // screen reader gets its name from here, and it has no button (a
+                                // nameless button in the header was a control that did nothing).
                                 {...(column.field === "__expand"
-                                    ? {}
+                                    ? { "aria-label": t.tasks.diagram.tooltips.expand }
                                     : { [GRID_COL_ATTR]: column.field })}
                                 style={{
                                     ...getHeaderCellStyles(
@@ -1762,7 +1771,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             >
                                 {/* Header content - clickable for sorting */}
                                 <PlainButton
-                                    tabIndex={column.field === "__expand" ? -1 : undefined}
+                                    // The expand column sorts nothing: no tab stop, no click, and out
+                                    // of the accessibility tree (the header cell carries the name).
+                                    {...(column.field === "__expand"
+                                        ? { "aria-hidden": true, disabled: true, tabIndex: -1 }
+                                        : {})}
                                     style={{
                                         display: "flex",
                                         alignItems: "center",

@@ -2670,6 +2670,7 @@ export const ar: DeepPartial<Messages> = {
             },
             loadingTasks: "في انتظار تحميل المهام…",
             gridLabel: "جدول المهام",
+            rowActionsHeader: "إجراءات الصف",
             emptyTitle: "لا توجد مهام لعرضها",
             emptyHint: "جرّب تعديل عوامل التصفية",
             addTagsPlaceholder: "إضافة علامات…",
