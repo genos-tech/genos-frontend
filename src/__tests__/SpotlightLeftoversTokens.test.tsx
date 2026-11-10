@@ -303,6 +303,9 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
                 ["light", 4.5, 7],
             ] as const) {
                 const r = buildRoles(id, mode);
+                // A hover and a visited link are a different color from the link itself.
+                expect(r.linkHover, `${id}/${mode} hover`).not.toBe(r.link);
+                expect(r.linkVisited, `${id}/${mode} visited`).not.toBe(r.link);
                 const fills = fillsOf(r).map(([, f]) => f);
                 for (const f of fills) {
                     expect(contrast(r.link, f), `${id}/${mode} link`).toBeGreaterThanOrEqual(link);
