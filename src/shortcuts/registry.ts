@@ -45,10 +45,10 @@ export type ShortcutKind = "chord" | "gesture" | "pointer";
  * Where a shortcut applies. Two entries may share keys only in different
  * scopes, and the test names every such pair (see `KNOWN_OVERLAPS`).
  */
-export type ShortcutScope = "global" | "chat" | "composer" | "taskCreate";
+export type ShortcutScope = "global" | "chat" | "composer" | "taskCreate" | "taskTable";
 
 /** The Settings group a shortcut is listed under. */
-export type ShortcutGroup = "global" | "chat" | "editing";
+export type ShortcutGroup = "global" | "chat" | "editing" | "table";
 
 /** What a handler may do when the key is pressed inside a text field. */
 export type EditablePolicy = "allow" | "skip";
@@ -69,6 +69,12 @@ export type ShortcutDef = {
     label: (t: ShortcutCatalog) => string | undefined;
     /** Fire while the focus is in an input, textarea or contenteditable? */
     editable: EditablePolicy;
+    /**
+     * The key caps a display-only entry prints, one cap per element and joined with "+"
+     * (`["Ctrl", "Home / End"]`). A cap may list alternatives ("Home / End"). A chord entry
+     * prints its chord instead, and the cycle gesture composes its own words.
+     */
+    parts?: readonly string[];
 };
 
 const NONE: Record<Platform, readonly Chord[]> = { mac: [], other: [] };
@@ -242,6 +248,64 @@ export const SHORTCUTS = {
         label: (t) => t.settings?.shortcuts?.editing?.rows?.createTask,
         editable: "allow",
     },
+    // The task table's grid keys (MIP-1230). Their code is `gridNav.ts` / `useGridNav.tsx`
+    // (one tab stop, arrows between cells) and `cellEditors.tsx` (Escape); they are listed
+    // here so Settings can show them, not matched through the registry. Same keys on both
+    // platforms. A test pins them to `intentForKey`.
+    "table.move": {
+        kind: "gesture",
+        scope: "taskTable",
+        group: "table",
+        keys: NONE,
+        parts: ["← ↑ ↓ →"],
+        label: (t) => t.settings?.shortcuts?.table?.rows?.move,
+        editable: "allow",
+    },
+    "table.rowEdges": {
+        kind: "gesture",
+        scope: "taskTable",
+        group: "table",
+        keys: NONE,
+        parts: ["Home / End"],
+        label: (t) => t.settings?.shortcuts?.table?.rows?.rowEdges,
+        editable: "allow",
+    },
+    "table.gridEdges": {
+        kind: "gesture",
+        scope: "taskTable",
+        group: "table",
+        keys: NONE,
+        parts: ["Ctrl", "Home / End"],
+        label: (t) => t.settings?.shortcuts?.table?.rows?.gridEdges,
+        editable: "allow",
+    },
+    "table.page": {
+        kind: "gesture",
+        scope: "taskTable",
+        group: "table",
+        keys: NONE,
+        parts: ["PageUp / PageDown"],
+        label: (t) => t.settings?.shortcuts?.table?.rows?.page,
+        editable: "allow",
+    },
+    "table.activate": {
+        kind: "gesture",
+        scope: "taskTable",
+        group: "table",
+        keys: NONE,
+        parts: ["Enter / Space"],
+        label: (t) => t.settings?.shortcuts?.table?.rows?.activate,
+        editable: "allow",
+    },
+    "table.cancel": {
+        kind: "gesture",
+        scope: "taskTable",
+        group: "table",
+        keys: NONE,
+        parts: ["Esc"],
+        label: (t) => t.settings?.shortcuts?.table?.rows?.cancel,
+        editable: "allow",
+    },
 } as const satisfies Record<string, ShortcutDef>;
 
 export type ShortcutId = keyof typeof SHORTCUTS;
@@ -325,7 +389,8 @@ const keyLabel = (key: string | readonly string[]): string => {
 
 /**
  * The printed parts of a chord shortcut, one per key cap: `["Ctrl", "⌘", "T"]`.
- * A gesture or pointer entry has none (its text is composed where it is shown).
+ * A gesture or pointer entry prints its `parts` when it has them; otherwise its text is
+ * composed where it is shown (the cycle, the thread click).
  */
 export const shortcutParts = (
     id: ShortcutId,
@@ -333,7 +398,7 @@ export const shortcutParts = (
 ): string[] => {
     const def: ShortcutDef = SHORTCUTS[id];
     const chord = def.keys[platform][0];
-    if (!chord) return [];
+    if (!chord) return [...(def.parts ?? [])];
     return [...chord.mods.map((m) => MOD_LABEL[platform][m]), keyLabel(chord.key)];
 };
 

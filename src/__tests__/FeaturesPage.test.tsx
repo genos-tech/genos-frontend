@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 
 import { en } from "../i18n/locales/en";
 import FeaturesPage from "../lp/FeaturesPage";
+import { LP_SHORTCUT_ORDER } from "../lp/shortcutRows";
 
 const copy = en.featuresPage;
 /** Every feature the copy defines. The page must render all of them. */
@@ -48,13 +49,14 @@ describe("FeaturesPage", () => {
     });
 
     it("describes the service cycle the shortcut actually performs", () => {
-        // `useGlobalServiceShortcut` cycles five services; Genos was
-        // added and this row said four for a while. A shortcut list that
+        // `useGlobalServiceShortcut` cycles six stops (Inbox, Chat, Tasks, Notes, Genos,
+        // To-Do); Genos was added and this row said four for a while, then To-Do. A shortcut list that
         // is wrong is worse than one that is absent — the reader tries
         // it, it does something else, and they stop trusting the page.
         renderPage();
-        const cycle = copy.shortcuts.items.find((s) => s.keys.includes("tap Ctrl"));
+        const cycle = copy.shortcuts.items[LP_SHORTCUT_ORDER.indexOf("global.cycle")];
         expect(cycle?.label).toContain("Genos");
+        expect(cycle?.label).toContain("To-Do");
         expect(screen.getByText(cycle!.label)).toBeTruthy();
     });
 

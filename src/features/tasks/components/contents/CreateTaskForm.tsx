@@ -1614,13 +1614,16 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     variant="plain"
                                     onClick={handleMilestoneCancelClick}
                                 >
-                                    Cancel
+                                    {t.tasks.createForm.cancel}
                                 </Button>
                                 <AppTooltip
                                     title={
                                         isMilestoneSubmitDisabled
-                                            ? "Create Milestone"
-                                            : `Create Milestone (${shortcutLabel})`
+                                            ? t.tasks.createForm.createMilestone
+                                            : fmt(t.tasks.createForm.withShortcut, {
+                                                  label: t.tasks.createForm.createMilestone,
+                                                  shortcut: shortcutLabel,
+                                              })
                                     }
                                 >
                                     <Button
@@ -1632,7 +1635,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                         variant="solid"
                                         onClick={handleCreateMilestone}
                                     >
-                                        {isCreatingMilestone ? "Creating…" : "Create Milestone"}
+                                        {isCreatingMilestone
+                                            ? t.tasks.createForm.creating
+                                            : t.tasks.createForm.createMilestone}
                                     </Button>
                                 </AppTooltip>
                             </Stack>

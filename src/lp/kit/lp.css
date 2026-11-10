@@ -1488,6 +1488,16 @@ a.lp-row:hover .lp-row__arrow {
     white-space: nowrap;
 }
 
+/* The cycle row's keys are a short sentence ("Hold Alt + Tap Ctrl to cycle"): on a phone let
+   them wrap instead of squeezing the label beside them into a one-word column. */
+@media (max-width: 520px) {
+    .lp-row .lp-kbd {
+        white-space: normal;
+        max-width: 9.5rem;
+        text-align: end;
+    }
+}
+
 .lp-panel {
     display: grid;
     gap: 14px;

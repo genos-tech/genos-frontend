@@ -1148,6 +1148,19 @@ export const es: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Atajos de teclado",
+            table: {
+                title: "Tabla de tareas",
+                description:
+                    "Activos mientras una celda de la tabla de tareas tiene el foco. Tab entra y sale de la tabla; estas teclas se mueven dentro de ella.",
+                rows: {
+                    move: "Moverse entre celdas",
+                    rowEdges: "Ir a la primera / última celda de la fila",
+                    gridEdges: "Ir a la primera / última celda de la tabla",
+                    page: "Subir / bajar una página",
+                    activate: "Abrir el editor de la celda",
+                    cancel: "Cerrar el editor de la celda sin guardar",
+                },
+            },
             editing: {
                 title: "Al escribir",
                 description:
@@ -2474,6 +2487,11 @@ export const es: DeepPartial<Messages> = {
                 "No se pudo preparar una nueva tarea. Comprueba tu conexión e inténtalo de nuevo.",
             bootstrapRetry: "Reintentar",
             bootstrapCancel: "Cancelar",
+            cancel: "Cancelar",
+            createTask: "Crear tarea",
+            createMilestone: "Crear hito",
+            creating: "Creando…",
+            withShortcut: "{label} ({shortcut})",
             discardTaskTitle: "¿Descartar este borrador?",
             discardTaskBody:
                 "Se perderán el título, el cuerpo y los adjuntos. Esta acción no se puede deshacer.",
@@ -5645,44 +5663,36 @@ export const es: DeepPartial<Messages> = {
         shortcuts: {
             eyebrow: "Atajos",
             title: "Atajos de teclado",
-            platformNote: "En macOS use ⌘; en Windows y Linux utilice Alt en su lugar.",
+            platformNote:
+                "Las teclas se adaptan a tu sistema: ⌘ en macOS, Ctrl y Alt en Windows y Linux.",
             keysHeader: "Atajo",
             actionHeader: "que hace",
             items: [
                 {
-                    keys: "⌘K",
                     label: "Abre la búsqueda AI Spotlight",
                 },
                 {
-                    keys: "Mantenga presionado ⌘ + toque Ctrl",
-                    label: "Ciclo Bandeja de entrada → Chat → Tareas → Notas → Genos (cambio inverso)",
+                    label: "Ciclo Bandeja de entrada → Chat → Tareas → Notas → Genos → Por hacer (cambio inverso)",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "Abre Tareas y comience una nueva tarea",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "Abre Notas y cree una nueva nota",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "Abrir el calendario",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "Genera un enlace Google Meet y cópialo",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "Toggle Historial de elementos abiertos recientemente",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "Abrir el diagrama de tareas para la tarea actual",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "Abrir la lista de tareas pendientes",
                 },
                 {
