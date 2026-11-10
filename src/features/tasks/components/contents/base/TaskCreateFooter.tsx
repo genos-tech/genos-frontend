@@ -11,7 +11,7 @@ import { consumeYjsPersistenceFailure } from "../../../../../db/utils/yjsPersist
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
-import { getMessages, useTranslation } from "../../../../../i18n";
+import { fmt, getMessages, useTranslation } from "../../../../../i18n";
 import { shortcutText } from "../../../../../shortcuts";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
@@ -258,7 +258,7 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                     }}
                     onClick={handleCancelClick}
                 >
-                    Cancel
+                    {t.tasks.createForm.cancel}
                 </Button>
 
                 <ConfirmDialog
@@ -271,7 +271,16 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                     onClose={() => setShowDiscardConfirm(false)}
                     onConfirm={confirmDiscard}
                 />
-                <AppTooltip title={isDisabled ? "Create Task" : `Create Task (${shortcutLabel})`}>
+                <AppTooltip
+                    title={
+                        isDisabled
+                            ? t.tasks.createForm.createTask
+                            : fmt(t.tasks.createForm.withShortcut, {
+                                  label: t.tasks.createForm.createTask,
+                                  shortcut: shortcutLabel,
+                              })
+                    }
+                >
                     <Button
                         disabled={isDisabled}
                         loading={isCreatingTask}
@@ -281,7 +290,9 @@ export const TaskCreateFooter = forwardRef<TaskCreateFooterHandle, TaskCreateFoo
                         variant="solid"
                         onClick={triggerSubmit}
                     >
-                        {isCreatingTask ? "Creating…" : "Create Task"}
+                        {isCreatingTask
+                            ? t.tasks.createForm.creating
+                            : t.tasks.createForm.createTask}
                     </Button>
                 </AppTooltip>
             </Stack>

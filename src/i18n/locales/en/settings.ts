@@ -1052,6 +1052,19 @@ export const settings = {
     },
     shortcuts: {
         heading: "Keyboard shortcuts",
+        table: {
+            title: "Task table",
+            description:
+                "Active while a cell of the task table has focus. Tab enters and leaves the table; these keys move inside it.",
+            rows: {
+                move: "Move between cells",
+                rowEdges: "Jump to the first / last cell in the row",
+                gridEdges: "Jump to the first / last cell in the table",
+                page: "Move a page up / down",
+                activate: "Open the cell's editor",
+                cancel: "Close a cell editor without saving",
+            },
+        },
         editing: {
             title: "Writing",
             description: "Active while you write a message or fill in the new-task form.",

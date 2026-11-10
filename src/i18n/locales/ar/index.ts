@@ -1124,6 +1124,19 @@ export const ar: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "اختصارات لوحة المفاتيح",
+            table: {
+                title: "جدول المهام",
+                description:
+                    "تعمل أثناء وجود التركيز على خلية في جدول المهام. يدخل Tab إلى الجدول ويخرج منه؛ وتتحرك هذه المفاتيح داخله.",
+                rows: {
+                    move: "التنقّل بين الخلايا",
+                    rowEdges: "الانتقال إلى أول / آخر خلية في الصف",
+                    gridEdges: "الانتقال إلى أول / آخر خلية في الجدول",
+                    page: "الانتقال صفحة للأعلى / للأسفل",
+                    activate: "فتح محرّر الخلية",
+                    cancel: "إغلاق محرّر الخلية دون حفظ",
+                },
+            },
             editing: {
                 title: "أثناء الكتابة",
                 description: "نشطة أثناء كتابة رسالة أو ملء نموذج المهمة الجديدة.",
@@ -2436,6 +2449,11 @@ export const ar: DeepPartial<Messages> = {
             bootstrapFailed: "تعذّر تجهيز مهمة جديدة. تحقّق من اتصالك وحاول مرة أخرى.",
             bootstrapRetry: "إعادة المحاولة",
             bootstrapCancel: "إلغاء",
+            cancel: "إلغاء",
+            createTask: "إنشاء المهمة",
+            createMilestone: "إنشاء المعلم",
+            creating: "جارٍ الإنشاء…",
+            withShortcut: "{label}: {shortcut}",
             discardTaskTitle: "تجاهل هذه المسودة؟",
             discardTaskBody: "سيتم فقدان العنوان والنص والمرفقات. لا يمكن التراجع عن هذا الإجراء.",
             discardMilestoneTitle: "تجاهل مسودة هذا المعلم؟",
@@ -5280,44 +5298,35 @@ export const ar: DeepPartial<Messages> = {
         shortcuts: {
             eyebrow: "الاختصارات",
             title: "اختصارات لوحة المفاتيح",
-            platformNote: "على macOS استخدم ⌘; على نظامي التشغيل Windows وLinux استخدم Alt مكانه.",
+            platformNote: "تظهر المفاتيح بحسب نظامك: ⌘ على macOS، وCtrl وAlt على Windows وLinux.",
             keysHeader: "الاختصار",
             actionHeader: "ماذا يفعل",
             items: [
                 {
-                    keys: "⌘ك",
                     label: "افتح Spotlight AI البحث",
                 },
                 {
-                    keys: "اضغط مع الاستمرار على ⌘ + اضغط على Ctrl",
-                    label: "دورة البريد الوارد → الدردشة → المهام → الملاحظات → Genos (التحويل العكسي)",
+                    label: "دورة البريد الوارد → الدردشة → المهام → الملاحظات → Genos → مهام اليوم (التحويل العكسي)",
                 },
                 {
-                    keys: "Ctrl + ⌘ + ت",
                     label: "افتح المهام وابدأ مهمة جديدة",
                 },
                 {
-                    keys: "Ctrl + ⌘ + ن",
                     label: "افتح الملاحظات وأنشئ ملاحظة جديدة",
                 },
                 {
-                    keys: "Ctrl + ⌘ + ج",
                     label: "افتح التقويم",
                 },
                 {
-                    keys: "Ctrl + ⌘ + م",
                     label: "أنشئ رابط Google Meet وانسخه",
                 },
                 {
-                    keys: "Ctrl + ⌘ + ح",
                     label: "تبديل محفوظات العناصر المفتوحة مؤخرًا",
                 },
                 {
-                    keys: "Ctrl + ⌘ + ز",
                     label: "افتح مخطط المهمة للمهمة الحالية",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "افتح قائمة المهام",
                 },
                 {

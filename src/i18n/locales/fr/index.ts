@@ -2188,44 +2188,36 @@ export const fr: DeepPartial<Messages> = {
         shortcuts: {
             eyebrow: "Raccourcis",
             title: "Raccourcis clavier",
-            platformNote: "Sur macOS, utilisez ⌘; sous Windows et Linux, utilisez Alt à la place.",
+            platformNote:
+                "Les touches s'adaptent à votre système : ⌘ sur macOS, Ctrl et Alt sous Windows et Linux.",
             keysHeader: "Raccourci",
             actionHeader: "Ce qu'il fait",
             items: [
                 {
-                    keys: "⌘K",
                     label: "Ouvrir la recherche AI Spotlight",
                 },
                 {
-                    keys: "Maintenez ⌘ + appuyez sur Ctrl",
-                    label: "Cycle Boîte de réception → Chat → Tâches → Notes → Genos (Maj inversé)",
+                    label: "Cycle Boîte de réception → Chat → Tâches → Notes → Genos → À faire (Maj inversé)",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "Ouvrez les tâches et démarrez une nouvelle tâche",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "Ouvrez Notes et créez une nouvelle note",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "Ouvrir le calendrier",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "Générez un lien Google Meet et copiez-le",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "Toggle Historique des éléments récemment ouverts",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "Ouvrir le diagramme de tâches pour la tâche en cours",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "Ouvrir la liste des tâches",
                 },
                 {
@@ -4318,6 +4310,19 @@ export const fr: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Raccourcis clavier",
+            table: {
+                title: "Tableau des tâches",
+                description:
+                    "Actifs tant qu'une cellule du tableau des tâches a le focus. Tab entre dans le tableau et en sort ; ces touches se déplacent à l'intérieur.",
+                rows: {
+                    move: "Se déplacer entre les cellules",
+                    rowEdges: "Aller à la première / dernière cellule de la ligne",
+                    gridEdges: "Aller à la première / dernière cellule du tableau",
+                    page: "Monter / descendre d'une page",
+                    activate: "Ouvrir l'éditeur de la cellule",
+                    cancel: "Fermer l'éditeur de cellule sans enregistrer",
+                },
+            },
             editing: {
                 title: "Pendant la rédaction",
                 description:
@@ -5004,6 +5009,11 @@ export const fr: DeepPartial<Messages> = {
                 "Impossible de préparer une nouvelle tâche. Vérifiez votre connexion et réessayez.",
             bootstrapRetry: "Réessayer",
             bootstrapCancel: "Annuler",
+            cancel: "Annuler",
+            createTask: "Créer la tâche",
+            createMilestone: "Créer le jalon",
+            creating: "Création…",
+            withShortcut: "{label} ({shortcut})",
             discardTaskTitle: "Abandonner ce brouillon ?",
             discardTaskBody:
                 "Le titre, le contenu et les pièces jointes seront perdus. Cette action est irréversible.",

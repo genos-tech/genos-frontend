@@ -2091,44 +2091,35 @@ export const zh: DeepPartial<Messages> = {
         shortcuts: {
             eyebrow: "快捷方式",
             title: "键盘快捷键",
-            platformNote: "在 macOS 上使用 ⌘;在 Windows 和 Linux 上使用 Alt 代替。",
+            platformNote: "按键会按你的系统显示：macOS 用 ⌘，Windows 和 Linux 用 Ctrl 与 Alt。",
             keysHeader: "捷径",
             actionHeader: "它的作用",
             items: [
                 {
-                    keys: "⌘K",
                     label: "打开Spotlight人工智能搜索",
                 },
                 {
-                    keys: "按住 ⌘ + 点击 Ctrl",
-                    label: "循环收件箱→聊天→任务→笔记→Genos（Shift反向）",
+                    label: "循环收件箱→聊天→任务→笔记→Genos→待办事项（Shift反向）",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "打开任务并开始新任务",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "打开笔记并创建新笔记",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "打开日历",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "生成Google Meet链接并复制",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "切换最近打开的项目的历史记录",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "打开当前任务的任务图",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "打开待办事项列表",
                 },
                 {
@@ -4112,6 +4103,19 @@ export const zh: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "键盘快捷键",
+            table: {
+                title: "任务表格",
+                description:
+                    "当任务表格中的某个单元格获得焦点时有效。Tab 进入和离开表格，这些按键在表格内移动。",
+                rows: {
+                    move: "在单元格之间移动",
+                    rowEdges: "跳到本行第一个／最后一个单元格",
+                    gridEdges: "跳到表格第一个／最后一个单元格",
+                    page: "向上／向下翻一页",
+                    activate: "打开单元格编辑器",
+                    cancel: "不保存并关闭单元格编辑器",
+                },
+            },
             editing: {
                 title: "编写时",
                 description: "在撰写消息或填写新建任务表单时可用。",
@@ -4775,6 +4779,11 @@ export const zh: DeepPartial<Messages> = {
             bootstrapFailed: "无法准备新任务。请检查网络连接后重试。",
             bootstrapRetry: "重试",
             bootstrapCancel: "取消",
+            cancel: "取消",
+            createTask: "创建任务",
+            createMilestone: "创建里程碑",
+            creating: "创建中…",
+            withShortcut: "{label}（{shortcut}）",
             discardTaskTitle: "放弃此草稿？",
             discardTaskBody: "标题、正文和附件将丢失，此操作无法撤销。",
             discardMilestoneTitle: "放弃此里程碑草稿？",

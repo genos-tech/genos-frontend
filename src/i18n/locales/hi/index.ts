@@ -1422,6 +1422,19 @@ export const hi: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "कीबोर्ड शॉर्टकट",
+            table: {
+                title: "टास्क टेबल",
+                description:
+                    "जब टास्क टेबल की कोई सेल फ़ोकस में हो तब सक्रिय। Tab टेबल में प्रवेश कराता है और बाहर निकालता है; ये कुंजियाँ टेबल के भीतर चलती हैं।",
+                rows: {
+                    move: "सेल्स के बीच जाएँ",
+                    rowEdges: "पंक्ति की पहली / आख़िरी सेल पर जाएँ",
+                    gridEdges: "टेबल की पहली / आख़िरी सेल पर जाएँ",
+                    page: "एक पेज ऊपर / नीचे जाएँ",
+                    activate: "सेल का एडिटर खोलें",
+                    cancel: "बिना सहेजे सेल एडिटर बंद करें",
+                },
+            },
             editing: {
                 title: "लिखते समय",
                 description: "संदेश लिखते समय या नया टास्क फ़ॉर्म भरते समय सक्रिय।",
@@ -2466,6 +2479,11 @@ export const hi: DeepPartial<Messages> = {
                 "नया टास्क तैयार नहीं हो सका। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
             bootstrapRetry: "फिर से कोशिश करें",
             bootstrapCancel: "रद्द करें",
+            cancel: "रद्द करें",
+            createTask: "टास्क बनाएँ",
+            createMilestone: "माइलस्टोन बनाएँ",
+            creating: "बनाया जा रहा है…",
+            withShortcut: "{label} ({shortcut})",
             discardTaskTitle: "इस ड्राफ़्ट को छोड़ें?",
             discardTaskBody:
                 "आपका शीर्षक, मुख्य भाग और अनुलग्नक खो जाएंगे. इसे पूर्ववत नहीं किया जा सकता.",
@@ -5610,44 +5628,35 @@ export const hi: DeepPartial<Messages> = {
             eyebrow: "शॉर्टकट",
             title: "कुंजीपटल अल्प मार्ग",
             platformNote:
-                "macOS पर ⌘ का उपयोग करें; विंडोज़ और लिनक्स पर इसके स्थान पर Alt का उपयोग करें।",
+                "कुंजियाँ आपके सिस्टम के अनुसार दिखती हैं: macOS पर ⌘, Windows और Linux पर Ctrl और Alt।",
             keysHeader: "शॉर्टकट",
             actionHeader: "यह क्या करता है",
             items: [
                 {
-                    keys: "⌘K",
                     label: "स्पॉटलाइट AI खोज खोलें",
                 },
                 {
-                    keys: "Hold ⌘ + tap Ctrl",
-                    label: "साइकिल इनबॉक्स → चैट → कार्य → नोट्स → Genos (Shift रिवर्स)",
+                    label: "साइकिल इनबॉक्स → चैट → कार्य → नोट्स → Genos → टू-डू (Shift रिवर्स)",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "कार्य खोलें और एक नया कार्य प्रारंभ करें",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "नोट्स खोलें और एक नया नोट बनाएं",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "कैलेंडर खोलें",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "एक Google Meet लिंक जेनरेट करें और उसे कॉपी करें",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "हाल ही में खोले गए आइटम का इतिहास टॉगल करें",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "वर्तमान कार्य के लिए कार्य आरेख खोलें",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "टू-डू सूची खोलें",
                 },
                 {

@@ -2170,44 +2170,35 @@ export const ja: DeepPartial<Messages> = {
             eyebrow: "ショートカット",
             title: "キーボードショートカット",
             platformNote:
-                "macOS では ⌘ を使用します。 Windows と Linux では、代わりに Alt を使用します。",
+                "キーはお使いのシステムに合わせて表示されます。macOS では ⌘、Windows と Linux では Ctrl と Alt です。",
             keysHeader: "ショートカット",
             actionHeader: "何をするのか",
             items: [
                 {
-                    keys: "⌘K",
                     label: "Spotlight AI 検索を開く",
                 },
                 {
-                    keys: "⌘ を押しながら Ctrl をタップします",
-                    label: "受信箱 → チャット → タスク → ノート → Genos (シフトを逆にします) をサイクルします。",
+                    label: "受信箱 → チャット → タスク → ノート → Genos → To-Do (シフトを逆にします) をサイクルします。",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "タスクを開いて新しいタスクを開始する",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "ノートを開いて新しいノートを作成する",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "カレンダーを開く",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "Google Meet リンクを生成してコピーします",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "Toggle 最近開いたアイテムの履歴",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "現在のタスクのタスク図を開きます",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "To-Doリストを開く",
                 },
                 {
@@ -4259,6 +4250,19 @@ export const ja: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "キーボードショートカット",
+            table: {
+                title: "タスクテーブル",
+                description:
+                    "タスクテーブルのセルにフォーカスがある間に有効です。Tab でテーブルに入り・出ます。これらのキーはテーブル内を移動します。",
+                rows: {
+                    move: "セル間を移動",
+                    rowEdges: "行の最初／最後のセルへ移動",
+                    gridEdges: "テーブルの最初／最後のセルへ移動",
+                    page: "1 ページ上／下へ移動",
+                    activate: "セルのエディターを開く",
+                    cancel: "保存せずにセルのエディターを閉じる",
+                },
+            },
             editing: {
                 title: "入力中",
                 description:
@@ -4940,6 +4944,11 @@ export const ja: DeepPartial<Messages> = {
                 "新しいタスクを準備できませんでした。接続を確認して、もう一度お試しください。",
             bootstrapRetry: "再試行",
             bootstrapCancel: "キャンセル",
+            cancel: "キャンセル",
+            createTask: "タスクを作成",
+            createMilestone: "マイルストーンを作成",
+            creating: "作成中…",
+            withShortcut: "{label} ({shortcut})",
             discardTaskTitle: "この下書きを破棄しますか?",
             discardTaskBody:
                 "タイトル、本文、添付ファイルは失われます。この操作は取り消せません。",

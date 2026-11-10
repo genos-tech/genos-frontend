@@ -44,7 +44,7 @@ const Kbd = ({ children }: { children: ReactNode }) => (
 );
 
 /** Settings groups, in the order they are listed. */
-const GROUP_ORDER: readonly ShortcutGroup[] = ["global", "chat", "editing"];
+const GROUP_ORDER: readonly ShortcutGroup[] = ["global", "chat", "editing", "table"];
 
 /**
  * Settings → Shortcuts, generated from the shortcut registry: every entry
@@ -59,6 +59,7 @@ export const KeyboardShortcutsSection = () => {
     // from translated words around the platform's keys.
     const comboOf = (id: ShortcutId): string[] => {
         const kind = SHORTCUTS[id].kind;
+        if (kind === "gesture" && shortcutParts(id).length > 0) return shortcutParts(id);
         if (kind === "gesture") {
             const { hold } = cycleKeys();
             const words = copy.global.cycleCombo;
@@ -75,6 +76,8 @@ export const KeyboardShortcutsSection = () => {
         rows: SHORTCUT_IDS.filter((id) => SHORTCUTS[id].group === group).map((id) => ({
             id,
             kind: SHORTCUTS[id].kind,
+            // Key caps read left to right in every language: chords, and gestures that print caps.
+            keyCaps: SHORTCUTS[id].kind === "chord" || shortcutParts(id).length > 0,
             label: shortcutLabel(id, t),
             combo: comboOf(id),
         })),
@@ -106,10 +109,10 @@ export const KeyboardShortcutsSection = () => {
                                         spacing={2}
                                     >
                                         <Typography level="body-sm">{row.label}</Typography>
-                                        {/* Key caps read left to right in every language; a gesture or click row has translated words in it. */}
+                                        {/* Key caps read left to right in every language; the cycle and click rows have translated words in them. */}
                                         <Stack
                                             alignItems="center"
-                                            dir={row.kind === "chord" ? "ltr" : undefined}
+                                            dir={row.keyCaps ? "ltr" : undefined}
                                             direction="row"
                                             spacing={0.5}
                                         >
