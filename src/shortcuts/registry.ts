@@ -153,7 +153,7 @@ export const SHORTCUTS = {
         kind: "chord",
         scope: "global",
         group: "global",
-        keys: letter("d"),
+        keys: letter("x"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.openTodo,
         editable: "allow",
     },
