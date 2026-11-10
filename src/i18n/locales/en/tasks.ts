@@ -897,6 +897,15 @@ export const tasks = {
         noAssignee: "No assignee",
     },
 
+    // Deleting a task or milestone: no question, an Undo toast instead (MIP-1303).
+    // The delete is sent when the toast has gone.
+    deleteUndo: {
+        deleted: "Task deleted",
+        milestoneDeleted: "Milestone deleted",
+        errorRestored: "Couldn’t delete the task. It is back.",
+        milestoneErrorRestored: "Couldn’t delete the milestone. It is back.",
+    },
+
     // Named, project-shared filter selections in the filter bar. Called
     // "Saved Filters" rather than "Views" on purpose: the app already
     // uses "view" for the mutually-exclusive table / dashboard /

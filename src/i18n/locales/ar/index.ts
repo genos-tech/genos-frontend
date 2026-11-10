@@ -3051,6 +3051,12 @@ export const ar: DeepPartial<Messages> = {
             allMembers: "جميع الأعضاء",
             noAssignee: "لا المكلف",
         },
+        deleteUndo: {
+            deleted: "تم حذف المهمة",
+            milestoneDeleted: "تم حذف المعلم",
+            errorRestored: "تعذّر حذف المهمة. عادت إلى مكانها.",
+            milestoneErrorRestored: "تعذّر حذف المعلم. عاد إلى مكانه.",
+        },
         savedFilters: {
             button: "المرشحات المحفوظة",
             tooltip:

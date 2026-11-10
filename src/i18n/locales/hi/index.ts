@@ -2851,6 +2851,12 @@ export const hi: DeepPartial<Messages> = {
             allMembers: "सभी सदस्य",
             noAssignee: "कोई समनुदेशिती नहीं",
         },
+        deleteUndo: {
+            deleted: "टास्क हटा दिया गया",
+            milestoneDeleted: "माइलस्टोन हटा दिया गया",
+            errorRestored: "टास्क हटाया नहीं जा सका। वह वापस आ गया है।",
+            milestoneErrorRestored: "माइलस्टोन हटाया नहीं जा सका। वह वापस आ गया है।",
+        },
         savedFilters: {
             button: "सहेजे गए फ़िल्टर",
             tooltip:
