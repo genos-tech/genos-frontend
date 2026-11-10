@@ -49,9 +49,6 @@ vi.mock("../services/notifications/NotificationsContext", () => ({
         unmuteTarget: vi.fn(),
     }),
 }));
-vi.mock("../features/tasks/components/modals/ModalDeleteTask", () => ({
-    ModalDeleteTask: () => <div />,
-}));
 vi.mock("../features/tasks/diagram/components/LazyTaskDiagram", () => ({
     LazyTaskDiagram: () => <div />,
 }));

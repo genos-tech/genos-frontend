@@ -52,10 +52,11 @@ describe("isDeletingStatus", () => {
 });
 
 describe("the preview's status picker", () => {
-    const setup = (over: object = {}) => {
+    const setup = (over: object = {}, withHandler = true) => {
         const setTaskContent = vi.fn();
         const setTaskStatusUpdated = vi.fn();
         const setTaskUpdated = vi.fn();
+        const onDeleteTask = vi.fn();
         render(
             <CssVarsProvider>
                 <ACTaskStatus
@@ -66,68 +67,56 @@ describe("the preview's status picker", () => {
                     taskContent={
                         { id: "1", title: "Ship it", status: byName("Open"), ...over } as never
                     }
+                    onDeleteTask={withHandler ? onDeleteTask : undefined}
                 />
             </CssVarsProvider>
         );
-        return { setTaskContent, setTaskStatusUpdated, setTaskUpdated };
+        return { setTaskContent, setTaskStatusUpdated, setTaskUpdated, onDeleteTask };
     };
-    const choose = (name: string) => {
+    const open = () => {
         const input = screen.getByRole("combobox");
         fireEvent.focus(input);
         fireEvent.keyDown(input, { key: "ArrowDown" });
-        const option = screen
-            .getAllByRole("option")
-            .find((o) => o.textContent?.includes(name === "Deleted" ? "Deleted" : name))!;
+    };
+    const choose = (name: string) => {
+        open();
+        const option = screen.getAllByRole("option").find((o) => o.textContent?.includes(name))!;
         fireEvent.click(option);
     };
 
-    it("opens a destructive confirm and changes nothing until it is confirmed", () => {
-        const { setTaskContent, setTaskStatusUpdated, setTaskUpdated } = setup();
+    it("Deleted goes to the delete handler and NEVER into the working copy or the autosave flags (MIP-1168)", () => {
+        const { setTaskContent, setTaskStatusUpdated, setTaskUpdated, onDeleteTask } = setup();
         choose("Deleted");
-
-        const dialog = screen.getByRole("alertdialog");
-        expect(within(dialog).getByText("Delete this task?")).toBeTruthy();
-        expect(within(dialog).getByText("Ship it")).toBeTruthy();
-        // The autosave flow has seen nothing: no working-copy write, no flags.
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+        expect(onDeleteTask).toHaveBeenCalledTimes(1);
+        // Every autosave PUT carries `status`: the copy must not hold Deleted.
         expect(setTaskContent).not.toHaveBeenCalled();
         expect(setTaskStatusUpdated).not.toHaveBeenCalled();
         expect(setTaskUpdated).not.toHaveBeenCalled();
     });
 
-    it("Cancel closes it and the task keeps its status", async () => {
-        const { setTaskContent, setTaskUpdated } = setup();
-        choose("Deleted");
-        fireEvent.click(within(screen.getByRole("alertdialog")).getByText("Cancel"));
-        await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
-        expect(setTaskContent).not.toHaveBeenCalled();
-        expect(setTaskUpdated).not.toHaveBeenCalled();
-    });
-
-    it("Confirm makes exactly the three calls a pick always made", async () => {
-        const { setTaskContent, setTaskStatusUpdated, setTaskUpdated } = setup();
-        choose("Deleted");
-        fireEvent.click(within(screen.getByRole("alertdialog")).getByText("Delete"));
-        await waitFor(() => expect(setTaskContent).toHaveBeenCalledTimes(1));
-        expect(setTaskContent.mock.calls[0][0].status.status).toBe("Deleted");
-        expect(setTaskStatusUpdated).toHaveBeenCalledWith(true);
-        expect(setTaskUpdated).toHaveBeenCalledWith(true);
-        await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
-    });
-
     it("any other status applies at once, with no dialog", () => {
-        const { setTaskContent, setTaskUpdated } = setup();
+        const { setTaskContent, setTaskUpdated, onDeleteTask } = setup();
         choose("WIP");
         expect(screen.queryByRole("alertdialog")).toBeNull();
         expect(setTaskContent.mock.calls[0][0].status.status).toBe("WIP");
         expect(setTaskUpdated).toHaveBeenCalledWith(true);
+        expect(onDeleteTask).not.toHaveBeenCalled();
     });
 
-    it("a milestone is never called a task", () => {
-        setup({ isMilestone: true });
-        choose("Deleted");
-        const dialog = screen.getByRole("alertdialog");
-        expect(within(dialog).getByText("Delete this milestone?")).toBeTruthy();
-        expect(dialog.textContent).not.toMatch(/task/i);
+    it("leaving Deleted (bringing a task back) is an ordinary pick", () => {
+        const { setTaskContent, onDeleteTask } = setup({ status: byName("Deleted") });
+        choose("Open");
+        expect(setTaskContent.mock.calls[0][0].status.status).toBe("Open");
+        expect(onDeleteTask).not.toHaveBeenCalled();
+    });
+
+    it("without a handler the Deleted option is not offered", () => {
+        setup({}, false);
+        open();
+        const names = screen.getAllByRole("option").map((o) => o.textContent);
+        expect(names.some((n) => n?.includes("Deleted"))).toBe(false);
+        expect(names.some((n) => n?.includes("WIP"))).toBe(true);
     });
 });
 
