@@ -332,6 +332,10 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     //  - the commit is never built from this copy (an edit made in the window
     //    would be overwritten): it is the minimal PUT.
     const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    // The task the pane shows NOW: the save below is awaited, and the person may have
+    // opened another task (or closed the modal) by the time it has landed.
+    const shownTaskIdRef = useRef<number | undefined>(undefined);
+    shownTaskIdRef.current = taskEditState.tmpCurrentTaskContent?.id;
     const handleDeleteTask = async () => {
         const task = taskEditState.tmpCurrentTaskContent;
         if (task?.id == null || task.project?.projectId == null) return;
@@ -347,6 +351,8 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             { id: task.id, projectId: Number(task.project.projectId) },
             {
                 afterHide: () => {
+                    // Another task is on screen now: it is not ours to close.
+                    if (Number(shownTaskIdRef.current) !== Number(task.id)) return;
                     // The same close as the header's X. A modal-hosted preview closes
                     // its modal; the global preview state is not its own.
                     useTM.setIsTaskPreviewVisible(false);
