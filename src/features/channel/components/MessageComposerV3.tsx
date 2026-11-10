@@ -256,6 +256,7 @@ export function MessageComposerV3({
                 onRemove={attachments.removeAt}
             />
             <div
+                data-fab-avoid="composer"
                 data-testid={testIdPrefix}
                 style={{
                     display: "flex",
