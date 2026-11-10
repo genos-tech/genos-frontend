@@ -34,7 +34,8 @@ type GenosDictionary = ReturnType<typeof useBlockNoteDictionary>;
  */
 export const GENOS_SURFACES = {
     composer: { editingRules: true, tabStaysInEditor: false, tables: false },
-    todo: { editingRules: true, tabStaysInEditor: true, tables: false },
+    // Tables on since MIP-1334: the notes editor offers what a task body does, bar media.
+    todo: { editingRules: true, tabStaysInEditor: true, tables: true },
     template: { editingRules: true, tabStaysInEditor: true, tables: true },
     preview: { editingRules: false, tabStaysInEditor: false, tables: false },
 } as const;

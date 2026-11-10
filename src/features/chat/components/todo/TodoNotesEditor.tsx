@@ -20,7 +20,8 @@ interface TodoNotesEditorProps {
 }
 
 // Per-item rich-text notes editor. Reuses BnTodoPreview's BlockNote
-// configuration (mentions, formatting toolbar, no headings/tables).
+// configuration: the task body's editing tools (`/` menu, drag handle, link
+// toolbar, tables, headings), without media (MIP-1334).
 // Note: checkListItem blocks remain available inside notes, but the
 // item's `is_completed` field on the row is the source of truth for
 // completion — nested checkboxes inside notes are presentational only

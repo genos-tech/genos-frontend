@@ -24,7 +24,7 @@ export type MentionSources = {
 type GenosSuggestionMenusProps = {
     editor: AnyEditor;
     getMentionSources: () => MentionSources;
-    /** Omit for a surface with no `/` menu (the todo body). */
+    /** Omit for a surface with no `/` menu. */
     slash?: { preset: SlashPreset; setShowGifPicker: (value: boolean) => void };
 };
 
