@@ -78,14 +78,16 @@ describe("per-project tasks scope", () => {
         expect(syncStatus.getSnapshot().failed).toEqual(["tasks:7"]);
     });
 
-    it("a project that is gone for the user (HTTP 404 / 403) is forgotten, not failed forever", async () => {
+    it("a project that is gone for the user (HTTP 404) is forgotten, not failed forever", async () => {
         tasksReq.mockRejectedValueOnce(new Error("Failed to load project tasks (HTTP 404)"));
         await expect(loadProjectTasks(myself, 9, "tok")).rejects.toThrow("HTTP 404");
         expect(syncStatus.getSnapshot().failed).toEqual([]);
 
+        // A 403 is an auth problem that can heal (a gateway, an expired session): a failure, with Retry.
         tasksReq.mockRejectedValueOnce(new Error("Failed to load project tasks (HTTP 403)"));
         await expect(loadProjectTasks(myself, 10, "tok")).rejects.toThrow("HTTP 403");
-        expect(syncStatus.getSnapshot().failed).toEqual([]);
+        expect(syncStatus.getSnapshot().failed).toEqual(["tasks:10"]);
+        syncStatus.forget(tasksScope(10));
 
         // A server error is a real failure (the project may well exist).
         tasksReq.mockRejectedValueOnce(new Error("Failed to load project tasks (HTTP 500)"));
@@ -106,13 +108,25 @@ describe("per-project tasks scope", () => {
         expect(syncStatus.getSnapshot().failed).toEqual(["inbox"]);
     });
 
-    it("the banner and the hydration marker see task failures; notes and flags do not hold the marker", () => {
-        syncStatus.report("notes:favorites", false);
-        syncStatus.report("flags", false);
+    it("the banner and the hydration marker see task failures; the on-demand notes and flags reads do neither", () => {
+        const banner = renderHook(() => useSyncBanner());
+        act(() => {
+            syncStatus.report("notes:favorites", false);
+            syncStatus.report("flags", false);
+        });
         expect(syncStatus.getSnapshot().failed.length).toBe(2);
         expect(syncStatus.bootFailed()).toBe(false);
-        syncStatus.report(tasksScope(4), false);
+        expect(banner.result.current.failed).toBe(false);
+        act(() => syncStatus.report(tasksScope(4), false));
         expect(syncStatus.bootFailed()).toBe(true);
+        expect(banner.result.current.failed).toBe(true);
+        expect(banner.result.current.episode).toBe(1);
+    });
+
+    it("the project list only drops FAILURES of missing projects: a load in flight for a project the list has not seen yet stays", () => {
+        syncStatus.track(tasksScope(8), new Promise(() => {}));
+        syncStatus.retainProjects([1]);
+        expect(syncStatus.getSnapshot().inFlight).toEqual(["tasks:8"]);
     });
 });
 
@@ -153,6 +167,29 @@ describe("first read in flight", () => {
         });
         expect(syncStatus.getSnapshot().inFlight).toEqual([]);
         expect(syncStatus.getSnapshot().failed).toEqual(["tasks:5"]);
+    });
+
+    it("a team switch (reset) or a forgotten project drops the ceiling timer: a late timeout cannot re-mark it failed", async () => {
+        vi.useFakeTimers();
+        syncStatus.track(tasksScope(5), new Promise(() => {}));
+        syncStatus.track(tasksScope(6), new Promise(() => {}));
+        syncStatus.reset();
+        syncStatus.forget(tasksScope(6));
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(30_000);
+        });
+        expect(syncStatus.getSnapshot().failed).toEqual([]);
+    });
+
+    it("overlapping loads of one scope: the first to settle does not clear the other's in-flight mark", async () => {
+        let first!: () => void;
+        syncStatus.track("notes:favorites", new Promise<void>((r) => (first = r)));
+        syncStatus.track("notes:favorites", new Promise(() => {}));
+        await act(async () => {
+            first();
+            await Promise.resolve();
+        });
+        expect(syncStatus.getSnapshot().inFlight).toEqual(["notes:favorites"]);
     });
 
     it("a retry that is running reads as retrying for a failed scope (the skeleton, not the stale error)", () => {

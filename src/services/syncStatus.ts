@@ -48,8 +48,9 @@ export type SyncScope =
 
 export const tasksScope = (projectId: number): SyncScope => `tasks:${projectId}`;
 
-/** Scopes that are part of the boot set: a failure there keeps a cold team from
- *  being marked hydrated. The on-demand ones (notes, flags) are not. */
+/** Scopes that are part of the boot set: a failure there raises the app-wide banner
+ *  and keeps a cold team from being marked hydrated. The on-demand ones (notes, flags)
+ *  show their own error where they are, and neither raise the banner nor block that. */
 const isBootScope = (scope: SyncScope) => !scope.startsWith("notes:") && scope !== "flags";
 
 export type SyncStatusSnapshot = {
@@ -84,6 +85,23 @@ const listeners = new Set<() => void>();
 const set = (next: SyncStatusSnapshot) => {
     snapshot = next;
     listeners.forEach((l) => l());
+};
+
+// Loads in flight per scope (a count: the notes lists and the flags read are not
+// deduplicated, so two can overlap and the first to settle must not clear the other's
+// mark) with their ceiling timers. `reset` and `forget` drop them, and bump an epoch so
+// a load that settles (or hits its ceiling) afterwards touches nothing: the scope it
+// was about no longer exists, or belongs to the team that was switched away from.
+type Loads = { count: number; timers: Set<ReturnType<typeof setTimeout>> };
+const loads = new Map<SyncScope, Loads>();
+let epoch = 0;
+const scopeEpoch = new Map<SyncScope, number>();
+
+const dropLoads = (scope: SyncScope) => {
+    const entry = loads.get(scope);
+    if (entry) entry.timers.forEach((t) => clearTimeout(t));
+    loads.delete(scope);
+    scopeEpoch.set(scope, (scopeEpoch.get(scope) ?? 0) + 1);
 };
 
 const setInFlight = (scope: SyncScope, on: boolean) => {
@@ -134,8 +152,10 @@ export const syncStatus = {
             ...snapshot,
             failed: failed.length === 0 ? EMPTY : failed,
             answered: answered ? [...snapshot.answered, scope] : snapshot.answered,
+            // A new outage of the BANNER's scopes (the on-demand notes / flags reads show
+            // where they are, not in the app-wide banner).
             episode:
-                snapshot.failed.length === 0 && failed.length > 0
+                !snapshot.failed.some(isBootScope) && failed.some(isBootScope)
                     ? snapshot.episode + 1
                     : snapshot.episode,
         });
@@ -156,21 +176,33 @@ export const syncStatus = {
         promise: Promise<T>,
         options?: { gone?: (err: unknown) => boolean; ceilingMs?: number }
     ): Promise<T> => {
-        const ceilingMs = options?.ceilingMs ?? LOAD_CEILING_MS;
+        const myEpoch = epoch;
+        const myScopeEpoch = scopeEpoch.get(scope) ?? 0;
+        const live = () => epoch === myEpoch && (scopeEpoch.get(scope) ?? 0) === myScopeEpoch;
+        const entry: Loads = loads.get(scope) ?? { count: 0, timers: new Set() };
+        loads.set(scope, entry);
+        entry.count += 1;
         setInFlight(scope, true);
         const timer = setTimeout(() => {
+            entry.timers.delete(timer);
+            if (!live()) return;
             setInFlight(scope, false);
             syncStatus.report(scope, false);
-        }, ceilingMs);
+        }, options?.ceilingMs ?? LOAD_CEILING_MS);
+        entry.timers.add(timer);
+        const settle = () => {
+            clearTimeout(timer);
+            entry.timers.delete(timer);
+            entry.count = Math.max(0, entry.count - 1);
+            if (live() && entry.count === 0) setInFlight(scope, false);
+            return live();
+        };
         promise.then(
             () => {
-                clearTimeout(timer);
-                setInFlight(scope, false);
-                syncStatus.report(scope, true);
+                if (settle()) syncStatus.report(scope, true);
             },
             (err: unknown) => {
-                clearTimeout(timer);
-                setInFlight(scope, false);
+                if (!settle()) return;
                 if (options?.gone?.(err)) syncStatus.forget(scope);
                 else syncStatus.report(scope, false);
             }
@@ -182,6 +214,7 @@ export const syncStatus = {
      *  everything known about it, so a failure that can never be retried
      *  into success does not hold the banner up. */
     forget: (scope: SyncScope) => {
+        dropLoads(scope);
         if (
             !snapshot.failed.includes(scope) &&
             !snapshot.inFlight.includes(scope) &&
@@ -197,13 +230,16 @@ export const syncStatus = {
         });
     },
 
-    /** The project list just loaded: any `tasks:<id>` of a project that is not in
-     *  it (deleted, left, lost access) is forgotten. */
+    /** The project list just loaded: a FAILURE of a `tasks:<id>` whose project is not in
+     *  it (deleted, left, lost access) is dropped, so it cannot hold the banner up for
+     *  good. Only failures: a project that was just created or joined may be missing
+     *  from a list that was read a moment earlier, and its load in flight stays. */
     retainProjects: (projectIds: readonly number[]) => {
         const keep = new Set(projectIds.map((id) => tasksScope(id)));
-        [...snapshot.failed, ...snapshot.inFlight, ...snapshot.answered]
-            .filter((s) => s.startsWith("tasks:") && !keep.has(s))
-            .forEach((s) => syncStatus.forget(s));
+        const failed = snapshot.failed.filter((s) => !s.startsWith("tasks:") || keep.has(s));
+        if (failed.length !== snapshot.failed.length) {
+            set({ ...snapshot, failed: failed.length === 0 ? EMPTY : failed });
+        }
     },
 
     /** Every failed project, so Retry can reload each one (not only the open one). */
@@ -230,6 +266,9 @@ export const syncStatus = {
 
     /** Forget what failed: the cache it was about was wiped (team switch). */
     reset: () => {
+        epoch += 1;
+        loads.forEach((entry) => entry.timers.forEach((t) => clearTimeout(t)));
+        loads.clear();
         if (
             snapshot.failed.length > 0 ||
             snapshot.answered.length > 0 ||
@@ -241,6 +280,9 @@ export const syncStatus = {
 
     /** Test helper. */
     __reset: () => {
+        epoch += 1;
+        loads.forEach((entry) => entry.timers.forEach((t) => clearTimeout(t)));
+        loads.clear();
         runs = 0;
         retryFn = null;
         snapshot = { syncing: false, failed: EMPTY, episode: 0, inFlight: EMPTY, answered: EMPTY };
@@ -304,7 +346,7 @@ const answersFor = (snap: SyncStatusSnapshot, scopes: readonly SyncScope[]): str
 export const useTasksSyncFailure = (projectId: number | null | undefined) =>
     useSyncFailure(...(projectId ? [tasksScope(projectId)] : []));
 
-/** The sync banner's answers (a selector, like `useSyncFailure`). */
+/** The sync banner's answers (a selector, like `useSyncFailure`): the boot set only; the on-demand notes and flags reads say so where they are. */
 export const useSyncBanner = () => {
     const answers = useSyncExternalStore(subscribe, bannerAnswers, bannerAnswers);
     const [failed, syncing, episode] = answers.split(",");
@@ -312,4 +354,4 @@ export const useSyncBanner = () => {
 };
 
 const bannerAnswers = (): string =>
-    `${snapshot.failed.length > 0 ? 1 : 0},${snapshot.syncing ? 1 : 0},${snapshot.episode}`;
+    `${snapshot.failed.some(isBootScope) ? 1 : 0},${snapshot.syncing ? 1 : 0},${snapshot.episode}`;

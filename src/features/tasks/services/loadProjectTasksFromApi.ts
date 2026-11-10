@@ -78,7 +78,8 @@ export const loadProjectTasksFromApi = async (
 export const projectTasksFailureMessage = (status: number | undefined): string =>
     status ? `Failed to load project tasks (HTTP ${status})` : "Failed to load project tasks";
 
-/** The project no longer exists for this user (deleted, left, access lost): the
- *  load can never succeed, so it is not a failure to sync (MIP-1323). */
+/** The project no longer exists for this user (deleted, left, access lost: the API
+ *  answers 404 "Project not found" to a non-member): the load can never succeed, so it is
+ *  not a failure to sync (MIP-1323). Only 404: a 403 is an auth problem that can heal. */
 export const isProjectGoneError = (err: unknown): boolean =>
-    err instanceof Error && /\(HTTP (403|404)\)/.test(err.message);
+    err instanceof Error && /\(HTTP 404\)/.test(err.message);
