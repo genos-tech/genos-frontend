@@ -80,6 +80,10 @@ export interface CalendarSourcesState {
      *  caller distinguish "no calendars yet" from "no calendars". */
     loaded: boolean;
     error: string | null;
+    /** The calendar-list request FAILED (offline, a 5xx). Not a connection-level
+     *  answer (not connected / no scope / reauth), which the modal draws as its own
+     *  prompt, and not "no calendars". `calendars` then holds the last good list. */
+    failed: boolean;
     toggleSource: (key: string) => void;
     setAccountSelected: (accountId: string, selected: boolean) => void;
     reload: () => void;
@@ -95,6 +99,7 @@ export const useCalendarSources = (
     const [loading, setLoading] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [failed, setFailed] = useState(false);
     const [reloadToken, setReloadToken] = useState(0);
 
     // Whether the stored selection has been applied yet. Without this
@@ -113,7 +118,14 @@ export const useCalendarSources = (
             if (cancelled) return;
             setLoading(false);
             setLoaded(true);
-            if (!res || typeof res === "string") {
+            setFailed(res === null);
+            if (res === null) {
+                // The request itself failed. Keep what was last loaded (nothing, on
+                // the first open) so the modal can offer Retry instead of drawing
+                // "no calendars selected".
+                return;
+            }
+            if (typeof res === "string") {
                 // Connection-level failure (not connected / no scope /
                 // reauth). The modal renders the matching prompt from
                 // its own connection probe; here we just clear so a
@@ -250,6 +262,7 @@ export const useCalendarSources = (
         loading,
         loaded,
         error,
+        failed,
         toggleSource,
         setAccountSelected,
         reload,

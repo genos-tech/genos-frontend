@@ -15,7 +15,7 @@ export const loadNoteVersion = async (
         const api = authApi(accessToken);
         if (api) {
             const query = `team_id=${myself.teamId}&note_type=${noteType}&note_id=${noteId}&version_no=${versionNo}`;
-            const res = await api.get(`/note/version/?${query}`);
+            const res = await api.get(`/note/version/?${query}`, { suppressErrorToast: true });
             return res.data as NoteVersionDetail;
         }
         console.error("Unauthorized. Auth token is not found.");

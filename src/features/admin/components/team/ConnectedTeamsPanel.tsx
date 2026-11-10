@@ -36,7 +36,8 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../../components/ui/feedback/DataState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { fmt, useTranslation } from "../../../../i18n";
 import type { TeamConnection } from "../../services/teamConnections";
@@ -80,6 +81,7 @@ export const ConnectedTeamsPanel = ({
     const [withdrawnNotice, setWithdrawnNotice] = useState<number | null>(null);
 
     const { active, incoming, outgoing, busy, error } = connections;
+    const hasRows = active.length + incoming.length + outgoing.length > 0;
 
     const handleRequest = async () => {
         const target = teamIdDraft.trim();
@@ -183,100 +185,107 @@ export const ConnectedTeamsPanel = ({
                 </Typography>
             </FormControl>
 
-            <Stack spacing={1}>
-                {/* Incoming first: it is the only bucket with a decision
+            <DataState
+                empty={{ body: strings.empty, "data-empty": "connected-teams" }}
+                error={connections.loadFailed}
+                errorState={{
+                    title: strings.loadFailed,
+                    onRetry: connections.reload,
+                    "data-error": "connected-teams",
+                }}
+                hasData={hasRows}
+                loading={connections.loading}
+                size="xs"
+                skeleton={<SkeletonRows count={2} />}
+            >
+                <Stack spacing={1}>
+                    {/* Incoming first: it is the only bucket with a decision
                     in it, and burying it under the established list is
                     how requests go unanswered for a week. */}
-                {incoming.map((c) =>
-                    row(
-                        c,
-                        canManage ? (
-                            <Stack direction="row" spacing={0.5}>
-                                <AppTooltip size="sm" title={strings.approve}>
-                                    <IconButton
-                                        color="success"
-                                        disabled={busy}
-                                        size="sm"
-                                        variant="soft"
-                                        onClick={() =>
-                                            void connections.respond(c.connectionId, true)
-                                        }
-                                    >
-                                        <CheckRoundedIcon sx={{ fontSize: 18 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                                <AppTooltip size="sm" title={strings.decline}>
-                                    <IconButton
-                                        color="neutral"
-                                        disabled={busy}
-                                        size="sm"
-                                        variant="soft"
-                                        onClick={() =>
-                                            void connections.respond(c.connectionId, false)
-                                        }
-                                    >
-                                        <CloseRoundedIcon sx={{ fontSize: 18 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                            </Stack>
-                        ) : (
-                            <Chip color="warning" size="sm" variant="soft">
-                                {strings.statusPending}
-                            </Chip>
-                        ),
-                        strings.incomingNote
-                    )
-                )}
-
-                {outgoing.map((c) =>
-                    row(
-                        c,
-                        <Chip color="neutral" size="sm" variant="soft">
-                            {strings.statusAwaiting}
-                        </Chip>,
-                        strings.outgoingNote
-                    )
-                )}
-
-                {active.map((c) =>
-                    row(
-                        c,
-                        <Stack alignItems="center" direction="row" spacing={0.5}>
-                            <Chip
-                                color="success"
-                                size="sm"
-                                startDecorator={<HubRoundedIcon sx={{ fontSize: 14 }} />}
-                                variant="soft"
-                            >
-                                {strings.statusConnected}
-                            </Chip>
-                            {canDisconnect && (
-                                <AppTooltip size="sm" title={strings.disconnect}>
-                                    <IconButton
-                                        color="danger"
-                                        disabled={busy}
-                                        size="sm"
-                                        variant="plain"
-                                        onClick={() => setPendingRevoke(c)}
-                                    >
-                                        <LinkOffRoundedIcon sx={{ fontSize: 18 }} />
-                                    </IconButton>
-                                </AppTooltip>
-                            )}
-                        </Stack>
-                        // No note: the Owner/Guest chip above already says
-                        // who asked, and spelling it out again in prose
-                        // read as a second, competing claim.
-                    )
-                )}
-
-                {!connections.loading &&
-                    active.length === 0 &&
-                    incoming.length === 0 &&
-                    outgoing.length === 0 && (
-                        <EmptyState body={strings.empty} data-empty="connected-teams" size="xs" />
+                    {incoming.map((c) =>
+                        row(
+                            c,
+                            canManage ? (
+                                <Stack direction="row" spacing={0.5}>
+                                    <AppTooltip size="sm" title={strings.approve}>
+                                        <IconButton
+                                            color="success"
+                                            disabled={busy}
+                                            size="sm"
+                                            variant="soft"
+                                            onClick={() =>
+                                                void connections.respond(c.connectionId, true)
+                                            }
+                                        >
+                                            <CheckRoundedIcon sx={{ fontSize: 18 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                    <AppTooltip size="sm" title={strings.decline}>
+                                        <IconButton
+                                            color="neutral"
+                                            disabled={busy}
+                                            size="sm"
+                                            variant="soft"
+                                            onClick={() =>
+                                                void connections.respond(c.connectionId, false)
+                                            }
+                                        >
+                                            <CloseRoundedIcon sx={{ fontSize: 18 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                </Stack>
+                            ) : (
+                                <Chip color="warning" size="sm" variant="soft">
+                                    {strings.statusPending}
+                                </Chip>
+                            ),
+                            strings.incomingNote
+                        )
                     )}
-            </Stack>
+
+                    {outgoing.map((c) =>
+                        row(
+                            c,
+                            <Chip color="neutral" size="sm" variant="soft">
+                                {strings.statusAwaiting}
+                            </Chip>,
+                            strings.outgoingNote
+                        )
+                    )}
+
+                    {active.map((c) =>
+                        row(
+                            c,
+                            <Stack alignItems="center" direction="row" spacing={0.5}>
+                                <Chip
+                                    color="success"
+                                    size="sm"
+                                    startDecorator={<HubRoundedIcon sx={{ fontSize: 14 }} />}
+                                    variant="soft"
+                                >
+                                    {strings.statusConnected}
+                                </Chip>
+                                {canDisconnect && (
+                                    <AppTooltip size="sm" title={strings.disconnect}>
+                                        <IconButton
+                                            color="danger"
+                                            disabled={busy}
+                                            size="sm"
+                                            variant="plain"
+                                            onClick={() => setPendingRevoke(c)}
+                                        >
+                                            <LinkOffRoundedIcon sx={{ fontSize: 18 }} />
+                                        </IconButton>
+                                    </AppTooltip>
+                                )}
+                            </Stack>
+                            // No note: the Owner/Guest chip above already says
+                            // who asked, and spelling it out again in prose
+                            // read as a second, competing claim.
+                        )
+                    )}
+                </Stack>
+            </DataState>
 
             {canManage && (
                 <Stack

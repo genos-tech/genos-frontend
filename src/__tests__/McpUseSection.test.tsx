@@ -140,4 +140,19 @@ describe("the AI-app activity switch", () => {
         expect(theSwitch().disabled).toBe(true);
         expect(theSwitch().checked).toBe(false);
     });
+
+    it("a failed read offers Retry, and Retry asks again and lands the setting", async () => {
+        const user = userEvent.setup();
+        api.get.mockRejectedValueOnce(new Error("down"));
+        renderSection();
+        expect(await screen.findByText(m.loadFailed)).toBeTruthy();
+        expect(api.get).toHaveBeenCalledTimes(1);
+
+        await user.click(screen.getByRole("button", { name: en.common.actions.retry }));
+
+        await waitFor(() => expect(theSwitch().checked).toBe(true));
+        expect(theSwitch().disabled).toBe(false);
+        expect(screen.queryByText(m.loadFailed)).toBeNull();
+        expect(api.get).toHaveBeenCalledTimes(2);
+    });
 });

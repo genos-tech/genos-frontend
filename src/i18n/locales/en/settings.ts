@@ -39,6 +39,7 @@ export const settings = {
         everyoneAlreadyMember: "Everyone is already a member.",
     },
     customEmoji: {
+        loadFailed: "Couldn't load custom emoji",
         heading: "Custom emoji",
         description:
             "Team-wide emoji, animated GIFs welcome. Type :name: in any editor, pick them from the emoji picker, or use them as reactions. Anyone on the team can add one; only the uploader can remove it.",

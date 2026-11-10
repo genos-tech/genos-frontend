@@ -230,6 +230,7 @@ export const fr: DeepPartial<Messages> = {
             uploadFailed: "Échec de l'envoi de l'image de profil de l'équipe.",
         },
         connectedTeams: {
+            loadFailed: "Impossible de charger les équipes connectées",
             title: "Équipes connectées",
             explainer:
                 "La connexion vous permet de partager ultérieurement une discussion, un projet ou un dossier de notes spécifique avec une autre organisation. À lui seul, il ne leur donne accès à rien.",
@@ -408,6 +409,7 @@ export const fr: DeepPartial<Messages> = {
             unexpected: "Une erreur inattendue s'est produite. Veuillez réessayer.",
         },
         projectLabels: {
+            loadFailed: "Impossible de charger les libellés de projet",
             sectionLabel: "Balises",
             manageTooltip: "Modifier les balises",
             manageHeading: "Tags du projet",
@@ -869,6 +871,7 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     calendar: {
+        eventsLoadFailed: "Impossible de charger vos événements",
         title: "Calendrier",
         today: "Aujourd’hui",
         prevMonth: "Mois précédent",
@@ -931,6 +934,7 @@ export const fr: DeepPartial<Messages> = {
                 "La modification de tous les événements ne déplacera pas la série — modifiez plutôt la date sur une seule occurrence.",
         },
         sources: {
+            loadFailed: "Impossible de charger vos agendas",
             title: "Calendriers",
             addAccount: "Ajouter un compte Google",
             showAllFrom: "Afficher tous les agendas de ce compte",
@@ -1225,6 +1229,7 @@ export const fr: DeepPartial<Messages> = {
             threadChip: "Fil",
         },
         gmTags: {
+            loadFailed: "Impossible de charger vos étiquettes",
             assignTitle: "Balises pour {name}",
             cancelButton: "Annuler",
             createButton: "Ajouter",
@@ -2768,7 +2773,6 @@ export const fr: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "Impossible de charger le résumé de la note.",
-            retry: "Réessayer",
             forbidden: "Vous n'avez pas accès à cette note.",
         },
     },
@@ -3069,6 +3073,8 @@ export const fr: DeepPartial<Messages> = {
             },
         },
         history: {
+            detailLoadFailed: "Impossible de charger cette version",
+            listLoadFailed: "Impossible de charger l'historique des versions",
             chipTooltip: "Voir l'historique des versions",
             viewVersions: "Voir les versions",
             chipSummary: "Modifié par {name} · {time}",
@@ -3388,6 +3394,7 @@ export const fr: DeepPartial<Messages> = {
             everyoneAlreadyMember: "Tout le monde est déjà membre.",
         },
         customEmoji: {
+            loadFailed: "Impossible de charger les émojis personnalisés",
             heading: "Emoji personnalisé",
             description:
                 "Emoji à l'échelle de l'équipe et GIF animés bienvenus. Tapez :name: dans n'importe quel éditeur, sélectionnez-les dans le sélecteur d'emoji ou utilisez-les comme réactions. N'importe quel membre de l'équipe peut en ajouter un ; seul celui qui a téléchargé le fichier peut le supprimer.",
@@ -5902,7 +5909,6 @@ export const fr: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "Impossible de charger le résumé du fil de discussion.",
-            retry: "Réessayer",
             forbidden: "Vous n'avez pas accès à ce fil de discussion.",
         },
     },
