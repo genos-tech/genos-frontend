@@ -6,6 +6,7 @@ import { useTheme } from "@mui/joy/styles";
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { SkeletonLines } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
@@ -112,6 +113,9 @@ export const ModalNoteHistory = ({
     const [selectedVersionNo, setSelectedVersionNo] = useState<number | null>(null);
     const [detail, setDetail] = useState<NoteVersionDetail | null>(null);
     const [loadingDetail, setLoadingDetail] = useState(false);
+    // The version body could not be loaded (not the same as "nothing selected").
+    const [detailFailed, setDetailFailed] = useState(false);
+    const [detailAttempt, setDetailAttempt] = useState(0);
     const [restoring, setRestoring] = useState(false);
 
     // Default the selection to the latest non-head version (or the head
@@ -135,9 +139,12 @@ export const ModalNoteHistory = ({
         let cancelled = false;
         setLoadingDetail(true);
         setDetail(null);
+        setDetailFailed(false);
         loadNoteVersion(myself, noteType, noteId, selectedVersionNo, accessToken)
             .then((d) => {
-                if (!cancelled) setDetail(d ?? null);
+                if (cancelled) return;
+                setDetail(d ?? null);
+                setDetailFailed(!d);
             })
             .finally(() => {
                 if (!cancelled) setLoadingDetail(false);
@@ -146,7 +153,7 @@ export const ModalNoteHistory = ({
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, selectedVersionNo, noteType, noteId]);
+    }, [open, selectedVersionNo, noteType, noteId, detailAttempt]);
 
     const previewText = useMemo(() => extractPlainText(detail?.body), [detail]);
 
@@ -230,7 +237,14 @@ export const ModalNoteHistory = ({
                         overflow: "auto",
                     }}
                 >
-                    {versions.length === 0 ? (
+                    {versions.length === 0 && useNM.currentNoteVersionsFailed ? (
+                        <ErrorState
+                            data-error="note-history"
+                            size="sm"
+                            title={t.notes.history.listLoadFailed}
+                            onRetry={() => void useNM.loadNoteVersionsFor(noteType, noteId)}
+                        />
+                    ) : versions.length === 0 ? (
                         <EmptyState
                             body={t.notes.history.emptyList}
                             data-empty="note-history"
@@ -365,7 +379,15 @@ export const ModalNoteHistory = ({
                     }}
                 >
                     {loadingDetail && <SkeletonLines lines={6} />}
-                    {!loadingDetail && !detail && (
+                    {!loadingDetail && !detail && detailFailed && (
+                        <ErrorState
+                            data-error="note-history-version"
+                            size="sm"
+                            title={t.notes.history.detailLoadFailed}
+                            onRetry={() => setDetailAttempt((n) => n + 1)}
+                        />
+                    )}
+                    {!loadingDetail && !detail && !detailFailed && (
                         <Typography
                             level="body-sm"
                             sx={{ fontStyle: "italic", color: g.text.tertiary }}

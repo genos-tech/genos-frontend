@@ -275,6 +275,7 @@ export const chat = {
     // Personal GM tags (private per-user labels) — the assign +
     // manage modals opened from the GM row ⋮ menu / tag filter row.
     gmTags: {
+        loadFailed: "Couldn't load your tags",
         assignTitle: "Tags for {name}",
         cancelButton: "Cancel",
         createButton: "Add",

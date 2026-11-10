@@ -266,6 +266,8 @@ export interface NoteManagementState {
 
     // Note version history
     currentNoteVersions: NoteVersionMeta[];
+    /** The latest version-list request failed (so `currentNoteVersions` may be empty or stale). */
+    currentNoteVersionsFailed?: boolean;
     setCurrentNoteVersions: (versions: NoteVersionMeta[]) => void;
     loadNoteVersionsFor: (noteType: number, noteId: number) => Promise<void>;
     // Optimistic head update after the local user saves. If the head is
@@ -477,6 +479,9 @@ export const useNoteManagement = (
     // Version history of the currently-opened note. Latest version sits
     // at index 0 (matches the backend's ordering).
     const [currentNoteVersions, setCurrentNoteVersions] = useState<NoteVersionMeta[]>([]);
+    const [currentNoteVersionsFailed, setCurrentNoteVersionsFailed] = useState(false);
+    // Which note `currentNoteVersions` belongs to, so a failed refresh never keeps another note's list.
+    const versionsOfRef = useRef<string | null>(null);
 
     // Monotonic counter that forces `useNoteEditorCore` to re-seed local
     // `title`/`body` from `currentNote` even when the note identity hasn't
@@ -1780,7 +1785,15 @@ export const useNoteManagement = (
             return;
         }
         const versions = await loadNoteVersions(myself, noteType, noteId, accessToken);
-        setCurrentNoteVersions(versions);
+        const key = `${noteType}:${noteId}`;
+        setCurrentNoteVersionsFailed(versions === null);
+        if (versions) {
+            versionsOfRef.current = key;
+            setCurrentNoteVersions(versions);
+        } else if (versionsOfRef.current !== key) {
+            // Nothing of this note's to keep; a failure for the same note keeps its list.
+            setCurrentNoteVersions([]);
+        }
     };
 
     // Optimistic head bump after a local save. Same coalesce rules as
@@ -2679,6 +2692,7 @@ export const useNoteManagement = (
 
         // Note version history
         currentNoteVersions,
+        currentNoteVersionsFailed,
         setCurrentNoteVersions,
         loadNoteVersionsFor,
         bumpNoteVersionsHead,

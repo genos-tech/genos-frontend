@@ -20,6 +20,8 @@ export type TeamEmojiDeleteLabels = { message: ReactNode; errorMessage: ReactNod
 export interface TeamEmojiApi {
     teamEmoji: TeamEmoji[];
     loading: boolean;
+    /** The latest list request failed; `teamEmoji` is then the last good catalog. */
+    error: boolean;
     refresh: () => Promise<void>;
     create: (name: string, file: File) => Promise<TeamEmoji | null>;
     /** Delete with an Undo window (MIP-1300): the emoji leaves `teamEmoji` at once,
@@ -48,18 +50,33 @@ export const useTeamEmoji = (myself: UserProps, accessToken: string | null): Tea
     const tokenRef = useRef(accessToken);
     tokenRef.current = accessToken;
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
+    // Which team `rawEmoji` belongs to, so a failed refresh never keeps another team's catalog.
+    const listTeamRef = useRef<string | null>(null);
     const teamId = myself?.teamId ?? "";
 
     const refresh = useCallback(async () => {
         if (!teamId || !accessToken) {
+            listTeamRef.current = null;
             setTeamEmoji([]);
             setTeamEmojiList([]);
+            setError(false);
             return;
         }
         setLoading(true);
         const emoji = await listTeamEmoji(accessToken, teamId);
-        setTeamEmoji(emoji);
-        setTeamEmojiList(emoji);
+        if (emoji) {
+            listTeamRef.current = teamId;
+            setTeamEmoji(emoji);
+            setTeamEmojiList(emoji);
+        } else if (listTeamRef.current !== teamId) {
+            // Nothing of this team's to keep. A failure for the same team keeps the
+            // catalog: pickers and reaction chips must not lose every emoji to one
+            // dropped request.
+            setTeamEmoji([]);
+            setTeamEmojiList([]);
+        }
+        setError(emoji === null);
         setLoading(false);
     }, [teamId, accessToken]);
 
@@ -106,7 +123,7 @@ export const useTeamEmoji = (myself: UserProps, accessToken: string | null): Tea
     );
 
     return useMemo(
-        () => ({ teamEmoji, loading, refresh, create, remove }),
-        [teamEmoji, loading, refresh, create, remove]
+        () => ({ teamEmoji, loading, error, refresh, create, remove }),
+        [teamEmoji, loading, error, refresh, create, remove]
     );
 };

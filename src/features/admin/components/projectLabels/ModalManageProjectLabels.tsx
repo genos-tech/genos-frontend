@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -16,7 +16,7 @@ import {
 } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
@@ -74,6 +74,9 @@ export const ModalManageProjectLabels = ({
     const [catalog, setCatalog] = useState<ProjectLabelProps[]>([]);
     const [assignedIds, setAssignedIds] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
+    // Which team `catalog` belongs to.
+    const catalogTeamRef = useRef<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
@@ -94,7 +97,14 @@ export const ModalManageProjectLabels = ({
     const refreshCatalog = useCallback(async () => {
         setLoading(true);
         const labels = await loadTeamProjectLabels(teamId, accessToken);
-        setCatalog(labels);
+        if (labels) {
+            catalogTeamRef.current = teamId;
+            setCatalog(labels);
+        } else if (catalogTeamRef.current !== teamId) {
+            // A failed read keeps this team's last catalog, never another team's.
+            setCatalog([]);
+        }
+        setLoadFailed(labels === null);
         setLoading(false);
     }, [teamId, accessToken]);
 
@@ -314,15 +324,22 @@ export const ModalManageProjectLabels = ({
             {/* Catalog list — checkbox = assign to this project,
                     pencil/trash = edit the team-wide entry. */}
             <Stack spacing={0.5} sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}>
-                {loading && <SkeletonRows count={3} />}
-
-                {!loading && catalog.length === 0 && (
-                    <EmptyState
-                        body={t.admin.projectLabels.empty}
-                        data-empty="project-labels"
-                        size="sm"
-                    />
-                )}
+                <DataState
+                    empty={{
+                        body: t.admin.projectLabels.empty,
+                        "data-empty": "project-labels",
+                    }}
+                    error={loadFailed}
+                    errorState={{
+                        title: t.admin.projectLabels.loadFailed,
+                        onRetry: () => void refreshCatalog(),
+                        "data-error": "project-labels",
+                    }}
+                    hasData={!loading && catalog.length > 0}
+                    loading={loading}
+                    size="sm"
+                    skeleton={<SkeletonRows count={3} />}
+                />
 
                 {!loading &&
                     catalog.map((label) => {

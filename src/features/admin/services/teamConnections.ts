@@ -94,21 +94,28 @@ const errorText = (error: unknown, fallback: string): string => {
     return fallback;
 };
 
-/** GET every connection this team is part of, in either direction. */
+/**
+ * GET every connection this team is part of, in either direction.
+ *
+ * Resolves `null` when the request FAILED (no session, offline, a 5xx), and
+ * `[]` only when the server answered "none". The panel used to render both as
+ * "Not connected to any other team yet", which told someone with live
+ * connections that they had none (MIP-1305).
+ */
 export const fetchTeamConnections = async (
     accessToken: string | null,
     teamId: string
-): Promise<TeamConnection[]> => {
+): Promise<TeamConnection[] | null> => {
     try {
         const api = authApi(accessToken);
-        if (!api) return [];
-        const res = await api.get("/team/connection/", { params: { team_id: teamId } });
+        if (!api) return null;
+        const res = await api.get("/team/connection/", {
+            params: { team_id: teamId },
+            suppressErrorToast: true,
+        });
         return (res.data as { connections: TeamConnection[] }).connections ?? [];
     } catch {
-        // The panel renders empty rather than erroring: a team with no
-        // connections and a failed fetch look the same to the user, and
-        // this section is never the reason they opened the modal.
-        return [];
+        return null;
     }
 };
 

@@ -1228,6 +1228,7 @@ export const ar: DeepPartial<Messages> = {
             everyoneAlreadyMember: "الجميع عضو بالفعل.",
         },
         customEmoji: {
+            loadFailed: "تعذّر تحميل الرموز التعبيرية المخصصة",
             heading: "الرموز التعبيرية المخصصة",
             description:
                 "نرحب بالرموز التعبيرية على مستوى الفريق وصور GIF المتحركة. اكتب :name: في أي محرر، اختره من منتقي الرموز التعبيرية، أو استخدمه كردود فعل. يمكن لأي شخص في الفريق إضافة واحد؛ فقط القائم بالتحميل يمكنه إزالته.",
@@ -1947,6 +1948,7 @@ export const ar: DeepPartial<Messages> = {
             reactedLabel: "تفاعل",
         },
         gmTags: {
+            loadFailed: "تعذّر تحميل وسومك",
             assignTitle: "الكلمات الدلالية لـ {name}",
             cancelButton: "إلغاء",
             createButton: "إضافة",
@@ -3373,6 +3375,8 @@ export const ar: DeepPartial<Messages> = {
             },
         },
         history: {
+            detailLoadFailed: "تعذّر تحميل هذا الإصدار",
+            listLoadFailed: "تعذّر تحميل سجل الإصدارات",
             chipTooltip: "عرض سجل الإصدارات",
             viewVersions: "عرض الإصدارات",
             chipSummary: "حُرّر بواسطة {name} · {time}",
@@ -4388,6 +4392,7 @@ export const ar: DeepPartial<Messages> = {
             loading: "جارٍ التحميل...",
         },
         connectedTeams: {
+            loadFailed: "تعذّر تحميل الفرق المتصلة",
             title: "فرق متصلة",
             explainer:
                 "يتيح لك الاتصال مشاركة محادثة أو مشروع أو مجلد ملاحظات محدد مع مؤسسة أخرى لاحقًا. فهو بحد ذاته يمنحهم إمكانية الوصول إلى لا شيء.",
@@ -4494,6 +4499,7 @@ export const ar: DeepPartial<Messages> = {
             },
         },
         projectLabels: {
+            loadFailed: "تعذّر تحميل تسميات المشاريع",
             sectionLabel: "العلامات",
             manageTooltip: "تحرير العلامات",
             manageHeading: "علامات المشروع",
@@ -5021,6 +5027,7 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     calendar: {
+        eventsLoadFailed: "تعذّر تحميل أحداثك",
         title: "تقويم",
         today: "اليوم",
         prevMonth: "الشهر السابق",
@@ -5082,6 +5089,7 @@ export const ar: DeepPartial<Messages> = {
                 "لن يؤدي تحرير جميع الأحداث إلى نقل السلسلة - قم بتغيير التاريخ في حدث واحد بدلاً من ذلك.",
         },
         sources: {
+            loadFailed: "تعذّر تحميل تقاويمك",
             title: "التقاويم",
             addAccount: "إضافة حساب Google",
             showAllFrom: "إظهار كافة التقاويم من هذا الحساب",
@@ -5659,7 +5667,6 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "تعذر تحميل ملخص الملاحظة.",
-            retry: "أعد المحاولة",
             forbidden: "ليس لديك حق الوصول إلى هذه المذكرة.",
         },
     },
@@ -5752,7 +5759,6 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "تعذر تحميل ملخص الموضوع.",
-            retry: "أعد المحاولة",
             forbidden: "ليس لديك حق الوصول إلى هذا الموضوع.",
         },
     },
