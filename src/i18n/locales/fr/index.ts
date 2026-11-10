@@ -2664,8 +2664,8 @@ export const fr: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "Connectez GitHub pour voir l'état de la PR",
                 connectButton: "Connecter GitHub",
-                privateOrDeleted:
-                    "Ce PR est privé d'un dépôt auquel vous n'avez pas accès, ou il a été supprimé.",
+                loadFailed:
+                    "Impossible de charger cette PR. Elle est peut-être privée ou supprimée.",
                 state: {
                     merged: "Fusionné",
                     draft: "Brouillon",
@@ -3574,7 +3574,6 @@ export const fr: DeepPartial<Messages> = {
             activityEmpty: "Rien d'enregistré pour l'instant.",
             activityLoadFailed: "Impossible de charger votre activité de sécurité.",
             activityLoadMore: "Afficher les plus anciennes",
-            activityRetry: "Réessayer",
             teamsHeading: "Vos équipes",
             teamsDescription:
                 "Quitter une équipe met fin à votre accès à ses discussions, projets et notes. Votre compte et vos autres équipes ne changent pas, et on pourra vous réinviter plus tard.",
@@ -5003,10 +5002,7 @@ export const fr: DeepPartial<Messages> = {
         createForm: {
             taskDetails: "Détails de la tâche",
             preparing: "Préparation de la tâche…",
-            bootstrapFailed:
-                "Impossible de préparer une nouvelle tâche. Vérifiez votre connexion et réessayez.",
-            bootstrapRetry: "Réessayer",
-            bootstrapCancel: "Annuler",
+            bootstrapFailed: "Impossible de préparer une nouvelle tâche",
             discardTaskTitle: "Abandonner ce brouillon ?",
             discardTaskBody:
                 "Le titre, le contenu et les pièces jointes seront perdus. Cette action est irréversible.",
