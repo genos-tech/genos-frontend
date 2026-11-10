@@ -50,3 +50,33 @@ export const chipRowTouchSx = {
         },
     },
 } as const;
+
+/**
+ * A control that must keep its size and look (a task id chip in a row of text, an avatar in a
+ * header) is still a 44 x 44 target on a touch screen: an invisible hit area, centred on it,
+ * reaches out to 44px (and never narrower than the control itself). Nothing is painted, nothing
+ * moves, and with a mouse the rule does not exist.
+ *
+ * `selector` picks the control inside the element the sx is spread on (`"&"` for the element
+ * itself). The control becomes the hit area's containing block, so it must not already be
+ * positioned some other way (`position: relative` is what this sets).
+ *
+ * The area overlaps whatever sits within 22px of the control's centre, so use it where the
+ * neighbours are at least that far away (a row of 44px, the end of a header), as the To-Do
+ * chip row (`chipRowTouchSx`) does.
+ */
+export const invisibleHitAreaSx = (selector = "&") =>
+    ({
+        "@media (pointer: coarse)": {
+            [selector]: { position: "relative" },
+            [`${selector}::after`]: {
+                content: '""',
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                width: `max(100%, ${TOUCH_TARGET}px)`,
+                height: TOUCH_TARGET,
+                transform: "translate(-50%, -50%)",
+            },
+        },
+    }) as const;
