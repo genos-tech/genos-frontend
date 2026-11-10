@@ -253,6 +253,19 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
     const todayExists = groups.some((g) => g.localDate === getLocalCurrentDate());
     const tomorrowExists = groups.some((g) => g.localDate === getLocalTomorrowDate());
+    // On a phone the header has one add icon, not a labelled "Start today" button (MIP-1219):
+    // it starts today while today has no list, and tomorrow once today has one. Desktop keeps
+    // its labelled "Start today" and the "Start tomorrow" icon, each on its own gate.
+    const phoneStartDay: "today" | "tomorrow" | null = !todayExists
+        ? "today"
+        : !tomorrowExists
+          ? "tomorrow"
+          : null;
+    const startIconDay: "today" | "tomorrow" | null = isMobile
+        ? phoneStartDay
+        : !tomorrowExists
+          ? "tomorrow"
+          : null;
 
     // Deep-link: bring the target group into the viewport. Prefer the
     // group that actually CONTAINS the item (belt-and-braces against the
@@ -500,8 +513,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     </IconButton>
                                 </AppTooltip>
 
-                                {/* "New Todo" button — only when today's group is empty/absent. */}
-                                {!todayExists && (
+                                {/* "New Todo" button — only when today's group is empty/absent.
+                            Desktop only: a phone gets the one add icon below. */}
+                                {!isMobile && !todayExists && (
                                     <AppTooltip title={t.chat.todoPane.createTodayTooltip}>
                                         <Button
                                             size="sm"
@@ -513,16 +527,27 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     </AppTooltip>
                                 )}
 
-                                {/* "Start tomorrow" — same gate as today's, so a
-                            day that already has a list doesn't offer to
-                            create it again. Icon-only at every width (MIP-1051):
+                                {/* The add icon. Desktop: "Start tomorrow", same gate as
+                            today's, so a day that already has a list doesn't offer to
+                            create it again. Phone: "Start today" until today has a
+                            list, then "Start tomorrow". Icon-only at every width (MIP-1051):
                             tomorrow is the secondary of the two, and a second
                             labelled button made the header crowded. The tooltip
                             and aria-label carry the name. */}
-                                {!tomorrowExists && (
-                                    <AppTooltip title={t.chat.todoPane.createTomorrowTooltip}>
+                                {startIconDay && (
+                                    <AppTooltip
+                                        title={
+                                            startIconDay === "today"
+                                                ? t.chat.todoPane.createTodayTooltip
+                                                : t.chat.todoPane.createTomorrowTooltip
+                                        }
+                                    >
                                         <IconButton
-                                            aria-label={t.chat.todoPane.startTomorrow}
+                                            aria-label={
+                                                startIconDay === "today"
+                                                    ? t.chat.todoPane.startToday
+                                                    : t.chat.todoPane.startTomorrow
+                                            }
                                             size="sm"
                                             sx={{
                                                 borderRadius: "10px",
@@ -541,7 +566,11 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                                         : "rgba(var(--gp-brand-700-rgb), 0.08)",
                                                 },
                                             }}
-                                            onClick={handleCreateTomorrowGroup}
+                                            onClick={
+                                                startIconDay === "today"
+                                                    ? handleCreateTodayGroup
+                                                    : handleCreateTomorrowGroup
+                                            }
                                         >
                                             <AddIcon sx={{ fontSize: "18px" }} />
                                         </IconButton>
