@@ -164,11 +164,36 @@ describe("toast host", () => {
         render(wrap(<ToastHost />));
         const style = document.getElementById("genos-toast-region")!.style;
         expect(style.position).toBe("fixed");
-        expect(style.left).toBe("50%");
+        // Centred by two equal insets, not left:50% (MIP-1196).
+        expect(style.left).toBe("16px");
+        expect(style.right).toBe("16px");
         expect(style.bottom).toContain("16px");
         // On a phone the tab bar (or the keyboard) is reserved, not covered.
         expect(style.bottom).toContain("--mobile-bottom-inset");
         expect(Number(style.zIndex)).toBeGreaterThan(13300);
+    });
+
+    it("both regions are sized by side insets, not centred with left:50% (MIP-1196)", () => {
+        render(
+            wrap(
+                <>
+                    <Toast duration={null} open placement="top" tone="danger">
+                        Connection lost
+                    </Toast>
+                    <Toast open>Saved</Toast>
+                </>
+            )
+        );
+        for (const id of ["genos-banner-region", "genos-toast-region"]) {
+            const { style } = document.getElementById(id)!;
+            // 16px inside both edges, never `left: 50%` / translateX / a vw-based width,
+            // which move with whatever box the region is centred on.
+            expect(style.left, id).toBe("16px");
+            expect(style.right, id).toBe("16px");
+            expect(style.maxWidth, id).toBe("440px");
+            expect(style.transform, id).toBe("");
+            expect(style.width, id).toBe("");
+        }
     });
 
     it("pins a persistent state banner at the TOP, clear of the composer (MIP-1171)", () => {
