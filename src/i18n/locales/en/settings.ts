@@ -1065,6 +1065,18 @@ export const settings = {
                 cancel: "Close a cell editor without saving",
             },
         },
+        board: {
+            title: "Task board",
+            description:
+                "Active while a card of the board has focus. Tab moves between the columns (one stop each); these keys move inside the board.",
+            rows: {
+                move: "Move between cards and columns",
+                columnEdges: "Jump to the first / last card in the column",
+                boardEdges: "Jump to the first / last card on the board",
+                open: "Open the card's preview",
+                lift: "Pick up a card (arrows move it, Space drops it, Esc cancels)",
+            },
+        },
         editing: {
             title: "Writing",
             description: "Active while you write a message or fill in the new-task form.",

@@ -5,6 +5,7 @@ import { IconButton } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
+import { ROVING_GROUP_ATTR, ROVING_ITEM_ATTR } from "../../../../hooks/common/roving";
 import { useTranslation } from "../../../../i18n";
 import { focusRing, g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
@@ -16,6 +17,9 @@ import { MilestoneCardBody } from "../MilestoneCardBody";
 type SprintBoardCardProps = {
     task: TaskTableProps;
     index: number;
+    // The column the card is in: with the task id, the card's place in the board's roving
+    // tab stops (one Tab stop per column, MIP-1402; see useRovingNav).
+    columnId: string;
     myself: UserProps;
     teamMemberProfiles: Record<string, UserProps>;
     // Pass the whole task so the parent can branch on `isMilestone` and
@@ -40,6 +44,7 @@ type SprintBoardCardProps = {
 const SprintBoardCardImpl = ({
     task,
     index,
+    columnId,
     onTaskClick,
     onOpenDiagram,
     isSelected = false,
@@ -94,6 +99,10 @@ const SprintBoardCardImpl = ({
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
+                    {...{
+                        [ROVING_GROUP_ATTR]: columnId,
+                        [ROVING_ITEM_ATTR]: task.id?.toString() || "",
+                    }}
                     keys={["Enter"]}
                     sx={{
                         mb: 0.75,

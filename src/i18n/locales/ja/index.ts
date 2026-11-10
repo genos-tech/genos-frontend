@@ -4263,6 +4263,18 @@ export const ja: DeepPartial<Messages> = {
                     cancel: "保存せずにセルのエディターを閉じる",
                 },
             },
+            board: {
+                title: "タスクボード",
+                description:
+                    "ボードのカードにフォーカスがある間に有効です。Tab で列の間を移動します（列ごとに 1 か所）。これらのキーはボード内を移動します。",
+                rows: {
+                    move: "カードと列の間を移動",
+                    columnEdges: "列の最初／最後のカードへ移動",
+                    boardEdges: "ボードの最初／最後のカードへ移動",
+                    open: "カードのプレビューを開く",
+                    lift: "カードを持ち上げる（矢印で移動、Space で置く、Esc で取り消し）",
+                },
+            },
             editing: {
                 title: "入力中",
                 description:

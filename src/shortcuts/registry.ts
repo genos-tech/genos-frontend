@@ -45,10 +45,16 @@ export type ShortcutKind = "chord" | "gesture" | "pointer";
  * Where a shortcut applies. Two entries may share keys only in different
  * scopes, and the test names every such pair (see `KNOWN_OVERLAPS`).
  */
-export type ShortcutScope = "global" | "chat" | "composer" | "taskCreate" | "taskTable";
+export type ShortcutScope =
+    | "global"
+    | "chat"
+    | "composer"
+    | "taskCreate"
+    | "taskTable"
+    | "taskBoard";
 
 /** The Settings group a shortcut is listed under. */
-export type ShortcutGroup = "global" | "chat" | "editing" | "table";
+export type ShortcutGroup = "global" | "chat" | "editing" | "table" | "board";
 
 /** What a handler may do when the key is pressed inside a text field. */
 export type EditablePolicy = "allow" | "skip";
@@ -304,6 +310,56 @@ export const SHORTCUTS = {
         keys: NONE,
         parts: ["Esc"],
         label: (t) => t.settings?.shortcuts?.table?.rows?.cancel,
+        editable: "allow",
+    },
+    // The task board's keys (MIP-1402). Their code is `useBoardRovingNav` (one Tab stop per
+    // column, arrows between cards and columns; `hooks/common/roving`), the card's own
+    // `Clickable` (Enter) and the drag library's keyboard sensor (Space and what follows); they
+    // are listed here so Settings can show them, not matched through the registry. Same keys on
+    // both platforms. A test pins them to `columnMove`.
+    "board.move": {
+        kind: "gesture",
+        scope: "taskBoard",
+        group: "board",
+        keys: NONE,
+        parts: ["← ↑ ↓ →"],
+        label: (t) => t.settings?.shortcuts?.board?.rows?.move,
+        editable: "allow",
+    },
+    "board.columnEdges": {
+        kind: "gesture",
+        scope: "taskBoard",
+        group: "board",
+        keys: NONE,
+        parts: ["Home / End"],
+        label: (t) => t.settings?.shortcuts?.board?.rows?.columnEdges,
+        editable: "allow",
+    },
+    "board.boardEdges": {
+        kind: "gesture",
+        scope: "taskBoard",
+        group: "board",
+        keys: NONE,
+        parts: ["Ctrl", "Home / End"],
+        label: (t) => t.settings?.shortcuts?.board?.rows?.boardEdges,
+        editable: "allow",
+    },
+    "board.open": {
+        kind: "gesture",
+        scope: "taskBoard",
+        group: "board",
+        keys: NONE,
+        parts: ["Enter"],
+        label: (t) => t.settings?.shortcuts?.board?.rows?.open,
+        editable: "allow",
+    },
+    "board.lift": {
+        kind: "gesture",
+        scope: "taskBoard",
+        group: "board",
+        keys: NONE,
+        parts: ["Space"],
+        label: (t) => t.settings?.shortcuts?.board?.rows?.lift,
         editable: "allow",
     },
 } as const satisfies Record<string, ShortcutDef>;

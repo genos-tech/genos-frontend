@@ -159,6 +159,7 @@ describe("SprintBoardCard open-diagram trigger", () => {
         render(
             dnd(
                 <SprintBoardCard
+                    columnId="open"
                     index={0}
                     myself={myself}
                     task={task}

@@ -1161,6 +1161,18 @@ export const es: DeepPartial<Messages> = {
                     cancel: "Cerrar el editor de la celda sin guardar",
                 },
             },
+            board: {
+                title: "Tablero de tareas",
+                description:
+                    "Activo mientras una tarjeta del tablero tiene el foco. Tab se mueve entre las columnas (una parada por columna); estas teclas se mueven dentro del tablero.",
+                rows: {
+                    move: "Moverse entre tarjetas y columnas",
+                    columnEdges: "Ir a la primera / última tarjeta de la columna",
+                    boardEdges: "Ir a la primera / última tarjeta del tablero",
+                    open: "Abrir la vista previa de la tarjeta",
+                    lift: "Levantar una tarjeta (las flechas la mueven, Espacio la suelta, Esc cancela)",
+                },
+            },
             editing: {
                 title: "Al escribir",
                 description:

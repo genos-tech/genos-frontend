@@ -4323,6 +4323,18 @@ export const fr: DeepPartial<Messages> = {
                     cancel: "Fermer l'éditeur de cellule sans enregistrer",
                 },
             },
+            board: {
+                title: "Tableau des tâches",
+                description:
+                    "Actif tant qu'une carte du tableau a le focus. Tab passe d'une colonne à l'autre (un arrêt par colonne) ; ces touches se déplacent dans le tableau.",
+                rows: {
+                    move: "Se déplacer entre les cartes et les colonnes",
+                    columnEdges: "Aller à la première / dernière carte de la colonne",
+                    boardEdges: "Aller à la première / dernière carte du tableau",
+                    open: "Ouvrir l'aperçu de la carte",
+                    lift: "Soulever une carte (les flèches la déplacent, Espace la dépose, Échap annule)",
+                },
+            },
             editing: {
                 title: "Pendant la rédaction",
                 description:
