@@ -22,8 +22,11 @@ const addTask = vi.fn(async () => null);
 const updateTaskCard = vi.fn(async () => undefined);
 const invalidateCachedFullTask = vi.fn(async () => undefined);
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
-vi.mock("../services/api", () => ({ authApi: () => ({ put }) }));
+const auth = vi.hoisted(() => ({ token: "tok" }));
+vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: auth.token }) }));
+vi.mock("../services/api", () => ({
+    authApi: (token: string) => ({ put: (...a: unknown[]) => put(token, ...a) }),
+}));
 vi.mock("../features/tasks/services/addTask", () => ({ addTask: (r: unknown) => addTask(r) }));
 vi.mock("../db/services/task-full.service", () => ({
     invalidateCachedFullTask: (id: number) => invalidateCachedFullTask(id),
@@ -92,6 +95,7 @@ const statusOf = (
 
 beforeEach(() => {
     vi.useFakeTimers();
+    auth.token = "tok";
     put.mockResolvedValue({ data: {} });
 });
 afterEach(() => {
@@ -130,7 +134,7 @@ describe("useDeleteTask", () => {
         });
         await flush();
         expect(put).toHaveBeenCalledTimes(1);
-        expect(put).toHaveBeenCalledWith("/task/", {
+        expect(put).toHaveBeenCalledWith("tok", "/task/", {
             task_id: 1,
             status: "Deleted",
             status_code: 0,
@@ -219,7 +223,7 @@ describe("useDeleteTask", () => {
             flushUndoables("next");
         });
         await flush();
-        const body = put.mock.calls[0][1];
+        const body = put.mock.calls[0][2];
         expect(Object.keys(body).sort()).toEqual(["status", "status_code", "task_id"]);
         expect(view.result.current.useTM.allTasks[0].title).toBe("Renamed meanwhile");
     });
@@ -266,5 +270,55 @@ describe("useDeleteTask", () => {
         );
         expect(put).not.toHaveBeenCalled();
         expect(view.result.current.useTM.allTasks[0].updatedAt).toBe("2026-11-11 09:00:00");
+    });
+});
+
+describe("useDeleteTask: what is read when the window ends", () => {
+    it("uses the access token of the moment of the write, not of the click (it can refresh in the window)", async () => {
+        const view = await setup();
+        act(() => view.result.current.deleteTask(target));
+        auth.token = "refreshed";
+        view.rerender();
+        await act(async () => {
+            flushUndoables("next");
+        });
+        await flush();
+        expect(put).toHaveBeenCalledWith("refreshed", "/task/", expect.anything());
+    });
+
+    it("the page going away: a task is PUT by keepalive fetch, a milestone through its own record", async () => {
+        const fetchSpy = vi.fn(async () => ({}) as Response);
+        vi.stubGlobal("fetch", fetchSpy);
+        try {
+            const view = await setup([row(1), row(2, { isMilestone: true, milestoneId: 5 })]);
+            act(() => view.result.current.deleteTask(target));
+            act(() => flushUndoables("exit"));
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+            const [url, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+            expect(url).toMatch(/\/task\/$/);
+            expect(init).toMatchObject({ method: "PUT", keepalive: true });
+            expect(JSON.parse(init.body as string)).toEqual({
+                task_id: 1,
+                status: "Deleted",
+                status_code: 0,
+            });
+
+            act(() =>
+                view.result.current.deleteTask({
+                    id: 2,
+                    projectId: 10,
+                    isMilestone: true,
+                    milestoneId: 5,
+                })
+            );
+            act(() => flushUndoables("exit"));
+            expect(fetchSpy).toHaveBeenCalledTimes(2);
+            const [murl, minit] = fetchSpy.mock.calls[1] as unknown as [string, RequestInit];
+            expect(murl).toMatch(/\/milestone\/5\/$/);
+            expect(minit).toMatchObject({ method: "PATCH", keepalive: true });
+            expect(JSON.parse(minit.body as string)).toEqual({ status: "Deleted" });
+        } finally {
+            vi.unstubAllGlobals();
+        }
     });
 });

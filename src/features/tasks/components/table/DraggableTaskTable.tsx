@@ -1521,11 +1521,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         (row: TaskTableProps) =>
             deleteTask({
                 id: Number(row.id),
-                projectId: Number(row.projectId),
+                projectId: Number(row.projectId ?? usePM.currentProject?.projectId),
                 isMilestone: row.isMilestone === true,
                 milestoneId: row.milestoneId,
             }),
-        [deleteTask]
+        [deleteTask, usePM.currentProject?.projectId]
     );
     // Identity-stable so TaskTableRows (which excludes callbacks from its
     // comparator, same contract as DraggableTaskRow) never holds a closure

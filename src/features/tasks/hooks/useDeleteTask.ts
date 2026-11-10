@@ -9,6 +9,7 @@ import { UserProps } from "../../../types/admin";
 import { TaskTableProps } from "../../../types/tasks";
 import {
     afterTaskDeleted,
+    deleteMilestoneOnExit,
     deleteTaskOnExit,
     putTaskDeleted,
     syncDeletedTaskCard,
@@ -69,7 +70,7 @@ export const useDeleteTask = (deps: Deps) => {
     latest.current = { ...deps, accessToken, t };
 
     return useCallback((target: DeleteTaskTarget, options?: DeleteTaskOptions) => {
-        const { useTM, useSM, myself, accessToken, t } = latest.current;
+        const { useTM, t } = latest.current;
         const u = t.tasks.deleteUndo;
         const id = Number(target.id);
         const isMilestone = target.isMilestone === true;
@@ -80,6 +81,8 @@ export const useDeleteTask = (deps: Deps) => {
             keepOnNavigate: true,
             releaseOnCommit: true,
             commit: async () => {
+                // Read now, not at the click: the token can be refreshed in the window.
+                const { useTM, useSM, myself, accessToken } = latest.current;
                 let updatedAt: string | undefined;
                 if (isMilestone) {
                     // A milestone's status lives on its own record, which then
@@ -111,7 +114,14 @@ export const useDeleteTask = (deps: Deps) => {
                 if (!isMilestone)
                     void syncDeletedTaskCard(myself, target.projectId, id, accessToken);
             },
-            onExit: () => deleteTaskOnExit(accessToken, id),
+            onExit: () => {
+                const { accessToken } = latest.current;
+                if (isMilestone && target.milestoneId != null) {
+                    deleteMilestoneOnExit(accessToken, target.milestoneId);
+                } else {
+                    deleteTaskOnExit(accessToken, id);
+                }
+            },
         });
         // `runUndoable` ignores a task that is already pending: nothing to close.
         if (options?.afterHide) options.afterHide();

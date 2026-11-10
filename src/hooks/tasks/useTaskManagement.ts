@@ -49,7 +49,6 @@ import {
     TaskTypesProps,
 } from "../../types/tasks";
 import { getLocalCurrentDate, getLocalCurrentTimestamp } from "../../utils/dateUtils";
-// 30 days
 import { useUndoHidden } from "../common/useUndoableAction";
 
 // Draft snapshot of an in-progress CreateTaskForm. Persisted to
@@ -70,7 +69,7 @@ export type TaskDraft = {
 };
 
 const TASK_DRAFT_KEY = "createTaskForm:draft:v1";
-const TASK_DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const TASK_DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Field-wise equality for a table row. Used by the preview→row mirror to
 // recognise a no-op patch and hand back the previous `allTasks` array

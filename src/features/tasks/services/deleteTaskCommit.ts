@@ -47,6 +47,26 @@ export const deleteTaskOnExit = (accessToken: string | null, taskId: number): vo
     }
 };
 
+/** A milestone's own record, for a page that is going away: the commit writes the
+ *  milestone (which mirrors onto its backing task), so the exit path must too, or the
+ *  two would disagree. */
+export const deleteMilestoneOnExit = (accessToken: string | null, milestoneId: number): void => {
+    if (!accessToken || typeof fetch !== "function") return;
+    try {
+        void fetch(`${import.meta.env.VITE_API_BASE_URL}/milestone/${milestoneId}/`, {
+            method: "PATCH",
+            keepalive: true,
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ status: "Deleted" }),
+        }).catch(() => undefined);
+    } catch {
+        // Never let this break a page transition.
+    }
+};
+
 /** The write. Rejects when the server refused it, so the caller puts the task back. */
 export const putTaskDeleted = async (
     taskId: number,
