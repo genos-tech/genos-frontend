@@ -410,7 +410,6 @@ export const settings = {
         activityEmpty: "Nothing recorded yet.",
         activityLoadFailed: "Couldn't load your security activity.",
         activityLoadMore: "Show older",
-        activityRetry: "Try again",
         teamsHeading: "Your teams",
         teamsDescription:
             "Leaving a team ends your access to its chats, projects and notes. Your account and your other teams are untouched, and someone can invite you back later.",

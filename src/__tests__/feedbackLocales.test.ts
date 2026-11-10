@@ -47,6 +47,8 @@ const KEYS = [
     "notes.history.listLoadFailed",
     "notes.history.detailLoadFailed",
     "chat.gmTags.loadFailed",
+    "integrations.pullRequest.linkedCard.loadFailed",
+    "tasks.createForm.bootstrapFailed",
     "chat.channel.pane.loadFailed",
     "chat.channel.thread.loadFailed",
     "chat.threadTabs.ariaLabel",

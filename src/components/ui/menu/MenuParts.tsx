@@ -18,7 +18,7 @@
  * parts keep it and put the shared look on top.
  */
 
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, useMemo, type ReactNode } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import {
     Box,
@@ -33,7 +33,13 @@ import {
 import { useDiagramZIndex } from "../../../features/tasks/diagram/diagramZIndex";
 import { g } from "../../../theme/tokens";
 import { useNoteModalHostZIndex } from "../../modals/noteModalHostZIndex";
-import { menuDividerSx, menuGroupLabelSx, menuRowSx, menuSurfaceSx } from "./menuStyles";
+import {
+    MENU_POPPER_MODIFIERS,
+    menuDividerSx,
+    menuGroupLabelSx,
+    menuRowSx,
+    menuSurfaceSx,
+} from "./menuStyles";
 
 export type MenuSurfaceProps = Omit<MenuProps, "size" | "color" | "variant"> & {
     /** Exact layer. Default: the host's z + 1 when a modal-hosted note or the task
@@ -53,7 +59,7 @@ const stop = (event: { stopPropagation: () => void }) => event.stopPropagation()
  * Joy's own handlers sit on the same node and still run (genos-ui rule 4).
  */
 export const MenuSurface = forwardRef<HTMLDivElement, MenuSurfaceProps>(function MenuSurface(
-    { zIndex, sx, onClick, onKeyDown, onPointerDown, onMouseDown, ...rest },
+    { zIndex, sx, modifiers, onClick, onKeyDown, onPointerDown, onMouseDown, ...rest },
     ref
 ) {
     const noteHostZ = useNoteModalHostZIndex();
@@ -61,10 +67,17 @@ export const MenuSurface = forwardRef<HTMLDivElement, MenuSurfaceProps>(function
     // The diagram context defaults to the page layer (9999), so +1 is only a
     // real lift when a host provided something higher.
     const layer = zIndex ?? (noteHostZ ?? diagramZ) + 1;
+    // A caller's own modifiers add to the viewport guard; they do not replace it. The array
+    // identity is stable (Joy memoizes on it) unless the caller's changes.
+    const popperModifiers = useMemo(
+        () => (modifiers ? [...MENU_POPPER_MODIFIERS, ...modifiers] : MENU_POPPER_MODIFIERS),
+        [modifiers]
+    );
     return (
         <Menu
             {...rest}
             ref={ref}
+            modifiers={popperModifiers}
             size="sm"
             sx={[menuSurfaceSx, { zIndex: layer }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
             onClick={(event) => {

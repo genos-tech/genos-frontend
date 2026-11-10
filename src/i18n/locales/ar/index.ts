@@ -490,7 +490,6 @@ export const ar: DeepPartial<Messages> = {
             activityEmpty: "لم يُسجَّل شيء بعد.",
             activityLoadFailed: "تعذّر تحميل نشاطك الأمني.",
             activityLoadMore: "عرض الأقدم",
-            activityRetry: "حاول مرة أخرى",
             teamsHeading: "فرقك",
             teamsDescription:
                 "مغادرة فريق تُنهي وصولك إلى محادثاته ومشاريعه وملاحظاته. أما حسابك وبقية فرقك فتبقى كما هي، ويمكن لأحدهم دعوتك مرة أخرى لاحقًا.",
@@ -2436,9 +2435,7 @@ export const ar: DeepPartial<Messages> = {
             taskProgressOther: "أخرى",
         },
         createForm: {
-            bootstrapFailed: "تعذّر تجهيز مهمة جديدة. تحقّق من اتصالك وحاول مرة أخرى.",
-            bootstrapRetry: "إعادة المحاولة",
-            bootstrapCancel: "إلغاء",
+            bootstrapFailed: "تعذّر تجهيز مهمة جديدة",
             discardTaskTitle: "تجاهل هذه المسودة؟",
             discardTaskBody: "سيتم فقدان العنوان والنص والمرفقات. لا يمكن التراجع عن هذا الإجراء.",
             discardMilestoneTitle: "تجاهل مسودة هذا المعلم؟",
@@ -5599,7 +5596,7 @@ export const ar: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "اربط GitHub لعرض حالة PR",
                 connectButton: "ربط GitHub",
-                privateOrDeleted: "هذا PR خاص بمستودع لا يمكنك الوصول إليه، أو تم حذفه.",
+                loadFailed: "تعذّر تحميل هذا PR. قد يكون خاصًا أو محذوفًا.",
                 state: {
                     merged: "تم الدمج",
                     draft: "مسودة",

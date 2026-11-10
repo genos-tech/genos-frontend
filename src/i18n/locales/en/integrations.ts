@@ -199,8 +199,7 @@ export const integrations = {
         linkedCard: {
             connectPrompt: "Connect GitHub to see PR status",
             connectButton: "Connect GitHub",
-            privateOrDeleted:
-                "This PR is private to a repo you don't have access to, or it was deleted.",
+            loadFailed: "Couldn't load this PR. It may be private or deleted.",
             state: {
                 merged: "Merged",
                 draft: "Draft",

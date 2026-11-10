@@ -1132,6 +1132,21 @@ const CanvasInner = ({
         []
     );
 
+    // Backspace/Delete removes the selection. React Flow has ONE `deleteKeyCode` for
+    // nodes and edges, and `onNodesChange` only mirrors a removal locally, so a deleted
+    // card would vanish from the canvas while the task stayed on the server (MIP-1320).
+    // Task deletion is the card's own confirmed soft delete, so the key may only remove
+    // edges the user selected (those go through `onEdgesChange` to the server). The edges
+    // React Flow adds because they touch a selected node are dropped too: deleting a
+    // node must never unlink its neighbours.
+    const onBeforeDelete = useCallback(
+        async ({ edges: doomed }: { nodes: Node[]; edges: Edge[] }) => ({
+            nodes: [] as Node[],
+            edges: doomed.filter((e) => e.selected),
+        }),
+        []
+    );
+
     const onEdgesChange = useCallback(
         (changes: EdgeChange[]) => {
             // Intercept *removes* — every other change (selection,
@@ -1374,6 +1389,7 @@ const CanvasInner = ({
                 minZoom={0.25}
                 nodes={drawn.nodes}
                 nodeTypes={nodeTypes}
+                onBeforeDelete={onBeforeDelete}
                 proOptions={{ hideAttribution: true }}
                 fitView
                 onConnect={onConnectFresh}

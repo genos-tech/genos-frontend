@@ -126,4 +126,39 @@ describe("useShortcut", () => {
         press({ key: "Enter", metaKey: true }, window);
         expect(handler).toHaveBeenCalledTimes(2);
     });
+
+    describe("within (a form shortcut, MIP-1312)", () => {
+        const setup = () => {
+            const form = document.body.appendChild(document.createElement("div"));
+            const field = form.appendChild(document.createElement("input"));
+            const composer = document.body.appendChild(document.createElement("div"));
+            composer.setAttribute("contenteditable", "true");
+            const handler = vi.fn();
+            const ref = { current: form };
+            renderHook(() =>
+                useShortcut("taskCreate.submit", handler, { target: "window", within: ref })
+            );
+            return { form, field, composer, handler };
+        };
+        const submit = { key: "Enter", metaKey: true };
+
+        it("fires for a key pressed inside the form", () => {
+            const { field, handler } = setup();
+            press(submit, field);
+            expect(handler).toHaveBeenCalledTimes(1);
+        });
+
+        it("does not fire for a key pressed in a composer outside it", () => {
+            const { composer, handler } = setup();
+            press(submit, composer);
+            expect(handler).not.toHaveBeenCalled();
+        });
+
+        it("fires when nothing is focused (body) or the event is not on a node", () => {
+            const { handler } = setup();
+            press(submit, document.body);
+            press(submit, window);
+            expect(handler).toHaveBeenCalledTimes(2);
+        });
+    });
 });

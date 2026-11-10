@@ -2645,8 +2645,8 @@ export const ja: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "GitHub に接続して PR ステータスを確認する",
                 connectButton: "GitHubに接続する",
-                privateOrDeleted:
-                    "この PR は、アクセス権のないリポジトリに対してプライベートになっているか、削除されています。",
+                loadFailed:
+                    "この PR を読み込めませんでした。非公開か、削除された可能性があります。",
                 state: {
                     merged: "マージ済み",
                     draft: "下書き",
@@ -3536,7 +3536,6 @@ export const ja: DeepPartial<Messages> = {
             activityEmpty: "まだ記録はありません。",
             activityLoadFailed: "セキュリティ アクティビティを読み込めませんでした。",
             activityLoadMore: "さらに古い記録を表示",
-            activityRetry: "再試行",
             teamsHeading: "参加中のチーム",
             teamsDescription:
                 "チームから抜けると、そのチームのチャット・プロジェクト・ノートにアクセスできなくなります。アカウントや他のチームはそのまま残り、あとから招待してもらうこともできます。",
@@ -4944,10 +4943,7 @@ export const ja: DeepPartial<Messages> = {
         createForm: {
             taskDetails: "タスクの詳細",
             preparing: "準備中…",
-            bootstrapFailed:
-                "新しいタスクを準備できませんでした。接続を確認して、もう一度お試しください。",
-            bootstrapRetry: "再試行",
-            bootstrapCancel: "キャンセル",
+            bootstrapFailed: "新しいタスクを準備できませんでした",
             discardTaskTitle: "この下書きを破棄しますか?",
             discardTaskBody:
                 "タイトル、本文、添付ファイルは失われます。この操作は取り消せません。",

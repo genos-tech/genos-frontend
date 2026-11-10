@@ -695,7 +695,6 @@ export const hi: DeepPartial<Messages> = {
             activityEmpty: "अभी कुछ दर्ज नहीं हुआ है।",
             activityLoadFailed: "आपकी सुरक्षा गतिविधि लोड नहीं हो सकी।",
             activityLoadMore: "पुरानी दिखाएँ",
-            activityRetry: "फिर से कोशिश करें",
             teamsHeading: "आपकी टीमें",
             teamsDescription:
                 "टीम छोड़ने पर उसके चैट, प्रोजेक्ट और नोट्स तक आपकी पहुँच खत्म हो जाती है। आपका अकाउंट और बाकी टीमें वैसी ही रहती हैं, और कोई आपको बाद में फिर से आमंत्रित कर सकता है।",
@@ -2465,10 +2464,7 @@ export const hi: DeepPartial<Messages> = {
         createForm: {
             taskDetails: "टास्क का विवरण",
             preparing: "कार्य तैयार किया जा रहा है...",
-            bootstrapFailed:
-                "नया टास्क तैयार नहीं हो सका। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
-            bootstrapRetry: "फिर से कोशिश करें",
-            bootstrapCancel: "रद्द करें",
+            bootstrapFailed: "नया टास्क तैयार नहीं हो सका",
             discardTaskTitle: "इस ड्राफ़्ट को छोड़ें?",
             discardTaskBody:
                 "आपका शीर्षक, मुख्य भाग और अनुलग्नक खो जाएंगे. इसे पूर्ववत नहीं किया जा सकता.",
@@ -3965,8 +3961,7 @@ export const hi: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "PR स्थिति देखने के लिए GitHub कनेक्ट करें",
                 connectButton: "GitHub कनेक्ट करें",
-                privateOrDeleted:
-                    "यह PR एक रेपो के लिए निजी है जिस तक आपकी पहुंच नहीं है, या इसे हटा दिया गया था।",
+                loadFailed: "यह PR लोड नहीं हो सका। यह निजी हो सकता है या हटाया जा चुका हो।",
                 state: {
                     merged: "मर्ज किया गया",
                     draft: "ड्राफ़्ट",
