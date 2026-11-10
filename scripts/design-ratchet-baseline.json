@@ -70,7 +70,6 @@
     "features/tasks:heavyFontWeights": 57,
     "features/tasks:isDarkTernaries": 422,
     "features/tasks:literalColors": 787,
-    "other:brandVars": 5,
-    "other:literalColors": 69,
+    "other:literalColors": 49,
     "other:muiMaterial": 1
 }
