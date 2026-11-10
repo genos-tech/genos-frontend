@@ -183,6 +183,80 @@ describe("useUndoableAction", () => {
         expect(commit).toHaveBeenCalledTimes(1);
     });
 
+    it("keepOnNavigate: a route change does not end the window; the timer does (MIP-1303)", async () => {
+        const { run, commit } = make({ key: "a", keepOnNavigate: true });
+        const Go = () => {
+            const navigate = useNavigate();
+            return (
+                <button type="button" onClick={() => navigate("/elsewhere")}>
+                    go
+                </button>
+            );
+        };
+        mount(<Go />);
+        act(() => runUndoable(run));
+        fireEvent.click(screen.getByRole("button", { name: "go" }));
+        await tick(0);
+        expect(commit).not.toHaveBeenCalled();
+        expect(screen.getByText("a deleted")).toBeTruthy();
+        // Undo is still there after the move.
+        await tick(WINDOW + 100);
+        expect(commit).toHaveBeenCalledTimes(1);
+    });
+
+    it("keepOnNavigate still commits when another delete starts and when the page goes away", async () => {
+        const a = make({ key: "a", keepOnNavigate: true });
+        const b = make({ key: "b", keepOnNavigate: true, onExit: vi.fn() });
+        mount();
+        act(() => runUndoable(a.run));
+        act(() => runUndoable(b.run));
+        await tick(0);
+        expect(a.commit).toHaveBeenCalledTimes(1);
+        act(() => flushUndoables("exit"));
+        expect(b.run.onExit).toHaveBeenCalledTimes(1);
+        expect(b.commit).not.toHaveBeenCalled();
+    });
+
+    it("releaseOnCommit: the key is shown again after the commit, onCommitted first (MIP-1303)", async () => {
+        const seen: string[] = [];
+        const { run } = make({
+            key: "a",
+            releaseOnCommit: true,
+            // The committed state is in place before the release: nothing flickers.
+            onCommitted: () => seen.push(`committed while hidden=${hiddenText()}`),
+        });
+        mount();
+        act(() => runUndoable(run));
+        await tick(WINDOW + 100);
+        expect(seen).toEqual(["committed while hidden=a"]);
+        expect(hiddenText()).toBe("");
+    });
+
+    it("releaseOnCommit: the same item can be deleted again", async () => {
+        const first = make({ key: "a", releaseOnCommit: true });
+        const second = make({ key: "a", releaseOnCommit: true });
+        mount();
+        act(() => runUndoable(first.run));
+        await tick(WINDOW + 100);
+        act(() => runUndoable(second.run));
+        expect(hiddenText()).toBe("a");
+        await tick(WINDOW + 100);
+        expect(first.commit).toHaveBeenCalledTimes(1);
+        expect(second.commit).toHaveBeenCalledTimes(1);
+    });
+
+    it("without releaseOnCommit the key stays hidden for good (a hard delete)", async () => {
+        const first = make({ key: "a" });
+        const second = make({ key: "a" });
+        mount();
+        act(() => runUndoable(first.run));
+        await tick(WINDOW + 100);
+        act(() => runUndoable(second.run));
+        await tick(WINDOW + 100);
+        expect(second.commit).not.toHaveBeenCalled();
+        expect(hiddenText()).toBe("a");
+    });
+
     it("a second delete commits the first one; only the second can be undone", async () => {
         const a = make({ key: "a" });
         const b = make({ key: "b" });

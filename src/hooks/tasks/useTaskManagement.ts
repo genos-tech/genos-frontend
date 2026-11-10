@@ -4,6 +4,7 @@ import {
     useCallback,
     useEffect,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from "react";
@@ -27,6 +28,10 @@ import {
 import { buildConcatTags } from "../../features/tasks/utils/concatTags";
 import { mergeProjectRows } from "../../features/tasks/utils/mergeProjectRows";
 import {
+    isTaskDeletePending,
+    overlayPendingDeletes,
+} from "../../features/tasks/utils/pendingTaskDelete";
+import {
     NO_ROWS,
     ProjectRowsCache,
     projectRowsKey,
@@ -44,6 +49,8 @@ import {
     TaskTypesProps,
 } from "../../types/tasks";
 import { getLocalCurrentDate, getLocalCurrentTimestamp } from "../../utils/dateUtils";
+// 30 days
+import { useUndoHidden } from "../common/useUndoableAction";
 
 // Draft snapshot of an in-progress CreateTaskForm. Persisted to
 // localStorage in `setTaskDraft` below so navigating away from the
@@ -63,7 +70,7 @@ export type TaskDraft = {
 };
 
 const TASK_DRAFT_KEY = "createTaskForm:draft:v1";
-const TASK_DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const TASK_DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 // Field-wise equality for a table row. Used by the preview→row mirror to
 // recognise a no-op patch and hand back the previous `allTasks` array
@@ -434,6 +441,9 @@ export const useTaskManagement = (
     });
 
     // Current task state
+    // Deletes that wait behind their Undo toast (MIP-1303): the overlay on
+    // `allTasks` below and the preview's refusal to open such a task read them.
+    const undoHidden = useUndoHidden();
     const [currentPreviewTaskId, _setCurrentPreviewTaskId] = useState<number>(-1);
     const [previewLoadFailedTaskId, setPreviewLoadFailedTaskId] = useState<number | null>(null);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps | undefined>(undefined);
@@ -476,6 +486,10 @@ export const useTaskManagement = (
     // freeze the pane on a stale entity (was the root cause of the
     // "stuck on milestone, can't open another task" bug).
     const setCurrentPreviewTaskId = (id: number) => {
+        // A task whose delete waits behind its Undo toast is gone from every list
+        // already, so no link or stale click opens it (MIP-1303). The toast's Undo
+        // brings it back.
+        if (id !== -1 && isTaskDeletePending(undoHidden, id)) return;
         // A genuinely new selection forgets an earlier failed load, so the
         // pane can't flash a stale task for one render before `loadTask`
         // starts. A same-id re-click must NOT clear it: no load re-runs for an
@@ -699,7 +713,14 @@ export const useTaskManagement = (
         }
     });
 
-    const allTasks = rowsState.rows;
+    // The rows the app reads. A task whose delete waits behind its Undo toast
+    // (MIP-1303) reads as Deleted here already; `rowsState.rows` stays the truth
+    // that the setters, the commit and every refetch work on. The same array
+    // while nothing is pending.
+    const allTasks = useMemo(
+        () => overlayPendingDeletes(rowsState.rows, undoHidden),
+        [rowsState.rows, undoHidden]
+    );
     // Same signature as before (a state setter), applied to the rows of the
     // open project. A functional update sees those rows.
     const setAllTasks = useCallback<Dispatch<SetStateAction<TaskTableProps[]>>>((action) => {

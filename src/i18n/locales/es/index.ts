@@ -3101,6 +3101,12 @@ export const es: DeepPartial<Messages> = {
             allMembers: "Todos los miembros",
             noAssignee: "Sin cesionario",
         },
+        deleteUndo: {
+            deleted: "Tarea eliminada",
+            milestoneDeleted: "Hito eliminado",
+            errorRestored: "No se pudo eliminar la tarea. Ha vuelto.",
+            milestoneErrorRestored: "No se pudo eliminar el hito. Ha vuelto.",
+        },
         savedFilters: {
             button: "Filtros guardados",
             tooltip:

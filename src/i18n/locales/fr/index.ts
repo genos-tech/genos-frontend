@@ -5398,6 +5398,12 @@ export const fr: DeepPartial<Messages> = {
             allMembers: "Tous les membres",
             noAssignee: "Aucun cessionnaire",
         },
+        deleteUndo: {
+            deleted: "Tâche supprimée",
+            milestoneDeleted: "Jalon supprimé",
+            errorRestored: "Impossible de supprimer la tâche. Elle est de retour.",
+            milestoneErrorRestored: "Impossible de supprimer le jalon. Il est de retour.",
+        },
         savedFilters: {
             button: "Filtres enregistrés",
             tooltip:

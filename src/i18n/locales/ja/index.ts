@@ -5330,6 +5330,12 @@ export const ja: DeepPartial<Messages> = {
             allMembers: "メンバー全員",
             noAssignee: "担当者なし",
         },
+        deleteUndo: {
+            deleted: "タスクを削除しました",
+            milestoneDeleted: "マイルストーンを削除しました",
+            errorRestored: "タスクを削除できませんでした。元に戻しました。",
+            milestoneErrorRestored: "マイルストーンを削除できませんでした。元に戻しました。",
+        },
         savedFilters: {
             button: "保存されたフィルター",
             tooltip:

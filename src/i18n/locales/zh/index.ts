@@ -5152,6 +5152,12 @@ export const zh: DeepPartial<Messages> = {
             allMembers: "所有成员",
             noAssignee: "无受让人",
         },
+        deleteUndo: {
+            deleted: "任务已删除",
+            milestoneDeleted: "里程碑已删除",
+            errorRestored: "无法删除任务，已恢复。",
+            milestoneErrorRestored: "无法删除里程碑，已恢复。",
+        },
         savedFilters: {
             button: "已保存的过滤器",
             tooltip: "保存当前的过滤器组合，或应用项目已有的过滤器组合",
