@@ -498,7 +498,6 @@ export const es: DeepPartial<Messages> = {
             activityEmpty: "Aún no hay nada registrado.",
             activityLoadFailed: "No se pudo cargar tu actividad de seguridad.",
             activityLoadMore: "Mostrar anteriores",
-            activityRetry: "Reintentar",
             teamsHeading: "Tus equipos",
             teamsDescription:
                 "Salir de un equipo termina tu acceso a sus chats, proyectos y notas. Tu cuenta y tus demás equipos no cambian, y alguien puede volver a invitarte más adelante.",
@@ -2471,10 +2470,7 @@ export const es: DeepPartial<Messages> = {
             taskProgressOther: "Otros",
         },
         createForm: {
-            bootstrapFailed:
-                "No se pudo preparar una nueva tarea. Comprueba tu conexión e inténtalo de nuevo.",
-            bootstrapRetry: "Reintentar",
-            bootstrapCancel: "Cancelar",
+            bootstrapFailed: "No se pudo preparar una nueva tarea",
             discardTaskTitle: "¿Descartar este borrador?",
             discardTaskBody:
                 "Se perderán el título, el cuerpo y los adjuntos. Esta acción no se puede deshacer.",
@@ -4796,8 +4792,7 @@ export const es: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "Conecta GitHub para ver el estado de la PR",
                 connectButton: "Conectar GitHub",
-                privateOrDeleted:
-                    "Esta PR pertenece a un repo privado al que no tienes acceso o se ha eliminado.",
+                loadFailed: "No se pudo cargar esta PR. Puede ser privada o haberse eliminado.",
                 state: {
                     merged: "Fusionado",
                     draft: "Borrador",

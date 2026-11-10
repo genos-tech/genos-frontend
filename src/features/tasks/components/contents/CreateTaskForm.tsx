@@ -578,7 +578,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // no catch, so a rejected POST (offline, !ok, malformed body) — or a
     // missing token, which the service used to swallow silently — left the
     // loading pane up permanently with no way out.
-    const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+    // `title` says what failed; `body` is the server's reason when it gave
+    // one (a plan limit), else the shared "check your connection" hint.
+    const [bootstrapError, setBootstrapError] = useState<{ body?: string } | null>(null);
     const [bootstrapRetryNonce, setBootstrapRetryNonce] = useState(0);
     // One create per mount (or per explicit retry). Guards the effect below
     // from re-running on an `accessToken` refresh — each POST writes a real
@@ -642,11 +644,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 // Plan-limit rejections carry a user-facing "why" —
                 // show it in the error pane instead of the generic
                 // bootstrap-failure copy (retry won't help there).
-                setBootstrapError(
-                    err instanceof LimitReachedError && err.message
-                        ? err.message
-                        : t.tasks.createForm.bootstrapFailed
-                );
+                setBootstrapError({
+                    body:
+                        err instanceof LimitReachedError && err.message ? err.message : undefined,
+                });
             } finally {
                 clearTimeout(abortTimer);
             }
@@ -1681,10 +1682,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 </Sheet>
             ) : bootstrapError ? (
                 <TaskPaneError
-                    cancelLabel={t.tasks.createForm.bootstrapCancel}
-                    isDark={isDark}
-                    message={bootstrapError}
-                    retryLabel={t.tasks.createForm.bootstrapRetry}
+                    body={bootstrapError.body}
+                    cancelLabel={t.common.actions.cancel}
+                    title={t.tasks.createForm.bootstrapFailed}
                     onCancel={cancelBootstrap}
                     onRetry={retryBootstrap}
                 />
