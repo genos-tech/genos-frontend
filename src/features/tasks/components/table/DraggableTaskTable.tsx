@@ -34,6 +34,7 @@ import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import type { TaskGraphScope } from "../../diagram/types";
+import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { statusSolid } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
@@ -1512,6 +1513,20 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 : null,
         [useTM.taskFieldRules, usePM.currentProject?.projectId]
     );
+    // "Deleted" in a row's status cell: hidden behind an Undo toast, written when
+    // the toast is gone (MIP-1303). The returned callback is identity-stable and
+    // reads the latest state itself, so rows that skip a render stay correct.
+    const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    const handleDeleteRow = useCallback(
+        (row: TaskTableProps) =>
+            deleteTask({
+                id: Number(row.id),
+                projectId: Number(row.projectId),
+                isMilestone: row.isMilestone === true,
+                milestoneId: row.milestoneId,
+            }),
+        [deleteTask]
+    );
     // Identity-stable so TaskTableRows (which excludes callbacks from its
     // comparator, same contract as DraggableTaskRow) never holds a closure
     // over stale state — the ref it writes is the only state involved.
@@ -1917,6 +1932,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             useTEM={useTEM}
                                             useTM={useTM}
                                             useUISM={useUISM}
+                                            onDeleteTask={handleDeleteRow}
                                             onOpenDiagram={openDiagram}
                                             onQuickAddChild={openQuickAdd}
                                             onQuickAddClose={closeQuickAdd}
