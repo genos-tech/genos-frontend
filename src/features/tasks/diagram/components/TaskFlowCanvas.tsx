@@ -45,6 +45,11 @@ import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
 import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
+import {
+    indexTasksById,
+    isUnderClosedAncestor,
+    isUnderDeletedAncestor,
+} from "../../utils/taskAncestry";
 import { statuses } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
@@ -150,7 +155,7 @@ const DELETED_STATUS = statuses.find((s) => s.status === "Deleted");
 const isDeletedStatus = (status: string | null | undefined): boolean =>
     (status ?? "").toLowerCase() === "deleted";
 
-const computeOverview = (
+export const computeOverview = (
     graph: TaskGraph,
     sprintByTaskId: Map<number, Sprint>,
     openBlockerCountByTask: Map<number, number>
@@ -163,7 +168,14 @@ const computeOverview = (
     // Deleted tasks are excluded from every overview figure (progress,
     // span, overdue/due-soon/blocked) so the header matches the graph,
     // which never renders them.
-    const liveTasks = graph.tasks.filter((t) => !isDeletedStatus(t.status));
+    // Whatever hangs under a Deleted task is gone with it, and whatever hangs under a
+    // Closed one counts as Closed however its own row is set (MIP-1382): users do not
+    // close every sub-task before the parent, so an "Open" child of a Closed parent must
+    // neither hold the progress back nor show up as overdue.
+    const byId = indexTasksById(graph.tasks);
+    const liveTasks = graph.tasks.filter(
+        (t) => !isDeletedStatus(t.status) && !isUnderDeletedAncestor(t, byId)
+    );
     // Span: min(start) → max(due) across visible (non-ghost) tasks.
     let spanStart: string | null = null;
     let spanEnd: string | null = null;
@@ -195,7 +207,8 @@ const computeOverview = (
     for (const t of liveTasks) {
         if (t.id == null) continue;
         const taskId = Number(t.id);
-        const isClosed = (t.status ?? "").toLowerCase() === "closed";
+        const isClosed =
+            (t.status ?? "").toLowerCase() === "closed" || isUnderClosedAncestor(t, byId);
         if (taskId !== rootTaskId) {
             total += 1;
             if (isClosed) closed += 1;
@@ -285,6 +298,7 @@ const computeDescendantCounts = (
         bucket.push(t);
         byParent.set(pid, bucket);
     }
+    const byId = indexTasksById(tasks);
     const counts = new Map<number, { total: number; closed: number }>();
     const walk = (rootId: number): { total: number; closed: number } => {
         const cached = counts.get(rootId);
@@ -299,7 +313,13 @@ const computeDescendantCounts = (
             // overview, which also excludes them.
             if (isDeletedStatus(child.status)) continue;
             total += 1;
-            if ((child.status ?? "").toLowerCase() === "closed") closed += 1;
+            // A child under a Closed task is Closed too, whatever its own row says
+            // (MIP-1382), so the badge agrees with the header overview.
+            if (
+                (child.status ?? "").toLowerCase() === "closed" ||
+                isUnderClosedAncestor(child, byId)
+            )
+                closed += 1;
             const sub = walk(Number(child.id));
             total += sub.total;
             closed += sub.closed;
