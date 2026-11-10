@@ -759,14 +759,16 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     </Stack>
                 )}
                 {/* The columns are the board. While the first read is in flight (or failed)
-                    and no card is on any column, a skeleton or the error with Retry stands in:
+                    and no card is on any column, a skeleton or the error with Retry stands in
+                    (never while the quick-add card is open: a background reload must not
+                    unmount a title being typed into an empty project's first card):
                     five empty columns read as "this project has no tasks", which nothing
                     had checked (MIP-1308). An empty board AFTER a read is still the columns:
                     the quick-add "+" is how the first card gets made. */}
                 <DataState
                     error={syncFailure.failed && useTM.allTasks.length === 0}
                     hasData={COLUMNS.some((column) => (boardTasks[column.id] ?? []).length > 0)}
-                    loading={useTM.isLoadingTasks || syncFailure.retrying}
+                    loading={(useTM.isLoadingTasks || syncFailure.retrying) && !isQuickAddOpen}
                     size="md"
                     errorState={{
                         "data-error": "sprint-board",

@@ -63,11 +63,19 @@ vi.mock("../features/tasks/components/board/SprintBoardColumn", () => ({
     SprintBoardColumn: ({
         column,
         tasks,
+        quickAddSlot,
+        onQuickAddClick,
     }: {
         column: { id: string };
         tasks: TaskTableProps[];
+        quickAddSlot?: React.ReactNode;
+        onQuickAddClick?: () => void;
     }) => (
         <div data-testid={`column-${column.id}`}>
+            {onQuickAddClick && (
+                <button data-testid="quick-add-plus" type="button" onClick={onQuickAddClick} />
+            )}
+            {quickAddSlot}
             {tasks.map((t) => (
                 <span key={t.id} data-testid={`card-${t.id}`} />
             ))}
@@ -280,6 +288,41 @@ describe("Sprint board", () => {
         board({});
         expect(screen.getByTestId("column-open")).toBeTruthy();
         expect(screen.queryByRole("status", { name: en.tasks.table.loadingTasks })).toBeNull();
+    });
+
+    it("a reload that starts while the quick-add card is open does not unmount it (empty project)", () => {
+        const tm = (isLoadingTasks: boolean) =>
+            ({
+                allTasks: [],
+                setAllTasks: vi.fn(),
+                tableMilestoneFilterId: null,
+                currentPreviewTask: undefined,
+                setCurrentPreviewTask: vi.fn(),
+                isLoadingTasks,
+            }) as never;
+        const element = (isLoadingTasks: boolean) =>
+            wrap(
+                <SprintBoard
+                    myself={{ teamId: "t1", userId: "u1" } as never}
+                    setTeamMembers={vi.fn()}
+                    teamMemberProfiles={{}}
+                    teamMembers={[]}
+                    usePM={{ currentProject: { projectId: 1, projectTags: [] } } as never}
+                    useSM={{ projectMilestones: {}, projectSprints: {} } as never}
+                    useTM={tm(isLoadingTasks)}
+                />
+            );
+        const view = render(element(false));
+        fireEvent.click(screen.getByTestId("quick-add-plus"));
+        const draft = () => screen.queryByPlaceholderText(/./, { exact: false });
+        expect(screen.getByTestId("column-open")).toBeTruthy();
+
+        view.rerender(element(true));
+
+        // The columns (and with them the open card) are still there: no skeleton.
+        expect(screen.getByTestId("column-open")).toBeTruthy();
+        expect(screen.queryByRole("status", { name: en.tasks.table.loadingTasks })).toBeNull();
+        void draft;
     });
 
     it("cached cards stay on screen when a refresh failed or is in flight", () => {
