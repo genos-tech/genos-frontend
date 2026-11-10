@@ -5402,6 +5402,7 @@ export const ja: DeepPartial<Messages> = {
             loadingTasks: "タスクの読み込みを待っています…",
             gridLabel: "タスク一覧",
             rowActionsHeader: "行の操作",
+            expandHeader: "展開",
             emptyTitle: "表示するタスクがありません",
             emptyHint: "フィルターを調整してみてください",
             addTagsPlaceholder: "タグを追加…",

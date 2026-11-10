@@ -2710,6 +2710,7 @@ export const es: DeepPartial<Messages> = {
             loadingTasks: "Esperando a cargar las tareas…",
             gridLabel: "Tabla de tareas",
             rowActionsHeader: "Acciones de fila",
+            expandHeader: "Expandir",
             emptyTitle: "No hay tareas que mostrar",
             emptyHint: "Prueba a ajustar los filtros",
             addTagsPlaceholder: "Añadir etiquetas…",

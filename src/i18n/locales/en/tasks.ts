@@ -983,6 +983,7 @@ export const tasks = {
         // Accessible name of the task table (a treegrid).
         gridLabel: "Tasks table",
         rowActionsHeader: "Row actions",
+        expandHeader: "Expand",
         emptyTitle: "No tasks to display",
         emptyHint: "Try adjusting your filters",
     },

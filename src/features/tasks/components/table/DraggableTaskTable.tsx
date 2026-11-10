@@ -1742,7 +1742,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 // screen reader gets its name from here, and it has no button (a
                                 // nameless button in the header was a control that did nothing).
                                 {...(column.field === "__expand"
-                                    ? { "aria-label": t.tasks.diagram.tooltips.expand }
+                                    ? { "aria-label": t.tasks.table.expandHeader }
                                     : { [GRID_COL_ATTR]: column.field })}
                                 style={{
                                     ...getHeaderCellStyles(
@@ -1769,61 +1769,60 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                               : "1px solid rgba(0, 0, 0, 0.04)",
                                 }}
                             >
-                                {/* Header content - clickable for sorting */}
-                                <PlainButton
-                                    // The expand column sorts nothing: no tab stop, no click, and out
-                                    // of the accessibility tree (the header cell carries the name).
-                                    {...(column.field === "__expand"
-                                        ? { "aria-hidden": true, disabled: true, tabIndex: -1 }
-                                        : {})}
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 4,
-                                        flex: 1,
-                                        overflow: "hidden",
-                                    }}
-                                    onClick={() => handleHeaderClick(column.field)}
-                                    onMouseEnter={(e) => {
-                                        if (!resizingColumn) {
-                                            e.currentTarget.style.opacity = "0.8";
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.opacity = "1";
-                                    }}
-                                >
-                                    <span
+                                {/* Header content - clickable for sorting. The expand column has nothing to sort by:
+                                    no button at all (a nameless, do-nothing control is impossible by
+                                    construction), the cell carries the name (aria-label above). */}
+                                {column.field !== "__expand" && (
+                                    <PlainButton
                                         style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: 4,
+                                            flex: 1,
                                             overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
+                                        }}
+                                        onClick={() => handleHeaderClick(column.field)}
+                                        onMouseEnter={(e) => {
+                                            if (!resizingColumn) {
+                                                e.currentTarget.style.opacity = "0.8";
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.opacity = "1";
                                         }}
                                     >
-                                        {column.headerName}
-                                    </span>
-                                    {/* Show the indicator only on the
+                                        <span
+                                            style={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {column.headerName}
+                                        </span>
+                                        {/* Show the indicator only on the
                                         primary tier (tier 0). The
                                         secondary tier from Settings is
                                         intentionally not flagged in the
                                         header to avoid two arrows
                                         competing visually. */}
-                                    {sortTiers[0]?.field === column.field && (
-                                        <span
-                                            style={{
-                                                fontSize: "0.7rem",
-                                                color:
-                                                    mode === "dark"
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)",
-                                                flexShrink: 0,
-                                            }}
-                                        >
-                                            {sortTiers[0].direction === "asc" ? "▲" : "▼"}
-                                        </span>
-                                    )}
-                                </PlainButton>
+                                        {sortTiers[0]?.field === column.field && (
+                                            <span
+                                                style={{
+                                                    fontSize: "0.7rem",
+                                                    color:
+                                                        mode === "dark"
+                                                            ? "var(--gp-brandalt-400)"
+                                                            : "var(--gp-brand-700)",
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {sortTiers[0].direction === "asc" ? "▲" : "▼"}
+                                            </span>
+                                        )}
+                                    </PlainButton>
+                                )}
 
                                 {/* Resize handle */}
                                 {column.resizable !== false && (

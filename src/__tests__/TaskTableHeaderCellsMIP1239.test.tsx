@@ -158,15 +158,13 @@ describe("the task table header matches the body, column for column", () => {
         expect(gutter.getAttribute("aria-hidden")).toBeNull();
     });
 
-    it("the expand column's header has a name and no button; no column header is nameless", async () => {
+    it("the expand column's header has a name and no button at all; no column header is nameless", async () => {
         await renderTable();
         const headers = screen.getAllByRole("columnheader");
         const expand = headers[1];
-        expect(expand.getAttribute("aria-label")).toBe(en.tasks.diagram.tooltips.expand);
-        // hidden from the accessibility tree and out of the tab order: nothing to sort by
-        const button = expand.querySelector("button");
-        expect(button?.getAttribute("aria-hidden")).toBe("true");
-        expect(button?.hasAttribute("disabled")).toBe(true);
+        expect(expand.getAttribute("aria-label")).toBe(en.tasks.table.expandHeader);
+        // nothing to sort by: no button at all, so no nameless control to land on
+        expect(expand.querySelector("button")).toBeNull();
         expect(expand.hasAttribute(GRID_COL_ATTR)).toBe(false);
         for (const h of headers) expect(nameOf(h)).not.toBe("");
     });
