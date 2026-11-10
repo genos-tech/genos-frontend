@@ -1009,6 +1009,7 @@ export const ja: DeepPartial<Messages> = {
             tag: "タグ",
             general: "一般",
             newTagPlaceholder: "新しいタグ",
+            addTag: "タグを追加",
             tags: {
                 manageTitle: "タグを管理",
                 manageTooltip: "タグを管理",

@@ -239,6 +239,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                                 }}
                             />
                             <IconButton
+                                aria-label={t.chat.todoPane.addTag}
                                 disabled={!newName.trim() || creating}
                                 size="sm"
                                 sx={{ borderRadius: g.radius.sm, ...TAG_ADD_TOUCH_SX }}

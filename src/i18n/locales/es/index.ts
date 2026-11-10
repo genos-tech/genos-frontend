@@ -1592,6 +1592,7 @@ export const es: DeepPartial<Messages> = {
             tag: "Etiqueta",
             general: "General",
             newTagPlaceholder: "Nueva etiqueta",
+            addTag: "Añadir etiqueta",
             tags: {
                 manageTitle: "Gestionar etiquetas",
                 manageTooltip: "Gestionar etiquetas",
