@@ -6,6 +6,8 @@
  *
  * "Start tomorrow" is a small add-icon button at EVERY width (MIP-1051; it was
  * phone-only, MIP-979). It keeps its name (aria-label) and its click behaviour.
+ * On a phone (MIP-1219) the labelled "Start today" goes and that one add icon takes
+ * its place while today has no list; once today has one, it starts tomorrow.
  *
  * The phone switch is `useIsMobile()` (a JS media query), not an
  * `sx` breakpoint, because jsdom can't evaluate the latter — see
@@ -105,27 +107,51 @@ describe("To-do pane header on mobile", () => {
         expect(screen.queryByText(/items completed/)).toBeNull();
     });
 
-    // MIP-1051: icon-only at every width, not only on a phone.
-    it.each([
-        ["desktop", false],
-        ["mobile", true],
-    ])("shows Start tomorrow as an icon-only button on %s, still named", (_name, mobile) => {
-        isMobileViewport = mobile;
+    // MIP-1051: "Start tomorrow" is an icon-only button; MIP-1219: on a phone the one add icon
+    // starts today while today has no list, and tomorrow once today has one.
+    it("on desktop, with neither list, keeps the labelled Start today and the Start tomorrow icon", () => {
         renderPane([groupOn(OLD_DAY)]);
 
-        // The name is the old label, so the meaning isn't lost to assistive tech.
-        const button = screen.getByRole("button", { name: "Start tomorrow" });
-        // No printed text, just the add icon.
-        expect(button.textContent).toBe("");
-        expect(button.querySelector('[data-testid="AddIcon"]')).not.toBeNull();
-        expect(screen.queryByText("Start tomorrow")).toBeNull();
+        expect(screen.getByText("Start today")).toBeInTheDocument();
+        const tomorrow = screen.getByRole("button", { name: "Start tomorrow" });
+        // The name is the label, so the meaning isn't lost to assistive tech; no printed text.
+        expect(tomorrow.textContent).toBe("");
+        expect(tomorrow.querySelector('[data-testid="AddIcon"]')).not.toBeNull();
     });
 
-    it("still creates tomorrow's list when the icon-only button is pressed", () => {
+    it("on a phone, with no list for today, shows ONE add icon named Start today and no label", () => {
+        isMobileViewport = true;
+        renderPane([groupOn(OLD_DAY)]);
+
+        const button = screen.getByRole("button", { name: "Start today" });
+        expect(button.textContent).toBe("");
+        expect(button.querySelector('[data-testid="AddIcon"]')).not.toBeNull();
+        // Nothing prints "Start today" or "Start tomorrow", and tomorrow isn't offered yet.
+        expect(screen.queryByText("Start today")).toBeNull();
+        expect(screen.queryByRole("button", { name: "Start tomorrow" })).toBeNull();
+    });
+
+    it("on a phone, pressing it creates TODAY's list", () => {
         isMobileViewport = true;
         const { addItem } = renderPane([groupOn(OLD_DAY)]);
 
-        fireEvent.click(screen.getByRole("button", { name: "Start tomorrow" }));
+        fireEvent.click(screen.getByRole("button", { name: "Start today" }));
+
+        expect(addItem).toHaveBeenCalledTimes(1);
+        expect(addItem).toHaveBeenCalledWith({
+            localDate: getLocalCurrentDate(),
+            title: "Untitled to-do",
+        });
+    });
+
+    it("on a phone, once today has a list, the same icon starts TOMORROW", () => {
+        isMobileViewport = true;
+        const { addItem } = renderPane([groupOn(getLocalCurrentDate())]);
+
+        expect(screen.queryByRole("button", { name: "Start today" })).toBeNull();
+        const button = screen.getByRole("button", { name: "Start tomorrow" });
+        expect(button.textContent).toBe("");
+        fireEvent.click(button);
 
         expect(addItem).toHaveBeenCalledTimes(1);
         expect(addItem).toHaveBeenCalledWith({
@@ -134,7 +160,23 @@ describe("To-do pane header on mobile", () => {
         });
     });
 
-    it("creates tomorrow's list from the icon button on desktop too", () => {
+    it("on a phone, a list for tomorrow alone still leaves Start today", () => {
+        isMobileViewport = true;
+        renderPane([groupOn(getLocalTomorrowDate())]);
+
+        expect(screen.getByRole("button", { name: "Start today" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Start tomorrow" })).toBeNull();
+    });
+
+    it("on a phone, with lists for today and tomorrow, offers no add button", () => {
+        isMobileViewport = true;
+        renderPane([groupOn(getLocalTomorrowDate()), groupOn(getLocalCurrentDate())]);
+
+        expect(screen.queryByRole("button", { name: "Start today" })).toBeNull();
+        expect(screen.queryByRole("button", { name: "Start tomorrow" })).toBeNull();
+    });
+
+    it("creates tomorrow's list from the icon button on desktop", () => {
         const { addItem } = renderPane([groupOn(OLD_DAY)]);
 
         fireEvent.click(screen.getByRole("button", { name: "Start tomorrow" }));
@@ -145,23 +187,28 @@ describe("To-do pane header on mobile", () => {
         });
     });
 
-    it.each([
-        ["desktop", false],
-        ["mobile", true],
-    ])(
-        "leaves Start today with its label on %s (only tomorrow's button shrinks)",
-        (_n, mobile) => {
-            isMobileViewport = mobile;
-            renderPane([groupOn(OLD_DAY)]);
+    it("creates today's list from the labelled button on desktop", () => {
+        const { addItem } = renderPane([groupOn(OLD_DAY)]);
 
-            expect(screen.getByText("Start today")).toBeInTheDocument();
-        }
-    );
+        fireEvent.click(screen.getByText("Start today"));
 
-    it("offers no Start tomorrow at all once tomorrow's list exists, mobile or not", () => {
-        isMobileViewport = true;
+        expect(addItem).toHaveBeenCalledWith({
+            localDate: getLocalCurrentDate(),
+            title: "Untitled to-do",
+        });
+    });
+
+    it("on desktop, once today has a list, only the Start tomorrow icon remains", () => {
+        renderPane([groupOn(getLocalCurrentDate())]);
+
+        expect(screen.queryByText("Start today")).toBeNull();
+        expect(screen.getByRole("button", { name: "Start tomorrow" })).toBeInTheDocument();
+    });
+
+    it("offers no Start tomorrow at all once tomorrow's list exists, on desktop", () => {
         renderPane([groupOn(getLocalTomorrowDate()), groupOn(getLocalCurrentDate())]);
 
         expect(screen.queryByRole("button", { name: "Start tomorrow" })).toBeNull();
+        expect(screen.queryByText("Start today")).toBeNull();
     });
 });
