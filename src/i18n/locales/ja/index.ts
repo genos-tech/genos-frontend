@@ -4949,6 +4949,10 @@ export const ja: DeepPartial<Messages> = {
             createMilestone: "マイルストーンを作成",
             creating: "作成中…",
             withShortcut: "{label} ({shortcut})",
+            createLabel: "作成:",
+            kindTask: "タスク",
+            kindMilestone: "マイルストーン",
+            selectFiles: "ファイルを選択",
             discardTaskTitle: "この下書きを破棄しますか?",
             discardTaskBody:
                 "タイトル、本文、添付ファイルは失われます。この操作は取り消せません。",

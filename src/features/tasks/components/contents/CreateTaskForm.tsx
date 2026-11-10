@@ -1229,7 +1229,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             >
                                 <Stack alignItems="center" direction="row" spacing={1}>
                                     <Typography level="body-xs" sx={{ color: "neutral.500" }}>
-                                        Create:
+                                        {t.tasks.createForm.createLabel}
                                     </Typography>
                                     <Button
                                         color={creationKind === "task" ? "primary" : "neutral"}
@@ -1240,7 +1240,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                         }
                                         onClick={() => switchKind("task")}
                                     >
-                                        Task
+                                        {t.tasks.createForm.kindTask}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -1251,7 +1251,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                         }
                                         onClick={() => switchKind("milestone")}
                                     >
-                                        Milestone
+                                        {t.tasks.createForm.kindMilestone}
                                     </Button>
                                 </Stack>
                             </Box>

@@ -2484,6 +2484,10 @@ export const hi: DeepPartial<Messages> = {
             createMilestone: "माइलस्टोन बनाएँ",
             creating: "बनाया जा रहा है…",
             withShortcut: "{label} ({shortcut})",
+            createLabel: "बनाएँ:",
+            kindTask: "टास्क",
+            kindMilestone: "माइलस्टोन",
+            selectFiles: "फ़ाइलें चुनें",
             discardTaskTitle: "इस ड्राफ़्ट को छोड़ें?",
             discardTaskBody:
                 "आपका शीर्षक, मुख्य भाग और अनुलग्नक खो जाएंगे. इसे पूर्ववत नहीं किया जा सकता.",

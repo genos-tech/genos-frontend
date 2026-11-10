@@ -5014,6 +5014,10 @@ export const fr: DeepPartial<Messages> = {
             createMilestone: "Créer le jalon",
             creating: "Création…",
             withShortcut: "{label} ({shortcut})",
+            createLabel: "Créer :",
+            kindTask: "Tâche",
+            kindMilestone: "Jalon",
+            selectFiles: "Sélectionner des fichiers",
             discardTaskTitle: "Abandonner ce brouillon ?",
             discardTaskBody:
                 "Le titre, le contenu et les pièces jointes seront perdus. Cette action est irréversible.",
