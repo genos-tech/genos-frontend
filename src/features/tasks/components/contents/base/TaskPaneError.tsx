@@ -1,6 +1,7 @@
-import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { Box, Button, Sheet, Stack, Typography } from "@mui/joy";
+import { Sheet } from "@mui/joy";
+
+import { ErrorState } from "../../../../../components/ui/feedback/ErrorState";
+import { g } from "../../../../../theme/tokens";
 
 // The dead-end counterpart to `TaskPaneLoading`.
 //
@@ -9,112 +10,55 @@ import { Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 // way out and (on the silent paths) nothing in the console. This is the
 // escape hatch: say what happened, and offer Retry / Cancel.
 //
-// Deliberately styled as the same pane (`minHeight: 500`, matching gradient,
-// border and accent bar) so nothing reflows when it replaces the loader.
+// The shared `ErrorState` (MIP-1306) draws the message and the buttons; this
+// file is only the pane frame around it: the same footprint as the loader
+// (`minHeight: 500` from `md`, edge to edge below it) so nothing reflows when
+// it replaces the loader. Colors come from the tokens, not literals.
 
 type TaskPaneErrorProps = {
-    isDark: boolean;
-    message: string;
-    retryLabel: string;
+    /** What failed. */
+    title: string;
+    /** Why, when the server said (a plan limit); defaults to the connection hint. */
+    body?: string;
     cancelLabel: string;
     onRetry: () => void;
     onCancel: () => void;
 };
 
 export const TaskPaneError = ({
-    isDark,
-    message,
-    retryLabel,
+    title,
+    body,
     cancelLabel,
     onRetry,
     onCancel,
 }: TaskPaneErrorProps) => (
     <Sheet
-        role="alert"
+        data-pane="task-error"
         sx={{
             flex: 1,
             // Full-screen frame below `md`, matching TaskPaneLoading and the
             // loaded TaskPreviewLayout (see the note on TaskPaneLoading).
             minHeight: { xs: 0, md: 500 },
-            borderRadius: { xs: 0, md: "16px" },
+            borderRadius: { xs: 0, md: g.radius.lg },
             p: 0,
             overflow: "hidden",
-            background: isDark
-                ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
-                : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
-            border: {
-                xs: "none",
-                md: `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"}`,
-            },
-            boxShadow: {
-                xs: "none",
-                md: isDark
-                    ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
-                    : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
-            },
-            position: "relative",
+            background: g.surface.default,
+            border: { xs: "none", md: `1px solid ${g.border.default}` },
+            boxShadow: { xs: "none", md: g.shadow.md },
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: 2,
             px: 3,
-            textAlign: "center",
         }}
     >
-        {/* Accent bar — amber rather than the loader's purple, so a glance
-            at the pane's top edge already says "this one needs you". */}
-        <Box
-            sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                background: "linear-gradient(90deg, #f59e0b 0%, #f97316 50%, #ef4444 100%)",
-                borderRadius: "16px 16px 0 0",
-                opacity: 0.85,
-            }}
+        <ErrorState
+            body={body}
+            data-error="task-bootstrap"
+            secondary={{ label: cancelLabel, onClick: onCancel }}
+            size="md"
+            title={title}
+            onRetry={onRetry}
         />
-
-        <Box
-            sx={{
-                width: 48,
-                height: 48,
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: isDark ? "rgba(245,158,11,0.12)" : "rgba(245,158,11,0.1)",
-                border: "1px solid",
-                borderColor: isDark ? "rgba(245,158,11,0.25)" : "rgba(245,158,11,0.2)",
-            }}
-        >
-            <ErrorOutlineRoundedIcon sx={{ fontSize: 26, color: "#f59e0b" }} />
-        </Box>
-
-        <Typography
-            level="body-sm"
-            sx={{
-                maxWidth: 380,
-                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
-            }}
-        >
-            {message}
-        </Typography>
-
-        <Stack direction="row" spacing={1.5}>
-            <Button color="neutral" size="sm" variant="plain" onClick={onCancel}>
-                {cancelLabel}
-            </Button>
-            <Button
-                size="sm"
-                startDecorator={<RefreshRoundedIcon sx={{ fontSize: 16 }} />}
-                variant="solid"
-                onClick={onRetry}
-            >
-                {retryLabel}
-            </Button>
-        </Stack>
     </Sheet>
 );

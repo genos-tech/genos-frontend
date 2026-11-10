@@ -31,6 +31,7 @@ import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { MODAL_CHROME_CLEARANCE } from "../../../../components/ui/modal/modalChrome";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
+import { headerTouchTargetsSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
@@ -2199,6 +2200,7 @@ const MilestonePreviewInner = ({
                             // Hosted in UrlLinkModal: keep clear of its floating Move to
                             // page / Close, which sit in this corner (MIP-1169).
                             ...(hostZIndex != null && { pr: MODAL_CHROME_CLEARANCE }),
+                            ...headerTouchTargetsSx,
                         }}
                     >
                         <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />

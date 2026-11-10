@@ -41,6 +41,8 @@ const KEYS = [
     "integrations.github.repoAccess.loadFailed",
     "tasks.subTasks.loadFailed",
     "tasks.savedFilters.loadFailed",
+    "integrations.pullRequest.linkedCard.loadFailed",
+    "tasks.createForm.bootstrapFailed",
     "chat.channel.pane.loadFailed",
     "chat.channel.thread.loadFailed",
     "chat.threadTabs.ariaLabel",

@@ -6,6 +6,7 @@ import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonLines } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
@@ -107,6 +108,8 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [result, setResult] = useState<PrStatusResult | null>(null);
+    // Bumped by Retry: the effect below runs again for the same PR.
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -119,7 +122,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
         return () => {
             cancelled = true;
         };
-    }, [accessToken, url]);
+    }, [accessToken, url, attempt]);
 
     if (result === null) {
         return (
@@ -160,39 +163,25 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
     }
 
     if (result.kind === "error") {
+        // A lookup that failed is NOT "this PR is gone": a dropped connection
+        // looks the same as a private repo from here, so the card says what
+        // failed, offers Retry, and still lets the person open the PR on GitHub.
         return (
-            <Card
-                component="a"
-                href={url}
-                rel="noreferrer"
-                target="_blank"
-                variant="outlined"
-                sx={{
-                    p: 1.5,
-                    textDecoration: "none",
-                    color: "inherit",
-                    "&:hover": { borderColor: "primary.500" },
-                }}
-            >
+            <Card sx={{ p: 1.5 }} variant="outlined">
                 <Stack alignItems="center" direction="row" spacing={1.25}>
                     <GitHubIcon sx={{ color: "neutral.500" }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                            {t.integrations.pullRequest.linkedCard.privateOrDeleted}
-                        </Typography>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                color: "text.tertiary",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
+                        <ErrorState
+                            data-error="linked-pr"
+                            secondary={{
+                                label: t.integrations.github.openOnGithub,
+                                href: url,
                             }}
-                        >
-                            {url}
-                        </Typography>
+                            size="xs"
+                            title={t.integrations.pullRequest.linkedCard.loadFailed}
+                            onRetry={() => setAttempt((n) => n + 1)}
+                        />
                     </Box>
-                    <OpenInNewRoundedIcon sx={{ color: "text.tertiary", fontSize: 18 }} />
                 </Stack>
             </Card>
         );

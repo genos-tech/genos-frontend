@@ -51,15 +51,13 @@ const frames: Array<[string, () => HTMLElement]> = [
                 <CssVarsProvider>
                     <TaskPaneError
                         cancelLabel="Cancel"
-                        isDark={false}
-                        message="Failed"
-                        retryLabel="Retry"
+                        title="Failed"
                         onCancel={vi.fn()}
                         onRetry={vi.fn()}
                     />
                 </CssVarsProvider>
             );
-            return document.querySelector('[role="alert"]') as HTMLElement;
+            return document.querySelector('[data-pane="task-error"]') as HTMLElement;
         },
     ],
 ];
@@ -83,8 +81,16 @@ describe.each(frames)("%s frame", (_name, mount) => {
 
         expect(desktop).toBeDefined();
         expect(desktop).toContain("min-height:500px");
-        expect(desktop).toContain("border-radius:16px");
-        expect(desktop).toContain("border:1px solid rgba(0,0,0,0.08)");
-        expect(desktop).toContain("box-shadow:0 8px 32px");
+        // The loader keeps its own literals; the error pane (MIP-1306) draws the same
+        // footprint from the tokens.
+        if (_name === "TaskPaneError") {
+            expect(desktop).toContain("border-radius:var(--g-radius-lg)");
+            expect(desktop).toContain("border:1px solid var(--g-border)");
+            expect(desktop).toContain("box-shadow:var(--g-shadow-md)");
+        } else {
+            expect(desktop).toContain("border-radius:16px");
+            expect(desktop).toContain("border:1px solid rgba(0,0,0,0.08)");
+            expect(desktop).toContain("box-shadow:0 8px 32px");
+        }
     });
 });

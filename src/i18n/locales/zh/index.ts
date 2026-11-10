@@ -2547,7 +2547,7 @@ export const zh: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "连接 GitHub 以查看 PR 状态",
                 connectButton: "连接 GitHub",
-                privateOrDeleted: "此 PR 所在仓库对你不可见，或 PR 已被删除。",
+                loadFailed: "无法加载此 PR。它可能是私有的，或已被删除。",
                 state: {
                     merged: "已合并",
                     draft: "草稿",
@@ -3417,7 +3417,6 @@ export const zh: DeepPartial<Messages> = {
             activityEmpty: "暂无记录。",
             activityLoadFailed: "无法加载你的安全活动。",
             activityLoadMore: "显示更早的记录",
-            activityRetry: "重试",
             teamsHeading: "你的团队",
             teamsDescription:
                 "退出团队后，你将无法再访问该团队的聊天、项目和笔记。你的账户和其他团队不受影响，之后也可以再次被邀请加入。",
@@ -4773,9 +4772,7 @@ export const zh: DeepPartial<Messages> = {
         createForm: {
             taskDetails: "任务详情",
             preparing: "准备任务…",
-            bootstrapFailed: "无法准备新任务。请检查网络连接后重试。",
-            bootstrapRetry: "重试",
-            bootstrapCancel: "取消",
+            bootstrapFailed: "无法准备新任务",
             discardTaskTitle: "放弃此草稿？",
             discardTaskBody: "标题、正文和附件将丢失，此操作无法撤销。",
             discardMilestoneTitle: "放弃此里程碑草稿？",
