@@ -2208,18 +2208,6 @@ export const hi: DeepPartial<Messages> = {
             close: "बंद करें",
         },
         modals: {
-            deleteTask: {
-                title: "टास्क हटाएँ?",
-                body: "यह कार्रवाई वापस नहीं ली जा सकती",
-                confirmButton: "टास्क हटाएँ",
-                cancelButton: "रद्द करें",
-            },
-            confirmDeletedStatus: {
-                title: "इस टास्क को हटाएँ?",
-                titleMilestone: "इस माइलस्टोन को हटाएँ?",
-                body: "यह सभी सूचियों, बोर्ड और डैशबोर्ड से गायब हो जाएगा। इसे वापस लाने के लिए तालिका को “हटाया गया” व्यू पर बदलें और इसे कोई दूसरी स्थिति दें।",
-                bodyMilestone: "यह सभी सूचियों और बोर्ड से गायब हो जाएगा।",
-            },
             createProject: {
                 heading: "नया प्रोजेक्ट बनाएँ",
                 namePlaceholder: "प्रोजेक्ट का नाम डालें…",
@@ -3127,9 +3115,6 @@ export const hi: DeepPartial<Messages> = {
             overdueCount: "{count} अतिदेय",
             dueSoonCount: "{count} जल्द ही आने वाला है",
             blockedCount: "{count} अवरुद्ध",
-            confirmDelete: "यह कार्य हटाएं?",
-            confirmDeleteBody:
-                "इसे हटाया हुआ चिह्नित किया जाएगा. इसके उप-कार्य बने रहेंगे, लेकिन आंकड़ों में नहीं गिने जाएंगे.",
             errors: {
                 load: "कार्य ग्राफ़ लोड नहीं किया जा सका.",
                 update: "भार बढ़ाना विफल हुवा।",

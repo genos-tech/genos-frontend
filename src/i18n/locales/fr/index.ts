@@ -4744,18 +4744,6 @@ export const fr: DeepPartial<Messages> = {
             close: "Fermer",
         },
         modals: {
-            deleteTask: {
-                title: "Supprimer la tâche ?",
-                body: "Cette action est irréversible",
-                confirmButton: "Supprimer la tâche",
-                cancelButton: "Annuler",
-            },
-            confirmDeletedStatus: {
-                title: "Supprimer cette tâche ?",
-                titleMilestone: "Supprimer ce jalon ?",
-                body: "Elle disparaît de toutes les listes, de tous les tableaux et du tableau de bord. Pour la récupérer, passez le tableau sur la vue Supprimée et donnez-lui un autre statut.",
-                bodyMilestone: "Il disparaît de toutes les listes et de tous les tableaux.",
-            },
             createProject: {
                 heading: "Créer un nouveau projet",
                 namePlaceholder: "Saisir le nom du projet…",
@@ -5673,9 +5661,6 @@ export const fr: DeepPartial<Messages> = {
             overdueCount: "{count} en retard",
             dueSoonCount: "{count} bientôt disponible",
             blockedCount: "{count} bloqué",
-            confirmDelete: "Supprimer cette tâche ?",
-            confirmDeleteBody:
-                "Elle sera marquée comme supprimée. Ses sous-tâches sont conservées, mais ne comptent plus dans les statistiques.",
             errors: {
                 load: "Impossible de charger le graphique des tâches.",
                 update: "La mise à jour a échoué.",

@@ -11,7 +11,7 @@
 //                    `emitTaskTouched(id, "update")` (its Activity feed, which has a
 //                    new row; what `RestoreBodyControl` emits after a restore).
 //   task, deleted    undoing `create_task`. The server soft-deletes it (status
-//                    "Deleted"), as `ModalDeleteTask` does. The same two events: the
+//                    "Deleted"), as a task delete does everywhere. The same two events: the
 //                    row comes back with status "Deleted" and the open preview
 //                    reloads onto it, the same road any remote delete takes.
 //   comment, deleted undoing `add_comment`. `emitTaskTouched(id, "comment")`, what

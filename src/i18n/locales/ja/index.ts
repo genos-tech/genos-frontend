@@ -4680,18 +4680,6 @@ export const ja: DeepPartial<Messages> = {
             close: "閉じる",
         },
         modals: {
-            deleteTask: {
-                title: "タスクを削除しますか？",
-                body: "この操作は取り消せません",
-                confirmButton: "タスクを削除",
-                cancelButton: "キャンセル",
-            },
-            confirmDeletedStatus: {
-                title: "このタスクを削除しますか？",
-                titleMilestone: "このマイルストーンを削除しますか？",
-                body: "すべてのリスト、ボード、ダッシュボードから消えます。元に戻すには、テーブルを「Deleted」ビューに切り替えて、別のステータスを選んでください。",
-                bodyMilestone: "すべてのリストとボードから消えます。",
-            },
             createProject: {
                 heading: "新規プロジェクトを作成",
                 namePlaceholder: "プロジェクト名を入力…",
@@ -5607,9 +5595,6 @@ export const ja: DeepPartial<Messages> = {
             overdueCount: "{count} 締切切れ",
             dueSoonCount: "{count} まもなく終了予定",
             blockedCount: "{count} がブロックされました",
-            confirmDelete: "このタスクを削除しますか?",
-            confirmDeleteBody:
-                "削除済みとして扱われます。サブタスクは残りますが、統計には含まれなくなります。",
             errors: {
                 load: "タスクグラフを読み込めませんでした。",
                 update: "アップデートに失敗しました。",
