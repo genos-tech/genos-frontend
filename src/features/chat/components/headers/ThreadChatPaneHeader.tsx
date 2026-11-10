@@ -67,6 +67,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const { myself, useCM, useNM, useTM, threadTaskMeta, hostZIndex } = props;
     // Layer for popups spawned by this header when it's modal-hosted.
     const popupZIndex = hostZIndex != null ? hostZIndex + 1 : undefined;
+    // Inside a preview dialog (ModalChatView passes its stacking level).
+    const isModalHosted = hostZIndex != null;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -387,15 +389,19 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     ...modalChromeEndPadding("8px"),
                 }}
             >
-                <IconButton
-                    size="sm"
-                    variant="plain"
-                    onClick={handleMobileBack}
-                    aria-label={t.chat.headers.backToChat}
-                    sx={{ flexShrink: 0 }}
-                >
-                    <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
-                </IconButton>
+                {/* Back to the main chat by navigating the PAGE. A preview dialog has no page
+                    behind it to go back on, and its own Close is the way out (MIP-1321). */}
+                {!isModalHosted && (
+                    <IconButton
+                        size="sm"
+                        variant="plain"
+                        onClick={handleMobileBack}
+                        aria-label={t.chat.headers.backToChat}
+                        sx={{ flexShrink: 0 }}
+                    >
+                        <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                )}
 
                 <Stack
                     direction="row"
@@ -695,7 +701,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
                 {/* Close Button. In a preview modal the dialog has its own Close, and this
                     one would sit right under it (MIP-1296). */}
-                {hostZIndex == null && (
+                {!isModalHosted && (
                     <AppTooltip size="sm" title={t.chat.headers.close}>
                         <IconButton
                             size="sm"
