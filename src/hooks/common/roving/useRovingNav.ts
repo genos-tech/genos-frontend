@@ -85,6 +85,10 @@ export class RovingNav {
      *  does not always manage to focus it. */
     private focused: { el: HTMLElement; item: string } | null = null;
     private lastKeyAt = 0;
+    /** What the mutations since the last frame touched: items that came or went (everything is
+     *  read again), or only the content of some items (just those are fixed up). */
+    private structural = false;
+    private dirty = new Set<HTMLElement>();
 
     constructor(private readonly getConfig: () => RovingConfig) {}
 
@@ -94,7 +98,7 @@ export class RovingNav {
         const onFocusIn = (event: FocusEvent) => this.activateFrom(event.target);
         container.addEventListener("keydown", onKeyDown);
         container.addEventListener("focusin", onFocusIn);
-        const observer = new MutationObserver(() => this.schedule());
+        const observer = new MutationObserver((records) => this.onMutations(records));
         observer.observe(container, { childList: true, subtree: true });
         this.sync();
         return () => {
@@ -164,8 +168,49 @@ export class RovingNav {
         if (this.frame || !this.container) return;
         this.frame = requestAnimationFrame(() => {
             this.frame = 0;
-            this.sync();
+            const structural = this.structural;
+            const dirty = Array.from(this.dirty);
+            this.structural = false;
+            this.dirty.clear();
+            if (structural) {
+                this.sync();
+                return;
+            }
+            // Only the inside of some items changed (a button re-mounted in a card): fix those.
+            const keepInner = !!this.getConfig().keepInner;
+            for (const el of dirty) {
+                const pos = el.isConnected ? posOf(el) : null;
+                if (pos) this.applyStop(el, this.active.get(pos.group) === pos.item, keepInner);
+            }
         });
+    }
+
+    /** A drag, a placeholder, a text change: most mutations on a board are not about the
+     *  tab stops, and a card in a drag is re-measured every frame. Only items that were added
+     *  or removed, and the inside of an item, count. */
+    private onMutations(records: MutationRecord[]) {
+        const container = this.container;
+        if (!container) return;
+        const holdsItem = (node: Node) =>
+            node instanceof HTMLElement &&
+            (node.matches(ITEM) || node.querySelector(ITEM) !== null);
+        let touched = false;
+        for (const record of records) {
+            const target = record.target;
+            const own = target instanceof Element ? target.closest<HTMLElement>(ITEM) : null;
+            if (own && container.contains(own)) {
+                this.dirty.add(own);
+                touched = true;
+            }
+            if (!this.structural) {
+                const changed = (nodes: NodeList) => Array.from(nodes).some(holdsItem);
+                if (changed(record.addedNodes) || changed(record.removedNodes)) {
+                    this.structural = true;
+                    touched = true;
+                }
+            }
+        }
+        if (touched) this.schedule();
     }
 
     /** Make every group's active item its tab stop, and take the rest out of the Tab order. */
@@ -184,12 +229,14 @@ export class RovingNav {
             const items = model.itemsOf(group);
             let current = this.active.get(group);
             if (current === undefined || !items.includes(current)) {
+                // The group's own default first (today, or the 1st, when the month changed),
+                // else the nearest to where the stop was, else the first.
                 const remembered = this.lastIndex.get(group);
-                const fallback =
-                    current !== undefined && remembered !== undefined
+                current =
+                    items.find((id) => defaults.has(`${group}\u0000${id}`)) ??
+                    (remembered !== undefined
                         ? items[Math.min(remembered, items.length - 1)]
-                        : (items.find((id) => defaults.has(`${group}\u0000${id}`)) ?? items[0]);
-                current = fallback;
+                        : items[0]);
                 this.active.set(group, current);
             }
             this.lastIndex.set(group, Math.max(0, items.indexOf(current)));
@@ -203,7 +250,8 @@ export class RovingNav {
     }
 
     private applyStop(el: HTMLElement, isActive: boolean, keepInner: boolean) {
-        el.setAttribute("tabindex", isActive ? "0" : "-1");
+        const own = isActive ? "0" : "-1";
+        if (el.getAttribute("tabindex") !== own) el.setAttribute("tabindex", own);
         const restore = keepInner && isActive;
         for (const inner of el.querySelectorAll<HTMLElement>(FOCUSABLE)) {
             // An item nested in an item is its own stop (none today); a text field keeps its own tabindex.
@@ -329,6 +377,9 @@ export class RovingNav {
             this.pending = { group: target.group, item: target.item };
             this.pendingTimer = setTimeout(() => this.clearPending(), PENDING_MS);
             config.onOutside({ group: target.group, item: target.item });
+            // The host may not change anything (the day is on this grid already): look now.
+            this.structural = true;
+            this.schedule();
             return;
         }
         if (target.group === from.group && target.item === from.item) return;

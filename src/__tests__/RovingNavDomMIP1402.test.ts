@@ -101,6 +101,26 @@ describe("one tab stop per group", () => {
         expect(inner(c, "a").hasAttribute("data-roving-tabindex")).toBe(false);
     });
 
+    it("when the active day goes with a month change, the group's default is the stop, not the same grid index", async () => {
+        const c = build({ month: ["2026-11-29", "2026-11-30", "2026-12-01"] });
+        item(c, "2026-11-30").setAttribute("data-roving-default", "");
+        attach(nav({ move: monthMove }), c);
+        item(c, "2026-12-01").focus();
+        expect(stops(c)).toEqual(["2026-12-01"]);
+        // the next month's grid replaces the cells; its default is the 1st
+        c.innerHTML = "";
+        for (const id of ["2027-01-01", "2027-01-02", "2027-01-03"]) {
+            const el = document.createElement("div");
+            el.setAttribute("data-roving-group", "month");
+            el.setAttribute("data-roving-item", id);
+            el.setAttribute("tabindex", "0");
+            if (id === "2027-01-01") el.setAttribute("data-roving-default", "");
+            c.appendChild(el);
+        }
+        await flush();
+        expect(stops(c)).toEqual(["2027-01-01"]);
+    });
+
     it("an item that is focused (a click, a Tab) becomes its group's stop", () => {
         const c = build({ open: ["a", "b", "c"], wip: ["d"] });
         attach(nav(), c);
@@ -211,6 +231,30 @@ describe("items come and go", () => {
         item(c, "b").remove();
         await flush();
         expect(stops(c)).toEqual(["c"]);
+    });
+
+    it("a control that re-mounts inside an item is fixed up without reading the whole surface", async () => {
+        const c = build({ open: ["a", "b"] });
+        attach(nav({ keepInner: true }), c);
+        const spy = vi.spyOn(c, "querySelectorAll");
+        const fresh = document.createElement("button");
+        fresh.setAttribute("tabindex", "0");
+        item(c, "b").replaceChildren(fresh);
+        await flush();
+        expect(fresh.getAttribute("tabindex")).toBe("-1");
+        // the surface-wide item query is not run for a change inside one item
+        expect(spy.mock.calls.filter(([q]) => String(q) === "[data-roving-item]")).toHaveLength(0);
+    });
+
+    it("a drag's placeholders and text changes do not make it read the surface", async () => {
+        const c = build({ open: ["a", "b"] });
+        attach(nav(), c);
+        const spy = vi.spyOn(c, "querySelectorAll");
+        const placeholder = document.createElement("div");
+        c.appendChild(placeholder);
+        placeholder.remove();
+        await flush();
+        expect(spy).not.toHaveBeenCalled();
     });
 
     it("a new item is taken out of the Tab order", async () => {
@@ -326,6 +370,15 @@ describe("a move to a day that is not there yet", () => {
         await flush();
         expect(document.activeElement).toBe(dec);
         expect(stops(c)).toEqual(["2026-12-01"]);
+    });
+
+    it("focuses the day at once when the host had it on screen already", async () => {
+        const c = build({ month: ["2026-11-05", "2026-12-05"] });
+        attach(nav({ move: monthMove, onOutside: vi.fn() }), c);
+        item(c, "2026-11-05").focus();
+        key(item(c, "2026-11-05"), "PageDown"); // Dec 5 IS in the model: no mutation will come
+        await flush();
+        expect(document.activeElement).toBe(item(c, "2026-12-05"));
     });
 
     it("swallows the key when the host cannot show the day", () => {

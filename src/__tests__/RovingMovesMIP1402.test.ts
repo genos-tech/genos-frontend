@@ -95,21 +95,25 @@ describe("monthMove (the date grid)", () => {
         expect(go("2026-11-11", "rowEnd")).toEqual({ group: "month", item: "2026-11-14" });
     });
 
-    it("PageUp / PageDown are a month, a short month clamps to its last day", () => {
-        // Dec 11 is still on the 6-week November grid; Oct 11 is not, so the host shows October.
-        expect(go("2026-11-11", "pageDown")).toEqual({ group: "month", item: "2026-12-11" });
+    it("PageUp / PageDown are a month, a short month clamps to its last day, and the host always shows it", () => {
+        // Dec 11 is on the 6-week November grid too, but it is December's: the host switches month.
+        expect(go("2026-11-11", "pageDown")).toEqual({
+            group: "month",
+            item: "2026-12-11",
+            outside: true,
+        });
         expect(go("2026-11-11", "pageUp")).toEqual({
             group: "month",
             item: "2026-10-11",
             outside: true,
         });
-        expect(go("2026-12-31", "pageDown")).toBeNull(); // not a day of this grid: no position
         const jan = model({ month: [dayId(new Date(2027, 0, 31))] });
         expect(monthMove(jan, { group: "month", item: "2027-01-31" }, "pageDown")).toEqual({
             group: "month",
             item: "2027-02-28",
             outside: true,
         });
+        expect(go("2026-12-31", "pageDown")).toBeNull(); // not a day of this grid: no position
     });
 
     it("a day outside the grid is returned as such, for the host to show its month", () => {

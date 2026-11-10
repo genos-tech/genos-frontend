@@ -99,10 +99,12 @@ const SprintBoardCardImpl = ({
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    {...{
-                        [ROVING_GROUP_ATTR]: columnId,
-                        [ROVING_ITEM_ATTR]: task.id?.toString() || "",
-                    }}
+                    {...(task.id != null && task.id !== ""
+                        ? {
+                              [ROVING_GROUP_ATTR]: columnId,
+                              [ROVING_ITEM_ATTR]: String(task.id),
+                          }
+                        : {})}
                     keys={["Enter"]}
                     sx={{
                         mb: 0.75,

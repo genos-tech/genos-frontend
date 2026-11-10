@@ -9,6 +9,8 @@
 // (group, item) ids, never by DOM node, so the stop survives a re-render: a card that is
 // moved to another column keeps being the stop of that column.
 
+import dayjs, { type Dayjs } from "dayjs";
+
 import { intentForKey, type GridIntent } from "../../../features/tasks/components/table/gridNav";
 
 export { intentForKey };
@@ -93,37 +95,20 @@ export const columnMove: RovingMove = (model, from, intent) => {
     }
 };
 
-/** "YYYY-MM-DD", the item id of a day. Local time, as the grid is. */
-export const dayId = (d: Date): string =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+/** "YYYY-MM-DD", the item id of a day: the format the calendar views write on their cells. */
+export const dayId = (d: Date | Dayjs): string => dayjs(d).format("YYYY-MM-DD");
 
-const parseDay = (id: string): Date => {
-    const [y, m, d] = id.split("-").map(Number);
-    return new Date(y, m - 1, d);
-};
-
-const addDays = (id: string, n: number): string => {
-    const d = parseDay(id);
-    d.setDate(d.getDate() + n);
-    return dayId(d);
-};
+const addDays = (id: string, n: number): string => dayjs(id).add(n, "day").format("YYYY-MM-DD");
 
 /** Same day of the neighbouring month, or its last day when that is shorter (Jan 31 -> Feb 28). */
-const addMonths = (id: string, n: number): string => {
-    const d = parseDay(id);
-    const day = d.getDate();
-    d.setDate(1);
-    d.setMonth(d.getMonth() + n);
-    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    d.setDate(Math.min(day, last));
-    return dayId(d);
-};
+const addMonths = (id: string, n: number): string =>
+    dayjs(id).add(n, "month").format("YYYY-MM-DD");
 
 /**
  * The WAI-ARIA date grid on a 6x7 month: ONE group of consecutive days, one row per week.
  * Left / Right a day, Up / Down a week, Home / End the start / end of the week, PageUp /
- * PageDown a month. A day that is not in the grid comes back with `outside` set and the
- * host shows its month. Ctrl+Home / Ctrl+End are not claimed (no meaningful day).
+ * PageDown a month. A day that is not in the grid, and every page move, comes back with
+ * `outside` set and the host shows that day's month. Ctrl+Home / Ctrl+End are not claimed (no meaningful day).
  */
 export const monthMove: RovingMove = (model, from, intent) => {
     const days = model.itemsOf(from.group);
@@ -147,10 +132,13 @@ export const monthMove: RovingMove = (model, from, intent) => {
             return to(days[Math.floor(at / 7) * 7]);
         case "rowEnd":
             return to(days[Math.min(days.length - 1, Math.floor(at / 7) * 7 + 6)]);
+        // A month is a month ON SCREEN: the target can be one of the dimmed days of the
+        // neighbouring month this grid also shows, and the host still has to switch to it
+        // (else PageDown from the 3rd would land on the next month's 3rd and skip it).
         case "pageUp":
-            return to(addMonths(from.item, -1));
+            return { group: from.group, item: addMonths(from.item, -1), outside: true };
         case "pageDown":
-            return to(addMonths(from.item, 1));
+            return { group: from.group, item: addMonths(from.item, 1), outside: true };
         default:
             return null;
     }
