@@ -1436,6 +1436,8 @@ export const hi: DeepPartial<Messages> = {
                 title: "ग्लोबल",
                 description:
                     "कहीं भी उपलब्ध। अब अक्षर वाले शॉर्टकट नेविगेशन को क्रिएशन ऐक्शन के साथ जोड़ते हैं; साइकल जेस्चर macOS के Cmd+Tab स्विचर की तरह काम करता है।",
+                editorNote:
+                    "Windows और Linux पर, एडिटर या टेक्स्ट फ़ील्ड में टाइप करते समय Ctrl+Alt अक्षर वाले शॉर्टकट कुछ नहीं करते, इसलिए एडिटर अपनी Ctrl+Alt कुंजियाँ रखता है (Ctrl+Alt+C कोड ब्लॉक है)।",
                 rows: {
                     spotlight: "Spotlight सर्च खोलें",
                     tasksNew: "टास्क खोलें और एक नया टास्क शुरू करें",

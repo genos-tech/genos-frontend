@@ -1163,6 +1163,8 @@ export const es: DeepPartial<Messages> = {
                 title: "Globales",
                 description:
                     "Disponibles en cualquier lugar. Los atajos de letras combinan navegación con una acción de creación; el gesto de ciclo funciona como el conmutador Cmd+Tab de macOS.",
+                editorNote:
+                    "En Windows y Linux, los atajos de letra con Ctrl+Alt no hacen nada mientras escribes en un editor o un campo de texto, así que el editor conserva sus propias teclas Ctrl+Alt (Ctrl+Alt+C es un bloque de código).",
                 rows: {
                     spotlight: "Abrir búsqueda Spotlight",
                     tasksNew: "Abrir Tareas y empezar una nueva tarea",

@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
-import { currentPlatform, matchesShortcut, type ShortcutId } from "../../shortcuts";
+import {
+    currentPlatform,
+    editablePolicy,
+    isEditableTarget,
+    matchesShortcut,
+    type ShortcutId,
+} from "../../shortcuts";
 
 // Ordered list of services. The array index doubles as the service id,
 // which is what `mruOrder` stores. Mirrors the NAV_ITEMS table in
@@ -289,6 +295,11 @@ export const useGlobalServiceShortcut = (
             for (const [id, option] of LETTER_ACTIONS) {
                 const run = optionsRef.current?.[option] as (() => void) | undefined;
                 if (!run || !matchesShortcut(id, e, platform)) continue;
+                // Windows/Linux: Ctrl+Alt+<letter> in an editor belongs to the editor
+                // (Ctrl+Alt+C is its code block, AltGr+letter types text): do nothing and
+                // leave the event alone (MIP-1311).
+                if (editablePolicy(id, platform) === "skip" && isEditableTarget(e.target))
+                    continue;
                 e.preventDefault();
                 if (previewIndexRef.current !== null) setPreviewIndex(null);
                 run();

@@ -67,11 +67,24 @@ export type ShortcutDef = {
     keys: Record<Platform, readonly Chord[]>;
     /** Row label, read from the existing `settings.shortcuts` strings. Takes a partial catalog so the locale test can read raw files. */
     label: (t: ShortcutCatalog) => string | undefined;
-    /** Fire while the focus is in an input, textarea or contenteditable? */
-    editable: EditablePolicy;
+    /**
+     * Fire while the focus is in an input, textarea or contenteditable? One answer, or one
+     * per platform (the letter chords skip editors on Windows/Linux only, see `LETTER_EDITABLE`).
+     */
+    editable: EditablePolicy | Record<Platform, EditablePolicy>;
 };
 
 const NONE: Record<Platform, readonly Chord[]> = { mac: [], other: [] };
+
+/**
+ * The `Ctrl+Alt+<letter>` family (MIP-1311). On Windows and Linux BlockNote's own
+ * `Mod-Alt-c` (code block) is the same chord (`Mod` is Ctrl there), so pressing it in a
+ * composer or note opened the calendar AND made a code block; AltGr+letter, which
+ * reports ctrl+alt, has the same exposure in any text field. Ken's decision: the global
+ * chord does nothing while typing in an editor or text field, and the editor keeps its
+ * key. The Mac chord (Ctrl+Cmd) overlaps nothing, so it keeps working everywhere.
+ */
+const LETTER_EDITABLE: Record<Platform, EditablePolicy> = { mac: "allow", other: "skip" };
 
 /**
  * `Ctrl+Cmd+<letter>` on Mac, `Ctrl+Alt+<letter>` elsewhere. The "other"
@@ -107,7 +120,7 @@ export const SHORTCUTS = {
         group: "global",
         keys: letter("t"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.tasksNew,
-        editable: "allow",
+        editable: LETTER_EDITABLE,
     },
     "global.notesNew": {
         kind: "chord",
@@ -115,7 +128,7 @@ export const SHORTCUTS = {
         group: "global",
         keys: letter("n"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.notesNew,
-        editable: "allow",
+        editable: LETTER_EDITABLE,
     },
     "global.calendar": {
         kind: "chord",
@@ -123,7 +136,7 @@ export const SHORTCUTS = {
         group: "global",
         keys: letter("c"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.calendar,
-        editable: "allow",
+        editable: LETTER_EDITABLE,
     },
     "global.meetClipboard": {
         kind: "chord",
@@ -131,7 +144,7 @@ export const SHORTCUTS = {
         group: "global",
         keys: letter("m"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.meetClipboard,
-        editable: "allow",
+        editable: LETTER_EDITABLE,
     },
     "global.history": {
         kind: "chord",
@@ -139,7 +152,7 @@ export const SHORTCUTS = {
         group: "global",
         keys: letter("h"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.openHistory,
-        editable: "allow",
+        editable: LETTER_EDITABLE,
     },
     "global.taskGraph": {
         kind: "chord",
@@ -147,7 +160,7 @@ export const SHORTCUTS = {
         group: "global",
         keys: letter("g"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.openTaskDiagram,
-        editable: "allow",
+        editable: LETTER_EDITABLE,
     },
     "global.todo": {
         kind: "chord",
@@ -155,7 +168,7 @@ export const SHORTCUTS = {
         group: "global",
         keys: letter("x"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.openTodo,
-        editable: "allow",
+        editable: LETTER_EDITABLE,
     },
     // Hold Cmd (Alt elsewhere) and tap Ctrl. The listener stays in
     // `useGlobalServiceShortcut` (it needs the keyup and the overlay state); the
@@ -274,6 +287,15 @@ export const matchesShortcut = (
 ): boolean => {
     const def: ShortcutDef = SHORTCUTS[id];
     return def.keys[platform].some((chord) => chordMatches(chord, event));
+};
+
+/** What a shortcut does inside a text field on `platform`. */
+export const editablePolicy = (
+    id: ShortcutId,
+    platform: Platform = currentPlatform()
+): EditablePolicy => {
+    const policy: ShortcutDef["editable"] = SHORTCUTS[id].editable;
+    return typeof policy === "string" ? policy : policy[platform];
 };
 
 /** Is the event's target a text field, where a plain-text shortcut must stay out of the way? */

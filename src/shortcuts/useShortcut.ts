@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { isEditableTarget, matchesShortcut, SHORTCUTS, type ShortcutId } from "./registry";
+import { editablePolicy, isEditableTarget, matchesShortcut, type ShortcutId } from "./registry";
 
 type Options = {
     /** Attach to `window` instead of `document` (the create-task form always did). */
@@ -35,7 +35,7 @@ export const useShortcut = (
         const onKeyDown = (event: Event) => {
             const e = event as KeyboardEvent;
             if (!matchesShortcut(id, e)) return;
-            if (SHORTCUTS[id].editable === "skip" && isEditableTarget(e.target)) return;
+            if (editablePolicy(id) === "skip" && isEditableTarget(e.target)) return;
             handlerRef.current(e);
         };
         host.addEventListener("keydown", onKeyDown);

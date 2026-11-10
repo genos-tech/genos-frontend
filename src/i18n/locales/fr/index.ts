@@ -4335,6 +4335,8 @@ export const fr: DeepPartial<Messages> = {
                 title: "Global",
                 description:
                     "Disponibles partout. Les raccourcis par lettre combinent désormais la navigation avec une action de création ; le geste de cycle fonctionne comme le sélecteur Cmd+Tab de macOS.",
+                editorNote:
+                    "Sous Windows et Linux, les raccourcis par lettre Ctrl+Alt ne font rien pendant que vous saisissez dans un éditeur ou un champ de texte : l'éditeur garde ses propres touches Ctrl+Alt (Ctrl+Alt+C est un bloc de code).",
                 rows: {
                     spotlight: "Ouvrir la recherche Spotlight",
                     tasksNew: "Ouvrir Tâches et créer une nouvelle tâche",
