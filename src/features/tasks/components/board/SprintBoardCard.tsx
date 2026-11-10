@@ -35,6 +35,9 @@ type SprintBoardCardProps = {
     // must be identity-stable in the parent (this component is React.memo).
     milestone?: Milestone;
     sprintName?: string | null;
+    // The card sits in the Closed column: its own status may still say Open when a
+    // Closed ancestor put it there (MIP-1389), and a closed card has no due badge.
+    inClosedColumn?: boolean;
 };
 
 const SprintBoardCardImpl = ({
@@ -45,6 +48,7 @@ const SprintBoardCardImpl = ({
     isSelected = false,
     milestone,
     sprintName = null,
+    inClosedColumn = false,
 }: SprintBoardCardProps) => {
     const { t } = useTranslation();
 
@@ -116,7 +120,7 @@ const SprintBoardCardImpl = ({
                             dragging={snapshot.isDragging}
                             headerEnd={diagramButton}
                             selected={isSelected}
-                            showDue={task.status !== "Closed"}
+                            showDue={task.status !== "Closed" && !inClosedColumn}
                             task={task}
                         />
                     )}
