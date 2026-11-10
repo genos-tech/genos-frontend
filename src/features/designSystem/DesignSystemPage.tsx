@@ -470,6 +470,22 @@ const roleRows = (r: RoleColors): { group: string; rows: RoleRow[] }[] => {
                     min: 4.5,
                 },
                 {
+                    name: "link",
+                    value: r.link,
+                    paint: r.link,
+                    use: "Links, quote bars and code ink in chat bubbles and comments",
+                    ratio: onSurface(r.link),
+                    min: 4.5,
+                },
+                {
+                    name: "text-quote",
+                    value: r.textQuote,
+                    paint: r.textQuote,
+                    use: "Quoted text in a bubble (link-visited and link-hover sit beside link)",
+                    ratio: onSurface(r.textQuote),
+                    min: 4.5,
+                },
+                {
                     name: "accent-subtle",
                     value: a(r.accentSubtle),
                     paint: a(r.accentSubtle),

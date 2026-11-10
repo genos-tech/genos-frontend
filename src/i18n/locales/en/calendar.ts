@@ -1,4 +1,5 @@
 export const calendar = {
+    eventsLoadFailed: "Couldn't load your events",
     title: "Calendar",
     today: "Today",
     prevMonth: "Previous month",
@@ -73,6 +74,7 @@ export const calendar = {
     // Multi-account overlay: the side rail that picks which accounts
     // and calendars are drawn on the grid at once.
     sources: {
+        loadFailed: "Couldn't load your calendars",
         title: "Calendars",
         addAccount: "Add Google account",
         showAllFrom: "Show all calendars from this account",

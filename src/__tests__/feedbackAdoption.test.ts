@@ -127,6 +127,24 @@ describe("feedback adoption", () => {
         }
     });
 
+    it("MIP-1306: the create-task pane, the linked-PR card and the security list use ErrorState", () => {
+        const text = (path: string) => files.find(({ f }) => f === path)?.text ?? "";
+        for (const f of [
+            "features/tasks/components/contents/base/TaskPaneError.tsx",
+            "features/integrations/components/LinkedPrCard.tsx",
+            "components/layout/MySecurityActivity.tsx",
+        ]) {
+            expect(text(f), f).toContain("ui/feedback/ErrorState");
+        }
+        expect(text("components/layout/MySecurityActivity.tsx")).toContain(
+            "ui/feedback/DataState"
+        );
+        // The pane that used to be a gradient with an amber-to-red bar has no color literal left.
+        expect(text("features/tasks/components/contents/base/TaskPaneError.tsx")).not.toMatch(
+            /#[0-9a-fA-F]{3,8}\b|rgba?\(/
+        );
+    });
+
     it("MIP-1173: no raw CircularProgress outside the Spinner and the determinate upload rings", () => {
         // Rule: in a button -> the Button's `loading`; a list -> SkeletonRows; a block of
         // text -> SkeletonLines; anything else -> Spinner (with a `caption` for a page).

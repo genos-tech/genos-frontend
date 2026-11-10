@@ -212,6 +212,7 @@ export const zh: DeepPartial<Messages> = {
             uploadFailed: "上传团队头像失败。",
         },
         connectedTeams: {
+            loadFailed: "无法加载已连接的团队",
             title: "已连接团队",
             explainer:
                 "连接后，你可以与其他组织共享指定的聊天、项目或笔记文件夹。仅建立连接不会授予对方任何访问权限。",
@@ -383,6 +384,7 @@ export const zh: DeepPartial<Messages> = {
             unexpected: "发生了意外错误，请重试。",
         },
         projectLabels: {
+            loadFailed: "无法加载项目标签",
             sectionLabel: "标签",
             manageTooltip: "编辑标签",
             manageHeading: "项目标签",
@@ -822,6 +824,7 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     calendar: {
+        eventsLoadFailed: "无法加载你的日程",
         title: "日历",
         today: "今天",
         prevMonth: "上个月",
@@ -880,6 +883,7 @@ export const zh: DeepPartial<Messages> = {
             seriesTimingNote: "编辑整个系列不会移动系列日期；如需改期，请编辑单次日程。",
         },
         sources: {
+            loadFailed: "无法加载你的日历",
             title: "日历",
             addAccount: "添加 Google 账号",
             showAllFrom: "显示此账号的所有日历",
@@ -965,6 +969,7 @@ export const zh: DeepPartial<Messages> = {
             tag: "标签",
             general: "常规",
             newTagPlaceholder: "新标签",
+            addTag: "添加标签",
             tags: {
                 manageTitle: "管理标签",
                 manageTooltip: "管理标签",
@@ -1164,6 +1169,7 @@ export const zh: DeepPartial<Messages> = {
             threadChip: "话题",
         },
         gmTags: {
+            loadFailed: "无法加载你的标签",
             assignTitle: "{name} 的标签",
             cancelButton: "取消",
             createButton: "添加",
@@ -2548,6 +2554,7 @@ export const zh: DeepPartial<Messages> = {
                 connectPrompt: "连接 GitHub 以查看 PR 状态",
                 connectButton: "连接 GitHub",
                 privateOrDeleted: "此 PR 所在仓库对你不可见，或 PR 已被删除。",
+                loadFailed: "无法加载此 PR。",
                 state: {
                     merged: "已合并",
                     draft: "草稿",
@@ -2645,7 +2652,6 @@ export const zh: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "无法加载笔记摘要。",
-            retry: "重试",
             forbidden: "你无权访问此笔记。",
         },
     },
@@ -2931,6 +2937,8 @@ export const zh: DeepPartial<Messages> = {
             },
         },
         history: {
+            detailLoadFailed: "无法加载此版本",
+            listLoadFailed: "无法加载版本历史",
             chipTooltip: "查看版本历史",
             viewVersions: "查看版本",
             chipSummary: "由 {name} 编辑 · {time}",
@@ -3234,6 +3242,7 @@ export const zh: DeepPartial<Messages> = {
             everyoneAlreadyMember: "每个人都已经是成员了。",
         },
         customEmoji: {
+            loadFailed: "无法加载自定义表情",
             heading: "自定义表情符号",
             description:
                 "欢迎使用团队范围内的表情符号、动画 GIF。在任何编辑器中输入：名称：，从表情符号选择器中选择它们，或将它们用作反应。团队中的任何人都可以添加一个；只有上传者才能将其删除。",
@@ -3417,7 +3426,6 @@ export const zh: DeepPartial<Messages> = {
             activityEmpty: "暂无记录。",
             activityLoadFailed: "无法加载你的安全活动。",
             activityLoadMore: "显示更早的记录",
-            activityRetry: "重试",
             teamsHeading: "你的团队",
             teamsDescription:
                 "退出团队后，你将无法再访问该团队的聊天、项目和笔记。你的账户和其他团队不受影响，之后也可以再次被邀请加入。",
@@ -4773,9 +4781,7 @@ export const zh: DeepPartial<Messages> = {
         createForm: {
             taskDetails: "任务详情",
             preparing: "准备任务…",
-            bootstrapFailed: "无法准备新任务。请检查网络连接后重试。",
-            bootstrapRetry: "重试",
-            bootstrapCancel: "取消",
+            bootstrapFailed: "无法准备新任务",
             discardTaskTitle: "放弃此草稿？",
             discardTaskBody: "标题、正文和附件将丢失，此操作无法撤销。",
             discardMilestoneTitle: "放弃此里程碑草稿？",
@@ -5647,7 +5653,6 @@ export const zh: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "无法加载话题摘要。",
-            retry: "重试",
             forbidden: "你无权访问此话题。",
         },
     },

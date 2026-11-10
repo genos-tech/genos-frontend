@@ -11,6 +11,7 @@ import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { HeaderUserNameStyles } from "../../../../components/ui/styles/commonStyle";
+import { invisibleHitAreaSx } from "../../../../components/ui/touchTargets";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -94,6 +95,8 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     background: styles.avatarBg,
                     border: `1px solid ${styles.avatarBorder}`,
                     transition: "all 0.2s ease",
+                    // The avatar opens the chat's profile: 38px drawn, a 44px tap on a phone.
+                    ...invisibleHitAreaSx("& [role='button']"),
                     "&:hover": {
                         background: isDark
                             ? "rgba(var(--gp-brand-700-rgb), 0.15)"

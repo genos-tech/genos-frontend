@@ -218,6 +218,7 @@ export const admin = {
     // bearing: a connection grants nothing, and "connect" read as "give
     // them access" is the one misunderstanding that would matter.
     connectedTeams: {
+        loadFailed: "Couldn't load connected teams",
         title: "Connected teams",
         explainer:
             "Connecting lets you share a specific chat, project, or note folder with another organization later. On its own it gives them access to nothing.",
@@ -411,6 +412,7 @@ export const admin = {
     // project list. Distinct from `tasks.*.tags`, which are the
     // per-project tags applied to tasks.
     projectLabels: {
+        loadFailed: "Couldn't load project labels",
         sectionLabel: "Tags",
         manageTooltip: "Edit tags",
         manageHeading: "Project tags",

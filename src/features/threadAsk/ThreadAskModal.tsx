@@ -22,6 +22,7 @@ import { useTheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { ErrorState } from "../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
@@ -317,14 +318,12 @@ export const ThreadAskModal = ({
             ) : null}
 
             {state.summaryError ? (
-                <Alert color="danger" sx={{ mb: 1 }}>
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        <Typography level="body-sm">{state.summaryError}</Typography>
-                        <Button size="sm" variant="soft" onClick={state.refreshSummary}>
-                            {t.threadAsk.errors.retry}
-                        </Button>
-                    </Stack>
-                </Alert>
+                <ErrorState
+                    data-error="threadAsk-summary"
+                    size="xs"
+                    title={state.summaryError}
+                    onRetry={state.refreshSummary}
+                />
             ) : null}
 
             {state.summary ? (
