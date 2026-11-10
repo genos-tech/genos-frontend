@@ -200,6 +200,40 @@ describe("toast host", () => {
         ).toBe("assertive");
     });
 
+    it("a top banner lets taps through to the header under it; only its own buttons catch them (MIP-1327)", () => {
+        render(
+            wrap(
+                <>
+                    <Toast duration={null} open placement="top" tone="danger" dismissible={false}>
+                        Connection lost
+                    </Toast>
+                    <Toast
+                        action={{ label: "Retry", onClick: () => {} }}
+                        duration={null}
+                        open
+                        placement="top"
+                        tone="warning"
+                    >
+                        Could not sync
+                    </Toast>
+                    <Toast open>Saved</Toast>
+                </>
+            )
+        );
+        const cardOf = (text: string) => screen.getByText(text).closest("[data-toast-tone]")!;
+        const events = (el: Element) => getComputedStyle(el).pointerEvents;
+        // The passive banner never intercepts a tap.
+        expect(events(cardOf("Connection lost"))).toBe("none");
+        // The sync banner's card is see-through to taps too, but Retry and close are not.
+        expect(events(cardOf("Could not sync"))).toBe("none");
+        expect(events(screen.getByRole("button", { name: "Retry" }))).toBe("auto");
+        expect(events(cardOf("Could not sync").querySelector("button:last-of-type")!)).toBe(
+            "auto"
+        );
+        // A bottom toast stays interactive (hover pauses the timer).
+        expect(events(cardOf("Saved"))).toBe("auto");
+    });
+
     it("puts the connection and idle-reload banners in the top region", () => {
         render(
             wrap(

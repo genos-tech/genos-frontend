@@ -12,6 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { NoteModalHostZIndexProvider } from "../components/modals/noteModalHostZIndex";
+import { TOAST_REGION_Z_INDEX } from "../components/ui/feedback/toastLayers";
 import { MENU_ITEM_HEIGHT, MENU_ITEM_HEIGHT_COARSE } from "../components/ui/menu/menuStyles";
 import {
     MenuDivider,
@@ -237,20 +238,28 @@ describe("tokens", () => {
 describe("layer", () => {
     const zOf = (menu: HTMLElement) => getComputedStyle(menu).zIndex;
 
-    it("an explicit zIndex wins", async () => {
+    it("an explicit zIndex above the banner wins", async () => {
         const user = userEvent.setup();
-        render(<MoreMenu items={items()} zIndex={10021} />);
-        expect(zOf(await openMenu(user))).toBe("10021");
+        render(<MoreMenu items={items()} zIndex={14200} />);
+        expect(zOf(await openMenu(user))).toBe("14200");
     });
 
-    it("a modal-hosted note menu opens one above its host", async () => {
+    it("a host layer below the toast region is lifted just above it, so the persistent banner never covers the first row (MIP-1327)", async () => {
+        const user = userEvent.setup();
+        render(<MoreMenu items={items()} zIndex={10021} />);
+        expect(Number(zOf(await openMenu(user)))).toBe(TOAST_REGION_Z_INDEX + 1);
+    });
+
+    it("a modal-hosted note menu stays above its host, and above the toast region", async () => {
         const user = userEvent.setup();
         render(
             <NoteModalHostZIndexProvider value={10020}>
                 <MoreMenu items={items()} />
             </NoteModalHostZIndexProvider>
         );
-        expect(zOf(await openMenu(user))).toBe("10021");
+        const z = Number(zOf(await openMenu(user)));
+        expect(z).toBeGreaterThanOrEqual(10021);
+        expect(z).toBeGreaterThan(TOAST_REGION_Z_INDEX);
     });
 
     it("on a page surface it clears Joy modals (1300) and BlockNote (1400)", async () => {
