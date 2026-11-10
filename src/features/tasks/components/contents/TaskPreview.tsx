@@ -336,7 +336,12 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         const task = taskEditState.tmpCurrentTaskContent;
         if (task?.id == null || task.project?.projectId == null) return;
         if (taskEditState.taskUpdated || (taskEditState.taskBodyEdited && isBodyDirty())) {
-            await sendUpdatedTask(false);
+            try {
+                await sendUpdatedTask(false);
+            } catch (error) {
+                // A save that could not go out must not keep the person from deleting.
+                console.error("[TaskPreview] save before delete failed:", error);
+            }
         }
         deleteTask(
             { id: task.id, projectId: Number(task.project.projectId) },
