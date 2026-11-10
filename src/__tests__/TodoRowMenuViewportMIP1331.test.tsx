@@ -10,6 +10,7 @@
  * result (every row reachable by a real tap at 390 and 1440) is in the PR and in
  * `design/evidence/MIP-1331.md`.
  */
+import { Dropdown, MenuButton } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -17,6 +18,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cssWithMediaOf } from "./utils/cssOf";
 
 import { MENU_POPPER_MODIFIERS } from "../components/ui/menu/menuStyles";
+import { MenuRow, MenuSurface } from "../components/ui/MoreMenu";
 import { TodoItemMoreMenu } from "../features/chat/components/todo/TodoItemMoreMenu";
 
 const menu = vi.hoisted(() => ({ modifiers: [] as unknown[] }));
@@ -61,16 +63,34 @@ const openMenu = () => {
 };
 
 describe("the menu stays inside the viewport", () => {
-    it("slides on the cross axis, with room to spare at the edge", () => {
+    it("slides on the cross axis, with room to spare at the edge, still tethered", () => {
         expect(MENU_POPPER_MODIFIERS).toContainEqual({
             name: "preventOverflow",
-            options: expect.objectContaining({ altAxis: true, padding: 8 }),
+            options: { altAxis: true, padding: 8 },
         });
     });
 
     it("the surface hands those modifiers to the Joy Menu (and so to Popper)", () => {
         openMenu();
         expect(menu.modifiers).toBe(MENU_POPPER_MODIFIERS);
+    });
+});
+
+describe("a caller's own modifiers", () => {
+    it("are added to the viewport guard, not instead of it", () => {
+        const own = [{ name: "offset", options: { offset: [0, 12] } }];
+        render(
+            <CssVarsProvider>
+                <Dropdown>
+                    <MenuButton>open</MenuButton>
+                    <MenuSurface modifiers={own}>
+                        <MenuRow>row</MenuRow>
+                    </MenuSurface>
+                </Dropdown>
+            </CssVarsProvider>
+        );
+        fireEvent.click(screen.getByRole("button"));
+        expect(menu.modifiers).toEqual([...MENU_POPPER_MODIFIERS, ...own]);
     });
 });
 
@@ -82,7 +102,7 @@ describe("the new-tag controls on a touch screen", () => {
         for (const el of [field.closest("div")!, add]) {
             const css = cssWithMediaOf(el);
             expect(css, el.outerHTML.slice(0, 60)).toMatch(
-                /@media \(pointer: coarse\)[^{]*\{[^}]*min-height: 44px/
+                /@media \(pointer: coarse\)[^{]*\{[^}]*min-height: var\(--g-row-comfortable/
             );
         }
     });

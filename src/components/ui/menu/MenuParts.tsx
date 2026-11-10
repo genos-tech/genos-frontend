@@ -18,7 +18,7 @@
  * parts keep it and put the shared look on top.
  */
 
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, useMemo, type ReactNode } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import {
     Box,
@@ -67,11 +67,17 @@ export const MenuSurface = forwardRef<HTMLDivElement, MenuSurfaceProps>(function
     // The diagram context defaults to the page layer (9999), so +1 is only a
     // real lift when a host provided something higher.
     const layer = zIndex ?? (noteHostZ ?? diagramZ) + 1;
+    // A caller's own modifiers add to the viewport guard; they do not replace it. The array
+    // identity is stable (Joy memoizes on it) unless the caller's changes.
+    const popperModifiers = useMemo(
+        () => (modifiers ? [...MENU_POPPER_MODIFIERS, ...modifiers] : MENU_POPPER_MODIFIERS),
+        [modifiers]
+    );
     return (
         <Menu
             {...rest}
             ref={ref}
-            modifiers={modifiers ?? MENU_POPPER_MODIFIERS}
+            modifiers={popperModifiers}
             size="sm"
             sx={[menuSurfaceSx, { zIndex: layer }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
             onClick={(event) => {
