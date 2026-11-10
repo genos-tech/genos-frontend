@@ -79,6 +79,11 @@ const graph = () => ({
 const setAllTasks = vi.fn();
 const loadUpdatedTask = vi.fn().mockResolvedValue(undefined);
 
+const onOverviewChange = vi.fn();
+/** The last overview the canvas gave the modal header ("closed/total"). */
+const lastOverview = () =>
+    onOverviewChange.mock.calls.at(-1)?.[0] as { total: number; closed: number } | undefined;
+
 const renderCanvas = () =>
     render(
         <CssVarsProvider>
@@ -99,6 +104,7 @@ const renderCanvas = () =>
                         } as never
                     }
                     onCloseModal={vi.fn()}
+                    onOverviewChange={onOverviewChange}
                 />
             </div>
         </CssVarsProvider>
@@ -123,6 +129,7 @@ describe("graph delete", () => {
             return { ok: true };
         });
         setAllTasks.mockReset();
+        onOverviewChange.mockReset();
         vi.spyOn(console, "error").mockImplementation(() => {});
     });
     afterEach(() => {
@@ -195,5 +202,40 @@ describe("graph delete", () => {
 
         expect(await screen.findByTestId("delete-2")).toBeTruthy();
         expect(setAllTasks).not.toHaveBeenCalled();
+    });
+
+    it("the header counter leaves the pending card out at once, and Undo counts it again", async () => {
+        renderCanvas();
+        await waitFor(() => expect(lastOverview()?.total).toBe(1));
+        await deleteCard(2);
+        await waitFor(() => expect(lastOverview()?.total).toBe(0));
+        act(() => {
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "z", ctrlKey: true }));
+        });
+        await waitFor(() => expect(lastOverview()?.total).toBe(1));
+    });
+
+    it("a refresh of the graph in the window keeps the counter without the pending card", async () => {
+        renderCanvas();
+        await deleteCard(2);
+        await waitFor(() => expect(lastOverview()?.total).toBe(0));
+        // The server still says Open: the fresh load must not count the card again.
+        await act(async () => {
+            window.dispatchEvent(
+                new CustomEvent("genos:task-touched", { detail: { taskId: 1, kind: "update" } })
+            );
+        });
+        await waitFor(() => expect(loadTaskGraph.mock.calls.length).toBeGreaterThan(1));
+        expect(lastOverview()?.total).toBe(0);
+    });
+
+    it("after the commit the counter stays without the card", async () => {
+        renderCanvas();
+        await deleteCard(2);
+        await waitFor(() => expect(lastOverview()?.total).toBe(0));
+        await endWindow();
+        await waitFor(() => expect(patchTaskFields).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        expect(lastOverview()?.total).toBe(0);
     });
 });

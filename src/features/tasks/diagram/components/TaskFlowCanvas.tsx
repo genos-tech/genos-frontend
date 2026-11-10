@@ -633,6 +633,32 @@ const CanvasInner = ({
     // is closed and reopened.
     const newTaskIdsRef = useRef<Set<number>>(new Set());
 
+    // Tasks whose delete waits behind its Undo toast (MIP-1303). A ref, so the
+    // assembly and the overview below keep their identity (they are dependencies of
+    // the layout effects).
+    const undoHidden = useUndoHidden();
+    const undoHiddenRef = useRef(undoHidden);
+    undoHiddenRef.current = undoHidden;
+
+    // The header overview (progress, counts, health) of the graph WITH the pending
+    // deletes applied: a card waiting behind its Undo toast is already off the canvas
+    // and must not count in "0/1" either. The burndown arrives later than the rest
+    // (its own request), so the last one is kept for a re-publish that only follows a
+    // delete starting or ending.
+    const burndownRef = useRef<ScheduleOverview["burndown"]>(null);
+    const publishOverview = useCallback(
+        (loadedGraph: TaskGraph): ScheduleOverview | null => {
+            if (!onOverviewChange) return null;
+            const graph = overlayGraphDeletes(loadedGraph, undoHiddenRef.current);
+            const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
+            const blockerMap = buildOpenBlockerCountByTask(graph);
+            const overview = computeOverview(graph, sprintByTaskId, blockerMap);
+            onOverviewChange({ ...overview, burndown: burndownRef.current });
+            return overview;
+        },
+        [onOverviewChange, useSM, projectId]
+    );
+
     const refresh = useCallback(async () => {
         setError(null);
         const graph = await loadTaskGraph(myself, projectId, rootTaskId, accessToken, scope);
@@ -649,10 +675,9 @@ const CanvasInner = ({
         // the chip + counts paint immediately, then patch in the chart
         // data after the (separately fetched) activity rollup lands.
         if (onOverviewChange) {
-            const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
-            const blockerMap = buildOpenBlockerCountByTask(graph);
-            const overview = computeOverview(graph, sprintByTaskId, blockerMap);
-            onOverviewChange(overview);
+            burndownRef.current = null;
+            const overview = publishOverview(graph);
+            if (!overview) return graph;
 
             // Fire-and-forget burndown fetch. Uses the same window the
             // health verdict came from (sprint dates when set, else
@@ -676,7 +701,8 @@ const CanvasInner = ({
                 void loadMilestoneBurndown(taskIds, window.start, window.end, accessToken).then(
                     (burndown) => {
                         if (burndown != null) {
-                            onOverviewChange({ ...overview, burndown });
+                            burndownRef.current = burndown;
+                            publishOverview(graphRef.current ?? graph);
                         }
                     }
                 );
@@ -690,7 +716,7 @@ const CanvasInner = ({
         scope,
         accessToken,
         onOverviewChange,
-        useSM,
+        publishOverview,
         t.tasks.diagram.errors.load,
     ]);
 
@@ -1010,12 +1036,6 @@ const CanvasInner = ({
         onOpenPreview: handleOpenPreview,
     };
 
-    // Tasks whose delete waits behind its Undo toast (MIP-1303). A ref, so the
-    // assembly below keeps its identity (it is a dependency of the layout effects).
-    const undoHidden = useUndoHidden();
-    const undoHiddenRef = useRef(undoHidden);
-    undoHiddenRef.current = undoHidden;
-
     const assembleAndLayout = useCallback(
         // `fit` re-frames the whole graph (zoom + pan) after layout. It's
         // wanted on initial load and when the hide-closed toggle flips
@@ -1119,7 +1139,9 @@ const CanvasInner = ({
     // graph, without re-framing the camera.
     const pendingDeletes = pendingDeleteSignature(undoHidden);
     useEffect(() => {
-        if (graphRef.current) assembleAndLayout(graphRef.current, { fit: false });
+        if (!graphRef.current) return;
+        assembleAndLayout(graphRef.current, { fit: false });
+        publishOverview(graphRef.current);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pendingDeletes]);
 
