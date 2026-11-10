@@ -5232,6 +5232,8 @@ export const zh: DeepPartial<Messages> = {
             },
             loadingTasks: "正在等待加载任务…",
             gridLabel: "任务表格",
+            rowActionsHeader: "行操作",
+            expandHeader: "展开",
             emptyTitle: "没有可显示的任务",
             emptyHint: "试试调整筛选条件",
             addTagsPlaceholder: "添加标签…",

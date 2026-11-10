@@ -5480,6 +5480,8 @@ export const fr: DeepPartial<Messages> = {
             },
             loadingTasks: "En attente du chargement des tâches…",
             gridLabel: "Tableau des tâches",
+            rowActionsHeader: "Actions de la ligne",
+            expandHeader: "Développer",
             emptyTitle: "Aucune tâche à afficher",
             emptyHint: "Essayez d'ajuster vos filtres",
             addTagsPlaceholder: "Ajouter des tags…",
