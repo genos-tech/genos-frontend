@@ -1079,6 +1079,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // a ref so a single stable `keydown` listener can call the latest
     // closure without re-binding on every render.
     const taskFooterRef = useRef<TaskCreateFooterHandle>(null);
+    const formRootRef = useRef<HTMLDivElement>(null);
     const shortcutLabel = shortcutText("taskCreate.submit");
     const isMilestoneSubmitDisabled =
         isCreatingMilestone ||
@@ -1104,7 +1105,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             e.preventDefault();
             shortcutHandlerRef.current();
         },
-        { target: "window" }
+        // The create form is where this chord lives: with the panel open beside
+        // the chat composer, Cmd/Ctrl+Enter there only sends the message.
+        { target: "window", within: formRootRef }
     );
 
     // "Has the user actually entered anything worth confirming before
@@ -1173,6 +1176,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         <>
             {taskContent && taskContent.id ? (
                 <Sheet
+                    ref={formRootRef}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
                         minHeight: 500,
