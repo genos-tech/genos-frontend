@@ -134,16 +134,15 @@ describe("MonthView", () => {
         const wed = cell(container, "2026-11-11");
         wed.focus();
         fireEvent.keyDown(wed, { key: "PageDown" });
-        expect(h.onNavigateToDay).not.toHaveBeenCalled(); // Dec 11 is still on this grid
-        expect(document.activeElement).toBe(cell(container, "2026-12-11"));
-        fireEvent.keyDown(document.activeElement!, { key: "PageUp" });
-        fireEvent.keyDown(document.activeElement!, { key: "PageUp" });
+        // A month on screen: Dec 11 is on this grid too, but the host shows December.
         expect(h.onNavigateToDay).toHaveBeenCalledTimes(1);
-        expect(h.onNavigateToDay.mock.calls[0][0].format("YYYY-MM-DD")).toBe("2026-10-11");
+        expect(h.onNavigateToDay.mock.calls[0][0].format("YYYY-MM-DD")).toBe("2026-12-11");
+        fireEvent.keyDown(wed, { key: "PageUp" });
+        expect(h.onNavigateToDay.mock.calls[1][0].format("YYYY-MM-DD")).toBe("2026-10-11");
         const first = cell(container, "2026-11-01");
         first.focus();
         fireEvent.keyDown(first, { key: "ArrowLeft" });
-        expect(h.onNavigateToDay.mock.calls[1][0].format("YYYY-MM-DD")).toBe("2026-10-31");
+        expect(h.onNavigateToDay.mock.calls[2][0].format("YYYY-MM-DD")).toBe("2026-10-31");
     });
 
     it("Enter opens the list of a day that has events, creates on an empty one", () => {
