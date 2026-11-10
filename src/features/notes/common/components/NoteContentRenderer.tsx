@@ -214,7 +214,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     if (useNM.tabItems.length === 0) {
         // The route named a note and it would not open: say so (MIP-1307).
         if (useNM.noteOpenFailure) {
-            return <NoteOpenFailure useNM={useNM} onMobileBack={onMobileBack} />;
+            return <NoteOpenFailure useNM={useNM} onMobileBack={onMobileBack} socket={socket} />;
         }
         return (
             <EmptyState

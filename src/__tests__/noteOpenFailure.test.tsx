@@ -1,6 +1,7 @@
 // MIP-1276: clicking a note whose body is not cached, while the request FAILS, used to
 // do nothing at all: no tab, no message. It now says "Couldn't open this note" with a
-// Retry that asks again. A 403 is not a failure (the access-request panel owns it).
+// Retry that asks again. A 403 is not a failure to retry: with no tab open the pane offers
+// the access request (MIP-1330, noteOpenFailurePane.test.tsx), with one open a toast says so.
 //
 // MIP-1307: with NO tab open the toast (8 s) is not enough: the failure is kept in
 // `noteOpenFailure` for the pane (see noteOpenFailurePane.test.tsx); the toast is for
@@ -157,7 +158,7 @@ describe("opening a note from the sidebar when the request fails", () => {
         expect(toast?.action).toBeUndefined();
     });
 
-    it("a 403 is not a failure: no toast, no kept failure", async () => {
+    it("a 403 with no tab open is kept for the pane (access request), with no toast", async () => {
         vi.mocked(loadSpecificNote).mockResolvedValueOnce({ error: "forbidden" } as never);
         const hook = renderNm();
         await settle();
@@ -165,7 +166,30 @@ describe("opening a note from the sidebar when the request fails", () => {
             await hook.result.current.nm.loadNote(1, 7, 0);
         });
         expect(hook.result.current.toasts).toHaveLength(0);
+        expect(hook.result.current.nm.noteOpenFailure).toMatchObject({
+            noteId: 7,
+            reason: "forbidden",
+        });
+    });
+
+    it("a 403 with another note open is a toast without Retry; the note stays", async () => {
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce({ ...NOTE, noteId: 8 } as never);
+        const hook = renderNm();
+        await settle();
+        await act(async () => {
+            await hook.result.current.nm.loadNote(1, 8, 0);
+        });
+        await waitFor(() => expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(1));
+
+        vi.mocked(loadSpecificNote).mockResolvedValueOnce({ error: "forbidden" } as never);
+        await act(async () => {
+            await hook.result.current.nm.loadNote(1, 7, 0);
+        });
+        const toast = hook.result.current.toasts.find((t) => t.tone === "danger");
+        expect(toast?.message).toBe(en.notes.accessRequest.heading);
+        expect(toast?.action).toBeUndefined();
         expect(hook.result.current.nm.noteOpenFailure).toBeNull();
+        expect(hook.result.current.nm.tabsApi.tabs).toHaveLength(1);
     });
 
     it("clearNoteOpenFailure resets the kept failure", async () => {
