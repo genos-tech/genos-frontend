@@ -1,4 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
+import type { TaskGraph } from "../diagram/types";
 
 /**
  * A task delete waits behind an Undo toast (MIP-1303, `useDeleteTask`). While it
@@ -47,4 +48,25 @@ export const overlayPendingDeletes = (
         return { ...row, status: "Deleted" };
     });
     return changed ? next : rows;
+};
+
+/** The ids of the tasks whose delete is pending, as one stable string: a re-layout
+ *  that depends on it runs when a delete starts or ends and not for any other key. */
+export const pendingDeleteSignature = (hidden: ReadonlySet<string>): string =>
+    [...hidden]
+        .filter((key) => key.startsWith(PREFIX))
+        .sort()
+        .join(",");
+
+/**
+ * The task graph (the diagram keeps its own copy of the rows, loaded from the graph
+ * endpoint) with every pending delete shown as Deleted, so a card leaves the canvas
+ * when its toast opens and comes back on Undo. The same object when nothing applies.
+ */
+export const overlayGraphDeletes = (graph: TaskGraph, hidden: ReadonlySet<string>): TaskGraph => {
+    const tasks = overlayPendingDeletes(graph.tasks, hidden);
+    const externalTasks = overlayPendingDeletes(graph.externalTasks, hidden);
+    return tasks === graph.tasks && externalTasks === graph.externalTasks
+        ? graph
+        : { ...graph, tasks, externalTasks };
 };

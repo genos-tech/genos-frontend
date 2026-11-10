@@ -1,10 +1,10 @@
 /**
- * MIP-1301: picking "Deleted" in a status picker asks first.
+ * MIP-1301 (superseded by MIP-1303): picking "Deleted" in a status picker never writes it
+ * from the picker. Each door hands over to the delete handler, which hides the task behind
+ * an Undo toast and sends the delete when the toast is gone.
  *
- * The "Delete Task" menu item has a confirm; the status pickers (the preview's
- * ACTaskStatus, the table's status cell, the graph card's menu) used to be a way around
- * it. The working copy must not hold "Deleted" while the question is open, because every
- * autosave PUT carries `status`.
+ * The working copy must not hold "Deleted" in the window, because every autosave PUT
+ * carries `status`.
  */
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -237,6 +237,7 @@ describe("the table's status cell", () => {
 describe("the graph card's status menu", () => {
     const renderCard = () => {
         const onChange = vi.fn();
+        const onDelete = vi.fn();
         const data = {
             task: {
                 id: 7,
@@ -259,6 +260,7 @@ describe("the graph card's status menu", () => {
             projectName: "",
             onChange,
             onAddSubtask: vi.fn(),
+            onDelete,
             onOpenPreview: vi.fn(),
         } as unknown as TaskNodeData;
         render(
@@ -279,35 +281,25 @@ describe("the graph card's status menu", () => {
             </AvatarContextProvider>
         );
         fireEvent.click(screen.getByRole("button", { name: /Open/ }));
-        return onChange;
+        return { onChange, onDelete };
     };
     const pick = (name: string) =>
         fireEvent.click(
             screen.getAllByRole("menuitem").find((el) => within(el).queryByText(name))!
         );
 
-    it("asks before Deleted and patches nothing on Cancel", async () => {
-        const onChange = renderCard();
+    it("Deleted hands over to the canvas's delete (an Undo toast) and patches nothing itself", () => {
+        const { onChange, onDelete } = renderCard();
         pick("Deleted");
-        const dialog = screen.getByRole("alertdialog");
-        expect(within(dialog).getByText("Node title")).toBeTruthy();
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+        expect(onDelete).toHaveBeenCalledTimes(1);
         expect(onChange).not.toHaveBeenCalled();
-        fireEvent.click(within(dialog).getByText("Cancel"));
-        await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
-        expect(onChange).not.toHaveBeenCalled();
-    });
-
-    it("patches the status once, on Confirm", async () => {
-        const onChange = renderCard();
-        pick("Deleted");
-        fireEvent.click(within(screen.getByRole("alertdialog")).getByText("Delete"));
-        await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
-        expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ status: "Deleted" }));
     });
 
     it("another status patches at once", () => {
-        const onChange = renderCard();
+        const { onChange, onDelete } = renderCard();
         pick("WIP");
+        expect(onDelete).not.toHaveBeenCalled();
         expect(screen.queryByRole("alertdialog")).toBeNull();
         expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ status: "WIP" }));
     });

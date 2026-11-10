@@ -27,11 +27,11 @@ import {
 } from "@xyflow/react";
 
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
-import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../context/AuthContext";
 import { invalidateCachedFullTask } from "../../../../db/services/task-full.service";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { useUndoHidden } from "../../../../hooks/common/useUndoableAction";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -39,12 +39,14 @@ import { useColorTheme } from "../../../../theme/ColorThemeProvider";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { addTask } from "../../services/addTask";
 import { createTaskDependency } from "../../services/createTaskDependency";
 import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
 import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
+import { overlayGraphDeletes, pendingDeleteSignature } from "../../utils/pendingTaskDelete";
 import { statuses } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
@@ -139,9 +141,6 @@ const addDaysIso = (iso: string, days: number): string => {
     const day = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
 };
-
-// The status picker's "Deleted" entry (utils/taskMeta): what a delete sends.
-const DELETED_STATUS = statuses.find((s) => s.status === "Deleted");
 
 // Soft-deleted rows the rest of the app never exposes (table, sidebar,
 // search) and which the canvas always hides. Shared by every stats
@@ -893,30 +892,39 @@ const CanvasInner = ({
         [myself, projectId, accessToken, useTM, refresh] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
-    // The card's trash button only ASKS; the dialog (in the return) runs `deleteTask`.
-    const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-    const handleDelete = useCallback((taskId: number) => setPendingDeleteId(taskId), []);
-
-    // The same delete the preview does: the status becomes Deleted (a soft delete, so the
-    // task, its comments and its sub-tasks stay in the database and nothing is orphaned),
-    // saved and mirrored through the one path every status change in the graph takes. It
-    // used to call `DELETE /task/`, a hard delete that removed the row with its comments and
-    // left its sub-tasks pointing at a parent that no longer existed (MIP-1302).
-    const deleteTask = useCallback(
-        async (taskId: number) => {
-            const saved = await handleChange(
-                taskId,
-                { status: "Deleted", statusCode: DELETED_STATUS?.code ?? 0 },
-                t.tasks.diagram.errors.delete
+    // Delete a card (its status menu's "Deleted"): hidden behind an Undo toast, written
+    // when the toast is gone (MIP-1303), the same as in the table and the preview. The
+    // card leaves the canvas at once because `assembleAndLayout` shows a pending task as
+    // Deleted; Undo, or a refused write, brings it back through the same path. The write is
+    // `{task_id, status, status_code}` (a soft delete, so the task, its comments and its
+    // sub-tasks stay in the database and nothing is orphaned, MIP-1302).
+    const runDeleteTask = useDeleteTask({ useTM, useSM, myself });
+    const handleDelete = useCallback(
+        (taskId: number) => {
+            const row = graphRef.current?.tasks.find((t) => Number(t.id) === taskId);
+            runDeleteTask(
+                {
+                    id: taskId,
+                    projectId,
+                    isMilestone: row?.isMilestone === true,
+                    milestoneId: row?.milestoneId,
+                },
+                {
+                    onCommitted: () => {
+                        // The graph is the snapshot every re-layout rebuilds from: it must
+                        // say Deleted before the overlay lets go of the task.
+                        if (!graphRef.current) return;
+                        graphRef.current = {
+                            ...graphRef.current,
+                            tasks: graphRef.current.tasks.map((t) =>
+                                Number(t.id) === taskId ? { ...t, status: "Deleted" } : t
+                            ),
+                        };
+                    },
+                }
             );
-            if (!saved) return;
-            // The save already marked the task in the cached graph, so if the reload fails
-            // the card still leaves the canvas (the load error is on screen).
-            const graph = (await refresh()) ?? graphRef.current;
-            if (graph) assembleAndLayout(graph, { fit: false });
-            void useTM.loadUpdatedTask(projectId);
         },
-        [handleChange, t.tasks.diagram.errors.delete, useTM, projectId, refresh] // eslint-disable-line react-hooks/exhaustive-deps
+        [runDeleteTask, projectId]
     );
 
     const handleOpenPreview = useCallback(
@@ -982,6 +990,12 @@ const CanvasInner = ({
         onOpenPreview: handleOpenPreview,
     };
 
+    // Tasks whose delete waits behind its Undo toast (MIP-1303). A ref, so the
+    // assembly below keeps its identity (it is a dependency of the layout effects).
+    const undoHidden = useUndoHidden();
+    const undoHiddenRef = useRef(undoHidden);
+    undoHiddenRef.current = undoHidden;
+
     const assembleAndLayout = useCallback(
         // `fit` re-frames the whole graph (zoom + pan) after layout. It's
         // wanted on initial load and when the hide-closed toggle flips
@@ -990,7 +1004,10 @@ const CanvasInner = ({
         // background task-touched refreshes) — re-fitting there yanks the
         // camera back to the whole tree and loses the user's zoom/pan,
         // which reads as the diagram "resetting" on every edit.
-        (graph: TaskGraph, opts?: { fit?: boolean }) => {
+        (loadedGraph: TaskGraph, opts?: { fit?: boolean }) => {
+            // A pending delete reads as Deleted here, whatever the loaded graph says: the
+            // card is dropped from the canvas and nothing waits on it.
+            const graph = overlayGraphDeletes(loadedGraph, undoHiddenRef.current);
             const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
             const blockerMap = buildOpenBlockerCountByTask(graph);
             // Diagram project name — every internal task in `graph.tasks`
@@ -1076,6 +1093,15 @@ const CanvasInner = ({
         // the intent visible at the call site.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hideClosed]);
+
+    // A delete starts (the card leaves), is undone or fails (it comes back), or is
+    // committed (the graph already says Deleted): lay out again from the last-loaded
+    // graph, without re-framing the camera.
+    const pendingDeletes = pendingDeleteSignature(undoHidden);
+    useEffect(() => {
+        if (graphRef.current) assembleAndLayout(graphRef.current, { fit: false });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pendingDeletes]);
 
     // Initial load.
     useEffect(() => {
@@ -1303,21 +1329,6 @@ const CanvasInner = ({
 
     return (
         <Box sx={containerSx}>
-            {/* The graph is itself a modal; the confirm takes its layer from it. */}
-            <ConfirmDialog
-                cancelLabel={t.common.actions.cancel}
-                confirmLabel={t.common.actions.delete}
-                description={t.tasks.diagram.confirmDeleteBody}
-                hostZIndex={diagramZIndex}
-                open={pendingDeleteId != null}
-                title={t.tasks.diagram.confirmDelete}
-                closeOnConfirm
-                destructive
-                onClose={() => setPendingDeleteId(null)}
-                onConfirm={async () => {
-                    if (pendingDeleteId != null) await deleteTask(pendingDeleteId);
-                }}
-            />
             {loading && (
                 <Stack
                     alignItems="center"
