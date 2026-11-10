@@ -26,6 +26,7 @@ import { MODAL_CHROME_CLEARANCE } from "../../../../../components/ui/modal/modal
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
+import { headerTouchTargetsSx } from "../../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -367,6 +368,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     // Close over this corner (see ui/modal/modalChrome): keep
                     // the header's own actions out from under them (MIP-1169).
                     ...(isModalHosted && { pr: MODAL_CHROME_CLEARANCE }),
+                    ...headerTouchTargetsSx,
                 }}
             >
                 {/* Left side: ID and Status chips (preview mode) or New Task badge (create mode) */}
