@@ -17,6 +17,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { DataState } from "../../../../../components/ui/feedback/DataState";
+import { ErrorState } from "../../../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
@@ -95,7 +96,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     // only an answer of "ok" with no rows may say "No sub tasks yet": a failed request is
     // not an empty list (MIP-1308).
     const [childLoad, setChildLoad] = useState<{ key: string; failed: boolean } | null>(null);
-    // The task the rows in `childTasks` belong to, so a failure never keeps another task's rows.
+    // The task the rows in `childTasks` belong to: a failure never keeps another task's rows,
+    // and another task's rows are not drawn while this one's list is loading.
+    const [childrenOf, setChildrenOf] = useState<string | null>(null);
     const childrenOfRef = useRef<string | null>(null);
     const openLanding = useTaskOpenLanding();
 
@@ -196,12 +199,14 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     // answer is an array). Keep this task's rows, drop another task's.
                     if (childrenOfRef.current !== key) {
                         childrenOfRef.current = key;
+                        setChildrenOf(key);
                         setChildTasks([]);
                     }
                     setChildLoad({ key, failed: true });
                     return;
                 }
                 childrenOfRef.current = key;
+                setChildrenOf(key);
                 setChildTasks(result?.length ? result : []);
                 setChildLoad({ key, failed: false });
             });
@@ -242,6 +247,8 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const childAnswer = loadKey !== null && childLoad?.key === loadKey ? childLoad : null;
     const loadingChildren = loadKey !== null && childAnswer === null;
     const childrenFailed = childAnswer?.failed === true;
+    // Rows only count as "something to show" for the task they belong to.
+    const hasChildRows = childTasks.length > 0 && (loadKey === null || childrenOf === loadKey);
 
     const submitQuickTask = async () => {
         const trimmed = quickTitle.trim();
@@ -347,7 +354,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
 
             <DataState
                 error={childrenFailed}
-                hasData={childTasks.length > 0}
+                hasData={hasChildRows}
                 loading={loadingChildren}
                 size="xs"
                 skeleton={null}
@@ -500,6 +507,19 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     </Typography>
                 )}
             </DataState>
+            {/* A refresh that failed after rows were shown keeps them (DataState ignores the
+                error then): say the list may be stale, with a way to ask again. */}
+            {childrenFailed && hasChildRows && (
+                <ErrorState
+                    data-error="sub-tasks-stale"
+                    size="xs"
+                    title={t.tasks.subTasks.loadFailed}
+                    onRetry={() => {
+                        setChildLoad(null);
+                        setChildRefreshNonce((n) => n + 1);
+                    }}
+                />
+            )}
 
             {/* Quick Task row. Always visible at the bottom regardless of
                 whether the list above has items or is empty. Collapsed:

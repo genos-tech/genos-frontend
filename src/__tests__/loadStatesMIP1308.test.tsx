@@ -165,6 +165,46 @@ describe("Sub Tasks block", () => {
         expect(hits("/task/childTasks/")).toBe(2);
     });
 
+    it("a task's rows are not drawn under the next task while its list loads", async () => {
+        ok("/task/childTasks/", [child]);
+        const view = block(903);
+        expect(await screen.findByText("Wire the endpoint")).toBeTruthy();
+
+        let answer!: (rows: unknown[]) => void;
+        ok("/task/childTasks/", new Promise<unknown[]>((r) => (answer = r)));
+        view.rerender(
+            wrap(
+                <TaskSubTasksBlock
+                    currentTaskContent={
+                        {
+                            id: 904,
+                            rootTaskId: 904,
+                            title: "Next",
+                            project: { projectId: 46, projectName: "Destination" },
+                        } as unknown as TaskProps
+                    }
+                    emptyText="No tasks yet"
+                    forceLoad={true}
+                    myself={{ userId: "u1", teamId: "t1" } as never}
+                    SectionHeader={({ children }) => <div>{children}</div>}
+                    setMyself={vi.fn()}
+                    socket={null}
+                    useCM={{} as never}
+                    useTEM={{ teamMemberProfiles: {} } as never}
+                    useTM={{ currentPreviewTaskId: -1 } as never}
+                    useUISM={{} as never}
+                />
+            )
+        );
+
+        await waitFor(() => expect(hits("/task/childTasks/")).toBe(2));
+        expect(screen.queryByText("Wire the endpoint")).toBeNull();
+        expect(screen.queryByText("No tasks yet")).toBeNull();
+
+        await act(async () => answer([]));
+        expect(await screen.findByText("No tasks yet")).toBeTruthy();
+    });
+
     it("says 'no sub tasks' only after an answer of none, never while it waits", async () => {
         let answer!: (rows: unknown[]) => void;
         ok("/task/childTasks/", new Promise<unknown[]>((r) => (answer = r)));

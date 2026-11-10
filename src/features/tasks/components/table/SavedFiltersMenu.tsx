@@ -157,8 +157,13 @@ export const SavedFiltersMenu = ({
 
     const refresh = useCallback(async () => {
         if (!teamId || !projectId) {
+            // No project: nothing to read, and an answer still in flight for the one that was
+            // open must not land here.
+            fetchTokenRef.current += 1;
+            savedOfRef.current = null;
             setSaved([]);
             setLoadFailed(false);
+            setIsLoading(false);
             return;
         }
         const token = ++fetchTokenRef.current;
