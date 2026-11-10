@@ -37,6 +37,7 @@ import {
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { DataState } from "../../../../components/ui/feedback/DataState";
+import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -286,6 +287,16 @@ export const ConnectedTeamsPanel = ({
                     )}
                 </Stack>
             </DataState>
+            {/* A refresh that failed after rows were shown keeps them (DataState ignores the
+                error then), so the rows' Approve / Decline can be stale: say so under them. */}
+            {connections.loadFailed && hasRows && (
+                <ErrorState
+                    data-error="connected-teams-stale"
+                    size="xs"
+                    title={strings.loadFailed}
+                    onRetry={connections.reload}
+                />
+            )}
 
             {canManage && (
                 <Stack

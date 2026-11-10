@@ -114,7 +114,8 @@ const _refetch = async (): Promise<void> => {
         // Endpoint missing / network error — keep whatever we have. An untagged render is
         // strictly cosmetic degradation; the Manage modal reads `failed` so it does not
         // call that "no tags yet".
-        _setState({ ..._state, failed: true });
+        // Not when it already says so: a focus loop while offline must not re-render every row.
+        if (!_state.failed) _setState({ ..._state, failed: true });
     }
 };
 

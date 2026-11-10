@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -75,6 +75,8 @@ export const ModalManageProjectLabels = ({
     const [assignedIds, setAssignedIds] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(false);
     const [loadFailed, setLoadFailed] = useState(false);
+    // Which team `catalog` belongs to.
+    const catalogTeamRef = useRef<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
@@ -95,7 +97,13 @@ export const ModalManageProjectLabels = ({
     const refreshCatalog = useCallback(async () => {
         setLoading(true);
         const labels = await loadTeamProjectLabels(teamId, accessToken);
-        if (labels) setCatalog(labels);
+        if (labels) {
+            catalogTeamRef.current = teamId;
+            setCatalog(labels);
+        } else if (catalogTeamRef.current !== teamId) {
+            // A failed read keeps this team's last catalog, never another team's.
+            setCatalog([]);
+        }
         setLoadFailed(labels === null);
         setLoading(false);
     }, [teamId, accessToken]);

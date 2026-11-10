@@ -57,8 +57,10 @@ export const useTeamEmoji = (myself: UserProps, accessToken: string | null): Tea
 
     const refresh = useCallback(async () => {
         if (!teamId || !accessToken) {
+            listTeamRef.current = null;
             setTeamEmoji([]);
             setTeamEmojiList([]);
+            setError(false);
             return;
         }
         setLoading(true);

@@ -109,7 +109,10 @@ export const useCalendarSources = (
     const seededRef = useRef(false);
 
     useEffect(() => {
-        if (!enabled || !accessToken) return;
+        if (!enabled || !accessToken) {
+            setFailed(false);
+            return;
+        }
         let cancelled = false;
         setLoading(true);
         setError(null);

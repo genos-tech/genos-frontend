@@ -119,6 +119,44 @@ describe("Connected teams", () => {
         expect(screen.queryByText(en.admin.connectedTeams.loadFailed)).toBeNull();
     });
 
+    it("rows that could not be refreshed say so under them (their Approve/Decline may be stale)", async () => {
+        const Refreshing = () => {
+            const connections = useTeamConnections("t1");
+            return (
+                <>
+                    <button type="button" onClick={() => void connections.refresh()}>
+                        refresh
+                    </button>
+                    <ConnectedTeamsPanel
+                        borderColor="#ccc"
+                        canDisconnect
+                        canManage
+                        connections={connections}
+                        labelColor="#666"
+                        myTeamId="t1"
+                        valueColor="#111"
+                    />
+                </>
+            );
+        };
+        ok("/team/connection/", { connections: [row] });
+        render(wrap(<Refreshing />));
+        expect(await screen.findByText("Acme")).toBeTruthy();
+
+        fail("/team/connection/");
+        ok("/team/connection/", { connections: [row] });
+        fireEvent.click(screen.getByRole("button", { name: "refresh" }));
+
+        expect(await screen.findByText(en.admin.connectedTeams.loadFailed)).toBeTruthy();
+        expect(screen.getByText("Acme")).toBeTruthy();
+
+        fireEvent.click(retry());
+
+        await waitFor(() =>
+            expect(screen.queryByText(en.admin.connectedTeams.loadFailed)).toBeNull()
+        );
+    });
+
     it("a failed refetch keeps the rows already shown", async () => {
         ok("/team/connection/", { connections: [row] });
         const { result } = renderHook(() => useTeamConnections("t1"));

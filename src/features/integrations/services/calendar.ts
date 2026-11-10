@@ -242,7 +242,9 @@ export const listCalendars = async (
     try {
         const api = authApi(accessToken);
         if (!api) return null;
-        const res = await api.get<CalendarListResponse>("/calendar/list/");
+        const res = await api.get<CalendarListResponse>("/calendar/list/", {
+            suppressErrorToast: true,
+        });
         return res.data;
     } catch (error) {
         return errorReturn(error, setErrorMessage, [
@@ -292,6 +294,7 @@ export const listEventsAggregate = async (
                 sources: opts.sources.map((s) => sourceKey(s.accountId, s.calendarId)).join(","),
                 max_results: opts.maxResults,
             },
+            suppressErrorToast: true,
         });
         return {
             items: res.data.items ?? [],
