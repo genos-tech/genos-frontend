@@ -236,7 +236,14 @@ const installListeners = () => {
     // `beforeunload` covers desktop. The second finds nothing left to do.
     window.addEventListener("pagehide", onPageHide);
     window.addEventListener("beforeunload", onPageHide);
-    window.addEventListener("keydown", onKeyDown);
+    // CAPTURE phase on purpose (MIP-1395): `ModalFrame` stops keydown at its own root
+    // (its FENCE) so the page's shortcuts do not fire under a dialog, and a bubble
+    // listener on `window` never hears a key pressed inside one (the task graph, a
+    // preview opened in a modal). Capture runs before any fence. It is safe to be this
+    // early because `onKeyDown` acts only while an undo toast is up, only for Cmd/Ctrl+Z
+    // and not in a text field; every other key, and every other shortcut, still stops
+    // where the dialog stops it.
+    window.addEventListener("keydown", onKeyDown, true);
 };
 
 /** The runner. Stable, so it is safe in a dependency list. */
