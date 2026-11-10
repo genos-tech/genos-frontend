@@ -190,6 +190,16 @@ export const zh: DeepPartial<Messages> = {
             comingSoon: "即将推出",
         },
         teamProfile: {
+            pendingInvites: {
+                title: "待处理的邀请（{count}）",
+                detail: "邀请人 {name} · {date} 到期",
+                guestOf: "{project} 的访客",
+                cancelNamed: "取消对 {email} 的邀请",
+                confirmTitle: "取消对 {email} 的邀请？",
+                confirmBody: "邮件中的链接会立即失效。之后可以再次邀请。",
+                confirm: "取消邀请",
+                keep: "保留邀请",
+            },
             title: "团队资料 - {teamName}",
             editTeamImage: "编辑团队图片",
             teamName: "团队名称",
@@ -1529,6 +1539,26 @@ export const zh: DeepPartial<Messages> = {
         personPicker: {
             youSuffix: "（你）",
             noMatches: "没有匹配项",
+        },
+        memberRemoval: {
+            remove: "移除",
+            removeNamed: "移除 {name}",
+            failed: "无法移除该成员，请重试。",
+            titleTeam: "将 {name} 从 {scope} 移除？",
+            titleProject: "将 {name} 从 {scope} 移除？",
+            titleChat: "将 {name} 从 {scope} 移除？",
+            bodyTeam:
+                "{name} 将无法再访问 {scope} 及其中的所有项目和聊天。其团队 API 密钥将失效，已连接的 AI 应用也将不再包含此团队。其过往消息和工作会保留。之后可以再次邀请。",
+            bodyProject:
+                "{name} 将无法再访问 {scope} 及其聊天。他们仍留在团队中，并保留其他项目。之后可以再次添加。",
+            bodyChat: "{name} 将不再看到或收到 {scope} 的消息。过往消息会保留。之后可以再次添加。",
+            unassign: "取消分配其未完成的工作",
+            unassignCount:
+                "{tasks, plural, one {# 个未完成任务} other {# 个未完成任务}}和{milestones, plural, one {# 个里程碑} other {# 个里程碑}}",
+            unassignHint: "已完成的工作仍保留负责人。",
+            loadingWork: "正在检查其未完成的工作…",
+            confirm: "移除",
+            cancel: "取消",
         },
         memberRoles: {
             owner: "所有者",
@@ -3275,6 +3305,20 @@ export const zh: DeepPartial<Messages> = {
                         "使用此团队密钥的一切会立即停止工作，且已撤销的密钥无法重新启用。其创建者需要重新创建一个。",
                     confirm: "撤销密钥",
                 },
+            },
+            teamApps: {
+                title: "已连接的 AI 应用",
+                blurb: "成员连接的、可在此团队中工作的 Claude、ChatGPT 等 AI 应用。所有者可终止任意一个，编辑可终止查看者的。终止只会移除此团队，该成员的其他团队不受影响。",
+                empty: "此团队没有已连接的 AI 应用。",
+                connectedBy: "连接者：{name}",
+                otherTeams: "另有 {count, plural, one {# 个团队} other {# 个团队}}",
+                end: "终止对此团队的访问",
+                endNamed: "终止 {name} 的 {app}",
+                confirmTitle: "终止 {name} 的 {app}？",
+                confirmBody:
+                    "{name} 的 {app} 将无法在此团队中工作。其他团队不受影响，对方也可以自行重新连接。",
+                confirm: "终止访问",
+                cancel: "取消",
             },
             teamKeys: {
                 title: "团队 API 密钥",

@@ -125,6 +125,30 @@ export const common = {
         // missing key renders `undefined` rather than failing to compile.
         guestHint: "Outside collaborator — sees only this project.",
     },
+    // Removing someone ELSE from a team, project or chat (MIP-1371). Leaving is `leaveConfirm`.
+    memberRemoval: {
+        remove: "Remove",
+        removeNamed: "Remove {name}",
+        failed: "Couldn't remove that member. Please try again.",
+        titleTeam: "Remove {name} from {scope}?",
+        titleProject: "Remove {name} from {scope}?",
+        titleChat: "Remove {name} from {scope}?",
+        // What the person loses. Each says what STAYS true as well, so the manager can see
+        // the cost before confirming.
+        bodyTeam:
+            "{name} loses access to {scope} and to every project and chat in it. Their team API keys stop working and their connected AI apps lose this team. Their past messages and work stay. You can invite them again later.",
+        bodyProject:
+            "{name} loses access to {scope} and its chat. They stay in the team and keep their other projects. You can add them back later.",
+        bodyChat:
+            "{name} will no longer see or get messages from {scope}. Past messages stay. You can add them back later.",
+        unassign: "Unassign their open work",
+        unassignCount:
+            "{tasks, plural, one {# open task} other {# open tasks}} and {milestones, plural, one {# milestone} other {# milestones}}",
+        unassignHint: "Closed work keeps its assignee.",
+        loadingWork: "Checking their open work…",
+        confirm: "Remove",
+        cancel: "Cancel",
+    },
     profileEdit: {
         rename: "Rename",
         save: "Save",

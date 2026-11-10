@@ -267,6 +267,27 @@ export const es: DeepPartial<Messages> = {
             youSuffix: "(Tú)",
             noMatches: "No hay coincidencias",
         },
+        memberRemoval: {
+            remove: "Quitar",
+            removeNamed: "Quitar a {name}",
+            failed: "No se pudo quitar al miembro. Inténtalo de nuevo.",
+            titleTeam: "¿Quitar a {name} de {scope}?",
+            titleProject: "¿Quitar a {name} de {scope}?",
+            titleChat: "¿Quitar a {name} de {scope}?",
+            bodyTeam:
+                "{name} perderá el acceso a {scope} y a todos los proyectos y chats que contiene. Sus claves de API del equipo dejarán de funcionar y sus apps de IA conectadas perderán este equipo. Sus mensajes y su trabajo anteriores se conservan. Puedes invitarle de nuevo más tarde.",
+            bodyProject:
+                "{name} perderá el acceso a {scope} y a su chat. Sigue en el equipo y conserva sus otros proyectos. Puedes añadirle de nuevo más tarde.",
+            bodyChat:
+                "{name} dejará de ver y recibir los mensajes de {scope}. Los mensajes anteriores se conservan. Puedes añadirle de nuevo más tarde.",
+            unassign: "Desasignar su trabajo abierto",
+            unassignCount:
+                "{tasks, plural, one {# tarea abierta} other {# tareas abiertas}} y {milestones, plural, one {# hito} other {# hitos}}",
+            unassignHint: "El trabajo cerrado conserva su responsable.",
+            loadingWork: "Comprobando su trabajo abierto…",
+            confirm: "Quitar",
+            cancel: "Cancelar",
+        },
         memberRoles: {
             owner: "Propietario",
             editor: "Editor",
@@ -1304,6 +1325,21 @@ export const es: DeepPartial<Messages> = {
                         "Todo lo que use esta clave de equipo dejará de funcionar de inmediato, y una clave revocada no se puede volver a activar. Quien la creó tendrá que crear una nueva.",
                     confirm: "Revocar clave",
                 },
+            },
+            teamApps: {
+                title: "Apps de IA conectadas",
+                blurb: "Claude, ChatGPT y otras apps de IA que los miembros conectaron y que pueden trabajar en este equipo. El propietario puede terminar cualquiera; un editor, las de un lector. Terminarla quita solo este equipo: los demás equipos de esa persona siguen funcionando.",
+                empty: "No hay apps de IA conectadas a este equipo.",
+                connectedBy: "Conectada por {name}",
+                otherTeams:
+                    "también en {count, plural, one {# otro equipo} other {# otros equipos}}",
+                end: "Terminar el acceso a este equipo",
+                endNamed: "Terminar {app} de {name}",
+                confirmTitle: "¿Terminar {app} de {name}?",
+                confirmBody:
+                    "{app} dejará de funcionar en este equipo para {name}. Sus otros equipos no se ven afectados y puede volver a conectarla por su cuenta.",
+                confirm: "Terminar acceso",
+                cancel: "Cancelar",
             },
             teamKeys: {
                 title: "Claves de API del equipo",
@@ -4306,6 +4342,17 @@ export const es: DeepPartial<Messages> = {
             comingSoon: "Próximamente",
         },
         teamProfile: {
+            pendingInvites: {
+                title: "Invitaciones pendientes ({count})",
+                detail: "Invitó {name} · caduca {date}",
+                guestOf: "Invitado de {project}",
+                cancelNamed: "Cancelar la invitación de {email}",
+                confirmTitle: "¿Cancelar la invitación de {email}?",
+                confirmBody:
+                    "El enlace de su correo deja de funcionar al instante. Puedes invitarle de nuevo más tarde.",
+                confirm: "Cancelar invitación",
+                keep: "Mantener",
+            },
             title: "Perfil del equipo - {teamName}",
             editTeamImage: "Editar imagen del equipo",
             teamName: "Nombre del equipo",

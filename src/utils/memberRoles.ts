@@ -68,6 +68,21 @@ export const canManageMembers = (role: MemberRole): boolean =>
     role === MEMBER_ROLE.owner || role === MEMBER_ROLE.editor;
 
 /**
+ * May someone with `actor` role remove someone with `target` role from a team, project or
+ * chat? (MIP-1371.) The same rule the server enforces (`can_remove_member`): the owner may
+ * remove anyone but the owner; an editor only viewers and guests. Yourself is Leave, not this,
+ * so callers also exclude their own row. The server decides; this only decides whether to show
+ * the button.
+ */
+export const canRemoveMember = (actor: MemberRole, target: MemberRole): boolean => {
+    if (actor === MEMBER_ROLE.owner) return target !== MEMBER_ROLE.owner;
+    if (actor === MEMBER_ROLE.editor) {
+        return target === MEMBER_ROLE.viewer || target === MEMBER_ROLE.guest;
+    }
+    return false;
+};
+
+/**
  * The current user's effective role in an entity, from its member list.
  *
  * Convenience wrapper so each modal computes its `canManage` gate the
