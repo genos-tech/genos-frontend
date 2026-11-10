@@ -1,5 +1,6 @@
 import { extendTheme } from "@mui/joy/styles";
 
+import { MENU_MIN_Z_INDEX, TOOLTIP_Z_INDEX } from "../components/ui/feedback/toastLayers";
 import { DEFAULT_THEME_ID, ThemeId } from "./themePalettes";
 import { joyComponents } from "./tokens/joyComponents";
 import { joyPalette } from "./tokens/joyPalette";
@@ -304,7 +305,10 @@ export const buildJoyTheme = (
         // them so tooltips stay topmost everywhere. (Relative order vs Joy's
         // menus/modals/snackbars is unchanged — the token was already above those.)
         zIndex: {
-            tooltip: 13300,
+            // Menus, Select and Autocomplete listboxes clear the toast and banner regions
+            // (MIP-1327, MIP-1393); the tooltip stays one above them (`toastLayers.ts`).
+            popup: MENU_MIN_Z_INDEX,
+            tooltip: TOOLTIP_Z_INDEX,
         },
     });
 };
