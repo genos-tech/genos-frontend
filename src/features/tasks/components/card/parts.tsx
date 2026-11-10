@@ -17,6 +17,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { Clickable } from "../../../../components/ui/Clickable";
+import { invisibleHitAreaSx } from "../../../../components/ui/touchTargets";
 import { useTranslation } from "../../../../i18n";
 import { focusRing, g, type } from "../../../../theme/tokens";
 import { TagListProps } from "../../../../types/tasks";
@@ -50,6 +51,8 @@ const CopyableId = ({ text, focusable }: { text: string; focusable: boolean }) =
                 sx={{
                     ...idSx,
                     cursor: "pointer",
+                    // "Click to copy" is a 40 x 16 chip: a 44px tap on a phone, same look.
+                    ...invisibleHitAreaSx(),
                     transition: `color ${g.motion.fast}`,
                     "&:hover": { color: g.accent.text },
                     "&:focus-visible": { ...focusRing, borderRadius: g.radius.xs },

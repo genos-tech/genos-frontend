@@ -10,7 +10,7 @@ import { fmt, useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { CustomEmojiImg } from "../editors/CustomEmojiImg";
 import { AppTooltip } from "../ui/AppTooltip";
-import { EmptyState } from "../ui/feedback/EmptyState";
+import { DataState } from "../ui/feedback/DataState";
 import { SkeletonRows } from "../ui/feedback/Skeleton";
 
 type Props = {
@@ -40,7 +40,14 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
     const { mode } = useColorScheme();
     const { t, locale } = useTranslation();
     const isDark = mode === "dark";
-    const { teamEmoji, loading, create, remove } = useTeamEmojiContext();
+    const {
+        teamEmoji,
+        loading,
+        error: loadFailed,
+        refresh,
+        create,
+        remove,
+    } = useTeamEmojiContext();
     // The catalog includes the server-seeded global defaults; this
     // panel manages only the team's own uploads, so defaults stay
     // hidden here (they're still available in pickers/reactions).
@@ -166,17 +173,22 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
             </Sheet>
 
             {/* Emoji grid */}
-            {ownTeamEmoji.length === 0 ? (
-                loading ? (
-                    <SkeletonRows count={2} />
-                ) : (
-                    <EmptyState
-                        body={t.settings.customEmoji.empty}
-                        data-empty="custom-emoji"
-                        size="sm"
-                    />
-                )
-            ) : (
+            <DataState
+                empty={{
+                    body: t.settings.customEmoji.empty,
+                    "data-empty": "custom-emoji",
+                }}
+                error={loadFailed}
+                errorState={{
+                    title: t.settings.customEmoji.loadFailed,
+                    onRetry: () => void refresh(),
+                    "data-error": "custom-emoji",
+                }}
+                hasData={ownTeamEmoji.length > 0}
+                loading={loading}
+                size="sm"
+                skeleton={<SkeletonRows count={2} />}
+            >
                 <Box
                     sx={{
                         display: "grid",
@@ -246,7 +258,7 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
                         );
                     })}
                 </Box>
-            )}
+            </DataState>
         </Sheet>
     );
 };

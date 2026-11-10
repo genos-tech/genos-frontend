@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import { IconButton } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useIsMobile } from "../../hooks/common/useIsMobile";
@@ -8,11 +8,14 @@ import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import {
     clampFabTop,
+    FAB_AVOID_ATTR,
     FAB_EDGE_GAP,
     FAB_SIZE,
+    fabLift,
     FabPosition,
     isFabTap,
     readStoredFabPosition,
+    Box as Rect,
     resolveFabDrop,
     writeStoredFabPosition,
 } from "./spotlightFabPosition";
@@ -41,10 +44,14 @@ const readBottomInset = (): number => {
 // Cmd/Ctrl-K and the sidebar's search entry, so this is mobile-only.
 //
 // DRAGGABLE because a fixed button can't avoid every surface underneath
-// it: parked bottom-right it sat exactly on the chat composer's "Send"
-// button and swallowed those taps. Rather than pick another corner that
-// happens to be free on the screens we thought of, the user drags it
-// wherever suits them; it snaps to the nearest side edge and persists.
+// it. The user drags it wherever suits them; it snaps to the nearest side
+// edge and persists.
+//
+// COMPOSERS are the one surface it must never cover: parked bottom-right
+// it sat exactly on the chat composer's "Send" button and swallowed those
+// taps (MIP-1403). A composer marks its box `data-fab-avoid`; while one is
+// visible and under the button, the button rises to sit just above it
+// (wherever it is parked), and steps aside if there is no room.
 export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
     const isMobile = useIsMobile();
     const { mode } = useColorScheme();
@@ -66,6 +73,13 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
     // click that follows doesn't also open Spotlight. Same idea as
     // `useLongPress().consumedTap()`.
     const draggedRef = useRef(false);
+
+    // Keeping clear of composers (MIP-1403). `baseRef` is an invisible twin
+    // that sits where the button would be with nothing in the way, with no
+    // transition, so measuring it is exact even while the real button is
+    // easing to its lifted spot.
+    const baseRef = useRef<HTMLDivElement>(null);
+    const [avoid, setAvoid] = useState({ lift: 0, hidden: false });
 
     // A rotation, or the keyboard opening, can leave a parked button
     // below the fold. Re-clamp against the live viewport instead of
@@ -92,6 +106,63 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
             window.removeEventListener("orientationchange", reclamp);
         };
     }, [isMobile]);
+
+    useEffect(() => {
+        if (!isMobile) return undefined;
+        let frame = 0;
+        const watched = new Set<Element>();
+        // A composer appearing or going away (a route change, the thread pane
+        // opening) is a DOM change; one growing, or a kept-alive screen being
+        // hidden, is a size change; the keyboard moves a composer without
+        // either, so the viewport is watched too.
+        const resizeObserver =
+            typeof ResizeObserver === "undefined"
+                ? undefined
+                : new ResizeObserver(() => schedule());
+        const measure = () => {
+            frame = 0;
+            const base = baseRef.current;
+            if (!base) return;
+            const found = Array.from(document.querySelectorAll(`[${FAB_AVOID_ATTR}]`));
+            // A composer in a screen that is kept alive but hidden (display:
+            // none) has no box: only a visible one counts.
+            const boxes: Rect[] = [];
+            for (const el of found) {
+                if (!watched.has(el)) {
+                    watched.add(el);
+                    resizeObserver?.observe(el);
+                }
+                const r = el.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) boxes.push(r);
+            }
+            for (const el of watched) {
+                if (!el.isConnected) {
+                    watched.delete(el);
+                    resizeObserver?.unobserve(el);
+                }
+            }
+            const next = fabLift(base.getBoundingClientRect(), boxes);
+            setAvoid((prev) =>
+                prev.lift === next.lift && prev.hidden === next.hidden ? prev : next
+            );
+        };
+        function schedule() {
+            if (!frame) frame = requestAnimationFrame(measure);
+        }
+        const mutationObserver = new MutationObserver(schedule);
+        mutationObserver.observe(document.body, { childList: true, subtree: true });
+        window.addEventListener("resize", schedule);
+        window.visualViewport?.addEventListener("resize", schedule);
+        schedule();
+        return () => {
+            if (frame) cancelAnimationFrame(frame);
+            mutationObserver.disconnect();
+            resizeObserver?.disconnect();
+            window.removeEventListener("resize", schedule);
+            window.visualViewport?.removeEventListener("resize", schedule);
+        };
+        // `position`: a drop parks the twin somewhere new.
+    }, [isMobile, position]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
         // Ignore secondary buttons / multi-touch continuations.
@@ -174,59 +245,85 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
                 right: FAB_EDGE_GAP,
             };
 
+    // Rise above a composer under the button, or step aside when there is
+    // no room (a short viewport): never sit on Send. Not while dragging: the
+    // finger decides then.
+    const lift = dragXY ? 0 : avoid.lift;
+    const hidden = !dragXY && avoid.hidden;
+
     return (
-        <IconButton
-            aria-label={t.layout.mobile.openGenos}
-            size="lg"
-            sx={{
-                position: "fixed",
-                ...anchorSx,
-                // Above page content (BottomTabBar is 1200) but below
-                // MUI Joy Modal (1300) and the SpotlightOverlay (13100).
-                zIndex: 1250,
-                width: FAB_SIZE,
-                height: FAB_SIZE,
-                borderRadius: "50%",
-                // The browser must not claim the gesture as a scroll, or
-                // `pointermove` stops arriving mid-drag.
-                touchAction: "none",
-                background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
-                color: "#fff",
-                // Joy drives descendant icon color through `--Icon-color`,
-                // which defaults to neutral grey in light mode and overrides
-                // the `color: "#fff"` above — so force the icon white too.
-                "--Icon-color": "#fff",
-                boxShadow: isDark
-                    ? `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.4)`
-                    : `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.15)`,
-                // No position transition while dragging — the button has to
-                // track the finger exactly, not ease toward it. The snap on
-                // release keeps the eased motion.
-                transition: dragXY
-                    ? "none"
-                    : "transform 0.15s ease, box-shadow 0.15s ease, top 0.2s ease, left 0.2s ease, right 0.2s ease",
-                opacity: dragXY ? 0.85 : 1,
-                "&:hover": {
-                    background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.867) 100%)`,
-                    transform: "translateY(-2px)",
+        <>
+            {/* Where the button would be with nothing in the way: measured
+                to decide the lift (see `baseRef`). */}
+            <Box
+                ref={baseRef}
+                aria-hidden
+                sx={{
+                    position: "fixed",
+                    ...anchorSx,
+                    width: FAB_SIZE,
+                    height: FAB_SIZE,
+                    visibility: "hidden",
+                    pointerEvents: "none",
+                }}
+            />
+            <IconButton
+                aria-label={t.layout.mobile.openGenos}
+                size="lg"
+                sx={{
+                    position: "fixed",
+                    ...anchorSx,
+                    // `translate`, not `transform`: hover and press already own
+                    // `transform`, and this one eases on its own.
+                    translate: `0 ${-lift}px`,
+                    visibility: hidden ? "hidden" : "visible",
+                    // Above page content (BottomTabBar is 1200) but below
+                    // MUI Joy Modal (1300) and the SpotlightOverlay (13100).
+                    zIndex: 1250,
+                    width: FAB_SIZE,
+                    height: FAB_SIZE,
+                    borderRadius: "50%",
+                    // The browser must not claim the gesture as a scroll, or
+                    // `pointermove` stops arriving mid-drag.
+                    touchAction: "none",
+                    background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.8) 100%)`,
+                    color: "#fff",
+                    // Joy drives descendant icon color through `--Icon-color`,
+                    // which defaults to neutral grey in light mode and overrides
+                    // the `color: "#fff"` above — so force the icon white too.
+                    "--Icon-color": "#fff",
                     boxShadow: isDark
-                        ? `0 12px 28px rgba(${accentRgb}, 0.4), 0 2px 6px rgba(0,0,0,0.5)`
-                        : `0 12px 28px rgba(${accentRgb}, 0.4), 0 2px 6px rgba(0,0,0,0.2)`,
-                },
-                "&:active": {
-                    transform: "translateY(0)",
-                },
-            }}
-            onClick={handleClick}
-            onPointerCancel={endDrag}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={endDrag}
-        >
-            {/* Spotlight's brand icon — the same AI "sparkle" the sidebar's
+                        ? `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.4)`
+                        : `0 8px 24px rgba(${accentRgb}, 0.333), 0 2px 6px rgba(0,0,0,0.15)`,
+                    // No position transition while dragging — the button has to
+                    // track the finger exactly, not ease toward it. The snap on
+                    // release keeps the eased motion.
+                    transition: dragXY
+                        ? "none"
+                        : "transform 0.15s ease, box-shadow 0.15s ease, top 0.2s ease, left 0.2s ease, right 0.2s ease, translate 0.2s ease",
+                    opacity: dragXY ? 0.85 : 1,
+                    "&:hover": {
+                        background: `linear-gradient(135deg, ${accent} 0%, rgba(${accentRgb}, 0.867) 100%)`,
+                        transform: "translateY(-2px)",
+                        boxShadow: isDark
+                            ? `0 12px 28px rgba(${accentRgb}, 0.4), 0 2px 6px rgba(0,0,0,0.5)`
+                            : `0 12px 28px rgba(${accentRgb}, 0.4), 0 2px 6px rgba(0,0,0,0.2)`,
+                    },
+                    "&:active": {
+                        transform: "translateY(0)",
+                    },
+                }}
+                onClick={handleClick}
+                onPointerCancel={endDrag}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={endDrag}
+            >
+                {/* Spotlight's brand icon — the same AI "sparkle" the sidebar's
                 Spotlight entry uses, so the two entry points read as one
                 feature (this used to be a generic magnifier). */}
-            <AutoAwesomeRoundedIcon sx={{ fontSize: 24 }} />
-        </IconButton>
+                <AutoAwesomeRoundedIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+        </>
     );
 };

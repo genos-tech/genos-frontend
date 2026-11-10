@@ -274,8 +274,8 @@ input[type="checkbox"] {
    and its stylesheet arrives with a lazily-imported editor chunk, i.e.
    after App.css. */
 .bn-message-bubble-box-light [data-content-type="quote"] blockquote {
-    border-left-color: var(--gp-brand-700);
-    color: #4b5563; /* Muted gray against the body's near-black */
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
 /* Light mode - Sent messages (the accent wash: `Bubble` paints the fill from tokens) */
@@ -286,48 +286,52 @@ input[type="checkbox"] {
 }
 
 .bn-message-bubble-box-light-me code {
-    background-color: rgba(99, 102, 241, 0.15) !important;
-    color: var(--gp-brand-700); /* Purple for code */
+    /* The theme's active wash (it was indigo on every theme, so amber code sat on lavender). */
+    background-color: var(--g-active) !important;
+    color: var(--g-link); /* The accent family, as dark as AA needs, for code */
 }
 
 .bn-message-bubble-box-light-me [data-content-type="quote"] blockquote {
-    border-left-color: var(--gp-brand-700);
-    color: #4338ca; /* Lighter indigo against the body's deep indigo */
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
 /* Dark mode - Received messages (the bubble fills are `Bubble` tokens, since MIP-1130) */
 .bn-message-bubble-box-dark .bn-editor {
     background-color: transparent;
     padding: 1px;
-    color: #f3f4f6; /* Light text on dark gray background */
+    color: var(--g-text);
 }
 
 .bn-message-bubble-box-dark code {
-    background-color: rgba(0, 0, 0, 0.3) !important;
-    color: #fb923c; /* Orange for code */
+    /* The same chip as the sent bubble; the ink is the code role, which reads at least as
+       well as the orange on a black wash it replaces on every bubble fill (MIP-1388). */
+    background-color: var(--g-active) !important;
+    color: var(--g-text-code);
 }
 
 .bn-message-bubble-box-dark [data-content-type="quote"] blockquote {
-    border-left-color: var(--g-accent-text);
-    color: #cbd5e1;
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
 /* Links in the dark bubbles (MIP-1041). Without a colour of their own they take
    the browser's default link colour for the element's `color-scheme`, and the
    full BlockNote renderer (and every task comment) computes to `light` even in
    dark mode, so a link was the light-scheme dark blue (#0000ee), and a visited
-   one dark purple, on a near-black bubble. The colours come from this palette's
-   own indigo family; the light bubbles keep the browser default. */
+   one dark purple, on a near-black bubble. The colours are the `link` roles
+   (MIP-1317): the color theme's own family, held to 9.5:1 or more on every fill
+   a bubble has; the light bubbles keep the browser default. */
 .bn-message-bubble-box-dark a {
-    color: #a5b4fc;
+    color: var(--g-link);
 }
 
 .bn-message-bubble-box-dark a:visited {
-    color: #c4b5fd;
+    color: var(--g-link-visited);
 }
 
 .bn-message-bubble-box-dark a:hover {
-    color: #c7d2fe;
+    color: var(--g-link-hover);
 }
 
 /* Dark mode - Sent messages (the accent wash) */
@@ -343,21 +347,21 @@ input[type="checkbox"] {
 }
 
 .bn-message-bubble-box-dark-me [data-content-type="quote"] blockquote {
-    border-left-color: #a5b4fc;
-    color: #c7d2fe;
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
-/* The deep indigo bubble needs lighter links than the grey one (MIP-1041). */
+/* The sent bubble has the same fills as the received one since MIP-1130, so it shares the roles. */
 .bn-message-bubble-box-dark-me a {
-    color: #c7d2fe;
+    color: var(--g-link);
 }
 
 .bn-message-bubble-box-dark-me a:visited {
-    color: #ddd6fe;
+    color: var(--g-link-visited);
 }
 
 .bn-message-bubble-box-dark-me a:hover {
-    color: #e0e7ff;
+    color: var(--g-link-hover);
 }
 
 /* Where an external link really goes (MIP-737). `data-link-host` is set from the
@@ -871,8 +875,8 @@ div[data-floating-ui-focusable] {
    the selector carries `[data-content-type="quote"]`. Same two colours as
    the received bubble, whose background this shares. */
 .task-comment-preview-light [data-content-type="quote"] blockquote {
-    border-left-color: var(--gp-brand-700);
-    color: #4b5563;
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
 .task-comment-preview-dark .bn-editor {
@@ -888,21 +892,21 @@ div[data-floating-ui-focusable] {
 
 /* Same pair as the dark sent bubble — identical indigo background. */
 .task-comment-preview-dark [data-content-type="quote"] blockquote {
-    border-left-color: #a5b4fc;
-    color: #c7d2fe;
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
 /* Link colours for the task comment, as in the dark message bubbles (MIP-1041). */
 .task-comment-preview-dark a {
-    color: #a5b4fc;
+    color: var(--g-link);
 }
 
 .task-comment-preview-dark a:visited {
-    color: #c4b5fd;
+    color: var(--g-link-visited);
 }
 
 .task-comment-preview-dark a:hover {
-    color: #c7d2fe;
+    color: var(--g-link-hover);
 }
 
 /* Inbox preview */
@@ -933,8 +937,8 @@ div[data-floating-ui-focusable] {
 
 /* Quoted text — see the note in the message-bubble section above. */
 .inbox-preview-light [data-content-type="quote"] blockquote {
-    border-left-color: var(--gp-brand-700);
-    color: #4b5563;
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
 .inbox-preview-dark .bn-editor {
@@ -949,8 +953,8 @@ div[data-floating-ui-focusable] {
 }
 
 .inbox-preview-dark [data-content-type="quote"] blockquote {
-    border-left-color: #818cf8;
-    color: #cbd5e1;
+    border-left-color: var(--g-link);
+    color: var(--g-text-quote);
 }
 
 /* Todo per-item notes editor.

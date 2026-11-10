@@ -3,6 +3,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import { Box, Stack, Typography } from "@mui/joy";
 
 import { TaskCard } from "./components/card";
+import { effectiveStatusOf, selectAncestorVerdicts } from "./utils/closedByAncestor";
 
 import { DataState } from "../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
@@ -30,15 +31,17 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
 
     // Project-scoped, top-level rows. Closed and Deleted are hidden —
     // an "active work" view by default; reopening or re-listing is a
-    // desktop concern.
+    // desktop concern. A row whose milestone is Closed or Deleted is hidden
+    // too, whatever its own status says (MIP-1389).
     const tasks = useMemo<TaskTableProps[]>(() => {
         if (!projectId) return [];
+        const verdicts = selectAncestorVerdicts(useTM.allTasks);
         return useTM.allTasks.filter(
             (t) =>
                 t.projectId === projectId &&
-                t.status !== "Deleted" &&
-                t.status !== "Closed" &&
-                t.parentTaskId == null
+                t.parentTaskId == null &&
+                effectiveStatusOf(t, verdicts) !== "Deleted" &&
+                effectiveStatusOf(t, verdicts) !== "Closed"
         );
     }, [useTM.allTasks, projectId]);
 

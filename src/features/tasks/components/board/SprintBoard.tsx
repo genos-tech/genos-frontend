@@ -31,7 +31,7 @@ import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
 import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
 import { QuickAddDraft } from "../../utils/quickAddDraft";
 import { buildComparator } from "../../utils/sortTask";
-import { buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
+import { bucketBoardColumns, buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
@@ -262,22 +262,6 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // its docstring and the toggle comment above); here we just bucket the
     // result by status and sort each column.
     useEffect(() => {
-        const organized: Record<string, TaskTableProps[]> = {
-            open: [],
-            wip: [],
-            blocked: [],
-            pending: [],
-            closed: [],
-        };
-        const dispatchToColumn = (task: TaskTableProps) => {
-            const status = task.status?.toLowerCase() || "open";
-            if (status === "open") organized.open.push(task);
-            else if (status === "wip") organized.wip.push(task);
-            else if (status === "blocked") organized.blocked.push(task);
-            else if (status === "pending") organized.pending.push(task);
-            else if (status === "closed") organized.closed.push(task);
-        };
-
         const display = buildBoardDisplaySet({
             filteredTasks: filteredTasks || [],
             visibleChildTaskIds,
@@ -286,7 +270,12 @@ export const SprintBoard = (props: SprintBoardProps) => {
             memberFilterActive: isMemberFilterActive,
             expandExtraDepth,
         });
-        for (const task of display) dispatchToColumn(task);
+        // By EFFECTIVE status: a card under a Closed ancestor sits in Closed, one under
+        // a Deleted ancestor is not drawn (MIP-1389).
+        const organized: Record<string, TaskTableProps[]> = bucketBoardColumns(
+            display,
+            useTM.allTasks
+        );
 
         // Sort each column independently. `sortColumn` is a no-op when
         // `sortBy === "default"`, so paying for an extra useMemo +

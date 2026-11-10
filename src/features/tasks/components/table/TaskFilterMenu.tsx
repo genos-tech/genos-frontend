@@ -42,7 +42,7 @@ import {
     predefinedStatusFilters,
     taskTypes,
 } from "../../types/TaskTableTypes";
-import { selectClosedByAncestor } from "../../utils/closedByAncestor";
+import { selectAncestorVerdicts } from "../../utils/closedByAncestor";
 import {
     selectMilestoneRowsForSelection,
     selectMilestonesWithMatchingChildren,
@@ -1297,18 +1297,21 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
         const filteredTop: TaskTableProps[] = [];
         const childIdSet = new Set<string>();
-        // A Closed parent closes what is under it, whatever those rows say.
-        const closedByAncestor = selectClosedByAncestor(useTM.allTasks);
+        // A Closed or Deleted ancestor closes (deletes) what is under it, whatever
+        // those rows say.
+        const ancestorVerdicts = selectAncestorVerdicts(useTM.allTasks);
 
         for (const task of useTM.allTasks) {
-            // Narrowing to a milestone asks to see its contents, so the rule
-            // steps aside there: a closed milestone still lists its tasks.
+            // Narrowing to a milestone asks to see its contents, so the Closed rule
+            // steps aside there: a closed milestone still lists its tasks. A Deleted
+            // ancestor is gone, not finished: nothing opens it on purpose.
             const openedOnPurpose =
                 milestoneScopeActive ||
                 (task.milestoneId != null && milestoneIdSet.has(task.milestoneId));
+            const verdict = task.id != null ? ancestorVerdicts.get(String(task.id)) : undefined;
             const effectiveStatus =
-                !openedOnPurpose && task.id != null && closedByAncestor.has(String(task.id))
-                    ? "Closed"
+                verdict != null && (verdict.status === "Deleted" || !openedOnPurpose)
+                    ? verdict.status
                     : task.status;
 
             // Outdated milestones (Closed + ended sprint) and everything under

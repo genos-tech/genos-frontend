@@ -12,6 +12,7 @@ import "fake-indexeddb/auto";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { AxiosError, type AxiosResponse } from "axios";
+import type { Socket } from "socket.io-client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { NoteContentRenderer } from "../features/notes/common/components/NoteContentRenderer";
@@ -138,6 +139,8 @@ const NOTE = {
 const retry = () => screen.getByRole("button", { name: en.common.actions.retry });
 
 // The notes pane as the app mounts it, fed by the real hook.
+const emit = vi.fn();
+const fakeSocket = { emit } as unknown as Socket;
 const Pane = ({ onReady }: { onReady: (nm: ReturnType<typeof useNoteManagement>) => void }) => {
     const nm = useNoteManagement(myself, "tok");
     onReady(nm);
@@ -145,7 +148,7 @@ const Pane = ({ onReady }: { onReady: (nm: ReturnType<typeof useNoteManagement>)
         <NoteContentRenderer
             myself={myself}
             setMyself={() => {}}
-            socket={null}
+            socket={fakeSocket}
             useCM={{} as never}
             useNM={nm}
             usePM={{} as never}
@@ -167,6 +170,7 @@ const mountPane = async () => {
 };
 
 beforeEach(() => {
+    emit.mockClear();
     answers.queue.length = 0;
     calls.urls.length = 0;
     clearNoteCache();
@@ -230,6 +234,67 @@ describe("a deep link whose note failed to open", () => {
         });
         expect(screen.getByText(en.notes.editor.loadFailed)).toBeTruthy();
         expect(screen.queryByText(en.notes.placeholder.noteNotFoundTitle)).toBeNull();
+    });
+});
+
+// MIP-1330: a note that EXISTS but the user has no role on (403) is the shared-URL case. The
+// access-request panel lives in a tab's editor panel, and no tab opens for a note that could
+// not be fetched, so the pane used to end on "No Note Selected".
+describe("a deep link to a note the user has no role on (403)", () => {
+    const accessRequest = en.notes.accessRequest;
+    const requestAccess = () => screen.getByRole("button", { name: accessRequest.sendButton });
+
+    it.each([
+        ["my note", 1, "/note/personal/single/"],
+        ["task note", 2, "/note/task/single/"],
+        ["chat note", 3, "/note/chat/single/"],
+    ])(
+        "%s: the pane offers the access request, and Request Access files it",
+        async (_name, noteType, url) => {
+            const nm = await mountPane();
+            reply(url, httpError(403));
+            await act(async () => {
+                await nm().loadNote(noteType, 7, -1);
+            });
+
+            expect(screen.getByText(accessRequest.heading)).toBeTruthy();
+            expect(screen.queryByText(en.notes.placeholder.noNoteSelectedTitle)).toBeNull();
+            expect(screen.queryByRole("button", { name: en.common.actions.retry })).toBeNull();
+
+            fireEvent.click(requestAccess());
+            expect(emit).toHaveBeenCalledWith("note_access_request", {
+                note_type: noteType,
+                note_id: 7,
+            });
+            expect(hits(url)).toBe(1);
+        }
+    );
+
+    it("a team / shared link asks about the backend note type (they live in type 1)", async () => {
+        const nm = await mountPane();
+        reply("/note/personal/single/", httpError(403));
+        await act(async () => {
+            await nm().loadNote(8, 7, -1);
+        });
+        fireEvent.click(requestAccess());
+        expect(emit).toHaveBeenCalledWith("note_access_request", { note_type: 1, note_id: 7 });
+    });
+
+    it("another route replaces it (the denial belongs to the URL that asked)", async () => {
+        const nm = await mountPane();
+        reply("/note/personal/single/", httpError(403));
+        await act(async () => {
+            await nm().loadNote(1, 7, -1);
+        });
+        expect(screen.getByText(accessRequest.heading)).toBeTruthy();
+
+        reply("/note/personal/single/", NOTE);
+        await act(async () => {
+            nm().clearNoteOpenFailure();
+            await nm().loadNote(1, 7, -1);
+        });
+        await waitFor(() => expect(nm().tabsApi.tabs).toHaveLength(1));
+        expect(screen.queryByText(accessRequest.heading)).toBeNull();
     });
 });
 

@@ -512,6 +512,7 @@ export const hi: DeepPartial<Messages> = {
             everyoneAlreadyMember: "हर कोई पहले से ही सदस्य है.",
         },
         customEmoji: {
+            loadFailed: "कस्टम इमोजी लोड नहीं हो सके",
             heading: "कस्टम इमोजी",
             description:
                 "टीम-व्यापी इमोजी, एनिमेटेड GIF का स्वागत है। किसी भी संपादक में :name: टाइप करें, उन्हें इमोजी पिकर से चुनें, या उन्हें प्रतिक्रियाओं के रूप में उपयोग करें। टीम में कोई भी व्यक्ति इसे जोड़ सकता है; केवल अपलोडर ही इसे हटा सकता है.",
@@ -1573,6 +1574,7 @@ export const hi: DeepPartial<Messages> = {
             tag: "टैग",
             general: "सामान्य",
             newTagPlaceholder: "नया टैग",
+            addTag: "टैग जोड़ें",
             tags: {
                 manageTitle: "टैग प्रबंधित करें",
                 manageTooltip: "टैग प्रबंधित करें",
@@ -1779,6 +1781,7 @@ export const hi: DeepPartial<Messages> = {
             threadChip: "थ्रेड",
         },
         gmTags: {
+            loadFailed: "आपके टैग लोड नहीं हो सके",
             assignTitle: "{name} के लिए टैग",
             cancelButton: "रद्द करना",
             createButton: "जोड़ना",
@@ -2851,6 +2854,12 @@ export const hi: DeepPartial<Messages> = {
             allMembers: "सभी सदस्य",
             noAssignee: "कोई समनुदेशिती नहीं",
         },
+        deleteUndo: {
+            deleted: "टास्क हटा दिया गया",
+            milestoneDeleted: "माइलस्टोन हटा दिया गया",
+            errorRestored: "टास्क हटाया नहीं जा सका। वह वापस आ गया है।",
+            milestoneErrorRestored: "माइलस्टोन हटाया नहीं जा सका। वह वापस आ गया है।",
+        },
         savedFilters: {
             loadFailed: "सहेजे गए फ़िल्टर लोड नहीं हो सके",
             button: "सहेजे गए फ़िल्टर",
@@ -2923,10 +2932,14 @@ export const hi: DeepPartial<Messages> = {
             },
             loadingTasks: "टास्क लोड होने की प्रतीक्षा है…",
             gridLabel: "टास्क तालिका",
+            rowActionsHeader: "पंक्ति की क्रियाएँ",
+            expandHeader: "विस्तार करें",
             emptyTitle: "दिखाने के लिए कोई टास्क नहीं",
             emptyHint: "अपने फ़िल्टर बदलकर देखें",
             addTagsPlaceholder: "टैग जोड़ें…",
             addTagsMenuItem: "+ टैग जोड़ें",
+            setPriority: "प्राथमिकता चुनें",
+            setEffort: "प्रयास स्तर चुनें",
         },
         dueLabel: {
             noDueDate: "कोई ड्यू तारीख नहीं",
@@ -3553,6 +3566,8 @@ export const hi: DeepPartial<Messages> = {
             },
         },
         history: {
+            detailLoadFailed: "यह संस्करण लोड नहीं हो सका",
+            listLoadFailed: "संस्करण इतिहास लोड नहीं हो सका",
             chipTooltip: "वर्शन हिस्ट्री देखें",
             viewVersions: "वर्शन देखें",
             chipSummary: "{name} ने एडिट किया · {time}",
@@ -3961,7 +3976,9 @@ export const hi: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "PR स्थिति देखने के लिए GitHub कनेक्ट करें",
                 connectButton: "GitHub कनेक्ट करें",
-                loadFailed: "यह PR लोड नहीं हो सका। यह निजी हो सकता है या हटाया जा चुका हो।",
+                privateOrDeleted:
+                    "यह PR एक रेपो के लिए निजी है जिस तक आपकी पहुंच नहीं है, या इसे हटा दिया गया था।",
+                loadFailed: "यह PR लोड नहीं हो सका।",
                 state: {
                     merged: "मर्ज किया गया",
                     draft: "ड्राफ़्ट",
@@ -4229,7 +4246,6 @@ export const hi: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "थ्रेड सारांश लोड नहीं किया जा सका.",
-            retry: "पुन: प्रयास करें",
             forbidden: "आपके पास इस थ्रेड तक पहुंच नहीं है.",
         },
     },
@@ -4290,7 +4306,6 @@ export const hi: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "नोट सारांश लोड नहीं किया जा सका.",
-            retry: "पुन: प्रयास करें",
             forbidden: "आपके पास इस नोट तक पहुंच नहीं है.",
         },
     },
@@ -4738,6 +4753,7 @@ export const hi: DeepPartial<Messages> = {
             uploadFailed: "टीम प्रोफाइल इमेज अपलोड नहीं हो सकी।",
         },
         connectedTeams: {
+            loadFailed: "कनेक्टेड टीमें लोड नहीं हो सकीं",
             title: "जुड़ी हुई टीमें",
             explainer:
                 "कनेक्ट करने से आप बाद में किसी विशिष्ट चैट, प्रोजेक्ट या नोट फ़ोल्डर को किसी अन्य संगठन के साथ साझा कर सकते हैं। अपने आप में यह उन्हें किसी चीज़ तक पहुंच नहीं देता है।",
@@ -4915,6 +4931,7 @@ export const hi: DeepPartial<Messages> = {
             unexpected: "एक अनपेक्षित त्रुटि हुई। कृपया फिर से कोशिश करें।",
         },
         projectLabels: {
+            loadFailed: "प्रोजेक्ट लेबल लोड नहीं हो सके",
             sectionLabel: "टैग",
             manageTooltip: "जोड़ संपादित करें",
             manageHeading: "प्रोजेक्ट टैग",
@@ -5318,6 +5335,7 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     calendar: {
+        eventsLoadFailed: "आपके इवेंट लोड नहीं हो सके",
         title: "कैलेंडर",
         today: "आज",
         prevMonth: "पिछला महीना",
@@ -5379,6 +5397,7 @@ export const hi: DeepPartial<Messages> = {
                 "सभी घटनाओं को संपादित करने से श्रृंखला नहीं बदलेगी - इसके बजाय किसी एक घटना पर तारीख बदलें।",
         },
         sources: {
+            loadFailed: "आपके कैलेंडर लोड नहीं हो सके",
             title: "कैलेंडर",
             addAccount: "Google खाता जोड़ें",
             showAllFrom: "इस खाते से सभी कैलेंडर दिखाएं",

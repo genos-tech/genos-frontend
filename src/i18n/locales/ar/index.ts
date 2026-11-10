@@ -1230,6 +1230,7 @@ export const ar: DeepPartial<Messages> = {
             everyoneAlreadyMember: "الجميع عضو بالفعل.",
         },
         customEmoji: {
+            loadFailed: "تعذّر تحميل الرموز التعبيرية المخصصة",
             heading: "الرموز التعبيرية المخصصة",
             description:
                 "نرحب بالرموز التعبيرية على مستوى الفريق وصور GIF المتحركة. اكتب :name: في أي محرر، اختره من منتقي الرموز التعبيرية، أو استخدمه كردود فعل. يمكن لأي شخص في الفريق إضافة واحد؛ فقط القائم بالتحميل يمكنه إزالته.",
@@ -1566,6 +1567,7 @@ export const ar: DeepPartial<Messages> = {
             tag: "علامة",
             general: "عام",
             newTagPlaceholder: "علامة جديدة",
+            addTag: "إضافة علامة",
             tags: {
                 manageTitle: "إدارة العلامات",
                 manageTooltip: "إدارة العلامات",
@@ -1948,6 +1950,7 @@ export const ar: DeepPartial<Messages> = {
             reactedLabel: "تفاعل",
         },
         gmTags: {
+            loadFailed: "تعذّر تحميل وسومك",
             assignTitle: "الكلمات الدلالية لـ {name}",
             cancelButton: "إلغاء",
             createButton: "إضافة",
@@ -2670,10 +2673,14 @@ export const ar: DeepPartial<Messages> = {
             },
             loadingTasks: "في انتظار تحميل المهام…",
             gridLabel: "جدول المهام",
+            rowActionsHeader: "إجراءات الصف",
+            expandHeader: "توسيع",
             emptyTitle: "لا توجد مهام لعرضها",
             emptyHint: "جرّب تعديل عوامل التصفية",
             addTagsPlaceholder: "إضافة علامات…",
             addTagsMenuItem: "+ إضافة علامات",
+            setPriority: "تحديد الأولوية",
+            setEffort: "تحديد مستوى الجهد",
         },
         dueLabel: {
             noDueDate: "بدون تاريخ استحقاق",
@@ -3051,6 +3058,12 @@ export const ar: DeepPartial<Messages> = {
             allMembers: "جميع الأعضاء",
             noAssignee: "لا المكلف",
         },
+        deleteUndo: {
+            deleted: "تم حذف المهمة",
+            milestoneDeleted: "تم حذف المعلم",
+            errorRestored: "تعذّر حذف المهمة. عادت إلى مكانها.",
+            milestoneErrorRestored: "تعذّر حذف المعلم. عاد إلى مكانه.",
+        },
         savedFilters: {
             loadFailed: "تعذّر تحميل عوامل التصفية المحفوظة",
             button: "المرشحات المحفوظة",
@@ -3376,6 +3389,8 @@ export const ar: DeepPartial<Messages> = {
             },
         },
         history: {
+            detailLoadFailed: "تعذّر تحميل هذا الإصدار",
+            listLoadFailed: "تعذّر تحميل سجل الإصدارات",
             chipTooltip: "عرض سجل الإصدارات",
             viewVersions: "عرض الإصدارات",
             chipSummary: "حُرّر بواسطة {name} · {time}",
@@ -4391,6 +4406,7 @@ export const ar: DeepPartial<Messages> = {
             loading: "جارٍ التحميل...",
         },
         connectedTeams: {
+            loadFailed: "تعذّر تحميل الفرق المتصلة",
             title: "فرق متصلة",
             explainer:
                 "يتيح لك الاتصال مشاركة محادثة أو مشروع أو مجلد ملاحظات محدد مع مؤسسة أخرى لاحقًا. فهو بحد ذاته يمنحهم إمكانية الوصول إلى لا شيء.",
@@ -4497,6 +4513,7 @@ export const ar: DeepPartial<Messages> = {
             },
         },
         projectLabels: {
+            loadFailed: "تعذّر تحميل تسميات المشاريع",
             sectionLabel: "العلامات",
             manageTooltip: "تحرير العلامات",
             manageHeading: "علامات المشروع",
@@ -5024,6 +5041,7 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     calendar: {
+        eventsLoadFailed: "تعذّر تحميل أحداثك",
         title: "تقويم",
         today: "اليوم",
         prevMonth: "الشهر السابق",
@@ -5085,6 +5103,7 @@ export const ar: DeepPartial<Messages> = {
                 "لن يؤدي تحرير جميع الأحداث إلى نقل السلسلة - قم بتغيير التاريخ في حدث واحد بدلاً من ذلك.",
         },
         sources: {
+            loadFailed: "تعذّر تحميل تقاويمك",
             title: "التقاويم",
             addAccount: "إضافة حساب Google",
             showAllFrom: "إظهار كافة التقاويم من هذا الحساب",
@@ -5592,7 +5611,8 @@ export const ar: DeepPartial<Messages> = {
             linkedCard: {
                 connectPrompt: "اربط GitHub لعرض حالة PR",
                 connectButton: "ربط GitHub",
-                loadFailed: "تعذّر تحميل هذا PR. قد يكون خاصًا أو محذوفًا.",
+                privateOrDeleted: "هذا PR خاص بمستودع لا يمكنك الوصول إليه، أو تم حذفه.",
+                loadFailed: "تعذّر تحميل هذا PR.",
                 state: {
                     merged: "تم الدمج",
                     draft: "مسودة",
@@ -5662,7 +5682,6 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "تعذر تحميل ملخص الملاحظة.",
-            retry: "أعد المحاولة",
             forbidden: "ليس لديك حق الوصول إلى هذه المذكرة.",
         },
     },
@@ -5755,7 +5774,6 @@ export const ar: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "تعذر تحميل ملخص الموضوع.",
-            retry: "أعد المحاولة",
             forbidden: "ليس لديك حق الوصول إلى هذا الموضوع.",
         },
     },

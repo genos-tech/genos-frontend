@@ -74,6 +74,7 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
+import { deriveEffectiveTasks, EffectiveTask } from "../../utils/effectiveTasks";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
@@ -86,22 +87,6 @@ import { ProjectTagChip } from "../ProjectTagChip";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { DashboardTaskRow } from "./DashboardTaskRow";
 import { TaskVelocitySection } from "./TaskVelocitySection";
-
-// A task augmented with status/close-date rolled up from its parent chain.
-// `effectiveStatus`:
-//   - "Deleted"  → task itself or any ancestor is Deleted (excluded from stats).
-//   - "Closed"   → task itself OR any ancestor is Closed (sub-tasks of a closed
-//                  parent are reported as completed even if their own status
-//                  was never updated).
-//   - otherwise  → the task's own status.
-// `effectiveCloseDate`: when the task became "effectively" closed:
-//   - the task's own `updatedAt` if its own status is Closed,
-//   - else the closest closed ancestor's `updatedAt`,
-//   - else null (task is not effectively closed).
-type EffectiveTask = TaskTableProps & {
-    effectiveStatus: string;
-    effectiveCloseDate: string | null;
-};
 
 type TaskHomeContentProps = {
     useTM: TaskManagementState;
@@ -121,46 +106,6 @@ const startOfTodayMs = (): number => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d.getTime();
-};
-
-// Roll a flat task list up into `EffectiveTask`s: drop Deleted tasks and
-// whole branches under a Deleted parent, and treat a sub-task of a Closed
-// parent as Closed itself. Shared by the current-project dashboard metrics
-// and the team-wide (all-projects) Team Capacity pass, so both apply the
-// exact same closed/deleted semantics. Iterates `taskById.values()` so any
-// duplicate rows collapse to one entry per id (latest wins).
-const deriveEffectiveTasks = (taskById: Map<string, TaskTableProps>): EffectiveTask[] => {
-    const result: EffectiveTask[] = [];
-    for (const t of taskById.values()) {
-        if (!t.id) continue;
-        if (t.status === "Deleted") continue;
-
-        const visited = new Set<string>();
-        let current: TaskTableProps | undefined = t;
-        let ancestorClosedDate: string | null = null;
-        let isInDeletedBranch = false;
-
-        while (current && current.id && !visited.has(current.id)) {
-            visited.add(current.id);
-            if (current.status === "Deleted") {
-                isInDeletedBranch = true;
-                break;
-            }
-            if (current.status === "Closed" && ancestorClosedDate === null) {
-                ancestorClosedDate = current.updatedAt;
-            }
-            if (!current.parentTaskId) break;
-            current = taskById.get(String(current.parentTaskId));
-        }
-
-        if (isInDeletedBranch) continue;
-
-        const effectiveStatus = ancestorClosedDate !== null ? "Closed" : t.status || "Open";
-        const effectiveCloseDate = t.status === "Closed" ? t.updatedAt : ancestorClosedDate;
-
-        result.push({ ...t, effectiveStatus, effectiveCloseDate });
-    }
-    return result;
 };
 
 // Per-assignee effort load, bucketed by due-window. Shared by the

@@ -6,7 +6,8 @@ import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
 import { Alert, Box, Button, IconButton, Input, Stack } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { DataState } from "../../../../components/ui/feedback/DataState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
@@ -132,7 +133,7 @@ type ModalManageGMTagsProps = {
 
 export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => {
     const { t } = useTranslation();
-    const { tags, updateTag, deleteTag } = usePersonalGMTags();
+    const { tags, loaded, failed, reload, updateTag, deleteTag } = usePersonalGMTags();
 
     // Two-click delete: first click arms the row, second confirms.
     const [armedDeleteTagId, setArmedDeleteTagId] = useState<number | null>(null);
@@ -159,9 +160,21 @@ export const ModalManageGMTags = ({ open, setOpen }: ModalManageGMTagsProps) => 
             }}
         >
             <Box sx={{ maxHeight: 320, overflowY: "auto", my: 1 }}>
-                {tags.length === 0 && (
-                    <EmptyState body={t.chat.gmTags.emptyList} data-empty="gm-tags" size="sm" />
-                )}
+                {/* Not loaded yet / failed is not "no tags": the list is the app-wide store, read
+                    once at boot and again on focus, and a failed read used to say "no tags yet". */}
+                <DataState
+                    empty={{ body: t.chat.gmTags.emptyList, "data-empty": "gm-tags" }}
+                    error={failed}
+                    hasData={tags.length > 0}
+                    loading={!loaded && !failed}
+                    size="sm"
+                    skeleton={<SkeletonRows count={2} />}
+                    errorState={{
+                        title: t.chat.gmTags.loadFailed,
+                        onRetry: reload,
+                        "data-error": "gm-tags",
+                    }}
+                />
                 {tags.map((tag) => {
                     const isArmed = armedDeleteTagId === tag.tagId;
                     return (

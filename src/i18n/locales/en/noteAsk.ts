@@ -59,7 +59,6 @@ export const noteAsk = {
     },
     errors: {
         loadFailed: "Couldn't load the note summary.",
-        retry: "Retry",
         forbidden: "You don't have access to this note.",
     },
 } as const;

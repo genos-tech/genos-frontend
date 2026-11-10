@@ -1,0 +1,19 @@
+{
+    // The test type check (MIP-1315). `tsc -b` (the build, and so the Railway deploy) leaves
+    // `src/__tests__` and `*.test.ts(x)` out on purpose: stale test-fixture type drift must
+    // not block a deploy. This config type-checks them anyway, for a separate non-blocking
+    // CI step that only watches the error COUNT (scripts/test-typecheck-ratchet.mjs).
+    //
+    // NOT referenced from tsconfig.json: `tsc -b` never reads it.
+    "extends": "./tsconfig.app.json",
+    "compilerOptions": {
+        "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+        // The tests run on Node 22 (and Chromium-grade jsdom), not on the app's ES2020 floor:
+        // `.at()`, `Object.hasOwn` and friends are fine there and were 56 false errors.
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        // vitest's globals (`describe`, `it`, `vi`, ...) and node's (`process`, `Buffer`)
+        "types": ["vitest/globals", "node"]
+    },
+    "include": ["src"],
+    "exclude": []
+}

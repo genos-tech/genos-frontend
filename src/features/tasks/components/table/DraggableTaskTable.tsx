@@ -34,6 +34,7 @@ import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import type { TaskGraphScope } from "../../diagram/types";
+import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { statusSolid } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
@@ -45,6 +46,7 @@ import {
     collectDescendantIds,
     TreePosition,
 } from "../../utils/cascadeTreePosition";
+import { selectChildrenByParent } from "../../utils/childrenByParent";
 import { buildCustomFieldColumns, parseCustomFieldColKey } from "../../utils/customFields";
 import {
     DND_ACTIVE_ATTR,
@@ -598,19 +600,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         // is `null` the filter pass hasn't run yet — fall through to a
         // permissive build to avoid blanking out children on the very
         // first render before TaskFilterMenu's `useEffect` fires.
-        const map = new Map<string, TaskTableProps[]>();
-        for (const task of useTM.allTasks) {
-            if (task.parentTaskId == null) continue;
-            if (visibleChildTaskIds === null) {
-                if (task.status === "Deleted") continue;
-            } else if (task.id == null || !visibleChildTaskIds.has(String(task.id))) {
-                continue;
-            }
-            const parentId = String(task.parentTaskId);
-            const arr = map.get(parentId) || [];
-            arr.push(task);
-            map.set(parentId, arr);
-        }
+        const map = selectChildrenByParent(useTM.allTasks, visibleChildTaskIds);
         // Subtasks obey the user's sort condition too. Without this the
         // groups render in raw `allTasks` order, so changing the sort
         // reorders the root rows while every expanded subtask group sits
@@ -1512,6 +1502,20 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 : null,
         [useTM.taskFieldRules, usePM.currentProject?.projectId]
     );
+    // "Deleted" in a row's status cell: hidden behind an Undo toast, written when
+    // the toast is gone (MIP-1303). The returned callback is identity-stable and
+    // reads the latest state itself, so rows that skip a render stay correct.
+    const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    const handleDeleteRow = useCallback(
+        (row: TaskTableProps) =>
+            deleteTask({
+                id: Number(row.id),
+                projectId: Number(row.projectId ?? usePM.currentProject?.projectId),
+                isMilestone: row.isMilestone === true,
+                milestoneId: row.milestoneId,
+            }),
+        [deleteTask, usePM.currentProject?.projectId]
+    );
     // Identity-stable so TaskTableRows (which excludes callbacks from its
     // comparator, same contract as DraggableTaskRow) never holds a closure
     // over stale state — the ref it writes is the only state involved.
@@ -1720,8 +1724,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         style={{ ...getTableHeaderStyles(mode), minWidth: totalTableWidth }}
                         {...{ [GRID_ROW_ATTR]: GRID_HEADER_ROW }}
                     >
-                        {/* Drag handle placeholder */}
-                        <div style={headerDragHandlePlaceholderStyles} aria-hidden />
+                        {/* The leading gutter (drag, graph, +) is one cell in every body row, so it
+                            is one header cell too: without it a screen reader counted one more
+                            column in a row than in the header (MIP-1239). Named, not marked as a
+                            grid column: there is nothing to sort or to stop on. */}
+                        <div
+                            role="columnheader"
+                            aria-label={t.tasks.table.rowActionsHeader}
+                            style={headerDragHandlePlaceholderStyles}
+                        />
 
                         {visibleColumns.map((column, index) => (
                             <div
@@ -1734,9 +1745,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             : "descending"
                                         : undefined
                                 }
-                                // The expand column has no name and nothing to sort by.
+                                // The expand column has no visible name and nothing to sort by: a
+                                // screen reader gets its name from here, and it has no button (a
+                                // nameless button in the header was a control that did nothing).
                                 {...(column.field === "__expand"
-                                    ? {}
+                                    ? { "aria-label": t.tasks.table.expandHeader }
                                     : { [GRID_COL_ATTR]: column.field })}
                                 style={{
                                     ...getHeaderCellStyles(
@@ -1763,57 +1776,60 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                               : "1px solid rgba(0, 0, 0, 0.04)",
                                 }}
                             >
-                                {/* Header content - clickable for sorting */}
-                                <PlainButton
-                                    tabIndex={column.field === "__expand" ? -1 : undefined}
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 4,
-                                        flex: 1,
-                                        overflow: "hidden",
-                                    }}
-                                    onClick={() => handleHeaderClick(column.field)}
-                                    onMouseEnter={(e) => {
-                                        if (!resizingColumn) {
-                                            e.currentTarget.style.opacity = "0.8";
-                                        }
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.opacity = "1";
-                                    }}
-                                >
-                                    <span
+                                {/* Header content - clickable for sorting. The expand column has nothing to sort by:
+                                    no button at all (a nameless, do-nothing control is impossible by
+                                    construction), the cell carries the name (aria-label above). */}
+                                {column.field !== "__expand" && (
+                                    <PlainButton
                                         style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: 4,
+                                            flex: 1,
                                             overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
+                                        }}
+                                        onClick={() => handleHeaderClick(column.field)}
+                                        onMouseEnter={(e) => {
+                                            if (!resizingColumn) {
+                                                e.currentTarget.style.opacity = "0.8";
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.opacity = "1";
                                         }}
                                     >
-                                        {column.headerName}
-                                    </span>
-                                    {/* Show the indicator only on the
+                                        <span
+                                            style={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {column.headerName}
+                                        </span>
+                                        {/* Show the indicator only on the
                                         primary tier (tier 0). The
                                         secondary tier from Settings is
                                         intentionally not flagged in the
                                         header to avoid two arrows
                                         competing visually. */}
-                                    {sortTiers[0]?.field === column.field && (
-                                        <span
-                                            style={{
-                                                fontSize: "0.7rem",
-                                                color:
-                                                    mode === "dark"
-                                                        ? "var(--gp-brandalt-400)"
-                                                        : "var(--gp-brand-700)",
-                                                flexShrink: 0,
-                                            }}
-                                        >
-                                            {sortTiers[0].direction === "asc" ? "▲" : "▼"}
-                                        </span>
-                                    )}
-                                </PlainButton>
+                                        {sortTiers[0]?.field === column.field && (
+                                            <span
+                                                style={{
+                                                    fontSize: "0.7rem",
+                                                    color:
+                                                        mode === "dark"
+                                                            ? "var(--gp-brandalt-400)"
+                                                            : "var(--gp-brand-700)",
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                {sortTiers[0].direction === "asc" ? "▲" : "▼"}
+                                            </span>
+                                        )}
+                                    </PlainButton>
+                                )}
 
                                 {/* Resize handle */}
                                 {column.resizable !== false && (
@@ -1920,6 +1936,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             useTEM={useTEM}
                                             useTM={useTM}
                                             useUISM={useUISM}
+                                            onDeleteTask={handleDeleteRow}
                                             onOpenDiagram={openDiagram}
                                             onQuickAddChild={openQuickAdd}
                                             onQuickAddClose={closeQuickAdd}

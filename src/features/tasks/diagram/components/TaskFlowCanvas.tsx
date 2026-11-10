@@ -1,6 +1,13 @@
 import "@xyflow/react/dist/style.css";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Alert, Box, IconButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -45,6 +52,11 @@ import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
 import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
+import {
+    indexTasksById,
+    isUnderClosedAncestor,
+    isUnderDeletedAncestor,
+} from "../../utils/taskAncestry";
 import { statuses } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
@@ -150,7 +162,7 @@ const DELETED_STATUS = statuses.find((s) => s.status === "Deleted");
 const isDeletedStatus = (status: string | null | undefined): boolean =>
     (status ?? "").toLowerCase() === "deleted";
 
-const computeOverview = (
+export const computeOverview = (
     graph: TaskGraph,
     sprintByTaskId: Map<number, Sprint>,
     openBlockerCountByTask: Map<number, number>
@@ -163,7 +175,14 @@ const computeOverview = (
     // Deleted tasks are excluded from every overview figure (progress,
     // span, overdue/due-soon/blocked) so the header matches the graph,
     // which never renders them.
-    const liveTasks = graph.tasks.filter((t) => !isDeletedStatus(t.status));
+    // Whatever hangs under a Deleted task is gone with it, and whatever hangs under a
+    // Closed one counts as Closed however its own row is set (MIP-1382): users do not
+    // close every sub-task before the parent, so an "Open" child of a Closed parent must
+    // neither hold the progress back nor show up as overdue.
+    const byId = indexTasksById(graph.tasks);
+    const liveTasks = graph.tasks.filter(
+        (t) => !isDeletedStatus(t.status) && !isUnderDeletedAncestor(t, byId)
+    );
     // Span: min(start) → max(due) across visible (non-ghost) tasks.
     let spanStart: string | null = null;
     let spanEnd: string | null = null;
@@ -195,7 +214,8 @@ const computeOverview = (
     for (const t of liveTasks) {
         if (t.id == null) continue;
         const taskId = Number(t.id);
-        const isClosed = (t.status ?? "").toLowerCase() === "closed";
+        const isClosed =
+            (t.status ?? "").toLowerCase() === "closed" || isUnderClosedAncestor(t, byId);
         if (taskId !== rootTaskId) {
             total += 1;
             if (isClosed) closed += 1;
@@ -285,6 +305,7 @@ const computeDescendantCounts = (
         bucket.push(t);
         byParent.set(pid, bucket);
     }
+    const byId = indexTasksById(tasks);
     const counts = new Map<number, { total: number; closed: number }>();
     const walk = (rootId: number): { total: number; closed: number } => {
         const cached = counts.get(rootId);
@@ -299,7 +320,13 @@ const computeDescendantCounts = (
             // overview, which also excludes them.
             if (isDeletedStatus(child.status)) continue;
             total += 1;
-            if ((child.status ?? "").toLowerCase() === "closed") closed += 1;
+            // A child under a Closed task is Closed too, whatever its own row says
+            // (MIP-1382), so the badge agrees with the header overview.
+            if (
+                (child.status ?? "").toLowerCase() === "closed" ||
+                isUnderClosedAncestor(child, byId)
+            )
+                closed += 1;
             const sub = walk(Number(child.id));
             total += sub.total;
             closed += sub.closed;
@@ -568,7 +595,7 @@ const CanvasInner = ({
     // exception to going through `purplePalette`.
     const { raw: rawTheme } = useColorTheme();
     const rawAccent = isDark ? rawTheme.dark.accent : rawTheme.light.accent;
-    const { fitView } = useReactFlow();
+    const { fitView, deleteElements, getEdges } = useReactFlow();
     // True once React Flow has measured every node (real dimensions). We
     // gate viewport fitting on this — see `pendingFitRef` and the fit
     // effect below for why fitting before measurement corrupts the view.
@@ -1147,6 +1174,28 @@ const CanvasInner = ({
         []
     );
 
+    // Backspace/Delete on a selected EDGE (MIP-1390). The graph lives in a modal, and the
+    // modal frame stops key events at its own root so they never reach the page, which is
+    // also where React Flow listens for `deleteKeyCode`: its own key handling never saw the
+    // key, and an edge has no delete control of its own. So the canvas handles the key
+    // itself, here, below the frame's fence, and React Flow's is switched off (one path,
+    // never two). Only edges: a card is deleted from its own status menu (MIP-1303), which
+    // `onBeforeDelete` above also enforces. Typing in a card's title or a date field is left
+    // alone.
+    const onCanvasKeyDown = useCallback(
+        (event: ReactKeyboardEvent) => {
+            if (event.key !== "Backspace" && event.key !== "Delete") return;
+            if (event.defaultPrevented) return;
+            const target = event.target as HTMLElement | null;
+            if (target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+            const selected = getEdges().filter((edge) => edge.selected);
+            if (selected.length === 0) return;
+            event.preventDefault();
+            void deleteElements({ edges: selected });
+        },
+        [getEdges, deleteElements]
+    );
+
     const onEdgesChange = useCallback(
         (changes: EdgeChange[]) => {
             // Intercept *removes* — every other change (selection,
@@ -1297,6 +1346,8 @@ const CanvasInner = ({
         () => ({
             flex: 1,
             position: "relative" as const,
+            // Focusable only so the keyboard goes here on a click; no ring on the whole canvas.
+            outline: "none",
             background: isDark
                 ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
                 : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
@@ -1317,7 +1368,8 @@ const CanvasInner = ({
     );
 
     return (
-        <Box sx={containerSx}>
+        // Focusable, so a click on the canvas puts the keyboard here (Backspace/Delete).
+        <Box sx={containerSx} tabIndex={-1} onKeyDown={onCanvasKeyDown}>
             {/* The graph is itself a modal; the confirm takes its layer from it. */}
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
@@ -1377,7 +1429,7 @@ const CanvasInner = ({
             <ReactFlow
                 colorMode={isDark ? "dark" : "light"}
                 defaultEdgeOptions={{ animated: false }}
-                deleteKeyCode={["Backspace", "Delete"]}
+                deleteKeyCode={null}
                 edges={drawn.edges}
                 edgeTypes={edgeTypes}
                 // Padding matches the deferred fit effect so React Flow's

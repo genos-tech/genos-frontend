@@ -351,6 +351,7 @@ const SprintBoardColumnImpl = ({
                                         <SprintBoardCard
                                             key={task.id}
                                             index={index}
+                                            inClosedColumn={column.status === "Closed"}
                                             isSelected={isSelected}
                                             milestone={milestone}
                                             myself={myself}
