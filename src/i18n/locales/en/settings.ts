@@ -1077,6 +1077,17 @@ export const settings = {
                 lift: "Pick up a card (arrows move it, Space drops it, Esc cancels)",
             },
         },
+        calendar: {
+            title: "Calendar",
+            description:
+                "Active while a day or an event of the calendar has focus. Tab enters and leaves the grid (the month is one stop, the week and day views one per day); these keys move inside it.",
+            rows: {
+                move: "Move between days and weeks (month), or events and days (week and day views)",
+                edges: "First / last day of the week (month), first / last event of the day (week and day views)",
+                page: "Previous / next month (month view)",
+                open: "Open the day's events or the event; an empty day starts a new event",
+            },
+        },
         editing: {
             title: "Writing",
             description: "Active while you write a message or fill in the new-task form.",

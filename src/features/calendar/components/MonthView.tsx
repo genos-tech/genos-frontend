@@ -8,11 +8,20 @@ import dayjs, { Dayjs } from "dayjs";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Clickable } from "../../../components/ui/Clickable";
+import {
+    monthMove,
+    ROVING_DEFAULT_ATTR,
+    ROVING_GROUP_ATTR,
+    ROVING_ITEM_ATTR,
+    useRovingNav,
+    type RovingConfig,
+} from "../../../hooks/common/roving";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";
+import { focusRing } from "../../../theme/tokens";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
-import { buildMonthGrid, weekdayLabels } from "../utils/monthGrid";
+import { buildMonthGrid, formatCalendarDate, weekdayLabels } from "../utils/monthGrid";
 import { clampLanes, layoutSpanSegments, type SpanSegment } from "../utils/multiDay";
 import { paletteForEvent } from "../utils/sourceColors";
 
@@ -68,6 +77,9 @@ interface MonthViewProps {
     /** Click on the "+N more" overflow chip → caller surfaces a
      *  per-day popover listing all events for that key. */
     onShowMore: (dayKey: string) => void;
+    /** The keyboard moved to a day outside the six weeks shown (PageUp / PageDown, or an arrow
+     *  off the edge): show that day's month. The focus follows when its cell is there. */
+    onNavigateToDay: (day: Dayjs) => void;
     /** Base color per `accountId:calendarId`. With several accounts
      *  overlaid, color is the only thing distinguishing a work meeting
      *  from a personal one, so events are tinted per source rather than
@@ -106,6 +118,7 @@ export const MonthView = ({
     onCellClick,
     onEventClick,
     onShowMore,
+    onNavigateToDay,
     colorBySource,
     freeBusySources,
     busyLabel,
@@ -128,6 +141,47 @@ export const MonthView = ({
             ),
         [events, grid]
     );
+
+    // Days that have something on them, spans and the ones the lane cap folded included: Enter on
+    // such a day opens the list of its events (the "+N" popover), on an empty one it creates.
+    const busyDays = useMemo(() => {
+        const busy = new Set<string>();
+        grid.forEach((week, weekIndex) => {
+            const { visible, hiddenPerColumn } = weekSpans[weekIndex];
+            week.forEach((day, dayIndex) => {
+                const key = dayKey(day);
+                if ((eventsByDay[key]?.length ?? 0) > 0 || (hiddenPerColumn[dayIndex] ?? 0) > 0) {
+                    busy.add(key);
+                }
+            });
+            for (const segment of visible) {
+                for (let i = segment.startIndex; i <= segment.endIndex; i++) {
+                    busy.add(dayKey(week[i]));
+                }
+            }
+        });
+        return busy;
+    }, [grid, weekSpans, eventsByDay]);
+
+    // ONE Tab stop for the month (the WAI-ARIA date grid, MIP-1402): the day the stop is on is
+    // today, or the 1st when today is not in this month. Arrows move by day and week, Home /
+    // End the week, PageUp / PageDown the month; the chips, bars and "+N" inside a day are not
+    // stops of their own (Enter opens the day's list of events).
+    const monthStart = grid[0].find((d) => d.month() === focused.month()) ?? grid[0][0];
+    const stopDay = dayKey(
+        dayjs(todayKey).isSame(focused, "month") ? dayjs(todayKey) : monthStart
+    );
+    const navConfig: RovingConfig = {
+        move: monthMove,
+        groupOrder: "dom",
+        activate: ({ item }) => {
+            if (busyDays.has(item)) onShowMore(item);
+            else onCellClick(dayjs(item));
+        },
+        onOutside: ({ item }) => onNavigateToDay(dayjs(item)),
+    };
+    const { ref: gridRef } = useRovingNav(navConfig);
+    const monthLabel = formatCalendarDate(focused, locale, { month: "long", year: "numeric" });
 
     const accent = isDark
         ? "rgba(var(--gp-brand-700-rgb), 0.85)"
@@ -152,6 +206,10 @@ export const MonthView = ({
                 }
             >
                 <Clickable
+                    // The bars are outside the day cells (their own layer), so the month's one
+                    // Tab stop cannot take them out of the order: they are not stops. Enter on
+                    // any day the bar covers lists it with the day's other events.
+                    tabIndex={-1}
                     sx={{
                         // 1-based grid lines, and the end line is
                         // exclusive — hence +1 / +2. Spanning several
@@ -262,6 +320,9 @@ export const MonthView = ({
 
             {/* Six week rows */}
             <Box
+                ref={gridRef}
+                aria-label={monthLabel}
+                role="grid"
                 sx={{
                     display: "grid",
                     gridTemplateRows: "repeat(6, minmax(0, 1fr))",
@@ -289,6 +350,7 @@ export const MonthView = ({
                         >
                             {/* Day cells, each owning its own content. */}
                             <Box
+                                role="row"
                                 sx={{
                                     display: "grid",
                                     gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
@@ -317,7 +379,28 @@ export const MonthView = ({
                                     return (
                                         <Sheet
                                             key={key}
+                                            aria-current={isToday ? "date" : undefined}
+                                            aria-label={[
+                                                formatCalendarDate(day, locale, {
+                                                    weekday: "long",
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                }),
+                                                ...dayEvents.map((e) =>
+                                                    eventLabel(e, freeBusySources, busyLabel)
+                                                ),
+                                            ].join(", ")}
+                                            role="gridcell"
+                                            tabIndex={-1}
                                             variant="outlined"
+                                            {...{
+                                                [ROVING_GROUP_ATTR]: "month",
+                                                [ROVING_ITEM_ATTR]: key,
+                                                ...(key === stopDay
+                                                    ? { [ROVING_DEFAULT_ATTR]: "" }
+                                                    : {}),
+                                            }}
                                             sx={{
                                                 display: "flex",
                                                 flexDirection: "column",
@@ -343,6 +426,8 @@ export const MonthView = ({
                                                         ? "rgba(var(--gp-brand-700-rgb), 0.08)"
                                                         : "rgba(var(--gp-brand-700-rgb), 0.04)",
                                                 },
+                                                "&:focus": { outline: "none" },
+                                                "&:focus-visible": focusRing,
                                             }}
                                             onClick={(ev) => {
                                                 // Only the cell surface opens
