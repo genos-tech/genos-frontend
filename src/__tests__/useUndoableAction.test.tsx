@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ToastHost } from "../components/ui/feedback/Toast";
 import { __resetToasts, MAX_VISIBLE, toast } from "../components/ui/feedback/toastStore";
 import { UndoableRouteFlush } from "../components/ui/feedback/UndoableRouteFlush";
+import { ModalFrame } from "../components/ui/modal/ModalFrame";
 import {
     __resetUndoables,
     flushUndoables,
@@ -389,6 +390,76 @@ describe("useUndoableAction", () => {
         expect(onRestore).not.toHaveBeenCalled();
         await tick(WINDOW + 100);
         expect(commit).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("Ctrl+Z inside a dialog (MIP-1395)", () => {
+    // `ModalFrame` stops keydown at its own root so a page shortcut does not fire under
+    // a dialog; the Undo chord has to get through it while a toast is up.
+    const mountDialog = (body: React.ReactNode) =>
+        mount(
+            <ModalFrame open onClose={() => {}} title="Task graph">
+                {body}
+            </ModalFrame>
+        );
+
+    it("undoes the pending delete when the key is pressed inside a ModalFrame", async () => {
+        const { run, commit, onRestore } = make({ key: "a" });
+        mountDialog(<button type="button">card</button>);
+        act(() => runUndoable(run));
+        fireEvent.keyDown(screen.getByRole("button", { name: "card" }), {
+            key: "z",
+            metaKey: true,
+        });
+        await tick(WINDOW * 2);
+        expect(commit).not.toHaveBeenCalled();
+        expect(onRestore).toHaveBeenCalledTimes(1);
+        expect(hiddenText()).toBe("");
+    });
+
+    it("the dialog still fences every other key: nothing outside it hears them", () => {
+        // The listener sits on `window` in the capture phase for the undo chord only.
+        const outside = vi.fn();
+        window.addEventListener("keydown", outside);
+        try {
+            const { run } = make({ key: "a" });
+            mountDialog(<button type="button">card</button>);
+            act(() => runUndoable(run));
+            fireEvent.keyDown(screen.getByRole("button", { name: "card" }), { key: "Delete" });
+            fireEvent.keyDown(screen.getByRole("button", { name: "card" }), {
+                key: "k",
+                metaKey: true,
+            });
+            expect(outside).not.toHaveBeenCalled();
+        } finally {
+            window.removeEventListener("keydown", outside);
+        }
+    });
+
+    it("a text field inside the dialog keeps its own undo and leaves the delete pending", async () => {
+        const { run, commit, onRestore } = make({ key: "a" });
+        mountDialog(<input aria-label="field" />);
+        act(() => runUndoable(run));
+        fireEvent.keyDown(screen.getByLabelText("field"), { key: "z", ctrlKey: true });
+        expect(onRestore).not.toHaveBeenCalled();
+        await tick(WINDOW + 100);
+        expect(commit).toHaveBeenCalledTimes(1);
+    });
+
+    it("with no undo toast up the chord is left alone inside the dialog too", () => {
+        const { run } = make({ key: "a" });
+        mountDialog(<button type="button">card</button>);
+        const ev = new KeyboardEvent("keydown", {
+            key: "z",
+            metaKey: true,
+            bubbles: true,
+            cancelable: true,
+        });
+        // Nothing pending (the listener is installed by the first undoable action).
+        act(() => runUndoable(run));
+        act(() => flushUndoables("exit"));
+        screen.getByRole("button", { name: "card" }).dispatchEvent(ev);
+        expect(ev.defaultPrevented).toBe(false);
     });
 });
 
