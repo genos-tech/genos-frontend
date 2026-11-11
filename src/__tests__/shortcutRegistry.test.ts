@@ -334,18 +334,25 @@ describe("no silent clashes", () => {
 
     /**
      * Chords the rich-text editor binds itself. Both run for one keypress (nothing checks
-     * `defaultPrevented`): Cmd/Ctrl+K opens Spotlight over the link popover (still open).
-     * A shortcut that SKIPS editors on that platform never fires inside one, so it cannot
-     * clash: that is how Windows Ctrl+Alt+C (BlockNote's code block) is settled (MIP-1311).
+     * `defaultPrevented`). Each overlap is settled one of two ways, so none is left to list:
+     * Cmd/Ctrl+K by a claim (Spotlight wins and BlockNote's link popover never sees the key,
+     * MIP-1310), and a shortcut that SKIPS editors on that platform never fires inside one, so
+     * it cannot clash: that is how Windows Ctrl+Alt+C (calendar + code block) is settled (MIP-1311).
      */
     const KNOWN_EDITOR_OVERLAPS: Record<Platform, string[]> = {
-        mac: ["global.spotlight|blocknote.link"],
-        other: ["global.spotlight|blocknote.link"],
+        mac: [],
+        other: [],
     };
+
+    it("Spotlight claims Cmd/Ctrl+K from the editor (the only claim)", () => {
+        const claiming = SHORTCUT_IDS.filter((id) => "claimsEditor" in SHORTCUTS[id]);
+        expect(claiming).toEqual(["global.spotlight"]);
+    });
 
     it.each(PLATFORMS)("every overlap with an editor chord is a known one (%s)", (platform) => {
         const found: string[] = [];
         for (const id of SHORTCUT_IDS) {
+            if ("claimsEditor" in SHORTCUTS[id]) continue;
             if (editablePolicy(id, platform) === "skip") continue;
             const mine = new Set(chordsOf(id, platform));
             for (const ec of EDITOR_CHORDS.filter((c) => c.platform === platform)) {
