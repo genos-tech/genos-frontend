@@ -1,5 +1,27 @@
 import "@testing-library/jest-dom/vitest";
 
+// Node 25+ also ships its OWN `localStorage` / `sessionStorage` globals, and vitest's jsdom
+// environment leaves them in place: a working store, but not jsdom's `Storage` (`instanceof
+// Storage` is false and its `setItem` is not `Storage.prototype.setItem`). Every test that spies
+// on `Storage.prototype` (to count writes, or to make them throw) then watches an object nothing
+// writes to: three draft-debounce tests failed on Node 26, and the "storage throws" tests passed
+// without testing anything (MIP-1407). CI pins Node 22, where the global IS jsdom's. Put jsdom's
+// back wherever it is not, so the suite means the same on any Node.
+{
+    const jsdomWindow = (globalThis as { jsdom?: { window: Window } }).jsdom?.window;
+    for (const name of ["localStorage", "sessionStorage"] as const) {
+        const current = (globalThis as Record<string, unknown>)[name];
+        const wanted = jsdomWindow?.[name];
+        if (wanted && current !== wanted && !(current instanceof Storage)) {
+            Object.defineProperty(globalThis, name, {
+                configurable: true,
+                writable: true,
+                value: wanted,
+            });
+        }
+    }
+}
+
 // Node 25+ exposes a stub `localStorage` global that throws / is
 // undefined unless `--localstorage-file` is passed. jsdom normally
 // provides its own, but Vitest's worker can leave the Node stub in
