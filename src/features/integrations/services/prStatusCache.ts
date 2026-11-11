@@ -42,7 +42,8 @@ export const getCachedOrFetchPrStatus = async (
     setErrorMessage?: (m: string) => void,
     // The PR column's re-sync (MIP-1409) asks again past the memo. A refused or failed
     // fetch is not stored, so a good entry that is still within its TTL survives it.
-    options?: { forceRefresh?: boolean }
+    // `fresh` also skips the SERVER's cache (MIP-1410): a click, not a poll.
+    options?: { forceRefresh?: boolean; fresh?: boolean }
 ): Promise<PrStatusResult> => {
     const ref = parsePrUrl(url);
     if (!ref) return { kind: "error" };
@@ -53,13 +54,25 @@ export const getCachedOrFetchPrStatus = async (
         const payload = await memo.get(
             url,
             async () => {
-                const res = await getPullDetail(
-                    accessToken,
-                    ref.owner,
-                    ref.repo,
-                    ref.number,
-                    setErrorMessage
-                );
+                // A plain call sends exactly what it always did.
+                const res = options?.fresh
+                    ? await getPullDetail(
+                          accessToken,
+                          ref.owner,
+                          ref.repo,
+                          ref.number,
+                          setErrorMessage,
+                          {
+                              fresh: true,
+                          }
+                      )
+                    : await getPullDetail(
+                          accessToken,
+                          ref.owner,
+                          ref.repo,
+                          ref.number,
+                          setErrorMessage
+                      );
                 if (res === "github_not_connected") {
                     throw new PrStatusMiss({ kind: "github_not_connected" });
                 }

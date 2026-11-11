@@ -194,8 +194,11 @@ const SinglePrBadge = ({
         if (!(resync.reason === "manual" ? now.needsDetail : !now.finished)) return undefined;
         let cancelled = false;
         (async () => {
+            // A click also skips the server's cache, so a CI run that just finished shows; a
+            // poll leaves it in place (every skipped lookup is two GitHub round trips per PR).
             const r = await getCachedOrFetchPrStatus(token, now.url, undefined, {
                 forceRefresh: true,
+                fresh: resync.reason === "manual",
             });
             // A refresh that failed leaves the detail already drawn alone.
             if (!cancelled)

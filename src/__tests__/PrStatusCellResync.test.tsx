@@ -169,6 +169,7 @@ describe("a poll", () => {
         expect(mockStatus).toHaveBeenCalledTimes(2);
         expect(mockStatus).toHaveBeenLastCalledWith("tok", pull(7).html_url, undefined, {
             forceRefresh: true,
+            fresh: false,
         });
     });
 
@@ -331,6 +332,7 @@ describe("a click on Refresh tasks", () => {
         expect(mockStatus).toHaveBeenCalledTimes(2);
         expect(mockStatus).toHaveBeenLastCalledWith("tok", merged(8).html_url, undefined, {
             forceRefresh: true,
+            fresh: true,
         });
     });
 
@@ -343,6 +345,7 @@ describe("a click on Refresh tasks", () => {
 
         expect(mockStatus).toHaveBeenLastCalledWith("tok", pull(7).html_url, undefined, {
             forceRefresh: true,
+            fresh: true,
         });
     });
 
