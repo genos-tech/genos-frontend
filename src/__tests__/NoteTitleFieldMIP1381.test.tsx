@@ -106,7 +106,7 @@ describe("the three note editors share it", () => {
     it.each(EDITORS)("%s draws its title with NoteTitleField, through the shell's slot", (rel) => {
         const src = code(rel);
         expect(src).toContain("NoteTitleField");
-        expect(src).toMatch(/titleSlot=\{\s*<NoteTitleField/);
+        expect(src).toMatch(/(?<![\w-])titleSlot=\{\s*<NoteTitleField/);
     });
 
     it.each(EDITORS)("%s no longer carries its own pinned, fixed-width title", (rel) => {
