@@ -1,6 +1,6 @@
 import { Box, Button, Stack, Typography } from "@mui/joy";
 
-import { TOUCH_TARGET } from "../../../../components/ui/touchTargets";
+import { COMPACT_ROW, TOUCH_TARGET } from "../../../../components/ui/touchTargets";
 import { useTranslation } from "../../../../i18n";
 import { TodoCategoryProps } from "../../../../types/chat";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
@@ -13,6 +13,9 @@ type Props = {
     onToggle: (key: TagFilterKey) => void;
     onClear: () => void;
     isDark: boolean;
+    /** A phone header that has to be short: rows are `COMPACT_ROW` tall, the tap target stays 44px
+     *  (an invisible hit area, not layout). */
+    compact?: boolean;
 };
 
 /**
@@ -21,7 +24,14 @@ type Props = {
  * the others dim. Several can be picked (any of them), and "No tag" picks the
  * items without one.
  */
-export const TodoTagFilterBar = ({ categories, selected, onToggle, onClear, isDark }: Props) => {
+export const TodoTagFilterBar = ({
+    categories,
+    selected,
+    onToggle,
+    onClear,
+    isDark,
+    compact = false,
+}: Props) => {
     const { t } = useTranslation();
     if (categories.length === 0) return null;
 
@@ -42,11 +52,27 @@ export const TodoTagFilterBar = ({ categories, selected, onToggle, onClear, isDa
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
-                    "@media (pointer: coarse)": {
-                        justifyContent: "center",
-                        minHeight: TOUCH_TARGET,
-                        minWidth: TOUCH_TARGET,
-                    },
+                    "@media (pointer: coarse)": compact
+                        ? {
+                              justifyContent: "center",
+                              minHeight: COMPACT_ROW,
+                              position: "relative",
+                              // The 44px band is a hit area, not layout.
+                              "&::after": {
+                                  content: '""',
+                                  position: "absolute",
+                                  top: "50%",
+                                  left: "50%",
+                                  width: `max(100%, ${TOUCH_TARGET}px)`,
+                                  height: TOUCH_TARGET,
+                                  transform: "translate(-50%, -50%)",
+                              },
+                          }
+                        : {
+                              justifyContent: "center",
+                              minHeight: TOUCH_TARGET,
+                              minWidth: TOUCH_TARGET,
+                          },
                     "&:hover > [data-tag-chip]": { opacity: 1 },
                     "&:focus-visible": { outline: "2px solid currentColor", outlineOffset: 2 },
                 }}
@@ -80,7 +106,7 @@ export const TodoTagFilterBar = ({ categories, selected, onToggle, onClear, isDa
             aria-label={t.chat.todoPane.tagFilterLabel}
             direction="row"
             role="group"
-            sx={{ flexWrap: "wrap", gap: 0.75, mt: 1 }}
+            sx={{ flexWrap: "wrap", gap: compact ? 0.5 : 0.75, mt: compact ? 0.25 : 1 }}
         >
             {categories.map((c) => pick(c.categoryId, c.name, todoTagColor(c)))}
             {pick(NO_TAG, t.chat.todoPane.tagFilterNone, "#808080")}
@@ -92,7 +118,7 @@ export const TodoTagFilterBar = ({ categories, selected, onToggle, onClear, isDa
                         minHeight: 0,
                         py: 0,
                         "@media (pointer: coarse)": {
-                            minHeight: TOUCH_TARGET,
+                            minHeight: compact ? COMPACT_ROW : TOUCH_TARGET,
                             minWidth: TOUCH_TARGET,
                         },
                     }}

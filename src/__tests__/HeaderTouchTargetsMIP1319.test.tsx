@@ -19,6 +19,7 @@ import { PageHeader } from "../components/ui/page/PageHeader";
 import { pageHeaderFrameSx } from "../components/ui/page/pageHeaderFrame";
 import {
     chipRowTouchSx,
+    compactChipRowTouchSx,
     headerTouchTargetsSx,
     TOUCH_TARGET,
     touchTargetSx,
@@ -64,6 +65,38 @@ describe("the shared rules", () => {
     });
 });
 
+describe("the To-Do pane header on a phone is compact", () => {
+    const source = readFileSync(
+        join(dirname(fileURLToPath(import.meta.url)), "..", "features/chat/ToDoPane.tsx"),
+        "utf8"
+    );
+    it("pads the header and the title row tighter, only on a phone", () => {
+        expect(source).toMatch(/pt: isMobile \? 1 : 2,/);
+        expect(source).toMatch(/pb: isMobile \? 1 : 1\.5,/);
+        expect(source).toMatch(/mb=\{isMobile \? 0\.5 : 1\.5\}/);
+    });
+    it("hands the tag row the compact mode on a phone", () => {
+        expect(source).toMatch(/<TodoTagFilterBar[^>]*compact=\{isMobile\}/s);
+    });
+});
+
+describe("the compact chip row (phone To-Do header)", () => {
+    it("is shorter than the 44px row but keeps the same 44px hit band around the chip", () => {
+        const full = chipRowTouchSx["@media (pointer: coarse)"];
+        const compact = compactChipRowTouchSx["@media (pointer: coarse)"];
+        expect(compact.minHeight).toBe(32);
+        expect(compact.minHeight).toBeLessThan(full.minHeight);
+        // Same reach above and below the 20px chip: 12 + 20 + 12 = 44.
+        expect(compact["& .MuiChip-action::after"]).toEqual(full["& .MuiChip-action::after"]);
+        // Room around the chip (6px) is never less than half the reach beyond it (6px), so
+        // the band stops at the neighbouring row's chip instead of covering it.
+        expect((compact.minHeight - 20) / 2).toBeGreaterThanOrEqual(
+            -compact["& .MuiChip-action::after"].top - 6
+        );
+        expect(Object.keys(compactChipRowTouchSx)).toEqual(["@media (pointer: coarse)"]);
+    });
+});
+
 describe("the headers that wear the frame", () => {
     it("PageHeader emits the 44px rule only under a coarse pointer", () => {
         render(
@@ -92,10 +125,50 @@ describe("the headers that do not wear the frame use the same rule", () => {
 
     it("the To-Do pane: actions 44px on the page too, filter chips banded, title row wraps on a phone", () => {
         const source = readFileSync(join(SRC, "features/chat/ToDoPane.tsx"), "utf8");
-        expect(source).toContain("sx={chipRowTouchSx}");
+        expect(source).toContain("isMobile ? compactChipRowTouchSx : chipRowTouchSx");
         expect(source).toContain('touchTargetSx("& .MuiIconButton-root, & .MuiButton-root")');
         // The wrap treatment is no longer gated on the dialog.
         expect(source).toMatch(/isMobile\s*\?\s*\{ flexWrap: "wrap", rowGap: 1 \}/);
+    });
+});
+
+describe("the To-Do tag filter chips, compact (phone header)", () => {
+    const view = (compact: boolean) => {
+        render(
+            <CssVarsProvider>
+                <TodoTagFilterBar
+                    categories={[{ categoryId: 1, color: "#f00", name: "Work" } as never]}
+                    compact={compact}
+                    isDark={false}
+                    selected={new Set()}
+                    onClear={vi.fn()}
+                    onToggle={vi.fn()}
+                />
+            </CssVarsProvider>
+        );
+        return cssWithMediaOf(screen.getByRole("button", { name: "Work" }));
+    };
+    it("is 32px tall with an invisible 44px hit area instead of 44px of layout", () => {
+        const css = view(true);
+        expect(css).toMatch(/@media \(pointer: coarse\)[^{]*\{[^}]*min-height: 32px/);
+        expect(css).not.toMatch(/min-height: 44px/);
+        expect(css).toMatch(/::after[^{]*\{[^}]*height: 44px/);
+    });
+    it("closes the gaps around the row, and only in compact mode", () => {
+        view(true);
+        const compactGroup = cssWithMediaOf(screen.getByRole("group"));
+        expect(compactGroup).toMatch(/margin-top: 2px/);
+        expect(compactGroup).toMatch(/gap: 4px/);
+        cleanup();
+        view(false);
+        const fullGroup = cssWithMediaOf(screen.getByRole("group"));
+        expect(fullGroup).toMatch(/margin-top: 8px/);
+        expect(fullGroup).toMatch(/gap: 6px/);
+    });
+    it("stays 44px tall when not compact (the dialog on a desktop)", () => {
+        const css = view(false);
+        expect(css).toMatch(/min-height: 44px/);
+        expect(css).not.toMatch(/::after/);
     });
 });
 
