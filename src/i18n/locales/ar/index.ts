@@ -3384,6 +3384,8 @@ export const ar: DeepPartial<Messages> = {
             ownerLabelWithMore: "المالك: {name} · {count} آخرون",
             membersLabel: "الأعضاء",
             ownerProjectTooltip: "المشروع المالك",
+            focusNote: "التركيز على هذه الملاحظة (إخفاء الأجزاء الأخرى)",
+            exitFocusNote: "إظهار الأجزاء الأخرى مجددًا",
             threadCrumb: "موضوع",
             showHiddenCrumbs: "إظهار {count} فتات الخبز المخفية",
             importMarkdown: "استيراد تخفيض السعر…",

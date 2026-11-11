@@ -48,7 +48,7 @@ import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone";
 import { statusSolid } from "../../../meta/taskTone";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
-import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
+import { shouldFallBackToTable } from "../../../utils/mainPanelVisibility";
 import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
 import { StatusLabel } from "../../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
@@ -234,10 +234,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             // note tab is closed, and treating that as "the note pane is
             // still up" would skip this fallback and leave the page with
             // no main panel at all.
-            if (useTM.isCreatingTask.flag === false && useNM.isTaskNotePaneVisible === false) {
-                if (isNoMainPanelVisible(useTM)) {
-                    useTM.setIsTaskTableVisible(true);
-                }
+            if (
+                useTM.isCreatingTask.flag === false &&
+                shouldFallBackToTable(useTM, useNM.isTaskNotePaneVisible)
+            ) {
+                useTM.setIsTaskTableVisible(true);
             }
         }
 
@@ -251,7 +252,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
         // (The old nested form's `else`s re-set whichever panel was already
         // visible — no-ops — so this one-liner is equivalent.)
-        if (useTM.isTaskPreviewVisible === false && isNoMainPanelVisible(useTM)) {
+        if (
+            useTM.isTaskPreviewVisible === false &&
+            shouldFallBackToTable(useTM, useNM.isTaskNotePaneVisible)
+        ) {
             useTM.setIsTaskTableVisible(true);
         }
 
@@ -302,7 +306,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         // closes a preview pane (there isn't one in create mode).
         // (The old nested form's `else`s re-set whichever panel was already
         // visible — no-ops — so this one-liner is equivalent.)
-        if (useTM.isTaskPreviewVisible === false && isNoMainPanelVisible(useTM)) {
+        if (
+            useTM.isTaskPreviewVisible === false &&
+            shouldFallBackToTable(useTM, useNM.isTaskNotePaneVisible)
+        ) {
             useTM.setIsTaskTableVisible(true);
         }
 

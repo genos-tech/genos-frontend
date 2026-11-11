@@ -2967,6 +2967,8 @@ export const fr: DeepPartial<Messages> = {
             ownerLabelWithMore: "Propriétaire : {name} · {count} de plus",
             membersLabel: "Membres",
             ownerProjectTooltip: "Projet propriétaire",
+            focusNote: "Se concentrer sur cette note (masquer les autres volets)",
+            exitFocusNote: "Réafficher les autres volets",
         },
         importMd: {
             heading: "Importer une démarque",

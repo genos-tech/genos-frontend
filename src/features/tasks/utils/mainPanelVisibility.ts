@@ -24,3 +24,18 @@ export const isNoMainPanelVisible = (v: MainPanelVisibility): boolean =>
     v.isTaskTableVisible === false &&
     v.isSprintBoardVisible === false &&
     v.isTaskDashboardVisible === false;
+
+/**
+ * "Closing me must not leave the page empty" — the fallback to the table, with
+ * the note pane counted. The note pane is a pane in its own right: with it on
+ * screen and every main panel hidden (the Focus view of a note), restoring the
+ * table would undo the user's choice, and nothing but the Focus toggle could
+ * hide it again. Callers pass the DERIVED `useNM.isTaskNotePaneVisible` (the
+ * pane is actually on screen), not the raw intent flag: the flag stays true
+ * after the last note tab is closed, and trusting it would skip the fallback
+ * and leave the page with no pane at all.
+ */
+export const shouldFallBackToTable = (
+    v: MainPanelVisibility,
+    isNotePaneOnScreen: boolean
+): boolean => isNotePaneOnScreen === false && isNoMainPanelVisible(v);

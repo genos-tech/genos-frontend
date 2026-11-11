@@ -46,8 +46,17 @@ import {
 } from "../../common/components/ModalImportMarkdown";
 import { ModalNoteHistory } from "../../common/components/ModalNoteHistory";
 import { ContextCrumb, NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
+import { NoteFocusButton } from "../../common/components/NoteFocusButton";
 import { loadSpecificNote } from "../../common/services/loadSpecificNote";
 import { downloadMarkdown, noteBlocksToMarkdown } from "../../common/services/noteMarkdown";
+import {
+    enterChatNoteFocus,
+    enterTaskNoteFocus,
+    exitChatNoteFocus,
+    exitTaskNoteFocus,
+    isChatNoteFocused,
+    isTaskNoteFocused,
+} from "../../common/utils/noteFocus";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 /** Backend note type for the notes this header owns. Part of the identity of
@@ -589,6 +598,28 @@ export const ChatNoteHeader = ({
                         />
                     );
                 })()}
+
+                {/* Focus: the note takes the whole page; the same button gives it back.
+                    Chat page hides the chat / thread / preview; task page
+                    hides the table / board / dashboard / preview. */}
+                {(isInChatPage === true || isInTaskPage === true) && (
+                    <NoteFocusButton
+                        focused={
+                            isInTaskPage
+                                ? isTaskNoteFocused(useTM, useNM.isTaskNotePaneVisible)
+                                : isChatNoteFocused(useCM, useTM, true)
+                        }
+                        onToggle={() => {
+                            if (isInTaskPage) {
+                                if (isTaskNoteFocused(useTM, useNM.isTaskNotePaneVisible)) {
+                                    exitTaskNoteFocus(useTM);
+                                } else enterTaskNoteFocus(useTM);
+                            } else if (isChatNoteFocused(useCM, useTM, true)) {
+                                exitChatNoteFocus(useCM);
+                            } else enterChatNoteFocus(useCM, useTM);
+                        }}
+                    />
+                )}
 
                 {/* Close Button */}
                 {(isInChatPage === true || isInTaskPage === true) && (

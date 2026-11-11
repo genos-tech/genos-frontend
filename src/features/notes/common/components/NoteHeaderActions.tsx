@@ -47,6 +47,7 @@ import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias"
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
 import { ModalNoteHistory } from "./ModalNoteHistory";
 import { ModalNoteSharing } from "./ModalNoteSharing";
+import { NoteFocusButton } from "./NoteFocusButton";
 
 interface NoteHeaderActionsProps {
     noteType: number;
@@ -66,6 +67,8 @@ interface NoteHeaderActionsProps {
     onDeleteNote: () => void;
     onCloseNotes: () => void;
     onCopyNoteLink?: () => void;
+    /** Focus toggle (task page only): present means "show the Focus button". */
+    focus?: { active: boolean; onToggle: () => void };
     /** Set when this header is rendered inside the UrlLinkModal (see
      *  ModalNoteView). The ⋮ MoreMenu portals to document.body at its
      *  default z (9999) which sits BEHIND the modal (≥10020) — pass the
@@ -91,6 +94,7 @@ export const NoteHeaderActions = ({
     onDeleteNote,
     onCloseNotes,
     onCopyNoteLink,
+    focus,
     useNM,
     hostZIndex,
 }: NoteHeaderActionsProps) => {
@@ -734,6 +738,10 @@ export const NoteHeaderActions = ({
                         }
                     }}
                 />
+            )}
+
+            {isInTaskPage && focus && (
+                <NoteFocusButton focused={focus.active} onToggle={focus.onToggle} />
             )}
 
             {/* Close Button (only in task page) */}
