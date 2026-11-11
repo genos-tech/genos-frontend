@@ -1,22 +1,19 @@
 import { useEffect, useRef } from "react";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import { Box, FormControl } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnTaskNoteEditor } from "../../../../components/editors/bnTaskNoteEditor";
-import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { upsertNoteCache, useNoteData } from "../../../../hooks/notes/useNoteData";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
-import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteLoadState } from "../../common/components/NoteLoadState";
+import { NoteTitleField } from "../../common/components/NoteTitleField";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 
 interface TaskNoteEditorPanelProps {
@@ -53,8 +50,6 @@ export const TaskNoteEditorPanel = ({
     useCM,
     useNM,
 }: TaskNoteEditorPanelProps) => {
-    const { t } = useTranslation();
-    const isMobile = useIsMobile();
     const titleInputRef = useRef<HTMLInputElement | null>(null);
     const { note, accessDenied, isLoading, error, notFound, reload } = useNoteData<TaskNoteProps>(
         tab,
@@ -146,29 +141,6 @@ export const TaskNoteEditorPanel = ({
                 ...(fillHeight ? { flex: 1, minHeight: 0 } : {}),
             }}
         >
-            <FormControl
-                sx={{
-                    mt: "10px",
-                    ml: "10px",
-                    justifyContent: "center",
-                    position: "absolute",
-                    zIndex: 100,
-                    width: isMobile ? "50%" : "30%",
-                }}
-                required
-            >
-                <InlineTitleEdit
-                    ariaLabel={t.notes.editor.titlePlaceholder}
-                    inputRef={titleInputRef}
-                    level="h3"
-                    placeholder={t.notes.editor.titlePlaceholder}
-                    startDecorator={<NoteAltIcon />}
-                    value={currentTaskNoteTitle}
-                    variant="field"
-                    onCommit={() => handleTitleBlur()}
-                    onDraftChange={handleTitleChange}
-                />
-            </FormControl>
             {/* "Saved" chip lives INSIDE BnTaskNoteEditor (next to the
                 wrap toggles) so it auto-shifts when the comments pane
                 opens — see `noteBodySaved` prop below. */}
@@ -187,6 +159,14 @@ export const TaskNoteEditorPanel = ({
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
+                titleSlot={
+                    <NoteTitleField
+                        inputRef={titleInputRef}
+                        value={currentTaskNoteTitle}
+                        onCommit={() => handleTitleBlur()}
+                        onDraftChange={handleTitleChange}
+                    />
+                }
             />
         </Box>
     );

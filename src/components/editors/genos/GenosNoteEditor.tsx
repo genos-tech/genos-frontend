@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../../App.css";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState, type ReactNode } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
@@ -84,6 +84,12 @@ export type GenosNoteEditorProps = {
      *  the parent) so it follows the toggles' right-margin shift when
      *  the comments pane opens. */
     noteBodySaved?: boolean;
+    /**
+     * The note's title (`NoteTitleField`). It lives in the same flex row as the wrap toggles and
+     * the Saved chip, so it takes the space the controls leave instead of a fixed share of the
+     * width, and that row moves with the comments sidebar (MIP-1381).
+     */
+    titleSlot?: ReactNode;
     useUISM: UIStateManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
@@ -111,6 +117,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         setNoteBodyEdited,
         setNoteBodySaved,
         noteBodySaved,
+        titleSlot,
         useUISM,
         useCM,
         currentNoteMembers,
@@ -341,49 +348,63 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                 <Box
                     sx={{
                         position: "absolute",
-                        top: 8,
+                        // Centred on the Comments toggle (top 8, 32px): the row is 40px tall.
+                        top: 4,
+                        minHeight: 40,
+                        // Starts where the body text starts, so the title lines up with it.
+                        left: "var(--note-body-start, 50px)",
                         // Closed: 52px clears the comment toggle at right:8.
                         // Open: the toggle sits over the sidebar header instead,
                         // so the cluster only needs to clear the panel's left
                         // edge — a snug 12px gap, not another 52.
                         right: showComments ? COMMENTS_SIDEBAR_WIDTH + 12 : 52,
-                        zIndex: 10,
+                        // Above the editor: the title used to sit at 100 on its own.
+                        zIndex: 100,
                         display: "flex",
                         alignItems: "center",
+                        justifyContent: "flex-end",
                         gap: 1,
                         transition: "right 0.15s ease",
+                        // The row is wide; only what is IN it takes clicks, never the empty
+                        // stretch over the editor.
+                        pointerEvents: "none",
+                        "& > *": { pointerEvents: "auto" },
                     }}
                 >
+                    {titleSlot}
                     {/* "Saved" chip lives in the same row as the wrap
                         toggles. Anchored here instead of in the
                         parent (NoteEditor) so the two affordances stay
-                        adjacent across every layout. */}
-                    {noteBodySaved && (
-                        <Chip
-                            color="neutral"
-                            size="sm"
-                            startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
-                            variant="soft"
-                            sx={{
-                                fontWeight: 500,
-                                fontSize: "13px",
-                                "--Chip-paddingInline": "10px",
-                                animation: "fadeIn 0.3s ease-in-out",
-                                "@keyframes fadeIn": {
-                                    from: { opacity: 0, transform: "scale(0.95)" },
-                                    to: { opacity: 1, transform: "scale(1)" },
-                                },
-                            }}
-                        >
-                            {t.notes.editor.savedChip}
-                        </Chip>
-                    )}
-                    <WrapToggleButtons
-                        setUnwrapAll={setUnwrapAll}
-                        setUnwrapCode={setUnwrapCode}
-                        unwrapAll={unwrapAll}
-                        unwrapCode={unwrapCode}
-                    />
+                        adjacent across every layout. Never shrunk: it is the
+                        title that gives way. */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexShrink: 0 }}>
+                        {noteBodySaved && (
+                            <Chip
+                                color="neutral"
+                                size="sm"
+                                startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
+                                variant="soft"
+                                sx={{
+                                    fontWeight: 500,
+                                    fontSize: "13px",
+                                    "--Chip-paddingInline": "10px",
+                                    animation: "fadeIn 0.3s ease-in-out",
+                                    "@keyframes fadeIn": {
+                                        from: { opacity: 0, transform: "scale(0.95)" },
+                                        to: { opacity: 1, transform: "scale(1)" },
+                                    },
+                                }}
+                            >
+                                {t.notes.editor.savedChip}
+                            </Chip>
+                        )}
+                        <WrapToggleButtons
+                            setUnwrapAll={setUnwrapAll}
+                            setUnwrapCode={setUnwrapCode}
+                            unwrapAll={unwrapAll}
+                            unwrapCode={unwrapCode}
+                        />
+                    </Box>
                 </Box>
 
                 <GifPicker

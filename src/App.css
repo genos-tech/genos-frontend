@@ -604,10 +604,19 @@ input[type="checkbox"] {
 }
 
 /* Note body editor styles */
+/* The body's top and start padding are variables because the note's title row (the title, the
+   Saved chip and the wrap toggles, in GenosNoteEditor) sits in that top band and starts where
+   the body text starts (MIP-1381). One source, so they cannot drift apart. */
+.bn-note-body-box-light,
+.bn-note-body-box-dark {
+    --note-body-top: 64px;
+    --note-body-start: 50px;
+}
+
 .bn-note-body-box-light .bn-editor,
 .bn-note-body-box-dark .bn-editor {
     background-color: var(--editor-bg);
-    padding: 55px 50px 20px;
+    padding: var(--note-body-top) 50px 20px var(--note-body-start);
     height: 92dvh;
     overflow-y: scroll;
 }
@@ -1024,10 +1033,16 @@ div[data-floating-ui-focusable] {
         height: var(--task-body-editor-height, 300px);
     }
 
+    .bn-note-body-box-light,
+    .bn-note-body-box-dark {
+        --note-body-top: 56px;
+        --note-body-start: 44px;
+    }
+
     .bn-note-body-box-light .bn-editor,
     .bn-note-body-box-dark .bn-editor {
-        padding-block: 56px 20px;
-        padding-inline: 44px 22px;
+        padding-block: var(--note-body-top) 20px;
+        padding-inline: var(--note-body-start) 22px;
         height: 85dvh;
     }
 }

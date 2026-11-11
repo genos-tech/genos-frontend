@@ -26,7 +26,7 @@
 
 import "fake-indexeddb/auto";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -72,23 +72,30 @@ vi.mock("../db/services/note.service", () => ({
 
 // The BlockNote editor is replaced by a button that performs exactly what
 // a real local body edit does: mark the body edited and hand up new blocks.
+// It renders `titleSlot` too: the title is drawn by the editor's shell since MIP-1381
+// (in the same row as its controls), so a stand-in for the shell has to place it.
 vi.mock("../components/editors/bnTaskNoteEditor", () => ({
     BnTaskNoteEditor: ({
         setBody,
         setNoteBodyEdited,
+        titleSlot,
     }: {
         setBody: (b: unknown[]) => void;
         setNoteBodyEdited: (v: boolean) => void;
+        titleSlot?: ReactNode;
     }) => (
-        <button
-            type="button"
-            onClick={() => {
-                setBody([{ type: "paragraph", content: "edited body" }]);
-                setNoteBodyEdited(true);
-            }}
-        >
-            edit-body
-        </button>
+        <>
+            {titleSlot}
+            <button
+                type="button"
+                onClick={() => {
+                    setBody([{ type: "paragraph", content: "edited body" }]);
+                    setNoteBodyEdited(true);
+                }}
+            >
+                edit-body
+            </button>
+        </>
     ),
 }));
 
