@@ -4560,18 +4560,6 @@ export const zh: DeepPartial<Messages> = {
             close: "关闭",
         },
         modals: {
-            deleteTask: {
-                title: "删除任务？",
-                body: "此操作无法撤销",
-                confirmButton: "删除任务",
-                cancelButton: "取消",
-            },
-            confirmDeletedStatus: {
-                title: "删除此任务？",
-                titleMilestone: "删除此里程碑？",
-                body: "它将从所有列表、看板和仪表盘中消失。若要恢复，请将表格切换到“已删除”视图，并为它选择其他状态。",
-                bodyMilestone: "它将从所有列表和看板中消失。",
-            },
             createProject: {
                 heading: "新建项目",
                 namePlaceholder: "请输入项目名称…",
@@ -5470,8 +5458,6 @@ export const zh: DeepPartial<Messages> = {
             overdueCount: "{count} 逾期",
             dueSoonCount: "{count} 即将到期",
             blockedCount: "{count} 被阻止",
-            confirmDelete: "删除此任务？",
-            confirmDeleteBody: "该任务将被标记为已删除。其子任务会保留，但不再计入统计。",
             errors: {
                 load: "无法加载任务图。",
                 update: "更新失败。",

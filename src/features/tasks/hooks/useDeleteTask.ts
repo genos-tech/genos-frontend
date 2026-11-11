@@ -51,6 +51,9 @@ export type DeleteTaskOptions = {
      *  preview when it shows this task; a preview that lives in a modal closes
      *  itself. */
     afterHide?: () => void;
+    /** Runs when the delete was written, before the task is let go of by the
+     *  overlay. For a view that keeps its own copy of the task (the graph). */
+    onCommitted?: () => void;
 };
 
 type Deps = {
@@ -111,6 +114,7 @@ export const useDeleteTask = (deps: Deps) => {
                     prev.map((row) => (isIt(row) ? { ...row, ...patch } : row))
                 );
                 afterTaskDeleted(id, source ? { ...source, ...patch } : null);
+                options?.onCommitted?.();
                 if (!isMilestone)
                     void syncDeletedTaskCard(myself, target.projectId, id, accessToken);
             },

@@ -1,4 +1,6 @@
 import { TaskTableProps } from "../../../types/tasks";
+import type { TaskGraph } from "../diagram/types";
+import type { Milestone } from "../sprint-milestone/types";
 
 /**
  * A task delete waits behind an Undo toast (MIP-1303, `useDeleteTask`). While it
@@ -47,4 +49,58 @@ export const overlayPendingDeletes = (
         return { ...row, status: "Deleted" };
     });
     return changed ? next : rows;
+};
+
+/** The ids of the tasks whose delete is pending, as one stable string: a re-layout
+ *  that depends on it runs when a delete starts or ends and not for any other key. */
+export const pendingDeleteSignature = (hidden: ReadonlySet<string>): string =>
+    [...hidden]
+        .filter((key) => key.startsWith(PREFIX))
+        .sort()
+        .join(",");
+
+/**
+ * The task graph (the diagram keeps its own copy of the rows, loaded from the graph
+ * endpoint) with every pending delete shown as Deleted, so a card leaves the canvas
+ * when its toast opens and comes back on Undo. The same object when nothing applies.
+ */
+export const overlayGraphDeletes = (graph: TaskGraph, hidden: ReadonlySet<string>): TaskGraph => {
+    const tasks = overlayPendingDeletes(graph.tasks, hidden);
+    const externalTasks = overlayPendingDeletes(graph.externalTasks, hidden);
+    return tasks === graph.tasks && externalTasks === graph.externalTasks
+        ? graph
+        : { ...graph, tasks, externalTasks };
+};
+
+/**
+ * The project -> milestones map with every pending delete shown as Deleted. A
+ * milestone's delete is keyed by its backing task (`task:<taskId>`, see
+ * `useDeleteTask`), so the match is on `taskId`. The sidebar, the pickers, the
+ * filter and the dashboard already leave a "Deleted" milestone out, which is all
+ * the overlay has to say. The SAME object when nothing applies, and a bucket
+ * nothing applies to keeps its array (a new identity re-runs every selector).
+ */
+export const overlayPendingMilestoneDeletes = (
+    byProject: Record<number, Milestone[]>,
+    hidden: ReadonlySet<string>
+): Record<number, Milestone[]> => {
+    if (hidden.size === 0) return byProject;
+    let changed = false;
+    const next: Record<number, Milestone[]> = {};
+    for (const [projectId, list] of Object.entries(byProject)) {
+        let bucketChanged = false;
+        const overlaid = list.map((m) => {
+            if (
+                m.taskId == null ||
+                m.status === "Deleted" ||
+                !isTaskDeletePending(hidden, m.taskId)
+            )
+                return m;
+            bucketChanged = true;
+            return { ...m, status: "Deleted" };
+        });
+        if (bucketChanged) changed = true;
+        next[Number(projectId)] = bucketChanged ? overlaid : list;
+    }
+    return changed ? next : byProject;
 };

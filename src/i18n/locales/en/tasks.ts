@@ -169,18 +169,6 @@ export const tasks = {
 
     // Modal dialogs.
     modals: {
-        deleteTask: {
-            title: "Delete Task?",
-            body: "This action cannot be undone",
-            confirmButton: "Delete Task",
-            cancelButton: "Cancel",
-        },
-        confirmDeletedStatus: {
-            title: "Delete this task?",
-            titleMilestone: "Delete this milestone?",
-            body: "It disappears from every list, board and dashboard. To bring it back, switch the table to the Deleted view and give it another status.",
-            bodyMilestone: "It disappears from every list and board.",
-        },
         createProject: {
             heading: "Create New Project",
             namePlaceholder: "Enter project name...",
@@ -1220,9 +1208,6 @@ export const tasks = {
         overdueCount: "{count} overdue",
         dueSoonCount: "{count} due soon",
         blockedCount: "{count} blocked",
-        confirmDelete: "Delete this task?",
-        confirmDeleteBody:
-            "It is marked Deleted. Its sub-tasks are kept, but they stop counting in the stats.",
         errors: {
             load: "Couldn't load the task graph.",
             update: "Update failed.",

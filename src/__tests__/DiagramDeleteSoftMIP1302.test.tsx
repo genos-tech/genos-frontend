@@ -1,21 +1,23 @@
 /**
- * MIP-1302: deleting a task from the graph is the preview's delete, not a hard delete.
+ * MIP-1302 + MIP-1303: deleting a task from the graph is the preview's delete (a soft one,
+ * status Deleted, so the task, its comments and its sub-tasks stay in the database), and it
+ * waits behind an Undo toast.
  *
- * `DELETE /task/` removed the row together with its comments and left its sub-tasks
- * pointing at a parent that no longer existed (`parent_task_id` is a plain integer, not a
- * foreign key), and the confirm said "and all its sub-tasks". Now the confirm runs the same
- * status change every status edit in the graph runs (status Deleted, code 0), through
- * `patchTaskFields` (`PUT /task/`), and the copy says what happens to the sub-tasks.
+ * The card leaves the canvas at once (the canvas lays the graph out with a pending delete
+ * shown as Deleted), nothing is sent while the toast is up, Undo brings the card back, and
+ * when the window ends ONE `PUT /task/ {task_id, status, status_code}` goes out. A refused
+ * write brings the card back.
  *
- * The node card has no Delete control today, so the mocked card below stands in for
- * whatever calls `data.onDelete()`.
+ * The node card's own Delete entry (its status menu) is tested next door
+ * (`DeletedStatusConfirmMIP1301`); the mocked card below stands in for whatever calls
+ * `data.onDelete()`.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskFlowCanvas } from "../features/tasks/diagram/components/TaskFlowCanvas";
-import { en } from "../i18n/locales/en";
+import { __resetUndoables, flushUndoables } from "../hooks/common/useUndoableAction";
 import type { TaskTableProps } from "../types/tasks";
 
 const loadTaskGraph = vi.fn();
@@ -29,6 +31,9 @@ vi.mock("../features/tasks/diagram/services/patchTaskFields", () => ({
 // The browser-side caches (IndexedDB) are not under test; jsdom has none.
 vi.mock("../features/tasks/services/addTask", () => ({ addTask: vi.fn() }));
 vi.mock("../db/services/task-full.service", () => ({ invalidateCachedFullTask: vi.fn() }));
+vi.mock("../features/tasks/services/loadSpecificTask", () => ({
+    loadSpecificTask: vi.fn(async () => []),
+}));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/diagram/components/TaskNodeCard", () => ({
     TaskNodeCard: ({ data }: { data: { task: { id: string }; onDelete: () => void } }) => (
@@ -60,15 +65,24 @@ const row = (id: number, parentTaskId: number | null): TaskTableProps =>
         tags: [],
     }) as unknown as TaskTableProps;
 
+// What the server holds: a task the (mocked) PUT marked Deleted reads Deleted on the next load.
+const deletedOnServer = new Set<string>();
 const graph = () => ({
     rootTaskId: 1,
-    tasks: [row(1, null), row(2, 1)],
+    tasks: [row(1, null), row(2, 1)].map((t) =>
+        deletedOnServer.has(String(t.id)) ? { ...t, status: "Deleted" } : t
+    ),
     externalTasks: [],
     dependencyEdges: [],
 });
 
 const setAllTasks = vi.fn();
 const loadUpdatedTask = vi.fn().mockResolvedValue(undefined);
+
+const onOverviewChange = vi.fn();
+/** The last overview the canvas gave the modal header ("closed/total"). */
+const lastOverview = () =>
+    onOverviewChange.mock.calls.at(-1)?.[0] as { total: number; closed: number } | undefined;
 
 const renderCanvas = () =>
     render(
@@ -82,39 +96,74 @@ const renderCanvas = () =>
                     usePM={{} as never}
                     useTM={
                         {
+                            allTasks: [],
+                            currentPreviewKind: "task",
                             currentPreviewTaskId: -1,
                             setAllTasks,
                             loadUpdatedTask,
                         } as never
                     }
                     onCloseModal={vi.fn()}
+                    onOverviewChange={onOverviewChange}
                 />
             </div>
         </CssVarsProvider>
     );
 
-const askToDelete = async (id: number) => {
+const deleteCard = async (id: number) =>
     fireEvent.click(await screen.findByTestId(`delete-${id}`));
-    return screen.findByText(en.tasks.diagram.confirmDelete);
+const endWindow = async () => {
+    await act(async () => {
+        flushUndoables("next");
+    });
 };
-const confirm = () =>
-    fireEvent.click(screen.getByRole("button", { name: en.common.actions.delete }));
 
 describe("graph delete", () => {
     beforeEach(() => {
         loadTaskGraph.mockReset();
         loadTaskGraph.mockImplementation(async () => graph());
+        deletedOnServer.clear();
         patchTaskFields.mockReset();
-        patchTaskFields.mockResolvedValue({ ok: true });
+        patchTaskFields.mockImplementation(async (id: number) => {
+            deletedOnServer.add(String(id));
+            return { ok: true };
+        });
         setAllTasks.mockReset();
+        onOverviewChange.mockReset();
         vi.spyOn(console, "error").mockImplementation(() => {});
     });
+    afterEach(() => {
+        cleanup();
+        __resetUndoables();
+    });
 
-    it("marks the task Deleted through PUT, then reloads the graph", async () => {
+    it("the card leaves the canvas at once, with no confirm and nothing sent", async () => {
         renderCanvas();
-        await askToDelete(2);
-        const loadsBefore = loadTaskGraph.mock.calls.length;
-        confirm();
+        await deleteCard(2);
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        // The sibling stays, and no dialog was asked.
+        expect(screen.getByTestId("delete-1")).toBeTruthy();
+        expect(screen.queryByRole("alertdialog")).toBeNull();
+        expect(patchTaskFields).not.toHaveBeenCalled();
+    });
+
+    it("Undo brings the card back and sends nothing", async () => {
+        renderCanvas();
+        await deleteCard(2);
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        act(() => {
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "z", ctrlKey: true }));
+        });
+        expect(await screen.findByTestId("delete-2")).toBeTruthy();
+        await endWindow();
+        expect(patchTaskFields).not.toHaveBeenCalled();
+    });
+
+    it("when the window ends, marks the task Deleted with ONE minimal PUT and the card stays gone", async () => {
+        renderCanvas();
+        await deleteCard(2);
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        await endWindow();
 
         await waitFor(() => expect(patchTaskFields).toHaveBeenCalledTimes(1));
         expect(patchTaskFields).toHaveBeenCalledWith(
@@ -124,40 +173,69 @@ describe("graph delete", () => {
         );
         // The mirror into the table's rows, like any status change from the graph.
         expect(setAllTasks).toHaveBeenCalled();
-        await waitFor(() => expect(loadTaskGraph.mock.calls.length).toBeGreaterThan(loadsBefore));
-    });
-
-    it("the card still leaves the canvas when the reload after the save fails", async () => {
-        renderCanvas();
-        await askToDelete(2);
-        // The first load (on open) succeeded; the reload after the delete fails.
-        loadTaskGraph.mockImplementation(async () => null);
-        confirm();
-
+        // The overlay is let go of after the commit, and the card still does not return:
+        // the graph itself now says Deleted.
         await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
-        // The other task is untouched, and the load error is the one on screen.
         expect(screen.getByTestId("delete-1")).toBeTruthy();
-        expect(screen.getByText(en.tasks.diagram.errors.load)).toBeTruthy();
     });
 
-    it("keeps the task when the server refuses, and says so", async () => {
+    it("a refresh of the graph during the window does not bring the card back", async () => {
+        renderCanvas();
+        await deleteCard(2);
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        // The server still says Open (nothing was sent): a re-layout from a fresh load.
+        await act(async () => {
+            window.dispatchEvent(
+                new CustomEvent("genos:task-touched", { detail: { taskId: 1, kind: "update" } })
+            );
+        });
+        await waitFor(() => expect(loadTaskGraph.mock.calls.length).toBeGreaterThan(1));
+        expect(screen.queryByTestId("delete-2")).toBeNull();
+    });
+
+    it("puts the card back when the server refuses", async () => {
         patchTaskFields.mockResolvedValue({ ok: false });
         renderCanvas();
-        await askToDelete(2);
-        const loadsBefore = loadTaskGraph.mock.calls.length;
-        confirm();
+        await deleteCard(2);
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        await endWindow();
 
-        expect(await screen.findByText(en.tasks.diagram.errors.delete)).toBeTruthy();
-        // No reload: the graph must not pretend the task is gone.
-        expect(loadTaskGraph.mock.calls.length).toBe(loadsBefore);
+        expect(await screen.findByTestId("delete-2")).toBeTruthy();
         expect(setAllTasks).not.toHaveBeenCalled();
     });
 
-    it("the confirm says the sub-tasks are kept (and drop out of the stats)", async () => {
+    it("the header counter leaves the pending card out at once, and Undo counts it again", async () => {
         renderCanvas();
-        await askToDelete(1);
-        expect(screen.getByText(en.tasks.diagram.confirmDeleteBody)).toBeTruthy();
-        expect(en.tasks.diagram.confirmDelete).not.toMatch(/sub-tasks/i);
-        expect(en.tasks.diagram.confirmDeleteBody).toMatch(/sub-tasks are kept/i);
+        await waitFor(() => expect(lastOverview()?.total).toBe(1));
+        await deleteCard(2);
+        await waitFor(() => expect(lastOverview()?.total).toBe(0));
+        act(() => {
+            window.dispatchEvent(new KeyboardEvent("keydown", { key: "z", ctrlKey: true }));
+        });
+        await waitFor(() => expect(lastOverview()?.total).toBe(1));
+    });
+
+    it("a refresh of the graph in the window keeps the counter without the pending card", async () => {
+        renderCanvas();
+        await deleteCard(2);
+        await waitFor(() => expect(lastOverview()?.total).toBe(0));
+        // The server still says Open: the fresh load must not count the card again.
+        await act(async () => {
+            window.dispatchEvent(
+                new CustomEvent("genos:task-touched", { detail: { taskId: 1, kind: "update" } })
+            );
+        });
+        await waitFor(() => expect(loadTaskGraph.mock.calls.length).toBeGreaterThan(1));
+        expect(lastOverview()?.total).toBe(0);
+    });
+
+    it("after the commit the counter stays without the card", async () => {
+        renderCanvas();
+        await deleteCard(2);
+        await waitFor(() => expect(lastOverview()?.total).toBe(0));
+        await endWindow();
+        await waitFor(() => expect(patchTaskFields).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(screen.queryByTestId("delete-2")).toBeNull());
+        expect(lastOverview()?.total).toBe(0);
     });
 });

@@ -45,6 +45,8 @@ import {
     SprintConfig,
 } from "../../features/tasks/sprint-milestone/types";
 import { upsertMilestoneInList } from "../../features/tasks/sprint-milestone/utils/milestoneListState";
+import { overlayPendingMilestoneDeletes } from "../../features/tasks/utils/pendingTaskDelete";
+import { useUndoHidden } from "../common/useUndoableAction";
 
 // Every milestone mutation goes through `_sync_backing_task` on the
 // backend, which mirrors the milestone's status / dates / sprint /
@@ -249,8 +251,16 @@ export const useSprintMilestoneManagement = (
     const [convertedMilestones, setConvertedMilestones] = useState<
         Record<number, ConvertedTaskRef>
     >({});
-    const [projectMilestones, setProjectMilestonesState] = useState<Record<number, Milestone[]>>(
-        {}
+    const [rawProjectMilestones, setProjectMilestonesState] = useState<
+        Record<number, Milestone[]>
+    >({});
+    // A milestone whose delete waits behind its Undo toast (MIP-1303) reads as
+    // Deleted here, so the sidebar and the pickers drop it at once, like the table
+    // does. Raw rows stay the truth for every write above and a refetch.
+    const undoHidden = useUndoHidden();
+    const projectMilestones = useMemo(
+        () => overlayPendingMilestoneDeletes(rawProjectMilestones, undoHidden),
+        [rawProjectMilestones, undoHidden]
     );
     const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
     const [projectFolders, setProjectFolders] = useState<Record<number, MilestoneFolder[]>>({});
