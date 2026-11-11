@@ -3505,6 +3505,8 @@ export const hi: DeepPartial<Messages> = {
             ownerLabelWithMore: "ओनर: {name} · {count} और",
             membersLabel: "मेंबर",
             ownerProjectTooltip: "स्वामी प्रोजेक्ट",
+            focusNote: "इस नोट पर फ़ोकस करें (बाकी पैन छिपाएँ)",
+            exitFocusNote: "बाकी पैन फिर से दिखाएँ",
         },
         importMd: {
             heading: "मार्कडाउन आयात करें",

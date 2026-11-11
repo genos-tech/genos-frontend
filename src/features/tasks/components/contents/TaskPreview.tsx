@@ -82,7 +82,7 @@ import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
 import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sendMilestoneUpdatedMessage";
 import { Milestone } from "../../sprint-milestone/types";
 import { customFieldValuesEqual } from "../../utils/customFields";
-import { isNoMainPanelVisible } from "../../utils/mainPanelVisibility";
+import { shouldFallBackToTable } from "../../utils/mainPanelVisibility";
 import {
     countMilestoneTaskStatuses,
     milestoneTaskStatuses,
@@ -362,7 +362,8 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                     useTM.setIsTaskPreviewVisible(false);
                     if (hostZIndex == null) {
                         useTM.setCurrentPreviewTaskId(-1);
-                        if (isNoMainPanelVisible(useTM)) useTM.setIsTaskTableVisible(true);
+                        if (shouldFallBackToTable(useTM, useNM.isTaskNotePaneVisible))
+                            useTM.setIsTaskTableVisible(true);
                     }
                     useNM.setIsTaskVisibleInNote?.(false);
                 },
@@ -2132,7 +2133,9 @@ const MilestonePreviewInner = ({
         // so vanished). The scope is an explicit filter —
         // cleared via the "Milestone: …" chip in the filter
         // bar, not by closing the preview.
-        if (isNoMainPanelVisible(useTM)) {
+        // The note pane counts: closing a milestone opened from a note must
+        // not bring the table back beside (or, in Focus, over) the note.
+        if (shouldFallBackToTable(useTM, useNM.isTaskNotePaneVisible)) {
             useTM.setIsTaskTableVisible(true);
         }
 

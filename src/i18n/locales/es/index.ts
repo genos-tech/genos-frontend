@@ -3434,6 +3434,8 @@ export const es: DeepPartial<Messages> = {
             ownerLabelWithMore: "Propietario: {name} · {count} más",
             membersLabel: "Miembros",
             ownerProjectTooltip: "Proyecto propietario",
+            focusNote: "Centrarse en esta nota (ocultar los demás paneles)",
+            exitFocusNote: "Volver a mostrar los demás paneles",
             threadCrumb: "Hilo",
             showHiddenCrumbs: "Mostrar rutas de navegación ocultas {count}",
             importMarkdown: "Importar Markdown…",

@@ -2836,6 +2836,8 @@ export const zh: DeepPartial<Messages> = {
             ownerLabelWithMore: "所有者：{name} · 还有 {count} 人",
             membersLabel: "成员",
             ownerProjectTooltip: "所属项目",
+            focusNote: "专注于此笔记（隐藏其他窗格）",
+            exitFocusNote: "重新显示其他窗格",
         },
         importMd: {
             heading: "导入降价",

@@ -2936,6 +2936,8 @@ export const ja: DeepPartial<Messages> = {
             ownerLabelWithMore: "オーナー：{name} ・ 他 {count} 名",
             membersLabel: "メンバー",
             ownerProjectTooltip: "所属プロジェクト",
+            focusNote: "このノートに集中（ほかのペインを隠す）",
+            exitFocusNote: "ほかのペインを再び表示",
         },
         importMd: {
             heading: "Markdownをインポート",

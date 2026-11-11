@@ -17,6 +17,11 @@ import { UserProps } from "../../../../types/admin";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabStrip } from "../../common/components/NoteTabStrip";
 import { useTaskPreview } from "../../common/hooks/useTaskPreview";
+import {
+    enterTaskNoteFocus,
+    exitTaskNoteFocus,
+    isTaskNoteFocused,
+} from "../../common/utils/noteFocus";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
 import { TaskNoteEditorPanel } from "./TaskNoteEditorPanel";
@@ -144,6 +149,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             useTM.setIsSprintBoardVisible(false);
         }
     }, [useNM, useTM, setIsTaskTableVisible]);
+
+    const handleToggleFocus = useCallback(() => {
+        if (isTaskNoteFocused(useTM, useNM.isTaskNotePaneVisible)) exitTaskNoteFocus(useTM);
+        else enterTaskNoteFocus(useTM);
+    }, [useNM.isTaskNotePaneVisible, useTM]);
 
     const handleCopyNoteLink = useCallback(async () => {
         if (useNM.currentTaskNote) {
@@ -275,6 +285,17 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         useTEM={useTEM}
                         useUISM={useUISM}
                         onCloseNotes={handleCloseNotes}
+                        focus={
+                            isInTaskPage
+                                ? {
+                                      active: isTaskNoteFocused(
+                                          useTM,
+                                          useNM.isTaskNotePaneVisible
+                                      ),
+                                      onToggle: handleToggleFocus,
+                                  }
+                                : undefined
+                        }
                         onCopyNoteLink={handleCopyNoteLink}
                         onCreateChildNote={handleCreateChildNote}
                         onCreateNewNote={() => {}} // Don't create new task note in task note page

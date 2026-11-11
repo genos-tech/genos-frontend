@@ -209,6 +209,8 @@ export const notes = {
         ownerLabelWithMore: "Owner: {name} · {count} more",
         membersLabel: "Members",
         ownerProjectTooltip: "Owner project",
+        focusNote: "Focus on this note (hide the other panes)",
+        exitFocusNote: "Show the other panes again",
     },
     importMd: {
         heading: "Import Markdown",
