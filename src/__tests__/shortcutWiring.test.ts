@@ -36,6 +36,12 @@ describe("handlers read the registry", () => {
         }
     });
 
+    it("undo's chord and editable policy are the registry's (MIP-1313)", () => {
+        const src = read("hooks/common/useUndoableAction.ts");
+        expect(src).toContain('matchesShortcut("global.undo"');
+        expect(src).not.toMatch(/e\.key\.toLowerCase\(\) !== "z"/);
+    });
+
     it("the create-task submit is contained to its form, so the chat composer's Cmd/Ctrl+Enter only sends (MIP-1312)", () => {
         expect(read("features/tasks/components/contents/CreateTaskForm.tsx")).toMatch(
             /"taskCreate\.submit",[\s\S]*?within: formRootRef/

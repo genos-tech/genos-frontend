@@ -170,6 +170,34 @@ describe("registry matches what the old handlers matched", () => {
     });
 });
 
+describe("global.undo matches what useUndoableAction's own check matched (MIP-1313)", () => {
+    // The predicate that listener used before it asked the registry, copied as it was.
+    const oldPredicate = (e: KeyLike) =>
+        !e.shiftKey && !e.altKey && !!(e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z";
+
+    it.each(PLATFORMS)("every modifier combination, upper and lower case (%s)", (platform) => {
+        for (const key of ["z", "Z", "y", "Enter"]) {
+            for (let bits = 0; bits < 16; bits++) {
+                const e: KeyLike = {
+                    key,
+                    ctrlKey: !!(bits & 1),
+                    metaKey: !!(bits & 2),
+                    altKey: !!(bits & 4),
+                    shiftKey: !!(bits & 8),
+                };
+                expect(matchesShortcut("global.undo", e, platform), `${key} ${bits}`).toBe(
+                    oldPredicate(e)
+                );
+            }
+        }
+    });
+
+    it("prints Cmd+Z on Mac and Ctrl+Z elsewhere", () => {
+        expect(shortcutText("global.undo", "mac")).toBe("⌘+Z");
+        expect(shortcutText("global.undo", "other")).toBe("Ctrl+Z");
+    });
+});
+
 describe("editable-target policy", () => {
     const LETTERS: ShortcutId[] = [
         "global.tasksNew",
@@ -183,14 +211,15 @@ describe("editable-target policy", () => {
     const skipping = (platform: Platform) =>
         SHORTCUT_IDS.filter((id) => editablePolicy(id, platform) === "skip").sort();
 
-    it("on Mac only the two chat arrow shortcuts keep out of text fields (as before); everything else fires", () => {
-        expect(skipping("mac")).toEqual(["chat.moveSelection", "chat.switchTab"]);
+    // The two chat arrows and undo (MIP-1313) keep out of text fields on both platforms.
+    const EVERYWHERE: ShortcutId[] = ["chat.moveSelection", "chat.switchTab", "global.undo"];
+
+    it("on Mac only the two chat arrow shortcuts and undo keep out of text fields; everything else fires", () => {
+        expect(skipping("mac")).toEqual(EVERYWHERE);
     });
 
     it("on Windows and Linux the seven Ctrl+Alt letter chords keep out of editors too (MIP-1311)", () => {
-        expect(skipping("other")).toEqual(
-            ["chat.moveSelection", "chat.switchTab", ...LETTERS].sort()
-        );
+        expect(skipping("other")).toEqual([...EVERYWHERE, ...LETTERS].sort());
     });
 
     it("the Ctrl+Alt letter that BlockNote also binds is among them, and Mac stays allowed", () => {

@@ -132,6 +132,7 @@ describe("the board's columns", () => {
                             {(provided) => (
                                 <div ref={provided.innerRef} {...provided.droppableProps}>
                                     <SprintBoardCard
+                                        columnId="open"
                                         index={0}
                                         inClosedColumn={inClosedColumn}
                                         myself={{} as UserProps}

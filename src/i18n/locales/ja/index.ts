@@ -2178,44 +2178,35 @@ export const ja: DeepPartial<Messages> = {
             eyebrow: "ショートカット",
             title: "キーボードショートカット",
             platformNote:
-                "macOS では ⌘ を使用します。 Windows と Linux では、代わりに Alt を使用します。",
+                "キーはお使いのシステムに合わせて表示されます。macOS では ⌘、Windows と Linux では Ctrl と Alt です。",
             keysHeader: "ショートカット",
             actionHeader: "何をするのか",
             items: [
                 {
-                    keys: "⌘K",
                     label: "Spotlight AI 検索を開く",
                 },
                 {
-                    keys: "⌘ を押しながら Ctrl をタップします",
-                    label: "受信箱 → チャット → タスク → ノート → Genos (シフトを逆にします) をサイクルします。",
+                    label: "受信箱 → チャット → タスク → ノート → Genos → To-Do (シフトを逆にします) をサイクルします。",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "タスクを開いて新しいタスクを開始する",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "ノートを開いて新しいノートを作成する",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "カレンダーを開く",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "Google Meet リンクを生成してコピーします",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "Toggle 最近開いたアイテムの履歴",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "現在のタスクのタスク図を開きます",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "To-Doリストを開く",
                 },
                 {
@@ -2690,8 +2681,6 @@ export const ja: DeepPartial<Messages> = {
             notes: "ノート",
             search: "Genos",
             todo: "To-Do",
-            hintMac: "⌘ を長押し  ・  Ctrl をタップで切り替え  ・  ⌘ を離して確定",
-            hintOther: "Alt を長押し  ・  Ctrl をタップで切り替え  ・  Alt を離して確定",
         },
     },
     noteAsk: {
@@ -4271,6 +4260,42 @@ export const ja: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "キーボードショートカット",
+            table: {
+                title: "タスクテーブル",
+                description:
+                    "タスクテーブルのセルにフォーカスがある間に有効です。Tab でテーブルに入り・出ます。これらのキーはテーブル内を移動します。",
+                rows: {
+                    move: "セル間を移動",
+                    rowEdges: "行の最初／最後のセルへ移動",
+                    gridEdges: "テーブルの最初／最後のセルへ移動",
+                    page: "1 ページ上／下へ移動",
+                    activate: "セルのエディターを開く",
+                    cancel: "保存せずにセルのエディターを閉じる",
+                },
+            },
+            board: {
+                title: "タスクボード",
+                description:
+                    "ボードのカードにフォーカスがある間に有効です。Tab で列の間を移動します（列ごとに 1 か所）。これらのキーはボード内を移動します。",
+                rows: {
+                    move: "カードと列の間を移動",
+                    columnEdges: "列の最初／最後のカードへ移動",
+                    boardEdges: "ボードの最初／最後のカードへ移動",
+                    open: "カードのプレビューを開く",
+                    lift: "カードを持ち上げる（矢印で移動、Space で置く、Esc で取り消し）",
+                },
+            },
+            calendar: {
+                title: "カレンダー",
+                description:
+                    "カレンダーの日または予定にフォーカスがある間に有効です。Tab でグリッドに入り・出ます（月表示は 1 か所、週・日表示は日ごとに 1 か所）。これらのキーはグリッド内を移動します。",
+                rows: {
+                    move: "日と週の間（月表示）、予定と日の間（週・日表示）を移動",
+                    edges: "週の最初／最後の日（月表示）、その日の最初／最後の予定（週・日表示）へ移動",
+                    page: "前／次の月へ移動（月表示）",
+                    open: "その日の予定または予定を開く。予定のない日では新しい予定を作成",
+                },
+            },
             editing: {
                 title: "入力中",
                 description:
@@ -4296,6 +4321,7 @@ export const ja: DeepPartial<Messages> = {
                     openTaskDiagram: "プレビューされたタスクのタスク図を開く",
                     openTodo: "To-Doリストを開く",
                     cycle: "サービスを順に切り替え",
+                    undo: "削除を元に戻す（「元に戻す」の通知が出ている間）",
                 },
                 cycleCombo: {
                     hold: "{key} を長押し",
@@ -4950,6 +4976,15 @@ export const ja: DeepPartial<Messages> = {
             taskDetails: "タスクの詳細",
             preparing: "準備中…",
             bootstrapFailed: "新しいタスクを準備できませんでした",
+            cancel: "キャンセル",
+            createTask: "タスクを作成",
+            createMilestone: "マイルストーンを作成",
+            creating: "作成中…",
+            withShortcut: "{label} ({shortcut})",
+            createLabel: "作成:",
+            kindTask: "タスク",
+            kindMilestone: "マイルストーン",
+            selectFiles: "ファイルを選択",
             discardTaskTitle: "この下書きを破棄しますか?",
             discardTaskBody:
                 "タイトル、本文、添付ファイルは失われます。この操作は取り消せません。",

@@ -193,6 +193,7 @@ describe("one status icon and color per status, on every surface", () => {
         const { container } = render(
             inDnd(
                 <SprintBoardCard
+                    columnId="open"
                     index={0}
                     myself={{} as UserProps}
                     task={task()}
@@ -212,6 +213,7 @@ const priorityCards = {
     "sprint board card": (p: string | null) =>
         inDnd(
             <SprintBoardCard
+                columnId="open"
                 index={0}
                 myself={{} as UserProps}
                 task={task({ priority: p })}
@@ -379,6 +381,7 @@ describe("board card wrapper", () => {
         render(
             inDnd(
                 <SprintBoardCard
+                    columnId="open"
                     index={0}
                     myself={{} as UserProps}
                     task={task()}
@@ -398,6 +401,7 @@ describe("board card wrapper", () => {
         const { unmount } = render(
             inDnd(
                 <SprintBoardCard
+                    columnId="open"
                     index={0}
                     myself={{} as UserProps}
                     task={task({ status: "Closed" })}
@@ -410,6 +414,7 @@ describe("board card wrapper", () => {
         render(
             inDnd(
                 <SprintBoardCard
+                    columnId="open"
                     index={0}
                     myself={{} as UserProps}
                     task={task()}

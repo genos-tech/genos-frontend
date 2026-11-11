@@ -463,8 +463,6 @@ export const es: DeepPartial<Messages> = {
             chats: "Chats",
             tasks: "Tareas",
             notes: "Notas",
-            hintMac: "Mantén ⌘  ·  Pulsa Ctrl para navegar  ·  Suelta ⌘ para cambiar",
-            hintOther: "Mantén Alt  ·  Pulsa Ctrl para navegar  ·  Suelta Alt para cambiar",
             search: "Genos",
             todo: "Por hacer",
         },
@@ -1151,6 +1149,42 @@ export const es: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Atajos de teclado",
+            table: {
+                title: "Tabla de tareas",
+                description:
+                    "Activos mientras una celda de la tabla de tareas tiene el foco. Tab entra y sale de la tabla; estas teclas se mueven dentro de ella.",
+                rows: {
+                    move: "Moverse entre celdas",
+                    rowEdges: "Ir a la primera / última celda de la fila",
+                    gridEdges: "Ir a la primera / última celda de la tabla",
+                    page: "Subir / bajar una página",
+                    activate: "Abrir el editor de la celda",
+                    cancel: "Cerrar el editor de la celda sin guardar",
+                },
+            },
+            board: {
+                title: "Tablero de tareas",
+                description:
+                    "Activo mientras una tarjeta del tablero tiene el foco. Tab se mueve entre las columnas (una parada por columna); estas teclas se mueven dentro del tablero.",
+                rows: {
+                    move: "Moverse entre tarjetas y columnas",
+                    columnEdges: "Ir a la primera / última tarjeta de la columna",
+                    boardEdges: "Ir a la primera / última tarjeta del tablero",
+                    open: "Abrir la vista previa de la tarjeta",
+                    lift: "Levantar una tarjeta (las flechas la mueven, Espacio la suelta, Esc cancela)",
+                },
+            },
+            calendar: {
+                title: "Calendario",
+                description:
+                    "Activo mientras un día o un evento del calendario tiene el foco. Tab entra y sale de la cuadrícula (el mes es una parada; las vistas de semana y día, una por día); estas teclas se mueven dentro de ella.",
+                rows: {
+                    move: "Moverse entre días y semanas (mes) o entre eventos y días (vistas de semana y día)",
+                    edges: "Primer / último día de la semana (mes), primer / último evento del día (vistas de semana y día)",
+                    page: "Mes anterior / siguiente (vista de mes)",
+                    open: "Abrir los eventos del día o el evento; un día vacío crea un evento nuevo",
+                },
+            },
             editing: {
                 title: "Al escribir",
                 description:
@@ -1171,6 +1205,7 @@ export const es: DeepPartial<Messages> = {
                     tasksNew: "Abrir Tareas y empezar una nueva tarea",
                     notesNew: "Abrir Notas y crear una nueva nota personal",
                     cycle: "Cambiar entre servicios",
+                    undo: "Deshacer una eliminación (mientras se muestra el aviso Deshacer)",
                     calendar: "Abrir calendario compacto",
                     meetClipboard: "Copia un enlace nuevo de Meet al portapapeles",
                     openHistory: "Historia abierta",
@@ -2478,6 +2513,15 @@ export const es: DeepPartial<Messages> = {
         },
         createForm: {
             bootstrapFailed: "No se pudo preparar una nueva tarea",
+            cancel: "Cancelar",
+            createTask: "Crear tarea",
+            createMilestone: "Crear hito",
+            creating: "Creando…",
+            withShortcut: "{label} ({shortcut})",
+            createLabel: "Crear:",
+            kindTask: "Tarea",
+            kindMilestone: "Hito",
+            selectFiles: "Seleccionar archivos",
             discardTaskTitle: "¿Descartar este borrador?",
             discardTaskBody:
                 "Se perderán el título, el cuerpo y los adjuntos. Esta acción no se puede deshacer.",
@@ -5666,44 +5710,36 @@ export const es: DeepPartial<Messages> = {
         shortcuts: {
             eyebrow: "Atajos",
             title: "Atajos de teclado",
-            platformNote: "En macOS use ⌘; en Windows y Linux utilice Alt en su lugar.",
+            platformNote:
+                "Las teclas se adaptan a tu sistema: ⌘ en macOS, Ctrl y Alt en Windows y Linux.",
             keysHeader: "Atajo",
             actionHeader: "que hace",
             items: [
                 {
-                    keys: "⌘K",
                     label: "Abre la búsqueda AI Spotlight",
                 },
                 {
-                    keys: "Mantenga presionado ⌘ + toque Ctrl",
-                    label: "Ciclo Bandeja de entrada → Chat → Tareas → Notas → Genos (cambio inverso)",
+                    label: "Ciclo Bandeja de entrada → Chat → Tareas → Notas → Genos → Por hacer (cambio inverso)",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "Abre Tareas y comience una nueva tarea",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "Abre Notas y cree una nueva nota",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "Abrir el calendario",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "Genera un enlace Google Meet y cópialo",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "Toggle Historial de elementos abiertos recientemente",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "Abrir el diagrama de tareas para la tarea actual",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "Abrir la lista de tareas pendientes",
                 },
                 {

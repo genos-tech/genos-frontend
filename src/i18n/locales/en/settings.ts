@@ -1052,6 +1052,42 @@ export const settings = {
     },
     shortcuts: {
         heading: "Keyboard shortcuts",
+        table: {
+            title: "Task table",
+            description:
+                "Active while a cell of the task table has focus. Tab enters and leaves the table; these keys move inside it.",
+            rows: {
+                move: "Move between cells",
+                rowEdges: "Jump to the first / last cell in the row",
+                gridEdges: "Jump to the first / last cell in the table",
+                page: "Move a page up / down",
+                activate: "Open the cell's editor",
+                cancel: "Close a cell editor without saving",
+            },
+        },
+        board: {
+            title: "Task board",
+            description:
+                "Active while a card of the board has focus. Tab moves between the columns (one stop each); these keys move inside the board.",
+            rows: {
+                move: "Move between cards and columns",
+                columnEdges: "Jump to the first / last card in the column",
+                boardEdges: "Jump to the first / last card on the board",
+                open: "Open the card's preview",
+                lift: "Pick up a card (arrows move it, Space drops it, Esc cancels)",
+            },
+        },
+        calendar: {
+            title: "Calendar",
+            description:
+                "Active while a day or an event of the calendar has focus. Tab enters and leaves the grid (the month is one stop, the week and day views one per day); these keys move inside it.",
+            rows: {
+                move: "Move between days and weeks (month), or events and days (week and day views)",
+                edges: "First / last day of the week (month), first / last event of the day (week and day views)",
+                page: "Previous / next month (month view)",
+                open: "Open the day's events or the event; an empty day starts a new event",
+            },
+        },
         editing: {
             title: "Writing",
             description: "Active while you write a message or fill in the new-task form.",
@@ -1076,6 +1112,7 @@ export const settings = {
                 openTaskDiagram: "Open task graph for the previewed task",
                 openTodo: "Open the To-Do list",
                 cycle: "Cycle through services",
+                undo: "Undo a deletion (while its Undo toast shows)",
             },
             cycleCombo: {
                 hold: "Hold {key}",

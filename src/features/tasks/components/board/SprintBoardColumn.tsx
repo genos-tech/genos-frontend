@@ -230,7 +230,9 @@ const SprintBoardColumnImpl = ({
                     return (
                         <Box
                             ref={provided.innerRef}
+                            aria-label={columnTitle}
                             className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                            role="group"
                             {...provided.droppableProps}
                             sx={{
                                 position: "relative",
@@ -350,6 +352,7 @@ const SprintBoardColumnImpl = ({
                                     return (
                                         <SprintBoardCard
                                             key={task.id}
+                                            columnId={column.id}
                                             index={index}
                                             inClosedColumn={column.status === "Closed"}
                                             isSelected={isSelected}

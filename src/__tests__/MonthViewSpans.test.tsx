@@ -67,6 +67,7 @@ const renderMonth = (events: CalendarEvent[], handlers: Partial<Handlers> = {}) 
                 freeBusySources={new Set()}
                 onCellClick={onCellClick}
                 onEventClick={onEventClick}
+                onNavigateToDay={vi.fn()}
                 onShowMore={onShowMore}
             />
         </CssVarsProvider>
@@ -132,6 +133,7 @@ describe("MonthView multi-day spans", () => {
                     freeBusySources={new Set(["a:teammate"])}
                     onCellClick={vi.fn()}
                     onEventClick={vi.fn()}
+                    onNavigateToDay={vi.fn()}
                     onShowMore={vi.fn()}
                 />
             </CssVarsProvider>

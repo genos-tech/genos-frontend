@@ -393,10 +393,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         ) {
                             userInteractedRef.current = true;
                         }
-                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            if (editor.document.length > 1) {
-                            }
-                        }
                     }}
                     onPaste={() => {
                         userInteractedRef.current = true;

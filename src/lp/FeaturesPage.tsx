@@ -23,6 +23,7 @@ import { Shot } from "./kit/Shot";
 import { SHOT_ALT } from "./kit/shotAlts";
 import { useSyncAppLocale } from "./kit/useSyncAppLocale";
 import type { Lang } from "./lpLang";
+import { shortcutRows } from "./shortcutRows";
 import { useDocumentMeta } from "./useDocumentMeta";
 
 // Order + icon for each entry in `t.featuresPage.features.items`.
@@ -80,6 +81,8 @@ const META: Record<Lang, { title: string; description: string }> = {
 function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) => string }) {
     const { t } = useTranslation();
     const copy = t.featuresPage;
+    // Keys from the registry for this visitor's system; the catalog holds the labels.
+    const shortcuts = shortcutRows(copy.shortcuts.items, t.settings.shortcuts.global.cycleCombo);
     useSyncAppLocale(lang);
     useDocumentMeta({
         title: META[lang].title,
@@ -172,8 +175,8 @@ function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) =>
                         <p className="lp-small">{copy.shortcuts.platformNote}</p>
                     </div>
                     <ul className="lp-rows" style={{ listStyle: "none", margin: 0, padding: 0 }}>
-                        {copy.shortcuts.items.map((shortcut) => (
-                            <li key={shortcut.keys} className="lp-row">
+                        {shortcuts.map((shortcut) => (
+                            <li key={shortcut.label} className="lp-row">
                                 <span>{shortcut.label}</span>
                                 <kbd className="lp-kbd" translate="no">
                                     {shortcut.keys}

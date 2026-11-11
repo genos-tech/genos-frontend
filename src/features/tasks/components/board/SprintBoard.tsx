@@ -40,6 +40,7 @@ import { COLUMN_MIN_WIDTH, ColumnConfig, SprintBoardColumn } from "./SprintBoard
 import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
 import { SprintBoardSkeleton } from "./SprintBoardSkeleton";
 import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
+import { useBoardRovingNav } from "./useBoardRovingNav";
 
 const NO_TAGS: TagListProps[] = [];
 // After a quick-add create, how long the filter pipeline gets to put the new
@@ -316,6 +317,8 @@ export const SprintBoard = (props: SprintBoardProps) => {
     );
 
     const { boardRef, lockColumnScroll, unlockColumnScroll } = useBoardDragScrollLock();
+    // One Tab stop per column, arrows between cards and columns (MIP-1402).
+    const boardNavRef = useBoardRovingNav(boardRef);
 
     // Handle drag end. Two modes: task vs milestone — milestones are
     // persisted via the milestone API (`useSM.updateExistingMilestone`),
@@ -795,7 +798,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         }}
                     >
                         <div
-                            ref={boardRef}
+                            ref={boardNavRef}
                             className={`custom-scrollbar-${mode === "dark" ? "dark" : "light"}`}
                             style={getBoardContainerStyles(mode)}
                         >

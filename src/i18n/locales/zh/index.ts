@@ -2099,44 +2099,35 @@ export const zh: DeepPartial<Messages> = {
         shortcuts: {
             eyebrow: "快捷方式",
             title: "键盘快捷键",
-            platformNote: "在 macOS 上使用 ⌘;在 Windows 和 Linux 上使用 Alt 代替。",
+            platformNote: "按键会按你的系统显示：macOS 用 ⌘，Windows 和 Linux 用 Ctrl 与 Alt。",
             keysHeader: "捷径",
             actionHeader: "它的作用",
             items: [
                 {
-                    keys: "⌘K",
                     label: "打开Spotlight人工智能搜索",
                 },
                 {
-                    keys: "按住 ⌘ + 点击 Ctrl",
-                    label: "循环收件箱→聊天→任务→笔记→Genos（Shift反向）",
+                    label: "循环收件箱→聊天→任务→笔记→Genos→待办事项（Shift反向）",
                 },
                 {
-                    keys: "Ctrl + ⌘ + T",
                     label: "打开任务并开始新任务",
                 },
                 {
-                    keys: "Ctrl + ⌘ + N",
                     label: "打开笔记并创建新笔记",
                 },
                 {
-                    keys: "Ctrl + ⌘ + C",
                     label: "打开日历",
                 },
                 {
-                    keys: "Ctrl + ⌘ + M",
                     label: "生成Google Meet链接并复制",
                 },
                 {
-                    keys: "Ctrl + ⌘ + H",
                     label: "切换最近打开的项目的历史记录",
                 },
                 {
-                    keys: "Ctrl + ⌘ + G",
                     label: "打开当前任务的任务图",
                 },
                 {
-                    keys: "Ctrl + ⌘ + O",
                     label: "打开待办事项列表",
                 },
                 {
@@ -2596,8 +2587,6 @@ export const zh: DeepPartial<Messages> = {
             notes: "笔记",
             search: "Genos",
             todo: "待办事项",
-            hintMac: "按住 ⌘  ·  点按 Ctrl 切换  ·  松开 ⌘ 确认",
-            hintOther: "按住 Alt  ·  点按 Ctrl 切换  ·  松开 Alt 确认",
         },
     },
     noteAsk: {
@@ -4124,6 +4113,42 @@ export const zh: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "键盘快捷键",
+            table: {
+                title: "任务表格",
+                description:
+                    "当任务表格中的某个单元格获得焦点时有效。Tab 进入和离开表格，这些按键在表格内移动。",
+                rows: {
+                    move: "在单元格之间移动",
+                    rowEdges: "跳到本行第一个／最后一个单元格",
+                    gridEdges: "跳到表格第一个／最后一个单元格",
+                    page: "向上／向下翻一页",
+                    activate: "打开单元格编辑器",
+                    cancel: "不保存并关闭单元格编辑器",
+                },
+            },
+            board: {
+                title: "任务看板",
+                description:
+                    "看板上的卡片获得焦点时生效。Tab 在各列之间移动（每列一个停靠点），这些按键在看板内部移动。",
+                rows: {
+                    move: "在卡片和列之间移动",
+                    columnEdges: "跳到该列的第一张 / 最后一张卡片",
+                    boardEdges: "跳到看板的第一张 / 最后一张卡片",
+                    open: "打开卡片预览",
+                    lift: "拿起卡片（方向键移动，空格放下，Esc 取消）",
+                },
+            },
+            calendar: {
+                title: "日历",
+                description:
+                    "日历中的某一天或某个日程获得焦点时生效。Tab 进入和离开网格（月视图为一个停靠点，周视图和日视图每天一个），这些按键在网格内部移动。",
+                rows: {
+                    move: "在日期和周之间（月视图）、日程和日期之间（周视图和日视图）移动",
+                    edges: "跳到一周的第一天 / 最后一天（月视图），当天的第一个 / 最后一个日程（周视图和日视图）",
+                    page: "上一个 / 下一个月（月视图）",
+                    open: "打开当天的日程或该日程；没有日程的一天会新建日程",
+                },
+            },
             editing: {
                 title: "编写时",
                 description: "在撰写消息或填写新建任务表单时可用。",
@@ -4148,6 +4173,7 @@ export const zh: DeepPartial<Messages> = {
                     openTaskDiagram: "打开预览任务的任务图",
                     openTodo: "打开待办事项列表",
                     cycle: "在各服务间循环切换",
+                    undo: "撤销删除（撤销提示显示期间）",
                 },
                 cycleCombo: {
                     hold: "按住 {key}",
@@ -4786,6 +4812,15 @@ export const zh: DeepPartial<Messages> = {
             taskDetails: "任务详情",
             preparing: "准备任务…",
             bootstrapFailed: "无法准备新任务",
+            cancel: "取消",
+            createTask: "创建任务",
+            createMilestone: "创建里程碑",
+            creating: "创建中…",
+            withShortcut: "{label}（{shortcut}）",
+            createLabel: "创建：",
+            kindTask: "任务",
+            kindMilestone: "里程碑",
+            selectFiles: "选择文件",
             discardTaskTitle: "放弃此草稿？",
             discardTaskBody: "标题、正文和附件将丢失，此操作无法撤销。",
             discardMilestoneTitle: "放弃此里程碑草稿？",

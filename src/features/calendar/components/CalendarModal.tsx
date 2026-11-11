@@ -752,6 +752,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                     freeBusySources={sources.freeBusySources}
                                     onCellClick={openCreateOn}
                                     onEventClick={openEdit}
+                                    onNavigateToDay={(day) => setAnchor(day.startOf("month"))}
                                     onShowMore={setPopoverDayKey}
                                 />
                             ) : (
@@ -822,6 +823,22 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                                     </Chip>
                                 );
                             }
+                        )}
+                        {/* A day that has events can still be given another, and a keyboard
+                            has no blank cell to click: the same create the cell opens. */}
+                        {popoverDayKey && (
+                            <Button
+                                size="sm"
+                                variant="plain"
+                                sx={{ alignSelf: "flex-start" }}
+                                onClick={() => {
+                                    const day = dayjs(popoverDayKey);
+                                    setPopoverDayKey(null);
+                                    openCreateOn(day);
+                                }}
+                            >
+                                {t.calendar.event.newTitle}
+                            </Button>
                         )}
                     </Stack>
                 </ModalFrame>

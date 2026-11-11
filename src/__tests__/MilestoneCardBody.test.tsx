@@ -120,6 +120,7 @@ const renderBoardCard = ({
                     {(provided) => (
                         <div ref={provided.innerRef} {...provided.droppableProps}>
                             <SprintBoardCard
+                                columnId="open"
                                 index={0}
                                 milestone={milestone}
                                 myself={{} as UserProps}

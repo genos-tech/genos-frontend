@@ -1108,7 +1108,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 variant="soft"
                                 onClick={() => inputRef.current?.click()}
                             >
-                                Select Files
+                                {t.tasks.createForm.selectFiles}
                             </Button>
                         </Box>
 

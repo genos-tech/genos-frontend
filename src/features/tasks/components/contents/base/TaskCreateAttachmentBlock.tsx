@@ -364,7 +364,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                     variant="soft"
                     onClick={() => inputRef.current?.click()}
                 >
-                    Select Files
+                    {t.tasks.createForm.selectFiles}
                 </Button>
             </Box>
 
