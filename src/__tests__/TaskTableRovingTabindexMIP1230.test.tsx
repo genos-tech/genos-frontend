@@ -148,6 +148,7 @@ const Table = ({
                                         useTEM={{} as never}
                                         useTM={useTM}
                                         useUISM={{} as never}
+                                        onDeleteTask={vi.fn()}
                                         onOpenDiagram={vi.fn()}
                                         onQuickAddChild={vi.fn()}
                                         onRequestPreview={vi.fn()}
@@ -546,6 +547,7 @@ describe("the quick-add form", () => {
                                         useTEM={{} as never}
                                         useTM={useTM}
                                         useUISM={{} as never}
+                                        onDeleteTask={vi.fn()}
                                         onOpenDiagram={vi.fn()}
                                         onQuickAddChild={(t) => setParent(String(t.id))}
                                         onQuickAddClose={() => setParent(null)}
