@@ -203,7 +203,8 @@ describe("editable-target policy", () => {
                         sig(c).some((x) => sig(ec.chord).includes(x))
                     ) && editablePolicy(id, "other") !== "skip"
             );
-            // Only Spotlight (Ctrl+K) is still open; no Ctrl+Alt letter overlaps an editor chord unskipped.
+            // Only Spotlight (Ctrl+K) still shares keys with an editor chord, by design: it claims
+            // them (MIP-1310). No Ctrl+Alt letter overlaps an editor chord unskipped.
             expect(clash).toEqual(ec.id === "blocknote.link" ? ["global.spotlight"] : []);
         }
     });
