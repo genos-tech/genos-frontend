@@ -391,7 +391,27 @@ export const resetLinkedGithubMemo = (): void => {
 
 interface LinkedPullsBatchResponse {
     pulls_by_task: Record<string, LinkedPull[]>;
+    /**
+     * The ids of the tasks whose list may be SHORT because a GitHub call failed in a way that
+     * says nothing about access (a 5xx, a rate limit, a 401): for those, `[]` means "could not
+     * look", not "no PR" (MIP-1412). Present, and empty, on every answer of a server that
+     * reports it; absent on an older one, which cannot say.
+     */
+    incomplete?: string[];
 }
+
+/** A row's PR list, and whether the server vouched for it. */
+export type RefreshedPulls = {
+    pulls: LinkedPull[];
+    /**
+     * The server reports completeness and did not name this row, so an empty list is "no PR".
+     * False when it cannot say (an older server, or the per-task fallback).
+     */
+    complete: boolean;
+};
+
+// Prefix-matched by `invalidate`, so the id ends in a delimiter: `ghpulls:12:` is not task 120's.
+const pullsKey = (taskId: number | string): string => `ghpulls:${taskId}:`;
 
 const BATCH_WINDOW_MS = 50;
 const BATCH_MAX_IDS = 200; // mirrors the backend cap
@@ -407,10 +427,10 @@ type PullsBatchWaiter = {
     refresh?: boolean;
     /** Ask the server to skip its own cache too (`fresh=1`). */
     fresh?: boolean;
-    resolve: (pulls: LinkedPull[] | null) => void;
+    resolve: (answer: RefreshedPulls | null) => void;
 };
 
-const pullsBatchCache = createRequestCache<LinkedPull[]>({ ttlMs: 60_000 });
+const pullsBatchCache = createRequestCache<RefreshedPulls>({ ttlMs: 60_000 });
 let pendingPullsWaiters: PullsBatchWaiter[] = [];
 let pullsFlushTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -423,7 +443,11 @@ const flushPullsBatch = async (): Promise<void> => {
     const fallback = (chunk: PullsBatchWaiter[]) => {
         for (const w of chunk) {
             if (w.refresh) w.resolve(null);
-            else void loadLinkedPulls(w.accessToken, w.taskId).then(w.resolve);
+            else {
+                void loadLinkedPulls(w.accessToken, w.taskId).then((pulls) =>
+                    w.resolve({ pulls, complete: false })
+                );
+            }
         }
     };
 
@@ -431,7 +455,7 @@ const flushPullsBatch = async (): Promise<void> => {
         const chunk = waiters.slice(i, i + BATCH_MAX_IDS);
         const api = authApi(chunk[0].accessToken);
         if (!api) {
-            for (const w of chunk) w.resolve(w.refresh ? null : []);
+            for (const w of chunk) w.resolve(w.refresh ? null : { pulls: [], complete: false });
             continue;
         }
         try {
@@ -445,7 +469,23 @@ const flushPullsBatch = async (): Promise<void> => {
                 params,
             });
             const byTask = res.data.pulls_by_task ?? {};
-            for (const w of chunk) w.resolve(byTask[w.taskId] ?? []);
+            const reports = Array.isArray(res.data.incomplete);
+            const incomplete = new Set(res.data.incomplete ?? []);
+            for (const w of chunk) {
+                const pulls = byTask[w.taskId] ?? [];
+                const partial = incomplete.has(w.taskId);
+                if (w.refresh) {
+                    // A row the server could not fully look at is a failed re-sync: the caller
+                    // keeps what it shows, and the poll slows down (MIP-1412).
+                    w.resolve(partial ? null : { pulls, complete: reports });
+                    continue;
+                }
+                w.resolve({ pulls, complete: reports && !partial });
+                // Drawn as it is, but not kept for the memo's whole minute: the next mount asks
+                // again. (The resolve above is already queued; dropping the in-flight slot now
+                // is what keeps the memo from storing it.)
+                if (partial) pullsBatchCache.invalidate(pullsKey(w.taskId));
+            }
         } catch {
             fallback(chunk);
         }
@@ -456,26 +496,30 @@ export const loadLinkedPullsBatched = (
     accessToken: string | null,
     taskId: number | string
 ): Promise<LinkedPull[]> =>
-    pullsBatchCache.get(`ghpulls:${taskId}`, () => {
-        return new Promise<LinkedPull[]>((resolve) => {
-            pendingPullsWaiters.push({
-                taskId: String(taskId),
-                accessToken,
-                resolve: (pulls) => resolve(pulls ?? []),
+    pullsBatchCache
+        .get(pullsKey(taskId), () => {
+            return new Promise<RefreshedPulls>((resolve) => {
+                pendingPullsWaiters.push({
+                    taskId: String(taskId),
+                    accessToken,
+                    resolve: (answer) => resolve(answer ?? { pulls: [], complete: false }),
+                });
+                if (pullsFlushTimer == null) {
+                    pullsFlushTimer = setTimeout(() => void flushPullsBatch(), BATCH_WINDOW_MS);
+                }
             });
-            if (pullsFlushTimer == null) {
-                pullsFlushTimer = setTimeout(() => void flushPullsBatch(), BATCH_WINDOW_MS);
-            }
-        });
-    });
+        })
+        .then((answer) => answer.pulls);
 
 /**
  * Ask again for a row's PRs, past the client memo (MIP-1409): the PR column's "Refresh tasks"
  * click and its once-a-minute poll. Rows asking in the same window still share ONE request.
  *
  * Resolves `null` when the request failed, which is not `[]` ("looked, found none"): the
- * caller keeps what it already shows. A failure is not stored (the memo drops a rejection),
- * and a success is, so a row that mounts right after reads the new answer.
+ * caller keeps what it already shows. So is a row the server names in `incomplete` (MIP-1412):
+ * GitHub failed for it, and its list may be short. A failure is not stored (the memo drops a
+ * rejection), and a success is, so a row that mounts right after reads the new answer.
+ * `complete` says whether the server vouched for the list: when it did, `[]` is "no PR".
  * `fresh` also skips the server's cache: the click wants the authoritative answer, the poll
  * does not (every skipped lookup is a GitHub call per matching branch).
  */
@@ -483,19 +527,19 @@ export const refreshLinkedPullsBatched = async (
     accessToken: string | null,
     taskId: number | string,
     options?: { fresh?: boolean }
-): Promise<LinkedPull[] | null> => {
+): Promise<RefreshedPulls | null> => {
     try {
         return await pullsBatchCache.get(
-            `ghpulls:${taskId}`,
+            pullsKey(taskId),
             () =>
-                new Promise<LinkedPull[]>((resolve, reject) => {
+                new Promise<RefreshedPulls>((resolve, reject) => {
                     pendingPullsWaiters.push({
                         taskId: String(taskId),
                         accessToken,
                         refresh: true,
                         fresh: options?.fresh,
-                        resolve: (pulls) =>
-                            pulls ? resolve(pulls) : reject(new Error("PR list refresh failed")),
+                        resolve: (answer) =>
+                            answer ? resolve(answer) : reject(new Error("PR list refresh failed")),
                     });
                     if (pullsFlushTimer == null) {
                         pullsFlushTimer = setTimeout(

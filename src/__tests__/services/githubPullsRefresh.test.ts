@@ -65,7 +65,7 @@ describe("refreshLinkedPullsBatched", () => {
         // ...a refresh is not.
         const again = refreshLinkedPullsBatched("token", 1);
         await vi.advanceTimersByTimeAsync(60);
-        expect(await again).toEqual([mergedPull(7)]);
+        expect(await again).toEqual({ pulls: [mergedPull(7)], complete: false });
         expect(get).toHaveBeenCalledTimes(2);
     });
 
@@ -96,9 +96,9 @@ describe("refreshLinkedPullsBatched", () => {
         const c = refreshLinkedPullsBatched("token", 3);
         await vi.advanceTimersByTimeAsync(60);
 
-        expect(await a).toEqual([pull(7)]);
-        expect(await b).toEqual([pull(8)]);
-        expect(await c).toEqual([]);
+        expect(await a).toEqual({ pulls: [pull(7)], complete: false });
+        expect(await b).toEqual({ pulls: [pull(8)], complete: false });
+        expect(await c).toEqual({ pulls: [], complete: false });
         expect(get).toHaveBeenCalledTimes(1);
     });
 
@@ -195,5 +195,119 @@ describe("refreshLinkedPullsBatched", () => {
 
         expect(await a).toEqual([pull(7)]);
         expect(get.mock.calls[1][0]).toBe("/github/pulls/for-task/");
+    });
+});
+
+describe("the server says which rows it could not fully look at (MIP-1412)", () => {
+    const reportsAs = (
+        byTask: Record<string, LinkedPull[]>,
+        incomplete: string[] | undefined
+    ) => ({
+        data:
+            incomplete === undefined
+                ? { pulls_by_task: byTask }
+                : { pulls_by_task: byTask, incomplete },
+    });
+
+    it("a server that reports, and does not name the row, vouches for its list: complete", async () => {
+        const get = vi.fn().mockResolvedValue(reportsAs({ "1": [pull(7)], "2": [] }, []));
+        mockAuthApi.mockReturnValue({ get } as never);
+
+        const a = refreshLinkedPullsBatched("token", 1);
+        const b = refreshLinkedPullsBatched("token", 2);
+        await vi.advanceTimersByTimeAsync(60);
+
+        expect(await a).toEqual({ pulls: [pull(7)], complete: true });
+        // An empty list the server vouches for is "no PR".
+        expect(await b).toEqual({ pulls: [], complete: true });
+    });
+
+    it("a server that does not report cannot vouch for anything: not complete", async () => {
+        const get = vi.fn().mockResolvedValue(reportsAs({ "1": [] }, undefined));
+        mockAuthApi.mockReturnValue({ get } as never);
+
+        const a = refreshLinkedPullsBatched("token", 1);
+        await vi.advanceTimersByTimeAsync(60);
+
+        expect(await a).toEqual({ pulls: [], complete: false });
+    });
+
+    it("a row it names is a failed re-sync (null), and the rows it does not name are fine", async () => {
+        const get = vi.fn().mockResolvedValue(reportsAs({ "1": [], "2": [pull(8)] }, ["1"]));
+        mockAuthApi.mockReturnValue({ get } as never);
+
+        const a = refreshLinkedPullsBatched("token", 1);
+        const b = refreshLinkedPullsBatched("token", 2);
+        await vi.advanceTimersByTimeAsync(60);
+
+        expect(await a).toBeNull();
+        expect(await b).toEqual({ pulls: [pull(8)], complete: true });
+    });
+
+    it("a refresh of a row it names stores nothing: the last good answer is still the memo's", async () => {
+        const get = vi
+            .fn()
+            .mockResolvedValueOnce(reportsAs({ "1": [pull(7)] }, []))
+            .mockResolvedValueOnce(reportsAs({ "1": [] }, ["1"]));
+        mockAuthApi.mockReturnValue({ get } as never);
+        const first = loadLinkedPullsBatched("token", 1);
+        await vi.advanceTimersByTimeAsync(60);
+        await first;
+
+        const partial = refreshLinkedPullsBatched("token", 1);
+        await vi.advanceTimersByTimeAsync(60);
+        expect(await partial).toBeNull();
+
+        expect(await loadLinkedPullsBatched("token", 1)).toEqual([pull(7)]);
+        expect(get).toHaveBeenCalledTimes(2);
+    });
+
+    it("a first load of a row it names is drawn as answered, but not kept for the memo's minute", async () => {
+        const get = vi
+            .fn()
+            .mockResolvedValueOnce(reportsAs({ "1": [] }, ["1"]))
+            .mockResolvedValueOnce(reportsAs({ "1": [pull(7)] }, []));
+        mockAuthApi.mockReturnValue({ get } as never);
+
+        const first = loadLinkedPullsBatched("token", 1);
+        await vi.advanceTimersByTimeAsync(60);
+        expect(await first).toEqual([]);
+
+        // The next mount asks again, and now gets the PR.
+        const second = loadLinkedPullsBatched("token", 1);
+        await vi.advanceTimersByTimeAsync(60);
+        expect(await second).toEqual([pull(7)]);
+        expect(get).toHaveBeenCalledTimes(2);
+    });
+
+    it("a first load of a row it does NOT name is kept as before", async () => {
+        const get = vi.fn().mockResolvedValue(reportsAs({ "1": [pull(7)] }, []));
+        mockAuthApi.mockReturnValue({ get } as never);
+
+        const first = loadLinkedPullsBatched("token", 1);
+        await vi.advanceTimersByTimeAsync(60);
+        await first;
+
+        expect(await loadLinkedPullsBatched("token", 1)).toEqual([pull(7)]);
+        expect(get).toHaveBeenCalledTimes(1);
+    });
+
+    it("dropping one task's memo entry leaves another whose id starts the same", async () => {
+        // `invalidate` matches by prefix: task 12 must not take task 120 with it.
+        const get = vi
+            .fn()
+            .mockResolvedValueOnce(reportsAs({ "120": [pull(7)] }, []))
+            .mockResolvedValueOnce(reportsAs({ "12": [] }, ["12"]));
+        mockAuthApi.mockReturnValue({ get } as never);
+        const big = loadLinkedPullsBatched("token", 120);
+        await vi.advanceTimersByTimeAsync(60);
+        await big;
+
+        const small = loadLinkedPullsBatched("token", 12);
+        await vi.advanceTimersByTimeAsync(60);
+        await small;
+
+        expect(await loadLinkedPullsBatched("token", 120)).toEqual([pull(7)]);
+        expect(get).toHaveBeenCalledTimes(2);
     });
 });

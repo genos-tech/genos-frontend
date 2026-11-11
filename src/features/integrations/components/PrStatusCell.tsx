@@ -414,13 +414,23 @@ export const PrStatusCell = ({ taskId, accessToken }: Props) => {
                 fresh: resync.reason === "manual",
             });
             if (resync.reason === "poll") reportPrResyncOutcome(resync.id, next !== null);
-            // A failed request keeps what is drawn. So does a poll that answers "no PRs" for a
-            // row that has some: a PR does not vanish, but a GitHub that refuses us (a rate
-            // limit, a lost grant) is read by the server as "no PR", and the chips would blink
-            // out once a minute. A click is the user asking, and gets the answer as it is.
+            // A failed request keeps what is drawn, and so does a row the server says it could
+            // not fully look at (the loader hands both back as null, MIP-1412).
             if (cancelled || next === null) return;
-            if (resync.reason === "poll" && next.length === 0 && before.length > 0) return;
-            setPulls((prev) => (samePulls(prev, next) ? prev : next));
+            // A poll that answers "no PRs" for a row that has some is not believed unless the
+            // server vouches for it: a PR does not vanish, but a GitHub that refuses us is read
+            // by an older server as "no PR", and the chips would blink out once a minute. A
+            // server that reports completeness names the rows it could not look at, so for the
+            // others an empty list is the truth. A click is the user asking, and gets the answer.
+            if (
+                resync.reason === "poll" &&
+                !next.complete &&
+                next.pulls.length === 0 &&
+                before.length > 0
+            ) {
+                return;
+            }
+            setPulls((prev) => (samePulls(prev, next.pulls) ? prev : next.pulls));
         })();
         return () => {
             cancelled = true;

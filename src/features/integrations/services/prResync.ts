@@ -44,7 +44,13 @@ let lastRequestAt = 0;
 let lastManualAt = Number.NEGATIVE_INFINITY;
 let failures = 0;
 let resumeAt = 0;
-let lastReportedId = 0;
+
+// What the rows of the latest poll have reported so far. They answer one by one, and a healthy
+// row can report before a failing one, so the outcome is settled when the clock next looks
+// (by then every answer is in), not on the first report.
+type PollReport = { id: number; ok: number; failed: number; firstFailedAt: number };
+const NO_REPORT: PollReport = { id: 0, ok: 0, failed: 0, firstFailedAt: 0 };
+let report: PollReport = NO_REPORT;
 
 const hidden = (): boolean => typeof document !== "undefined" && document.hidden;
 const offline = (): boolean => typeof navigator !== "undefined" && navigator.onLine === false;
@@ -58,9 +64,11 @@ export const requestPrResync = (reason: PrResyncReason): boolean => {
     if (reason === "manual") {
         if (now - lastManualAt < PR_RESYNC_MANUAL_COOLDOWN_MS) return false;
         lastManualAt = now;
-        // The user asked: a backed-off clock is no reason to refuse.
+        // The user asked: a backed-off clock is no reason to refuse, and a poll's unsettled
+        // failure is not held against them.
         failures = 0;
         resumeAt = 0;
+        report = NO_REPORT;
     }
     lastRequestAt = now;
     latest = { id: latest.id + 1, reason };
@@ -69,24 +77,40 @@ export const requestPrResync = (reason: PrResyncReason): boolean => {
 };
 
 /**
- * A cell reports how the poll it took part in went. The first report for a request counts
- * (one request is one batched GET, so every cell sees the same outcome). A success resets the
- * clock; a failure makes it wait longer before the next poll.
+ * A cell reports how the poll it took part in went: `ok` is false when its re-sync failed, or
+ * when the server said it could not fully look at the row (MIP-1412). One failing row makes
+ * the poll a failing one, whoever reports first; the clock then waits longer before the next.
+ * A poll in which every row was fine puts it back at a minute.
  */
 export const reportPrResyncOutcome = (requestId: number, ok: boolean): void => {
-    if (requestId !== latest.id || requestId === lastReportedId) return;
-    lastReportedId = requestId;
-    if (latest.reason !== "poll") return;
+    if (requestId !== latest.id || latest.reason !== "poll") return;
+    if (report.id !== requestId) report = { id: requestId, ok: 0, failed: 0, firstFailedAt: 0 };
     if (ok) {
-        failures = 0;
-        resumeAt = 0;
+        report.ok += 1;
         return;
     }
-    failures = Math.min(failures + 1, MAX_BACKOFF_STEPS);
-    resumeAt = Date.now() + PR_RESYNC_INTERVAL_MS * 2 ** failures;
+    if (report.failed === 0) report.firstFailedAt = Date.now();
+    report.failed += 1;
+};
+
+// Count the latest poll once: a failure anywhere in it is one failure, however many rows share
+// it (40 rows of one failed GET are one failed poll), and it does not reset the count when a
+// healthy row reported first.
+const settle = (): void => {
+    const { id, ok, failed, firstFailedAt } = report;
+    if (id === 0) return;
+    report = NO_REPORT;
+    if (failed > 0) {
+        failures = Math.min(failures + 1, MAX_BACKOFF_STEPS);
+        resumeAt = firstFailedAt + PR_RESYNC_INTERVAL_MS * 2 ** failures;
+    } else if (ok > 0) {
+        failures = 0;
+        resumeAt = 0;
+    }
 };
 
 const tick = (): void => {
+    settle();
     if (hidden() || offline()) return;
     const now = Date.now();
     if (now + TICK_SLACK_MS < resumeAt) return;
@@ -141,5 +165,5 @@ export const _resetPrResyncForTests = (): void => {
     lastManualAt = Number.NEGATIVE_INFINITY;
     failures = 0;
     resumeAt = 0;
-    lastReportedId = 0;
+    report = NO_REPORT;
 };
