@@ -286,7 +286,8 @@ input[type="checkbox"] {
 }
 
 .bn-message-bubble-box-light-me code {
-    background-color: rgba(99, 102, 241, 0.15) !important;
+    /* The theme's active wash (it was indigo on every theme, so amber code sat on lavender). */
+    background-color: var(--g-active) !important;
     color: var(--g-link); /* The accent family, as dark as AA needs, for code */
 }
 
@@ -299,12 +300,14 @@ input[type="checkbox"] {
 .bn-message-bubble-box-dark .bn-editor {
     background-color: transparent;
     padding: 1px;
-    color: #f3f4f6; /* Light text on dark gray background */
+    color: var(--g-text);
 }
 
 .bn-message-bubble-box-dark code {
-    background-color: rgba(0, 0, 0, 0.3) !important;
-    color: #fb923c; /* Orange for code */
+    /* The same chip as the sent bubble; the ink is the code role, which reads at least as
+       well as the orange on a black wash it replaces on every bubble fill (MIP-1388). */
+    background-color: var(--g-active) !important;
+    color: var(--g-text-code);
 }
 
 .bn-message-bubble-box-dark [data-content-type="quote"] blockquote {

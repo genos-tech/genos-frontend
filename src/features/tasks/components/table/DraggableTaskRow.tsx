@@ -58,6 +58,7 @@ import {
     ChipSelect,
     EffortLabel,
     effortSelectNode,
+    EmptyCellHint,
     MemberAutocomplete,
     PillChip,
     prioritySelectNode,
@@ -1078,11 +1079,20 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         />
                     );
                 }
-                return priorityOption ? (
-                    <CellButton onClick={() => handleStartEdit("priority", value as string)}>
-                        <PriorityIcon priority={priorityOption.priority ?? ""} showLabel />
+                // A value the table does not know (legacy data) stays as it was: no cell.
+                if (!priorityOption && value) return null;
+                return (
+                    <CellButton
+                        label={priorityOption ? undefined : t.tasks.table.setPriority}
+                        onClick={() => handleStartEdit("priority", (value as string) ?? "")}
+                    >
+                        {priorityOption ? (
+                            <PriorityIcon priority={priorityOption.priority ?? ""} showLabel />
+                        ) : (
+                            <EmptyCellHint hint={t.tasks.table.columns.priority} />
+                        )}
                     </CellButton>
-                ) : null;
+                );
 
             case "effortLevel":
                 const effortOption = effortLevels.find((e) => e.level === value);
@@ -1106,11 +1116,19 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         />
                     );
                 }
-                return effortOption ? (
-                    <CellButton onClick={() => handleStartEdit("effortLevel", value as string)}>
-                        <EffortLabel level={effortOption.level ?? ""} />
+                if (!effortOption && value) return null;
+                return (
+                    <CellButton
+                        label={effortOption ? undefined : t.tasks.table.setEffort}
+                        onClick={() => handleStartEdit("effortLevel", (value as string) ?? "")}
+                    >
+                        {effortOption ? (
+                            <EffortLabel level={effortOption.level ?? ""} />
+                        ) : (
+                            <EmptyCellHint hint={t.tasks.table.columns.effortLevel} />
+                        )}
                     </CellButton>
-                ) : null;
+                );
 
             case "weight": {
                 // Derived Task Weight (priority × urgency). Read-only; it

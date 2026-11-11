@@ -79,6 +79,10 @@ export type RoleColors = {
     /** Quoted text in a bubble: dimmer than the body text, but 7:1 on every bubble fill (the
      *  secondary text role is 5.5-6.6:1 there). */
     textQuote: string;
+    /** Inline code ink in a chat bubble or comment, over the `active` wash that is its chip.
+     *  Dark: the warning amber lightened until it reads at least as well as the orange it
+     *  replaced on every bubble fill (`warning.text` is 1.1:1 lower on some). Light: `warning.text`. */
+    codeInk: string;
     /** Selected-row / selected-nav background. */
     accentSubtle: Alpha;
     accentBorder: Alpha;
@@ -127,6 +131,7 @@ const SEMANTIC_RAMPS = {
         800: "#166534",
     },
     warning: {
+        200: "#fde68a",
         300: "#fcd34d",
         400: "#fbbf24",
         500: "#f59e0b",
@@ -213,6 +218,9 @@ const VISITED_TURN = 30;
 /** ...and how much of its chroma it keeps, so the turn stays quiet. */
 const VISITED_CHROMA = 0.7;
 const QUOTE_TEXT_FLOOR = { light: 7, dark: 9.5 } as const;
+/** Inline code ink on its chip in the dark bubbles: the worst case the orange `#fb923c` on black
+ *  at .3 measured over the bubble fills (7.2 to 8.9), rounded up. */
+const CODE_INK_FLOOR = 7.4;
 
 /** Neutral lightness / chroma steps, per mode. Read off the references
  *  (Linear, Vercel Geist): near-white canvas with white cards in light,
@@ -234,7 +242,9 @@ const NEUTRAL = {
         bgSubtle: [0.178, 0.013],
         surface: [0.2, 0.014],
         surfaceRaised: [0.232, 0.015],
-        text: [0.955, 0.006],
+        // 0.97 (was 0.955): the received dark bubble's body text was #f3f4f6 (L 0.972) until it
+        // moved to this role (MIP-1388); at 0.955 it read up to 0.65:1 lower on the bubble fills.
+        text: [0.97, 0.006],
         textSecondary: [0.765, 0.012],
         textTertiary: [0.615, 0.012],
         textDisabled: [0.46, 0.01],
@@ -341,6 +351,22 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
         textQuote = oklchToHex(quoteL0 + (mode === "dark" ? 0.005 : -0.005) * i, quoteC, hue);
     }
 
+    // Code ink: the chip is the `active` wash over each bubble fill.
+    const warning = buildSemantic("warning", mode, surfaces);
+    const codeFills = bubbleFills.map((f) => composite(ink, al.active, f));
+    const codeInk =
+        mode === "dark"
+            ? firstAtLeast(
+                  [
+                      SEMANTIC_RAMPS.warning[400],
+                      SEMANTIC_RAMPS.warning[300],
+                      SEMANTIC_RAMPS.warning[200],
+                  ],
+                  codeFills,
+                  CODE_INK_FLOOR
+              )
+            : warning.text;
+
     const g1 = accent;
     const g2 = t.ramp[stepFrom(solidStop, 2)];
     const g3 = t.ramp[stepFrom(solidStop, 1)];
@@ -386,6 +412,7 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
         linkVisited,
         linkHover,
         textQuote,
+        codeInk,
         accentSubtle,
         accentBorder: { hex: accent, a: 0.35 },
         focus: accentText,
@@ -394,7 +421,7 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
         brandGradientStops: [g1, g2, g3, g4],
         danger: buildSemantic("danger", mode, surfaces),
         success,
-        warning: buildSemantic("warning", mode, surfaces),
+        warning,
         info: buildSemantic("info", mode, surfaces),
         scrim: mode === "light" ? { hex: ink, a: 0.32 } : { hex: "#000000", a: 0.55 },
         shadowSm: shadow.sm,

@@ -1,6 +1,13 @@
 import "@xyflow/react/dist/style.css";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Alert, Box, IconButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -587,7 +594,7 @@ const CanvasInner = ({
     // exception to going through `purplePalette`.
     const { raw: rawTheme } = useColorTheme();
     const rawAccent = isDark ? rawTheme.dark.accent : rawTheme.light.accent;
-    const { fitView } = useReactFlow();
+    const { fitView, deleteElements, getEdges } = useReactFlow();
     // True once React Flow has measured every node (real dimensions). We
     // gate viewport fitting on this — see `pendingFitRef` and the fit
     // effect below for why fitting before measurement corrupts the view.
@@ -1215,6 +1222,28 @@ const CanvasInner = ({
         []
     );
 
+    // Backspace/Delete on a selected EDGE (MIP-1390). The graph lives in a modal, and the
+    // modal frame stops key events at its own root so they never reach the page, which is
+    // also where React Flow listens for `deleteKeyCode`: its own key handling never saw the
+    // key, and an edge has no delete control of its own. So the canvas handles the key
+    // itself, here, below the frame's fence, and React Flow's is switched off (one path,
+    // never two). Only edges: a card is deleted from its own status menu (MIP-1303), which
+    // `onBeforeDelete` above also enforces. Typing in a card's title or a date field is left
+    // alone.
+    const onCanvasKeyDown = useCallback(
+        (event: ReactKeyboardEvent) => {
+            if (event.key !== "Backspace" && event.key !== "Delete") return;
+            if (event.defaultPrevented) return;
+            const target = event.target as HTMLElement | null;
+            if (target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+            const selected = getEdges().filter((edge) => edge.selected);
+            if (selected.length === 0) return;
+            event.preventDefault();
+            void deleteElements({ edges: selected });
+        },
+        [getEdges, deleteElements]
+    );
+
     const onEdgesChange = useCallback(
         (changes: EdgeChange[]) => {
             // Intercept *removes* — every other change (selection,
@@ -1365,6 +1394,8 @@ const CanvasInner = ({
         () => ({
             flex: 1,
             position: "relative" as const,
+            // Focusable only so the keyboard goes here on a click; no ring on the whole canvas.
+            outline: "none",
             background: isDark
                 ? "linear-gradient(180deg, rgba(var(--gp-dark-surface-b-rgb), 1) 0%, rgba(11,10,22,1) 100%)"
                 : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
@@ -1385,7 +1416,8 @@ const CanvasInner = ({
     );
 
     return (
-        <Box sx={containerSx}>
+        // Focusable, so a click on the canvas puts the keyboard here (Backspace/Delete).
+        <Box sx={containerSx} tabIndex={-1} onKeyDown={onCanvasKeyDown}>
             {loading && (
                 <Stack
                     alignItems="center"
@@ -1430,7 +1462,7 @@ const CanvasInner = ({
             <ReactFlow
                 colorMode={isDark ? "dark" : "light"}
                 defaultEdgeOptions={{ animated: false }}
-                deleteKeyCode={["Backspace", "Delete"]}
+                deleteKeyCode={null}
                 edges={drawn.edges}
                 edgeTypes={edgeTypes}
                 // Padding matches the deferred fit effect so React Flow's

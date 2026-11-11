@@ -63,9 +63,8 @@
     "features/tasks:brandVars": 159,
     "features/tasks:gradients": 36,
     "features/tasks:heavyFontWeights": 57,
-    "features/tasks:isDarkTernaries": 422,
-    "features/tasks:literalColors": 786,
-    "other:brandVars": 5,
-    "other:literalColors": 69,
+    "features/tasks:isDarkTernaries": 416,
+    "features/tasks:literalColors": 766,
+    "other:literalColors": 45,
     "other:muiMaterial": 1
 }

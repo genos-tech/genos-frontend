@@ -58,6 +58,7 @@ export const roleVars = (r: RoleColors): [string, string][] => [
     ["link-visited", r.linkVisited],
     ["link-hover", r.linkHover],
     ["text-quote", r.textQuote],
+    ["text-code", r.codeInk],
     ["accent-subtle", alphaCss(r.accentSubtle)],
     ["accent-border", alphaCss(r.accentBorder)],
     ["focus", r.focus],

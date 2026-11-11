@@ -35,6 +35,8 @@ export const g = {
         disabled: v("text-disabled"),
         /** Quoted text inside a chat bubble (7:1 on every bubble fill). */
         quote: v("text-quote"),
+        /** Inline code ink in a chat bubble (7.4:1 on every dark bubble fill). */
+        code: v("text-code"),
     },
     /** Links, quote bars and code ink inside chat bubbles and comments. */
     link: { default: v("link"), visited: v("link-visited"), hover: v("link-hover") },

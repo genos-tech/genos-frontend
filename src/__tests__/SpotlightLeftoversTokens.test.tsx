@@ -20,7 +20,7 @@ import { describe, expect, it } from "vitest";
 import { MentionSuggestionDropdown } from "../features/agentQA/mentions/MentionSuggestionDropdown";
 import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
 import { THEME_IDS, THEME_PRIMITIVES } from "../theme/themePalettes";
-import { composite, contrast } from "../theme/tokens/color";
+import { composite, contrast, hexToOklch, oklchToHex } from "../theme/tokens/color";
 import { buildRoles } from "../theme/tokens/roles";
 
 const src = (rel: string) => readFileSync(join(__dirname, "..", rel), "utf8");
@@ -293,6 +293,55 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
                 expect(rule(`${root}${suffix}`)).not.toMatch(/#[0-9a-f]{3,6}/i);
             }
         }
+    });
+
+    // ---- MIP-1388: the bubble code chips and the received dark body ----------------
+    it("sent light bubble: code on --g-active (was the brand 700 stop on indigo .15, a lavender chip on every theme)", () => {
+        expect(
+            regressions(
+                "light",
+                (id) => THEME_PRIMITIVES[id].ramp[700],
+                (r) => r.link,
+                { old: { hex: "#6366f1", a: 0.15 }, new: (r) => r.active }
+            )
+        ).toEqual([]);
+        const body = rule(".bn-message-bubble-box-light-me code");
+        expect(body).toMatch(/background-color:\s*var\(--g-active\)/);
+        expect(body).toMatch(/color:\s*var\(--g-link\)/);
+        expect(body).not.toMatch(/rgba?\(|#[0-9a-f]{3,6}/i);
+    });
+
+    it("received dark bubble: body text on --g-text (was #f3f4f6; the role was up to 0.65:1 lower until its dark lightness moved to 0.97)", () => {
+        expect(regressions("dark", "#f3f4f6", (r) => r.text)).toEqual([]);
+        expect(rule(".bn-message-bubble-box-dark .bn-editor")).toMatch(/color:\s*var\(--g-text\)/);
+        // The bump is the only reason this passes: at the old lightness it fails.
+        expect(
+            THEME_IDS.some((id) => {
+                const r = buildRoles(id, "dark");
+                const old = oklchToHex(0.955, 0.006, hexToOklch(THEME_PRIMITIVES[id].ramp[600]).h);
+                return fillsOf(r).some(([, f]) => contrast(old, f) < contrast("#f3f4f6", f));
+            })
+        ).toBe(true);
+    });
+
+    it("received dark bubble: code on --g-text-code over --g-active (was #fb923c on black .3)", () => {
+        expect(
+            regressions("dark", "#fb923c", (r) => r.codeInk, {
+                old: { hex: "#000000", a: 0.3 },
+                new: (r) => r.active,
+            })
+        ).toEqual([]);
+        const body = rule(".bn-message-bubble-box-dark code");
+        expect(body).toMatch(/color:\s*var\(--g-text-code\)/);
+        expect(body).toMatch(/background-color:\s*var\(--g-active\)/);
+        expect(body).not.toMatch(/rgba?\(|#[0-9a-f]{3,6}/i);
+        // The warning ink the sent bubble uses would NOT have held it: that is why the role exists.
+        expect(
+            regressions("dark", "#fb923c", (r) => r.warning.text, {
+                old: { hex: "#000000", a: 0.3 },
+                new: (r) => r.active,
+            }).length
+        ).toBeGreaterThan(0);
     });
 
     it("the roles are what the contrast rows promise on a spread of themes", () => {
