@@ -2220,6 +2220,10 @@ export const es: DeepPartial<Messages> = {
         header: {
             privateProject: "Proyecto privado",
             refreshTasks: "Actualizar tareas",
+            refreshed: "Las tareas están al día",
+            refreshFailed: "No se pudieron actualizar las tareas. Inténtalo de nuevo.",
+            refreshPrsFailed:
+                "Tareas actualizadas, pero no se pudo actualizar el estado de algunos PR.",
             closePanel: "Cerrar panel",
             taskButton: "Tarea",
             manageTagsMenuItem: "Gestionar etiquetas",

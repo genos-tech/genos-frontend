@@ -2186,6 +2186,9 @@ export const ar: DeepPartial<Messages> = {
         header: {
             privateProject: "مشروع خاص",
             refreshTasks: "تحديث المهام",
+            refreshed: "المهام محدّثة",
+            refreshFailed: "تعذّر تحديث المهام. حاول مرة أخرى.",
+            refreshPrsFailed: "تم تحديث المهام، لكن تعذّر تحديث حالة بعض PR.",
             closePanel: "إغلاق اللوحة",
             taskButton: "مهمة",
             manageTagsMenuItem: "إدارة الوسوم",

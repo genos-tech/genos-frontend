@@ -7,12 +7,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
     _resetPrResyncForTests,
+    beginPrResyncWork,
     getPrResyncRequest,
     PR_RESYNC_INTERVAL_MS,
     PR_RESYNC_MANUAL_COOLDOWN_MS,
     reportPrResyncOutcome,
     requestPrResync,
     subscribePrResync,
+    whenPrResyncDone,
 } from "../../features/integrations/services/prResync";
 
 const MIN = PR_RESYNC_INTERVAL_MS;
@@ -344,5 +346,152 @@ describe("a poll's rows report one by one (MIP-1412)", () => {
         const n = seen.length;
         vi.advanceTimersByTime(MIN);
         expect(seen.length).toBe(n + 1);
+    });
+});
+
+describe("the work a click starts in the cells (MIP-1411)", () => {
+    const nextMacrotask = () => vi.advanceTimersByTimeAsync(0);
+
+    it("counts every cell that took part, and how many of them failed", async () => {
+        const { unsubscribe } = watch();
+        requestPrResync("manual");
+        const id = getPrResyncRequest().id;
+        const [a, b, c] = [beginPrResyncWork(id), beginPrResyncWork(id), beginPrResyncWork(id)];
+
+        const done = whenPrResyncDone(id);
+        a(true);
+        b(false);
+        c(true);
+        await nextMacrotask();
+
+        expect(await done).toEqual({ rows: 3, failed: 1 });
+        unsubscribe();
+    });
+
+    it("waits for the cells: nothing is answered while one is still working", async () => {
+        const { unsubscribe } = watch();
+        requestPrResync("manual");
+        const id = getPrResyncRequest().id;
+        const finish = beginPrResyncWork(id);
+        let answered = false;
+        void whenPrResyncDone(id).then(() => (answered = true));
+
+        await nextMacrotask();
+        await vi.advanceTimersByTimeAsync(5_000);
+        expect(answered).toBe(false);
+
+        finish(true);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(answered).toBe(true);
+        unsubscribe();
+    });
+
+    it("answers at once, with no rows, when no cell is on screen", async () => {
+        requestPrResync("manual");
+        const done = whenPrResyncDone(getPrResyncRequest().id);
+        await nextMacrotask();
+        expect(await done).toEqual({ rows: 0, failed: 0 });
+    });
+
+    it("does not track a poll: nobody waits for it", async () => {
+        const { unsubscribe } = watch();
+        vi.advanceTimersByTime(MIN);
+        const id = getPrResyncRequest().id;
+        expect(getPrResyncRequest().reason).toBe("poll");
+        beginPrResyncWork(id)(false);
+
+        const done = whenPrResyncDone(id);
+        await nextMacrotask();
+        expect(await done).toEqual({ rows: 0, failed: 0 });
+        unsubscribe();
+    });
+
+    it("does not track a request that a newer one has replaced", async () => {
+        requestPrResync("manual");
+        const old = getPrResyncRequest().id;
+        vi.advanceTimersByTime(PR_RESYNC_MANUAL_COOLDOWN_MS);
+        requestPrResync("manual");
+
+        beginPrResyncWork(old)(false);
+        const done = whenPrResyncDone(old);
+        await nextMacrotask();
+        expect(await done).toEqual({ rows: 0, failed: 0 });
+    });
+
+    it("a cell finishing twice is harmless: the first answer stands", async () => {
+        requestPrResync("manual");
+        const id = getPrResyncRequest().id;
+        const finish = beginPrResyncWork(id);
+        const done = whenPrResyncDone(id);
+        finish(false);
+        finish(true);
+        await nextMacrotask();
+        expect(await done).toEqual({ rows: 1, failed: 1 });
+    });
+
+    it("gives up on a cell that never answers after the timeout, and counts it failed", async () => {
+        requestPrResync("manual");
+        const id = getPrResyncRequest().id;
+        const answered = beginPrResyncWork(id);
+        beginPrResyncWork(id); // never finishes
+        answered(true);
+
+        let result: { rows: number; failed: number } | null = null;
+        void whenPrResyncDone(id, 1_000).then((r) => (result = r));
+        await vi.advanceTimersByTimeAsync(999);
+        expect(result).toBeNull();
+        await vi.advanceTimersByTimeAsync(2);
+        expect(result).toEqual({ rows: 2, failed: 1 });
+    });
+
+    it("leaves no timer behind once everything answered", async () => {
+        requestPrResync("manual");
+        const id = getPrResyncRequest().id;
+        const finish = beginPrResyncWork(id);
+        const done = whenPrResyncDone(id);
+        finish(true);
+        await nextMacrotask();
+        await done;
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it("gives the cells their turn: work they register in the next task still counts", async () => {
+        // A real cell starts in an effect AFTER the request, not inside it.
+        const unsubscribe = subscribePrResync(() => {
+            const id = getPrResyncRequest().id;
+            setTimeout(() => beginPrResyncWork(id)(false), 0);
+        });
+        requestPrResync("manual");
+        const done = whenPrResyncDone(getPrResyncRequest().id);
+        await nextMacrotask();
+        expect(await done).toEqual({ rows: 1, failed: 1 });
+        unsubscribe();
+    });
+
+    it("forgets the work of a click nobody collected once a newer click starts work", async () => {
+        requestPrResync("manual");
+        const first = getPrResyncRequest().id;
+        beginPrResyncWork(first)(true);
+
+        vi.advanceTimersByTime(PR_RESYNC_MANUAL_COOLDOWN_MS);
+        requestPrResync("manual");
+        beginPrResyncWork(getPrResyncRequest().id)(true);
+
+        const done = whenPrResyncDone(first);
+        await nextMacrotask();
+        expect(await done).toEqual({ rows: 0, failed: 0 });
+    });
+
+    it("a request's work is read once", async () => {
+        requestPrResync("manual");
+        const id = getPrResyncRequest().id;
+        beginPrResyncWork(id)(true);
+        const first = whenPrResyncDone(id);
+        await nextMacrotask();
+        expect(await first).toEqual({ rows: 1, failed: 0 });
+
+        const second = whenPrResyncDone(id);
+        await nextMacrotask();
+        expect(await second).toEqual({ rows: 0, failed: 0 });
     });
 });

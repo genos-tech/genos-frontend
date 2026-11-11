@@ -23,9 +23,11 @@ import {
 } from "../features/integrations/services/github";
 import {
     _resetPrResyncForTests,
+    getPrResyncRequest,
     PR_RESYNC_INTERVAL_MS,
     reportPrResyncOutcome,
     requestPrResync,
+    whenPrResyncDone,
 } from "../features/integrations/services/prResync";
 import {
     getCachedOrFetchPrStatus,
@@ -505,5 +507,78 @@ describe("stateOf", () => {
             "merged",
             "closed",
         ]);
+    });
+});
+
+describe("what a click hands to the Refresh button (MIP-1411)", () => {
+    /** Send a click and return what the button would be told once the cells are done. */
+    const clickAndWait = async () => {
+        let outcome = { rows: -1, failed: -1 };
+        await act(async () => {
+            requestPrResync("manual");
+            outcome = await whenPrResyncDone(getPrResyncRequest().id);
+        });
+        return outcome;
+    };
+
+    it("an open PR is two pieces of work, the list and the detail, and both going through is no failure", async () => {
+        mockStatus.mockResolvedValue(detailFor(pull(7)));
+        await mountRows({ 1: [pull(7)] });
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
+
+        expect(await clickAndWait()).toEqual({ rows: 2, failed: 0 });
+    });
+
+    it("a finished PR nobody hovered is only the list", async () => {
+        await mountRows({ 1: [merged(8)] });
+        mockRefresh.mockResolvedValue(answer([merged(8)]));
+
+        expect(await clickAndWait()).toEqual({ rows: 1, failed: 0 });
+    });
+
+    it("a failed list request is a failure", async () => {
+        await mountRows({ 1: [merged(8)] });
+        mockRefresh.mockResolvedValue(null);
+
+        expect(await clickAndWait()).toEqual({ rows: 1, failed: 1 });
+    });
+
+    it("a failed detail request is a failure", async () => {
+        mockStatus.mockResolvedValue(detailFor(pull(7)));
+        await mountRows({ 1: [pull(7)] });
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
+        mockStatus.mockResolvedValue({ kind: "error" });
+
+        expect(await clickAndWait()).toEqual({ rows: 2, failed: 1 });
+    });
+
+    it("a refused or not-connected detail is an answer, not a failure", async () => {
+        for (const kind of ["unavailable", "github_not_connected"] as const) {
+            mockStatus.mockResolvedValue(detailFor(pull(7)));
+            const view = await mountRows({ 1: [pull(7)] });
+            mockRefresh.mockResolvedValue(answer([pull(7)]));
+            mockStatus.mockResolvedValue({ kind });
+
+            expect(await clickAndWait(), kind).toEqual({ rows: 2, failed: 0 });
+            view.unmount();
+            _resetPrResyncForTests();
+        }
+    });
+
+    it("every row of the table takes part in a click, and nothing in a table with none", async () => {
+        await mountRows({ 1: [merged(8)], 2: [], 3: [merged(9)] });
+        mockRefresh.mockResolvedValue(answer([]));
+        expect(await clickAndWait()).toEqual({ rows: 3, failed: 0 });
+    });
+
+    it("a poll hands nothing in: the button is not waiting for it", async () => {
+        mockStatus.mockResolvedValue(detailFor(pull(7)));
+        await mountRows({ 1: [pull(7)] });
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
+        await resync("poll");
+
+        const done = whenPrResyncDone(getPrResyncRequest().id);
+        await act(async () => {});
+        expect(await done).toEqual({ rows: 0, failed: 0 });
     });
 });

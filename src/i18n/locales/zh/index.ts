@@ -4520,6 +4520,9 @@ export const zh: DeepPartial<Messages> = {
         header: {
             privateProject: "私有项目",
             refreshTasks: "刷新任务",
+            refreshed: "任务已是最新",
+            refreshFailed: "无法刷新任务,请重试。",
+            refreshPrsFailed: "任务已刷新,但部分 PR 的状态无法更新。",
             closePanel: "关闭面板",
             taskButton: "任务",
             manageTagsMenuItem: "管理标签",

@@ -5,7 +5,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
-import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Button, IconButton, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
@@ -25,10 +24,10 @@ import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
-import { requestPrResync } from "../../../integrations/services/prResync";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
 import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
+import { TaskRefreshButton } from "./TaskRefreshButton";
 
 interface TaskHeaderProps {
     myself: UserProps;
@@ -220,29 +219,11 @@ export const TaskHeader = ({
                             </Button>
                         </AppTooltip>
 
-                        {/* Refresh Button to re-load task list */}
-                        {usePM.currentProject?.projectId && (
-                            <AppTooltip title={t.tasks.header.refreshTasks}>
-                                <IconButton
-                                    aria-label={t.tasks.header.refreshTasks}
-                                    color="neutral"
-                                    size="sm"
-                                    variant="plain"
-                                    onClick={async () => {
-                                        if (usePM.currentProject?.projectId) {
-                                            // The PR column re-syncs with the rows (MIP-1409):
-                                            // it had no way to learn of a merge or a CI run
-                                            // short of re-opening the table.
-                                            requestPrResync("manual");
-                                            await usePM.refreshProjectTasks(
-                                                usePM.currentProject.projectId
-                                            );
-                                        }
-                                    }}
-                                >
-                                    <RefreshRoundedIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                            </AppTooltip>
+                        {/* Reload the task rows, and re-sync the PR column with them (MIP-1409). */}
+                        {currentProjectId && (
+                            <TaskRefreshButton
+                                onRefresh={() => usePM.refreshProjectTasks(currentProjectId)}
+                            />
                         )}
 
                         <MoreMenu
