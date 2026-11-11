@@ -135,6 +135,8 @@ describe("the item ⋮ menu", () => {
         );
         fireEvent.click(screen.getByRole("button"));
         const menu = screen.getByRole("menu");
-        expect(Number(getComputedStyle(menu).zIndex)).toBe(10030);
+        // At least one above the pane (10030); a menu is also kept above the toast
+        // region so the connection banner never covers its first row (MIP-1327).
+        expect(Number(getComputedStyle(menu).zIndex)).toBeGreaterThanOrEqual(10030);
     });
 });

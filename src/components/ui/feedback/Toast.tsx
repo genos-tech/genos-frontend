@@ -10,6 +10,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { Clickable } from "../Clickable";
+import { TOAST_REGION_Z_INDEX } from "./toastLayers";
 import {
     ACTION_DURATION,
     DEFAULT_DURATION,
@@ -51,8 +52,9 @@ const REGION_IDS: Record<ToastPlacement, string> = {
 };
 
 /** Above every modal and the Spotlight layer (13300); a toast is the one
- *  thing that must never be hidden by the surface that caused it. */
-const REGION_Z_INDEX = 13500;
+ *  thing that must never be hidden by the surface that caused it. Menus sit one
+ *  above it (`MenuSurface`, `TOAST_REGION_Z_INDEX` in `toastLayers.ts`). */
+const REGION_Z_INDEX = TOAST_REGION_Z_INDEX;
 
 /** The region holds two lanes, so a live region is never nested in another:
  *  warnings and errors go in the assertive lane, everything else in the polite
@@ -211,7 +213,15 @@ const ToastCard = ({
             // warnings and errors, polite otherwise) announces it, and a role
             // inside a live region can be read twice.
             sx={{
-                pointerEvents: "auto",
+                // A persistent TOP banner sits over the page header (the back
+                // button, the title row's actions) and over the first row of a
+                // menu that opens under it. It is a state to read, not a
+                // control, so a tap on it goes through to what is underneath;
+                // only its own buttons (Retry, close) catch taps (MIP-1327).
+                // Bottom toasts keep the card interactive (hover pauses the
+                // timer, text can be selected).
+                pointerEvents: placement === "top" ? "none" : "auto",
+                "& button, & a[href], & [role='button']": { pointerEvents: "auto" },
                 display: "flex",
                 alignItems: "center",
                 gap: 1.25,

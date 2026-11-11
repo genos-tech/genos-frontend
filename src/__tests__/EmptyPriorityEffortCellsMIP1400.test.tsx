@@ -93,6 +93,7 @@ const renderRow = (over: Record<string, unknown> = {}) => {
                                         useTEM={{} as never}
                                         useTM={useTM}
                                         useUISM={{} as never}
+                                        onDeleteTask={vi.fn()}
                                         onOpenDiagram={vi.fn()}
                                         onQuickAddChild={vi.fn()}
                                         onRequestPreview={vi.fn()}

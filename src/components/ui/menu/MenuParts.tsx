@@ -33,6 +33,7 @@ import {
 import { useDiagramZIndex } from "../../../features/tasks/diagram/diagramZIndex";
 import { g } from "../../../theme/tokens";
 import { useNoteModalHostZIndex } from "../../modals/noteModalHostZIndex";
+import { MENU_MIN_Z_INDEX } from "../feedback/toastLayers";
 import {
     MENU_POPPER_MODIFIERS,
     menuDividerSx,
@@ -42,8 +43,9 @@ import {
 } from "./menuStyles";
 
 export type MenuSurfaceProps = Omit<MenuProps, "size" | "color" | "variant"> & {
-    /** Exact layer. Default: the host's z + 1 when a modal-hosted note or the task
-     *  diagram provides one, else the page layer. A menu opened from a
+    /** The host's layer. Default: the host's z + 1 when a modal-hosted note or the task
+     *  diagram provides one, else the page layer. Always lifted to clear the toast and
+     *  banner regions (`MENU_MIN_Z_INDEX`). A menu opened from a
      *  UrlLinkModal-hosted surface passes `hostZIndex + 1` (the modal sits at 10020+;
      *  a Joy `Menu` has `role="menu"`, so the modal's listbox re-stamp never lifts it). */
     zIndex?: number;
@@ -66,7 +68,9 @@ export const MenuSurface = forwardRef<HTMLDivElement, MenuSurfaceProps>(function
     const diagramZ = useDiagramZIndex();
     // The diagram context defaults to the page layer (9999), so +1 is only a
     // real lift when a host provided something higher.
-    const layer = zIndex ?? (noteHostZ ?? diagramZ) + 1;
+    // Never below the toast and banner regions: a menu opened under the phone
+    // header must not have its first row behind the connection banner (MIP-1327).
+    const layer = Math.max(zIndex ?? (noteHostZ ?? diagramZ) + 1, MENU_MIN_Z_INDEX);
     // A caller's own modifiers add to the viewport guard; they do not replace it. The array
     // identity is stable (Joy memoizes on it) unless the caller's changes.
     const popperModifiers = useMemo(

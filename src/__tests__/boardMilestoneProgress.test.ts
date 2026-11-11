@@ -19,7 +19,12 @@ const milestone = (over: Partial<Milestone> = {}): Milestone =>
         ...over,
     }) as unknown as Milestone;
 
+// A unique string id (as every real row has) and no parent: the closed-ancestor rule reads both,
+// and these rows have no ancestry. The MIP-1389 block below layers its own ids on top.
+let nextTaskId = 1000;
 const task = (status: string, milestoneId: number | null = 7, isMilestone = false) => ({
+    id: String(nextTaskId++),
+    parentTaskId: null,
     status,
     milestoneId,
     isMilestone,
@@ -64,7 +69,9 @@ describe("milestonesByTaskIdWithLiveProgress", () => {
     });
 
     it("never counts the milestone's own backing row", () => {
-        const rows = [task("Closed", 7, true), task("Open"), task("Closed")];
+        // Open on purpose: a Closed backing row closes its tasks (MIP-1389, tested below), which
+        // would hide whether the row itself was counted. Total 2, not 3, says it was not.
+        const rows = [task("Open", 7, true), task("Open"), task("Closed")];
         expect(milestonesByTaskIdWithLiveProgress([milestone()], rows).get(70)).toMatchObject({
             tasksClosed: 1,
             tasksTotal: 2,
