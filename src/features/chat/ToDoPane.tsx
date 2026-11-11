@@ -32,7 +32,11 @@ import {
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { modalChromeEndPadding } from "../../components/ui/modal/modalChrome";
-import { chipRowTouchSx, touchTargetSx } from "../../components/ui/touchTargets";
+import {
+    chipRowTouchSx,
+    compactChipRowTouchSx,
+    touchTargetSx,
+} from "../../components/ui/touchTargets";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -346,8 +350,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     <Box
                         sx={{
                             px: 2.5,
-                            pt: 2,
-                            pb: 1.5,
+                            // A phone header is short: the list under it is the page.
+                            pt: isMobile ? 1 : 2,
+                            pb: isMobile ? 1 : 1.5,
                             borderBottom: isDark
                                 ? "1px solid rgba(255,255,255,0.06)"
                                 : "1px solid rgba(0,0,0,0.06)",
@@ -357,7 +362,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             alignItems="center"
                             direction="row"
                             justifyContent="space-between"
-                            mb={1.5}
+                            mb={isMobile ? 0.5 : 1.5}
                             // In a modal the "open full page" and ✕ buttons float over
                             // this corner (UrlLinkModal publishes how much: ui/modal/
                             // modalChrome). MIP-1044 kept it clear of the actions; on a
@@ -585,7 +590,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 alignItems="center"
                                 direction="row"
                                 spacing={1}
-                                sx={chipRowTouchSx}
+                                sx={isMobile ? compactChipRowTouchSx : chipRowTouchSx}
                             >
                                 <Chip
                                     size="sm"
@@ -639,6 +644,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         </Stack>
                         <TodoTagFilterBar
                             categories={categories}
+                            compact={isMobile}
                             isDark={isDark}
                             selected={tagFilter}
                             onClear={() => setTagFilter(new Set())}

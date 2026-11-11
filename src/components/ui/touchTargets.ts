@@ -51,6 +51,23 @@ export const chipRowTouchSx = {
     },
 } as const;
 
+/** Height of a compact filter row, in px: the chip (20) plus 6px above and below. */
+export const COMPACT_ROW = 32;
+
+/**
+ * `chipRowTouchSx` for a phone header that has to be short: the row is `COMPACT_ROW` tall
+ * instead of 44, and the invisible hit area still reaches 12px above and below the chip, so the
+ * tap target is the same 44px band. With 6px of room around the chip the band stops exactly at
+ * the edge of the chip in the next row, so a tap never lands on the wrong chip; it only overlaps
+ * that row's own band, which holds nothing to hit.
+ */
+export const compactChipRowTouchSx = {
+    "@media (pointer: coarse)": {
+        ...chipRowTouchSx["@media (pointer: coarse)"],
+        minHeight: COMPACT_ROW,
+    },
+} as const;
+
 /**
  * A control that must keep its size and look (a task id chip in a row of text, an avatar in a
  * header) is still a 44 x 44 target on a touch screen: an invisible hit area, centred on it,
