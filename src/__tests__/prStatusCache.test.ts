@@ -211,3 +211,48 @@ describe("what is not a PR", () => {
         expect(mockGetPullDetail).not.toHaveBeenCalled();
     });
 });
+
+describe("a forced refresh (the PR column's re-sync, MIP-1409)", () => {
+    it("asks again for a PR the memo holds, and stores the newer answer", async () => {
+        mockGetPullDetail.mockResolvedValueOnce(detail(7));
+        await getCachedOrFetchPrStatus("tok", URL_7);
+
+        mockGetPullDetail.mockResolvedValueOnce({
+            pull: { number: 7, title: "newer" },
+            combined_status: null,
+            check_runs: null,
+        } as never);
+        const again = await getCachedOrFetchPrStatus("tok", URL_7, undefined, {
+            forceRefresh: true,
+        });
+
+        expect(mockGetPullDetail).toHaveBeenCalledTimes(2);
+        expect(again).toMatchObject({ kind: "ok", payload: { pull: { title: "newer" } } });
+        // A plain call within the TTL now reads the newer one, with no third request.
+        const plain = await getCachedOrFetchPrStatus("tok", URL_7);
+        expect(plain).toMatchObject({ kind: "ok", payload: { pull: { title: "newer" } } });
+        expect(mockGetPullDetail).toHaveBeenCalledTimes(2);
+    });
+
+    it("a plain call does not ask again (the option is what does it)", async () => {
+        mockGetPullDetail.mockResolvedValue(detail(7));
+        await getCachedOrFetchPrStatus("tok", URL_7);
+        await getCachedOrFetchPrStatus("tok", URL_7);
+        expect(mockGetPullDetail).toHaveBeenCalledTimes(1);
+    });
+
+    it("a refresh that fails reports the failure and leaves the stored good answer alone", async () => {
+        mockGetPullDetail.mockResolvedValueOnce(detail(7));
+        await getCachedOrFetchPrStatus("tok", URL_7);
+
+        mockGetPullDetail.mockResolvedValueOnce(null as never);
+        const failed = await getCachedOrFetchPrStatus("tok", URL_7, undefined, {
+            forceRefresh: true,
+        });
+        expect(failed).toEqual({ kind: "error" });
+
+        const plain = await getCachedOrFetchPrStatus("tok", URL_7);
+        expect(plain).toMatchObject({ kind: "ok", payload: { pull: { number: 7 } } });
+        expect(mockGetPullDetail).toHaveBeenCalledTimes(2);
+    });
+});

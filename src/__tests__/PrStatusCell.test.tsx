@@ -23,6 +23,8 @@ import {
 
 vi.mock("../features/integrations/services/github", () => ({
     loadLinkedPullsBatched: vi.fn(),
+    // The re-sync (MIP-1409) is tested in PrStatusCellResync.test.tsx.
+    refreshLinkedPullsBatched: vi.fn(),
 }));
 vi.mock("../features/integrations/services/prStatusCache", () => ({
     getCachedOrFetchPrStatus: vi.fn(),

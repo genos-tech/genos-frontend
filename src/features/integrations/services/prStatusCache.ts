@@ -39,7 +39,10 @@ class PrStatusMiss extends Error {
 export const getCachedOrFetchPrStatus = async (
     accessToken: string,
     url: string,
-    setErrorMessage?: (m: string) => void
+    setErrorMessage?: (m: string) => void,
+    // The PR column's re-sync (MIP-1409) asks again past the memo. A refused or failed
+    // fetch is not stored, so a good entry that is still within its TTL survives it.
+    options?: { forceRefresh?: boolean }
 ): Promise<PrStatusResult> => {
     const ref = parsePrUrl(url);
     if (!ref) return { kind: "error" };
@@ -47,21 +50,25 @@ export const getCachedOrFetchPrStatus = async (
     try {
         // `setErrorMessage` belongs to the request that is actually sent: a
         // caller that joins one already in flight does not get its callback.
-        const payload = await memo.get(url, async () => {
-            const res = await getPullDetail(
-                accessToken,
-                ref.owner,
-                ref.repo,
-                ref.number,
-                setErrorMessage
-            );
-            if (res === "github_not_connected") {
-                throw new PrStatusMiss({ kind: "github_not_connected" });
-            }
-            if (res === "unavailable") throw new PrStatusMiss({ kind: "unavailable" });
-            if (!res) throw new PrStatusMiss({ kind: "error" });
-            return res as PrDetailResponse;
-        });
+        const payload = await memo.get(
+            url,
+            async () => {
+                const res = await getPullDetail(
+                    accessToken,
+                    ref.owner,
+                    ref.repo,
+                    ref.number,
+                    setErrorMessage
+                );
+                if (res === "github_not_connected") {
+                    throw new PrStatusMiss({ kind: "github_not_connected" });
+                }
+                if (res === "unavailable") throw new PrStatusMiss({ kind: "unavailable" });
+                if (!res) throw new PrStatusMiss({ kind: "error" });
+                return res as PrDetailResponse;
+            },
+            { forceRefresh: options?.forceRefresh }
+        );
         return { kind: "ok", payload };
     } catch (e) {
         if (e instanceof PrStatusMiss) return e.result;
@@ -69,7 +76,7 @@ export const getCachedOrFetchPrStatus = async (
     }
 };
 
-// Test affordance and a future "manual refresh" button hook.
+// Test affordance.
 export const clearPrStatusCache = (): void => {
     memo.clear();
 };

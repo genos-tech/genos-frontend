@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
-import { loadLinkedPullsBatched, type LinkedPull } from "../services/github";
+import { usePrResyncRequest } from "../hooks/usePrResyncRequest";
+import {
+    loadLinkedPullsBatched,
+    refreshLinkedPullsBatched,
+    type LinkedPull,
+} from "../services/github";
+import { reportPrResyncOutcome, type PrResyncRequest } from "../services/prResync";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
 import type { PrDetailResponse } from "../services/prTypes";
 import {
@@ -44,6 +50,11 @@ import { PrHoverDetails } from "./PrHoverDetails";
 //   2. `getCachedOrFetchPrStatus(url)` — client-cached PR detail used
 //      to derive the state + CI badge. Reuses the same module-scoped
 //      TTL cache as LinkedPrCard so revisits are instant.
+//
+// Both layers load once per mount. After that the column is re-synced by a request from
+// `prResync` (MIP-1409): the Refresh tasks click (every row, past every cache) and a poll
+// about once a minute (only the rows that show an open or draft PR). A re-sync that fails
+// leaves what is drawn alone.
 
 type Props = {
     /** Task ID to look up auto-linked PRs for. */
@@ -133,12 +144,15 @@ const SinglePrBadge = ({
     accessToken,
     isDark,
     showRepo,
+    resync,
 }: {
     pull: LinkedPull;
     accessToken: string | null;
     isDark: boolean;
     /** Name the repo in the label: only worth the room when the task's PRs span repos. */
     showRepo: boolean;
+    /** The latest request to re-sync the column (MIP-1409). */
+    resync: PrResyncRequest;
 }) => {
     const { t } = useTranslation();
     const [detail, setDetail] = useState<PrStatusResult | null>(null);
@@ -163,6 +177,35 @@ const SinglePrBadge = ({
     }, [accessToken, pull.html_url, needsDetail]);
     const ask = () => setAsked(true);
 
+    // Re-sync (MIP-1409). A click re-asks for any PR whose detail is showing or due; a poll
+    // only for one that can still change. The latest values are read through a ref so that
+    // a list update or a hover during the request does not cancel it.
+    const latest = useRef({ accessToken, url: pull.html_url, finished, needsDetail });
+    useEffect(() => {
+        latest.current = { accessToken, url: pull.html_url, finished, needsDetail };
+    });
+    const handledResync = useRef(resync.id);
+    useEffect(() => {
+        if (resync.id === handledResync.current) return undefined;
+        handledResync.current = resync.id;
+        const now = latest.current;
+        const token = now.accessToken;
+        if (!token) return undefined;
+        if (!(resync.reason === "manual" ? now.needsDetail : !now.finished)) return undefined;
+        let cancelled = false;
+        (async () => {
+            const r = await getCachedOrFetchPrStatus(token, now.url, undefined, {
+                forceRefresh: true,
+            });
+            // A refresh that failed leaves the detail already drawn alone.
+            if (!cancelled)
+                setDetail((prev) => (r.kind === "ok" || prev?.kind !== "ok" ? r : prev));
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [resync.id, resync.reason]);
+
     // Derive a PR state from the list payload until detail lands.
     // Mirrors the backend list shape (`state` is open/closed, `merged_at`
     // distinguishes merged from closed-unmerged).
@@ -178,12 +221,18 @@ const SinglePrBadge = ({
     let ci: CiState = "none";
     let title = pull.title;
     let repoLabel = `${pull.owner}/${pull.repo}`;
-    if (detail && detail.kind === "ok") {
-        const payload = detail.payload as PrDetailResponse;
-        prState = derivePrState(payload.pull);
-        ci = deriveCiState(payload.combined_status, payload.check_runs);
-        title = payload.pull.title || title;
-        repoLabel = payload.pull.base.repo.full_name || repoLabel;
+    // The list can be newer than the detail: a re-sync asks for both at once, and the detail
+    // may be on its way or may have failed. A list that says the PR is finished beats a
+    // detail that still says open, or a merged PR would be drawn open (MIP-1409).
+    const detailPayload = detail?.kind === "ok" ? (detail.payload as PrDetailResponse) : null;
+    const detailState = detailPayload ? derivePrState(detailPayload.pull) : null;
+    const detailIsStale = finished && (detailState === "open" || detailState === "draft");
+    const usableDetail = detailPayload && !detailIsStale ? detailPayload : null;
+    if (usableDetail) {
+        prState = derivePrState(usableDetail.pull);
+        ci = deriveCiState(usableDetail.combined_status, usableDetail.check_runs);
+        title = usableDetail.pull.title || title;
+        repoLabel = usableDetail.pull.base.repo.full_name || repoLabel;
     }
     const ciColor = ciStateColor(ci);
 
@@ -192,13 +241,9 @@ const SinglePrBadge = ({
     // task preview. Before detail lands we fall back to a small tooltip
     // built from the list payload (title, repo, derived state) so
     // there's no empty hover during the first paint.
-    const hasDetail = detail?.kind === "ok";
-    const hoverTitle = hasDetail ? (
-        <PrHoverDetails
-            isDark={isDark}
-            payload={detail.payload as PrDetailResponse}
-            includeHeader
-        />
+    const hasDetail = usableDetail != null;
+    const hoverTitle = usableDetail ? (
+        <PrHoverDetails isDark={isDark} payload={usableDetail} includeHeader />
     ) : (
         <Stack spacing={0.25} sx={{ p: 0.5, color: palette.text }}>
             <Box sx={{ fontWeight: 600 }}>
@@ -324,10 +369,21 @@ const byRepoThenNumber = (a: LinkedPull, b: LinkedPull): number =>
 // component standalone. Kept exported so it doesn't get marked dead.
 export const _CiBadgeForTests = CiBadge;
 
+// The same list, row for row: a re-sync that found nothing new must not re-render the cell.
+const samePulls = (a: LinkedPull[] | null, b: LinkedPull[]): boolean =>
+    a != null && JSON.stringify(a) === JSON.stringify(b);
+
 export const PrStatusCell = ({ taskId, accessToken }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [pulls, setPulls] = useState<LinkedPull[] | null>(null);
+    // Subscribing also keeps the once-a-minute clock running while any cell is on screen.
+    const resync = usePrResyncRequest();
+    const shown = useRef<LinkedPull[] | null>(null);
+    useEffect(() => {
+        shown.current = pulls;
+    }, [pulls]);
+    const handledResync = useRef(resync.id);
 
     useEffect(() => {
         let cancelled = false;
@@ -340,6 +396,33 @@ export const PrStatusCell = ({ taskId, accessToken }: Props) => {
             cancelled = true;
         };
     }, [accessToken, taskId]);
+
+    // Re-sync (MIP-1409). A row still loading for the first time has nothing to refresh: its
+    // own load is the sync. A poll only covers a row that shows an open or draft PR.
+    useEffect(() => {
+        if (resync.id === handledResync.current) return undefined;
+        handledResync.current = resync.id;
+        const before = shown.current;
+        if (!accessToken || before == null) return undefined;
+        if (resync.reason === "poll" && !before.some((p) => !isFinishedPull(p))) return undefined;
+        let cancelled = false;
+        (async () => {
+            const next = await refreshLinkedPullsBatched(accessToken, taskId, {
+                fresh: resync.reason === "manual",
+            });
+            if (resync.reason === "poll") reportPrResyncOutcome(resync.id, next !== null);
+            // A failed request keeps what is drawn. So does a poll that answers "no PRs" for a
+            // row that has some: a PR does not vanish, but a GitHub that refuses us (a rate
+            // limit, a lost grant) is read by the server as "no PR", and the chips would blink
+            // out once a minute. A click is the user asking, and gets the answer as it is.
+            if (cancelled || next === null) return;
+            if (resync.reason === "poll" && next.length === 0 && before.length > 0) return;
+            setPulls((prev) => (samePulls(prev, next) ? prev : next));
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [resync.id, resync.reason, accessToken, taskId]);
 
     if (!pulls || pulls.length === 0) return null;
     const sorted = [...pulls].sort(byRepoThenNumber);
@@ -364,6 +447,7 @@ export const PrStatusCell = ({ taskId, accessToken }: Props) => {
                     accessToken={accessToken}
                     isDark={isDark}
                     pull={pull}
+                    resync={resync}
                     showRepo={showRepo}
                 />
             ))}
