@@ -70,10 +70,12 @@ describe("taskAncestry (MIP-1382)", () => {
     });
 
     it("accepts numeric ids and parent ids", () => {
+        // Off-type on purpose: `parentTaskId` is declared a string, but a numeric one has
+        // reached these rows, and the lookup compares through `String()`.
         const rows = [
             { id: 1, status: "Closed", parentTaskId: null },
             { id: 2, status: "Open", parentTaskId: 1 },
-        ];
+        ] as unknown as ReturnType<typeof row>[];
         const byId = indexTasksById(rows);
         expect(isUnderClosedAncestor(rows[1], byId)).toBe(true);
     });

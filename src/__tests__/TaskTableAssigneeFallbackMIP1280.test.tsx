@@ -97,6 +97,7 @@ const renderRow = (profiles: Record<string, UserProps>) =>
                                         useTEM={{} as never}
                                         useTM={useTM}
                                         useUISM={{} as never}
+                                        onDeleteTask={vi.fn()}
                                         onOpenDiagram={vi.fn()}
                                         onQuickAddChild={vi.fn()}
                                         onRequestPreview={vi.fn()}

@@ -18,9 +18,9 @@ import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
 
 const put = vi.fn();
-const addTask = vi.fn(async () => null);
+const addTask = vi.fn(async (_request: unknown) => null);
 const updateTaskCard = vi.fn(async () => undefined);
-const invalidateCachedFullTask = vi.fn(async () => undefined);
+const invalidateCachedFullTask = vi.fn(async (_id: number) => undefined);
 
 const auth = vi.hoisted(() => ({ token: "tok" }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: auth.token }) }));
