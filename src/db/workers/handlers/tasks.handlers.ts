@@ -1,7 +1,10 @@
 // Tasks-channel handlers. Consolidates the 4 single-purpose task workers
 // (addTask, loadProjectTasks, loadTeamTasks, popSpecificProjectTasks).
 
-import { loadProjectTasksFromApi } from "../../../features/tasks/services/loadProjectTasksFromApi";
+import {
+    loadProjectTasksFromApi,
+    projectTasksFailureMessage,
+} from "../../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamTasks } from "../../../features/tasks/services/loadTeamTasks";
 import type { TaskTableProps } from "../../../types/tasks";
 import { TaskRepository } from "../../repositories";
@@ -95,14 +98,16 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
             syncWithCheckpoint({
                 key,
                 fetcher: async (since) => {
+                    const failure: { status?: number } = {};
                     const response = await loadProjectTasksFromApi(
                         myself,
                         projectId,
                         accessToken,
-                        since
+                        since,
+                        failure
                     );
                     if (!response) {
-                        throw new Error("Failed to load project tasks");
+                        throw new Error(projectTasksFailureMessage(failure.status));
                     }
                     answer.serverTime = response.serverTime;
                     if (since !== null) {

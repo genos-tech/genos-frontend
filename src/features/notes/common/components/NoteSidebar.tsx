@@ -23,7 +23,6 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
-import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
@@ -87,6 +86,7 @@ import { GroupedNoteSection } from "./GroupedNoteSection";
 import { ModalDeleteNote } from "./ModalDeleteNote";
 import { ExportFolderTarget, ModalExportFolder } from "./ModalExportFolder";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
+import { NoteListState } from "./NoteListState";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
@@ -1175,13 +1175,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 </Box>
             )}
             {ownRootFolders.length === 0 ? (
-                <Box sx={{ px: 2 }}>
-                    <EmptyState
-                        body={t.notes.teamNotes.emptySpace}
-                        data-empty="team-folders"
-                        size="xs"
-                    />
-                </Box>
+                <NoteListState
+                    body={t.notes.teamNotes.emptySpace}
+                    emptyMarker="team-folders"
+                    hasAny={useNM.teamNoteFolders.length > 0}
+                    scope="teamFolders"
+                />
             ) : (
                 renderTeamFolderTrees(ownRootFolders, visibleTeamFolderIds)
             )}
@@ -1593,7 +1592,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     // Render favorite notes section content
     const renderFavoriteNotes = () => {
-        if (!useNM.favoriteNotes) return null;
+        // Not read yet: nothing, unless the read failed (then the error with Retry).
+        if (!useNM.favoriteNotes) {
+            return <NoteListState emptyMarker="note-favorites" hasAny={false} scope="favorites" />;
+        }
 
         // The server groups favorites by BACKEND note type, so team (and
         // shared) notes arrive in `personalNotes` — they're note_type 1.
@@ -1628,13 +1630,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             !hasChatNotes
         ) {
             return (
-                <Box sx={{ px: 2 }}>
-                    <EmptyState
-                        body={t.notes.sidebar.noFavorites}
-                        data-empty="note-favorites"
-                        size="xs"
-                    />
-                </Box>
+                <NoteListState
+                    body={t.notes.sidebar.noFavorites}
+                    emptyMarker="note-favorites"
+                    hasAny={false}
+                    scope="favorites"
+                />
             );
         }
 
@@ -1782,19 +1783,21 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // chronology is the primary signal. Each row carries a small
     // type icon so personal/task/chat notes are still distinguishable.
     const renderRecentNotes = () => {
-        if (!useNM.recentNotes) return null;
+        // Not read yet: nothing, unless the read failed (then the error with Retry).
+        if (!useNM.recentNotes) {
+            return <NoteListState emptyMarker="note-recents" hasAny={false} scope="recents" />;
+        }
 
         const rows = sortedRecentRows;
 
         if (rows.length === 0) {
             return (
-                <Box sx={{ px: 2 }}>
-                    <EmptyState
-                        body={t.notes.sidebar.noRecents}
-                        data-empty="note-recents"
-                        size="xs"
-                    />
-                </Box>
+                <NoteListState
+                    body={t.notes.sidebar.noRecents}
+                    emptyMarker="note-recents"
+                    hasAny={false}
+                    scope="recents"
+                />
             );
         }
 

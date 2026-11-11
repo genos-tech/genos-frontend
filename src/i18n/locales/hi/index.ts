@@ -20,6 +20,8 @@ export const hi: DeepPartial<Messages> = {
                 inboxFailed: "आपका इनबॉक्स लोड नहीं हो सका",
                 tasksFailed: "आपके टास्क लोड नहीं हो सके",
                 projectsFailed: "आपके प्रोजेक्ट लोड नहीं हो सके",
+                notesFailed: "आपके नोट लोड नहीं हो सके",
+                flagsFailed: "आपके पूरे किए गए फ्लैग लोड नहीं हो सके",
             },
             toast: {
                 region: "सूचनाएँ",
@@ -2584,6 +2586,7 @@ export const hi: DeepPartial<Messages> = {
             quickAddDismiss: "बंद करें",
         },
         subTasks: {
+            loadFailed: "सब टास्क लोड नहीं हो सके",
             title: "सब टास्क",
             buttonLabel: "सब टास्क",
             emptyText: "अभी कोई सब टास्क नहीं",
@@ -2904,6 +2907,7 @@ export const hi: DeepPartial<Messages> = {
             milestoneErrorRestored: "माइलस्टोन हटाया नहीं जा सका। वह वापस आ गया है।",
         },
         savedFilters: {
+            loadFailed: "सहेजे गए फ़िल्टर लोड नहीं हो सके",
             button: "सहेजे गए फ़िल्टर",
             tooltip:
                 "वर्तमान फ़िल्टर संयोजन सहेजें, या प्रोजेक्ट में पहले से मौजूद फ़िल्टर संयोजन लागू करें",

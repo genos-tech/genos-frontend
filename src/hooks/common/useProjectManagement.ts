@@ -5,8 +5,9 @@ import {
     type ProjectDeletedDetail,
 } from "../../features/agentQA/approvedProjectWrites";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
+import { isProjectGoneError } from "../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
-import { syncStatus } from "../../services/syncStatus";
+import { syncStatus, tasksScope } from "../../services/syncStatus";
 import { UserProps } from "../../types/admin";
 import { ProjectProps } from "../../types/tasks";
 import { keepIfEqual } from "../../utils/keepIfEqual";
@@ -32,6 +33,28 @@ export interface ProjectManagementState {
     // fixed setTimeout.
     tsTasksLoadedToIDB: { ts: number; projectId: number } | undefined;
 }
+
+// The fields of a listed project that the open project keeps.
+const toCurrentProject = (p: ProjectProps): ProjectProps => ({
+    projectId: p.projectId,
+    projectName: p.projectName,
+    projectTags: p.projectTags,
+    projectLabels: p.projectLabels,
+    isPrivate: p.isPrivate,
+    systemUserId: p.systemUserId,
+});
+
+// Drop the remembered "last open project" when it is the one that turned out stale.
+// A different value (another tab opened another project meanwhile) is left alone.
+const forgetLastProject = (projectId: number) => {
+    try {
+        if (localStorage.getItem("lastProjectId") === String(projectId)) {
+            localStorage.removeItem("lastProjectId");
+        }
+    } catch {
+        /* storage unavailable: nothing to forget */
+    }
+};
 
 export const useProjectManagement = (
     myself: UserProps,
@@ -71,13 +94,18 @@ export const useProjectManagement = (
     // unhandled promise rejection (MIP-1324). `loadProjectTasks` has already told the
     // sync status (`report("tasks", false)`, so the banner and Retry exist); this only
     // logs, and still announces, so the table shows the rows IndexedDB already has.
-    const loadPickedProjectTasks = async (pickedProjectId: number) => {
+    // Resolves `true` when the server says the project is gone for this user (404,
+    // MIP-1399): the caller must not stay on it.
+    const loadPickedProjectTasks = async (pickedProjectId: number): Promise<boolean> => {
+        let gone = false;
         try {
             await loadProjectTasks(myself, pickedProjectId, accessToken);
         } catch (error) {
+            gone = isProjectGoneError(error);
             console.error(`Failed to load the tasks of project ${pickedProjectId}`, error);
         }
         setTsTasksLoadedToIDB({ ts: Date.now(), projectId: pickedProjectId });
+        return gone;
     };
 
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
@@ -102,6 +130,10 @@ export const useProjectManagement = (
             return;
         }
         syncStatus.report("projects", true);
+        // A project the list no longer holds (deleted, left, access lost) has no
+        // task load worth retrying: its failure must not hold the banner up for a
+        // stale `lastProjectId` (MIP-1323).
+        syncStatus.retainProjects(loadedTeamProjects.map((p) => p.projectId));
         tsLastLoadProjectAndTasks.current = Date.now();
 
         // When the user has just switched teams, any caller-supplied
@@ -114,6 +146,35 @@ export const useProjectManagement = (
         if (teamHasChanged) {
             targetProjectId = -1;
         }
+
+        // A remembered project the list does not hold (deleted, left, access lost) is
+        // stale: forget it and fall back to the default pick below, instead of opening
+        // "No project selected" for a workspace that has projects (MIP-1399).
+        if (
+            targetProjectId !== -1 &&
+            !loadedTeamProjects.some((p) => p.projectId === targetProjectId)
+        ) {
+            forgetLastProject(targetProjectId);
+            targetProjectId = -1;
+        }
+
+        // Make a listed project the open one and load its rows. When the server then
+        // says it is gone (listed, but its tasks answer 404), forget it and move to the
+        // first other project the user has joined; with none, there is no project to show.
+        const pickListedProject = async (project: ProjectProps) => {
+            setCurrentProject(toCurrentProject(project));
+            if (!(await loadPickedProjectTasks(project.projectId))) return;
+            forgetLastProject(project.projectId);
+            const next = loadedTeamProjects.find(
+                (p) => p.projectId !== project.projectId && p.isJoined === true && p.projectId
+            );
+            if (!next) {
+                setCurrentProject(null);
+                return;
+            }
+            setCurrentProject(toCurrentProject(next));
+            await loadPickedProjectTasks(next.projectId);
+        };
 
         // Set the current project to one of the joining project.
         if (loadedTeamProjects && loadedTeamProjects.length > 0) {
@@ -139,48 +200,21 @@ export const useProjectManagement = (
                             (myself.teamId !== currentTeamId &&
                                 loadedTeamProjects[i].isJoined === true)
                         ) {
-                            const pickedProjectId = loadedTeamProjects[i].projectId;
-                            setCurrentProject({
-                                projectId: pickedProjectId,
-                                projectName: loadedTeamProjects[i].projectName,
-                                projectTags: loadedTeamProjects[i].projectTags,
-                                projectLabels: loadedTeamProjects[i].projectLabels,
-                                isPrivate: loadedTeamProjects[i].isPrivate,
-                                systemUserId: loadedTeamProjects[i].systemUserId,
-                            });
-                            await loadPickedProjectTasks(pickedProjectId);
+                            await pickListedProject(loadedTeamProjects[i]);
                             break;
                         }
                     } else {
                         // If targetProjectId is not -1, set the target project as the current project
                         if (targetProjectId !== -1) {
                             if (loadedTeamProjects[i].projectId === targetProjectId) {
-                                const pickedProjectId = loadedTeamProjects[i].projectId;
-                                setCurrentProject({
-                                    projectId: pickedProjectId,
-                                    projectName: loadedTeamProjects[i].projectName,
-                                    projectTags: loadedTeamProjects[i].projectTags,
-                                    projectLabels: loadedTeamProjects[i].projectLabels,
-                                    isPrivate: loadedTeamProjects[i].isPrivate,
-                                    systemUserId: loadedTeamProjects[i].systemUserId,
-                                });
-                                await loadPickedProjectTasks(pickedProjectId);
+                                await pickListedProject(loadedTeamProjects[i]);
                                 break;
                             }
                         } else if (
                             loadedTeamProjects[i].isJoined === true &&
                             loadedTeamProjects[i].projectId
                         ) {
-                            const pickedProjectId = loadedTeamProjects[i].projectId;
-                            setCurrentProject({
-                                projectId: pickedProjectId,
-                                projectName: loadedTeamProjects[i].projectName,
-                                projectTags: loadedTeamProjects[i].projectTags,
-                                projectLabels: loadedTeamProjects[i].projectLabels,
-                                isPrivate: loadedTeamProjects[i].isPrivate,
-                                systemUserId: loadedTeamProjects[i].systemUserId,
-                            });
-                            await loadPickedProjectTasks(pickedProjectId);
+                            await pickListedProject(loadedTeamProjects[i]);
                             break;
                         }
                     }
@@ -240,6 +274,7 @@ export const useProjectManagement = (
         const onProjectDeleted = (event: Event) => {
             const projectId = (event as CustomEvent<ProjectDeletedDetail>).detail?.projectId;
             if (typeof projectId !== "number") return;
+            syncStatus.forget(tasksScope(projectId));
             setCurrentProject((current) => (current?.projectId === projectId ? null : current));
             setTeamProjectsRaw((projects) => projects.filter((p) => p.projectId !== projectId));
         };

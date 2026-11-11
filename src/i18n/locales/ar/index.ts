@@ -21,6 +21,8 @@ export const ar: DeepPartial<Messages> = {
                 inboxFailed: "تعذّر تحميل صندوق الوارد",
                 tasksFailed: "تعذّر تحميل مهامك",
                 projectsFailed: "تعذّر تحميل مشاريعك",
+                notesFailed: "تعذّر تحميل ملاحظاتك",
+                flagsFailed: "تعذّر تحميل الأعلام المكتملة",
             },
             toast: {
                 region: "الإشعارات",
@@ -2556,6 +2558,7 @@ export const ar: DeepPartial<Messages> = {
             quickAddDismiss: "إغلاق",
         },
         subTasks: {
+            loadFailed: "تعذّر تحميل المهام الفرعية",
             title: "المهام الفرعية",
             buttonLabel: "مهمة فرعية",
             emptyText: "لا توجد مهام فرعية بعد",
@@ -3108,6 +3111,7 @@ export const ar: DeepPartial<Messages> = {
             milestoneErrorRestored: "تعذّر حذف المعلم. عاد إلى مكانه.",
         },
         savedFilters: {
+            loadFailed: "تعذّر تحميل عوامل التصفية المحفوظة",
             button: "المرشحات المحفوظة",
             tooltip:
                 "احفظ مجموعة عوامل التصفية الحالية، أو قم بتطبيق مجموعة موجودة بالفعل في المشروع",

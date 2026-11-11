@@ -1,7 +1,8 @@
 import { tasksChannel } from "../../../db/workers/channels";
-import { syncStatus } from "../../../services/syncStatus";
+import { syncStatus, tasksScope } from "../../../services/syncStatus";
 import { UserProps } from "../../../types/admin";
 import { ThreadMessageProps } from "../../../types/chat";
+import { isProjectGoneError } from "./loadProjectTasksFromApi";
 
 // In-flight cache so N concurrent callers for the same (teamId, projectId)
 // share ONE network round-trip + ONE IDB batchInsert. The previous behaviour
@@ -29,21 +30,17 @@ export const loadProjectTasks = (
     // "done"; the legacy worker did the same. Callers historically typed
     // the return as `ThreadMessageProps[]` but actually used it only as a
     // completion signal — keep the shape `[]` to preserve API surface.
-    const promise = tasksChannel
+    //
+    // `track` is what tells the sync status about this load, whichever caller
+    // asked (boot, wake, project switch; MIP-1298): in flight, answered, or
+    // failed, under THIS project's own scope so another project's load cannot
+    // clear or raise it (MIP-1323). A project that is gone for the user (404 / 403)
+    // is forgotten, not failed: the load can never succeed.
+    const request = tasksChannel
         .request("loadProjectTasks", { myself, projectId, accessToken })
-        .then(
-            () => {
-                syncStatus.report("tasks", true);
-                return [] as ThreadMessageProps[];
-            },
-            (err: unknown) => {
-                // Every caller (boot, wake, project switch) lands here, so the
-                // sync status learns of a failed load whichever one asked
-                // (MIP-1298). Rethrown: the callers' own handling is unchanged.
-                syncStatus.report("tasks", false);
-                throw err;
-            }
-        )
+        .then(() => [] as ThreadMessageProps[]);
+    const promise = syncStatus
+        .track(tasksScope(projectId), request, { gone: isProjectGoneError })
         .finally(() => {
             inFlight.delete(key);
         });

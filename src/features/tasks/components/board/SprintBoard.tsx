@@ -8,6 +8,7 @@ import Typography from "@mui/joy/Typography";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { DataState } from "../../../../components/ui/feedback/DataState";
 import { useAuth } from "../../../../context/AuthContext";
 import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -15,6 +16,7 @@ import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPref
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { useTasksSyncFailure } from "../../../../services/syncStatus";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
@@ -36,6 +38,7 @@ import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { COLUMN_MIN_WIDTH, ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
+import { SprintBoardSkeleton } from "./SprintBoardSkeleton";
 import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
 import { useBoardRovingNav } from "./useBoardRovingNav";
 
@@ -145,6 +148,8 @@ export const SprintBoard = (props: SprintBoardProps) => {
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    // The first read of the project's tasks: in flight, or failed (MIP-1298's shared sync state).
+    const syncFailure = useTasksSyncFailure(usePM.currentProject?.projectId);
 
     // Normalize mode
     const mode: "light" | "dark" | undefined =
@@ -745,87 +750,129 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         </Button>
                     </Stack>
                 )}
-                <DragDropContext
-                    onBeforeCapture={lockColumnScroll}
-                    onDragEnd={(result) => {
-                        // Also fires when a drag is cancelled (Esc, no drop).
-                        unlockColumnScroll();
-                        return handleDragEnd(result);
+                {/* The columns are the board. While the first read is in flight (or failed)
+                    and the project has no task at all (a filter that hides every card is
+                    still a board, so a reload must not replace it), a skeleton or the error
+                    with Retry stands in
+                    (never while the quick-add card is open: a background reload must not
+                    unmount a title being typed into an empty project's first card):
+                    five empty columns read as "this project has no tasks", which nothing
+                    had checked (MIP-1308). An empty board AFTER a read is still the columns:
+                    the quick-add "+" is how the first card gets made. */}
+                <DataState
+                    error={syncFailure.failed && useTM.allTasks.length === 0}
+                    hasData={
+                        useTM.allTasks.length > 0 ||
+                        COLUMNS.some((column) => (boardTasks[column.id] ?? []).length > 0)
+                    }
+                    loading={
+                        (useTM.isLoadingTasks ||
+                            (syncFailure.loading && useTM.allTasks.length === 0) ||
+                            syncFailure.retrying) &&
+                        !isQuickAddOpen
+                    }
+                    size="md"
+                    errorState={{
+                        "data-error": "sprint-board",
+                        onRetry: syncFailure.retry,
+                        title: t.common.feedback.sync.tasksFailed,
                     }}
+                    skeleton={
+                        <SprintBoardSkeleton
+                            columns={COLUMNS.map((column) => ({
+                                id: column.id,
+                                title: t.tasks.board[column.titleKey],
+                            }))}
+                            containerStyle={getBoardContainerStyles(mode)}
+                            label={t.tasks.table.loadingTasks}
+                        />
+                    }
+                    fill
                 >
-                    <div
-                        ref={boardNavRef}
-                        className={`custom-scrollbar-${mode === "dark" ? "dark" : "light"}`}
-                        style={getBoardContainerStyles(mode)}
+                    <DragDropContext
+                        onBeforeCapture={lockColumnScroll}
+                        onDragEnd={(result) => {
+                            // Also fires when a drag is cancelled (Esc, no drop).
+                            unlockColumnScroll();
+                            return handleDragEnd(result);
+                        }}
                     >
-                        {COLUMNS.map((column) => {
-                            // Pending state lights up the just-clicked
-                            // card; the debounced setters catch the
-                            // real `useTM.currentPreview*` state up
-                            // ~150 ms later. When the click is a *mode
-                            // switch* (e.g. milestone preview is open
-                            // and the user clicks a regular task — or
-                            // vice versa) the stale useTM values for
-                            // the old mode would otherwise keep the
-                            // previously-selected card highlighted
-                            // until the timer fires, producing the
-                            // "both cards selected for a second"
-                            // glitch. The pending fields express
-                            // intent: when one mode is pending, the
-                            // other mode's highlight must be
-                            // suppressed immediately.
-                            const taskPending = pendingTaskId != null;
-                            const milestonePending = pendingMilestoneId != null;
-                            const selectedTaskId = milestonePending
-                                ? undefined
-                                : (pendingTaskId ?? useTM.currentPreviewTaskId);
-                            const selectedMilestoneId = taskPending
-                                ? undefined
-                                : (pendingMilestoneId ?? useTM.currentPreviewMilestoneId);
-                            const isMilestonePreviewActive = taskPending
-                                ? false
-                                : milestonePending
-                                  ? true
-                                  : useTM.currentPreviewKind === "milestone";
-                            return (
-                                <SprintBoardColumn
-                                    key={column.id}
-                                    column={column}
-                                    isMilestonePreviewActive={isMilestonePreviewActive}
-                                    milestonesByTaskId={milestonesByTaskId}
-                                    myself={myself}
-                                    selectedMilestoneId={selectedMilestoneId}
-                                    selectedTaskId={selectedTaskId}
-                                    sprintNameById={sprintNameById}
-                                    tasks={boardTasks[column.id] || []}
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    quickAddSlot={
-                                        column.id === "open" && isQuickAddOpen ? (
-                                            <SprintBoardQuickAddCard
-                                                creatorUserId={myself.userId}
-                                                fieldRules={quickAddFieldRules}
-                                                projectTags={projectTags}
-                                                teamMemberIds={teamMemberIds}
-                                                projectId={
-                                                    projectId != null ? Number(projectId) : null
-                                                }
-                                                onClose={closeQuickAdd}
-                                                onSubmit={handleQuickAddSubmit}
-                                            />
-                                        ) : null
-                                    }
-                                    onOpenDiagram={handleOpenDiagram}
-                                    onTaskClick={handleTaskClick}
-                                    onQuickAddClick={
-                                        column.id === "open" && projectId != null
-                                            ? toggleQuickAdd
-                                            : undefined
-                                    }
-                                />
-                            );
-                        })}
-                    </div>
-                </DragDropContext>
+                        <div
+                            ref={boardNavRef}
+                            className={`custom-scrollbar-${mode === "dark" ? "dark" : "light"}`}
+                            style={getBoardContainerStyles(mode)}
+                        >
+                            {COLUMNS.map((column) => {
+                                // Pending state lights up the just-clicked
+                                // card; the debounced setters catch the
+                                // real `useTM.currentPreview*` state up
+                                // ~150 ms later. When the click is a *mode
+                                // switch* (e.g. milestone preview is open
+                                // and the user clicks a regular task — or
+                                // vice versa) the stale useTM values for
+                                // the old mode would otherwise keep the
+                                // previously-selected card highlighted
+                                // until the timer fires, producing the
+                                // "both cards selected for a second"
+                                // glitch. The pending fields express
+                                // intent: when one mode is pending, the
+                                // other mode's highlight must be
+                                // suppressed immediately.
+                                const taskPending = pendingTaskId != null;
+                                const milestonePending = pendingMilestoneId != null;
+                                const selectedTaskId = milestonePending
+                                    ? undefined
+                                    : (pendingTaskId ?? useTM.currentPreviewTaskId);
+                                const selectedMilestoneId = taskPending
+                                    ? undefined
+                                    : (pendingMilestoneId ?? useTM.currentPreviewMilestoneId);
+                                const isMilestonePreviewActive = taskPending
+                                    ? false
+                                    : milestonePending
+                                      ? true
+                                      : useTM.currentPreviewKind === "milestone";
+                                return (
+                                    <SprintBoardColumn
+                                        key={column.id}
+                                        column={column}
+                                        isMilestonePreviewActive={isMilestonePreviewActive}
+                                        milestonesByTaskId={milestonesByTaskId}
+                                        myself={myself}
+                                        selectedMilestoneId={selectedMilestoneId}
+                                        selectedTaskId={selectedTaskId}
+                                        sprintNameById={sprintNameById}
+                                        tasks={boardTasks[column.id] || []}
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        quickAddSlot={
+                                            column.id === "open" && isQuickAddOpen ? (
+                                                <SprintBoardQuickAddCard
+                                                    creatorUserId={myself.userId}
+                                                    fieldRules={quickAddFieldRules}
+                                                    projectTags={projectTags}
+                                                    teamMemberIds={teamMemberIds}
+                                                    projectId={
+                                                        projectId != null
+                                                            ? Number(projectId)
+                                                            : null
+                                                    }
+                                                    onClose={closeQuickAdd}
+                                                    onSubmit={handleQuickAddSubmit}
+                                                />
+                                            ) : null
+                                        }
+                                        onOpenDiagram={handleOpenDiagram}
+                                        onTaskClick={handleTaskClick}
+                                        onQuickAddClick={
+                                            column.id === "open" && projectId != null
+                                                ? toggleQuickAdd
+                                                : undefined
+                                        }
+                                    />
+                                );
+                            })}
+                        </div>
+                    </DragDropContext>
+                </DataState>
             </div>
 
             {/* Shared task-graph modal for the per-card footer trigger.
