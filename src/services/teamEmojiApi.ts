@@ -22,15 +22,21 @@ const handle = (e: unknown, label: string): null => {
     return null;
 };
 
-export const listTeamEmoji = async (accessToken: string, teamId: string): Promise<TeamEmoji[]> => {
+/** The team's catalog, or `null` when the request FAILED: `[]` is the server's
+ *  answer "no emoji", and the two must not look alike (MIP-1305). */
+export const listTeamEmoji = async (
+    accessToken: string,
+    teamId: string
+): Promise<TeamEmoji[] | null> => {
     const api = authApi(accessToken);
-    if (!api) return [];
+    if (!api) return null;
     try {
-        const res = await api.get(`/team-emoji/?team_id=${encodeURIComponent(teamId)}`);
+        const res = await api.get(`/team-emoji/?team_id=${encodeURIComponent(teamId)}`, {
+            suppressErrorToast: true,
+        });
         return (res.data?.teamEmoji ?? []) as TeamEmoji[];
     } catch (e) {
-        handle(e, "list");
-        return [];
+        return handle(e, "list");
     }
 };
 

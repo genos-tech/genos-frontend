@@ -1,5 +1,6 @@
 import { Box, Button, Stack, Typography } from "@mui/joy";
 
+import { TOUCH_TARGET } from "../../../../components/ui/touchTargets";
 import { useTranslation } from "../../../../i18n";
 import { TodoCategoryProps } from "../../../../types/chat";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
@@ -33,24 +34,42 @@ export const TodoTagFilterBar = ({ categories, selected, onToggle, onClear, isDa
                 component="button"
                 type="button"
                 sx={{
-                    // A bare button: the chip inside carries the look.
+                    // A bare button: the chip inside carries the look. It is the tap
+                    // target, so on a touch screen it is 44px tall around the chip
+                    // (MIP-1319); the ring and the dimming stay on the chip.
                     all: "unset",
-                    cursor: "pointer",
                     borderRadius: "8px",
-                    opacity: selected.size === 0 || on ? 1 : 0.55,
-                    boxShadow: on ? `0 0 0 2px ${color}` : "none",
-                    transition: "opacity 0.15s ease, box-shadow 0.15s ease",
-                    "&:hover": { opacity: 1 },
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    "@media (pointer: coarse)": {
+                        justifyContent: "center",
+                        minHeight: TOUCH_TARGET,
+                        minWidth: TOUCH_TARGET,
+                    },
+                    "&:hover > [data-tag-chip]": { opacity: 1 },
                     "&:focus-visible": { outline: "2px solid currentColor", outlineOffset: 2 },
                 }}
                 onClick={() => onToggle(key)}
             >
-                <ProjectTagChip
-                    fontSize="0.75rem"
-                    isDark={isDark}
-                    label={label}
-                    tagColor={color}
-                />
+                <Box
+                    component="span"
+                    data-tag-chip=""
+                    sx={{
+                        borderRadius: "8px",
+                        display: "inline-flex",
+                        opacity: selected.size === 0 || on ? 1 : 0.55,
+                        boxShadow: on ? `0 0 0 2px ${color}` : "none",
+                        transition: "opacity 0.15s ease, box-shadow 0.15s ease",
+                    }}
+                >
+                    <ProjectTagChip
+                        fontSize="0.75rem"
+                        isDark={isDark}
+                        label={label}
+                        tagColor={color}
+                    />
+                </Box>
             </Box>
         );
     };
@@ -66,7 +85,19 @@ export const TodoTagFilterBar = ({ categories, selected, onToggle, onClear, isDa
             {categories.map((c) => pick(c.categoryId, c.name, todoTagColor(c)))}
             {pick(NO_TAG, t.chat.todoPane.tagFilterNone, "#808080")}
             {selected.size > 0 && (
-                <Button size="sm" sx={{ minHeight: 0, py: 0 }} variant="plain" onClick={onClear}>
+                <Button
+                    size="sm"
+                    variant="plain"
+                    sx={{
+                        minHeight: 0,
+                        py: 0,
+                        "@media (pointer: coarse)": {
+                            minHeight: TOUCH_TARGET,
+                            minWidth: TOUCH_TARGET,
+                        },
+                    }}
+                    onClick={onClear}
+                >
                     <Typography level="body-xs">{t.chat.todoPane.tagFilterClear}</Typography>
                 </Button>
             )}

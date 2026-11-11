@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildNodesAndEdges } from "../features/tasks/diagram/components/TaskFlowCanvas";
+import {
+    buildNodesAndEdges,
+    computeOverview,
+} from "../features/tasks/diagram/components/TaskFlowCanvas";
 import type { TaskGraph } from "../features/tasks/diagram/types";
 import {
     computeAnchoredExternalIds,
@@ -102,15 +105,23 @@ describe("computeHiddenTaskIds", () => {
         expect(hidden(tasks, 1, true)).toEqual([2, 3]);
     });
 
-    it("documents the pre-existing Deleted-mid-path caveat: Deleted parent hidden, its open child not hidden (will detach)", () => {
-        // root(open) -> A(deleted) -> B(open). B stays visible but its
-        // parent A is force-hidden, so B falls back to a root-level node.
-        // Unchanged, pre-existing behavior (Deleted always hides but can't
-        // collapse its subtree); asserted so a future change is conscious.
-        const tasks = [task(1, "Open", null), task(2, "Deleted", 1), task(3, "Open", 2)];
-        const h = computeHiddenTaskIds(tasks, 1, true);
-        expect(h.has(2)).toBe(true);
-        expect(h.has(3)).toBe(false);
+    it("a Deleted parent takes its children with it, whatever their status, toggle or not (MIP-1382)", () => {
+        // root(open) -> A(deleted) -> B(open) -> C(wip). No sub-task floats on as a
+        // root-level card once its parent is gone.
+        const tasks = [
+            task(1, "Open", null),
+            task(2, "Deleted", 1),
+            task(3, "Open", 2),
+            task(4, "WIP", 3),
+            task(5, "Open", 1),
+        ];
+        expect(hidden(tasks, 1, true)).toEqual([2, 3, 4]);
+        expect(hidden(tasks, 1, false)).toEqual([2, 3, 4]);
+    });
+
+    it("a Closed parent's children stay visible with the toggle off", () => {
+        const tasks = [task(1, "Open", null), task(2, "Closed", 1), task(3, "Open", 2)];
+        expect(hidden(tasks, 1, false)).toEqual([]);
     });
 
     it("is resilient to a malformed parent cycle (no infinite loop)", () => {
@@ -246,5 +257,62 @@ describe("buildNodesAndEdges — closed tasks take their blockers with them", ()
         );
         expect(edges.some((e) => e.id === "d-1")).toBe(false);
         expect(edges.some((e) => e.id === "d-2")).toBe(true);
+    });
+});
+
+/**
+ * MIP-1382: the header overview and the cards' progress treat everything under a Closed
+ * task as Closed, and drop everything under a Deleted one, however those rows are set.
+ */
+describe("graph figures under a Closed / Deleted ancestor", () => {
+    // root -> A(closed) -> A1(open, overdue) ; root -> B(open) ; root -> D(deleted) -> D1(open)
+    const rows = [
+        task(1, "Open", null),
+        { ...task(2, "Closed", 1), dueDate: "2000-01-01" },
+        { ...task(3, "Open", 2), dueDate: "2000-01-01" },
+        { ...task(4, "Open", 1), dueDate: "2000-01-01" },
+        task(5, "Deleted", 1),
+        task(6, "Open", 5),
+    ];
+    const graph = {
+        rootTaskId: 1,
+        tasks: rows,
+        externalTasks: [],
+        dependencyEdges: [],
+    } as unknown as TaskGraph;
+
+    it("overview: the open child of a Closed task counts as closed and is not overdue", () => {
+        const o = computeOverview(graph, new Map(), new Map());
+        // 2 (closed), 3 (under closed), 4 (open) live; 5 and 6 are gone.
+        expect(o.total).toBe(3);
+        expect(o.closed).toBe(2);
+        // Only B is overdue: A1 sits under a Closed task, A is Closed.
+        expect(o.overdueCount).toBe(1);
+    });
+
+    it("cards: the root's progress badge agrees with the overview", () => {
+        const { nodes } = buildNodesAndEdges(
+            graph,
+            null,
+            new Map(),
+            new Map(),
+            null,
+            {
+                onChange: () => undefined,
+                onAddSubtask: () => undefined,
+                onDelete: () => undefined,
+                onOpenPreview: () => undefined,
+            },
+            false,
+            null
+        );
+        const root = nodes.find((n) => n.id === "1")?.data as {
+            closedDescendantCount: number;
+            totalDescendantCount: number;
+        };
+        expect(root.totalDescendantCount).toBe(3);
+        expect(root.closedDescendantCount).toBe(2);
+        // The Deleted branch is not drawn at all, even with closed tasks shown.
+        expect(nodes.map((n) => n.id).sort()).toEqual(["1", "2", "3", "4"]);
     });
 });

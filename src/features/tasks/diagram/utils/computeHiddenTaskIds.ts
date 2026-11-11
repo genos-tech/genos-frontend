@@ -1,4 +1,5 @@
 import { TaskTableProps } from "../../../../types/tasks";
+import { indexTasksById, isUnderDeletedAncestor } from "../../utils/taskAncestry";
 
 const statusLower = (t: TaskTableProps): string => (t.status ?? "").toLowerCase();
 const isDeleted = (t: TaskTableProps): boolean => statusLower(t) === "deleted";
@@ -10,7 +11,12 @@ const isClosed = (t: TaskTableProps): boolean => statusLower(t) === "closed";
  * `DiagramHiddenTasks.test.ts`).
  *
  * Always hidden: Deleted rows — soft-deleted tasks the rest of the app
- * never exposes (table / sidebar / search), regardless of the toggle.
+ * never exposes (table / sidebar / search), regardless of the toggle — and
+ * everything under a Deleted task, at any depth and whatever its own status
+ * (MIP-1382: "a deleted parent deletes its children"). A task cannot outlive
+ * its parent on the canvas, so no sub-task is left floating as a root-level
+ * card. Unlike Closed this is not a view preference, so the toggle does not
+ * bring it back, and the root is not exempt: a Deleted root draws nothing.
  *
  * When `hideClosed` is on, closing a parent collapses its WHOLE branch: a
  * Closed task (other than the root) is hidden together with its entire
@@ -25,11 +31,11 @@ const isClosed = (t: TaskTableProps): boolean => statusLower(t) === "closed";
  * its tree, so hiding everything under it would leave a useless near-empty
  * canvas. Closed branches *below* the root still collapse.
  *
- * Because a Closed parent's descendants are hidden along with it, hiding
- * closed work never leaves an open subtask dangling as a detached node.
- * (Pre-existing exception, unchanged: a Deleted task mid-path is always
- * force-hidden and can't collapse its subtree, so its open descendant
- * falls back to a root-level node.)
+ * Because a Closed or Deleted parent's descendants are hidden along with
+ * it, the canvas never leaves an open subtask dangling as a detached node.
+ * With the toggle off, the descendants of a Closed task are shown (and
+ * counted as Closed by the header and the cards' progress, see
+ * `isUnderClosedAncestor`).
  */
 export const computeHiddenTaskIds = (
     tasks: TaskTableProps[],
@@ -38,9 +44,13 @@ export const computeHiddenTaskIds = (
 ): Set<number> => {
     const hidden = new Set<number>();
 
-    // Deleted rows are always hidden, regardless of the toggle.
+    // Deleted rows, and everything under one, are always hidden, regardless
+    // of the toggle.
+    const byId = indexTasksById(tasks);
     for (const t of tasks) {
-        if (t.id != null && isDeleted(t)) hidden.add(Number(t.id));
+        if (t.id != null && (isDeleted(t) || isUnderDeletedAncestor(t, byId))) {
+            hidden.add(Number(t.id));
+        }
     }
     if (!hideClosed) return hidden;
 

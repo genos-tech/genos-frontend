@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useMemo } from "react";
 import { ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
@@ -9,7 +9,6 @@ import { TaskProps, TaskStatusProps } from "../../../../types/tasks";
 import { isDeletingStatus } from "../../utils/deletedStatus";
 import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { StatusLabel } from "../meta/StatusLabel";
-import { ConfirmDeletedStatus } from "../modals/ConfirmDeletedStatus";
 
 type ACTaskStatusProps = {
     socket: Socket | null;
@@ -17,9 +16,14 @@ type ACTaskStatusProps = {
     setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
-    /** The layer of the modal this picker is shown in (UrlLinkModal), so the
-     *  "Deleted" confirm opens above it. Page-hosted: omit. */
-    hostZIndex?: number;
+    /**
+     * Picking "Deleted" (MIP-1303): the host hides the task behind an Undo toast
+     * and sends the delete when the toast is gone (`useDeleteTask`). The picker
+     * never writes "Deleted" into the working copy: every autosave PUT carries
+     * `status` and would delete at once. Without a handler the option is not
+     * offered.
+     */
+    onDeleteTask?: () => void;
 };
 export const ACTaskStatus = (props: ACTaskStatusProps) => {
     const {
@@ -28,18 +32,14 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
         setTaskContent,
         setTaskUpdated,
         setTaskStatusUpdated,
-        hostZIndex,
+        onDeleteTask,
     } = props;
 
     const { t } = useTranslation();
-    // "Deleted" waits for a yes (MIP-1301). Until then the working copy keeps its
-    // status, so the autosave (every PUT carries `status`) never sees it.
-    // Tied to the task it was asked about: a different task showing in this picker
-    // never inherits the question.
-    const [pending, setPending] = useState<{ taskId: unknown; status: TaskStatusProps } | null>(
-        null
+    const options = useMemo(
+        () => (onDeleteTask ? statuses : statuses.filter((s) => s.status !== "Deleted")),
+        [onDeleteTask]
     );
-    const pendingDeleted = pending && pending.taskId === taskContent.id ? pending.status : null;
 
     const applyStatus = (status: TaskStatusProps) => {
         setTaskContent({ ...taskContent, status });
@@ -57,7 +57,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                 key={taskContent.id}
                 getOptionLabel={(option) => taskMetaLabel(option.status, t.tasks.filters)}
                 isOptionEqualToValue={(option, value) => option.status === value.status}
-                options={statuses}
+                options={options}
                 placeholder={t.tasks.autocomplete.statusPlaceholder}
                 size="sm"
                 sx={{ width: "100%" }}
@@ -80,23 +80,13 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                     if (value !== null && value.length > 0) {
                         const next = value.slice(-1)[0];
                         if (isDeletingStatus(next.status, taskContent.status?.status)) {
-                            setPending({ taskId: taskContent.id, status: next });
+                            onDeleteTask?.();
                             return;
                         }
                         applyStatus(next);
                     }
                 }}
             />
-            {pendingDeleted && (
-                <ConfirmDeletedStatus
-                    entityName={taskContent.title}
-                    hostZIndex={hostZIndex}
-                    isMilestone={taskContent.isMilestone === true}
-                    open
-                    onClose={() => setPending(null)}
-                    onConfirm={() => applyStatus(pendingDeleted)}
-                />
-            )}
         </Fragment>
     );
 };

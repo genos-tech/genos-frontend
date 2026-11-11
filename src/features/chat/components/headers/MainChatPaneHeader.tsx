@@ -87,7 +87,10 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const { t } = useTranslation();
     const isDark = mode === "dark";
     const isMobile = useIsMobile();
-    // Set only inside a preview modal, which draws its own Close (MIP-1296).
+    // Set only inside a preview modal. A chat shown there is a snapshot with no page
+    // around it: the dialog draws its own Close (MIP-1296), and the controls that drive
+    // the PAGE behind it (back to the list, the to-do pane toggle, swap, new task) have
+    // nothing to act on, so they are not drawn (MIP-1321).
     const isModalHosted = useNoteModalHostZIndex() != null;
     const navigate = useNavigate();
     const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
@@ -335,15 +338,19 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     ...modalChromeEndPadding("8px"),
                 }}
             >
-                <IconButton
-                    size="sm"
-                    variant="plain"
-                    onClick={handleMobileBack}
-                    aria-label={t.chat.headers.backToChat}
-                    sx={{ flexShrink: 0 }}
-                >
-                    <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
-                </IconButton>
+                {/* The page's way back to the chat list. A preview dialog has no list
+                    behind it, and its own Close is the way out. */}
+                {!isModalHosted && (
+                    <IconButton
+                        size="sm"
+                        variant="plain"
+                        onClick={handleMobileBack}
+                        aria-label={t.chat.headers.backToChat}
+                        sx={{ flexShrink: 0 }}
+                    >
+                        <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                )}
 
                 <Stack
                     direction="row"
@@ -366,7 +373,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         takes the visible icon slot and mute moves into the
                         overflow menu below. Every other chat keeps mute
                         surfaced here (it has no ToDo pane). */}
-                    {isYou === true ? (
+                    {isYou === true && !isModalHosted ? (
                         isToDoVisible === true ? (
                             <AppTooltip size="sm" title={t.chat.headers.backToChat}>
                                 <IconButton
@@ -443,7 +450,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </MenuRow>
                             )}
 
-                            {chat.chatType === 3 && (
+                            {chat.chatType === 3 && !isModalHosted && (
                                 <MenuRow
                                     icon={<AddTaskRoundedIcon />}
                                     onClick={() => {
@@ -472,7 +479,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </MenuRow>
                             )}
 
-                            {useCM.isSubChatVisible && (
+                            {useCM.isSubChatVisible && !isModalHosted && (
                                 <MenuRow onClick={() => swapChat()} icon={<SwapVertRoundedIcon />}>
                                     {t.chat.headers.swapChats}
                                 </MenuRow>
@@ -491,7 +498,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 slot above, so mute is surfaced here in the
                                 overflow instead. Other chats keep mute as
                                 their visible icon and don't need this. */}
-                            {isYou === true && (
+                            {isYou === true && !isModalHosted && (
                                 <MuteMenuItem
                                     chatType={chat.chatType}
                                     chatId={chat.chatId}
@@ -609,7 +616,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 )}
 
                 {/* Create Task Button */}
-                {chat.chatType === 3 && (
+                {chat.chatType === 3 && !isModalHosted && (
                     <AppTooltip size="sm" title={t.chat.headers.createNewTaskTooltip}>
                         <IconButton
                             size="sm"
@@ -636,7 +643,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {/* To-Do Button (only for self chat) */}
                 {isYou === true && (
                     <>
-                        {isToDoVisible === true ? (
+                        {isModalHosted ? null : isToDoVisible === true ? (
                             <AppTooltip size="sm" title={t.chat.headers.backToChat}>
                                 <IconButton
                                     size="sm"
@@ -703,7 +710,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 )}
 
                 {/* Swap Chat Button */}
-                {useCM.isSubChatVisible && (
+                {useCM.isSubChatVisible && !isModalHosted && (
                     <AppTooltip size="sm" title={t.chat.headers.swapChats}>
                         <IconButton size="sm" variant="plain" onClick={() => swapChat()}>
                             <SwapVertRoundedIcon

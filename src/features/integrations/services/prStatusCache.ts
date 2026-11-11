@@ -13,14 +13,18 @@ import type { PrDetailResponse } from "./prTypes";
 // linked PR from the table's PR column (`PrStatusCell`) and from the task
 // preview (`LinkedPrCard`) at the same moment, and until now each of them
 // sent its own call: every one of those is three GitHub calls on the server.
-// Only an `ok` answer is kept for the TTL; "GitHub not connected" and errors
-// are shared by whoever was waiting, then the next call asks again.
+// Only an `ok` answer is kept for the TTL; "GitHub not connected", "private or
+// deleted" and errors are shared by whoever was waiting, then the next call asks again.
 const TTL_MS = 60_000;
 const memo = createRequestCache<PrDetailResponse>({ ttlMs: TTL_MS });
 
 export type PrStatusResult =
     | { kind: "ok"; payload: PrDetailResponse }
     | { kind: "github_not_connected" }
+    // GitHub refused this account the PR (404/403): deleted, or private to a
+    // repo it cannot see. Asking again cannot help, so there is no Retry.
+    | { kind: "unavailable" }
+    // Anything else: a dropped connection, a 5xx, a rate limit. May pass.
     | { kind: "error" };
 
 // The shared cache stores what a fetch RESOLVES to and drops what it rejects,
@@ -54,6 +58,7 @@ export const getCachedOrFetchPrStatus = async (
             if (res === "github_not_connected") {
                 throw new PrStatusMiss({ kind: "github_not_connected" });
             }
+            if (res === "unavailable") throw new PrStatusMiss({ kind: "unavailable" });
             if (!res) throw new PrStatusMiss({ kind: "error" });
             return res as PrDetailResponse;
         });

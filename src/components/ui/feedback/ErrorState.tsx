@@ -30,6 +30,12 @@ export type ErrorStateProps = {
     onRetry: () => void;
     /** Defaults to the localized "Retry". */
     retryLabel?: string;
+    /**
+     * A second way out, drawn before Retry (Cancel on a form that could not
+     * start; "Open on GitHub" on a card that could not load). `href` makes it a
+     * link that opens in a new tab; otherwise it runs `onClick`.
+     */
+    secondary?: { label: string } & ({ onClick: () => void } | { href: string });
     icon?: ReactNode;
     size?: "md" | "sm" | "xs";
     /** Center in the parent's full height instead of sitting at the top. */
@@ -43,6 +49,7 @@ export const ErrorState = ({
     body,
     onRetry,
     retryLabel,
+    secondary,
     icon,
     size = "md",
     fill = false,
@@ -51,6 +58,35 @@ export const ErrorState = ({
     const { t } = useTranslation();
     const label = retryLabel ?? t.common.actions.retry;
     const hint = body ?? t.common.feedback.loadFailedBody;
+    const actions = (
+        <>
+            {secondary && (
+                <Button
+                    color="neutral"
+                    component={"href" in secondary ? "a" : "button"}
+                    href={"href" in secondary ? secondary.href : undefined}
+                    rel={"href" in secondary ? "noreferrer" : undefined}
+                    size="sm"
+                    sx={{ "&:focus-visible": focusRing }}
+                    target={"href" in secondary ? "_blank" : undefined}
+                    variant="plain"
+                    onClick={"onClick" in secondary ? secondary.onClick : undefined}
+                >
+                    {secondary.label}
+                </Button>
+            )}
+            <Button
+                color="neutral"
+                size="sm"
+                startDecorator={<RefreshRoundedIcon />}
+                sx={{ "&:focus-visible": focusRing }}
+                variant="outlined"
+                onClick={onRetry}
+            >
+                {label}
+            </Button>
+        </>
+    );
 
     if (size === "xs") {
         return (
@@ -72,16 +108,7 @@ export const ErrorState = ({
                 >
                     {title}
                 </Typography>
-                <Button
-                    color="neutral"
-                    size="sm"
-                    startDecorator={<RefreshRoundedIcon />}
-                    sx={{ "&:focus-visible": focusRing }}
-                    variant="outlined"
-                    onClick={onRetry}
-                >
-                    {label}
-                </Button>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>{actions}</Box>
             </Box>
         );
     }
@@ -136,17 +163,10 @@ export const ErrorState = ({
             >
                 {hint}
             </Typography>
-            <Box sx={{ mt: 1 }}>
-                <Button
-                    color="neutral"
-                    size="sm"
-                    startDecorator={<RefreshRoundedIcon />}
-                    sx={{ "&:focus-visible": focusRing }}
-                    variant="outlined"
-                    onClick={onRetry}
-                >
-                    {label}
-                </Button>
+            <Box
+                sx={{ mt: 1, display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 1 }}
+            >
+                {actions}
             </Box>
         </Box>
     );

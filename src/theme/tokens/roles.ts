@@ -70,6 +70,19 @@ export type RoleColors = {
     accentFg: string;
     /** Accent as text, link or icon on a surface. */
     accentText: string;
+    /** Link text and the quote bar / code ink INSIDE a chat bubble or comment, where the fills
+     *  vary (page, surface, hover, sent tint, deep-link tint). Held to a higher contrast than
+     *  `accentText` (dark 9.5:1, light AA) because a bubble's tinted fills are the worst case. */
+    link: string;
+    linkVisited: string;
+    linkHover: string;
+    /** Quoted text in a bubble: dimmer than the body text, but 7:1 on every bubble fill (the
+     *  secondary text role is 5.5-6.6:1 there). */
+    textQuote: string;
+    /** Inline code ink in a chat bubble or comment, over the `active` wash that is its chip.
+     *  Dark: the warning amber lightened until it reads at least as well as the orange it
+     *  replaced on every bubble fill (`warning.text` is 1.1:1 lower on some). Light: `warning.text`. */
+    codeInk: string;
     /** Selected-row / selected-nav background. */
     accentSubtle: Alpha;
     accentBorder: Alpha;
@@ -118,6 +131,7 @@ const SEMANTIC_RAMPS = {
         800: "#166534",
     },
     warning: {
+        200: "#fde68a",
         300: "#fcd34d",
         400: "#fbbf24",
         500: "#f59e0b",
@@ -164,6 +178,50 @@ const firstReadable = (candidates: string[], backdrops: string[]): string =>
     candidates.find((c) => backdrops.every((b) => contrast(c, b) >= AA)) ??
     candidates[candidates.length - 1];
 
+/** The lowest contrast of `fg` over `backdrops`. */
+const worstOn = (fg: string, backdrops: string[]): number =>
+    Math.min(...backdrops.map((b) => contrast(fg, b)));
+
+/** The first candidate that reaches `floor` on every backdrop; the last one if none does. */
+const firstAtLeast = (candidates: string[], backdrops: string[], floor: number): string =>
+    candidates.find((c) => worstOn(c, backdrops) >= floor) ?? candidates[candidates.length - 1];
+
+/** `hex` turned `turn` degrees around the hue wheel, then moved along lightness (`step` per
+ *  try) until it reaches `floor` on every backdrop. A visited link is the family's color
+ *  rotated and calmed, the way the old indigo went to violet; a theme with no chroma (slate) stays gray. */
+const turnedUntil = (
+    hex: string,
+    turn: number,
+    keep: number,
+    step: number,
+    backdrops: string[],
+    floor: number
+): string => {
+    const { l, c, h } = hexToOklch(hex);
+    let out = oklchToHex(l, c * keep, (h + turn) % 360);
+    for (let i = 1; i <= 80 && worstOn(out, backdrops) < floor; i++) {
+        out = oklchToHex(l + step * i, c * keep, (h + turn) % 360);
+    }
+    return out;
+};
+
+/** Contrast floors for links and quote text on the bubble fills. They are the worst case the
+ *  legacy hex values measured (dark links #a5b4fc..#e0e7ff: 6.8 to 11.4; quote text #cbd5e1 /
+ *  #c7d2fe: 9.1 to 9.5), so moving a rule from the hex to the role never lowers a fill's
+ *  contrast (SpotlightLeftoversTokens proves it per theme and fill). Light links stay at AA
+ *  and the quote text at 7:1: a darker light link would only recolor the quote bars. */
+const LINK_FLOOR = { light: AA, dark: 9.5 } as const;
+const LINK_VISITED_FLOOR = { light: AA, dark: 10.2 } as const;
+const LINK_HOVER_FLOOR = { light: AA, dark: 11.4 } as const;
+/** How far a visited link turns from its link, in OKLCH hue degrees. */
+const VISITED_TURN = 30;
+/** ...and how much of its chroma it keeps, so the turn stays quiet. */
+const VISITED_CHROMA = 0.7;
+const QUOTE_TEXT_FLOOR = { light: 7, dark: 9.5 } as const;
+/** Inline code ink on its chip in the dark bubbles: the worst case the orange `#fb923c` on black
+ *  at .3 measured over the bubble fills (7.2 to 8.9), rounded up. */
+const CODE_INK_FLOOR = 7.4;
+
 /** Neutral lightness / chroma steps, per mode. Read off the references
  *  (Linear, Vercel Geist): near-white canvas with white cards in light,
  *  a deep but not pure-black canvas in dark. */
@@ -184,7 +242,9 @@ const NEUTRAL = {
         bgSubtle: [0.178, 0.013],
         surface: [0.2, 0.014],
         surfaceRaised: [0.232, 0.015],
-        text: [0.955, 0.006],
+        // 0.97 (was 0.955): the received dark bubble's body text was #f3f4f6 (L 0.972) until it
+        // moved to this role (MIP-1388); at 0.955 it read up to 0.65:1 lower on the bubble fills.
+        text: [0.97, 0.006],
         textSecondary: [0.765, 0.012],
         textTertiary: [0.615, 0.012],
         textDisabled: [0.46, 0.01],
@@ -254,6 +314,59 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
             : [t.altRamp[400], t.altRamp[300], t.altRamp[200], t.ramp[200], t.ramp[100]];
     const accentText = firstReadable(textCandidates, [...surfaces, ...selectedBgs]);
 
+    // Link family and quote text, on the fills a bubble can have: the page and the surface, each
+    // plain and with the hover wash, the sent (accent) tint and the deep-link (success) tint.
+    const success = buildSemantic("success", mode, surfaces);
+    const bubbleFills = [bg, surface].flatMap((base) => [
+        base,
+        composite(ink, al.hover, base),
+        composite(accent, accentSubtle.a, base),
+        composite(success.subtle.hex, success.subtle.a, base),
+    ]);
+    // Dark: from the light stops up (more contrast = lighter). Light: from the 700 stop down,
+    // the stop the quote bars and code were always painted in, darker only where it misses AA.
+    const linkStops =
+        mode === "dark"
+            ? [t.altRamp[300], t.altRamp[200], t.ramp[200], t.ramp[100], t.ramp[50]]
+            : [t.ramp[700], t.ramp[800], t.ramp[900]];
+    const link = firstAtLeast(linkStops, bubbleFills, LINK_FLOOR[mode]);
+    const darker = linkStops.slice(linkStops.indexOf(link) + 1);
+    const linkHover = firstAtLeast(
+        mode === "dark" ? linkStops : darker.length ? darker : [link],
+        bubbleFills,
+        LINK_HOVER_FLOOR[mode]
+    );
+    const linkVisited = turnedUntil(
+        link,
+        VISITED_TURN,
+        VISITED_CHROMA,
+        mode === "dark" ? 0.005 : -0.005,
+        bubbleFills,
+        LINK_VISITED_FLOOR[mode]
+    );
+    // Quote text: the neutral ramp, lightness walked from secondary text until it clears the floor.
+    const [quoteL0, quoteC] = n.textSecondary;
+    let textQuote = oklchToHex(quoteL0, quoteC, hue);
+    for (let i = 1; i <= 80 && worstOn(textQuote, bubbleFills) < QUOTE_TEXT_FLOOR[mode]; i++) {
+        textQuote = oklchToHex(quoteL0 + (mode === "dark" ? 0.005 : -0.005) * i, quoteC, hue);
+    }
+
+    // Code ink: the chip is the `active` wash over each bubble fill.
+    const warning = buildSemantic("warning", mode, surfaces);
+    const codeFills = bubbleFills.map((f) => composite(ink, al.active, f));
+    const codeInk =
+        mode === "dark"
+            ? firstAtLeast(
+                  [
+                      SEMANTIC_RAMPS.warning[400],
+                      SEMANTIC_RAMPS.warning[300],
+                      SEMANTIC_RAMPS.warning[200],
+                  ],
+                  codeFills,
+                  CODE_INK_FLOOR
+              )
+            : warning.text;
+
     const g1 = accent;
     const g2 = t.ramp[stepFrom(solidStop, 2)];
     const g3 = t.ramp[stepFrom(solidStop, 1)];
@@ -295,6 +408,11 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
         // case; near-black only if a ramp never gets dark enough.
         accentFg: fgFor(accent),
         accentText,
+        link,
+        linkVisited,
+        linkHover,
+        textQuote,
+        codeInk,
         accentSubtle,
         accentBorder: { hex: accent, a: 0.35 },
         focus: accentText,
@@ -302,8 +420,8 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
         brandGradientHover: `linear-gradient(135deg, ${g3} 0%, ${g4} 100%)`,
         brandGradientStops: [g1, g2, g3, g4],
         danger: buildSemantic("danger", mode, surfaces),
-        success: buildSemantic("success", mode, surfaces),
-        warning: buildSemantic("warning", mode, surfaces),
+        success,
+        warning,
         info: buildSemantic("info", mode, surfaces),
         scrim: mode === "light" ? { hex: ink, a: 0.32 } : { hex: "#000000", a: 0.55 },
         shadowSm: shadow.sm,

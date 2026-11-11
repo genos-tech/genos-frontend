@@ -67,7 +67,6 @@ export const threadAsk = {
     },
     errors: {
         loadFailed: "Couldn't load the thread summary.",
-        retry: "Retry",
         forbidden: "You don't have access to this thread.",
     },
 } as const;

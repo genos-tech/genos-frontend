@@ -147,8 +147,10 @@ export type NoteOpenFailure = {
     /** The type as the caller passed it (1 my, 2 task, 3 chat, 4 shared, 8 team). */
     noteType: number;
     noteId: number;
-    /** `not_found`: the API answered 404, so Retry could never succeed. */
-    reason: "failed" | "not_found";
+    /** `not_found`: the API answered 404, so Retry could never succeed. `forbidden`: 403, the
+     *  note exists and the user has no role on it: the pane offers the access request
+     *  (MIP-1330), which no tab can because none opens for a note that could not be read. */
+    reason: "failed" | "not_found" | "forbidden";
     /** A Retry is in flight. */
     retrying: boolean;
 };
@@ -266,6 +268,8 @@ export interface NoteManagementState {
 
     // Note version history
     currentNoteVersions: NoteVersionMeta[];
+    /** The latest version-list request failed (so `currentNoteVersions` may be empty or stale). */
+    currentNoteVersionsFailed?: boolean;
     setCurrentNoteVersions: (versions: NoteVersionMeta[]) => void;
     loadNoteVersionsFor: (noteType: number, noteId: number) => Promise<void>;
     // Optimistic head update after the local user saves. If the head is
@@ -477,6 +481,9 @@ export const useNoteManagement = (
     // Version history of the currently-opened note. Latest version sits
     // at index 0 (matches the backend's ordering).
     const [currentNoteVersions, setCurrentNoteVersions] = useState<NoteVersionMeta[]>([]);
+    const [currentNoteVersionsFailed, setCurrentNoteVersionsFailed] = useState(false);
+    // Which note `currentNoteVersions` belongs to, so a failed refresh never keeps another note's list.
+    const versionsOfRef = useRef<string | null>(null);
 
     // Monotonic counter that forces `useNoteEditorCore` to re-seed local
     // `title`/`body` from `currentNote` even when the note identity hasn't
@@ -1780,7 +1787,15 @@ export const useNoteManagement = (
             return;
         }
         const versions = await loadNoteVersions(myself, noteType, noteId, accessToken);
-        setCurrentNoteVersions(versions);
+        const key = `${noteType}:${noteId}`;
+        setCurrentNoteVersionsFailed(versions === null);
+        if (versions) {
+            versionsOfRef.current = key;
+            setCurrentNoteVersions(versions);
+        } else if (versionsOfRef.current !== key) {
+            // Nothing of this note's to keep; a failure for the same note keeps its list.
+            setCurrentNoteVersions([]);
+        }
     };
 
     // Optimistic head bump after a local save. Same coalesce rules as
@@ -2232,20 +2247,25 @@ export const useNoteManagement = (
         if (!accessToken) return;
         // A click on a note whose body is not cached and whose request FAILED used
         // to do nothing at all (MIP-1276): no tab, no message. `loadSpecificNote`
-        // resolves undefined on a failed request (403 is `{ error: "forbidden" }`
-        // and is not a failure: the access-request panel handles it).
+        // resolves undefined on a failed request; a 403 is `{ error: "forbidden" }` and, with no
+        // tab open, ends on the pane's access-request panel (MIP-1330).
         const requestedType = noteType;
         const openSeq = ++openSeqRef.current;
         // `loadSpecificNote`: undefined = request failed, { error: "not_found" } = 404,
-        // { error: "forbidden" } = 403, which is not a failure here.
+        // { error: "forbidden" } = 403.
         const reportOpenFailed = (fetched: { error?: string } | undefined) => {
             if (openSeq !== openSeqRef.current) return;
-            if (fetched && fetched.error !== "not_found") {
-                // 403: the access-request panel owns it; a Retry in flight is over.
+            if (fetched && fetched.error !== "not_found" && fetched.error !== "forbidden") {
+                // Some other answer that is not this note: nothing to report; a Retry in
+                // flight is over.
                 setNoteOpenFailure(null);
                 return;
             }
-            const reason = fetched ? "not_found" : "failed";
+            const reason = !fetched
+                ? "failed"
+                : fetched.error === "forbidden"
+                  ? "forbidden"
+                  : "not_found";
             if (tabCountRef.current === 0) {
                 setNoteOpenFailure({
                     noteType: requestedType,
@@ -2256,14 +2276,18 @@ export const useNoteManagement = (
                 return;
             }
             const msgs = getMessages();
+            // A note is open already, so the pane keeps showing it; the toast says why this
+            // click did nothing. 403 has no Retry (a new request, not a retry, gets access).
             toast.error(
-                reason === "not_found"
-                    ? msgs.notes.placeholder.noteNotFoundTitle
-                    : msgs.notes.editor.loadFailed,
+                reason === "forbidden"
+                    ? msgs.notes.accessRequest.heading
+                    : reason === "not_found"
+                      ? msgs.notes.placeholder.noteNotFoundTitle
+                      : msgs.notes.editor.loadFailed,
                 {
                     id: `note-open-failed-${requestedType}-${noteId}`,
                     action:
-                        reason === "not_found"
+                        reason !== "failed"
                             ? undefined
                             : {
                                   label: msgs.common.actions.retry,
@@ -2679,6 +2703,7 @@ export const useNoteManagement = (
 
         // Note version history
         currentNoteVersions,
+        currentNoteVersionsFailed,
         setCurrentNoteVersions,
         loadNoteVersionsFor,
         bumpNoteVersionsHead,

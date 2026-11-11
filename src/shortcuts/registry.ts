@@ -72,6 +72,14 @@ export type ShortcutDef = {
      * per platform (the letter chords skip editors on Windows/Linux only, see `LETTER_EDITABLE`).
      */
     editable: EditablePolicy | Record<Platform, EditablePolicy>;
+    /**
+     * A form shortcut: its handler binds with `useShortcut(..., { within })` and
+     * fires only for a key pressed inside its own surface, so it cannot fire
+     * together with the same chord used elsewhere (Cmd/Ctrl+Enter in the chat
+     * composer vs an open create-task panel, MIP-1312). The overlap test lets a
+     * contained shortcut share keys with one in another scope.
+     */
+    contained?: true;
 };
 
 const NONE: Record<Platform, readonly Chord[]> = { mac: [], other: [] };
@@ -234,6 +242,7 @@ export const SHORTCUTS = {
         },
         label: (t) => t.settings?.shortcuts?.editing?.rows?.createTask,
         editable: "allow",
+        contained: true,
     },
 } as const satisfies Record<string, ShortcutDef>;
 

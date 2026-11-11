@@ -218,6 +218,43 @@ export const CellButton = ({
     </Box>
 );
 
+/**
+ * What the cell of a priority / effort with no value yet shows (MIP-1400), inside the same
+ * `CellButton` a filled cell has: the first value can be set from the table, with the same
+ * pick menu. The row passes the action's name as the button's `label` (the content is a
+ * hint, not a word a screen reader should have to guess from).
+ *
+ * It must be the SAME `CellButton` element as the filled cell's, not a component of its own:
+ * when the pick lands the cell turns into the filled one, and a different element there is
+ * replaced in the DOM, which drops the keyboard focus the grid has just put back on the cell.
+ *
+ * One plain `span` (no icon component): most rows are in this state, in a table of hundreds.
+ *
+ * Quiet, because most rows are in this state: at rest the cell looks empty, as it did. The
+ * hint ("+ Priority") shows while the row is hovered and while the keyboard is on the
+ * button, and always on a device with no hover (a tablet has no other way to find it). The
+ * button is as tall as a filled cell's (24px), so the row keeps its height.
+ */
+export const EmptyCellHint = ({ hint }: { hint: string }) => (
+    <Box
+        component="span"
+        sx={{
+            minWidth: 0,
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            fontSize: "var(--g-type-body-xs-size)",
+            color: g.text.tertiary,
+            opacity: 0,
+            transition: "opacity 0.15s ease",
+            "[data-grid-row]:hover &, [role='button']:focus-visible > &": { opacity: 1 },
+            "@media (hover: none)": { opacity: 1 },
+        }}
+    >
+        {`+ ${hint}`}
+    </Box>
+);
+
 // Re-exported: the label moved to `meta/` so the chat bundle can use it without the table editors.
 export { EffortLabel };
 

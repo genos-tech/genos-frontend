@@ -39,6 +39,7 @@ export const settings = {
         everyoneAlreadyMember: "Everyone is already a member.",
     },
     customEmoji: {
+        loadFailed: "Couldn't load custom emoji",
         heading: "Custom emoji",
         description:
             "Team-wide emoji, animated GIFs welcome. Type :name: in any editor, pick them from the emoji picker, or use them as reactions. Anyone on the team can add one; only the uploader can remove it.",
@@ -409,7 +410,6 @@ export const settings = {
         activityEmpty: "Nothing recorded yet.",
         activityLoadFailed: "Couldn't load your security activity.",
         activityLoadMore: "Show older",
-        activityRetry: "Try again",
         teamsHeading: "Your teams",
         teamsDescription:
             "Leaving a team ends your access to its chats, projects and notes. Your account and your other teams are untouched, and someone can invite you back later.",
