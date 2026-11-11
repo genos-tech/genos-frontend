@@ -63,7 +63,7 @@ describe("landing page shortcut rows", () => {
         (_locale, cat) => {
             const items = cat.featuresPage?.shortcuts?.items ?? [];
             expect(items).toHaveLength(LP_SHORTCUT_ORDER.length);
-            for (const item of items) expect(item.label.trim().length).toBeGreaterThan(0);
+            for (const item of items) expect(item?.label?.trim().length).toBeGreaterThan(0);
             expect(items.at(-1)).toHaveProperty("keys");
             // the generated rows carry no keys of their own any more
             for (const item of items.slice(0, -1)) expect(item).not.toHaveProperty("keys");

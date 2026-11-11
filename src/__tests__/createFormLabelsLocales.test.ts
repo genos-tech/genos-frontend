@@ -61,7 +61,7 @@ describe("create form button labels", () => {
             const form = cat.tasks?.createForm as Record<string, string>;
             for (const k of TRANSLATED)
                 expect(form[k], `${l} ${k}`).not.toBe(
-                    (en.tasks.createForm as Record<string, string>)[k]
+                    (en.tasks.createForm as Record<string, unknown>)[k]
                 );
         }
     );
