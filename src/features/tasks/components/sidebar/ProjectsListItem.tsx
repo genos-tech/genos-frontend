@@ -5,11 +5,14 @@ import WorkIcon from "@mui/icons-material/Work";
 import { Box, Dropdown, IconButton, List, ListItem, MenuButton, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { DataState } from "../../../../components/ui/feedback/DataState";
+import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { MenuDivider, MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { useTranslation } from "../../../../i18n";
+import { useSyncFailure } from "../../../../services/syncStatus";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
@@ -53,6 +56,9 @@ type ProjectsListItemProps = {
 export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsListItemProps) {
     const { usePM, setOpenJoinProject, useTM, useSM, useTEM, useCM, myself } = props;
     const { t } = useTranslation();
+    // The project list is read once for the whole app (cache first). When that read failed
+    // and nothing is cached, "no projects" is not what happened (MIP-1308).
+    const projectsSync = useSyncFailure("projects");
 
     // --- Project-label filter + always-on sort -------------------------
     // The label filter (by `projectLabels`, the team-catalog labels applied
@@ -219,6 +225,22 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                 )}
             >
                 <List sx={navNestedListSx}>
+                    {joinedProjects.length === 0 && projectsSync.failed && (
+                        <ListItem sx={{ px: 1, py: 0.5 }}>
+                            <DataState
+                                error
+                                hasData={false}
+                                loading={projectsSync.retrying}
+                                size="xs"
+                                skeleton={<SkeletonRows count={3} />}
+                                errorState={{
+                                    title: t.common.feedback.sync.projectsFailed,
+                                    onRetry: projectsSync.retry,
+                                    "data-error": "sidebar-projects",
+                                }}
+                            />
+                        </ListItem>
+                    )}
                     {filterActive && visibleProjects.length === 0 && (
                         <ListItem sx={{ px: 1, py: 0.5 }}>
                             <Typography

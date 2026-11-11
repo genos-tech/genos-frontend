@@ -14,6 +14,8 @@ export const common = {
             inboxFailed: "Couldn't load your inbox",
             tasksFailed: "Couldn't load your tasks",
             projectsFailed: "Couldn't load your projects",
+            notesFailed: "Couldn't load your notes",
+            flagsFailed: "Couldn't load your completed flags",
         },
         toast: {
             region: "Notifications",

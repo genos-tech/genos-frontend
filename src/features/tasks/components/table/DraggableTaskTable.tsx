@@ -27,7 +27,7 @@ import { useProjectCustomFields } from "../../../../hooks/tasks/useProjectCustom
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
-import { useSyncFailure } from "../../../../services/syncStatus";
+import { useTasksSyncFailure } from "../../../../services/syncStatus";
 import { focusRing } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks";
@@ -444,7 +444,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    const syncFailure = useSyncFailure("tasks");
+    const syncFailure = useTasksSyncFailure(usePM.currentProject?.projectId);
     const isDark = colorMode === "dark";
     // The table's one tab stop (MIP-1230): see useGridNav.
     const { nav: gridNav, gridRef } = useGridNavController();
@@ -1631,8 +1631,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
 
     // The skeleton replaces the rows while the first read of a project is in flight.
-    const showTaskSkeleton =
-        displayRows.length === 0 && (useTM.isLoadingTasks || syncFailure.retrying);
+    // `syncFailure.loading` is the sync state's own "first read in flight" (it outlasts
+    // `isLoadingTasks`' 8 s safety timeout), but only while nothing is cached.
+    const isFirstRead =
+        (syncFailure.loading && useTM.allTasks.length === 0) || syncFailure.retrying;
+    const showTaskSkeleton = displayRows.length === 0 && (useTM.isLoadingTasks || isFirstRead);
 
     return (
         <>
@@ -1960,7 +1963,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         <DataState
                             error={syncFailure.failed && useTM.allTasks.length === 0}
                             hasData={false}
-                            loading={useTM.isLoadingTasks || syncFailure.retrying}
+                            loading={useTM.isLoadingTasks || isFirstRead}
                             empty={{
                                 body: t.tasks.table.emptyHint,
                                 "data-empty": "task-table",

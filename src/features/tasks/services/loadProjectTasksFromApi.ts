@@ -34,11 +34,16 @@ export interface ProjectTasksDeltaResponse {
 // to populate IndexedDB; main-thread callers should go through
 // `loadProjectTasks` (the worker wrapper, which also dedupes in-flight
 // requests) instead of calling this directly.
+//
+// `failure.status` (optional out-parameter) receives the HTTP status of a failed
+// request, so the worker can tell "this project is gone for you" (404 / 403)
+// from "the server is down" without changing what callers get back (`undefined`).
 export const loadProjectTasksFromApi = async (
     myself: UserProps,
     projectId: number,
     accessToken: string | null,
-    since: string | null
+    since: string | null,
+    failure?: { status?: number }
 ): Promise<ProjectTasksDeltaResponse | undefined> => {
     try {
         const api = authApi(accessToken);
@@ -60,9 +65,21 @@ export const loadProjectTasksFromApi = async (
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
+            if (failure) failure.status = error.response?.status;
             console.error("API error:", error.response?.status, error.response?.data);
         } else {
             console.error("Unexpected error:", error);
         }
     }
 };
+
+// The worker's rejection reaches the main thread as a bare message, so the HTTP
+// status rides in it: "Failed to load project tasks (HTTP 404)".
+export const projectTasksFailureMessage = (status: number | undefined): string =>
+    status ? `Failed to load project tasks (HTTP ${status})` : "Failed to load project tasks";
+
+/** The project no longer exists for this user (deleted, left, access lost: the API
+ *  answers 404 "Project not found" to a non-member): the load can never succeed, so it is
+ *  not a failure to sync (MIP-1323). Only 404: a 403 is an auth problem that can heal. */
+export const isProjectGoneError = (err: unknown): boolean =>
+    err instanceof Error && /\(HTTP 404\)/.test(err.message);

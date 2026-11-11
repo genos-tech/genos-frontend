@@ -1518,6 +1518,8 @@ export const ja: DeepPartial<Messages> = {
                 inboxFailed: "受信箱を読み込めませんでした",
                 tasksFailed: "タスクを読み込めませんでした",
                 projectsFailed: "プロジェクトを読み込めませんでした",
+                notesFailed: "ノートを読み込めませんでした",
+                flagsFailed: "完了したフラグを読み込めませんでした",
             },
             toast: {
                 region: "通知",
@@ -5020,6 +5022,7 @@ export const ja: DeepPartial<Messages> = {
             quickAddDismiss: "閉じる",
         },
         subTasks: {
+            loadFailed: "サブタスクを読み込めませんでした",
             title: "サブタスク",
             buttonLabel: "サブタスク",
             emptyText: "まだサブタスクはありません",
@@ -5344,6 +5347,7 @@ export const ja: DeepPartial<Messages> = {
             milestoneErrorRestored: "マイルストーンを削除できませんでした。元に戻しました。",
         },
         savedFilters: {
+            loadFailed: "保存したフィルターを読み込めませんでした",
             button: "保存されたフィルター",
             tooltip:
                 "現在のフィルタの組み合わせを保存するか、プロジェクトにすでにあるフィルタの組み合わせを適用します",

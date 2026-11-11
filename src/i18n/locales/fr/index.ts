@@ -1537,6 +1537,8 @@ export const fr: DeepPartial<Messages> = {
                 inboxFailed: "Impossible de charger votre boîte de réception",
                 tasksFailed: "Impossible de charger vos tâches",
                 projectsFailed: "Impossible de charger vos projets",
+                notesFailed: "Impossible de charger vos notes",
+                flagsFailed: "Impossible de charger vos indicateurs terminés",
             },
             toast: {
                 region: "Notifications",
@@ -5087,6 +5089,7 @@ export const fr: DeepPartial<Messages> = {
             quickAddDismiss: "Fermer",
         },
         subTasks: {
+            loadFailed: "Impossible de charger les sous-tâches",
             title: "Sous-tâches",
             buttonLabel: "Sous-tâche",
             emptyText: "Aucune sous-tâche pour le moment",
@@ -5412,6 +5415,7 @@ export const fr: DeepPartial<Messages> = {
             milestoneErrorRestored: "Impossible de supprimer le jalon. Il est de retour.",
         },
         savedFilters: {
+            loadFailed: "Impossible de charger les filtres enregistrés",
             button: "Filtres enregistrés",
             tooltip:
                 "Enregistrez la combinaison de filtres actuelle ou appliquez-en une que le projet possède déjà.",

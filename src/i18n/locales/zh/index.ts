@@ -1464,6 +1464,8 @@ export const zh: DeepPartial<Messages> = {
                 inboxFailed: "无法加载你的收件箱",
                 tasksFailed: "无法加载你的任务",
                 projectsFailed: "无法加载你的项目",
+                notesFailed: "无法加载你的笔记",
+                flagsFailed: "无法加载你完成的标志",
             },
             toast: {
                 region: "通知",
@@ -4851,6 +4853,7 @@ export const zh: DeepPartial<Messages> = {
             quickAddDismiss: "关闭",
         },
         subTasks: {
+            loadFailed: "无法加载子任务",
             title: "子任务",
             buttonLabel: "子任务",
             emptyText: "暂无子任务",
@@ -5167,6 +5170,7 @@ export const zh: DeepPartial<Messages> = {
             milestoneErrorRestored: "无法删除里程碑，已恢复。",
         },
         savedFilters: {
+            loadFailed: "无法加载已保存的筛选器",
             button: "已保存的过滤器",
             tooltip: "保存当前的过滤器组合，或应用项目已有的过滤器组合",
             loading: "加载中…",

@@ -20,6 +20,8 @@ export const es: DeepPartial<Messages> = {
                 inboxFailed: "No se pudo cargar tu bandeja de entrada",
                 tasksFailed: "No se pudieron cargar tus tareas",
                 projectsFailed: "No se pudieron cargar tus proyectos",
+                notesFailed: "No se pudieron cargar tus notas",
+                flagsFailed: "No se pudieron cargar tus banderas completadas",
             },
             toast: {
                 region: "Notificaciones",
@@ -2550,6 +2552,7 @@ export const es: DeepPartial<Messages> = {
             quickAddDismiss: "Descartar",
         },
         subTasks: {
+            loadFailed: "No se pudieron cargar las subtareas",
             title: "Subtareas",
             buttonLabel: "Subtarea",
             emptyText: "Aún no hay subtareas",
@@ -3113,6 +3116,7 @@ export const es: DeepPartial<Messages> = {
             milestoneErrorRestored: "No se pudo eliminar el hito. Ha vuelto.",
         },
         savedFilters: {
+            loadFailed: "No se pudieron cargar los filtros guardados",
             button: "Filtros guardados",
             tooltip:
                 "Guarde la combinación de filtros actual o aplique una que el proyecto ya tenga",

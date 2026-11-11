@@ -16,6 +16,8 @@ import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
+import { DataState } from "../../../../../components/ui/feedback/DataState";
+import { ErrorState } from "../../../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
@@ -89,6 +91,15 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const isDark = mode === "dark";
     const urlLinkModal = useUrlLinkModal();
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
+    // What the last child-list request said, and for which task: "ok" (the list, possibly
+    // empty) or "failed". Until the current task has an answer the block is LOADING, and
+    // only an answer of "ok" with no rows may say "No sub tasks yet": a failed request is
+    // not an empty list (MIP-1308).
+    const [childLoad, setChildLoad] = useState<{ key: string; failed: boolean } | null>(null);
+    // The task the rows in `childTasks` belong to: a failure never keeps another task's rows,
+    // and another task's rows are not drawn while this one's list is loading.
+    const [childrenOf, setChildrenOf] = useState<string | null>(null);
+    const childrenOfRef = useRef<string | null>(null);
     const openLanding = useTaskOpenLanding();
 
     // Inline quick-create state. The button up top toggles `isQuickAdding`;
@@ -174,16 +185,30 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             : null;
         (async () => {
             if (!ticket) return;
-            const loaded: TaskProps[] =
-                (await loadSpecificChildTasks(
-                    myself,
-                    currentTaskContent.project!.projectId,
-                    currentTaskContent.id!,
-                    accessToken
-                )) ?? [];
+            const key = `${currentTaskContent.id}:${currentTaskContent.project!.projectId}`;
+            const result = await loadSpecificChildTasks(
+                myself,
+                currentTaskContent.project!.projectId,
+                currentTaskContent.id!,
+                accessToken
+            );
             ticket.land(() => {
                 if (cancelled) return;
-                setChildTasks(loaded?.length ? loaded : []);
+                if (result === undefined) {
+                    // The request failed (the loader says so with `undefined`; a real
+                    // answer is an array). Keep this task's rows, drop another task's.
+                    if (childrenOfRef.current !== key) {
+                        childrenOfRef.current = key;
+                        setChildrenOf(key);
+                        setChildTasks([]);
+                    }
+                    setChildLoad({ key, failed: true });
+                    return;
+                }
+                childrenOfRef.current = key;
+                setChildrenOf(key);
+                setChildTasks(result?.length ? result : []);
+                setChildLoad({ key, failed: false });
             });
         })();
         return () => {
@@ -210,6 +235,20 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         setQuickTitle("");
         setQuickError(null);
     }, [currentTaskContent.id]);
+
+    // Mirrors the load effect's own gate, so "loading" is only claimed for a task that loads.
+    const loadsChildren =
+        currentTaskContent.project != null &&
+        currentTaskContent.id != null &&
+        (forceLoad || useTM.currentPreviewTaskId === currentTaskContent.id);
+    const loadKey = loadsChildren
+        ? `${currentTaskContent.id}:${currentTaskContent.project!.projectId}`
+        : null;
+    const childAnswer = loadKey !== null && childLoad?.key === loadKey ? childLoad : null;
+    const loadingChildren = loadKey !== null && childAnswer === null;
+    const childrenFailed = childAnswer?.failed === true;
+    // Rows only count as "something to show" for the task they belong to.
+    const hasChildRows = childTasks.length > 0 && (loadKey === null || childrenOf === loadKey);
 
     const submitQuickTask = async () => {
         const trimmed = quickTitle.trim();
@@ -313,139 +352,173 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 </Button>
             </Stack>
 
-            {childTasks.length > 0 && (
-                <Stack
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    direction="row"
-                    sx={{
-                        width: "100%",
-                        minHeight: "40px",
-                        maxHeight: "300px",
-                        overflowY: "scroll",
-                    }}
-                >
-                    <ListItem sx={{ width: "100%" }} nested>
-                        <List sx={{ gap: 0.5 }}>
-                            {childTasks.map(
-                                (
-                                    { assignee, project, id, displayId, title, status, tags },
-                                    index
-                                ) => {
-                                    return (
-                                        <ListItem key={`listitem-${id}-${index}`}>
-                                            <AvatarWithStatus
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                showPulseDot={false}
-                                                socket={socket}
-                                                useCM={useCM}
-                                                useUISM={useUISM}
-                                                // Sub-tasks can be unassigned —
-                                                // fall back to the empty avatar
-                                                // that AvatarWithStatus renders
-                                                // when `avatarUser` is undefined.
-                                                avatarUser={
-                                                    assignee
-                                                        ? useTEM.teamMemberProfiles[
-                                                              assignee.userId
-                                                          ]
-                                                        : undefined
-                                                }
-                                                isYou={
-                                                    !!assignee && myself.userId === assignee.userId
-                                                }
-                                            />
-                                            <ListItemButton
-                                                sx={{
-                                                    marginLeft: "10px",
-                                                }}
-                                                onClick={() => {
-                                                    if (!project?.projectId || !id) {
-                                                        console.error(
-                                                            "Failed to set the current project"
-                                                        );
-                                                        return;
+            <DataState
+                error={childrenFailed}
+                hasData={hasChildRows}
+                loading={loadingChildren}
+                size="xs"
+                skeleton={null}
+                errorState={{
+                    title: t.tasks.subTasks.loadFailed,
+                    onRetry: () => {
+                        setChildLoad(null);
+                        setChildRefreshNonce((n) => n + 1);
+                    },
+                    "data-error": "sub-tasks",
+                }}
+            >
+                {childTasks.length > 0 && (
+                    <Stack
+                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                        direction="row"
+                        sx={{
+                            width: "100%",
+                            minHeight: "40px",
+                            maxHeight: "300px",
+                            overflowY: "scroll",
+                        }}
+                    >
+                        <ListItem sx={{ width: "100%" }} nested>
+                            <List sx={{ gap: 0.5 }}>
+                                {childTasks.map(
+                                    (
+                                        { assignee, project, id, displayId, title, status, tags },
+                                        index
+                                    ) => {
+                                        return (
+                                            <ListItem key={`listitem-${id}-${index}`}>
+                                                <AvatarWithStatus
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    showPulseDot={false}
+                                                    socket={socket}
+                                                    useCM={useCM}
+                                                    useUISM={useUISM}
+                                                    // Sub-tasks can be unassigned —
+                                                    // fall back to the empty avatar
+                                                    // that AvatarWithStatus renders
+                                                    // when `avatarUser` is undefined.
+                                                    avatarUser={
+                                                        assignee
+                                                            ? useTEM.teamMemberProfiles[
+                                                                  assignee.userId
+                                                              ]
+                                                            : undefined
                                                     }
-                                                    // Modal-hosted → re-target
-                                                    // the modal; the global
-                                                    // preview id would change
-                                                    // the page BEHIND it.
-                                                    if (hostZIndex != null && urlLinkModal) {
-                                                        urlLinkModal.openModalByHref(
-                                                            `/workspace/tasks/project/${project.projectId}/task/${id}`
-                                                        );
-                                                        return;
+                                                    isYou={
+                                                        !!assignee &&
+                                                        myself.userId === assignee.userId
                                                     }
-                                                    useTM.setCurrentPreviewTaskId(id);
-                                                }}
-                                            >
-                                                <TaskIdText
-                                                    key={`id-chip-${id}-${index}`}
-                                                    copyable={false}
-                                                    task={{ id, displayId }}
                                                 />
-                                                <Box
-                                                    key={`status-chip-${id}-${index}`}
-                                                    sx={{ mx: "5px" }}
-                                                >
-                                                    <StatusLabel status={status.status} />
-                                                </Box>
-                                                <Typography
+                                                <ListItemButton
                                                     sx={{
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                        width: "100%", // take full width of button
+                                                        marginLeft: "10px",
                                                     }}
-                                                    noWrap
-                                                >
-                                                    {`${title}`}
-                                                </Typography>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        marginLeft: "auto",
-                                                        alignItems: "center",
+                                                    onClick={() => {
+                                                        if (!project?.projectId || !id) {
+                                                            console.error(
+                                                                "Failed to set the current project"
+                                                            );
+                                                            return;
+                                                        }
+                                                        // Modal-hosted → re-target
+                                                        // the modal; the global
+                                                        // preview id would change
+                                                        // the page BEHIND it.
+                                                        if (hostZIndex != null && urlLinkModal) {
+                                                            urlLinkModal.openModalByHref(
+                                                                `/workspace/tasks/project/${project.projectId}/task/${id}`
+                                                            );
+                                                            return;
+                                                        }
+                                                        useTM.setCurrentPreviewTaskId(id);
                                                     }}
                                                 >
-                                                    {tags.map(({ tagName, tagColor }, index) => (
-                                                        <Chip
-                                                            key={`${id}-${index}-${tagName}`}
-                                                            size="md"
-                                                            variant="outlined"
-                                                            sx={{
-                                                                marginX: "2px",
-                                                                color:
-                                                                    mode === "dark"
-                                                                        ? "white"
-                                                                        : "black",
-                                                                fontWeight: "bold",
-                                                                borderRadius: "5px",
-                                                                borderWidth: "3px",
-                                                                borderColor: alpha(
-                                                                    tagColor,
-                                                                    mode === "dark" ? 0.5 : 0.75
-                                                                ),
-                                                            }}
-                                                        >
-                                                            {`${tagName}`}
-                                                        </Chip>
-                                                    ))}
-                                                </Box>
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                }
-                            )}
-                        </List>
-                    </ListItem>
-                </Stack>
-            )}
+                                                    <TaskIdText
+                                                        key={`id-chip-${id}-${index}`}
+                                                        copyable={false}
+                                                        task={{ id, displayId }}
+                                                    />
+                                                    <Box
+                                                        key={`status-chip-${id}-${index}`}
+                                                        sx={{ mx: "5px" }}
+                                                    >
+                                                        <StatusLabel status={status.status} />
+                                                    </Box>
+                                                    <Typography
+                                                        sx={{
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            whiteSpace: "nowrap",
+                                                            width: "100%", // take full width of button
+                                                        }}
+                                                        noWrap
+                                                    >
+                                                        {`${title}`}
+                                                    </Typography>
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            marginLeft: "auto",
+                                                            alignItems: "center",
+                                                        }}
+                                                    >
+                                                        {tags.map(
+                                                            ({ tagName, tagColor }, index) => (
+                                                                <Chip
+                                                                    key={`${id}-${index}-${tagName}`}
+                                                                    size="md"
+                                                                    variant="outlined"
+                                                                    sx={{
+                                                                        marginX: "2px",
+                                                                        color:
+                                                                            mode === "dark"
+                                                                                ? "white"
+                                                                                : "black",
+                                                                        fontWeight: "bold",
+                                                                        borderRadius: "5px",
+                                                                        borderWidth: "3px",
+                                                                        borderColor: alpha(
+                                                                            tagColor,
+                                                                            mode === "dark"
+                                                                                ? 0.5
+                                                                                : 0.75
+                                                                        ),
+                                                                    }}
+                                                                >
+                                                                    {`${tagName}`}
+                                                                </Chip>
+                                                            )
+                                                        )}
+                                                    </Box>
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    }
+                                )}
+                            </List>
+                        </ListItem>
+                    </Stack>
+                )}
 
-            {childTasks.length === 0 && (
-                <Typography level="body-sm" sx={{ mb: 2, textAlign: "center" }}>
-                    {emptyText}
-                </Typography>
+                {childTasks.length === 0 && (
+                    <Typography level="body-sm" sx={{ mb: 2, textAlign: "center" }}>
+                        {emptyText}
+                    </Typography>
+                )}
+            </DataState>
+            {/* A refresh that failed after rows were shown keeps them (DataState ignores the
+                error then): say the list may be stale, with a way to ask again. */}
+            {childrenFailed && hasChildRows && (
+                <ErrorState
+                    data-error="sub-tasks-stale"
+                    size="xs"
+                    title={t.tasks.subTasks.loadFailed}
+                    onRetry={() => {
+                        setChildLoad(null);
+                        setChildRefreshNonce((n) => n + 1);
+                    }}
+                />
             )}
 
             {/* Quick Task row. Always visible at the bottom regardless of

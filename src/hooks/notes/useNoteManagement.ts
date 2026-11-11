@@ -69,6 +69,7 @@ import { updateTeamNoteFolder as updateTeamNoteFolderApi } from "../../features/
 import { onTaskTouched } from "../../features/tasks/services/taskEvents";
 import { fmt, getMessages } from "../../i18n";
 import type { ToolResultNoteFolderRef } from "../../services/agentApi";
+import { syncStatus, type NoteListScope } from "../../services/syncStatus";
 import { UserProps } from "../../types/admin";
 import {
     ChatNoteMetaProps,
@@ -1621,9 +1622,17 @@ export const useNoteManagement = (
         return true;
     };
 
+    // Tell the app-wide sync status whether a sidebar list loaded, so its empty state can
+    // say "couldn't load" instead of "No favorites yet" (MIP-1323). Without a token the
+    // loaders resolve undefined by design: not a failure.
+    const reportNoteList = (list: NoteListScope, ok: boolean) => {
+        if (accessToken) syncStatus.report(`notes:${list}`, ok);
+    };
+
     // Favorite notes functions
     const getFavoriteNotesMeta = async () => {
         const loadedFavorites = await loadFavoriteNotesMeta(myself, accessToken);
+        reportNoteList("favorites", !!loadedFavorites);
         if (loadedFavorites) {
             setFavoriteNotes(loadedFavorites);
             // Build a set of favorited note IDs for quick lookup
@@ -1891,6 +1900,7 @@ export const useNoteManagement = (
         // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
         // real answer ("no team folders") and empties it.
         // Returns whether the list was loaded, as `getChatNoteMeta` does.
+        reportNoteList("teamFolders", Array.isArray(loaded));
         if (!Array.isArray(loaded)) return false;
         setTeamNoteFolders((prev) => keepIfEqual(prev, loaded));
         return true;
@@ -2032,6 +2042,7 @@ export const useNoteManagement = (
     // Recent notes functions
     const getRecentNotesMeta = async () => {
         const loadedRecents = await loadRecentNotesMeta(myself, accessToken);
+        reportNoteList("recents", !!loadedRecents);
         if (loadedRecents) {
             setRecentNotes(loadedRecents);
         }

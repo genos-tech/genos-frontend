@@ -303,7 +303,7 @@ export const SyncAwareEmpty = ({
         <DataState
             error={sync.failed && !hasAny}
             hasData={false}
-            loading={sync.retrying && !hasAny}
+            loading={(sync.retrying || sync.loading) && !hasAny}
             skeleton={<SkeletonRows count={5} avatar twoLines />}
             errorState={{
                 "data-error": "chat-list",
@@ -311,7 +311,9 @@ export const SyncAwareEmpty = ({
                 title:
                     scope === "channels"
                         ? t.common.feedback.sync.chatsFailed
-                        : t.common.feedback.sync.activityFailed,
+                        : scope === "flags"
+                          ? t.common.feedback.sync.flagsFailed
+                          : t.common.feedback.sync.activityFailed,
             }}
             fill
         >
@@ -909,12 +911,17 @@ export const ChatList = (props: ChatListProps) => {
             const isPast = flaggedViewMode === "past";
             const list = isPast ? tmpPastFlaggedMessages : tmpFlaggedMessages;
             if (list.length === 0) {
+                // The past list comes from one request (`fetchCompletedFlags`): when it failed,
+                // "No completed flags" is a claim nothing checked (MIP-1323). The active
+                // list rides the IndexedDB copy and the socket, which have no read to fail.
                 return isPast ? (
-                    <EmptyState
-                        chatType={CHAT_TYPES.FLAGGED}
-                        subtitleKey="emptyPastFlaggedSubtitle"
-                        titleKey="emptyPastFlaggedTitle"
-                    />
+                    <SyncAwareEmpty hasAny={false} scope="flags">
+                        <EmptyState
+                            chatType={CHAT_TYPES.FLAGGED}
+                            subtitleKey="emptyPastFlaggedSubtitle"
+                            titleKey="emptyPastFlaggedTitle"
+                        />
+                    </SyncAwareEmpty>
                 ) : (
                     <EmptyState chatType={CHAT_TYPES.FLAGGED} />
                 );

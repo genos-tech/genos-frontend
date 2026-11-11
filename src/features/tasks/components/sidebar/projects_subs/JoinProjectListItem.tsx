@@ -6,6 +6,7 @@ import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../../components/ui/nav/navStyles";
 import type { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../../i18n";
+import { useSyncFailure } from "../../../../../services/syncStatus";
 import { g } from "../../../../../theme/tokens";
 import { Toggler } from "../common";
 
@@ -25,6 +26,11 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
     const { t } = useTranslation();
 
     const unjoined = usePM.teamProjects.filter((project) => project.isJoined === false);
+    // The project list was never read: "No projects available" would be a claim nothing
+    // checked. The Projects section above already says "Couldn't load your projects" with
+    // Retry, so this one says nothing (MIP-1323).
+    const projectsSync = useSyncFailure("projects");
+    const listUnread = projectsSync.failed && usePM.teamProjects.length === 0;
 
     return (
         <Toggler
@@ -61,7 +67,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     />
                 ))}
 
-                {unjoined.length === 0 && (
+                {unjoined.length === 0 && !listUnread && (
                     <ListItem sx={{ px: 1, py: 0.5 }}>
                         <Typography level="body-sm" sx={{ color: g.text.tertiary }} noWrap>
                             {t.tasks.sidebar.noProjectsAvailable}
