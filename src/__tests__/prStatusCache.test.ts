@@ -256,3 +256,44 @@ describe("a forced refresh (the PR column's re-sync, MIP-1409)", () => {
         expect(mockGetPullDetail).toHaveBeenCalledTimes(2);
     });
 });
+
+describe("a fresh refresh (the click asks the server to skip its cache too, MIP-1410)", () => {
+    it("passes `fresh` on to the request", async () => {
+        mockGetPullDetail.mockResolvedValue(detail(7));
+        await getCachedOrFetchPrStatus("tok", URL_7, undefined, {
+            forceRefresh: true,
+            fresh: true,
+        });
+        expect(mockGetPullDetail).toHaveBeenCalledWith("tok", "acme", "rocket", 7, undefined, {
+            fresh: true,
+        });
+    });
+
+    it("a plain call and a forced one without `fresh` send exactly what they always did", async () => {
+        mockGetPullDetail.mockResolvedValue(detail(7));
+        await getCachedOrFetchPrStatus("tok", URL_7);
+        await getCachedOrFetchPrStatus("tok", URL_7, undefined, { forceRefresh: true });
+        expect(mockGetPullDetail).toHaveBeenCalledTimes(2);
+        for (const call of mockGetPullDetail.mock.calls) {
+            expect(call).toEqual(["tok", "acme", "rocket", 7, undefined]);
+        }
+    });
+
+    it("a fresh answer is stored, so the next plain call reads it", async () => {
+        mockGetPullDetail.mockResolvedValueOnce(detail(7));
+        await getCachedOrFetchPrStatus("tok", URL_7);
+        mockGetPullDetail.mockResolvedValueOnce({
+            pull: { number: 7, title: "newer" },
+            combined_status: null,
+            check_runs: null,
+        } as never);
+        await getCachedOrFetchPrStatus("tok", URL_7, undefined, {
+            forceRefresh: true,
+            fresh: true,
+        });
+
+        const plain = await getCachedOrFetchPrStatus("tok", URL_7);
+        expect(plain).toMatchObject({ kind: "ok", payload: { pull: { title: "newer" } } });
+        expect(mockGetPullDetail).toHaveBeenCalledTimes(2);
+    });
+});

@@ -226,12 +226,18 @@ export const getPullDetail = async (
     owner: string,
     repo: string,
     number: number,
-    setErrorMessage?: (value: string) => void
+    setErrorMessage?: (value: string) => void,
+    // `fresh` asks the server to skip its own cache (MIP-1410): the PR column's Refresh click,
+    // so a CI run that just finished shows. An older server ignores it.
+    options?: { fresh?: boolean }
 ): Promise<unknown | "github_not_connected" | "unavailable" | null> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
-        const res = await api.get(`/github/pulls/${owner}/${repo}/${number}/`, noSharedToast);
+        const res = await api.get(
+            `/github/pulls/${owner}/${repo}/${number}/`,
+            options?.fresh ? { ...noSharedToast, params: { fresh: "1" } } : noSharedToast
+        );
         return res.data;
     } catch (error) {
         if (surfaceError(error, setErrorMessage) === "github_not_connected") {
