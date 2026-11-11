@@ -100,7 +100,9 @@ describe("the once-a-minute clock", () => {
 
     it("does not catch up when the tab comes back within the minute", () => {
         const { seen } = watch();
-        vi.advanceTimersByTime(20_000);
+        // 40 s: past the half-minute a poll holds back after a sync, so only "a minute or more"
+        // can be what keeps this from polling.
+        vi.advanceTimersByTime(40_000);
         setHidden(true);
         document.dispatchEvent(new Event("visibilitychange"));
         setHidden(false);
@@ -229,6 +231,29 @@ describe("after a failed poll", () => {
         const id = pollOnce(seen);
         // Forty rows share one batched GET: forty failures are one failure.
         for (let i = 0; i < 40; i++) reportPrResyncOutcome(id, false);
+        const n = seen.length;
+        vi.advanceTimersByTime(2 * MIN);
+        expect(seen.length).toBe(n + 1);
+    });
+
+    it("a late report for a request a newer one has replaced changes nothing", () => {
+        const { seen } = watch();
+        vi.advanceTimersByTime(MIN); // poll #1, never reported
+        const first = getPrResyncRequest().id;
+        vi.advanceTimersByTime(MIN); // poll #2 replaces it
+        reportPrResyncOutcome(first, false);
+        const n = seen.length;
+        vi.advanceTimersByTime(MIN);
+        expect(seen.length).toBe(n + 1);
+    });
+
+    it("a failure after a success waits the short time again: the success reset the count", () => {
+        const { seen } = watch();
+        reportPrResyncOutcome(pollOnce(seen), false); // wait 2
+        vi.advanceTimersByTime(2 * MIN);
+        reportPrResyncOutcome(getPrResyncRequest().id, true); // reset
+        vi.advanceTimersByTime(MIN);
+        reportPrResyncOutcome(getPrResyncRequest().id, false); // 2 again, not 4
         const n = seen.length;
         vi.advanceTimersByTime(2 * MIN);
         expect(seen.length).toBe(n + 1);

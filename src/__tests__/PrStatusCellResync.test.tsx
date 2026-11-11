@@ -402,6 +402,25 @@ describe("who does not take part", () => {
         expect(screen.getByRole("link")).toBeTruthy();
     });
 
+    it("a PR chip that appears after a request was sent does not answer it either: its own load is the sync", async () => {
+        let release: (p: LinkedPull[]) => void = () => {};
+        mockLoad.mockImplementation(() => new Promise((resolve) => (release = resolve)));
+        render(
+            <CssVarsProvider>
+                <PrStatusCell accessToken="tok" taskId={1} />
+            </CssVarsProvider>
+        );
+        await act(async () => {});
+        mockStatus.mockResolvedValue(detailFor(pull(7)));
+
+        await resync("manual"); // the list is still on its way
+        await act(async () => release([pull(7)]));
+
+        // The chip's own mount load asked, plainly, once; the earlier click was not answered.
+        expect(mockStatus).toHaveBeenCalledTimes(1);
+        expect(mockStatus).toHaveBeenCalledWith("tok", pull(7).html_url);
+    });
+
     it("with no access token nothing is asked", async () => {
         await mountRows({ 1: [pull(7)] }, null);
         await resync("manual");
