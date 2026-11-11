@@ -23,6 +23,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
+import { headerTouchTargetsSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -293,6 +294,8 @@ export const NoteHeaderActions = ({
                 // Buttons keep their tap-target size inside the strip
                 // rather than being squeezed to slivers.
                 "& > *": { flexShrink: 0 },
+                // 44px icon buttons on a touch screen (MIP-1319).
+                ...headerTouchTargetsSx,
             }}
         >
             {/* My Notes: New Note Button — desktop only. On mobile the

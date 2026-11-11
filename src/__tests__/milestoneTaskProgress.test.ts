@@ -4,6 +4,7 @@ import { MILESTONE_STATUS_CHIP_COLORS } from "../features/tasks/sprint-milestone
 import {
     countMilestoneTaskStatuses,
     MILESTONE_PROGRESS_ORDER,
+    milestoneTaskStatuses,
 } from "../features/tasks/utils/milestoneTaskProgress";
 import { statuses as taskStatuses } from "../features/tasks/utils/taskMeta";
 
@@ -113,5 +114,46 @@ describe("countMilestoneTaskStatuses (MIP-1017)", () => {
                 taskStatuses.find((t) => t.status === s)?.color
             );
         }
+    });
+});
+
+describe("milestoneTaskStatuses (MIP-1389)", () => {
+    const row = (
+        id: number,
+        status: string,
+        parentTaskId: number | null = null,
+        milestoneId: number | null = 7,
+        isMilestone = false
+    ) => ({
+        id: String(id),
+        status,
+        parentTaskId: parentTaskId == null ? null : String(parentTaskId),
+        milestoneId,
+        isMilestone,
+    });
+
+    it("reads an Open task under a Closed parent as Closed and leaves a Deleted branch out", () => {
+        const rows = [
+            row(70, "Open", null, 7, true),
+            row(1, "Closed"),
+            row(2, "Open", 1),
+            row(3, "WIP", 2),
+            row(4, "Deleted"),
+            row(5, "Open", 4),
+            row(6, "Open"),
+            row(9, "Open", null, 8),
+        ];
+        const result = countMilestoneTaskStatuses(milestoneTaskStatuses(rows, 7));
+        expect(result.total).toBe(4);
+        expect(result.entries).toEqual([
+            { status: "Open", count: 1 },
+            { status: "Closed", count: 3 },
+        ]);
+    });
+
+    it("a Closed milestone reads every one of its tasks as Closed", () => {
+        const rows = [row(70, "Closed", null, 7, true), row(1, "Open"), row(2, "Blocked")];
+        const result = countMilestoneTaskStatuses(milestoneTaskStatuses(rows, 7));
+        expect(result.entries).toEqual([{ status: "Closed", count: 2 }]);
     });
 });

@@ -89,11 +89,14 @@ export const SourceChipRow = ({
                     }}
                     onClick={() => onOpen(s)}
                 >
-                    <HighlightedText
-                        extraTerms={s.matched_terms}
-                        query={query}
-                        text={sourceChipLabel(s, labels, noteScopes)}
-                    />
+                    {/* An island: a Latin source title truncates at its end in an RTL turn (MIP-1387). */}
+                    <bdi className="g-bidi-island">
+                        <HighlightedText
+                            extraTerms={s.matched_terms}
+                            query={query}
+                            text={sourceChipLabel(s, labels, noteScopes)}
+                        />
+                    </bdi>
                 </Chip>
             ))}
             {!showAll && hiddenCount > 0 && (

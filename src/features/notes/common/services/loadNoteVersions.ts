@@ -9,12 +9,15 @@ export const loadNoteVersions = async (
     noteType: number,
     noteId: number,
     accessToken: string | null
-): Promise<NoteVersionMeta[]> => {
+): Promise<NoteVersionMeta[] | null> => {
+    // `null` = the request failed; `[]` is the answer "no versions yet" (MIP-1305).
     try {
         const api = authApi(accessToken);
         if (api) {
             const query = `team_id=${myself.teamId}&note_type=${noteType}&note_id=${noteId}`;
-            const res = await api.get(`/note/version/all/?${query}`);
+            const res = await api.get(`/note/version/all/?${query}`, {
+                suppressErrorToast: true,
+            });
             return res.data as NoteVersionMeta[];
         }
         console.error("Unauthorized. Auth token is not found.");
@@ -25,5 +28,5 @@ export const loadNoteVersions = async (
             console.error("Unexpected error:", error);
         }
     }
-    return [];
+    return null;
 };

@@ -25,6 +25,8 @@ export const useMemberEventsPreference = () => {
     const [enabled, setEnabledState] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    // Bumped by `reload`: the GET runs again (the Retry of a failed load).
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -51,7 +53,9 @@ export const useMemberEventsPreference = () => {
         return () => {
             cancelled = true;
         };
-    }, [accessToken]);
+    }, [accessToken, attempt]);
+
+    const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
     const setEnabled = useCallback(
         async (value: boolean): Promise<boolean> => {
@@ -76,5 +80,5 @@ export const useMemberEventsPreference = () => {
         [accessToken]
     );
 
-    return { enabled, loading, saving, setEnabled };
+    return { enabled, loading, saving, setEnabled, reload };
 };

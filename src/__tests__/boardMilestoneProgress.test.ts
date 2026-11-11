@@ -119,4 +119,43 @@ describe("milestonesByTaskIdWithLiveProgress", () => {
         );
         expect(map.size).toBe(0);
     });
+
+    describe("a Closed or Deleted ancestor (MIP-1389)", () => {
+        const at = (id: number, status: string, parentTaskId: number | null = null) => ({
+            ...task(status),
+            id: String(id),
+            parentTaskId: parentTaskId == null ? null : String(parentTaskId),
+        });
+
+        it("counts an Open task under a Closed parent as Closed, at any depth", () => {
+            const rows = [at(1, "Closed"), at(2, "Open", 1), at(3, "WIP", 2), at(4, "Open")];
+            expect(milestonesByTaskIdWithLiveProgress([milestone()], rows).get(70)).toMatchObject({
+                tasksTotal: 4,
+                tasksClosed: 3,
+            });
+        });
+
+        it("leaves a task under a Deleted parent out of the total", () => {
+            const rows = [at(1, "Deleted"), at(2, "Open", 1), at(3, "Open"), at(4, "Closed")];
+            expect(milestonesByTaskIdWithLiveProgress([milestone()], rows).get(70)).toMatchObject({
+                tasksTotal: 2,
+                tasksClosed: 1,
+            });
+        });
+
+        it("a Closed milestone reads N/N: its tasks are Closed whatever they say", () => {
+            const backing = {
+                id: "70",
+                status: "Closed",
+                milestoneId: 7,
+                isMilestone: true,
+                parentTaskId: null,
+            };
+            const rows = [backing, at(2, "Open"), at(3, "WIP")];
+            expect(milestonesByTaskIdWithLiveProgress([milestone()], rows).get(70)).toMatchObject({
+                tasksTotal: 2,
+                tasksClosed: 2,
+            });
+        });
+    });
 });

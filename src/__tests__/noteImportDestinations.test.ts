@@ -29,7 +29,7 @@ const taskNote = (over: Partial<TaskNoteMetaProps>): TaskNoteMetaProps => ({
     displayId: "GEN-42",
     title: "note",
     tsUpdated: "",
-    ...(over as TaskNoteMetaProps),
+    ...over,
 });
 
 const chatNote = (over: Partial<ChatNoteMetaProps>): ChatNoteMetaProps => ({
@@ -43,7 +43,7 @@ const chatNote = (over: Partial<ChatNoteMetaProps>): ChatNoteMetaProps => ({
     threadId: 0,
     title: "note",
     tsUpdated: "",
-    ...(over as ChatNoteMetaProps),
+    ...over,
 });
 
 describe("buildTaskNoteDestinations", () => {

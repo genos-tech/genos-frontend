@@ -25,15 +25,19 @@ const logError = (label: string, error: unknown) => {
 export const loadTeamProjectLabels = async (
     teamId: string,
     accessToken: string | null
-): Promise<ProjectLabelProps[]> => {
+): Promise<ProjectLabelProps[] | null> => {
+    // `null` = the request failed. `[]` is the answer "no labels yet", and the
+    // modal must not say that when it never got an answer (MIP-1305).
     try {
         const api = authApi(accessToken);
-        if (!api || !teamId) return [];
-        const res = await api.get(`/project/label/?team_id=${teamId}`);
+        if (!api || !teamId) return null;
+        const res = await api.get(`/project/label/?team_id=${teamId}`, {
+            suppressErrorToast: true,
+        });
         return res.data ?? [];
     } catch (error: unknown) {
         logError("loadTeamProjectLabels", error);
-        return [];
+        return null;
     }
 };
 

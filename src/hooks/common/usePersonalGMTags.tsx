@@ -49,6 +49,9 @@ interface PersonalGMTagsState extends PersonalTagsBundle {
     /** False until the first GET settles — row chips gate on this so
      *  Virtuoso only reflows once, not per-chunk. */
     loaded: boolean;
+    /** The latest GET failed (MIP-1305). `tags` is then whatever was last loaded: the
+     *  Manage modal says so with Retry instead of "no tags yet". */
+    failed: boolean;
 }
 
 const EMPTY_STATE: PersonalGMTagsState = {
@@ -56,6 +59,7 @@ const EMPTY_STATE: PersonalGMTagsState = {
     assignments: {},
     defaultVisibleTagIds: [],
     loaded: false,
+    failed: false,
 };
 
 // ---- module store ----------------------------------------------------
@@ -104,11 +108,22 @@ const _refetch = async (): Promise<void> => {
                 ? res.data.defaultVisibleTagIds
                 : [],
             loaded: true,
+            failed: false,
         });
     } catch {
-        // Endpoint missing / network error — keep whatever we have.
-        // An untagged render is strictly cosmetic degradation.
+        // Endpoint missing / network error — keep whatever we have. An untagged render is
+        // strictly cosmetic degradation; the Manage modal reads `failed` so it does not
+        // call that "no tags yet".
+        // Not when it already says so: a focus loop while offline must not re-render every row.
+        if (!_state.failed) _setState({ ..._state, failed: true });
     }
+};
+
+/** Ask again (the Retry of the Manage modal). `failed` clears at once so the modal shows
+ *  its loading state, not the stale error, while the GET is in flight. */
+const reloadPersonalGMTags = () => {
+    if (_state.failed) _setState({ ..._state, failed: false });
+    void _refetch();
 };
 
 /** Test-only: reset module state between vitest cases. */
@@ -163,6 +178,7 @@ const deleteTag = async (tagId: number): Promise<boolean> => {
     }
     _setState({
         loaded: _state.loaded,
+        failed: _state.failed,
         tags: _state.tags.filter((t) => t.tagId !== tagId),
         assignments,
         defaultVisibleTagIds: _state.defaultVisibleTagIds.filter((id) => id !== tagId),
@@ -233,6 +249,7 @@ export interface PersonalGMTagsValue extends Omit<PersonalGMTagsState, "assignme
     createTag: typeof createTag;
     updateTag: typeof updateTag;
     deleteTag: typeof deleteTag;
+    reload: () => void;
     setChannelTags: typeof setChannelTags;
 }
 
@@ -246,6 +263,8 @@ export const usePersonalGMTags = (): PersonalGMTagsValue => {
         assignmentsByChannelId: snapshot.assignments,
         defaultVisibleTagIds: snapshot.defaultVisibleTagIds,
         loaded: snapshot.loaded,
+        failed: snapshot.failed,
+        reload: reloadPersonalGMTags,
         createTag,
         updateTag,
         deleteTag,

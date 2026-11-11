@@ -6,6 +6,7 @@ import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonLines } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
@@ -107,6 +108,8 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [result, setResult] = useState<PrStatusResult | null>(null);
+    // Bumped by Retry: the effect below runs again for the same PR.
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -119,7 +122,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
         return () => {
             cancelled = true;
         };
-    }, [accessToken, url]);
+    }, [accessToken, url, attempt]);
 
     if (result === null) {
         return (
@@ -159,7 +162,9 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
         );
     }
 
-    if (result.kind === "error") {
+    if (result.kind === "unavailable") {
+        // GitHub refused this account the PR (404/403): deleted, or private to a
+        // repo it cannot see. Retry cannot help, so the card is the link itself.
         return (
             <Card
                 component="a"
@@ -193,6 +198,31 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                         </Typography>
                     </Box>
                     <OpenInNewRoundedIcon sx={{ color: "text.tertiary", fontSize: 18 }} />
+                </Stack>
+            </Card>
+        );
+    }
+
+    if (result.kind === "error") {
+        // A lookup that failed for any other reason (a dropped connection, a
+        // 5xx, a rate limit) is NOT "this PR is gone": the card says what
+        // failed, offers Retry, and still lets the person open the PR on GitHub.
+        return (
+            <Card sx={{ p: 1.5 }} variant="outlined">
+                <Stack alignItems="center" direction="row" spacing={1.25}>
+                    <GitHubIcon sx={{ color: "neutral.500" }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <ErrorState
+                            data-error="linked-pr"
+                            secondary={{
+                                label: t.integrations.github.openOnGithub,
+                                href: url,
+                            }}
+                            size="xs"
+                            title={t.integrations.pullRequest.linkedCard.loadFailed}
+                            onRetry={() => setAttempt((n) => n + 1)}
+                        />
+                    </Box>
                 </Stack>
             </Card>
         );

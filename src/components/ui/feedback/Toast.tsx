@@ -70,14 +70,22 @@ const getToastRegion = (placement: ToastPlacement = "bottom"): HTMLElement | nul
         el = document.createElement("div");
         el.id = REGION_IDS[placement];
         el.setAttribute("role", "region");
-        // Centered with translateX(-50%), which is direction-neutral, so the
-        // same block works in `ar`. `pointer-events: none` on the region and
-        // `auto` on each card keeps the gaps clickable.
+        // Sized by two side insets of the layout viewport, not centred with
+        // `left:50%` + translateX (which moves with the width of whatever box it
+        // is centred on). With `minimum-scale=1` in index.html the layout viewport
+        // stays at the device width even when one element on the page overflows,
+        // so a banner or toast is always 16px inside the screen (MIP-1196). The
+        // equal insets and auto margins are direction-neutral, so the same block
+        // works in `ar`. `pointer-events: none` on the region and `auto` on each
+        // card keeps the gaps clickable.
         el.style.cssText = [
             "position:fixed",
             `z-index:${REGION_Z_INDEX}`,
-            "left:50%",
-            "transform:translateX(-50%)",
+            "left:16px",
+            "right:16px",
+            "margin-left:auto",
+            "margin-right:auto",
+            "max-width:440px",
             placement === "top"
                 ? // Below the notch / status bar on a phone.
                   "top:calc(12px + env(safe-area-inset-top, 0px))"
@@ -87,7 +95,6 @@ const getToastRegion = (placement: ToastPlacement = "bottom"): HTMLElement | nul
             "display:flex",
             "flex-direction:column",
             "gap:8px",
-            "width:min(440px, calc(100vw - 32px))",
             "pointer-events:none",
         ].join(";");
         for (const lane of Object.keys(LANES) as Lane[]) {

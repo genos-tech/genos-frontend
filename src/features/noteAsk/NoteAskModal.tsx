@@ -22,6 +22,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { useNoteModalHostZIndex } from "../../components/modals/noteModalHostZIndex";
+import { ErrorState } from "../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../i18n";
@@ -161,14 +162,12 @@ export const NoteAskModal = ({ state, onSelectSource }: NoteAskModalProps) => {
             ) : null}
 
             {state.summaryError ? (
-                <Alert color="danger" sx={{ mb: 1 }}>
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        <Typography level="body-sm">{state.summaryError}</Typography>
-                        <Button size="sm" variant="soft" onClick={state.refreshSummary}>
-                            {t.noteAsk.errors.retry}
-                        </Button>
-                    </Stack>
-                </Alert>
+                <ErrorState
+                    data-error="noteAsk-summary"
+                    size="xs"
+                    title={state.summaryError}
+                    onRetry={state.refreshSummary}
+                />
             ) : null}
 
             {state.summary ? (

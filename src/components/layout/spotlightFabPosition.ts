@@ -26,6 +26,17 @@ export const FAB_SIZE = 38;
 export const FAB_EDGE_GAP = 16;
 
 /**
+ * Attribute a bottom-pinned composer (or a banner floating over the bottom
+ * of the page) carries so the FAB can keep clear of it. On a composer, put it
+ * on the box that holds the editor AND its Send button: that whole box is a
+ * control (you tap it to type, and Send sits in its corner).
+ */
+export const FAB_AVOID_ATTR = "data-fab-avoid";
+
+/** Air (px) left between the FAB and the top edge of a composer it sits above. */
+export const FAB_AVOID_GAP = 12;
+
+/**
  * Movement (px) below which a pointer sequence counts as a tap, not a
  * drag. Mirrors `useLongPress`'s `moveTolerance` so the two touch
  * gestures agree on what "held still" means.
@@ -117,4 +128,39 @@ export const writeStoredFabPosition = (position: FabPosition): void => {
     } catch {
         /* private mode / quota — the position just won't survive a reload */
     }
+};
+
+export type Box = { left: number; top: number; right: number; bottom: number };
+
+/**
+ * How far (px) the FAB has to rise so it never covers a composer, and whether
+ * there is no room left to rise (then it hides, rather than sit on Send).
+ *
+ * `base` is where the FAB would be with no composer around (its default
+ * corner, or where the user parked it); `avoid` are the visible composers.
+ * Only a composer the FAB would touch (or come within `gap` of) moves it, so a
+ * button parked up by the header stays put, and the FAB is never lifted for
+ * a composer that is not under it. Lifting past one composer can land on
+ * another, so it settles in at most one pass per composer.
+ */
+export const fabLift = (
+    base: Box,
+    avoid: readonly Box[],
+    { gap = FAB_AVOID_GAP, edge = FAB_EDGE_GAP }: { gap?: number; edge?: number } = {}
+): { lift: number; hidden: boolean } => {
+    let lift = 0;
+    for (let pass = 0; pass <= avoid.length; pass++) {
+        const top = base.top - lift;
+        const bottom = base.bottom - lift;
+        let next = lift;
+        for (const a of avoid) {
+            const underX = a.left < base.right && a.right > base.left;
+            const underY = a.top < bottom + gap && a.bottom > top;
+            if (underX && underY) next = Math.max(next, base.bottom - a.top + gap);
+        }
+        if (next === lift) break;
+        lift = next;
+    }
+    if (base.top - lift < edge) return { lift: 0, hidden: true };
+    return { lift, hidden: false };
 };

@@ -42,6 +42,12 @@ export interface MutedTargetRef {
     label?: string;
 }
 
+/** What `muteTarget` takes: a `MutedTargetRef` whose id may still be the number it is in
+ *  the store (task, thread and note ids are numbers; the server takes the string form
+ *  only, `muted_targets[].target_id must be a non-empty string`). The manager turns it
+ *  into the string, so a stored / sent entry is always a `MutedTargetRef`. */
+export type MutedTargetInput = Omit<MutedTargetRef, "targetId"> & { targetId: string | number };
+
 export interface NotificationPreference {
     masterEnabled: boolean;
     // Coarse group masters (hard-gate their sub-categories).

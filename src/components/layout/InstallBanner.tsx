@@ -105,6 +105,9 @@ export const InstallBanner = () => {
     return (
         <>
             <Sheet
+                // The floating Genos button rises above this banner (and a composer
+                // above it) rather than cover its close button.
+                data-fab-avoid="banner"
                 variant="outlined"
                 sx={{
                     position: "fixed",

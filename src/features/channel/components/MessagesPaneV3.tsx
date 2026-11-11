@@ -402,7 +402,13 @@ function MessageRow({
                 be wider than a phone row — wrapping drops it onto its own
                 line instead of overflowing the pane horizontally. */}
                 <div style={{ display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
-                    <strong>{message.sender?.userName ?? "system"}:</strong>{" "}
+                    <strong>
+                        {/* A name is its own bidi island (MIP-1180): in an RTL row the
+                        bracket "(DY)" and the trailing colon would otherwise take the row's
+                        direction and read ":Ken Kamiya (DY)". The colon stays outside. */}
+                        <bdi className="g-bidi-island">{message.sender?.userName ?? "system"}</bdi>
+                        :
+                    </strong>{" "}
                     {editing ? (
                         <span style={{ display: "flex", gap: 4, flex: 1 }}>
                             <input

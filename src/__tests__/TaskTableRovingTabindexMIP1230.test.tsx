@@ -103,7 +103,9 @@ const Table = ({
             >
                 <div role="row" {...{ [GRID_ROW_ATTR]: GRID_HEADER_ROW }}>
                     {columns.map((c) => (
-                        // As the real header: the expand column has no header cell to stop on.
+                        // A replica of the real header's STOPS (the expand column has no cell to stop on). Its names,
+                        // and the gutter's header cell, are checked against the real header in
+                        // TaskTableHeaderCellsMIP1239.test.tsx (MIP-1239).
                         <div
                             key={c.field}
                             role="columnheader"

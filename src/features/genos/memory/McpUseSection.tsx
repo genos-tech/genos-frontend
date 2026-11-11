@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import { Box, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useMemberEventsPreference } from "../../../hooks/common/useMemberEventsPreference";
 import { useTranslation } from "../../../i18n";
@@ -86,9 +87,12 @@ export const McpUseSection = ({ onChanged }: Props) => {
                 />
             </Stack>
             {!pref.loading && !known && (
-                <Typography level="body-xs" role="alert" sx={{ mt: 1, color: "danger.500" }}>
-                    {m.loadFailed}
-                </Typography>
+                <ErrorState
+                    data-error="mcp-use"
+                    size="xs"
+                    title={m.loadFailed}
+                    onRetry={pref.reload}
+                />
             )}
             {toggleError && (
                 <Typography level="body-xs" role="alert" sx={{ mt: 1, color: "danger.500" }}>

@@ -206,22 +206,38 @@ export const parseRepoInput = (input: string): [string, string] | null => {
     return [owner, repo];
 };
 
+/**
+ * GitHub refused THIS account the pull: it does not exist or the repo is
+ * private to someone else, so asking again changes nothing. The backend
+ * relays GitHub's refusal as a 502 carrying `upstream_status` (404, or a 403
+ * that is not a rate limit), and a bare 404/403 is read the same way. A
+ * dropped connection, a 5xx or a rate limit is NOT this: those can pass.
+ */
+const isPullRefusal = (error: unknown): boolean => {
+    if (!axios.isAxiosError(error) || !error.response) return false;
+    const upstream = (error.response.data as { upstream_status?: number } | undefined)
+        ?.upstream_status;
+    const code = typeof upstream === "number" ? upstream : error.response.status;
+    return code === 404 || code === 403;
+};
+
 export const getPullDetail = async (
     accessToken: string,
     owner: string,
     repo: string,
     number: number,
     setErrorMessage?: (value: string) => void
-): Promise<unknown | "github_not_connected" | null> => {
+): Promise<unknown | "github_not_connected" | "unavailable" | null> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
         const res = await api.get(`/github/pulls/${owner}/${repo}/${number}/`, noSharedToast);
         return res.data;
     } catch (error) {
-        return surfaceError(error, setErrorMessage) === "github_not_connected"
-            ? "github_not_connected"
-            : null;
+        if (surfaceError(error, setErrorMessage) === "github_not_connected") {
+            return "github_not_connected";
+        }
+        return isPullRefusal(error) ? "unavailable" : null;
     }
 };
 

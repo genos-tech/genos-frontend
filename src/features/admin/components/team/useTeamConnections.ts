@@ -8,7 +8,7 @@
  * the OTHER team's side too, so a local patch is a guess that goes stale
  * the moment the counterparty answers.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -29,6 +29,10 @@ export type TeamConnectionControls = {
     /** Requests we sent, waiting on them. */
     outgoing: TeamConnection[];
     loading: boolean;
+    /** The latest list request failed. The rows (if any) are the last good ones. */
+    loadFailed: boolean;
+    /** Ask for the list again; `loading` is true until it answers. */
+    reload: () => void;
     busy: boolean;
     error: string | null;
     clearError: () => void;
@@ -51,14 +55,33 @@ export const useTeamConnections = (
     const { accessToken } = useAuth();
     const [rows, setRows] = useState<TeamConnection[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadFailed, setLoadFailed] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Which team `rows` belong to.
+    const rowsTeamRef = useRef<string | null>(null);
+
     const refresh = useCallback(async () => {
         if (!teamId) return;
-        setRows(await fetchTeamConnections(accessToken, teamId));
+        const fetched = await fetchTeamConnections(accessToken, teamId);
+        // A failed refetch keeps the rows already shown (a dropped connection
+        // must not turn live connections into "none") unless they are another
+        // team's: then there is nothing of this team's to keep.
+        if (fetched) {
+            rowsTeamRef.current = teamId;
+            setRows(fetched);
+        } else if (rowsTeamRef.current !== teamId) {
+            setRows([]);
+        }
+        setLoadFailed(fetched === null);
         setLoading(false);
     }, [accessToken, teamId]);
+
+    const reload = useCallback(() => {
+        setLoading(true);
+        void refresh();
+    }, [refresh]);
 
     useEffect(() => {
         void refresh();
@@ -96,6 +119,8 @@ export const useTeamConnections = (
     return {
         ...buckets,
         loading,
+        loadFailed,
+        reload,
         busy,
         error,
         clearError: useCallback(() => setError(null), []),

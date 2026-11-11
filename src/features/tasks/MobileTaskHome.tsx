@@ -15,6 +15,7 @@ import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 
 import { MobileOverlay } from "../../components/layout/MobileOverlay";
 import { MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
+import { headerTouchTargetsSx } from "../../components/ui/touchTargets";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -146,7 +147,8 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         alignItems: "center",
                         gap: 0.5,
                         px: 1,
-                        py: 0.75,
+                        // 4px, not 6: a 44px button plus 2 x 6px would push the 56px bar to 57.
+                        py: 0.5,
                         borderBottom: "1px solid",
                         borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                         background: isDark
@@ -155,6 +157,8 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         backdropFilter: "blur(8px)",
                         minHeight: "56px",
                         flexShrink: 0,
+                        // Back, list, dashboard, create, more: 44px targets on a phone.
+                        ...headerTouchTargetsSx,
                     }}
                 >
                     <IconButton

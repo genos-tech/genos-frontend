@@ -37,6 +37,10 @@ const TOKEN_COLORS: Record<string, (r: Roles) => string> = {
     "--g-text": (r) => r.text,
     "--g-warning-text": (r) => r.warning.text,
     "--g-accent-text": (r) => r.accentText,
+    "--g-text-code": (r) => r.codeInk,
+    "--g-link": (r) => r.link,
+    "--g-link-visited": (r) => r.linkVisited,
+    "--g-link-hover": (r) => r.linkHover,
 };
 /** `#rrggbb` as is; `var(--g-x)` as that role in the theme's dark mode. */
 const resolve = (value: string, id: (typeof THEME_IDS)[number]): string => {

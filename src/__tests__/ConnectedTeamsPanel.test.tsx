@@ -40,6 +40,8 @@ const controls = (over: Partial<TeamConnectionControls> = {}): TeamConnectionCon
     incoming: [],
     outgoing: [],
     loading: false,
+    loadFailed: false,
+    reload: vi.fn(),
     busy: false,
     error: null,
     clearError: vi.fn(),

@@ -142,7 +142,7 @@ describe("MySecurityActivity", () => {
             .mockResolvedValueOnce({ events: [event()], nextBefore: null });
         render(<MySecurityActivity />);
 
-        await userEvent.click(await screen.findByRole("button", { name: /Try again/i }));
+        await userEvent.click(await screen.findByRole("button", { name: /Retry/i }));
 
         expect(await screen.findByText(/Signed in/)).toBeInTheDocument();
         expect(screen.queryByText(/Couldn't load/i)).not.toBeInTheDocument();
@@ -165,7 +165,7 @@ describe("MySecurityActivity", () => {
         expect(screen.getAllByTestId("security-event")).toHaveLength(1);
 
         // The retry asks for the SAME older page, not the first one again.
-        await userEvent.click(screen.getByRole("button", { name: /Try again/i }));
+        await userEvent.click(screen.getByRole("button", { name: /Retry/i }));
         await waitFor(() => expect(screen.getAllByTestId("security-event")).toHaveLength(2));
         expect(listMySecurityEvents).toHaveBeenLastCalledWith("tok", 9);
     });
