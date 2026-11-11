@@ -59,12 +59,12 @@
     "features/notes:isDarkTernaries": 45,
     "features/notes:literalColors": 88,
     "features/spotlight:backdropFilter": 1,
-    "features/tasks:backdropFilter": 6,
-    "features/tasks:brandVars": 159,
-    "features/tasks:gradients": 36,
-    "features/tasks:heavyFontWeights": 57,
-    "features/tasks:isDarkTernaries": 416,
-    "features/tasks:literalColors": 766,
+    "features/tasks:backdropFilter": 5,
+    "features/tasks:brandVars": 154,
+    "features/tasks:gradients": 30,
+    "features/tasks:heavyFontWeights": 56,
+    "features/tasks:isDarkTernaries": 406,
+    "features/tasks:literalColors": 757,
     "other:literalColors": 45,
     "other:muiMaterial": 1
 }
