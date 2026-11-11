@@ -25,6 +25,7 @@ import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { requestPrResync } from "../../../integrations/services/prResync";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
 import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
@@ -229,6 +230,10 @@ export const TaskHeader = ({
                                     variant="plain"
                                     onClick={async () => {
                                         if (usePM.currentProject?.projectId) {
+                                            // The PR column re-syncs with the rows (MIP-1409):
+                                            // it had no way to learn of a merge or a CI run
+                                            // short of re-opening the table.
+                                            requestPrResync("manual");
                                             await usePM.refreshProjectTasks(
                                                 usePM.currentProject.projectId
                                             );

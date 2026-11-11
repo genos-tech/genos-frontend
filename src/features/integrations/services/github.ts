@@ -393,7 +393,15 @@ const BATCH_MAX_IDS = 200; // mirrors the backend cap
 type PullsBatchWaiter = {
     taskId: string;
     accessToken: string | null;
-    resolve: (pulls: LinkedPull[]) => void;
+    /**
+     * A re-sync of a row that is already drawn (MIP-1409), not a first load. It never falls
+     * back to the per-task endpoint (a failing batch must not turn into one request per row)
+     * and resolves `null` on failure, so the caller keeps what it shows.
+     */
+    refresh?: boolean;
+    /** Ask the server to skip its own cache too (`fresh=1`). */
+    fresh?: boolean;
+    resolve: (pulls: LinkedPull[] | null) => void;
 };
 
 const pullsBatchCache = createRequestCache<LinkedPull[]>({ ttlMs: 60_000 });
@@ -408,7 +416,8 @@ const flushPullsBatch = async (): Promise<void> => {
 
     const fallback = (chunk: PullsBatchWaiter[]) => {
         for (const w of chunk) {
-            void loadLinkedPulls(w.accessToken, w.taskId).then(w.resolve);
+            if (w.refresh) w.resolve(null);
+            else void loadLinkedPulls(w.accessToken, w.taskId).then(w.resolve);
         }
     };
 
@@ -416,14 +425,18 @@ const flushPullsBatch = async (): Promise<void> => {
         const chunk = waiters.slice(i, i + BATCH_MAX_IDS);
         const api = authApi(chunk[0].accessToken);
         if (!api) {
-            for (const w of chunk) w.resolve([]);
+            for (const w of chunk) w.resolve(w.refresh ? null : []);
             continue;
         }
         try {
             const ids = [...new Set(chunk.map((w) => w.taskId))];
+            const params: Record<string, string> = { task_ids: ids.join(",") };
+            // One row asking for a fresh answer makes the whole request one: it is a single
+            // GET, and the rows that did not ask only get a newer answer than they wanted.
+            if (chunk.some((w) => w.fresh)) params.fresh = "1";
             const res = await api.get<LinkedPullsBatchResponse>("/github/pulls/for-tasks/", {
                 ...noSharedToast,
-                params: { task_ids: ids.join(",") },
+                params,
             });
             const byTask = res.data.pulls_by_task ?? {};
             for (const w of chunk) w.resolve(byTask[w.taskId] ?? []);
@@ -439,12 +452,58 @@ export const loadLinkedPullsBatched = (
 ): Promise<LinkedPull[]> =>
     pullsBatchCache.get(`ghpulls:${taskId}`, () => {
         return new Promise<LinkedPull[]>((resolve) => {
-            pendingPullsWaiters.push({ taskId: String(taskId), accessToken, resolve });
+            pendingPullsWaiters.push({
+                taskId: String(taskId),
+                accessToken,
+                resolve: (pulls) => resolve(pulls ?? []),
+            });
             if (pullsFlushTimer == null) {
                 pullsFlushTimer = setTimeout(() => void flushPullsBatch(), BATCH_WINDOW_MS);
             }
         });
     });
+
+/**
+ * Ask again for a row's PRs, past the client memo (MIP-1409): the PR column's "Refresh tasks"
+ * click and its once-a-minute poll. Rows asking in the same window still share ONE request.
+ *
+ * Resolves `null` when the request failed, which is not `[]` ("looked, found none"): the
+ * caller keeps what it already shows. A failure is not stored (the memo drops a rejection),
+ * and a success is, so a row that mounts right after reads the new answer.
+ * `fresh` also skips the server's cache: the click wants the authoritative answer, the poll
+ * does not (every skipped lookup is a GitHub call per matching branch).
+ */
+export const refreshLinkedPullsBatched = async (
+    accessToken: string | null,
+    taskId: number | string,
+    options?: { fresh?: boolean }
+): Promise<LinkedPull[] | null> => {
+    try {
+        return await pullsBatchCache.get(
+            `ghpulls:${taskId}`,
+            () =>
+                new Promise<LinkedPull[]>((resolve, reject) => {
+                    pendingPullsWaiters.push({
+                        taskId: String(taskId),
+                        accessToken,
+                        refresh: true,
+                        fresh: options?.fresh,
+                        resolve: (pulls) =>
+                            pulls ? resolve(pulls) : reject(new Error("PR list refresh failed")),
+                    });
+                    if (pullsFlushTimer == null) {
+                        pullsFlushTimer = setTimeout(
+                            () => void flushPullsBatch(),
+                            BATCH_WINDOW_MS
+                        );
+                    }
+                }),
+            { forceRefresh: true }
+        );
+    } catch {
+        return null;
+    }
+};
 
 // Test affordance: reset the memo + any pending flush state so one
 // test's batch can't leak into the next.
