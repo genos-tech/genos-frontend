@@ -1,18 +1,14 @@
 import { PartialBlock } from "@blocknote/core";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import { FormControl } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnMyNoteEditor } from "../../../../components/editors/bnMyNoteEditor";
-import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
+import { NoteTitleField } from "./NoteTitleField";
 
 interface NoteEditorProps {
     useNM: NoteManagementState;
@@ -63,34 +59,8 @@ export const NoteEditor = ({
     useTEM,
     myself,
 }: NoteEditorProps) => {
-    const { t } = useTranslation();
-    const isMobile = useIsMobile();
     return (
         <>
-            <FormControl
-                sx={{
-                    mt: "10px",
-                    ml: "10px",
-                    justifyContent: "center",
-                    position: "absolute",
-                    zIndex: 100,
-                    width: isMobile ? "50%" : "30%",
-                }}
-                required
-            >
-                <InlineTitleEdit
-                    ariaLabel={t.notes.editor.titlePlaceholder}
-                    inputRef={titleInputRef}
-                    level="h3"
-                    placeholder={t.notes.editor.titlePlaceholder}
-                    startDecorator={<NoteAltIcon />}
-                    value={currentMyNoteTitle}
-                    variant="field"
-                    onCommit={() => onTitleBlur()}
-                    onDraftChange={onTitleChange}
-                />
-            </FormControl>
-
             {/* "Saved" chip is rendered INSIDE BnMyNoteEditor (next to
                 the wrap toggles) so it auto-shifts when the comments
                 pane opens — see `noteBodySaved` prop below. */}
@@ -110,6 +80,14 @@ export const NoteEditor = ({
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
+                titleSlot={
+                    <NoteTitleField
+                        inputRef={titleInputRef}
+                        value={currentMyNoteTitle}
+                        onCommit={() => onTitleBlur()}
+                        onDraftChange={onTitleChange}
+                    />
+                }
             />
         </>
     );

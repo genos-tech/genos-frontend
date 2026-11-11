@@ -1,17 +1,13 @@
 import { PartialBlock } from "@blocknote/core";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import { FormControl } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatNoteEditor } from "../../../../components/editors/bnChatNoteEditor";
-import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps, NoteRoleMember } from "../../../../types/notes";
+import { NoteTitleField } from "../../common/components/NoteTitleField";
 
 interface ChatNoteEditorProps {
     currentChatNote: ChatNoteProps;
@@ -56,34 +52,8 @@ export const ChatNoteEditor = ({
     currentNoteMembers,
     resyncSignal,
 }: ChatNoteEditorProps) => {
-    const { t } = useTranslation();
-    const isMobile = useIsMobile();
     return (
         <>
-            <FormControl
-                sx={{
-                    mt: "10px",
-                    ml: "10px",
-                    justifyContent: "center",
-                    position: "absolute",
-                    zIndex: 100,
-                    width: isMobile ? "50%" : "30%",
-                }}
-                required
-            >
-                <InlineTitleEdit
-                    ariaLabel={t.notes.editor.titlePlaceholder}
-                    inputRef={titleInputRef}
-                    level="h3"
-                    placeholder={t.notes.editor.titlePlaceholder}
-                    startDecorator={<NoteAltIcon />}
-                    value={currentChatNoteTitle}
-                    variant="field"
-                    onCommit={() => onTitleBlur()}
-                    onDraftChange={onTitleChange}
-                />
-            </FormControl>
-
             {/* "Saved" chip lives INSIDE BnChatNoteEditor (next to the
                 wrap toggles) so it stays anchored to them when the
                 comments pane opens — see `noteBodySaved` prop below. */}
@@ -103,6 +73,14 @@ export const ChatNoteEditor = ({
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
+                titleSlot={
+                    <NoteTitleField
+                        inputRef={titleInputRef}
+                        value={currentChatNoteTitle}
+                        onCommit={() => onTitleBlur()}
+                        onDraftChange={onTitleChange}
+                    />
+                }
             />
         </>
     );
