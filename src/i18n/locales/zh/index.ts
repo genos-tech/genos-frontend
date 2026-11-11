@@ -4159,6 +4159,8 @@ export const zh: DeepPartial<Messages> = {
                 title: "全局",
                 description:
                     "在任何位置都可使用。字母快捷键将导航与创建操作组合在一起；循环切换手势类似 macOS 的 Cmd+Tab 切换器。",
+                editorNote:
+                    "在 Windows 和 Linux 上，在编辑器或文本框中输入时，Ctrl+Alt 字母快捷键不会生效，编辑器保留自己的 Ctrl+Alt 按键（Ctrl+Alt+C 是代码块）。",
                 rows: {
                     spotlight: "打开 Spotlight 搜索",
                     tasksNew: "打开任务并新建任务",

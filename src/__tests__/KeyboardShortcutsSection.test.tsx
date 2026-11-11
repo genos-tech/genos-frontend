@@ -114,4 +114,21 @@ describe("KeyboardShortcutsSection", () => {
             unmount();
         }
     });
+
+    it("on Windows and Linux says the Ctrl+Alt letters stay out of editors; on Mac it says nothing (MIP-1311)", () => {
+        mac = false;
+        const win = view();
+        expect(win.getByTestId("shortcut-editor-note").textContent).toMatch(
+            /editor or a text field/
+        );
+        expect(
+            win
+                .getByTestId("shortcut-group-global")
+                .contains(win.getByTestId("shortcut-editor-note"))
+        ).toBe(true);
+        win.unmount();
+        mac = true;
+        const apple = view();
+        expect(apple.queryByTestId("shortcut-editor-note")).toBeNull();
+    });
 });

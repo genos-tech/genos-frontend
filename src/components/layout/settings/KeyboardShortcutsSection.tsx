@@ -4,6 +4,7 @@ import { Box, Divider, Sheet, Stack, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
 import {
+    currentPlatform,
     cycleKeys,
     SHORTCUT_IDS,
     shortcutLabel,
@@ -80,6 +81,11 @@ export const KeyboardShortcutsSection = () => {
         group,
         title: copy[group].title,
         description: copy[group].description,
+        // Windows / Linux only: the Ctrl+Alt letters stay out of editors and text fields (MIP-1311).
+        note:
+            group === "global" && currentPlatform() === "other"
+                ? copy.global.editorNote
+                : undefined,
         rows: SHORTCUT_IDS.filter((id) => SHORTCUTS[id].group === group).map((id) => ({
             id,
             kind: SHORTCUTS[id].kind,
@@ -103,9 +109,18 @@ export const KeyboardShortcutsSection = () => {
                         <Typography level="title-sm" sx={{ mt: gIdx === 0 ? 0.5 : 0 }}>
                             {group.title}
                         </Typography>
-                        <Typography level="body-xs" sx={{ mb: 1 }}>
+                        <Typography level="body-xs" sx={{ mb: group.note ? 0.5 : 1 }}>
                             {group.description}
                         </Typography>
+                        {group.note && (
+                            <Typography
+                                data-testid="shortcut-editor-note"
+                                level="body-xs"
+                                sx={{ mb: 1 }}
+                            >
+                                {group.note}
+                            </Typography>
+                        )}
                         <Stack spacing={0.75}>
                             {group.rows.map((row, idx) => (
                                 <Box key={row.id} data-shortcut-id={row.id}>

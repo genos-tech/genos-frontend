@@ -1,7 +1,7 @@
 import { ReactNode, useSyncExternalStore } from "react";
 
 import { toast, ToastDismissReason } from "../../components/ui/feedback/toastStore";
-import { isEditableTarget, matchesShortcut, SHORTCUTS } from "../../shortcuts";
+import { editablePolicy, isEditableTarget, matchesShortcut } from "../../shortcuts";
 
 /**
  * Delete (or archive) with an Undo window instead of an "Are you sure?" (MIP-1274).
@@ -208,7 +208,7 @@ const onKeyDown = (e: KeyboardEvent) => {
     if (e.defaultPrevented || e.repeat || e.isComposing) return;
     // The chord and the editable-target policy are the registry's ("global.undo").
     if (!matchesShortcut("global.undo", e)) return;
-    if (SHORTCUTS["global.undo"].editable === "skip" && isEditableTarget(e.target)) return;
+    if (editablePolicy("global.undo") === "skip" && isEditableTarget(e.target)) return;
     const pending = [...entries.values()].filter((entry) => entry.state === "pending");
     const latest = pending[pending.length - 1];
     if (!latest) return;

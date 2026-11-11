@@ -1,6 +1,12 @@
 import { useEffect, useRef, type RefObject } from "react";
 
-import { isEditableTarget, matchesShortcut, SHORTCUTS, type ShortcutId } from "./registry";
+import {
+    editablePolicy,
+    isEditableTarget,
+    matchesShortcut,
+    SHORTCUTS,
+    type ShortcutId,
+} from "./registry";
 
 /** Inside `scope`, or nowhere in particular (focus on `body`, a non-node target)? */
 const isInsideOrIdle = (scope: HTMLElement | null, target: EventTarget | null): boolean => {
@@ -46,14 +52,18 @@ export const useShortcut = (
     useEffect(() => {
         if (!enabled) return undefined;
         const host: Document | Window = target === "window" ? window : document;
+        // A shortcut that claims its keys from the editor listens before the editor's own
+        // listener (capture) and ends the event once handled (MIP-1310).
+        const claims = "claimsEditor" in SHORTCUTS[id];
         const onKeyDown = (event: Event) => {
             const e = event as KeyboardEvent;
             if (!matchesShortcut(id, e)) return;
-            if (SHORTCUTS[id].editable === "skip" && isEditableTarget(e.target)) return;
+            if (editablePolicy(id) === "skip" && isEditableTarget(e.target)) return;
             if (within && !isInsideOrIdle(within.current, e.target)) return;
             handlerRef.current(e);
+            if (claims) e.stopPropagation();
         };
-        host.addEventListener("keydown", onKeyDown);
-        return () => host.removeEventListener("keydown", onKeyDown);
+        host.addEventListener("keydown", onKeyDown, claims);
+        return () => host.removeEventListener("keydown", onKeyDown, claims);
     }, [id, target, enabled, within]);
 };

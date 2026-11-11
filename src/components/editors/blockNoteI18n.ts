@@ -34,6 +34,15 @@ export const useBlockNoteDictionary = (): Dictionary => {
     return {
         ...dictionary,
         ...blockStrings,
+        formatting_toolbar: {
+            ...dictionary.formatting_toolbar,
+            link: {
+                ...dictionary.formatting_toolbar.link,
+                // BlockNote prints "Ctrl+K" under the link button. Cmd/Ctrl+K opens Spotlight
+                // everywhere, the editor included (MIP-1310), so the hint would be a lie.
+                secondary_tooltip: "",
+            },
+        },
         placeholders: {
             ...dictionary.placeholders,
             emptyDocument: t.common.editor.placeholderEmpty,

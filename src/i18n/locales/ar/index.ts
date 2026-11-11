@@ -1171,6 +1171,8 @@ export const ar: DeepPartial<Messages> = {
                 title: "عام",
                 description:
                     "متاحة في أي مكان. تجمع اختصارات الحروف الآن بين التنقّل وإجراء الإنشاء؛ يعمل اختصار التنقّل كمبدّل Cmd+Tab في macOS.",
+                editorNote:
+                    "على نظامي Windows وLinux لا تعمل اختصارات الحروف Ctrl+Alt أثناء الكتابة في محرّر أو حقل نصي، فيحتفظ المحرّر بمفاتيح Ctrl+Alt الخاصة به (Ctrl+Alt+C كتلة شيفرة).",
                 rows: {
                     spotlight: "فتح بحث Spotlight",
                     tasksNew: "فتح المهام وبدء مهمة جديدة",
