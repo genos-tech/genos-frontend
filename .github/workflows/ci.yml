@@ -314,6 +314,12 @@ jobs:
             - name: Prettier
               if: always() # report both, even if eslint failed
               run: npx prettier --check .
+            # Counts below the design-ratchet baseline that nobody has locked in yet
+            # (MIP-1408). Never fails: committing the lowered baseline is optional, because
+            # two sweeps lowering the same line cannot merge. This just keeps the slack visible.
+            - name: Design ratchet slack
+              if: always()
+              run: npm run ratchet:slack
 
     # Known-vulnerable dependencies (MIP-727), production deps only: what
     # ships in the bundle, plus `serve`, which serves it on Railway.

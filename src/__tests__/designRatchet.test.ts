@@ -31,7 +31,9 @@ import {
     DEFAULT_BASELINE,
     DEFAULT_SRC,
     findRises,
+    findSlack,
     formatRises,
+    formatSlack,
     listSourceFiles,
     METRIC_NAMES,
     parseBaseline,
@@ -417,6 +419,9 @@ describe("the update rules and the failure message", () => {
         expect(message).toMatch(/fix: .*tokens/);
         expect(message).toContain("npm run ratchet:update");
         expect(message).toContain("--allow-raise");
+        // Locking in a lowered count is optional (MIP-1408), and the message says so.
+        expect(message).toContain("npm run ratchet:slack");
+        expect(message).toMatch(/another open PR lowers the same area/);
         expect(message).toContain("DESIGN_SYSTEM.md");
     });
 
@@ -485,6 +490,38 @@ describe("the update rules and the failure message", () => {
         expect(lower.lowered).toBe(2); // b went to zero (absent), a went down
     });
 
+    it("findSlack lists the counts below the baseline, sorted, a vanished area as 0", () => {
+        const baseline = {
+            "b:gradients": 3,
+            "a:gradients": 3,
+            "c:gradients": 3,
+            "gone:brandVars": 2,
+        };
+        const counts = { "a:gradients": 1, "b:gradients": 3, "c:gradients": 4 };
+        expect(findSlack(counts, baseline)).toEqual([
+            { key: "a:gradients", was: 3, now: 1 },
+            { key: "gone:brandVars", was: 2, now: 0 },
+        ]);
+        // Equal and above are not slack; above is a rise, which is findRises's.
+        expect(findSlack({ "a:gradients": 3 }, { "a:gradients": 3 })).toEqual([]);
+        expect(findSlack({ "a:gradients": 5 }, { "a:gradients": 3 })).toEqual([]);
+        // A key the baseline lacks is 0 there, and cannot be below it.
+        expect(findSlack({ "new:gradients": 0 }, {})).toEqual([]);
+    });
+
+    it("formatSlack names each entry, the total, and how to lock it in; says so when there is none", () => {
+        const text = formatSlack([
+            { key: "a:gradients", was: 3, now: 1 },
+            { key: "b:brandVars", was: 5, now: 4 },
+        ]);
+        expect(text).toContain("2 counts are below the baseline (3 in all)");
+        expect(text).toContain("a:gradients: 3 -> 1");
+        expect(text).toContain("b:brandVars: 5 -> 4");
+        expect(text).toContain("npm run ratchet:update");
+        expect(text).toContain("Nothing is wrong until then");
+        expect(formatSlack([])).toMatch(/no slack/);
+    });
+
     it("totalsByMetric sums over areas", () => {
         const totals = totalsByMetric({ "a/b:gradients": 2, "c:gradients": 3, "c:brandVars": 1 });
         expect(totals.gradients).toBe(5);
@@ -534,6 +571,35 @@ describe("end to end on a scratch tree (the mutation checks, automated)", () => 
         expect(s.run("--allow-raise").code).toBe(0);
         return parseBaseline(fs.readFileSync(s.baseline, "utf8"));
     };
+
+    it("--slack reports what a sweep left unlocked, writes nothing, and exits 0", () => {
+        const s = scratch();
+        expect(base(s)).toEqual({ "features/chat:literalColors": 1 });
+        s.write("features/chat/Old.tsx", "export const c = 1;\n"); // the sweep
+        const before = fs.readFileSync(s.baseline, "utf8");
+
+        const slack = s.run("--slack");
+        expect(slack.code).toBe(0);
+        expect(slack.stdout).toContain("features/chat:literalColors: 1 -> 0");
+        expect(fs.readFileSync(s.baseline, "utf8")).toBe(before);
+
+        // The guard is fine with the higher baseline ("nothing breaks" until it is spent) ...
+        const { counts } = countTree(s.src);
+        expect(findRises(counts, parseBaseline(before))).toEqual([]);
+        // ... and one update locks it in, after which there is no slack.
+        expect(s.run().code).toBe(0);
+        expect(parseBaseline(fs.readFileSync(s.baseline, "utf8"))).toEqual({});
+        expect(s.run("--slack").stdout).toMatch(/no slack/);
+    });
+
+    it("--slack on a tree that rose reports no slack and still exits 0 (it is not the guard)", () => {
+        const s = scratch();
+        base(s);
+        s.write("features/chat/More.tsx", 'export const d = "#abc";\n');
+        const slack = s.run("--slack");
+        expect(slack.code).toBe(0);
+        expect(slack.stdout).toMatch(/no slack/);
+    });
 
     it("the first baseline counts only counted files, comments stripped", () => {
         const s = scratch();
