@@ -15,6 +15,7 @@
         "format": "prettier --write .",
         "blocknote-compat": "node scripts/blocknote-compat.mjs",
         "ratchet:update": "node scripts/design-ratchet.mjs",
+        "ratchet:slack": "node scripts/design-ratchet.mjs --slack",
         "typecheck:tests": "node scripts/test-typecheck-ratchet.mjs",
         "typecheck:tests:update": "node scripts/test-typecheck-ratchet.mjs --update",
         "format:check": "prettier --check .",

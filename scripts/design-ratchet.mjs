@@ -5,7 +5,8 @@
 // as fast as the sweeps remove them, so this module counts them per area and
 // the vitest guard (src/__tests__/designRatchet.test.ts) fails when a count
 // rises above the committed baseline (scripts/design-ratchet-baseline.json).
-// `npm run ratchet:update` rewrites the baseline after a sweep lowered a count.
+// `npm run ratchet:update` rewrites the baseline after a sweep lowered a count, and
+// `npm run ratchet:slack` lists what could be tightened (read-only).
 //
 // ONE module, three users: the vitest guard, the update script (the CLI at the
 // bottom of this file) and the fixture tests. It is plain .mjs so the CLI needs
@@ -64,8 +65,12 @@
 // FILE FORMAT (design-ratchet-baseline.json): flat, sorted, one `"<area>:<metric>"`
 // per line, zeros omitted (absent = 0, so a new area or metric starts at 0 and
 // cannot rise silently). No totals, dates or other lines that change on every PR:
-// parallel sweep PRs each lower a few lines and merge textually. If two PRs
-// touch neighbouring lines, take either side and re-run `npm run ratchet:update`.
+// parallel sweep PRs each lower a few lines and merge textually. Two PRs that lower
+// the SAME line (a big area like features/tasks) cannot merge textually, and the right
+// answer is a third number: re-run `npm run ratchet:update` on the merged tree.
+// So committing the lowered baseline is OPTIONAL (MIP-1408): the guard passes against
+// a higher one, it only means the slack is not locked in. `ratchet:slack` shows how
+// much is left unlocked, and one update commit on its own tightens it.
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -484,11 +489,39 @@ export function formatRises(rises, files = {}, { topFiles = 5, changed = new Set
         "Use the `g` design tokens and the shared components instead of literals (see",
         "genos-docs/design/DESIGN_SYSTEM.md, section Guardrails). Counts are per area, so a",
         "file that is not listed can still be the one that pushed the area over.",
-        "If a sweep LOWERED other counts, run `npm run ratchet:update` and commit the",
-        "baseline. Raising a number on purpose needs `npm run ratchet:update -- --allow-raise`",
-        "and a reason in the PR."
+        "If a sweep LOWERED other counts, `npm run ratchet:update` locks them in (commit the",
+        "baseline; if another open PR lowers the same area, leave it for a tightening commit",
+        "on its own, `npm run ratchet:slack` lists what is left). Raising a number on purpose",
+        "needs `npm run ratchet:update -- --allow-raise` and a reason in the PR."
     );
     return lines.join("\n");
+}
+
+/**
+ * The counts that are BELOW the baseline: slack the guard lets through but has not locked in
+ * (a later PR could spend it). Sorted by key; a baseline entry whose area is gone reads as 0.
+ */
+export function findSlack(counts, baseline) {
+    const slack = [];
+    for (const key of Object.keys(baseline).sort(byCodeUnit)) {
+        const now = counts[key] ?? 0;
+        if (now < baseline[key]) slack.push({ key, was: baseline[key], now });
+    }
+    return slack;
+}
+
+/** The slack as text for `--slack`: one line per entry, then the total and how to lock it in. */
+export function formatSlack(slack) {
+    if (slack.length === 0)
+        return "design-ratchet: no slack, the baseline is as tight as the code.";
+    const total = slack.reduce((sum, s) => sum + (s.was - s.now), 0);
+    return [
+        `design-ratchet: ${slack.length} counts are below the baseline (${total} in all) and not locked in:`,
+        ...slack.map((s) => `  ${s.key}: ${s.was} -> ${s.now}`),
+        "",
+        "Lock them in with `npm run ratchet:update` and commit the baseline, on its own or",
+        "with a sweep. Nothing is wrong until then: the guard passes against the higher number.",
+    ].join("\n");
 }
 
 /**
@@ -512,7 +545,7 @@ export function planUpdate({ counts, baseline, allowRaise = false }) {
 
 // ----------------------------------------------------------------------- CLI
 
-/** `node scripts/design-ratchet.mjs [--allow-raise] [--src dir] [--baseline file] [--report]` */
+/** `node scripts/design-ratchet.mjs [--allow-raise] [--src dir] [--baseline file] [--report] [--slack]` */
 export function main(argv = process.argv.slice(2), out = (text) => console.log(text)) {
     const option = (name) => {
         const at = argv.indexOf(name);
@@ -522,6 +555,15 @@ export function main(argv = process.argv.slice(2), out = (text) => console.log(t
     const baselineFile = path.resolve(option("--baseline") ?? DEFAULT_BASELINE);
     const allowRaise = argv.includes("--allow-raise");
     const { counts, files } = countTree(src);
+
+    if (argv.includes("--slack")) {
+        const slack = findSlack(
+            counts,
+            fs.existsSync(baselineFile) ? loadBaseline(baselineFile) : {}
+        );
+        out(formatSlack(slack));
+        return 0;
+    }
 
     if (argv.includes("--report")) {
         const totals = totalsByMetric(counts);
