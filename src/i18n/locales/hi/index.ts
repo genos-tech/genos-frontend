@@ -2208,6 +2208,9 @@ export const hi: DeepPartial<Messages> = {
         header: {
             privateProject: "प्राइवेट प्रोजेक्ट",
             refreshTasks: "टास्क रिफ्रेश करें",
+            refreshed: "टास्क अप टू डेट हैं",
+            refreshFailed: "टास्क रिफ्रेश नहीं हो सके। फिर कोशिश करें।",
+            refreshPrsFailed: "टास्क रिफ्रेश हो गए, लेकिन कुछ PR की स्थिति अपडेट नहीं हो सकी।",
             closePanel: "पैनल बंद करें",
             taskButton: "टास्क",
             manageTagsMenuItem: "टैग मैनेज करें",

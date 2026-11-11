@@ -4677,6 +4677,10 @@ export const ja: DeepPartial<Messages> = {
         header: {
             privateProject: "プライベートプロジェクト",
             refreshTasks: "タスクを再読み込み",
+            refreshed: "タスクは最新です",
+            refreshFailed: "タスクを再読み込みできませんでした。もう一度お試しください。",
+            refreshPrsFailed:
+                "タスクは再読み込みされましたが、一部のPRの状態を更新できませんでした。",
             closePanel: "パネルを閉じる",
             taskButton: "タスク",
             manageTagsMenuItem: "タグを管理",

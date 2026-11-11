@@ -52,6 +52,13 @@ type PollReport = { id: number; ok: number; failed: number; firstFailedAt: numbe
 const NO_REPORT: PollReport = { id: 0, ok: 0, failed: 0, firstFailedAt: 0 };
 let report: PollReport = NO_REPORT;
 
+// What the cells started for a CLICK, so the Refresh button can stay busy until the column has
+// answered and say whether some of it failed (MIP-1411). A poll's work is not tracked: nobody
+// waits for it.
+const clickWork = new Map<number, Promise<boolean>[]>();
+/** A request that never settles must not leave the button spinning for good. */
+export const PR_RESYNC_WORK_TIMEOUT_MS = 30_000;
+
 const hidden = (): boolean => typeof document !== "undefined" && document.hidden;
 const offline = (): boolean => typeof navigator !== "undefined" && navigator.onLine === false;
 
@@ -156,6 +163,50 @@ export const subscribePrResync = (listener: () => void): (() => void) => {
 
 export const getPrResyncRequest = (): PrResyncRequest => latest;
 
+/**
+ * A cell calls this when it starts re-syncing for request `requestId`, and the function it
+ * returns when it is done: `true` if it went through, `false` if it failed. For a poll, or a
+ * request that has been replaced, it does nothing.
+ */
+export const beginPrResyncWork = (requestId: number): ((ok: boolean) => void) => {
+    if (requestId !== latest.id || latest.reason !== "manual") return () => {};
+    for (const id of [...clickWork.keys()]) if (id < requestId) clickWork.delete(id);
+    let finish: (ok: boolean) => void = () => {};
+    const done = new Promise<boolean>((resolve) => {
+        finish = resolve;
+    });
+    const list = clickWork.get(requestId);
+    if (list) list.push(done);
+    else clickWork.set(requestId, [done]);
+    return finish;
+};
+
+/**
+ * Resolves when every cell that took part in click `requestId` has its answer: how many did,
+ * and how many of those failed (one still running after `timeoutMs` counts as failed). The
+ * cells start in an effect right after the request, so this gives them the turn before it
+ * counts. With no PR cell on screen it resolves at once.
+ */
+export const whenPrResyncDone = async (
+    requestId: number,
+    timeoutMs: number = PR_RESYNC_WORK_TIMEOUT_MS
+): Promise<{ rows: number; failed: number }> => {
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const work = clickWork.get(requestId) ?? [];
+    clickWork.delete(requestId);
+    const outcomes: Array<boolean | null> = work.map(() => null);
+    work.forEach((w, i) => void w.then((ok) => (outcomes[i] = ok)));
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+        Promise.all(work),
+        new Promise<void>((resolve) => {
+            timer = setTimeout(resolve, timeoutMs);
+        }),
+    ]);
+    clearTimeout(timer);
+    return { rows: work.length, failed: outcomes.filter((o) => o !== true).length };
+};
+
 /** Test seam: forget every request, listener and timer so one test cannot leak into the next. */
 export const _resetPrResyncForTests = (): void => {
     stop();
@@ -166,4 +217,5 @@ export const _resetPrResyncForTests = (): void => {
     failures = 0;
     resumeAt = 0;
     report = NO_REPORT;
+    clickWork.clear();
 };

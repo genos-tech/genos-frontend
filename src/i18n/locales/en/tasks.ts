@@ -117,6 +117,9 @@ export const tasks = {
     header: {
         privateProject: "Private Project",
         refreshTasks: "Refresh Tasks",
+        refreshed: "Tasks are up to date",
+        refreshFailed: "Couldn't refresh the tasks. Try again.",
+        refreshPrsFailed: "Tasks refreshed, but some PR statuses couldn't be updated.",
         closePanel: "Close Panel",
         taskButton: "Task",
         manageTagsMenuItem: "Manage Tags",

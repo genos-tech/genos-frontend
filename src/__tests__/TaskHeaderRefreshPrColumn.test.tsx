@@ -4,7 +4,7 @@
  * re-opening the table).
  */
 import { CssVarsProvider } from "@mui/joy/styles";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -74,17 +74,32 @@ describe("the Refresh tasks button", () => {
         expect(seen).toEqual(["manual"]);
     });
 
-    it("a second click within the cooldown still reloads the rows, but not the PR column again", () => {
+    it("a second click within the cooldown still reloads the rows, but not the PR column again", async () => {
         const { refreshProjectTasks } = mount(PROJECT);
+        // One press at a time (MIP-1411): the button is busy until the first has finished.
+        const settled = () =>
+            waitFor(() => expect(refreshButton().getAttribute("aria-busy")).toBe("false"));
+
         fireEvent.click(refreshButton());
+        await settled();
         fireEvent.click(refreshButton());
+        await settled();
         expect(refreshProjectTasks).toHaveBeenCalledTimes(2);
         expect(seen).toEqual(["manual"]);
 
         vi.advanceTimersByTime(PR_RESYNC_MANUAL_COOLDOWN_MS);
         fireEvent.click(refreshButton());
+        await settled();
         expect(refreshProjectTasks).toHaveBeenCalledTimes(3);
         expect(seen).toEqual(["manual", "manual"]);
+    });
+
+    it("presses while one is running are ignored: the rows are not reloaded twice at once", () => {
+        const { refreshProjectTasks } = mount(PROJECT);
+        fireEvent.click(refreshButton());
+        fireEvent.click(refreshButton());
+        fireEvent.click(refreshButton());
+        expect(refreshProjectTasks).toHaveBeenCalledTimes(1);
     });
 
     it("is not there without an open project, so nothing is requested", () => {

@@ -11,7 +11,11 @@ import {
     refreshLinkedPullsBatched,
     type LinkedPull,
 } from "../services/github";
-import { reportPrResyncOutcome, type PrResyncRequest } from "../services/prResync";
+import {
+    beginPrResyncWork,
+    reportPrResyncOutcome,
+    type PrResyncRequest,
+} from "../services/prResync";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
 import type { PrDetailResponse } from "../services/prTypes";
 import {
@@ -193,6 +197,8 @@ const SinglePrBadge = ({
         if (!token) return undefined;
         if (!(resync.reason === "manual" ? now.needsDetail : !now.finished)) return undefined;
         let cancelled = false;
+        // A click's Refresh button waits for this (MIP-1411).
+        const finishWork = beginPrResyncWork(resync.id);
         (async () => {
             const r = await getCachedOrFetchPrStatus(token, now.url, undefined, {
                 forceRefresh: true,
@@ -200,6 +206,8 @@ const SinglePrBadge = ({
             // A refresh that failed leaves the detail already drawn alone.
             if (!cancelled)
                 setDetail((prev) => (r.kind === "ok" || prev?.kind !== "ok" ? r : prev));
+            // "Refused" and "not connected" are answers; only a failed request is a failure.
+            finishWork(r.kind !== "error");
         })();
         return () => {
             cancelled = true;
@@ -406,28 +414,37 @@ export const PrStatusCell = ({ taskId, accessToken }: Props) => {
         if (!accessToken || before == null) return undefined;
         if (resync.reason === "poll" && !before.some((p) => !isFinishedPull(p))) return undefined;
         let cancelled = false;
+        // A click's Refresh button waits for this (MIP-1411).
+        const finishWork = beginPrResyncWork(resync.id);
         (async () => {
-            const next = await refreshLinkedPullsBatched(accessToken, taskId, {
-                fresh: resync.reason === "manual",
-            });
-            if (resync.reason === "poll") reportPrResyncOutcome(resync.id, next !== null);
-            // A failed request keeps what is drawn, and so does a row the server says it could
-            // not fully look at (the loader hands both back as null, MIP-1412).
-            if (cancelled || next === null) return;
-            // A poll that answers "no PRs" for a row that has some is not believed unless the
-            // server vouches for it: a PR does not vanish, but a GitHub that refuses us is read
-            // by an older server as "no PR", and the chips would blink out once a minute. A
-            // server that reports completeness names the rows it could not look at, so for the
-            // others an empty list is the truth. A click is the user asking, and gets the answer.
-            if (
-                resync.reason === "poll" &&
-                !next.complete &&
-                next.pulls.length === 0 &&
-                before.length > 0
-            ) {
-                return;
+            let went = false;
+            try {
+                const next = await refreshLinkedPullsBatched(accessToken, taskId, {
+                    fresh: resync.reason === "manual",
+                });
+                if (resync.reason === "poll") reportPrResyncOutcome(resync.id, next !== null);
+                went = next !== null;
+                // A failed request keeps what is drawn, and so does a row the server says it
+                // could not fully look at (the loader hands both back as null, MIP-1412).
+                if (cancelled || next === null) return;
+                // A poll that answers "no PRs" for a row that has some is not believed unless
+                // the server vouches for it: a PR does not vanish, but a GitHub that refuses us
+                // is read by an older server as "no PR", and the chips would blink out once a
+                // minute. A server that reports completeness names the rows it could not look
+                // at, so for the others an empty list is the truth. A click is the user asking,
+                // and gets the answer.
+                if (
+                    resync.reason === "poll" &&
+                    !next.complete &&
+                    next.pulls.length === 0 &&
+                    before.length > 0
+                ) {
+                    return;
+                }
+                setPulls((prev) => (samePulls(prev, next.pulls) ? prev : next.pulls));
+            } finally {
+                finishWork(went);
             }
-            setPulls((prev) => (samePulls(prev, next.pulls) ? prev : next.pulls));
         })();
         return () => {
             cancelled = true;
