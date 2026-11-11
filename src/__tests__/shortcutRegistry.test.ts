@@ -300,16 +300,26 @@ describe("no silent clashes", () => {
     });
 
     /**
-     * Same keys, different scope. Each is a real overlap that MIP-1275 found and did not
-     * change; a NEW one fails this test until someone reads the inventory and lists it.
+     * Same keys, different scope. A NEW one fails this test until someone reads the inventory
+     * and lists it. None is left: Cmd/Ctrl+Enter is shared by `composer.send` and
+     * `taskCreate.submit`, but the latter is `contained` (it fires only inside its own form,
+     * MIP-1312), so the pair is skipped below instead of listed.
      */
-    const KNOWN_OVERLAPS = new Set(["composer.send|taskCreate.submit"]);
+    const KNOWN_OVERLAPS = new Set<string>();
+
+    const hasContained = (id: ShortcutId) => "contained" in SHORTCUTS[id];
+
+    it("the one shortcut that shares Cmd/Ctrl+Enter with the composer is contained", () => {
+        expect(hasContained("taskCreate.submit")).toBe(true);
+        expect(hasContained("composer.send")).toBe(false);
+    });
 
     it.each(PLATFORMS)("every cross-scope overlap is a known one (%s)", (platform) => {
         const found = new Set<string>();
         for (const a of SHORTCUT_IDS) {
             for (const b of SHORTCUT_IDS) {
                 if (a >= b || SHORTCUTS[a].scope === SHORTCUTS[b].scope) continue;
+                if (hasContained(a) || hasContained(b)) continue;
                 const sa = new Set(chordsOf(a, platform));
                 if (chordsOf(b, platform).some((s) => sa.has(s))) found.add(`${a}|${b}`);
             }

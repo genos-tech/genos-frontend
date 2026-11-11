@@ -82,6 +82,14 @@ export type ShortcutDef = {
      * prints its chord instead, and the cycle gesture composes its own words.
      */
     parts?: readonly string[];
+    /**
+     * A form shortcut: its handler binds with `useShortcut(..., { within })` and
+     * fires only for a key pressed inside its own surface, so it cannot fire
+     * together with the same chord used elsewhere (Cmd/Ctrl+Enter in the chat
+     * composer vs an open create-task panel, MIP-1312). The overlap test lets a
+     * contained shortcut share keys with one in another scope.
+     */
+    contained?: true;
 };
 
 const NONE: Record<Platform, readonly Chord[]> = { mac: [], other: [] };
@@ -254,6 +262,7 @@ export const SHORTCUTS = {
         },
         label: (t) => t.settings?.shortcuts?.editing?.rows?.createTask,
         editable: "allow",
+        contained: true,
     },
     // The task table's grid keys (MIP-1230). Their code is `gridNav.ts` / `useGridNav.tsx`
     // (one tab stop, arrows between cells) and `cellEditors.tsx` (Escape); they are listed

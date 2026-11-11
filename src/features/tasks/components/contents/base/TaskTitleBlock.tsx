@@ -26,6 +26,7 @@ import { MODAL_CHROME_CLEARANCE } from "../../../../../components/ui/modal/modal
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
+import { headerTouchTargetsSx } from "../../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -51,7 +52,6 @@ import { isNoMainPanelVisible } from "../../../utils/mainPanelVisibility";
 import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
 import { StatusLabel } from "../../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
-import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
 
 type TaskTitleBlockProps = {
@@ -89,6 +89,10 @@ type TaskTitleBlockProps = {
      *  lift above it (see diagramZIndex.ts), and marks the surface as
      *  modal-hosted for the header-action gating below. */
     hostZIndex?: number;
+    /** The "Delete Task" menu item (MIP-1303): the host flushes the pending save,
+     *  hides the task behind an Undo toast and closes the preview. Without it the
+     *  item is not offered. */
+    onDeleteTask?: () => void;
 };
 
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
@@ -115,6 +119,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         isSubTask,
         isDirty = false,
         hostZIndex,
+        onDeleteTask,
     } = props;
 
     const { accessToken } = useAuth();
@@ -189,7 +194,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             true
         );
     };
-    const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     // "Convert to milestone" asks first, in the app's own dialog (MIP-1042).
     const [openConvertToMilestone, setOpenConvertToMilestone] = useState<boolean>(false);
     const [showCloseDiscardConfirm, setShowCloseDiscardConfirm] = useState(false);
@@ -367,6 +371,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     // Close over this corner (see ui/modal/modalChrome): keep
                     // the header's own actions out from under them (MIP-1169).
                     ...(isModalHosted && { pr: MODAL_CHROME_CLEARANCE }),
+                    ...headerTouchTargetsSx,
                 }}
             >
                 {/* Left side: ID and Status chips (preview mode) or New Task badge (create mode) */}
@@ -739,14 +744,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     kind: "delete",
                                     label: t.tasks.titleBlock.menu.deleteTask,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
-                                    // Offered in a modal-hosted preview too:
-                                    // ModalDeleteTask lifts itself above the host
-                                    // (`hostZIndex` below).
-                                    visible: taskContent.status.status !== "Closed",
+                                    // Offered in a modal-hosted preview too: no dialog,
+                                    // the Undo toast is the safety net (MIP-1303).
+                                    visible:
+                                        !!onDeleteTask && taskContent.status.status !== "Closed",
                                     danger: true,
-                                    onClick: () => {
-                                        setOpenDeleteTask(true);
-                                    },
+                                    onClick: () => onDeleteTask?.(),
                                 },
                             ];
                             return (
@@ -872,16 +875,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 onConfirm={async () => {
                     if (taskContent.id != null) await convert.toMilestone(taskContent.id);
                 }}
-            />
-
-            <ModalDeleteTask
-                currentTaskContent={taskContent}
-                hostZIndex={hostZIndex}
-                openDeleteTask={openDeleteTask}
-                setCurrentTaskContent={setTaskContent}
-                setOpenDeleteTask={setOpenDeleteTask}
-                setTaskStatusUpdated={setTaskStatusUpdated}
-                setTaskUpdated={setTaskUpdated}
             />
 
             {taskContent.id != null && taskContent.project?.projectId != null && (

@@ -3,6 +3,7 @@ import { Box, Typography } from "@mui/joy";
 import type { SxProps } from "@mui/joy/styles/types";
 
 import { focusRing, g, type } from "../../../theme/tokens";
+import { invisibleHitAreaSx } from "../touchTargets";
 import { BUBBLE_AVATAR_SIZE, BUBBLE_TOOLBAR_OFFSET } from "./bubbleMetrics";
 
 /**
@@ -39,6 +40,10 @@ import { BUBBLE_AVATAR_SIZE, BUBBLE_TOOLBAR_OFFSET } from "./bubbleMetrics";
 
 /** Gap between the avatar column and the text. */
 const GUTTER_GAP = 12;
+
+/** The avatar opens a profile: 32px drawn, a 44px tap on a phone (MIP-1394). The area reaches 6px
+ *  past the avatar, inside the 12px gutter gap and the 4px under the header line. */
+const AVATAR_HIT_AREA = invisibleHitAreaSx("& [role='button']");
 
 export type BubbleLayout = "compact" | "bubble";
 /** A deep-link target ("focused") or the root of the open thread ("threadActive"). */
@@ -322,7 +327,9 @@ export const Bubble = (props: BubbleProps) => {
                         }}
                     >
                         {hasGutter && (
-                            <Box sx={{ flexShrink: 0 }}>{gutterNode(avatar, narrowBody)}</Box>
+                            <Box sx={{ flexShrink: 0, ...AVATAR_HIT_AREA }}>
+                                {gutterNode(avatar, narrowBody)}
+                            </Box>
                         )}
                         <Box sx={{ flex: 1, minWidth: 0 }}>{header}</Box>
                     </Box>
@@ -348,6 +355,7 @@ export const Bubble = (props: BubbleProps) => {
                         gridRow:
                             narrowBody === "below" ? { xs: 1, md: "1 / span 3" } : "1 / span 3",
                         flexShrink: 0,
+                        ...AVATAR_HIT_AREA,
                     }}
                 >
                     {gutterNode(avatar, narrowBody)}

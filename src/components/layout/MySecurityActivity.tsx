@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { Alert, Box, Button, Stack, Typography } from "@mui/joy";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Box, Button, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "../../i18n";
 import { listMySecurityEvents, SecurityEvent } from "../../services/developerApi";
+import { DataState } from "../ui/feedback/DataState";
+import { ErrorState } from "../ui/feedback/ErrorState";
 import { SkeletonRows } from "../ui/feedback/Skeleton";
 import { SecurityEventRow } from "./SecurityLogSection";
 
@@ -27,14 +29,19 @@ export const MySecurityActivity = () => {
     const [failed, setFailed] = useState(false);
     const [busy, setBusy] = useState(false);
 
+    // Bumped whenever the list is reset (token change, unmount): an answer that started
+    // before that, including one from an inline Retry, must not write into the new list.
+    const generationRef = useRef(0);
+
     // One path for the first page, a retry of it, and every older page.
     // `cursor` is null for the first page.
     const load = useCallback(
-        async (cursor: number | null, isLive: () => boolean = () => true) => {
+        async (cursor: number | null) => {
+            const generation = generationRef.current;
             setBusy(true);
             setFailed(false);
             const page = await listMySecurityEvents(accessToken, cursor);
-            if (!isLive()) return;
+            if (generation !== generationRef.current) return;
             setBusy(false);
             if (!page) {
                 setFailed(true);
@@ -49,12 +56,12 @@ export const MySecurityActivity = () => {
     );
 
     useEffect(() => {
-        let live = true;
+        generationRef.current += 1;
         setEvents(null);
         setNextBefore(null);
-        void load(null, () => live);
+        void load(null);
         return () => {
-            live = false;
+            generationRef.current += 1;
         };
     }, [load]);
 
@@ -64,35 +71,49 @@ export const MySecurityActivity = () => {
             <Typography level="body-xs" sx={{ mt: 0.5, mb: 1.5 }}>
                 {m.activityDescription}
             </Typography>
-            {events === null && !failed && <SkeletonRows count={3} twoLines />}
-            {failed && (
-                <Alert color="danger" size="sm" sx={{ mb: 1 }}>
-                    {m.activityLoadFailed}
-                </Alert>
-            )}
-            {events !== null && (
+            <DataState
+                error={failed}
+                errorState={{
+                    title: m.activityLoadFailed,
+                    onRetry: () => void load(null),
+                    "data-error": "security-activity",
+                }}
+                hasData={events !== null}
+                loading={events === null && !failed}
+                size="sm"
+                skeleton={<SkeletonRows count={3} twoLines />}
+            >
                 <Stack spacing={1}>
-                    {events.length === 0 && (
+                    {events?.length === 0 && (
                         <Typography level="body-xs" sx={{ opacity: 0.7 }}>
                             {m.activityEmpty}
                         </Typography>
                     )}
-                    {events.map((e) => (
+                    {events?.map((e) => (
                         <SecurityEventRow event={e} key={e.id} />
                     ))}
                 </Stack>
+            </DataState>
+            {/* An older page that failed keeps the rows already shown (DataState
+                ignores `error` once there is data) and says so under them; its
+                Retry asks for the SAME page, not the first one. */}
+            {events !== null && failed && (
+                <ErrorState
+                    data-error="security-activity-older"
+                    size="xs"
+                    title={m.activityLoadFailed}
+                    onRetry={() => void load(nextBefore)}
+                />
             )}
-            {/* A failed first page has no cursor, so the retry asks for it again;
-                otherwise "Show older" (or its retry) carries the next cursor. */}
-            {(nextBefore !== null || (events === null && failed)) && (
+            {nextBefore !== null && !failed && (
                 <Button
                     loading={busy}
                     size="sm"
                     sx={{ mt: 1, alignSelf: "flex-start" }}
                     variant="plain"
-                    onClick={() => void load(events === null ? null : nextBefore)}
+                    onClick={() => void load(nextBefore)}
                 >
-                    {failed ? m.activityRetry : m.activityLoadMore}
+                    {m.activityLoadMore}
                 </Button>
             )}
         </Box>

@@ -224,6 +224,7 @@ export const ja: DeepPartial<Messages> = {
             uploadFailed: "チームプロフィール画像のアップロードに失敗しました。",
         },
         connectedTeams: {
+            loadFailed: "連携チームを読み込めませんでした",
             title: "連携済みのチーム",
             explainer:
                 "連携すると、特定のチャット、プロジェクト、ノートフォルダを別のチームと共有できるようになります。連携しただけでは、相手に何も公開されません。",
@@ -399,6 +400,7 @@ export const ja: DeepPartial<Messages> = {
             unexpected: "予期しないエラーが発生しました。もう一度お試しください。",
         },
         projectLabels: {
+            loadFailed: "プロジェクトラベルを読み込めませんでした",
             sectionLabel: "タグ",
             manageTooltip: "タグを編集する",
             manageHeading: "プロジェクトタグ",
@@ -861,6 +863,7 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     calendar: {
+        eventsLoadFailed: "予定を読み込めませんでした",
         title: "カレンダー",
         today: "今日",
         prevMonth: "前月",
@@ -922,6 +925,7 @@ export const ja: DeepPartial<Messages> = {
                 "すべてのイベントを編集してもシリーズは移動されません。代わりに、単一のイベントの日付を変更します。",
         },
         sources: {
+            loadFailed: "カレンダーを読み込めませんでした",
             title: "カレンダー",
             addAccount: "Googleアカウントを追加",
             showAllFrom: "このアカウントのすべてのカレンダーを表示",
@@ -1009,6 +1013,7 @@ export const ja: DeepPartial<Messages> = {
             tag: "タグ",
             general: "一般",
             newTagPlaceholder: "新しいタグ",
+            addTag: "タグを追加",
             tags: {
                 manageTitle: "タグを管理",
                 manageTooltip: "タグを管理",
@@ -1214,6 +1219,7 @@ export const ja: DeepPartial<Messages> = {
             threadChip: "スレッド",
         },
         gmTags: {
+            loadFailed: "タグを読み込めませんでした",
             assignTitle: "「{name}」のタグ",
             cancelButton: "キャンセル",
             createButton: "追加",
@@ -2633,6 +2639,7 @@ export const ja: DeepPartial<Messages> = {
                 connectButton: "GitHubに接続する",
                 privateOrDeleted:
                     "この PR は、アクセス権のないリポジトリに対してプライベートになっているか、削除されています。",
+                loadFailed: "この PR を読み込めませんでした。",
                 state: {
                     merged: "マージ済み",
                     draft: "下書き",
@@ -2728,7 +2735,6 @@ export const ja: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "ノートの概要を読み込めませんでした。",
-            retry: "リトライ",
             forbidden: "このノートにはアクセスできません。",
         },
     },
@@ -3023,6 +3029,8 @@ export const ja: DeepPartial<Messages> = {
             },
         },
         history: {
+            detailLoadFailed: "このバージョンを読み込めませんでした",
+            listLoadFailed: "バージョン履歴を読み込めませんでした",
             chipTooltip: "バージョン履歴を表示",
             viewVersions: "バージョンを表示",
             chipSummary: "{name} が編集 ・ {time}",
@@ -3334,6 +3342,7 @@ export const ja: DeepPartial<Messages> = {
             everyoneAlreadyMember: "誰もがすでに会員です。",
         },
         customEmoji: {
+            loadFailed: "カスタム絵文字を読み込めませんでした",
             heading: "カスタム絵文字",
             description:
                 "チーム全体の絵文字、アニメーション GIF は大歓迎です。任意のエディターで「:name:」と入力するか、絵文字ピッカーから選択するか、リアクションとして使用します。チームの誰でも追加できます。アップロード者のみが削除できます。",
@@ -3518,7 +3527,6 @@ export const ja: DeepPartial<Messages> = {
             activityEmpty: "まだ記録はありません。",
             activityLoadFailed: "セキュリティ アクティビティを読み込めませんでした。",
             activityLoadMore: "さらに古い記録を表示",
-            activityRetry: "再試行",
             teamsHeading: "参加中のチーム",
             teamsDescription:
                 "チームから抜けると、そのチームのチャット・プロジェクト・ノートにアクセスできなくなります。アカウントや他のチームはそのまま残り、あとから招待してもらうこともできます。",
@@ -4963,10 +4971,7 @@ export const ja: DeepPartial<Messages> = {
         createForm: {
             taskDetails: "タスクの詳細",
             preparing: "準備中…",
-            bootstrapFailed:
-                "新しいタスクを準備できませんでした。接続を確認して、もう一度お試しください。",
-            bootstrapRetry: "再試行",
-            bootstrapCancel: "キャンセル",
+            bootstrapFailed: "新しいタスクを準備できませんでした",
             cancel: "キャンセル",
             createTask: "タスクを作成",
             createMilestone: "マイルストーンを作成",
@@ -5365,6 +5370,12 @@ export const ja: DeepPartial<Messages> = {
             allMembers: "メンバー全員",
             noAssignee: "担当者なし",
         },
+        deleteUndo: {
+            deleted: "タスクを削除しました",
+            milestoneDeleted: "マイルストーンを削除しました",
+            errorRestored: "タスクを削除できませんでした。元に戻しました。",
+            milestoneErrorRestored: "マイルストーンを削除できませんでした。元に戻しました。",
+        },
         savedFilters: {
             button: "保存されたフィルター",
             tooltip:
@@ -5436,10 +5447,14 @@ export const ja: DeepPartial<Messages> = {
             },
             loadingTasks: "タスクの読み込みを待っています…",
             gridLabel: "タスク一覧",
+            rowActionsHeader: "行の操作",
+            expandHeader: "展開",
             emptyTitle: "表示するタスクがありません",
             emptyHint: "フィルターを調整してみてください",
             addTagsPlaceholder: "タグを追加…",
             addTagsMenuItem: "+ タグを追加",
+            setPriority: "優先度を設定",
+            setEffort: "Effortレベルを設定",
         },
         dueLabel: {
             noDueDate: "締切なし",
@@ -5867,7 +5882,6 @@ export const ja: DeepPartial<Messages> = {
         },
         errors: {
             loadFailed: "スレッドの概要を読み込めませんでした。",
-            retry: "リトライ",
             forbidden: "このスレッドにアクセスできません。",
         },
     },

@@ -1,4 +1,5 @@
 import { g } from "../../../theme/tokens";
+import { headerTouchTargetsSx } from "../touchTargets";
 
 /**
  * The frame of every top bar (MIP-1134). Kept apart from `PageHeader.tsx`
@@ -20,4 +21,5 @@ export const pageHeaderFrameSx = {
     px: { xs: 2, md: 3 },
     background: g.bg.default,
     borderBottom: `1px solid ${g.border.subtle}`,
+    ...headerTouchTargetsSx,
 } as const;

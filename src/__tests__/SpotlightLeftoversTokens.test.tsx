@@ -20,7 +20,7 @@ import { describe, expect, it } from "vitest";
 import { MentionSuggestionDropdown } from "../features/agentQA/mentions/MentionSuggestionDropdown";
 import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
 import { THEME_IDS, THEME_PRIMITIVES } from "../theme/themePalettes";
-import { composite, contrast } from "../theme/tokens/color";
+import { composite, contrast, hexToOklch, oklchToHex } from "../theme/tokens/color";
 import { buildRoles } from "../theme/tokens/roles";
 
 const src = (rel: string) => readFileSync(join(__dirname, "..", rel), "utf8");
@@ -145,7 +145,7 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
     /** Every (theme, fill) where the token reads lower than the old hex. */
     const regressions = (
         mode: "light" | "dark",
-        oldFg: string,
+        oldFg: string | ((id: (typeof THEME_IDS)[number]) => string),
         newFg: (r: Roles) => string,
         chips?: { old: Wash; new: (r: Roles) => Wash }
     ) =>
@@ -153,7 +153,7 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
             const r = buildRoles(id, mode);
             return fillsOf(r).flatMap(([fill, f]) => {
                 const before = contrast(
-                    oldFg,
+                    typeof oldFg === "function" ? oldFg(id) : oldFg,
                     chips ? composite(chips.old.hex, chips.old.a, f) : f
                 );
                 const nw = chips ? chips.new(r) : null;
@@ -186,13 +186,6 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
         }
     });
 
-    it("received dark bubble quote rule: accent text (was #818cf8)", () => {
-        expect(regressions("dark", "#818cf8", (r) => r.accentText)).toEqual([]);
-        expect(rule('.bn-message-bubble-box-dark [data-content-type="quote"] blockquote')).toMatch(
-            /border-left-color:\s*var\(--g-accent-text\)/
-        );
-    });
-
     it("the file block: the name is accent text (was #1b60ae), its hover text (was #0800ff), the size secondary (was #af9c9e)", () => {
         expect(regressions("dark", "#1b60ae", (r) => r.accentText)).toEqual([]);
         expect(regressions("dark", "#0800ff", (r) => r.text)).toEqual([]);
@@ -216,18 +209,160 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
         ).toBeGreaterThan(0);
     });
 
-    it("the rules whose token would be lower keep their hex or brand stop", () => {
+    // ---- MIP-1317: the link roles -------------------------------------------------
+    const BUBBLES = [
+        ".bn-message-bubble-box-dark",
+        ".bn-message-bubble-box-dark-me",
+        ".task-comment-preview-dark",
+    ];
+
+    it("dark links: --g-link / -visited / -hover are not lower than the hex on any fill", () => {
+        // Received bubble (#a5b4fc / #c4b5fd / #c7d2fe) and the sent bubble and comment
+        // (#c7d2fe / #ddd6fe / #e0e7ff): the roles clear the stricter of the two.
+        for (const [oldHex, role] of [
+            ["#a5b4fc", (r: Roles) => r.link],
+            ["#c7d2fe", (r: Roles) => r.link],
+            ["#c4b5fd", (r: Roles) => r.linkVisited],
+            ["#ddd6fe", (r: Roles) => r.linkVisited],
+            ["#c7d2fe", (r: Roles) => r.linkHover],
+            ["#e0e7ff", (r: Roles) => r.linkHover],
+        ] as const) {
+            expect(regressions("dark", oldHex, role), oldHex).toEqual([]);
+        }
+        for (const root of BUBBLES) {
+            expect(rule(`${root} a`)).toMatch(/color:\s*var\(--g-link\)/);
+            expect(rule(`${root} a:visited`)).toMatch(/color:\s*var\(--g-link-visited\)/);
+            expect(rule(`${root} a:hover`)).toMatch(/color:\s*var\(--g-link-hover\)/);
+        }
+    });
+
+    it("dark quotes: the bar is --g-link and the text --g-text-quote (were #a5b4fc / #818cf8 and #cbd5e1 / #c7d2fe)", () => {
+        for (const oldHex of ["#a5b4fc", "#818cf8"]) {
+            expect(
+                regressions("dark", oldHex, (r) => r.link),
+                oldHex
+            ).toEqual([]);
+        }
+        for (const oldHex of ["#cbd5e1", "#c7d2fe"]) {
+            expect(
+                regressions("dark", oldHex, (r) => r.textQuote),
+                oldHex
+            ).toEqual([]);
+        }
+        for (const root of [...BUBBLES, ".inbox-preview-dark"]) {
+            const body = rule(`${root} [data-content-type="quote"] blockquote`);
+            expect(body).toMatch(/border-left-color:\s*var\(--g-link\)/);
+            expect(body).toMatch(/(?:^|[;\s])color:\s*var\(--g-text-quote\)/);
+        }
+    });
+
+    it("light quotes and the sent code: --g-link is not lower than the brand 700 stop on any fill", () => {
+        expect(
+            regressions(
+                "light",
+                (id) => THEME_PRIMITIVES[id].ramp[700],
+                (r) => r.link
+            )
+        ).toEqual([]);
+        for (const oldHex of ["#4b5563", "#4338ca"]) {
+            expect(
+                regressions("light", oldHex, (r) => r.textQuote),
+                oldHex
+            ).toEqual([]);
+        }
         for (const root of [
             ".bn-message-bubble-box-light",
             ".bn-message-bubble-box-light-me",
             ".task-comment-preview-light",
+            ".inbox-preview-light",
         ]) {
-            expect(rule(`${root} [data-content-type="quote"] blockquote`)).toMatch(
-                /border-left-color:\s*var\(--gp-brand-700\)/
-            );
+            const body = rule(`${root} [data-content-type="quote"] blockquote`);
+            expect(body).toMatch(/border-left-color:\s*var\(--g-link\)/);
+            expect(body).toMatch(/(?:^|[;\s])color:\s*var\(--g-text-quote\)/);
         }
-        expect(rule(".bn-message-bubble-box-light-me code")).toMatch(
-            /color:\s*var\(--gp-brand-700\)/
-        );
+        expect(rule(".bn-message-bubble-box-light-me code")).toMatch(/color:\s*var\(--g-link\)/);
+    });
+
+    it("no bubble link or quote rule keeps a hex or brand variable", () => {
+        for (const root of [...BUBBLES, ".inbox-preview-dark"]) {
+            const quote = rule(`${root} [data-content-type="quote"] blockquote`);
+            expect(quote).not.toMatch(/#[0-9a-f]{3,6}|--gp-/i);
+        }
+        for (const root of BUBBLES) {
+            for (const suffix of [" a", " a:visited", " a:hover"]) {
+                expect(rule(`${root}${suffix}`)).not.toMatch(/#[0-9a-f]{3,6}/i);
+            }
+        }
+    });
+
+    // ---- MIP-1388: the bubble code chips and the received dark body ----------------
+    it("sent light bubble: code on --g-active (was the brand 700 stop on indigo .15, a lavender chip on every theme)", () => {
+        expect(
+            regressions(
+                "light",
+                (id) => THEME_PRIMITIVES[id].ramp[700],
+                (r) => r.link,
+                { old: { hex: "#6366f1", a: 0.15 }, new: (r) => r.active }
+            )
+        ).toEqual([]);
+        const body = rule(".bn-message-bubble-box-light-me code");
+        expect(body).toMatch(/background-color:\s*var\(--g-active\)/);
+        expect(body).toMatch(/color:\s*var\(--g-link\)/);
+        expect(body).not.toMatch(/rgba?\(|#[0-9a-f]{3,6}/i);
+    });
+
+    it("received dark bubble: body text on --g-text (was #f3f4f6; the role was up to 0.65:1 lower until its dark lightness moved to 0.97)", () => {
+        expect(regressions("dark", "#f3f4f6", (r) => r.text)).toEqual([]);
+        expect(rule(".bn-message-bubble-box-dark .bn-editor")).toMatch(/color:\s*var\(--g-text\)/);
+        // The bump is the only reason this passes: at the old lightness it fails.
+        expect(
+            THEME_IDS.some((id) => {
+                const r = buildRoles(id, "dark");
+                const old = oklchToHex(0.955, 0.006, hexToOklch(THEME_PRIMITIVES[id].ramp[600]).h);
+                return fillsOf(r).some(([, f]) => contrast(old, f) < contrast("#f3f4f6", f));
+            })
+        ).toBe(true);
+    });
+
+    it("received dark bubble: code on --g-text-code over --g-active (was #fb923c on black .3)", () => {
+        expect(
+            regressions("dark", "#fb923c", (r) => r.codeInk, {
+                old: { hex: "#000000", a: 0.3 },
+                new: (r) => r.active,
+            })
+        ).toEqual([]);
+        const body = rule(".bn-message-bubble-box-dark code");
+        expect(body).toMatch(/color:\s*var\(--g-text-code\)/);
+        expect(body).toMatch(/background-color:\s*var\(--g-active\)/);
+        expect(body).not.toMatch(/rgba?\(|#[0-9a-f]{3,6}/i);
+        // The warning ink the sent bubble uses would NOT have held it: that is why the role exists.
+        expect(
+            regressions("dark", "#fb923c", (r) => r.warning.text, {
+                old: { hex: "#000000", a: 0.3 },
+                new: (r) => r.active,
+            }).length
+        ).toBeGreaterThan(0);
+    });
+
+    it("the roles are what the contrast rows promise on a spread of themes", () => {
+        // Floors, not exact colors: link 9.5 (dark) / AA (light), quote text 9.5 / 7.
+        for (const id of THEME_IDS) {
+            for (const [mode, link, quote] of [
+                ["dark", 9.5, 9.5],
+                ["light", 4.5, 7],
+            ] as const) {
+                const r = buildRoles(id, mode);
+                // A hover and a visited link are a different color from the link itself.
+                expect(r.linkHover, `${id}/${mode} hover`).not.toBe(r.link);
+                expect(r.linkVisited, `${id}/${mode} visited`).not.toBe(r.link);
+                const fills = fillsOf(r).map(([, f]) => f);
+                for (const f of fills) {
+                    expect(contrast(r.link, f), `${id}/${mode} link`).toBeGreaterThanOrEqual(link);
+                    expect(contrast(r.textQuote, f), `${id}/${mode} quote`).toBeGreaterThanOrEqual(
+                        quote
+                    );
+                }
+            }
+        }
     });
 });

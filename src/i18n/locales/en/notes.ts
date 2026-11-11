@@ -311,6 +311,8 @@ export const notes = {
         },
     },
     history: {
+        detailLoadFailed: "Couldn't load this version",
+        listLoadFailed: "Couldn't load the version history",
         chipTooltip: "View version history",
         viewVersions: "View versions",
         chipSummary: "Edited by {name} · {time}",

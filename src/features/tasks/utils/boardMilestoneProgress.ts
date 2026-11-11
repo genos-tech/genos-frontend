@@ -1,7 +1,11 @@
 import { TaskTableProps } from "../../../types/tasks";
 import { Milestone } from "../sprint-milestone/types";
+import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
-type CountedTask = Pick<TaskTableProps, "milestoneId" | "isMilestone" | "status">;
+type CountedTask = Pick<
+    TaskTableProps,
+    "id" | "parentTaskId" | "milestoneId" | "isMilestone" | "status"
+>;
 
 /**
  * The sprint board's milestone cards, keyed by their BACKING TASK's id (the
@@ -13,7 +17,9 @@ type CountedTask = Pick<TaskTableProps, "milestoneId" | "isMilestone" | "status"
  * dragged to Closed, until a reload. The loaded task rows are always current,
  * so count those instead, the same way the milestone preview does for its
  * status chips: by `milestoneId`, never the milestone's own backing row, and
- * not Deleted tasks.
+ * not Deleted tasks. A task under a Closed ancestor (a parent at any depth, or
+ * the milestone itself) counts as Closed and one under a Deleted ancestor is not
+ * counted, whatever its own status says (MIP-1389): a Closed milestone reads N/N.
  *
  * A milestone none of whose tasks is loaded keeps the server's numbers (the
  * rows may simply not be here yet; an empty count must not read as "0/0
@@ -25,12 +31,15 @@ export const milestonesByTaskIdWithLiveProgress = (
     tasks: ReadonlyArray<CountedTask>
 ): Map<number, Milestone> => {
     const counts = new Map<number, { total: number; closed: number }>();
+    const verdicts = selectAncestorVerdicts(tasks);
     for (const task of tasks) {
-        if (task.isMilestone || task.milestoneId == null || task.status === "Deleted") continue;
+        if (task.isMilestone || task.milestoneId == null) continue;
+        const status = effectiveStatusOf(task, verdicts);
+        if (status === "Deleted") continue;
         const id = Number(task.milestoneId);
         const c = counts.get(id) ?? { total: 0, closed: 0 };
         c.total += 1;
-        if (task.status === "Closed") c.closed += 1;
+        if (status === "Closed") c.closed += 1;
         counts.set(id, c);
     }
 

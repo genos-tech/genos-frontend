@@ -354,6 +354,7 @@ const SprintBoardColumnImpl = ({
                                             key={task.id}
                                             columnId={column.id}
                                             index={index}
+                                            inClosedColumn={column.status === "Closed"}
                                             isSelected={isSelected}
                                             milestone={milestone}
                                             myself={myself}

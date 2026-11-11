@@ -7,6 +7,7 @@ import { useTheme } from "@mui/joy/styles";
 import dayjs, { Dayjs } from "dayjs";
 
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
+import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../context/AuthContext";
@@ -135,7 +136,15 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const [anchor, setAnchor] = useState<Dayjs>(() => dayjs().startOf("day"));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // The events request itself failed (not a per-source problem, which arrives as
+    // `failed_sources`): the grid is empty because nothing loaded, not because the
+    // month is free.
+    const [eventsFailed, setEventsFailed] = useState(false);
     const [needsConnect, setNeedsConnect] = useState(false);
+    // The "which accounts are connected" probe itself failed. That is NOT "no Google
+    // account": it used to read as one and offer "Connect Google" (MIP-1305).
+    const [connectionsFailed, setConnectionsFailed] = useState(false);
+    const [probeAttempt, setProbeAttempt] = useState(0);
     const [needsScope, setNeedsScope] = useState(false);
     // Google accounts the user has connected. Held so per-account
     // failures can be reported by email rather than by opaque id.
@@ -149,7 +158,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         Array<{ accountId: string; reason: string }>
     >([]);
 
-    const sources = useCalendarSources(accessToken, open && !needsConnect);
+    const sources = useCalendarSources(accessToken, open && !needsConnect && !connectionsFailed);
     const { selectedSources, colorBySource, calendars } = sources;
 
     // Per-(view, range-start, selection) cache. Switching views or
@@ -224,9 +233,14 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         let cancelled = false;
         setNeedsConnect(false);
         setNeedsScope(false);
+        setConnectionsFailed(false);
         void (async () => {
             const res: ConnectionsResponse | null = await listConnections(accessToken);
             if (cancelled) return;
+            if (res === null) {
+                setConnectionsFailed(true);
+                return;
+            }
             const google = findGoogleConnections(res);
             setGoogleAccounts(google);
             if (google.length === 0) {
@@ -244,7 +258,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         return () => {
             cancelled = true;
         };
-    }, [open, accessToken]);
+    }, [open, accessToken, probeAttempt]);
 
     const fetchEvents = useCallback(
         async (key: string, useCache: boolean) => {
@@ -259,6 +273,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             }
             setLoading(true);
             setError(null);
+            setEventsFailed(false);
             const res = await listEventsAggregate(
                 accessToken,
                 {
@@ -269,6 +284,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 setError
             );
             setLoading(false);
+            setEventsFailed(res === null);
             if (!res || typeof res === "string") {
                 // Endpoint-level failure. `listEventsAggregate` already
                 // surfaced the message; per-source problems arrive via
@@ -310,6 +326,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             setEvents([]);
             setPopoverDayKey(null);
             setError(null);
+            setEventsFailed(false);
             setFailedSourceKeys([]);
             // Reset the anchor (so the user always reopens onto
             // "today") but preserve the view — the view is the
@@ -326,6 +343,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     }, [cacheKey, fetchEvents]);
 
     const showGrid = !needsConnect && !needsScope;
+    // The calendar list never loaded: there is no grid to draw yet, only Retry.
+    const listFailedEmpty =
+        connectionsFailed || (sources.failed && sources.calendars.length === 0);
+    const retryList = connectionsFailed ? () => setProbeAttempt((n) => n + 1) : sources.reload;
 
     const stepBackward = () => {
         if (view === "month") setAnchor(anchor.subtract(1, "month"));
@@ -578,10 +599,25 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     )}
                 </Stack>
 
-                {error && (
-                    <Alert color="danger" sx={{ mb: 1.5, flexShrink: 0 }}>
-                        {error}
-                    </Alert>
+                {showGrid && (eventsFailed || (sources.failed && !listFailedEmpty)) ? (
+                    <Box sx={{ mb: 1.5, flexShrink: 0 }}>
+                        <ErrorState
+                            data-error={sources.failed ? "calendar-sources" : "calendar-events"}
+                            size="xs"
+                            title={
+                                sources.failed
+                                    ? t.calendar.sources.loadFailed
+                                    : t.calendar.eventsLoadFailed
+                            }
+                            onRetry={sources.failed ? sources.reload : refreshCurrent}
+                        />
+                    </Box>
+                ) : (
+                    error && (
+                        <Alert color="danger" sx={{ mb: 1.5, flexShrink: 0 }}>
+                            {error}
+                        </Alert>
+                    )
                 )}
 
                 {needsConnect && accessToken && (
@@ -658,7 +694,16 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                     </Alert>
                 )}
 
-                {showGrid && (
+                {showGrid && listFailedEmpty && (
+                    <ErrorState
+                        data-error="calendar-sources"
+                        title={t.calendar.sources.loadFailed}
+                        fill
+                        onRetry={retryList}
+                    />
+                )}
+
+                {showGrid && !listFailedEmpty && (
                     <Stack
                         // Mobile: source strip on top, grid below.
                         // Desktop: side rail + grid (original layout).

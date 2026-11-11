@@ -8,7 +8,7 @@
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { useMemberRemoval } from "../components/ui/memberRoles/useMemberRemoval";
 import { canRemoveMember, MEMBER_ROLE, type MemberRole } from "../utils/memberRoles";
@@ -89,8 +89,10 @@ const buttons = () =>
 
 const OPEN_WORK = { tasks: 3, milestones: 1 };
 
+type RemoveFn = (id: string, unassign: boolean) => Promise<unknown>;
+
 describe("who gets a remove button", () => {
-    const remove = vi.fn().mockResolvedValue({});
+    const remove = vi.fn<RemoveFn>().mockResolvedValue({});
 
     it("the owner gets one on every row but their own", () => {
         mount({ kind: "team", me: OWNER, myRole: "owner", remove });
@@ -119,11 +121,11 @@ describe("who gets a remove button", () => {
 });
 
 describe("the confirm dialog", () => {
-    let remove: ReturnType<typeof vi.fn>;
-    let onRemoved: ReturnType<typeof vi.fn>;
+    let remove: Mock<RemoveFn>;
+    let onRemoved: Mock<(id: string) => void>;
     beforeEach(() => {
-        remove = vi.fn().mockResolvedValue({});
-        onRemoved = vi.fn();
+        remove = vi.fn<RemoveFn>().mockResolvedValue({});
+        onRemoved = vi.fn<(id: string) => void>();
     });
 
     const open = (id = VIEWER) => fireEvent.click(screen.getByTestId(`remove-member-${id}`));

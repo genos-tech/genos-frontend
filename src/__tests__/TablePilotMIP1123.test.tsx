@@ -88,8 +88,9 @@ describe("status, priority and effort in the table are the shared components", (
 
     it("the cells are CellButton + the shared labels, not solid chips", () => {
         expect(row).toMatch(/<CellButton[\s\S]{0,160}?<StatusLabel/);
-        expect(row).toMatch(/<CellButton[\s\S]{0,160}?<PriorityIcon/);
-        expect(row).toMatch(/<CellButton[\s\S]{0,160}?<EffortLabel/);
+        // An empty priority / effort is the same CellButton (MIP-1400), so the value is a little further in.
+        expect(row).toMatch(/<CellButton[\s\S]{0,320}?<PriorityIcon/);
+        expect(row).toMatch(/<CellButton[\s\S]{0,320}?<EffortLabel/);
         expect(row).not.toMatch(/<PillChip[^>]*icon=\{statusOption/);
     });
 

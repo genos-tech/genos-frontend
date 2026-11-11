@@ -238,7 +238,14 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 showGifPicker={showGifPicker}
                 onSelect={insertGif}
             />
-            <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            {/* data-fab-avoid: the floating "Open Genos" button rises above this box
+                instead of covering Send (MIP-1403). */}
+            <Box
+                ref={editorBoxRef}
+                className={bnBoxClassName}
+                data-fab-avoid="composer"
+                sx={{ position: "relative" }}
+            >
                 <FileUploadStatusBadge count={composer.editorUploadCount} />
                 <FileUploadOverlay
                     label={t.common.ui.fileUpload.uploadingDroppedFiles}

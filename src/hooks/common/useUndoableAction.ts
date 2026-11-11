@@ -59,6 +59,22 @@ export type UndoableRun = {
     onRestore?: () => void;
     /** After a commit succeeded. */
     onCommitted?: () => void;
+    /**
+     * After a commit succeeded, let the list show the key again (default: it
+     * stays hidden for the session, right for a hard delete). For a soft delete
+     * that can be undone from elsewhere (a task given another status): the
+     * hiding was only for the wait, and `onCommitted` has already put the
+     * committed state where the list reads it, so nothing flickers. Also lets
+     * the same item be deleted again after it was restored.
+     */
+    releaseOnCommit?: boolean;
+    /**
+     * Do not commit when the route changes (`UndoableRouteFlush`). For a delete
+     * that closes its own preview, which moves the URL a moment after the
+     * toast opened and would otherwise end the window at once. The toast timer,
+     * another action starting and the page going away still commit it.
+     */
+    keepOnNavigate?: boolean;
     /** ms the toast stays; default is the toast's own 8 s. */
     duration?: number;
 };
@@ -110,8 +126,10 @@ const commit = async (entry: Entry) => {
         await entry.run.commit();
         entry.state = "settled";
         entries.delete(entry.run.key);
-        // Stays hidden: it is gone for good.
+        // Stays hidden unless the caller asked to release it: it is gone for good.
+        // `onCommitted` goes first, so a release finds the committed state in place.
         entry.run.onCommitted?.();
+        if (entry.run.releaseOnCommit) setHidden(entry.run.key, false);
     } catch (error) {
         console.error("[undoable] commit failed:", error);
         entry.state = "settled";
@@ -144,6 +162,7 @@ const commitOnExit = (entry: Entry) => {
  */
 export const flushUndoables = (reason: "next" | "navigate" | "exit" = "navigate"): void => {
     for (const entry of [...entries.values()]) {
+        if (reason === "navigate" && entry.run.keepOnNavigate) continue;
         if (reason !== "exit") void commit(entry);
         else if (entry.state === "pending") commitOnExit(entry);
         else sendExitAgain(entry);

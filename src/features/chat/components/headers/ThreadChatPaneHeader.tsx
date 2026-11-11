@@ -26,6 +26,7 @@ import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFram
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -67,6 +68,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const { myself, useCM, useNM, useTM, threadTaskMeta, hostZIndex } = props;
     // Layer for popups spawned by this header when it's modal-hosted.
     const popupZIndex = hostZIndex != null ? hostZIndex + 1 : undefined;
+    // Inside a preview dialog (ModalChatView passes its stacking level).
+    const isModalHosted = hostZIndex != null;
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -235,7 +238,29 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     // isThreadVisible, so the main chat pane takes over.
     const handleMobileBack = closeThreadByUser;
 
+    // Hosted in the preview dialog, the page-state setters below (task preview, note panel,
+    // create-task) drive the page BEHIND the dialog and look dead (MIP-1384). "Open task"
+    // re-targets the dialog to the task instead, the mirror of the task preview's "Check
+    // thread" (TaskTitleBlock). Thread note and Create task have no dialog target (a note
+    // needs a note id, create-task is a page panel), so they are not offered while hosted.
+    const urlLinkModal = useUrlLinkModal();
+    const threadTaskProjectId =
+        threadTaskMeta?.project?.projectId ?? useCM.currentThreadChat?.project?.projectId;
+    const hostedTaskHref = (() => {
+        const metaId = Number(threadTaskMeta?.id);
+        const taskId = Number.isFinite(metaId) && metaId > 0 ? metaId : currentThreadTaskId;
+        if (!urlLinkModal || threadTaskProjectId == null || taskId == null || taskId <= 0) {
+            return null;
+        }
+        return `/workspace/tasks/project/${threadTaskProjectId}/task/${taskId}`;
+    })();
+    const canOpenTask = !isModalHosted || hostedTaskHref != null;
+    const openTaskInDialog = () => {
+        if (hostedTaskHref) urlLinkModal?.openModalByHref(hostedTaskHref);
+    };
+
     const openTaskHandler = () => {
+        if (isModalHosted) return openTaskInDialog();
         useCM.setIsMainChatVisible(false);
         useCM.setIsThreadVisible(true);
         useTM.setCurrentPreviewTaskId(currentThreadTaskId);
@@ -255,6 +280,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     // lives outside the currently-loaded one (DM/GM cross-project
     // threads, where neither the host channel nor `allTasks` can help).
     const openTaskFromMeta = () => {
+        if (isModalHosted) return openTaskInDialog();
         const meta = threadTaskMeta;
         useCM.setIsMainChatVisible(false);
         useCM.setIsThreadVisible(true);
@@ -387,15 +413,19 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     ...modalChromeEndPadding("8px"),
                 }}
             >
-                <IconButton
-                    size="sm"
-                    variant="plain"
-                    onClick={handleMobileBack}
-                    aria-label={t.chat.headers.backToChat}
-                    sx={{ flexShrink: 0 }}
-                >
-                    <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
-                </IconButton>
+                {/* Back to the main chat by navigating the PAGE. A preview dialog has no page
+                    behind it to go back on, and its own Close is the way out (MIP-1321). */}
+                {!isModalHosted && (
+                    <IconButton
+                        size="sm"
+                        variant="plain"
+                        onClick={handleMobileBack}
+                        aria-label={t.chat.headers.backToChat}
+                        sx={{ flexShrink: 0 }}
+                    >
+                        <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                )}
 
                 <Stack
                     direction="row"
@@ -440,12 +470,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             {t.threadAsk.headerButton.label}
                         </MenuRow>
                         {/* Same order as the desktop MoreMenu (moreMenuOrder.ts). */}
-                        {hasTask && (
+                        {hasTask && canOpenTask && (
                             <MenuRow onClick={openTaskHandler} icon={<AssignmentRoundedIcon />}>
                                 {t.chat.headers.openTask}
                             </MenuRow>
                         )}
-                        {chatType !== 3 && (
+                        {chatType !== 3 && !isModalHosted && (
                             <MenuRow onClick={openNoteHandler} icon={<NoteAltRoundedIcon />}>
                                 {t.chat.headers.threadNoteMenuItem}
                             </MenuRow>
@@ -455,7 +485,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 {t.chat.headers.copyThreadLink}
                             </MenuRow>
                         )}
-                        {!hasTask && chatType !== 3 && (
+                        {!hasTask && chatType !== 3 && !isModalHosted && (
                             <MenuRow onClick={createTaskHandler} icon={<AddTaskRoundedIcon />}>
                                 {t.chat.headers.threadTaskMenuItem}
                             </MenuRow>
@@ -606,7 +636,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     task: DM/GM/MDM once a task was created from the
                     thread, PM always (a PM thread IS a task thread).
                     Clicking opens the task preview. */}
-                {threadTaskMeta && currentThreadTaskId !== -1 && (
+                {threadTaskMeta && currentThreadTaskId !== -1 && canOpenTask && (
                     <TaskInfoPill task={threadTaskMeta} onOpen={openTaskFromMeta} />
                 )}
 
@@ -637,8 +667,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {(() => {
                     const hasTask = currentThreadTaskId !== -1;
                     const chatType = useCM.currentThreadChat?.chatType;
-                    const showOpenNote = chatType !== 3;
-                    const showCreateTask = !hasTask && chatType !== 3;
+                    const showOpenNote = chatType !== 3 && !isModalHosted;
+                    const showCreateTask = !hasTask && chatType !== 3 && !isModalHosted;
                     // Copy-link is offered on DM/GM/MDM threads (PM threads
                     // are addressed by task and carry their own copy-task-
                     // link on the preview).
@@ -695,7 +725,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
                 {/* Close Button. In a preview modal the dialog has its own Close, and this
                     one would sit right under it (MIP-1296). */}
-                {hostZIndex == null && (
+                {!isModalHosted && (
                     <AppTooltip size="sm" title={t.chat.headers.close}>
                         <IconButton
                             size="sm"

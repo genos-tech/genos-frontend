@@ -63,6 +63,7 @@ export type TaskTableRowsProps = {
     onQuickAddChild: (task: TaskTableProps) => void;
     onRequestPreview: (task: TaskTableProps) => void;
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;
+    onDeleteTask: (task: TaskTableProps) => void;
     onQuickAddClose: () => void;
     onQuickAddDirtyChange: (dirty: boolean) => void;
     onQuickAddSubmit: (parent: TaskTableProps, draft: QuickAddDraft) => Promise<void>;
@@ -98,6 +99,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
         onQuickAddChild,
         onRequestPreview,
         onRowUpdate,
+        onDeleteTask,
         onQuickAddClose,
         onQuickAddDirtyChange,
         onQuickAddSubmit,
@@ -141,6 +143,7 @@ const TaskTableRowsImpl = (props: TaskTableRowsProps) => {
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
+                        onDeleteTask={onDeleteTask}
                         onOpenDiagram={onOpenDiagram}
                         onQuickAddChild={onQuickAddChild}
                         onRequestPreview={onRequestPreview}
