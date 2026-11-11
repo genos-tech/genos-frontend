@@ -4,6 +4,7 @@ export {
     SHORTCUTS,
     chordMatches,
     currentPlatform,
+    editablePolicy,
     cycleKeys,
     isEditableTarget,
     matchesShortcut,

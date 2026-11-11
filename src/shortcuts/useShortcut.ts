@@ -1,6 +1,12 @@
 import { useEffect, useRef, type RefObject } from "react";
 
-import { isEditableTarget, matchesShortcut, SHORTCUTS, type ShortcutId } from "./registry";
+import {
+    editablePolicy,
+    isEditableTarget,
+    matchesShortcut,
+    SHORTCUTS,
+    type ShortcutId,
+} from "./registry";
 
 /** Inside `scope`, or nowhere in particular (focus on `body`, a non-node target)? */
 const isInsideOrIdle = (scope: HTMLElement | null, target: EventTarget | null): boolean => {
@@ -52,7 +58,7 @@ export const useShortcut = (
         const onKeyDown = (event: Event) => {
             const e = event as KeyboardEvent;
             if (!matchesShortcut(id, e)) return;
-            if (SHORTCUTS[id].editable === "skip" && isEditableTarget(e.target)) return;
+            if (editablePolicy(id) === "skip" && isEditableTarget(e.target)) return;
             if (within && !isInsideOrIdle(within.current, e.target)) return;
             handlerRef.current(e);
             if (claims) e.stopPropagation();

@@ -98,4 +98,51 @@ describe("letter shortcuts", () => {
         expect(onOpenCalendarModal).toHaveBeenCalledTimes(1);
         expect(result.current.previewIndex).toBeNull();
     });
+
+    describe("inside an editor (MIP-1311)", () => {
+        const editorTarget = () => {
+            const editor = document.body.appendChild(document.createElement("div"));
+            editor.setAttribute("contenteditable", "true");
+            return editor.appendChild(document.createElement("p"));
+        };
+        const pressOn = (target: EventTarget, init: KeyboardEventInit) => {
+            const e = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init });
+            act(() => {
+                target.dispatchEvent(e);
+            });
+            return e;
+        };
+
+        it.each(CASES)(
+            "Windows / Linux: Ctrl+Alt+%s does nothing and leaves the event to the editor",
+            (letter, option) => {
+                mac = false;
+                const fn = vi.fn();
+                setup({ [option]: fn });
+                const e = pressOn(editorTarget(), { key: letter, ctrlKey: true, altKey: true });
+                expect(fn).not.toHaveBeenCalled();
+                expect(e.defaultPrevented).toBe(false);
+                // outside an editor the same chord still runs
+                pressOn(document.body, { key: letter, ctrlKey: true, altKey: true });
+                expect(fn).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it("Windows / Linux: a plain input is skipped too (AltGr+letter types text)", () => {
+            mac = false;
+            const onOpenCalendarModal = vi.fn();
+            setup({ onOpenCalendarModal });
+            const input = document.body.appendChild(document.createElement("input"));
+            pressOn(input, { key: "c", ctrlKey: true, altKey: true });
+            expect(onOpenCalendarModal).not.toHaveBeenCalled();
+        });
+
+        it.each(CASES)("Mac: Ctrl+Cmd+%s still runs inside an editor", (letter, option) => {
+            const fn = vi.fn();
+            setup({ [option]: fn });
+            const e = pressOn(editorTarget(), { key: letter, ctrlKey: true, metaKey: true });
+            expect(fn).toHaveBeenCalledTimes(1);
+            expect(e.defaultPrevented).toBe(true);
+        });
+    });
 });

@@ -4282,6 +4282,8 @@ export const ja: DeepPartial<Messages> = {
                 title: "グローバル",
                 description:
                     "どこからでも利用できます。文字キーのショートカットは、ナビゲーションと作成アクションを組み合わせます。サイクル操作は macOS の Cmd+Tab スイッチャーのように動作します。",
+                editorNote:
+                    "Windows と Linux では、エディターやテキスト欄に入力している間は Ctrl+Alt の文字ショートカットは動作せず、エディター自身の Ctrl+Alt キーが使われます（Ctrl+Alt+C はコードブロック）。",
                 rows: {
                     spotlight: "Spotlight 検索を開く",
                     tasksNew: "タスクを開いて新規タスクを作成",

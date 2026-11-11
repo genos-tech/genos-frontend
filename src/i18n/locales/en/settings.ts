@@ -1064,6 +1064,8 @@ export const settings = {
             title: "Global",
             description:
                 "Available anywhere. The letter shortcuts now compose navigation with a creation action; the cycle gesture works like the macOS Cmd+Tab switcher.",
+            editorNote:
+                "On Windows and Linux, the Ctrl+Alt letter shortcuts do nothing while you type in an editor or a text field, so the editor keeps its own Ctrl+Alt keys (Ctrl+Alt+C is a code block).",
             rows: {
                 spotlight: "Open Spotlight search",
                 tasksNew: "Open Tasks and start a new task",

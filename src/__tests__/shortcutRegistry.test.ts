@@ -24,6 +24,7 @@ import { zh } from "../i18n/locales/zh";
 import {
     chordMatches,
     cycleKeys,
+    editablePolicy,
     EDITOR_CHORDS,
     isEditableTarget,
     matchesShortcut,
@@ -170,9 +171,42 @@ describe("registry matches what the old handlers matched", () => {
 });
 
 describe("editable-target policy", () => {
-    it("only the two chat arrow shortcuts keep out of text fields (as before); everything else fires", () => {
-        const skipping = SHORTCUT_IDS.filter((id) => SHORTCUTS[id].editable === "skip");
-        expect(skipping.sort()).toEqual(["chat.moveSelection", "chat.switchTab"]);
+    const LETTERS: ShortcutId[] = [
+        "global.tasksNew",
+        "global.notesNew",
+        "global.calendar",
+        "global.meetClipboard",
+        "global.history",
+        "global.taskGraph",
+        "global.todo",
+    ];
+    const skipping = (platform: Platform) =>
+        SHORTCUT_IDS.filter((id) => editablePolicy(id, platform) === "skip").sort();
+
+    it("on Mac only the two chat arrow shortcuts keep out of text fields (as before); everything else fires", () => {
+        expect(skipping("mac")).toEqual(["chat.moveSelection", "chat.switchTab"]);
+    });
+
+    it("on Windows and Linux the seven Ctrl+Alt letter chords keep out of editors too (MIP-1311)", () => {
+        expect(skipping("other")).toEqual(
+            ["chat.moveSelection", "chat.switchTab", ...LETTERS].sort()
+        );
+    });
+
+    it("the Ctrl+Alt letter that BlockNote also binds is among them, and Mac stays allowed", () => {
+        expect(editablePolicy("global.calendar", "other")).toBe("skip");
+        expect(editablePolicy("global.calendar", "mac")).toBe("allow");
+        for (const ec of EDITOR_CHORDS.filter((c) => c.platform === "other")) {
+            const clash = SHORTCUT_IDS.filter(
+                (id) =>
+                    SHORTCUTS[id].keys.other.some((c) =>
+                        sig(c).some((x) => sig(ec.chord).includes(x))
+                    ) && editablePolicy(id, "other") !== "skip"
+            );
+            // Only Spotlight (Ctrl+K) still shares keys with an editor chord, by design: it claims
+            // them (MIP-1310). No Ctrl+Alt letter overlaps an editor chord unskipped.
+            expect(clash).toEqual(ec.id === "blocknote.link" ? ["global.spotlight"] : []);
+        }
     });
 });
 
@@ -301,13 +335,14 @@ describe("no silent clashes", () => {
 
     /**
      * Chords the rich-text editor binds itself. Both run for one keypress (nothing checks
-     * `defaultPrevented`). Cmd/Ctrl+K is settled by a claim: Spotlight wins and BlockNote's link
-     * popover never sees the key (MIP-1310), so it is not listed here; a shortcut that
-     * `claimsEditor` is skipped below. Windows Ctrl+Alt+C (calendar + code block) is still open.
+     * `defaultPrevented`). Each overlap is settled one of two ways, so none is left to list:
+     * Cmd/Ctrl+K by a claim (Spotlight wins and BlockNote's link popover never sees the key,
+     * MIP-1310), and a shortcut that SKIPS editors on that platform never fires inside one, so
+     * it cannot clash: that is how Windows Ctrl+Alt+C (calendar + code block) is settled (MIP-1311).
      */
     const KNOWN_EDITOR_OVERLAPS: Record<Platform, string[]> = {
         mac: [],
-        other: ["global.calendar|blocknote.codeBlock"],
+        other: [],
     };
 
     it("Spotlight claims Cmd/Ctrl+K from the editor (the only claim)", () => {
@@ -319,6 +354,7 @@ describe("no silent clashes", () => {
         const found: string[] = [];
         for (const id of SHORTCUT_IDS) {
             if ("claimsEditor" in SHORTCUTS[id]) continue;
+            if (editablePolicy(id, platform) === "skip") continue;
             const mine = new Set(chordsOf(id, platform));
             for (const ec of EDITOR_CHORDS.filter((c) => c.platform === platform)) {
                 if (sig(ec.chord).some((s) => mine.has(s))) found.push(`${id}|${ec.id}`);
