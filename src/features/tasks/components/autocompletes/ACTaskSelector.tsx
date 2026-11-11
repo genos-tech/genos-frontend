@@ -82,6 +82,14 @@ type Props = {
      * on purpose — a `& ~ [role="listbox"]` sibling rule would claim
      * popups this surface doesn't own (the fe #122 cascade race). */
     popupZIndex?: number;
+    /**
+     * The rows of the project the host already holds, when it holds them (the task table's
+     * `allTasks` for the open project, MIP-1353). For THAT project the picker uses them and
+     * sends no request; any other project is fetched on demand as before. Empty rows mean
+     * "not loaded yet", so they fall through to a fetch too. Needs the project's whole list, not
+     * a filtered one: a task under a Closed ancestor is found by walking up through it.
+     */
+    knownTasks?: { projectId: number; tasks: readonly TaskTableProps[] } | null;
     /** Chat list, used to resolve each project's avatar from its PM
      *  chat — same role it plays in `ACTeamProjects`. Optional: without
      *  it the options still render, just with the generic project icon
@@ -103,6 +111,7 @@ export const ACTaskSelector = ({
     resetKey,
     size = "md",
     popupZIndex,
+    knownTasks,
     useCM,
 }: Props) => {
     const { accessToken } = useAuth();
@@ -126,10 +135,27 @@ export const ACTaskSelector = ({
         setSelectedTask(null);
     }, [resetKey]);
 
+    // The host's own rows for the picked project, when it has them: no request for those.
+    const hostRows = useMemo<readonly TaskTableProps[] | null>(() => {
+        if (!selectedProject || !knownTasks) return null;
+        if (knownTasks.projectId !== selectedProject.projectId) return null;
+        // A row of another project (a list caught mid-switch) must not be offered.
+        const own = knownTasks.tasks.filter(
+            (t) => t.projectId == null || Number(t.projectId) === selectedProject.projectId
+        );
+        return own.length > 0 ? own : null;
+    }, [selectedProject, knownTasks]);
+
     useEffect(() => {
         if (!selectedProject) return;
         const pid = selectedProject.projectId;
-        if (tasksByProject[pid]) return;
+        if (hostRows || tasksByProject[pid]) {
+            // Nothing to ask for. A request for the project picked before this one is cancelled
+            // by the cleanup below, and so is its `setLoading(false)`: clear it here, or the
+            // spinner stays on.
+            setLoading(false);
+            return;
+        }
         let cancelled = false;
         (async () => {
             setLoading(true);
@@ -147,7 +173,7 @@ export const ACTaskSelector = ({
         return () => {
             cancelled = true;
         };
-    }, [selectedProject, myself, accessToken, tasksByProject]);
+    }, [selectedProject, myself, accessToken, tasksByProject, hostRows]);
 
     const taskOptions = useMemo<TaskTableProps[]>(() => {
         if (!selectedProject) return [];
@@ -158,10 +184,10 @@ export const ACTaskSelector = ({
         // delete only sets the status), so the walk finds them. Trade-off:
         // you can no longer add a dependency onto an already-Closed task.
         return selectDependencyCandidates(
-            tasksByProject[selectedProject.projectId] ?? [],
+            hostRows ?? tasksByProject[selectedProject.projectId] ?? [],
             excludeTaskIds
         );
-    }, [selectedProject, tasksByProject, excludeTaskIds]);
+    }, [selectedProject, tasksByProject, hostRows, excludeTaskIds]);
 
     const scrollbarClass = `custom-scrollbar-${isDark ? "dark" : "light"}`;
     const listboxSlotProps = {

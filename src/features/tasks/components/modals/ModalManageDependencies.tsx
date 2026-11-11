@@ -20,7 +20,12 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
-import { ProjectProps, TaskDependencyRef, TaskProps } from "../../../../types/tasks";
+import {
+    ProjectProps,
+    TaskDependencyRef,
+    TaskProps,
+    TaskTableProps,
+} from "../../../../types/tasks";
 import { ACTaskSelector, StatusChip } from "../autocompletes/ACTaskSelector";
 import { TaskIdText } from "../card";
 
@@ -158,6 +163,14 @@ export const ModalManageDependencies = ({
         if (!open) setError(null);
     }, [open]);
 
+    // The open project's rows are already in memory (the task table's list): the picker uses
+    // them for that project instead of asking the server for every task again (MIP-1353).
+    const openProjectId = usePM.currentProject?.projectId;
+    const knownTasks = useMemo(
+        () => (openProjectId != null ? { projectId: openProjectId, tasks: useTM.allTasks } : null),
+        [openProjectId, useTM.allTasks]
+    );
+
     const excludeIds = useMemo(() => {
         const s = new Set<number>();
         if (taskId != null) s.add(taskId);
@@ -291,6 +304,7 @@ export const ModalManageDependencies = ({
                             excludeIds={excludeIds}
                             isDark={isDark}
                             kind={k}
+                            knownTasks={knownTasks}
                             myself={myself}
                             popupZIndex={modalZIndex + 1}
                             removeTooltip={depsT.modal.removeTooltip}
@@ -316,6 +330,8 @@ type SectionProps = {
     removeTooltip: string;
     deps: TaskDependencyRef[];
     excludeIds: Set<number>;
+    /** The open project's rows, so its picker asks for nothing (MIP-1353). */
+    knownTasks: { projectId: number; tasks: readonly TaskTableProps[] } | null;
     isDark: boolean;
     myself: UserProps;
     usePM: ProjectManagementState;
@@ -337,6 +353,7 @@ const DependencySection = ({
     removeTooltip,
     deps,
     excludeIds,
+    knownTasks,
     isDark,
     myself,
     usePM,
@@ -405,6 +422,7 @@ const DependencySection = ({
                 <ACTaskSelector
                     defaultProjectId={defaultProjectId}
                     excludeTaskIds={excludeIds}
+                    knownTasks={knownTasks}
                     myself={myself}
                     popupZIndex={popupZIndex}
                     resetKey={resetKey}
