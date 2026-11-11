@@ -11,6 +11,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import type { NodeProps } from "@xyflow/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { cssOf } from "./utils/cssOf";
@@ -89,9 +90,10 @@ const withContext = (node: React.ReactNode) => (
     </AvatarContextProvider>
 );
 
-const data = (
-    over: Omit<Partial<TaskNodeData>, "task"> & { task?: Partial<TaskTableProps> } = {}
-): TaskNodeData => {
+// What a test overrides: any node field, and only the parts of the task it cares about.
+type DataOver = Omit<Partial<TaskNodeData>, "task"> & { task?: Partial<TaskTableProps> };
+
+const data = (over: DataOver = {}): TaskNodeData => {
     const { task, ...rest } = over;
     return {
         task: {
@@ -235,7 +237,7 @@ describe("priority on the graph nodes is the shared icon", () => {
 });
 
 describe("the frame's graph states, in the order they always had", () => {
-    const emphasisOf = (over: Partial<TaskNodeData>) => {
+    const emphasisOf = (over: DataOver) => {
         const { container, unmount } = render(withContext(<TaskNodeView data={data(over)} />));
         const frame = frameOf(container);
         const out = {
@@ -523,7 +525,7 @@ describe("a task node keeps what it did", () => {
 });
 
 describe("a milestone node keeps what it did", () => {
-    const ms = (over: Partial<TaskNodeData> = {}) =>
+    const ms = (over: DataOver = {}) =>
         data({
             isMilestone: true,
             closedDescendantCount: 3,
@@ -592,7 +594,7 @@ describe("the handles the canvas depends on", () => {
     const handles = (container: HTMLElement) =>
         Object.fromEntries(
             [...container.querySelectorAll("[data-handle]")].map((el) => [
-                el.getAttribute("data-handle"),
+                el.getAttribute("data-handle") ?? "",
                 {
                     type: el.getAttribute("data-type"),
                     connectable: el.getAttribute("data-connectable"),
@@ -600,7 +602,8 @@ describe("the handles the canvas depends on", () => {
                 },
             ])
         );
-    const nodeProps = (d: TaskNodeData) => ({ data: d }) as never;
+    // React Flow's NodeProps are far more than the card reads (`data`); the cards are mounted with just that.
+    const nodeProps = (d: TaskNodeData) => ({ data: d }) as unknown as NodeProps;
 
     it("a task node has the four handles; a ghost's are inert and dimmed", () => {
         const live = handles(

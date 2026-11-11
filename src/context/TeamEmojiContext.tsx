@@ -25,6 +25,7 @@ export const useTeamEmojiContext = (): TeamEmojiApi => {
     return {
         teamEmoji: [],
         loading: false,
+        error: false,
         refresh: async () => {},
         create: async () => null,
         remove: async () => false,

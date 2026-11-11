@@ -160,7 +160,7 @@ describe("headers hosted in the dialog", () => {
             /\{!isModalHosted && \(\s*<AppTooltip size="sm" title=\{t\.chat\.headers\.close\}>/
         );
         expect(code("features/chat/components/headers/ThreadChatPaneHeader.tsx")).toMatch(
-            /\{hostZIndex == null && \(\s*<AppTooltip size="sm" title=\{t\.chat\.headers\.close\}>/
+            /\{!isModalHosted && \(\s*<AppTooltip size="sm" title=\{t\.chat\.headers\.close\}>/
         );
     });
 

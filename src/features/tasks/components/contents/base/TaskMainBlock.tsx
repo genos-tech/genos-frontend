@@ -177,6 +177,9 @@ type TaskMainBlockProps = {
     // preview state — which the modal ignores, so without this the
     // clicks silently did nothing.
     hostZIndex?: number;
+    /** Picking "Deleted" in the status picker (MIP-1303): the host hides the task
+     *  behind an Undo toast and sends the delete when the toast is gone. */
+    onDeleteTask?: () => void;
     // Create-form only: field keys the project owner marked required
     // (already filtered to the rules ACTIVE for this project — e.g. a
     // tags-required rule with zero project tags is excluded). Renders
@@ -214,6 +217,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         isMilestone,
         isSubTask,
         hostZIndex,
+        onDeleteTask,
         requiredFields,
     } = props;
     const { accessToken } = useAuth();
@@ -909,12 +913,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                     <ACTaskStatus
-                                        hostZIndex={hostZIndex}
                                         setTaskContent={setTaskContent}
                                         setTaskStatusUpdated={setTaskStatusUpdated}
                                         setTaskUpdated={setTaskUpdated}
                                         socket={socket}
                                         taskContent={taskContent}
+                                        onDeleteTask={onDeleteTask}
                                     />
                                 </Box>
                             </ListItem>

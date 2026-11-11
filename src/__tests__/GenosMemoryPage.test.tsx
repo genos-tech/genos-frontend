@@ -591,7 +591,12 @@ describe("the shared answers list states", () => {
             screen.queryByText("None of your answers are shared with teammates right now.")
         ).toBeNull();
 
-        await user.click(screen.getByRole("button", { name: "Retry" }));
+        // The page also holds the "note my activity" setting, whose own read can fail here and
+        // has its own Retry (MIP-1305): press the one inside THIS list's error.
+        const failure = screen
+            .getByText("Couldn't load your shared answers.")
+            .closest('[role="alert"]');
+        await user.click(within(failure as HTMLElement).getByRole("button", { name: "Retry" }));
         expect(await screen.findByText("who owns billing?")).toBeTruthy();
     });
 

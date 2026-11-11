@@ -66,6 +66,16 @@ interface TodoItemMoreMenuProps {
     onMoveToTomorrow?: () => void;
 }
 
+// The menu's rows are 44px on a touch screen (MenuSurface); the new-tag field and its add
+// button are the two controls that are not rows, so they get the same floor.
+const TOUCH_FLOOR = g.row.comfortable;
+const TAG_FIELD_TOUCH_SX = {
+    "@media (pointer: coarse)": { "--Input-minHeight": TOUCH_FLOOR, minHeight: TOUCH_FLOOR },
+} as const;
+const TAG_ADD_TOUCH_SX = {
+    "@media (pointer: coarse)": { minHeight: TOUCH_FLOOR, minWidth: TOUCH_FLOOR },
+} as const;
+
 // Consolidates the row's secondary actions (copy link, tag picker,
 // delete) behind one ⋮ trigger — five inline icon buttons per row was
 // too noisy. The tag picker (formerly the standalone CategoryPickerMenu
@@ -218,7 +228,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                             <Input
                                 placeholder={t.chat.todoPane.newTagPlaceholder}
                                 size="sm"
-                                sx={{ flex: 1 }}
+                                sx={{ flex: 1, ...TAG_FIELD_TOUCH_SX }}
                                 value={newName}
                                 onChange={(e) => setNewName(e.target.value)}
                                 onKeyDown={(e) => {
@@ -229,9 +239,10 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                                 }}
                             />
                             <IconButton
+                                aria-label={t.chat.todoPane.addTag}
                                 disabled={!newName.trim() || creating}
                                 size="sm"
-                                sx={{ borderRadius: g.radius.sm }}
+                                sx={{ borderRadius: g.radius.sm, ...TAG_ADD_TOUCH_SX }}
                                 variant="soft"
                                 onClick={handleCreate}
                             >

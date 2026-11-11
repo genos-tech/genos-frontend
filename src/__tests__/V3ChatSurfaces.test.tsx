@@ -194,10 +194,24 @@ describe("MessagesPaneV3", () => {
 
         render(<MessagesPaneV3 channelId="c-1" />);
         expect(screen.getByText("Smoke", { exact: false })).toBeInTheDocument();
-        expect(screen.getByText(/Alice:/)).toBeInTheDocument();
-        expect(screen.getByText(/Bob:/)).toBeInTheDocument();
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+        expect(screen.getByText("Bob")).toBeInTheDocument();
         expect(screen.getByText("hi")).toBeInTheDocument();
         expect(screen.getByText("world")).toBeInTheDocument();
+    });
+
+    it("MIP-1326: the sender name is its own bidi island and the colon stays outside it", () => {
+        // jsdom has no bidi algorithm, so this pins the markup that makes the browser keep
+        // "(DY) Ken Kamiya" in reading order in an RTL row (checked in Chromium in `ar`).
+        channelService.handleChannelCreated(fakeChannel("c-1"));
+        channelService.handleMessageCreated(fakeMessage("m-1", "c-1", "hello", "(DY) Ken Kamiya"));
+
+        render(<MessagesPaneV3 channelId="c-1" />);
+        const island = screen.getByText("(DY) Ken Kamiya");
+        expect(island.tagName).toBe("BDI");
+        expect(island).toHaveClass("g-bidi-island");
+        expect(island.parentElement?.tagName).toBe("STRONG");
+        expect(island.parentElement?.textContent).toBe("(DY) Ken Kamiya:");
     });
 
     it("re-renders live when a new message arrives via channelService", async () => {

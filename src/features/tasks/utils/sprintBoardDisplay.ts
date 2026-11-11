@@ -1,4 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
+import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
 /**
  * Which task cards the sprint board shows, per the depth model.
@@ -113,4 +114,33 @@ export const buildBoardDisplaySet = ({
         out.push(task);
     }
     return out;
+};
+
+/** The board's status columns, in the order they are drawn. */
+export type BoardColumnKey = "open" | "wip" | "blocked" | "pending" | "closed";
+
+/**
+ * Sort the board's cards into its status columns by their EFFECTIVE status: a card under a
+ * Closed ancestor (a parent at any depth, or its milestone) sits in the Closed column and
+ * one under a Deleted ancestor is not drawn, whatever its own status says (MIP-1389). A
+ * status without a column (Deleted) is dropped; a card with no status counts as Open.
+ * `allTasks` is the whole loaded list: the ancestors are looked up in it.
+ */
+export const bucketBoardColumns = (
+    display: readonly TaskTableProps[],
+    allTasks: readonly TaskTableProps[]
+): Record<BoardColumnKey, TaskTableProps[]> => {
+    const organized: Record<BoardColumnKey, TaskTableProps[]> = {
+        open: [],
+        wip: [],
+        blocked: [],
+        pending: [],
+        closed: [],
+    };
+    const verdicts = selectAncestorVerdicts(allTasks);
+    for (const task of display) {
+        const status = (effectiveStatusOf(task, verdicts) ?? "").toLowerCase() || "open";
+        if (status in organized) organized[status as BoardColumnKey].push(task);
+    }
+    return organized;
 };

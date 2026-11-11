@@ -51,7 +51,14 @@ describe("the preview pickers draw the table's pieces", () => {
     });
 
     it("status: every option is a StatusLabel (an icon and the word), not a Chip", () => {
-        wrap(<ACTaskStatus setTaskContent={noop} socket={null} taskContent={task({})} />);
+        wrap(
+            <ACTaskStatus
+                setTaskContent={noop}
+                socket={null}
+                taskContent={task({})}
+                onDeleteTask={noop}
+            />
+        );
         open();
         const options = screen.getAllByRole("option");
         expect(options.length).toBe(statuses.length);

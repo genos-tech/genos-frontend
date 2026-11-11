@@ -146,6 +146,7 @@ describe("TeamEmojiPanel", () => {
                     value={{
                         teamEmoji: [],
                         loading: false,
+                        error: false,
                         refresh: async () => {},
                         create: async () => null,
                         remove: () => {},

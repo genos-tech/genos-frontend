@@ -15,10 +15,15 @@
         <meta name="theme-color" content="#7c3aed" />
         <!-- viewport-fit=cover lets the app extend into device cutout areas,
              which is what makes the env(safe-area-inset-*) paddings (bottom
-             tab bar, FAB, overlays) actually resolve to non-zero values. -->
+             tab bar, FAB, overlays) actually resolve to non-zero values.
+             minimum-scale=1 keeps the LAYOUT viewport at the device width: without
+             it one element that overflows (a wide code block, table or URL) makes a
+             phone widen the layout viewport (390 -> 523 measured, MIP-1196), and
+             every fixed overlay (toast, banner, FAB) is then centred on the wider
+             box and partly off the screen. The page may still be zoomed IN. -->
         <meta
             name="viewport"
-            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+            content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover"
         />
         <!-- iOS treats a page as installable-to-standalone via these (plus the
              manifest). Web Push on iOS only works in an installed PWA, so

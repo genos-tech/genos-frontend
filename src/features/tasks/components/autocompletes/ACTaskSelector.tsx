@@ -20,6 +20,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
+import { selectDependencyCandidates } from "../../utils/dependencyCandidates";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { statuses } from "../../utils/taskMeta";
 import { StatusLabel } from "../meta/StatusLabel";
@@ -150,20 +151,16 @@ export const ACTaskSelector = ({
 
     const taskOptions = useMemo<TaskTableProps[]>(() => {
         if (!selectedProject) return [];
-        const all = tasksByProject[selectedProject.projectId] ?? [];
-        return all.filter((t) => {
-            const id = t.id != null ? Number(t.id) : NaN;
-            if (Number.isNaN(id)) return false;
-            if (excludeTaskIds.has(id)) return false;
-            // Hide finished/removed rows — a dependency should point at
-            // live work. Closed and Deleted are both filtered out (per
-            // user request); the source endpoint already excludes
-            // Deleted on its full-load path, so this also guards the
-            // incremental/cache path. Trade-off: you can no longer add a
-            // dependency onto an already-Closed task.
-            const status = (t.status ?? "").toLowerCase();
-            return status !== "deleted" && status !== "closed";
-        });
+        // Hide finished/removed rows — a dependency should point at
+        // live work. Closed and Deleted are both filtered out (per
+        // user request), and so is a task under a Closed or Deleted
+        // ancestor (MIP-1389): the endpoint sends Deleted rows too (a
+        // delete only sets the status), so the walk finds them. Trade-off:
+        // you can no longer add a dependency onto an already-Closed task.
+        return selectDependencyCandidates(
+            tasksByProject[selectedProject.projectId] ?? [],
+            excludeTaskIds
+        );
     }, [selectedProject, tasksByProject, excludeTaskIds]);
 
     const scrollbarClass = `custom-scrollbar-${isDark ? "dark" : "light"}`;

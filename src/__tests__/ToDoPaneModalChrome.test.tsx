@@ -97,14 +97,25 @@ describe("ToDoPane header row", () => {
         expect(actions).toMatch(/@media \(pointer: coarse\) \{[^}]*min-height: 44px/);
     });
 
-    it("on the page, adds nothing, at either width", () => {
-        for (const mobile of [false, true]) {
-            const row = renderPane(false, mobile);
-            const css = [row, row.children[0], row.children[1]].map(cssOf).join("\n");
-            expect(css).not.toContain("modal-chrome");
-            expect(css).not.toContain("flex-wrap: wrap");
-            expect(css).not.toContain("min-height: 44px");
-            cleanup();
-        }
+    it("on a desktop page, adds nothing: one line, no clearance", () => {
+        const row = renderPane(false, false);
+        const css = [row, row.children[0]].map(cssOf).join("\n");
+        expect(css).not.toContain("modal-chrome");
+        expect(css).not.toContain("flex-wrap: wrap");
+        // The 44px floor is only ever under `pointer: coarse` (MIP-1319).
+        const actions = cssOf(row.children[1]);
+        expect(cssWithMediaOf(row.children[1])).toMatch(/@media \(pointer: coarse\)/);
+        expect(actions).toContain("min-height: 44px");
+    });
+
+    it("on a phone page, the row may wrap but the title only gives up the line when it must (MIP-1319)", () => {
+        const row = renderPane(false, true);
+        expect(cssOf(row)).toContain("flex-wrap: wrap");
+        const titleCss = cssOf(row.children[0]);
+        // Not the dialog's full-width title line: it shares the row while it fits.
+        expect(titleCss).not.toContain("flex-basis: 100%");
+        expect(titleCss).not.toContain("modal-chrome");
+        const actions = cssWithMediaOf(row.children[1]);
+        expect(actions).toMatch(/@media \(pointer: coarse\) \{[^}]*min-height: 44px/);
     });
 });
