@@ -77,6 +77,9 @@ const pull = (number: number, over: Partial<LinkedPull> = {}): LinkedPull => ({
 });
 const merged = (n: number) => pull(n, { state: "closed", merged_at: "2026-11-11T01:00:00Z" });
 
+// What the loader hands back for a row: its PRs, and whether the server vouched for the list.
+const answer = (pulls: LinkedPull[], complete = false) => ({ pulls, complete });
+
 const detailFor = (p: LinkedPull, ci: "success" | "none" = "none") =>
     ({
         kind: "ok",
@@ -160,7 +163,7 @@ describe("a poll", () => {
         mockStatus.mockResolvedValue(detailFor(pull(7)));
         await mountRows({ 1: [pull(7)] });
         expect(mockStatus).toHaveBeenCalledTimes(1);
-        mockRefresh.mockResolvedValue([pull(7)]);
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
 
         await resync("poll");
 
@@ -174,7 +177,7 @@ describe("a poll", () => {
 
     it("leaves alone a row whose PRs are all finished, and a row with no PR", async () => {
         await mountRows({ 1: [pull(7)], 2: [merged(8)], 3: [] });
-        mockRefresh.mockResolvedValue([pull(7)]);
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
 
         await resync("poll");
 
@@ -185,7 +188,7 @@ describe("a poll", () => {
 
     it("a draft PR is live too", async () => {
         await mountRows({ 1: [pull(7, { draft: true })] });
-        mockRefresh.mockResolvedValue([pull(7, { draft: true })]);
+        mockRefresh.mockResolvedValue(answer([pull(7, { draft: true })]));
         await resync("poll");
         expect(mockRefresh).toHaveBeenCalledTimes(1);
     });
@@ -200,7 +203,7 @@ describe("a poll", () => {
             fireEvent.mouseEnter(screen.getByTestId("row-1").querySelectorAll("a")[1]);
         });
         mockStatus.mockClear();
-        mockRefresh.mockResolvedValue([pull(7), merged(8)]);
+        mockRefresh.mockResolvedValue(answer([pull(7), merged(8)]));
 
         await resync("poll");
 
@@ -213,7 +216,7 @@ describe("a poll", () => {
         mockStatus.mockResolvedValue(detailFor(pull(7)));
         await mountRows({ 1: [pull(7)] });
         expect(stateOf(chipIn(1))).toBe("open");
-        mockRefresh.mockResolvedValue([merged(7)]);
+        mockRefresh.mockResolvedValue(answer([merged(7)]));
         mockStatus.mockResolvedValue(detailFor(merged(7)));
 
         await resync("poll");
@@ -224,7 +227,7 @@ describe("a poll", () => {
     it("a merged list beats a stale open detail when the detail refresh fails", async () => {
         mockStatus.mockResolvedValue(detailFor(pull(7)));
         await mountRows({ 1: [pull(7)] });
-        mockRefresh.mockResolvedValue([merged(7)]);
+        mockRefresh.mockResolvedValue(answer([merged(7)]));
         mockStatus.mockResolvedValue({ kind: "error" });
 
         await resync("poll");
@@ -239,7 +242,7 @@ describe("a poll", () => {
         mockStatus.mockResolvedValue(detailFor(pull(7), "none"));
         await mountRows({ 1: [pull(7)] });
         expect(hasCiDot(chipIn(1))).toBe(false);
-        mockRefresh.mockResolvedValue([pull(7)]);
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
         mockStatus.mockResolvedValue(detailFor(pull(7), "success"));
 
         await resync("poll");
@@ -263,7 +266,7 @@ describe("a poll", () => {
         mockStatus.mockResolvedValue(detailFor(pull(7), "success"));
         await mountRows({ 1: [pull(7)] });
         expect(hasCiDot(chipIn(1))).toBe(true);
-        mockRefresh.mockResolvedValue([pull(7)]);
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
         mockStatus.mockResolvedValue({ kind: "error" });
 
         await resync("poll");
@@ -274,7 +277,7 @@ describe("a poll", () => {
     it("an answer of 'no PRs' for a row that had some is not believed (a refusing GitHub reads as that)", async () => {
         mockStatus.mockResolvedValue(detailFor(pull(7)));
         await mountRows({ 1: [pull(7)] });
-        mockRefresh.mockResolvedValue([]);
+        mockRefresh.mockResolvedValue(answer([]));
 
         await resync("poll");
 
@@ -283,9 +286,32 @@ describe("a poll", () => {
         expect(mockReport).toHaveBeenCalledWith(1, true);
     });
 
+    it("an answer of 'no PRs' that the server vouches for IS believed (it names the rows it could not look at)", async () => {
+        mockStatus.mockResolvedValue(detailFor(pull(7)));
+        await mountRows({ 1: [pull(7)] });
+        mockRefresh.mockResolvedValue(answer([], true));
+
+        await resync("poll");
+
+        expect(chipsIn(1)).toHaveLength(0);
+        expect(mockReport).toHaveBeenCalledWith(1, true);
+    });
+
+    it("a row the server could not fully look at keeps its chips and counts as a failed poll", async () => {
+        mockStatus.mockResolvedValue(detailFor(pull(7)));
+        await mountRows({ 1: [pull(7)] });
+        // The loader hands back null for a row the server names in `incomplete`.
+        mockRefresh.mockResolvedValue(null);
+
+        await resync("poll");
+
+        expect(chipsIn(1)).toHaveLength(1);
+        expect(mockReport).toHaveBeenCalledWith(1, false);
+    });
+
     it("a PR dropping out of a row that keeps another is believed", async () => {
         await mountRows({ 1: [pull(7), pull(8)] });
-        mockRefresh.mockResolvedValue([pull(8)]);
+        mockRefresh.mockResolvedValue(answer([pull(8)]));
 
         await resync("poll");
 
@@ -297,7 +323,7 @@ describe("a poll", () => {
 describe("a click on Refresh tasks", () => {
     it("every row re-asks the list with `fresh`: open, merged and empty alike", async () => {
         await mountRows({ 1: [pull(7)], 2: [merged(8)], 3: [] });
-        mockRefresh.mockResolvedValue([]);
+        mockRefresh.mockResolvedValue(answer([]));
 
         await resync("manual");
 
@@ -310,7 +336,7 @@ describe("a click on Refresh tasks", () => {
 
     it("a merged PR whose detail was never asked for is not asked for now either", async () => {
         await mountRows({ 2: [merged(8)] });
-        mockRefresh.mockResolvedValue([merged(8)]);
+        mockRefresh.mockResolvedValue(answer([merged(8)]));
 
         await resync("manual");
 
@@ -324,7 +350,7 @@ describe("a click on Refresh tasks", () => {
             fireEvent.mouseEnter(chipIn(2));
         });
         expect(mockStatus).toHaveBeenCalledTimes(1);
-        mockRefresh.mockResolvedValue([merged(8)]);
+        mockRefresh.mockResolvedValue(answer([merged(8)]));
 
         await resync("manual");
 
@@ -337,7 +363,7 @@ describe("a click on Refresh tasks", () => {
     it("re-asks the detail of an open PR past the memo", async () => {
         mockStatus.mockResolvedValue(detailFor(pull(7)));
         await mountRows({ 1: [pull(7)] });
-        mockRefresh.mockResolvedValue([pull(7)]);
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
 
         await resync("manual");
 
@@ -349,7 +375,7 @@ describe("a click on Refresh tasks", () => {
     it("a PR opened since appears on a row that had none", async () => {
         await mountRows({ 1: [] });
         expect(chipsIn(1)).toHaveLength(0);
-        mockRefresh.mockResolvedValue([pull(9)]);
+        mockRefresh.mockResolvedValue(answer([pull(9)]));
 
         await resync("manual");
 
@@ -359,7 +385,7 @@ describe("a click on Refresh tasks", () => {
 
     it("takes 'no PRs' as the answer: the user asked", async () => {
         await mountRows({ 1: [pull(7)] });
-        mockRefresh.mockResolvedValue([]);
+        mockRefresh.mockResolvedValue(answer([]));
 
         await resync("manual");
 
@@ -432,7 +458,7 @@ describe("the clock, through the cells", () => {
     it("a mounted cell makes the table poll by itself once a minute, and unmounting stops it", async () => {
         vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
         const view = await mountRows({ 1: [pull(7)] });
-        mockRefresh.mockResolvedValue([pull(7)]);
+        mockRefresh.mockResolvedValue(answer([pull(7)]));
 
         await act(async () => {
             vi.advanceTimersByTime(PR_RESYNC_INTERVAL_MS);

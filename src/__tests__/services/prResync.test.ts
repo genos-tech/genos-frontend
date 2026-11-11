@@ -277,3 +277,72 @@ describe("after a failed poll", () => {
         expect(seen).toEqual(["manual", "poll"]);
     });
 });
+
+describe("a poll's rows report one by one (MIP-1412)", () => {
+    const poll = (seen: string[]) => {
+        vi.advanceTimersByTime(MIN);
+        expect(seen.at(-1)).toBe("poll");
+        return getPrResyncRequest().id;
+    };
+
+    it("one failing row makes the poll a failing one, even when healthy rows reported first", () => {
+        const { seen } = watch();
+        const id = poll(seen);
+        reportPrResyncOutcome(id, true);
+        reportPrResyncOutcome(id, true);
+        reportPrResyncOutcome(id, false);
+        reportPrResyncOutcome(id, true);
+        const n = seen.length;
+
+        vi.advanceTimersByTime(MIN); // 1 min on: held back
+        expect(seen.length).toBe(n);
+        vi.advanceTimersByTime(MIN); // 2 min on: allowed
+        expect(seen.length).toBe(n + 1);
+    });
+
+    it("a failing row reporting first is the same", () => {
+        const { seen } = watch();
+        const id = poll(seen);
+        reportPrResyncOutcome(id, false);
+        reportPrResyncOutcome(id, true);
+        const n = seen.length;
+        vi.advanceTimersByTime(MIN);
+        expect(seen.length).toBe(n);
+    });
+
+    it("keeps escalating while every poll has healthy rows too", () => {
+        const { seen } = watch();
+        reportPrResyncOutcome(poll(seen), true);
+        reportPrResyncOutcome(getPrResyncRequest().id, false); // wait 2
+        vi.advanceTimersByTime(2 * MIN);
+        const second = getPrResyncRequest().id;
+        reportPrResyncOutcome(second, true);
+        reportPrResyncOutcome(second, false); // wait 4, not reset to 2 by the healthy row
+        const n = seen.length;
+
+        vi.advanceTimersByTime(3 * MIN);
+        expect(seen.length).toBe(n);
+        vi.advanceTimersByTime(MIN);
+        expect(seen.length).toBe(n + 1);
+    });
+
+    it("a poll in which every row was fine puts the clock back at a minute", () => {
+        const { seen } = watch();
+        reportPrResyncOutcome(poll(seen), false);
+        vi.advanceTimersByTime(2 * MIN);
+        const id = getPrResyncRequest().id;
+        for (let i = 0; i < 5; i++) reportPrResyncOutcome(id, true);
+        const n = seen.length;
+        vi.advanceTimersByTime(MIN);
+        expect(seen.length).toBe(n + 1);
+    });
+
+    it("a click discards a failure nobody has acted on yet", () => {
+        const { seen } = watch();
+        reportPrResyncOutcome(poll(seen), false);
+        requestPrResync("manual"); // before the clock looked again
+        const n = seen.length;
+        vi.advanceTimersByTime(MIN);
+        expect(seen.length).toBe(n + 1);
+    });
+});
