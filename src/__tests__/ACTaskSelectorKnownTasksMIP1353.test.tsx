@@ -12,9 +12,11 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ACTaskSelector } from "../features/tasks/components/autocompletes/ACTaskSelector";
+import { ModalManageDependencies } from "../features/tasks/components/modals/ModalManageDependencies";
 import { loadProjectTasksFromApi } from "../features/tasks/services/loadProjectTasksFromApi";
 import type { ProjectManagementState } from "../hooks/common/useProjectManagement";
-import type { ProjectProps, TaskTableProps } from "../types/tasks";
+import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
+import type { ProjectProps, TaskProps, TaskTableProps } from "../types/tasks";
 
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/services/loadProjectTasksFromApi", () => ({
@@ -105,6 +107,14 @@ describe("ACTaskSelector with the host's rows (MIP-1353)", () => {
         expect(mockLoad.mock.calls[0][1]).toBe(2);
     });
 
+    it("rows with no project id are still only for the project they were given for", async () => {
+        const bare = ROWS.map((r) => ({ ...r, projectId: null }) as unknown as TaskTableProps);
+        mount({ defaultProjectId: 2, knownTasks: { projectId: 1, tasks: bare } });
+        await offered();
+        expect(mockLoad).toHaveBeenCalledTimes(1);
+        expect(mockLoad.mock.calls[0][1]).toBe(2);
+    });
+
     it("a row of another project (a list caught mid-switch) is never offered", async () => {
         const stray = row({
             id: "9",
@@ -165,5 +175,48 @@ describe("ACTaskSelector with the host's rows (MIP-1353)", () => {
         const titles = await offered();
         expect(has(titles, "Live task")).toBe(false);
         expect(has(titles, "Another live task")).toBe(true);
+    });
+});
+
+describe("ModalManageDependencies hands the picker the open project's rows (MIP-1353)", () => {
+    const useTM = (allTasks: TaskTableProps[]) =>
+        ({
+            allTasks,
+            taskDependencies: {},
+            addTaskDependency: vi.fn(),
+            removeTaskDependency: vi.fn(),
+            refreshTaskStatuses: vi.fn(),
+        }) as unknown as TaskManagementState;
+
+    const mountModal = (pm: Partial<ProjectManagementState>, tm: TaskManagementState) =>
+        render(
+            <CssVarsProvider>
+                <ModalManageDependencies
+                    open
+                    myself={{ teamId: "t", userId: "u" } as never}
+                    taskContent={{ id: 10, project: ALPHA } as unknown as TaskProps}
+                    usePM={{ teamProjects: [ALPHA, BETA], ...pm } as ProjectManagementState}
+                    useTM={tm}
+                    onClose={vi.fn()}
+                />
+            </CssVarsProvider>
+        );
+
+    it("the open project's picker sends no request, in both sections", async () => {
+        mountModal({ currentProject: ALPHA }, useTM(ROWS));
+        // "Blocking" and "Blocked by" each have a picker; let both settle.
+        await waitFor(() => expect(screen.getAllByRole("combobox").length).toBe(4));
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        expect(mockLoad).not.toHaveBeenCalled();
+    });
+
+    it("with no project open it asks as before", async () => {
+        mountModal({ currentProject: undefined }, useTM(ROWS));
+        await waitFor(() => expect(mockLoad).toHaveBeenCalled());
+    });
+
+    it("the table's rows are for the OPEN project: another one is fetched", async () => {
+        mountModal({ currentProject: BETA }, useTM(ROWS));
+        await waitFor(() => expect(mockLoad).toHaveBeenCalled());
     });
 });
