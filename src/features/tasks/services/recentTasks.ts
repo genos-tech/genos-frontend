@@ -3,6 +3,7 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../types/tasks";
+import { landReadActivityIds } from "../../chat/services/landReadActivityIds";
 
 // The task sidebar's Recents (MIP-1063): the tasks THIS user opened, newest
 // open first, at most 20 per project. Private to the caller; the server
@@ -44,7 +45,9 @@ export const recordTaskOpen = async (
     try {
         const api = authApi(accessToken);
         if (!api) return false;
-        await api.post("/task/recent/open/", { task_id: taskId });
+        const res = await api.post("/task/recent/open/", { task_id: taskId });
+        // The server marked the task's unread activity read (MIP-1421): land it locally.
+        landReadActivityIds(res?.data);
         return true;
     } catch (error: unknown) {
         if (axios.isAxiosError(error) && error.response?.status === 404) return false;
