@@ -212,9 +212,15 @@ describe("editable-target policy", () => {
         SHORTCUT_IDS.filter((id) => editablePolicy(id, platform) === "skip").sort();
 
     // The two chat arrows and undo (MIP-1313) keep out of text fields on both platforms.
-    const EVERYWHERE: ShortcutId[] = ["chat.moveSelection", "chat.switchTab", "global.undo"];
+    const EVERYWHERE: ShortcutId[] = [
+        "chat.moveSelection",
+        "chat.switchTab",
+        "global.undo",
+        // a bare "/" is a character in a text field (MIP-1431)
+        "notes.filter",
+    ].sort() as ShortcutId[];
 
-    it("on Mac only the two chat arrow shortcuts and undo keep out of text fields; everything else fires", () => {
+    it('on Mac only the two chat arrow shortcuts, undo and the bare "/" keep out of text fields; everything else fires', () => {
         expect(skipping("mac")).toEqual(EVERYWHERE);
     });
 
