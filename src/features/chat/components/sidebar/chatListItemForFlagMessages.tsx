@@ -15,6 +15,7 @@ import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import { Box, Chip, IconButton, ListDivider, Stack, Typography } from "@mui/joy";
 import { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -49,6 +50,7 @@ import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { loadV3SpecificMessages } from "../../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
+import { buildChatPath } from "../../utils/chatPaths";
 import { formatReminderTime } from "../../utils/reminderPresets";
 
 // chat_type=4 carries two semantics in the wider codebase: legacy task
@@ -171,6 +173,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     } = props;
     const { mode } = useColorScheme();
     const { t, locale } = useTranslation();
+    const navigate = useNavigate();
     const isDark = mode === "dark";
     // Same legacy-slot cast as every other read of this field below: the
     // v3 message UUID, which is also the key reminders are stored under.
@@ -458,6 +461,21 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
         setSelectedFlaggedMessageId(flaggedMessage.flaggedMessageId);
 
+        // A task comment (its mirror message is the flagged one): open the task's thread at
+        // that comment, the same deep link the Comments tab uses (MIP-1434).
+        if (flaggedMessage.taskCommentId != null) {
+            navigate(
+                buildChatPath(
+                    "pm",
+                    flaggedMessage.chatId as unknown as string,
+                    flaggedMessage.taskId,
+                    undefined,
+                    flaggedMessage.taskCommentId
+                )
+            );
+            return;
+        }
+
         if (flaggedMessage.threadId === 0) {
             await handleNonThreadMessage();
         } else {
@@ -633,6 +651,22 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         }}
                     >
                         {formatTaskDisplayId(flaggedMessage)}
+                    </Chip>
+                )}
+                {flaggedMessage.taskCommentId != null && (
+                    <Chip
+                        color="neutral"
+                        size="sm"
+                        variant="outlined"
+                        sx={{
+                            borderRadius: "6px",
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            height: "20px",
+                            px: 0.75,
+                        }}
+                    >
+                        {t.chat.sidebar.chipTaskComment}
                     </Chip>
                 )}
             </>
@@ -854,8 +888,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 {renderChatNameChip()}
                                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                     {renderProjectChips()}
-                                    {renderChatTypeChip()}
-                                    {renderThreadChip()}
+                                    {/* "Task comment" already says PM and thread. */}
+                                    {flaggedMessage.taskCommentId == null && renderChatTypeChip()}
+                                    {flaggedMessage.taskCommentId == null && renderThreadChip()}
                                     {renderReminderChip()}
                                     {chatRemoved && renderRemovedChip(t.chat.listItem.chatRemoved)}
                                     {!chatRemoved &&

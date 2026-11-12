@@ -2397,13 +2397,7 @@ export class ChannelService {
             return;
         }
         for (const f of flags) this._upsertFlag(f);
-        const hasMessage = (messageId: string): boolean => {
-            for (const msgs of this._messages.values()) {
-                if (msgs.some((m) => m.id === messageId)) return true;
-            }
-            return false;
-        };
-        const missing = flags.filter((f) => !hasMessage(f.messageId));
+        const missing = flags.filter((f) => !this._hasMessage(f.messageId));
         if (missing.length > 0) {
             await Promise.all(missing.map((f) => this.fetchMessageById(f.messageId)));
         }
@@ -3151,6 +3145,7 @@ export class ChannelService {
             }
             if (flagRows.length > 0) this._flagsVersion += 1;
             this._bumpChannels();
+            for (const f of flagRows) if (!f.completedAt) this._ensureFlagHost(f.messageId);
         } catch (e) {
             // IDB failure is non-fatal — the app keeps working off the
             // live socket stream + REST cold reads. Record so the dev
@@ -3260,6 +3255,31 @@ export class ChannelService {
         void this._persistPinDelete(existing.id);
     }
 
+    private _hasMessage(messageId: string): boolean {
+        for (const msgs of this._messages.values()) {
+            if (msgs.some((m) => m.id === messageId)) return true;
+        }
+        return false;
+    }
+
+    /** Message ids whose host fetch was already tried this session (a 404 is not retried). */
+    private readonly _flagHostTried = new Set<string>();
+
+    /**
+     * An active flag's host message must be loaded for the Flagged list to draw its row (the
+     * adapter skips a flag whose message is not in `_messages`). Most are, but a THREAD REPLY
+     * is not until its thread opens, and a task comment's flag is exactly that: the comment is
+     * read through the task API, so its mirror reply was never fetched here (MIP-1434).
+     * Completed flags were back-filled by id already; active ones now are too. Once per
+     * message per session, so a deleted message is not asked for again.
+     */
+    private _ensureFlagHost(messageId: string): void {
+        if (this._flagHostTried.has(messageId) || !this.hasAccessToken()) return;
+        if (this._hasMessage(messageId)) return;
+        this._flagHostTried.add(messageId);
+        void this.fetchMessageById(messageId);
+    }
+
     private _upsertFlag(flag: Flag) {
         const previous = this._flagByMessageId.get(flag.messageId);
         if (previous && previous.id !== flag.id) this._flags.delete(previous.id);
@@ -3274,6 +3294,7 @@ export class ChannelService {
         this._flagsVersion += 1;
         this._notify();
         void this._persistFlag(flag, previous?.id !== flag.id ? previous?.id : undefined);
+        if (!flag.completedAt) this._ensureFlagHost(flag.messageId);
         // Marking a flag done retires its reminder server-side (FlagView),
         // so drop ours too — otherwise the bubble keeps offering to cancel
         // a reminder that no longer exists.

@@ -1,9 +1,11 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
@@ -29,6 +31,7 @@ import { TeamManagementState } from "../../../../../../hooks/common/useTeamManag
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { useUndoableAction } from "../../../../../../hooks/common/useUndoableAction";
 import { useTranslation } from "../../../../../../i18n";
+import { channelService } from "../../../../../../services/channel/channelService";
 import { g } from "../../../../../../theme/tokens";
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
@@ -44,7 +47,13 @@ import {
     PinnedBubbleAction,
     splitPinned,
 } from "../../../../../chat/components/bubbles/BubblePinnedActions";
+import {
+    MARK_DONE_ACTION,
+    pinnedForFlagState,
+    withMarkDone,
+} from "../../../../../chat/components/bubbles/markDoneAction";
 import { setTodoFromMessageBubble as requestTodoFromMessage } from "../../../../../chat/components/todo/addToTodoStore";
+import { useIsMessageFlagged } from "../../../../../chat/hooks/useIsMessageFlagged";
 import {
     deleteTaskComment,
     deleteTaskCommentOnExit,
@@ -132,6 +141,24 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
             ...comment,
             projectId: todoProjectId,
         });
+    // A comment's flag is the flag on its mirror message (MIP-1434). Without a mirror id (a
+    // comment this client just made, until the list is read again) there is nothing to flag.
+    const messageId = comment.messageId ?? null;
+    const isFlagged = useIsMessageFlagged(messageId);
+    const handleFlagClick = () => {
+        if (!messageId) return;
+        const done = isFlagged
+            ? channelService.unflagMessage(messageId)
+            : channelService.flagMessage(messageId);
+        void done.catch((e) => console.error("[TaskCommentBubble] flag failed:", e));
+    };
+    // Finish the flag: kept as done (it moves to the history), unlike Remove flag.
+    const handleMarkDoneClick = () => {
+        if (!messageId) return;
+        void channelService
+            .completeFlag(messageId)
+            .catch((e) => console.error("[TaskCommentBubble] mark done failed:", e));
+    };
     const isSent = comment.senderId === myself.userId;
     // The commenter's name is live-resolved by the `<ResolvedUserName>`
     // leaf in the name slot (so a rename shows on existing comments) —
@@ -401,6 +428,18 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     const moreMenuItems: MoreMenuItem[] = [
         {
+            // To READ AGAIN later, to remember what it says (MIP-1433's rule).
+            active: isFlagged,
+            icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "flag",
+            kind: "flag",
+            label: isFlagged
+                ? t.chat.messageActions.removeFlag
+                : t.chat.messageActions.flagForLater,
+            onClick: handleFlagClick,
+            visible: messageId != null,
+        },
+        {
             // A comment that needs you to DO something. Same label, glyph and rule as on a
             // chat message: "Flag for later" is the one to read again (MIP-1433, MIP-1434).
             divider: true,
@@ -452,15 +491,32 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // The actions pinned in Settings → Message actions sit on the toolbar, as on a chat
     // message; the rest stay in the menu (MIP-1434). Ones this bubble does not offer
     // (reply, flag, remind me, edit has its own button) are simply not there.
-    const { pinnedItems, menuItems: menuOnlyItems } = splitPinned(moreMenuItems, pinned);
-    const pinnedActions: PinnedBubbleAction[] = pinnedItems.map((item) => ({
-        active: item.active,
-        danger: item.danger,
-        icon: item.icon,
-        id: item.id as PinnableBubbleAction,
-        label: item.label,
-        onClick: item.onClick,
-    }));
+    // While the comment is flagged, Mark done takes the flag's toolbar slot and "Remove flag"
+    // stays in the menu, whatever was pinned (the MIP-1423 rule, as on a chat message).
+    const { pinnedItems, menuItems: menuOnlyItems } = splitPinned(
+        moreMenuItems,
+        pinnedForFlagState(pinned, isFlagged)
+    );
+    const markDone: PinnedBubbleAction | null =
+        isFlagged && messageId
+            ? {
+                  icon: <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />,
+                  id: MARK_DONE_ACTION,
+                  label: t.chat.listItem.completeFlag,
+                  onClick: handleMarkDoneClick,
+              }
+            : null;
+    const pinnedActions: PinnedBubbleAction[] = withMarkDone(
+        pinnedItems.map((item) => ({
+            active: item.active,
+            danger: item.danger,
+            icon: item.icon,
+            id: item.id as PinnableBubbleAction,
+            label: item.label,
+            onClick: item.onClick,
+        })),
+        markDone
+    );
     // A Box, not a Fragment: the Stack around it clones its direct children to space them,
     // and a Fragment cannot take the props it adds.
     const moreMenu = (

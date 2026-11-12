@@ -135,6 +135,12 @@ export type TaskCommentProps = {
     senderName: string;
     commentId: number;
     commentBody: PartialBlock[] | any[];
+    /**
+     * The comment's mirror v3 `Message` (a thread reply under the PM task header): a comment's
+     * flag and reminder are the message ones on that row. `null` when the mirror is missing;
+     * absent on a comment this client just made, until the list is read again (MIP-1434).
+     */
+    messageId?: string | null;
     reactions?: ReactionProps[];
     tsSent: string;
     tsUpdated: string;
