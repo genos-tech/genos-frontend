@@ -53,7 +53,13 @@ const withUnread = (unread: boolean, children: ReactNode) => (
     </NoteUnreadProvider>
 );
 
-const myNote = { noteType: 1, noteId: 5, parentNoteId: null, title: "Weekly plan", tsUpdated: "" };
+const myNote = {
+    noteType: 1 as const,
+    noteId: 5,
+    parentNoteId: null,
+    title: "Weekly plan",
+    tsUpdated: "",
+};
 
 const row = () => screen.getByRole("button", { name: /Weekly plan/ });
 const isSelected = () => row().className.includes("Mui-selected");
