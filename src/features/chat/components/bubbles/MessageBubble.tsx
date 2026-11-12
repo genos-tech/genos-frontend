@@ -30,6 +30,7 @@ import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../
 import { ReactionProps } from "../../../../types/common";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { isRealTaskId } from "../../../tasks/utils/taskPreviewPaneVisibility";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
@@ -569,7 +570,11 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     isCompact
                         ? undefined
                         : () => {
-                              if (message.taskId !== null) {
+                              // A click on a task card's body is "open this task"
+                              // (MIP-1422): it ASKS for the pane, not just selects
+                              // the task, because on the chat page a selection
+                              // alone never opens it. A real task only.
+                              if (isRealTaskId(message.taskId)) {
                                   useCM.setIsMainChatVisible(true);
                                   useCM.setIsThreadVisible(false);
                                   useTM.setIsCreatingTask((prev) => ({
@@ -577,6 +582,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                       flag: false,
                                   }));
                                   useTM.setCurrentPreviewTaskId(message.taskId);
+                                  useTM.setIsTaskPreviewVisible(true);
                               }
                           }
                 }
