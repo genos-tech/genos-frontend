@@ -52,6 +52,9 @@ export type MoreMenuProps = {
     ariaLabel?: string;
     /** Trigger icon font size. Default: 18. */
     iconFontSize?: number;
+    /** The trigger's glyph, for a menu that is not "more" (a "+" that opens a create menu).
+     *  Its size is `iconFontSize`. Default: the three dots. */
+    TriggerIcon?: React.ElementType;
     /** Notified when the menu opens (`true`) or closes (`false`). */
     onOpenChange?: (open: boolean) => void;
     /** Stacking level of the dropdown portal. The default (page layer, or the
@@ -70,6 +73,7 @@ export const MoreMenu = ({
     menuMinWidth = 200,
     ariaLabel,
     iconFontSize = 18,
+    TriggerIcon = MoreHorizRoundedIcon,
     onOpenChange,
     zIndex,
 }: MoreMenuProps) => {
@@ -101,7 +105,7 @@ export const MoreMenu = ({
                     // The trigger usually sits inside a clickable row.
                     onClick={(event) => event.stopPropagation()}
                 >
-                    <MoreHorizRoundedIcon sx={{ fontSize: iconFontSize }} />
+                    <TriggerIcon sx={{ fontSize: iconFontSize }} />
                 </MenuButton>
                 <MenuSurface placement={placement} sx={{ minWidth: menuMinWidth }} zIndex={zIndex}>
                     {visibleItems.map((item, index) => (

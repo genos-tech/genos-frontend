@@ -60,6 +60,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNo
             // on touch.
             actions={
                 <IconButton
+                    aria-label={t.notes.sidebar.removeFromFavorites}
                     className="favorite-remove-btn"
                     size="sm"
                     variant="plain"

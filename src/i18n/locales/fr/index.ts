@@ -2841,8 +2841,11 @@ export const fr: DeepPartial<Messages> = {
             myNotes: "Mes notes",
             taskNotes: "Notes de tâches",
             chatNotes: "Notes de conversation",
-            sharedNotes: "Notes partagées",
+            sharedNotes: "Partagé avec moi",
             sharedBy: "Partagée par {name}",
+            newMenu: "Nouveau",
+            addToFavorites: "Ajouter aux favoris",
+            removeFromFavorites: "Retirer des favoris",
             teamNotes: "Notes d'équipe",
             favoriteFolders: "Dossiers",
             noFavorites:

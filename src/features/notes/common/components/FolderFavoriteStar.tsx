@@ -4,6 +4,7 @@ import { IconButton } from "@mui/joy";
 
 import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 
 // A folder row's favorite star (MIP-747): always shown once starred
@@ -16,6 +17,7 @@ export const FolderFavoriteStar = ({
     folderId: number;
     useNM: NoteManagementState;
 }) => {
+    const { t } = useTranslation();
     const isFavorited = useNM.isFolderFavorited(folderId);
     return (
         <IconButton
@@ -23,6 +25,9 @@ export const FolderFavoriteStar = ({
             data-testid={`folder-favorite-${folderId}`}
             size="sm"
             variant="plain"
+            aria-label={
+                isFavorited ? t.notes.sidebar.removeFromFavorites : t.notes.sidebar.addToFavorites
+            }
             sx={{
                 minWidth: 20,
                 minHeight: 20,

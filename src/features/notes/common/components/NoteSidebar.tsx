@@ -1,4 +1,6 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
@@ -7,17 +9,18 @@ import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
-import { Box, Button, Chip, List, ListItem, Sheet, Typography } from "@mui/joy";
+import { Box, Button, Chip, IconButton, List, Sheet, Typography } from "@mui/joy";
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
-import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -25,6 +28,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, Messages, useTranslation } from "../../../../i18n";
+import { useSyncBanner } from "../../../../services/syncStatus";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -61,7 +65,6 @@ import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
     DraggableNoteRow,
-    DroppableHeader,
     DroppableNoteList,
     myRootContainerId,
     SidebarDndProvider,
@@ -71,6 +74,7 @@ import {
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
+import { chatRows, projectRows } from "../utils/flattenNoteGroups";
 import { buildLocationSources, noteLocation, type LocationLabels } from "../utils/noteLocation";
 import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias";
 import { FavoriteFolderItem } from "./FavoriteFolderItem";
@@ -462,6 +466,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Unread @mention state (from the activity feed). Drives the "Unread"
     // section here and the per-note dots inside the tree/recents/favorites.
     const { unreadNotes } = useNoteUnread();
+    // "Not read yet" and "the read failed" are not "empty" (MIP-1323): the My Notes empty
+    // state speaks only once the app's own read has answered.
+    const syncBanner = useSyncBanner();
 
     // Resolve a note's full metadata (for the subtitle: e.g. "DM" on chat
     // notes, project/task on task notes) from the loaded meta lists. Falls
@@ -805,59 +812,92 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // `data-first-child` prop — a Fragment root triggers React's
     // "Invalid prop supplied to React.Fragment" warning. The grouped
     // task/chat/shared sections are Box-rooted for the same reason.
+    const myNotesIsEmpty =
+        !syncBanner.syncing &&
+        !syncBanner.failed &&
+        useNM.myNoteFolderForest.rootFolders.length === 0 &&
+        useNM.myNoteFolderForest.rootNotes.length === 0;
+
+    // The "+" on the My Notes family row (MIP-1430): what the two dashed buttons were. Two
+    // choices, so a menu. A click on it must not fold the family.
+    const renderMyNotesActions = (setMenuOpen: (open: boolean) => void) => (
+        <Box onClick={(e) => e.stopPropagation()}>
+            <MoreMenu
+                ariaLabel={t.notes.sidebar.newMenu}
+                iconFontSize={16}
+                placement="bottom-end"
+                TriggerIcon={AddRoundedIcon}
+                triggerSize={20}
+                items={[
+                    {
+                        id: "new-note",
+                        kind: "newNote",
+                        label: t.notes.list.newNote,
+                        icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
+                        // A plain root note: no parent, no folder.
+                        onClick: () => void useNM.handleCreateNewMyNote(null),
+                    },
+                    {
+                        id: "new-folder",
+                        kind: "newSubfolder",
+                        label: t.notes.folders.newFolder,
+                        icon: <CreateNewFolderRoundedIcon sx={{ fontSize: 16 }} />,
+                        onClick: () =>
+                            setFolderNameModal({ mode: "create", parentFolderId: null }),
+                    },
+                ]}
+                onOpenChange={setMenuOpen}
+            />
+        </Box>
+    );
+
+    // The "+" on the Team Notes family row: one choice, so no menu. Member-only on the
+    // server, so a guest (who sees this family for the one folder shared with their team)
+    // gets none.
+    const renderTeamNotesActions = () => (
+        <AppTooltip title={t.notes.teamNotes.newFolder}>
+            <IconButton
+                aria-label={t.notes.teamNotes.newFolder}
+                size="sm"
+                variant="plain"
+                sx={{
+                    minWidth: 20,
+                    minHeight: 20,
+                    borderRadius: g.radius.xs,
+                    "--IconButton-size": "20px",
+                    color: g.text.tertiary,
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setTeamFolderModal({ mode: "create-root" });
+                }}
+            >
+                <AddRoundedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+        </AppTooltip>
+    );
+
     const renderMyNotesSection = () => {
         return (
             <Box>
-                {/* "New folder" / "New note" affordances — the row also doubles
-                    as the always-visible "move to root" drop target (folders
-                    below may be the only other rows when every note is filed).
-                    "New note" creates a plain root note (no parent, no folder). */}
-                <ListItem sx={{ p: 0 }}>
-                    <DroppableHeader containerId={myRootContainerId()} kind={1}>
-                        {(isDraggingOver) => (
-                            // The pair sits on one row and takes its content width
-                            // (not 50/50, which squeezed "New folder" onto two
-                            // lines). While a note is dragged over, both light up
-                            // together: the row is the root drop target.
-                            <Box sx={{ display: "flex", gap: 0.5, width: "100%" }}>
-                                {[
-                                    {
-                                        key: "folder",
-                                        icon: <CreateNewFolderRoundedIcon />,
-                                        label: t.notes.folders.newFolder,
-                                        onClick: () =>
-                                            setFolderNameModal({
-                                                mode: "create",
-                                                parentFolderId: null,
-                                            }),
-                                    },
-                                    {
-                                        key: "note",
-                                        icon: <NoteAddRoundedIcon />,
-                                        label: t.notes.list.newNote,
-                                        onClick: () => void useNM.handleCreateNewMyNote(null),
-                                    },
-                                ].map((action) => (
-                                    <NavItem
-                                        key={action.key}
-                                        as="div"
-                                        icon={action.icon}
-                                        label={action.label}
-                                        variant="dashed"
-                                        sx={{
-                                            flex: "0 0 auto",
-                                            ...(isDraggingOver && {
-                                                background: g.accent.subtle,
-                                                borderColor: g.accent.border,
-                                            }),
-                                        }}
-                                        onClick={action.onClick}
-                                    />
-                                ))}
-                            </Box>
-                        )}
-                    </DroppableHeader>
-                </ListItem>
+                {/* "New note" / "New folder" live in the family row's "+", and that row is
+                    the "move to the top level" drop target (see `noteTypesConfig`). Nothing
+                    here but the empty state, which has to say where to start because the
+                    "+" only shows on hover. */}
+                {myNotesIsEmpty && (
+                    <Box sx={{ px: 1.5 }}>
+                        <EmptyState
+                            body={t.notes.list.empty}
+                            data-empty="my-notes"
+                            size="xs"
+                            action={{
+                                inline: true,
+                                label: t.notes.list.newNote,
+                                onClick: () => void useNM.handleCreateNewMyNote(null),
+                            }}
+                        />
+                    </Box>
+                )}
                 {useNM.myNoteFolderForest.rootFolders.map((folder) => (
                     <MyNoteFolderTree
                         key={`folder-${folder.folderId}`}
@@ -1097,20 +1137,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Box root ON PURPOSE — see renderMyNotesSection.
     const renderTeamNotesSection = () => (
         <Box>
-            {/* Creating a folder in Team Notes is member-only on the server.
-                A guest sees this section for the one folder shared with their
-                team, so the affordance would only ever fail for them. */}
-            {!useTEM.currentTeam.isGuest && (
-                <ListItem sx={{ p: 0 }}>
-                    <NavItem
-                        as="div"
-                        icon={<CreateNewFolderRoundedIcon />}
-                        label={t.notes.teamNotes.newFolder}
-                        variant="dashed"
-                        onClick={() => setTeamFolderModal({ mode: "create-root" })}
-                    />
-                </ListItem>
-            )}
             {teamFolderTags.length > 0 && (
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, px: 1, py: 0.5 }}>
                     {teamFolderTags.map((tag) => {
@@ -1177,6 +1203,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     emptyMarker="team-folders"
                     hasAny={useNM.teamNoteFolders.length > 0}
                     scope="teamFolders"
+                    action={
+                        // Creating a folder in Team Notes is member-only on the server.
+                        useTEM.currentTeam.isGuest
+                            ? undefined
+                            : {
+                                  label: t.notes.teamNotes.newFolder,
+                                  onClick: () => setTeamFolderModal({ mode: "create-root" }),
+                              }
+                    }
                 />
             ) : (
                 renderTeamFolderTrees(ownRootFolders, visibleTeamFolderIds)
@@ -1236,7 +1271,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         taskGroup: TaskGroup,
         keyPrefix: string,
         activeNoteId: number | undefined,
-        projectId: number
+        projectId: number,
+        milestoneTitle?: string
     ) => (
         <GroupedNoteSection
             key={`${keyPrefix}-task-${taskGroup.taskId}`}
@@ -1245,11 +1281,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             droppableKind={2}
             groupKey={`${keyPrefix}-task-${taskGroup.taskId}`}
             groupLabel={taskGroup.taskTitle}
+            leadingIcon={<AssignmentOutlinedIcon />}
             menuItems={buildTaskFolderMenuItems(projectId, taskGroup.taskId)}
+            // The milestone is no folder level any more (MIP-1430): project › task › note.
+            // It is said here, where the task is.
             subLabel={formatTaskDisplayId({
                 taskId: taskGroup.taskId,
                 displayId: taskGroup.displayId,
             })}
+            tooltip={
+                milestoneTitle ? `${t.notes.sidebar.milestoneLabel}: ${milestoneTitle}` : undefined
+            }
         >
             <DroppableNoteList containerId={taskContainerId(projectId, taskGroup.taskId)} kind={2}>
                 {taskGroup.notes.map((note, index) => (
@@ -1271,6 +1313,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     droppableKind={2}
                     groupKey={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
                     groupLabel={subGroup.taskTitle}
+                    leadingIcon={<AssignmentOutlinedIcon />}
                     menuItems={buildTaskFolderMenuItems(projectId, subGroup.taskId)}
                     subLabel={formatTaskDisplayId({
                         taskId: subGroup.taskId,
@@ -1417,33 +1460,42 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     // as it does in the task-note header.
                     leadingIcon={renderProjectLeadingIcon(projectGroup.projectId)}
                 >
-                    {projectGroup.milestones.map((milestoneGroup) => {
+                    {/* project › task › note. A milestone is no folder level: its own notes
+                        (anchored to its backing task) are a row with the flag, and its tasks
+                        sit beside the project's other tasks with the milestone on hover. */}
+                    {projectRows(projectGroup).map((row) => {
+                        if (row.kind === "task") {
+                            return renderTaskGroup(
+                                row.task,
+                                row.milestone
+                                    ? `${projectKey}-milestone-${row.milestone.milestoneId}`
+                                    : projectKey,
+                                activeNoteId,
+                                projectGroup.projectId,
+                                row.milestone?.milestoneTitle
+                            );
+                        }
+                        const milestoneGroup = row.milestone;
                         const milestoneKey = `${projectKey}-milestone-${milestoneGroup.milestoneId}`;
                         return (
                             <GroupedNoteSection
                                 key={milestoneKey}
                                 groupKey={milestoneKey}
                                 groupLabel={milestoneGroup.milestoneTitle}
-                                // Same "<title> <display-id>" shape a task
-                                // folder uses; the flag icon marks it as a
-                                // milestone (matching the task page). Falls
-                                // back to no sub-label when no note revealed
-                                // the milestone's backing task id.
-                                subLabel={formatTaskDisplayId({
-                                    taskId: milestoneGroup.backingTaskId,
-                                    displayId: milestoneGroup.displayId,
-                                })}
-                                // A milestone folder IS a task (its backing
-                                // task), so it can hold notes — but only
-                                // once a child note has revealed which task
-                                // that is.
-                                defaultExpanded={milestoneGroupContainsNote(
-                                    milestoneGroup,
-                                    activeNoteId
+                                tooltip={t.notes.sidebar.milestoneLabel}
+                                // Only ITS notes: its tasks are rows of their own now,
+                                // and open themselves.
+                                defaultExpanded={milestoneGroup.directNotes.some(
+                                    (n) => n.noteId === activeNoteId
                                 )}
+                                // The flag marks it as a milestone (as on the task page).
                                 leadingIcon={
                                     <FlagRoundedIcon
-                                        sx={{ color: "#f97316", flexShrink: 0, fontSize: 14 }}
+                                        sx={{
+                                            color: "#f97316",
+                                            flexShrink: 0,
+                                            fontSize: 14,
+                                        }}
                                     />
                                 }
                                 menuItems={
@@ -1454,10 +1506,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                           )
                                         : undefined
                                 }
+                                // Same "<display-id> <title>" shape a task row has. No
+                                // chip until a note has revealed the milestone's
+                                // backing task id.
+                                subLabel={formatTaskDisplayId({
+                                    taskId: milestoneGroup.backingTaskId,
+                                    displayId: milestoneGroup.displayId,
+                                })}
                             >
                                 {/* Direct milestone notes all anchor to the
-                                    milestone's backing task, so that task is
-                                    their DnD container. */}
+                                              milestone's backing task, so that task is
+                                              their DnD container. */}
                                 {milestoneGroup.directNotes.length > 0 && (
                                     <DroppableNoteList
                                         kind={2}
@@ -1478,25 +1537,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                         ))}
                                     </DroppableNoteList>
                                 )}
-                                {milestoneGroup.tasks.map((taskGroup) =>
-                                    renderTaskGroup(
-                                        taskGroup,
-                                        milestoneKey,
-                                        activeNoteId,
-                                        projectGroup.projectId
-                                    )
-                                )}
                             </GroupedNoteSection>
                         );
                     })}
-                    {projectGroup.looseTasks.map((taskGroup) =>
-                        renderTaskGroup(
-                            taskGroup,
-                            projectKey,
-                            activeNoteId,
-                            projectGroup.projectId
-                        )
-                    )}
                 </GroupedNoteSection>
             );
         });
@@ -1527,50 +1570,42 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         </Box>
     );
 
-    // Render grouped chat notes (Chat Type → Chat Name → Notes)
+    // Render grouped chat notes: chat › note. The kind of chat (direct, group, project) is no
+    // folder level any more (MIP-1430): the chat's own avatar already says it, and the
+    // title says it on hover.
     const renderGroupedChatNotes = () =>
-        groupedChatNotes.map((chatTypeGroup) => (
+        chatRows(groupedChatNotes).map(({ chat: chatGroup, kindName }) => (
             <GroupedNoteSection
-                key={`chatType-${chatTypeGroup.chatType}`}
-                groupKey={`chatType-${chatTypeGroup.chatType}`}
-                groupLabel={chatTypeGroup.chatTypeName}
-                defaultExpanded={chatTypeGroup.chats.some((chatGroup) =>
-                    chatGroup.notes.some((note) => note.noteId === useNM.currentChatNote?.noteId)
+                key={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
+                droppableId={chatContainerId(chatGroup.chatType, chatGroup.chatId)}
+                droppableKind={3}
+                groupKey={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
+                groupLabel={chatGroup.chatName}
+                tooltip={kindName}
+                // The channel's own avatar in place of the generic
+                // folder glyph, so a chat folder reads the same
+                // here as it does in the chat header / sidebar.
+                leadingIcon={renderChatLeadingIcon(chatGroup)}
+                menuItems={buildChatFolderMenuItems(chatGroup)}
+                defaultExpanded={chatGroup.notes.some(
+                    (note) => note.noteId === useNM.currentChatNote?.noteId
                 )}
             >
-                {chatTypeGroup.chats.map((chatGroup) => (
-                    <GroupedNoteSection
-                        key={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
-                        droppableId={chatContainerId(chatGroup.chatType, chatGroup.chatId)}
-                        droppableKind={3}
-                        groupKey={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
-                        groupLabel={chatGroup.chatName}
-                        // The channel's own avatar in place of the generic
-                        // folder glyph, so a chat folder reads the same
-                        // here as it does in the chat header / sidebar.
-                        leadingIcon={renderChatLeadingIcon(chatGroup)}
-                        menuItems={buildChatFolderMenuItems(chatGroup)}
-                        defaultExpanded={chatGroup.notes.some(
-                            (note) => note.noteId === useNM.currentChatNote?.noteId
-                        )}
-                    >
-                        <DroppableNoteList
-                            containerId={chatContainerId(chatGroup.chatType, chatGroup.chatId)}
+                <DroppableNoteList
+                    containerId={chatContainerId(chatGroup.chatType, chatGroup.chatId)}
+                    kind={3}
+                >
+                    {chatGroup.notes.map((note, index) => (
+                        <DraggableNoteRow
+                            key={`chat-note-${note.noteId}`}
+                            index={index}
                             kind={3}
+                            noteId={note.noteId}
                         >
-                            {chatGroup.notes.map((note, index) => (
-                                <DraggableNoteRow
-                                    key={`chat-note-${note.noteId}`}
-                                    index={index}
-                                    kind={3}
-                                    noteId={note.noteId}
-                                >
-                                    {renderChatNoteTreeItem(note)}
-                                </DraggableNoteRow>
-                            ))}
-                        </DroppableNoteList>
-                    </GroupedNoteSection>
-                ))}
+                            {renderChatNoteTreeItem(note)}
+                        </DraggableNoteRow>
+                    ))}
+                </DroppableNoteList>
             </GroupedNoteSection>
         ));
 
@@ -1873,6 +1908,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             // Folder forest + unfiled roots (was a bare recursive tree).
             renderGrouped: renderMyNotesSection,
             isGrouped: true,
+            actions: renderMyNotesActions,
+            // The family row is where a note is dropped to take it out of its folder: the
+            // always-visible "move to the top level" target, collapsed or not.
+            dropTarget: { containerId: myRootContainerId(), kind: 1 as const },
         },
         // Shared Notes sits directly under My Notes: both are personal
         // notes (type 4 is a UI-only alias of 1), so they read as one
@@ -1903,6 +1942,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             renderGrouped: renderTeamNotesSection,
             isGrouped: true,
             isCurrent: useNM.currentNoteType === 8 && !openNoteIsInGuestFolder,
+            actions: useTEM.currentTeam.isGuest ? undefined : renderTeamNotesActions,
         },
         {
             noteType: 2,
@@ -2002,6 +2042,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         {noteTypesConfig.map((config) => (
                             <NoteTypeSection
                                 key={config.noteType}
+                                actions={config.actions}
+                                dropTarget={config.dropTarget}
                                 icon={config.icon}
                                 isCurrent={config.isCurrent}
                                 noteType={config.noteType}
