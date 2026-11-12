@@ -1319,6 +1319,8 @@ export const ja: DeepPartial<Messages> = {
             title: "このメッセージをリマインド",
             description:
                 "通知と受信箱のアクティビティでお知らせします。メッセージはフラグ付きのままです。",
+            descriptionComment:
+                "通知と受信箱のアクティビティでお知らせします。コメントはフラグ付きのままです。",
             currentlySetFor: "{time} にリマインドします。別の時間を選ぶと変更できます。",
             presets: {
                 in20m: "20分後",

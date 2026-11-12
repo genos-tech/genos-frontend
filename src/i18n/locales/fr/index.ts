@@ -1331,6 +1331,8 @@ export const fr: DeepPartial<Messages> = {
             title: "Me rappeler ceci",
             description:
                 "Vous recevrez une notification et une activité dans la boîte de réception. Le message reste marqué.",
+            descriptionComment:
+                "Vous recevrez une notification et une activité dans la boîte de réception. Le commentaire reste marqué.",
             currentlySetFor:
                 "Rappel prévu pour {time}. Choisissez une autre heure pour le modifier.",
             presets: {

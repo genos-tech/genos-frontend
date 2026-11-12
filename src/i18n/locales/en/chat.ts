@@ -384,6 +384,8 @@ export const chat = {
     remindMe: {
         title: "Remind me about this",
         description: "You'll get a notification and an inbox activity. The message stays flagged.",
+        descriptionComment:
+            "You'll get a notification and an inbox activity. The comment stays flagged.",
         currentlySetFor: "Reminder set for {time}. Pick another time to change it.",
         presets: {
             in20m: "In 20 minutes",
