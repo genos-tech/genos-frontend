@@ -9,7 +9,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
-import { Badge, Box, Chip, Divider, Sheet, Stack, Typography } from "@mui/joy";
+import { Badge, Box, Chip, Divider, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -175,6 +175,16 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
     // Flagged pane: false = active flags, true = past/completed flags.
     const [showPastFlagged, setShowPastFlagged] = useState(false);
+    // One switch for both doors to the flag history: the "…" menu item and the button on
+    // the section row (MIP-1423). Turning it on loads the completed flags.
+    const pastFlaggedLabel = showPastFlagged
+        ? t.chat.sidebar.viewActiveFlaggedMenu
+        : t.chat.sidebar.viewPastFlaggedMenu;
+    const togglePastFlagged = () => {
+        const next = !showPastFlagged;
+        setShowPastFlagged(next);
+        if (next) void useCM.funcSetPastFlaggedMessages();
+    };
     const [openJoinGM, setOpenJoinGM] = useState({
         flag: false,
         chatId: "",
@@ -593,38 +603,76 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         divider: true,
                                         visible:
                                             useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED,
-                                        onClick: () => {
-                                            const next = !showPastFlagged;
-                                            setShowPastFlagged(next);
-                                            if (next) void useCM.funcSetPastFlaggedMessages();
-                                        },
+                                        onClick: togglePastFlagged,
                                     },
                                 ]}
                             />
                         </Stack>
                     </Stack>
 
-                    {/* Current Section Label */}
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            fontWeight: 600,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.08em",
-                            fontSize: 10,
-                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                            px: 0.5,
-                        }}
-                    >
-                        {(() => {
-                            const navItem = NAV_ITEMS.find(
-                                (item) => item.type === useCM.currentChatPaneType
-                            );
-                            return navItem
-                                ? t.chat.sidebar[navItem.labelKey]
-                                : t.chat.sidebar.currentSectionFallback;
-                        })()}
-                    </Typography>
+                    {/* Current Section Label. On the Flagged pane its row also holds the
+                        past-flags toggle, right under the "…" menu (MIP-1423): the same
+                        switch as the menu's "View past flagged", one click away. */}
+                    <Stack alignItems="center" direction="row" justifyContent="space-between">
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em",
+                                fontSize: 10,
+                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                                px: 0.5,
+                            }}
+                        >
+                            {(() => {
+                                const navItem = NAV_ITEMS.find(
+                                    (item) => item.type === useCM.currentChatPaneType
+                                );
+                                return navItem
+                                    ? t.chat.sidebar[navItem.labelKey]
+                                    : t.chat.sidebar.currentSectionFallback;
+                            })()}
+                        </Typography>
+                        {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
+                            <AppTooltip size="sm" title={pastFlaggedLabel}>
+                                <IconButton
+                                    aria-label={pastFlaggedLabel}
+                                    aria-pressed={showPastFlagged}
+                                    data-testid="toggle-past-flagged-button"
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        minWidth: 24,
+                                        minHeight: 24,
+                                        width: 24,
+                                        height: 24,
+                                        borderRadius: "6px",
+                                        color: showPastFlagged
+                                            ? isDark
+                                                ? "var(--gp-brandalt-300)"
+                                                : "var(--gp-brand-700)"
+                                            : isDark
+                                              ? "rgba(255,255,255,0.5)"
+                                              : "rgba(0,0,0,0.45)",
+                                        background: showPastFlagged
+                                            ? isDark
+                                                ? "rgba(var(--gp-brand-700-rgb), 0.22)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.12)"
+                                            : "transparent",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(var(--gp-brand-700-rgb), 0.28)"
+                                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                                        },
+                                    }}
+                                    onClick={togglePastFlagged}
+                                >
+                                    <HistoryRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            </AppTooltip>
+                        )}
+                    </Stack>
                 </Box>
 
                 {/* Activity Filter (only shown for Activity tab).

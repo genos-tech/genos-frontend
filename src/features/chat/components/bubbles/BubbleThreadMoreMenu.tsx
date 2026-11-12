@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -25,6 +26,7 @@ import { formatReminderTime } from "../../utils/reminderPresets";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
 import { BubblePinnedActions, PinnedBubbleAction, splitPinned } from "./BubblePinnedActions";
+import { MARK_DONE_ACTION, pinnedForFlagState, withMarkDone } from "./markDoneAction";
 
 type BubbleThreadMoreMenuProps = {
     accessToken: string | null;
@@ -128,6 +130,16 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 .catch((e) => console.error("[BubbleThreadMoreMenu] unflag failed:", e));
         }
         setIsFlagged(!isFlagged);
+    };
+
+    // Finish the flag (MIP-1423): the same call as the Flagged list's Mark done.
+    const handleMarkDoneClick = () => {
+        const v3MessageId = message.messageIdWithChatIdAndThreadId;
+        if (!v3MessageId) return;
+        void channelService
+            .completeFlag(v3MessageId)
+            .catch((e) => console.error("[BubbleThreadMoreMenu] mark done failed:", e));
+        setIsFlagged(false);
     };
 
     const handleEditClick = () => {
@@ -245,17 +257,34 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
 
     // Actions the user pinned (Settings → Chat) sit on the toolbar beside the
     // "…"; the dropdown, and arrow-key navigation through it, keep the rest.
-    const { pinnedItems, menuItems: dropdownItems } = splitPinned(menuItems, pinned);
+    // While the message is flagged, Mark done takes the flag's toolbar slot and the flag
+    // ("Remove flag") stays in the menu, whatever was pinned (MIP-1423).
+    const { pinnedItems, menuItems: dropdownItems } = splitPinned(
+        menuItems,
+        pinnedForFlagState(pinned, isFlagged)
+    );
 
     // A pinned action keeps this menu's own handler (and the dialogs below).
-    const pinnedActions: PinnedBubbleAction[] = pinnedItems.map((item) => ({
-        active: item.active,
-        danger: item.danger,
-        icon: item.icon,
-        id: item.id as PinnableBubbleAction,
-        label: item.label,
-        onClick: item.onClick,
-    }));
+    const markDone: PinnedBubbleAction | null =
+        isFlagged && message.messageIdWithChatIdAndThreadId
+            ? {
+                  icon: <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />,
+                  id: MARK_DONE_ACTION,
+                  label: t.chat.listItem.completeFlag,
+                  onClick: handleMarkDoneClick,
+              }
+            : null;
+    const pinnedActions = withMarkDone(
+        pinnedItems.map((item) => ({
+            active: item.active,
+            danger: item.danger,
+            icon: item.icon,
+            id: item.id as PinnableBubbleAction,
+            label: item.label,
+            onClick: item.onClick,
+        })),
+        markDone
+    );
 
     return (
         <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 0.5 }}>

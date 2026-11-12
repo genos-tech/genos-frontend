@@ -4,10 +4,11 @@ import { IconButton, useColorScheme } from "@mui/joy";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { MoreMenuKind, orderMoreMenuItems } from "../../../../components/ui/moreMenuOrder";
 import { PinnableBubbleAction } from "../../../../hooks/common/useBubbleActionsPreference";
+import { MARK_DONE_ACTION } from "./markDoneAction";
 
-/** One action the user pinned onto the hover toolbar (MIP-803). */
+/** One action on the hover toolbar: one the user pinned (MIP-803), or Mark done. */
 export type PinnedBubbleAction = {
-    id: PinnableBubbleAction;
+    id: PinnableBubbleAction | typeof MARK_DONE_ACTION;
     label: string;
     icon: ReactNode;
     onClick: () => void;

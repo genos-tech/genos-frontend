@@ -3,6 +3,7 @@
 // save); disable simple-import-sort.
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -31,6 +32,7 @@ import { formatReminderTime } from "../../utils/reminderPresets";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
 import { BubblePinnedActions, PinnedBubbleAction, splitPinned } from "./BubblePinnedActions";
+import { MARK_DONE_ACTION, pinnedForFlagState, withMarkDone } from "./markDoneAction";
 
 type BubbleMoreMenuProps = {
     accessToken: string | null;
@@ -149,6 +151,17 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 .catch((e) => console.error("[BubbleMoreMenu] unflag failed:", e));
         }
         setIsFlagged(!isFlagged);
+    };
+
+    // Finish the flag (MIP-1423): the same call as the Flagged list's Mark done. The flag is
+    // kept as done (it moves to the history), unlike "Remove flag", which deletes it.
+    const handleMarkDoneClick = () => {
+        const v3MessageId = message.messageIdWithChatId;
+        if (!v3MessageId) return;
+        void channelService
+            .completeFlag(v3MessageId)
+            .catch((e) => console.error("[BubbleMoreMenu] mark done failed:", e));
+        setIsFlagged(false);
     };
 
     const handleReplyClick = () => {
@@ -289,11 +302,23 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     // Actions the user pinned (Settings → Chat) sit on the toolbar beside the
     // "…"; the rest stay in it. The dialogs below belong to this component,
     // not to the menu, so a pinned Delete / Remind me opens the same ones.
-    const { pinnedItems, menuItems } = splitPinned(items, pinned);
+    // While the message is flagged, Mark done takes the flag's toolbar slot and the flag
+    // ("Remove flag") stays in the menu, whatever was pinned (MIP-1423).
+    const { pinnedItems, menuItems } = splitPinned(items, pinnedForFlagState(pinned, isFlagged));
+    const markDone: PinnedBubbleAction | null =
+        isFlagged && message.messageIdWithChatId
+            ? {
+                  icon: <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />,
+                  id: MARK_DONE_ACTION,
+                  label: t.chat.listItem.completeFlag,
+                  onClick: handleMarkDoneClick,
+              }
+            : null;
+    const toolbarActions = withMarkDone(pinnedItems.map(toPinnedAction), markDone);
 
     return (
         <Box sx={{ position: "relative", display: "flex", alignItems: "center", gap: 0.5 }}>
-            <BubblePinnedActions actions={pinnedItems.map(toPinnedAction)} />
+            <BubblePinnedActions actions={toolbarActions} />
             {/* Nothing left to put in the menu (every offered action is pinned). */}
             {menuItems.length > 0 && (
                 <MoreMenu
