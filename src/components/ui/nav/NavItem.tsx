@@ -107,7 +107,17 @@ const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 // badge) is never taken out of the flow, and a badge is `position: relative` so its chip
 // can sit on the button's corner. Forcing `static` on it on hover let the chip fly to the
 // row's corner (MIP-1199).
-const ACTION_OUT_OF_FLOW = { position: "absolute", pointerEvents: "none" } as const;
+//
+// A hidden action is anchored to the row's end edge (the row, `ListItem`, is the containing
+// block). Without an anchor an absolute box sits where it would have been in the flow, at the
+// start of the (almost empty) actions column, and its 32px reach past the row's end: out of
+// sight (opacity 0) but still part of the scrollable area, so a chat list scrolled sideways
+// and, on a phone, could be dragged into a strip of nothing (MIP-1425).
+const ACTION_OUT_OF_FLOW = {
+    position: "absolute",
+    insetInlineEnd: 0,
+    pointerEvents: "none",
+} as const;
 const ACTION_IN_FLOW = { position: "static", pointerEvents: "auto" } as const;
 
 export const NavItem = ({
@@ -502,9 +512,17 @@ export const NavItem = ({
                                   // No hover to reveal them on touch.
                                   "@media (hover: none)": {
                                       "& > *": { opacity: 1 },
-                                      ...(actionsInPlace && {
-                                          [`& > *:not(.${NAV_KEEP_CLASS})`]: ACTION_IN_FLOW,
-                                      }),
+                                      // The fade above is `& > *:not(.NavItem-keep)`, which is
+                                      // MORE specific than `& > *`: an opacity set only on
+                                      // `& > *` loses to it, and the actions stayed invisible
+                                      // while the in-flow rule beside it won, so a phone got a
+                                      // column of invisible, tappable buttons and a strip of
+                                      // empty space (MIP-1425). Same selector, later in the
+                                      // sheet, so this one wins.
+                                      [`& > *:not(.${NAV_KEEP_CLASS})`]: {
+                                          opacity: 1,
+                                          ...(actionsInPlace && ACTION_IN_FLOW),
+                                      },
                                   },
                               }
                     }

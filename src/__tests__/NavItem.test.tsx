@@ -187,6 +187,51 @@ describe("NavItem", () => {
         });
     });
 
+    describe("on a touch screen the actions are shown by a rule the fade cannot out-rank (MIP-1425)", () => {
+        // jsdom cannot resolve the cascade, so this reads the rules and compares what the
+        // browser compares. The fade that hides an action is `> *:not(.NavItem-keep)`: two
+        // classes of specificity. An `opacity: 1` set on `> *` alone (one class) loses to it
+        // however late it comes, and the actions stayed invisible on every phone: the Pin and
+        // "..." of every chat row, and every action of the notes tree (measured in a browser).
+        const body = (rule: string) =>
+            rule.slice(rule.lastIndexOf("{", rule.lastIndexOf("}") - 1));
+        const touchRulesFor = (css: string, selectorPattern: RegExp) =>
+            css
+                .split("\n")
+                .filter((r) => r.startsWith("@media (hover: none)"))
+                .filter((r) =>
+                    selectorPattern.test(r.slice(0, r.indexOf("{", r.indexOf("{") + 1)))
+                );
+
+        it.each([
+            ["a plain actions slot", {}],
+            ["a chat row (actionsInPlace)", { actionsInPlace: true }],
+        ])("%s: the fade is lifted on the selector that hides it", (_name, extra) => {
+            mount({ actions: <span>a</span>, ...extra } as Partial<NavItemProps>);
+            const css = cssWithMediaOf(screen.getByText("a").parentElement as Element);
+            const hides = css
+                .split("\n")
+                .filter((r) => !r.startsWith("@media"))
+                .filter((r) => /:not\(\.NavItem-keep\)\s*\{[^}]*opacity: 0/.test(r));
+            expect(hides.length, "the fade that hides an action").toBeGreaterThan(0);
+            const lifts = touchRulesFor(css, /:not\(\.NavItem-keep\)\s*$/);
+            expect(lifts.map(body).join(" "), css).toMatch(/opacity: 1/);
+        });
+
+        it("a chat row's touch rule puts the action back in the flow AND shows it, in one rule", () => {
+            // Two rules, one winning the position and the other losing the opacity, is the
+            // bug: a column of invisible, tappable buttons reserving 70px on every row.
+            mount({ actionsInPlace: true, actions: <span>a</span> });
+            const css = cssWithMediaOf(screen.getByText("a").parentElement as Element);
+            const rule = touchRulesFor(css, /:not\(\.NavItem-keep\)\s*$/).find((r) =>
+                /position: static/.test(r)
+            );
+            expect(rule, css).toBeTruthy();
+            expect(rule).toMatch(/opacity: 1/);
+            expect(rule).toMatch(/pointer-events: auto/);
+        });
+    });
+
     describe("actionsInPlace (chat rows: the time gives way to the actions)", () => {
         const time = <span className="NavItem-hide-on-actions">12:00</span>;
         const mountInPlace = (extra: Partial<NavItemProps> = {}) =>
@@ -219,6 +264,20 @@ describe("NavItem", () => {
             expect(more).toBeTruthy();
             more.focus();
             expect(document.activeElement).toBe(more);
+        });
+
+        it("a hidden action is anchored to the row's end edge, so it cannot stretch the list sideways (MIP-1425)", () => {
+            // An absolute box with no inset sits where it would have been in the flow: at the
+            // start of an almost empty actions column, with its 32px reaching past the row.
+            // Invisible, but part of the scrollable area: the chat list scrolled sideways by
+            // 20px (measured in a browser), and on a phone could be dragged into empty space.
+            mountInPlace();
+            const more = screen.getByRole("button", { name: "More" });
+            const hidden = cssOf(more.parentElement as Element)
+                .split("\n")
+                .filter((r) => /position: absolute/.test(r));
+            expect(hidden.length).toBeGreaterThan(0);
+            for (const rule of hidden) expect(rule).toMatch(/inset-inline-end: 0/);
         });
 
         it("hover and keyboard focus bring the actions back and hide what gives way", () => {
