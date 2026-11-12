@@ -1,5 +1,5 @@
 import { TaskTableProps } from "../../../../types/tasks";
-import { indexTasksById, isUnderDeletedAncestor } from "../../utils/taskAncestry";
+import { isUnderDeletedAncestor, selectAncestorVerdicts } from "../../utils/closedByAncestor";
 
 const statusLower = (t: TaskTableProps): string => (t.status ?? "").toLowerCase();
 const isDeleted = (t: TaskTableProps): boolean => statusLower(t) === "deleted";
@@ -46,9 +46,9 @@ export const computeHiddenTaskIds = (
 
     // Deleted rows, and everything under one, are always hidden, regardless
     // of the toggle.
-    const byId = indexTasksById(tasks);
+    const verdicts = selectAncestorVerdicts(tasks);
     for (const t of tasks) {
-        if (t.id != null && (isDeleted(t) || isUnderDeletedAncestor(t, byId))) {
+        if (t.id != null && (isDeleted(t) || isUnderDeletedAncestor(t, verdicts))) {
             hidden.add(Number(t.id));
         }
     }

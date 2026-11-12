@@ -12,9 +12,9 @@ import { TaskTableProps } from "../../../types/tasks";
  * Set-based, so a surface that holds the whole list asks once and then looks rows
  * up by id. Ancestors are reached through `parentTaskId` or through `milestoneId`
  * to the milestone's backing row (a milestone's tasks do not always point at its
- * row). Cycle-safe, and a parent that is not loaded ends the walk. The task-graph
- * helper (`taskAncestry.ts`) is the per-row version of the same rule over
- * `parentTaskId` alone.
+ * row). Cycle-safe, and a parent that is not loaded ends the walk. This is the ONE
+ * implementation of the rule: the task graph asks it too (MIP-1398; it used to have a
+ * per-row copy over `parentTaskId` alone, `taskAncestry.ts`).
  */
 
 export type AncestorVerdict<T = TaskTableProps> = {
@@ -60,43 +60,39 @@ export const selectAncestorVerdicts = <T extends Ancestry>(
     };
 
     type Verdict = AncestorVerdict<T> | null;
-    // Memoised walk up. `visiting` guards against a cycle in the parent links:
-    // a row already on the path answers null rather than recursing for ever.
-    const memo = new Map<string, Verdict>();
-    const visiting = new Set<string>();
+    // One walk up per row, with its own `seen` set. The row itself starts in it, so its
+    // own status is never the reason, not even through a self-parent or a loop in the
+    // links; a node reached twice (parent link and milestone link) is looked at once; a
+    // parent that is not loaded ends that branch.
+    //
+    // It is a plain walk and not a memoised recursion on purpose: a memo filled while a
+    // loop guard cut the walk short remembers a half answer. With a Closed task inside a
+    // loop, the loop's other members got "not under anything" or "Closed" depending on
+    // which row was asked first.
+    //
+    // Order is the rule: ancestors are visited nearest first (a parent before what is
+    // above it, the parent link before the milestone link). The first Deleted wins
+    // outright (it beats Closed); otherwise the first Closed is named.
     const verdictOf = (id: string): Verdict => {
-        if (memo.has(id)) return memo.get(id) ?? null;
-        if (visiting.has(id)) return null;
-        const task = byId.get(id);
-        if (task == null) return null;
-        visiting.add(id);
-        let found: Verdict = null;
-        // Deleted beats Closed; among equals the nearest wins (a parent before
-        // what is above it, the parent link before the milestone link).
-        for (const parentId of parentsOf(task)) {
+        const start = byId.get(id);
+        if (start == null) return null;
+        const seen = new Set<string>([id]);
+        const stack = parentsOf(start).reverse();
+        let closed: Verdict = null;
+        while (stack.length > 0) {
+            const parentId = stack.pop() as string;
+            if (seen.has(parentId)) continue;
+            seen.add(parentId);
             const parent = byId.get(parentId);
             if (parent == null) continue;
-            const candidates: Verdict[] = [
-                is(parent, "deleted")
-                    ? { status: "Deleted", ancestor: parent }
-                    : is(parent, "closed")
-                      ? { status: "Closed", ancestor: parent }
-                      : null,
-                verdictOf(parentId),
-            ];
-            for (const candidate of candidates) {
-                if (candidate == null) continue;
-                if (
-                    found == null ||
-                    (candidate.status === "Deleted" && found.status === "Closed")
-                ) {
-                    found = candidate;
-                }
+            if (is(parent, "deleted")) return { status: "Deleted", ancestor: parent };
+            if (closed == null && is(parent, "closed")) {
+                closed = { status: "Closed", ancestor: parent };
             }
+            // Push the farther link first so the nearer one is popped first.
+            stack.push(...parentsOf(parent).reverse());
         }
-        visiting.delete(id);
-        memo.set(id, found);
-        return found;
+        return closed;
     };
 
     const result = new Map<string, AncestorVerdict<T>>();
@@ -116,3 +112,16 @@ export const effectiveStatusOf = (
     verdicts: ReadonlyMap<string, { status: "Closed" | "Deleted" }>
 ): string | null | undefined =>
     (task.id != null ? verdicts.get(String(task.id))?.status : undefined) ?? task.status;
+
+/** Some ancestor, at any depth, is Closed or Deleted. `verdicts` is `selectAncestorVerdicts`
+ *  over the same list. A task's own status is not an ancestor's. */
+export const isUnderClosedAncestor = (
+    task: Pick<TaskTableProps, "id">,
+    verdicts: ReadonlyMap<string, unknown>
+): boolean => task.id != null && verdicts.has(String(task.id));
+
+/** Some ancestor, at any depth, is Deleted (a Closed one does not count). */
+export const isUnderDeletedAncestor = (
+    task: Pick<TaskTableProps, "id">,
+    verdicts: ReadonlyMap<string, { status: "Closed" | "Deleted" }>
+): boolean => task.id != null && verdicts.get(String(task.id))?.status === "Deleted";
