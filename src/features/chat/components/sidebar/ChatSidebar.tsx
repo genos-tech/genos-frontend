@@ -25,6 +25,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useShortcut } from "../../../../shortcuts";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { useMarkFilteredActivityRead } from "../../hooks/useMarkFilteredActivityRead";
@@ -648,22 +649,19 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         width: 24,
                                         height: 24,
                                         borderRadius: "6px",
-                                        color: showPastFlagged
-                                            ? isDark
-                                                ? "var(--gp-brandalt-300)"
-                                                : "var(--gp-brand-700)"
-                                            : isDark
-                                              ? "rgba(255,255,255,0.5)"
-                                              : "rgba(0,0,0,0.45)",
+                                        // Roles, not the brand scale: the tokens switch
+                                        // with the colour mode themselves.
+                                        color: showPastFlagged ? g.accent.text : g.text.tertiary,
                                         background: showPastFlagged
-                                            ? isDark
-                                                ? "rgba(var(--gp-brand-700-rgb), 0.22)"
-                                                : "rgba(var(--gp-brand-700-rgb), 0.12)"
+                                            ? g.accent.subtle
                                             : "transparent",
                                         "&:hover": {
-                                            background: isDark
-                                                ? "rgba(var(--gp-brand-700-rgb), 0.28)"
-                                                : "rgba(var(--gp-brand-700-rgb), 0.15)",
+                                            background: showPastFlagged
+                                                ? g.accent.subtle
+                                                : g.hover,
+                                            color: showPastFlagged
+                                                ? g.accent.text
+                                                : g.text.secondary,
                                         },
                                     }}
                                     onClick={togglePastFlagged}
