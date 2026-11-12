@@ -53,12 +53,12 @@ import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
 import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
-import { overlayGraphDeletes, pendingDeleteSignature } from "../../utils/pendingTaskDelete";
 import {
-    indexTasksById,
     isUnderClosedAncestor,
     isUnderDeletedAncestor,
-} from "../../utils/taskAncestry";
+    selectAncestorVerdicts,
+} from "../../utils/closedByAncestor";
+import { overlayGraphDeletes, pendingDeleteSignature } from "../../utils/pendingTaskDelete";
 import { statuses } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
@@ -178,9 +178,9 @@ export const computeOverview = (
     // Closed one counts as Closed however its own row is set (MIP-1382): users do not
     // close every sub-task before the parent, so an "Open" child of a Closed parent must
     // neither hold the progress back nor show up as overdue.
-    const byId = indexTasksById(graph.tasks);
+    const verdicts = selectAncestorVerdicts(graph.tasks);
     const liveTasks = graph.tasks.filter(
-        (t) => !isDeletedStatus(t.status) && !isUnderDeletedAncestor(t, byId)
+        (t) => !isDeletedStatus(t.status) && !isUnderDeletedAncestor(t, verdicts)
     );
     // Span: min(start) → max(due) across visible (non-ghost) tasks.
     let spanStart: string | null = null;
@@ -214,7 +214,7 @@ export const computeOverview = (
         if (t.id == null) continue;
         const taskId = Number(t.id);
         const isClosed =
-            (t.status ?? "").toLowerCase() === "closed" || isUnderClosedAncestor(t, byId);
+            (t.status ?? "").toLowerCase() === "closed" || isUnderClosedAncestor(t, verdicts);
         if (taskId !== rootTaskId) {
             total += 1;
             if (isClosed) closed += 1;
@@ -304,7 +304,7 @@ const computeDescendantCounts = (
         bucket.push(t);
         byParent.set(pid, bucket);
     }
-    const byId = indexTasksById(tasks);
+    const verdicts = selectAncestorVerdicts(tasks);
     const counts = new Map<number, { total: number; closed: number }>();
     const walk = (rootId: number): { total: number; closed: number } => {
         const cached = counts.get(rootId);
@@ -323,7 +323,7 @@ const computeDescendantCounts = (
             // (MIP-1382), so the badge agrees with the header overview.
             if (
                 (child.status ?? "").toLowerCase() === "closed" ||
-                isUnderClosedAncestor(child, byId)
+                isUnderClosedAncestor(child, verdicts)
             )
                 closed += 1;
             const sub = walk(Number(child.id));

@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    indexTasksById,
     isUnderClosedAncestor,
     isUnderDeletedAncestor,
-} from "../features/tasks/utils/taskAncestry";
+    selectAncestorVerdicts,
+} from "../features/tasks/utils/closedByAncestor";
 
+// The task graph's two questions, asked of the ONE shared rule (MIP-1398). These seven cases
+// were `taskAncestry.test.ts` (MIP-1382), the graph's own per-row copy of the rule; their
+// bodies are unchanged, only the way they ask is.
 const row = (id: number, status: string, parentTaskId: number | null) => ({
     id: String(id),
     status,
@@ -13,15 +16,15 @@ const row = (id: number, status: string, parentTaskId: number | null) => ({
 });
 
 const check = (rows: ReturnType<typeof row>[], id: number) => {
-    const byId = indexTasksById(rows);
-    const task = byId.get(String(id))!;
+    const verdicts = selectAncestorVerdicts(rows);
+    const task = rows.find((r) => String(r.id) === String(id))!;
     return {
-        closed: isUnderClosedAncestor(task, byId),
-        deleted: isUnderDeletedAncestor(task, byId),
+        closed: isUnderClosedAncestor(task, verdicts),
+        deleted: isUnderDeletedAncestor(task, verdicts),
     };
 };
 
-describe("taskAncestry (MIP-1382)", () => {
+describe("the graph's ancestor questions on closedByAncestor (MIP-1382, MIP-1398)", () => {
     it("a task is under a Closed ancestor at any depth, whatever its own status", () => {
         const rows = [
             row(1, "Closed", null),
@@ -76,7 +79,6 @@ describe("taskAncestry (MIP-1382)", () => {
             { id: 1, status: "Closed", parentTaskId: null },
             { id: 2, status: "Open", parentTaskId: 1 },
         ] as unknown as ReturnType<typeof row>[];
-        const byId = indexTasksById(rows);
-        expect(isUnderClosedAncestor(rows[1], byId)).toBe(true);
+        expect(isUnderClosedAncestor(rows[1], selectAncestorVerdicts(rows))).toBe(true);
     });
 });
