@@ -3830,7 +3830,7 @@ export const fr: DeepPartial<Messages> = {
         messageActions: {
             heading: "Actions sur les messages",
             description:
-                "Actions à garder dans la barre d'outils qui apparaît au survol des messages du chat et des réponses de fil, plutôt que dans le menu …. Les commentaires de tâche ne sont pas concernés.",
+                "Actions à garder dans la barre d'outils qui apparaît au survol des messages du chat, des réponses de fil et des commentaires de tâche, plutôt que dans le menu ….",
             limit: "Choisissez-en {max} au maximum. Les autres restent dans le menu ….",
             flagHint: "Un message à relire plus tard pour se rappeler son contenu.",
             addToTodoHint: "Un message qui demande que vous agissiez.",

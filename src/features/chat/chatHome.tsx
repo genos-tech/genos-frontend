@@ -18,13 +18,13 @@ import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
 import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
-import { appendTodoFromMessage } from "./components/todo/services/appendTodoFromMessage";
+import {
+    setTodoFromMessageBubble,
+    useTodoFromMessageBubble,
+} from "./components/todo/addToTodoStore";
 import { useChatRouting } from "./hooks/useChatRouting";
-import { getFirstLine } from "./utils/common";
 
-import { Toast } from "../../components/ui/feedback/Toast";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
-import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -40,10 +40,7 @@ import { useTaskPreviewPaneVisible } from "../../hooks/tasks/useTaskPreviewPaneV
 import { usePanelSizes } from "../../hooks/usePanelSizes";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { useWindowSize } from "../../hooks/useWindowSize";
-import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
-import { MessageProps, ThreadMessageProps } from "../../types/chat";
-import { TaskCommentProps } from "../../types/tasks";
 import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalManageTagsHost } from "../tasks/components/modals/ModalManageTagsHost";
@@ -92,8 +89,6 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     // Common
     const { mode } = useColorScheme();
-    const { accessToken } = useAuth();
-    const { t } = useTranslation();
     const isMobile = useIsMobile();
 
     // Chat Related
@@ -133,76 +128,10 @@ export const ChatHome = (props: ChatHomeProps) => {
         isOpening: useNM.chatPanelApi.isLoading,
     });
 
-    const [todoFromMessageBubble, setTodoFromMessageBubble] = useState<
-        MessageProps | ThreadMessageProps | TaskCommentProps | null
-    >(null);
-    const [todoAddedFromMessageOpen, setTodoAddedFromMessageOpen] = useState<boolean>(false);
-
-    const handleAppendTodo = async (
-        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
-    ) => {
-        let created;
-        // Keys sorted alphabetically per `sort-keys`.
-        if ("messageIdWithChatIdAndThreadId" in todoFromMessageBubble) {
-            created = await appendTodoFromMessage(accessToken, myself, {
-                chatId: todoFromMessageBubble.chatId,
-                chatType: todoFromMessageBubble.chatType,
-                isThread: true,
-                messageId: todoFromMessageBubble.messageId,
-                messageText: getFirstLine(todoFromMessageBubble.content[0]),
-                threadId: todoFromMessageBubble.threadId,
-            });
-        } else if ("messageIdWithChatId" in todoFromMessageBubble) {
-            created = await appendTodoFromMessage(accessToken, myself, {
-                chatId: todoFromMessageBubble.chatId,
-                chatType: todoFromMessageBubble.chatType,
-                isThread: false,
-                messageId: todoFromMessageBubble.messageId,
-                messageText: getFirstLine(todoFromMessageBubble.content[0]),
-                // A project chat's message is usually a task's card: link the task. The card
-                // carries the task id; the project is the chat's (the message has none).
-                task: (() => {
-                    if (todoFromMessageBubble.chatType !== 3 || !todoFromMessageBubble.taskId) {
-                        return undefined;
-                    }
-                    const projectId =
-                        todoFromMessageBubble.project?.projectId ??
-                        useCM.allChats.find(
-                            (c) =>
-                                c.chatType === 3 &&
-                                c.chatId === String(todoFromMessageBubble.chatId)
-                        )?.project?.projectId;
-                    return projectId
-                        ? { projectId, taskId: todoFromMessageBubble.taskId }
-                        : undefined;
-                })(),
-                threadId: null,
-            });
-        } else if ("commentId" in todoFromMessageBubble) {
-            if (!todoFromMessageBubble.projectId) return;
-            created = await appendTodoFromMessage(accessToken, myself, {
-                chatId: todoFromMessageBubble.projectId,
-                chatType: 3,
-                isThread: true,
-                messageId: todoFromMessageBubble.commentId,
-                messageText: getFirstLine(todoFromMessageBubble.commentBody[0]),
-                taskComment: {
-                    commentId: todoFromMessageBubble.commentId,
-                    projectId: todoFromMessageBubble.projectId,
-                    taskId: todoFromMessageBubble.taskId,
-                },
-                threadId: todoFromMessageBubble.taskId,
-            });
-        }
-
-        if (created) {
-            // appendTodoFromMessage bypassed the hook's optimistic
-            // mutator, so re-pull groups for an authoritative view.
-            await useTG.refresh();
-            setTodoAddedFromMessageOpen(true);
-        }
-        setTodoFromMessageBubble(null);
-    };
+    // "Add to To-Do" requests are made through a store and handled by `AddToTodoHost` in App
+    // (MIP-1434), so a task comment can make one from the task page too. The pending request
+    // is still handed to the panels below as before.
+    const todoFromMessageBubble = useTodoFromMessageBubble();
 
     // Task preview is closed by default on chat. `useTM.isTaskPreviewVisible`
     // is shared with the task page, so it may already be true on mount — we
@@ -282,17 +211,6 @@ export const ChatHome = (props: ChatHomeProps) => {
         paneVisible: isTaskPreviewPaneVisible,
         setSurfaceVisible: setInitialTaskPreviewVisible,
     });
-
-    // Add a new todo from a message
-    useEffect(() => {
-        if (todoFromMessageBubble) {
-            handleAppendTodo(todoFromMessageBubble);
-        }
-        // Intentional: only re-run when the bubble changes — including
-        // `handleAppendTodo` would re-fire on every render (it's
-        // re-derived each time).
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [todoFromMessageBubble]);
 
     useEffect(() => {
         localStorage.setItem("isToDoVisible", isToDoVisible.toString());
@@ -386,15 +304,6 @@ export const ChatHome = (props: ChatHomeProps) => {
             useUISM={useUISM}
         >
             <Box sx={LayoutStyles.outerWrapper}>
-                <Toast
-                    duration={2000}
-                    open={todoAddedFromMessageOpen}
-                    tone="success"
-                    onClose={() => setTodoAddedFromMessageOpen?.(false)}
-                >
-                    {t.chat.feedback.todoAddedFromMessage}
-                </Toast>
-
                 <Sheet sx={ls.serviceSurface}>
                     {isMobile ? (
                         <MobileChatHome

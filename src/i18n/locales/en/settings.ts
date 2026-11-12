@@ -673,7 +673,7 @@ export const settings = {
     messageActions: {
         heading: "Message actions",
         description:
-            "Actions to keep on the hover toolbar of chat messages and thread replies instead of behind the … menu. Task comments are not affected.",
+            "Actions to keep on the hover toolbar of chat messages, thread replies and task comments instead of behind the … menu.",
         limit: "Pick up to {max}. The rest stay in the … menu.",
         flagHint: "A message to read again later, to remember what it says.",
         addToTodoHint: "A message that needs you to do something.",
