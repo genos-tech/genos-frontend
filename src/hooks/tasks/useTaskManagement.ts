@@ -106,6 +106,15 @@ export interface TaskManagementState {
      * to learn that the preview was closed (and maybe reopened) while away.
      */
     previewCloseCount: number;
+    /**
+     * How many times something ASKED for the preview to be shown
+     * (`setIsTaskPreviewVisible(true)`), counted even when it was already
+     * showing. A click that opens a task calls that setter; selecting a task
+     * (`setCurrentPreviewTaskId`) does not. The chat page opens its pane only
+     * on one of these (`useSurfaceTaskPreviewVisible`), so a selection alone
+     * never opens it (MIP-1422).
+     */
+    previewOpenCount: number;
     isTaskTableVisible: boolean;
     setIsTaskTableVisible: (visible: boolean) => void;
     isTaskDashboardVisible: boolean;
@@ -377,8 +386,14 @@ export const useTaskManagement = (
     }
 ): TaskManagementState => {
     // Task visible states
-    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
+    const [isTaskPreviewVisible, setIsTaskPreviewVisibleState] = useState(false);
     const [previewCloseCount, setPreviewCloseCount] = useState(0);
+    const [previewOpenCount, setPreviewOpenCount] = useState(0);
+    // Stable, like the raw setter it wraps (callers list it in effect deps).
+    const setIsTaskPreviewVisible = useCallback((visible: boolean) => {
+        if (visible) setPreviewOpenCount((n) => n + 1);
+        setIsTaskPreviewVisibleState(visible);
+    }, []);
     const wasPreviewVisibleRef = useRef(false);
     useEffect(() => {
         if (wasPreviewVisibleRef.current && !isTaskPreviewVisible) {
@@ -1237,6 +1252,7 @@ export const useTaskManagement = (
         isTaskPreviewVisible,
         setIsTaskPreviewVisible,
         previewCloseCount,
+        previewOpenCount,
         isTaskTableVisible,
         setIsTaskTableVisible,
         isTaskDashboardVisible,

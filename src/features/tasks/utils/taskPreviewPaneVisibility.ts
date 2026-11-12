@@ -39,7 +39,12 @@ export type TaskPreviewSelection = {
     currentPreviewMilestoneId: number;
 };
 
+/** A task id that names a task: task ids are positive. -1 is "none", and 0 is
+ *  what the v3 activity adapter writes for a thread with no task (MIP-1422). */
+export const isRealTaskId = (id: number | null | undefined): id is number =>
+    id != null && Number(id) > 0;
+
 export const hasTaskPreviewContent = (v: TaskPreviewSelection): boolean =>
     v.currentPreviewTask != null ||
-    (v.currentPreviewTaskId != null && v.currentPreviewTaskId !== -1) ||
+    isRealTaskId(v.currentPreviewTaskId) ||
     (v.currentPreviewKind === "milestone" && v.currentPreviewMilestoneId !== -1);
