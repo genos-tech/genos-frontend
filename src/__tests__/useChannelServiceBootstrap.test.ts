@@ -13,7 +13,7 @@
  */
 
 import { act, renderHook } from "@testing-library/react";
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { channelService } from "../services/channel/channelService";
 import { useChannelServiceBootstrap } from "../services/channel/useChannelServiceBootstrap";
@@ -155,5 +155,55 @@ describe("useChannelServiceBootstrap", () => {
         renderHook(() => useChannelServiceBootstrap("tok-1", "user-a", "team-fresh"));
         const opts = ioFactory.mock.calls[0][1] as { query: { teamId: string } };
         expect(opts.query.teamId).toBe("team-fresh");
+    });
+});
+
+describe("useChannelServiceBootstrap — active flags (MIP-1438)", () => {
+    const stubReads = () => {
+        const calls = {
+            flags: vi.spyOn(channelService, "fetchActiveFlags").mockResolvedValue(undefined),
+        };
+        vi.spyOn(channelService, "hydrateFromIDB").mockResolvedValue(undefined);
+        vi.spyOn(channelService, "fetchPins").mockResolvedValue(undefined);
+        vi.spyOn(channelService, "fetchReminders").mockResolvedValue(undefined);
+        vi.spyOn(channelService, "flushPendingQueue").mockResolvedValue(undefined as never);
+        vi.spyOn(channelService, "triggerResync").mockResolvedValue(undefined as never);
+        vi.spyOn(channelService, "refreshChannels").mockResolvedValue(undefined as never);
+        return calls;
+    };
+
+    afterEach(() => vi.restoreAllMocks());
+
+    beforeEach(() => {
+        ioFactory.mockReset();
+        ioFactory.mockImplementation(() => new FakeSocket());
+        channelService.setAccessToken(null);
+        channelService.setCurrentUserId(null);
+        channelService.setSocket(null);
+    });
+
+    it("reads the server's active flags once the local store is loaded", async () => {
+        const { flags } = stubReads();
+        renderHook(() => useChannelServiceBootstrap("tok-1", "user-a", "team-a"));
+        await vi.waitFor(() => expect(flags).toHaveBeenCalledTimes(1));
+    });
+
+    it("reads them again after a RECONNECT (the first connect does not)", async () => {
+        const { flags } = stubReads();
+        renderHook(() => useChannelServiceBootstrap("tok-1", "user-a", "team-a"));
+        await vi.waitFor(() => expect(flags).toHaveBeenCalledTimes(1));
+        const sock = ioFactory.mock.results[0].value as FakeSocket;
+        const connect = sock.listeners.get("connect")![0];
+        connect(); // the first connect: nothing more to read
+        await Promise.resolve();
+        expect(flags).toHaveBeenCalledTimes(1);
+        connect(); // a reconnect: flags changed elsewhere in the gap are not buffered
+        await vi.waitFor(() => expect(flags).toHaveBeenCalledTimes(2));
+    });
+
+    it("reads nothing when signed out", () => {
+        const { flags } = stubReads();
+        renderHook(() => useChannelServiceBootstrap(null, null, null));
+        expect(flags).not.toHaveBeenCalled();
     });
 });

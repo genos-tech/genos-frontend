@@ -2563,6 +2563,50 @@ export class ChannelService {
         this._notify();
     }
 
+    // Load the user's ACTIVE flags from the server (MIP-1438).
+    //
+    // Same gap `fetchPins` closed for pins: flags are durable server-side, but the only other
+    // sources were this session's live events and the browser's local store. The one
+    // `GET /api/v3/flags/` in the client asked for `status=completed`, so a flag set on one
+    // device never showed on another, or after the local store was cleared. A flagged task
+    // comment is the case that makes it matter: flag on the laptop, look on the phone.
+    //
+    // Reconciles rather than merges, as pins do: a flag removed on another device must go from
+    // here too. Two kinds of local flag are NOT removed for being absent from the answer,
+    // because the answer cannot know about them yet: an optimistic one (this tab's emit is
+    // still in flight), and one made after the server took its snapshot (`server_time`), which
+    // a live event can deliver while the request is out. Each server flag goes through
+    // `_upsertFlag`, which persists it and back-fills its host message.
+    async fetchActiveFlags(): Promise<void> {
+        if (!this.hasAccessToken()) return;
+        let flags: Flag[];
+        let snapshotAt = Number.POSITIVE_INFINITY;
+        try {
+            const res = await this.api().get<{ flags: Flag[]; server_time?: string }>(
+                "/api/v3/flags/?status=active"
+            );
+            flags = res.data?.flags ?? [];
+            const parsed = res.data?.server_time ? Date.parse(res.data.server_time) : NaN;
+            if (!Number.isNaN(parsed)) snapshotAt = parsed;
+        } catch {
+            // Offline / auth blip: keep what the local store gave us rather than blanking the
+            // user's flags on a failed request.
+            return;
+        }
+        const onServer = new Set(flags.map((f) => f.messageId));
+        for (const local of [...this._flagByMessageId.values()]) {
+            if (onServer.has(local.messageId)) continue;
+            if (local.id.startsWith("optimistic-")) continue;
+            if (Date.parse(local.tsCreated) > snapshotAt) continue;
+            this._removeFlagByMessage(local.messageId);
+        }
+        for (const f of flags) {
+            const have = this._flagByMessageId.get(f.messageId);
+            // Unchanged rows are left alone: each upsert persists and notifies.
+            if (!have || have.id !== f.id) this._upsertFlag(f);
+        }
+    }
+
     // ---- Inbound pin / flag socket handlers -------------------------------
     //
     // `pin.added` / `pin.removed` / `flag.added` / `flag.removed` arrive

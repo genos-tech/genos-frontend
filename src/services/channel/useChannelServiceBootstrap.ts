@@ -174,6 +174,9 @@ export function useChannelServiceBootstrap(
                 })
                 .finally(() => {
                     void channelService.refreshChannels();
+                    // A flag set or removed on another device during the gap is a per-user
+                    // broadcast the server does not buffer.
+                    void channelService.fetchActiveFlags();
                 });
         };
         next.on("connect", onConnect);
@@ -192,6 +195,7 @@ export function useChannelServiceBootstrap(
         // one they set twice.
         void channelService.hydrateFromIDB().then(() => {
             void channelService.fetchPins();
+            void channelService.fetchActiveFlags();
             void channelService.fetchReminders();
         });
 
