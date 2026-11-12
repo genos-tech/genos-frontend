@@ -50,7 +50,10 @@ type Props = {
 // Compact dependency display + entry point to the manage modal. Always
 // rendered as part of `TaskMainBlock` so the same surface appears in
 // both TaskPreview and MilestonePreview (milestone uses a backing
-// TaskMaster row under the hood). Hidden entirely when the task has
+// TaskMaster row under the hood). This block only READS
+// `useTM.taskDependencies[taskContent.id]`; each preview loads that entry
+// itself (TaskPreviewBody for a task, MilestonePreviewInner for a
+// milestone's backing task, MIP-1415). Hidden entirely when the task has
 // no real id yet (create flow) — dependencies are preview-only.
 export const TaskDependenciesBlock = ({
     taskContent,

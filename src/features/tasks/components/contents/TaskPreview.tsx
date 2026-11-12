@@ -1426,6 +1426,28 @@ const MilestonePreviewInner = ({
         useTM
     );
 
+    // Load the BACKING TASK's dependency edges (MIP-1415). A milestone's edges
+    // are stored on its backing task, and the dependency block and the Manage
+    // dependencies modal read `useTM.taskDependencies[milestone.taskId]`. The
+    // task preview's own loader (TaskPreviewBody) keys on
+    // `useTM.currentPreviewTask`, which opening a milestone clears, so in
+    // milestone mode nothing ever filled that entry: the edges showed only if
+    // something else had loaded them earlier in the session. No `land`: the
+    // open-landing batch is armed for the task preview only.
+    //
+    // Keyed on the backing task id (a number), not on the milestone object:
+    // the load below changes `backingDepsKey`, which re-pulls the milestone
+    // and hands this component a new `milestone` object with the SAME task id,
+    // so this does not run again. One extra GET per open, not a loop.
+    const backingTaskId = milestone?.taskId ?? null;
+    useEffect(() => {
+        if (backingTaskId == null || !Number.isFinite(backingTaskId) || backingTaskId <= 0) {
+            return;
+        }
+        void useTM.loadTaskDependenciesFor(backingTaskId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [backingTaskId]);
+
     // Re-pull the milestone when its BACKING TASK's dependency edges
     // change. A dependency add/remove auto-flips the milestone's status
     // (Blocked ↔ Open) server-side (task_blocking.sync_blocked_status),
