@@ -47,6 +47,7 @@ export type ShortcutKind = "chord" | "gesture" | "pointer";
  */
 export type ShortcutScope =
     | "global"
+    | "notes"
     | "chat"
     | "composer"
     | "taskCreate"
@@ -158,6 +159,19 @@ export const SHORTCUTS = {
         keys: letter("n"),
         label: (t) => t.settings?.shortcuts?.global?.rows?.notesNew,
         editable: LETTER_EDITABLE,
+    },
+    // "/" jumps to the notes sidebar's filter field (MIP-1431). It is a bare key, so it never
+    // fires in a text field: there it is a character. Only the Notes page listens.
+    "notes.filter": {
+        kind: "chord",
+        scope: "notes",
+        group: "global",
+        keys: {
+            mac: [{ key: "/", mods: [], forbid: ["ctrl", "meta", "alt"] }],
+            other: [{ key: "/", mods: [], forbid: ["ctrl", "meta", "alt"] }],
+        },
+        label: (t) => t.settings?.shortcuts?.global?.rows?.filterNotes,
+        editable: "skip",
     },
     "global.calendar": {
         kind: "chord",

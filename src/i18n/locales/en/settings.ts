@@ -1106,6 +1106,7 @@ export const settings = {
                 spotlight: "Open Spotlight search",
                 tasksNew: "Open Tasks and start a new task",
                 notesNew: "Open Notes and create a new My Note",
+                filterNotes: "Filter the notes list (on Notes)",
                 calendar: "Open compact calendar",
                 meetClipboard: "Copy a fresh Meet link to clipboard",
                 openHistory: "Open history",

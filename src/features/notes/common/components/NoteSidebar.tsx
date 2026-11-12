@@ -74,6 +74,7 @@ import {
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
+import { filterNotesByTitle } from "../utils/filterNotes";
 import { chatRows, projectRows } from "../utils/flattenNoteGroups";
 import { buildLocationSources, noteLocation, type LocationLabels } from "../utils/noteLocation";
 import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias";
@@ -87,6 +88,7 @@ import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdow
 import { NoteListState } from "./NoteListState";
 import { NoteOriginIcon } from "./noteOrigin";
 import { NotePinnedSection } from "./NotePinnedSection";
+import { NoteSearchBar } from "./NoteSearchBar";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
@@ -1823,6 +1825,36 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             noteLocation(noteType, note, locationSources, locationLabels),
         [locationSources, locationLabels]
     );
+    // The filter field (MIP-1431). While it has words, the families give way to a flat list of
+    // the notes whose title matches, each saying where it lives. The families stay mounted
+    // underneath (hidden), so what was folded or unfolded is as it was when the field is cleared.
+    const [filterQuery, setFilterQuery] = useState("");
+    const filterActive = filterQuery.trim().length > 0;
+    const filterResult = useMemo(
+        () =>
+            filterActive
+                ? filterNotesByTitle<MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps>(
+                      filterQuery,
+                      [
+                          { noteType: 1, notes: useNM.myNoteMeta },
+                          { noteType: 4, notes: useNM.sharedNoteMeta },
+                          { noteType: 8, notes: useNM.teamNoteMeta },
+                          { noteType: 2, notes: useNM.taskNoteMeta },
+                          { noteType: 3, notes: useNM.chatNoteMeta },
+                      ]
+                  )
+                : null,
+        [
+            filterActive,
+            filterQuery,
+            useNM.myNoteMeta,
+            useNM.sharedNoteMeta,
+            useNM.teamNoteMeta,
+            useNM.taskNoteMeta,
+            useNM.chatNoteMeta,
+        ]
+    );
+
     // Favorites are grouped under their space's header, which already says it.
     const locateFavoriteNote = useCallback(
         (noteType: number, note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps) =>
@@ -1991,6 +2023,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 minHeight: 0,
             }}
         >
+            <Box sx={{ flexShrink: 0, px: 1.5, pt: 1.5 }}>
+                <NoteSearchBar
+                    value={filterQuery}
+                    onChange={setFilterQuery}
+                    onNewNote={() => void useNM.handleCreateNewMyNote(null)}
+                />
+            </Box>
+
             {/* Content */}
             <Box
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
@@ -2007,57 +2047,105 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 {/* One DragDropContext covers all three note sections so
                     the typed droppables ("note-1|2|3") can reject
                     cross-kind drags for free. */}
-                <SidebarDndProvider onMove={handleSidebarMove}>
+                {filterResult && (
                     <List
+                        data-testid="note-filter-results"
                         size="sm"
-                        sx={{
-                            gap: 0.5,
-                            "--List-nestedInsetStart": "24px",
-                            "--ListItem-radius": "8px",
-                        }}
+                        sx={{ gap: 0.5, "--ListItem-radius": "8px" }}
                     >
-                        {/* Pinned above the workspaces: headings you can fold, not places
-                            you can be (MIP-1429). */}
-                        <NotePinnedSection id="favorites" title={t.notes.sidebar.favorites}>
-                            {renderFavoriteNotes()}
-                        </NotePinnedSection>
-
-                        <NotePinnedSection id="recents" title={t.notes.sidebar.recents}>
-                            {renderRecentNotes()}
-                        </NotePinnedSection>
-
-                        {/* Unread: after Recents, only when there are unread @mentions. */}
-                        {unreadNotes.length > 0 && (
-                            <NotePinnedSection
-                                id="unread"
-                                title={fmt(t.notes.sidebar.unread, { count: unreadNotes.length })}
-                            >
-                                {renderUnreadNotes()}
-                            </NotePinnedSection>
-                        )}
-
-                        <SectionHeader label={t.notes.sidebar.workspaces} sx={{ mt: 1.5 }} />
-
-                        {/* Note Type Sections */}
-                        {noteTypesConfig.map((config) => (
-                            <NoteTypeSection
-                                key={config.noteType}
-                                actions={config.actions}
-                                dropTarget={config.dropTarget}
-                                icon={config.icon}
-                                isCurrent={config.isCurrent}
-                                noteType={config.noteType}
-                                title={config.title}
+                        <SectionHeader
+                            as="li"
+                            label={fmt(t.notes.sidebar.filterResults, {
+                                count: filterResult.total,
+                            })}
+                        />
+                        {filterResult.hits.map(({ noteType, note }) => (
+                            <RecentNoteItem
+                                key={`filter-${noteType}-${note.noteId}`}
+                                locate={locateNote}
+                                note={note}
+                                noteType={noteType}
                                 useNM={useNM}
-                            >
-                                {/* Every section renders through its grouped
+                            />
+                        ))}
+                        {filterResult.total === 0 && (
+                            <Box sx={{ px: 1.5 }}>
+                                <EmptyState
+                                    data-empty="note-filter"
+                                    size="xs"
+                                    body={fmt(t.notes.sidebar.filterNoMatch, {
+                                        query: filterQuery.trim(),
+                                    })}
+                                />
+                            </Box>
+                        )}
+                        {filterResult.total > filterResult.hits.length && (
+                            <Box sx={{ px: 1.5 }}>
+                                <EmptyState
+                                    size="xs"
+                                    body={fmt(t.notes.sidebar.filterMore, {
+                                        count: filterResult.total - filterResult.hits.length,
+                                    })}
+                                />
+                            </Box>
+                        )}
+                    </List>
+                )}
+                <Box hidden={filterActive} sx={{ display: filterActive ? "none" : "block" }}>
+                    <SidebarDndProvider onMove={handleSidebarMove}>
+                        <List
+                            size="sm"
+                            sx={{
+                                gap: 0.5,
+                                "--List-nestedInsetStart": "24px",
+                                "--ListItem-radius": "8px",
+                            }}
+                        >
+                            {/* Pinned above the workspaces: headings you can fold, not places
+                            you can be (MIP-1429). */}
+                            <NotePinnedSection id="favorites" title={t.notes.sidebar.favorites}>
+                                {renderFavoriteNotes()}
+                            </NotePinnedSection>
+
+                            <NotePinnedSection id="recents" title={t.notes.sidebar.recents}>
+                                {renderRecentNotes()}
+                            </NotePinnedSection>
+
+                            {/* Unread: after Recents, only when there are unread @mentions. */}
+                            {unreadNotes.length > 0 && (
+                                <NotePinnedSection
+                                    id="unread"
+                                    title={fmt(t.notes.sidebar.unread, {
+                                        count: unreadNotes.length,
+                                    })}
+                                >
+                                    {renderUnreadNotes()}
+                                </NotePinnedSection>
+                            )}
+
+                            <SectionHeader label={t.notes.sidebar.workspaces} sx={{ mt: 1.5 }} />
+
+                            {/* Note Type Sections */}
+                            {noteTypesConfig.map((config) => (
+                                <NoteTypeSection
+                                    key={config.noteType}
+                                    actions={config.actions}
+                                    dropTarget={config.dropTarget}
+                                    icon={config.icon}
+                                    isCurrent={config.isCurrent}
+                                    noteType={config.noteType}
+                                    title={config.title}
+                                    useNM={useNM}
+                                >
+                                    {/* Every section renders through its grouped
                                 function now — My Notes joined task/chat/
                                 shared when it gained the folder forest. */}
-                                {config.renderGrouped ? config.renderGrouped() : null}
-                            </NoteTypeSection>
-                        ))}
-                    </List>
-                </SidebarDndProvider>
+                                    {config.renderGrouped ? config.renderGrouped() : null}
+                                </NoteTypeSection>
+                            ))}
+                        </List>
+                    </SidebarDndProvider>
+                </Box>
             </Box>
 
             {/* My-note folder dialogs — single instances serving every
