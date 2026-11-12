@@ -3176,6 +3176,8 @@ export const hi: DeepPartial<Messages> = {
                 update: "भार बढ़ाना विफल हुवा।",
                 delete: "हटाना विफल.",
                 reparent: "पुनः-अभिभावक विफल रहा.",
+                dependenciesPartial:
+                    "कुछ निर्भरता रेखाएँ लोड नहीं हो सकीं। फिर से कोशिश करने के लिए आरेख दोबारा खोलें।",
             },
             schedule: {
                 closed: "बंद किया हुआ",

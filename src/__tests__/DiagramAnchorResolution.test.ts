@@ -17,14 +17,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskTableProps } from "../types/tasks";
 
-const loadProjectTasksFromApi = vi.fn();
+// The project's rows, as the browser's synced copy hands them over (MIP-1416:
+// the diagram reads the same copy as the task table). `{ tasks }` to keep the
+// cases below readable.
+const projectRows = vi.fn();
 const loadTaskDependenciesForTasks = vi.fn();
 
+vi.mock("../features/tasks/services/loadProjectTasks", () => ({
+    loadProjectTasks: async () => [],
+}));
+vi.mock("../features/tasks/services/popSpecificProjectTasks", () => ({
+    popSpecificProjectTasks: async () =>
+        ((await projectRows()) as { tasks?: unknown[] })?.tasks ?? [],
+}));
 vi.mock("../features/tasks/services/loadProjectTasksFromApi", () => ({
-    loadProjectTasksFromApi: (...args: unknown[]) => loadProjectTasksFromApi(...args),
+    loadProjectTasksFromApi: async () => undefined,
 }));
 vi.mock("../features/tasks/services/loadTaskDependencies", () => ({
-    loadTaskDependenciesForTasks: (...args: unknown[]) => loadTaskDependenciesForTasks(...args),
+    loadTaskDependenciesBatched: async (...args: unknown[]) => {
+        const byTask = await loadTaskDependenciesForTasks(...args);
+        return byTask === undefined ? undefined : { byTask, failedIds: [] };
+    },
 }));
 
 const { loadTaskGraph } = await import("../features/tasks/diagram/services/loadTaskGraph");
@@ -81,7 +94,7 @@ describe("loadTaskGraph anchor resolution", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         loadTaskDependenciesForTasks.mockResolvedValue({});
-        loadProjectTasksFromApi.mockResolvedValue({ tasks: CHAIN });
+        projectRows.mockResolvedValue({ tasks: CHAIN });
     });
 
     it("THE BUG: a deep sub-task draws its milestone, parent and siblings — not itself alone", async () => {
@@ -105,7 +118,7 @@ describe("loadTaskGraph anchor resolution", () => {
         // every row still claims milestone 99's backing task as its root
         // while the parent edges say otherwise. The walk must believe the
         // edges.
-        loadProjectTasksFromApi.mockResolvedValue({
+        projectRows.mockResolvedValue({
             tasks: [
                 task(1, null, { isMilestone: true, milestoneId: 10 }),
                 task(2, 1, { rootTaskId: 99 }),
@@ -123,7 +136,7 @@ describe("loadTaskGraph anchor resolution", () => {
         // Parent 7 isn't in the project's task list (deleted, or living in
         // another project). Task 6 is then the top of the visible chain —
         // better than returning nothing.
-        loadProjectTasksFromApi.mockResolvedValue({
+        projectRows.mockResolvedValue({
             tasks: [task(6, 7), task(8, 6)],
         });
 
@@ -136,7 +149,7 @@ describe("loadTaskGraph anchor resolution", () => {
     it("terminates on a malformed parent cycle", async () => {
         // 20 ↔ 21 claim each other as parent. The walk has to stop rather
         // than spin, and still produce a usable graph.
-        loadProjectTasksFromApi.mockResolvedValue({
+        projectRows.mockResolvedValue({
             tasks: [task(20, 21), task(21, 20)],
         });
 
@@ -170,7 +183,7 @@ describe("loadTaskGraph scope", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         loadTaskDependenciesForTasks.mockResolvedValue({});
-        loadProjectTasksFromApi.mockResolvedValue({ tasks: CHAIN });
+        projectRows.mockResolvedValue({ tasks: CHAIN });
     });
 
     it("draws the anchor and its subtasks only: no milestone, no parent, no siblings", async () => {

@@ -3197,6 +3197,8 @@ export const es: DeepPartial<Messages> = {
                 update: "La actualización falló.",
                 delete: "Error al eliminar.",
                 reparent: "La re-parentalidad falló.",
+                dependenciesPartial:
+                    "No se pudieron cargar algunas líneas de dependencia. Vuelve a abrir el diagrama para intentarlo de nuevo.",
             },
             schedule: {
                 closed: "Cerrado",

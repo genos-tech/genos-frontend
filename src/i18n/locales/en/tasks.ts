@@ -1216,6 +1216,8 @@ export const tasks = {
             update: "Update failed.",
             delete: "Delete failed.",
             reparent: "Re-parent failed.",
+            dependenciesPartial:
+                "Some dependency lines could not be loaded. Reopen the diagram to try again.",
         },
         schedule: {
             closed: "Closed",

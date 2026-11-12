@@ -675,6 +675,11 @@ const CanvasInner = ({
             return;
         }
         graphRef.current = graph;
+        // Drawn, but some dependency lines could not be loaded (MIP-1416): say so
+        // rather than show those cards as unconnected.
+        if (graph.dependenciesIncomplete) {
+            setError(t.tasks.diagram.errors.dependenciesPartial);
+        }
         // Notify the modal so its header pill can update. Computed
         // here (one source of truth) instead of in the modal so the
         // modal stays a thin shell. Burndown trails behind the synch-
@@ -725,6 +730,7 @@ const CanvasInner = ({
         onOverviewChange,
         publishOverview,
         t.tasks.diagram.errors.load,
+        t.tasks.diagram.errors.dependenciesPartial,
     ]);
 
     // CRUD handlers — defined before `assemble` so the assembly can

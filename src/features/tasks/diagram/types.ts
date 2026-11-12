@@ -169,6 +169,9 @@ export type TaskGraph = {
          *  renderer can dim resolved (Closed) blockers. */
         otherStatus: TaskDependencyRef["status"];
     }>;
+    /** True when some dependency edges could not be loaded (MIP-1416): the
+     *  graph is drawn, but lines may be missing, and the canvas says so. */
+    dependenciesIncomplete?: boolean;
 };
 
 // Handle ids — must stay in sync with the strings hardcoded inside

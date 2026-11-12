@@ -5721,6 +5721,8 @@ export const fr: DeepPartial<Messages> = {
                 update: "La mise à jour a échoué.",
                 delete: "Échec de la suppression.",
                 reparent: "La re-parentalité a échoué.",
+                dependenciesPartial:
+                    "Certaines lignes de dépendance n'ont pas pu être chargées. Rouvrez le diagramme pour réessayer.",
             },
             schedule: {
                 closed: "Fermé",

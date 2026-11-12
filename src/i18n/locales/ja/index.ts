@@ -5656,6 +5656,8 @@ export const ja: DeepPartial<Messages> = {
                 update: "アップデートに失敗しました。",
                 delete: "削除に失敗しました。",
                 reparent: "親タスクの再設定に失敗しました。",
+                dependenciesPartial:
+                    "一部の依存関係の線を読み込めませんでした。図を開き直すと再試行します。",
             },
             schedule: {
                 closed: "Close",
