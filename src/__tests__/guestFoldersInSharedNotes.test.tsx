@@ -8,8 +8,9 @@
  * bucket, and relabelling them bucket 4 to match the section would quietly
  * break revealing a note opened from a link.
  *
- * Which leaves one thing to keep honest — the section highlight, since the
- * open note's bucket no longer says which section its row is in.
+ * Which leaves one thing to keep honest — which section unfolds for the open note,
+ * since the open note's bucket no longer says which section its row is in. (A section
+ * header is never tinted as selected, MIP-1429: only the open note's own row is.)
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render, screen } from "@testing-library/react";
@@ -60,12 +61,12 @@ const sectionState = (currentNoteType: number) =>
         setCurrentNoteType: () => {},
     }) as unknown as NoteManagementState;
 
-const showSection = (noteType: number, isSelected: boolean | undefined, open: number) =>
+const showSection = (noteType: number, isCurrent: boolean | undefined, open: number) =>
     render(
         <CssVarsProvider>
             <NoteTypeSection
                 icon={null}
-                isSelected={isSelected}
+                isCurrent={isCurrent}
                 noteType={noteType}
                 title={noteType === 4 ? "Shared Notes" : "Team Notes"}
                 useNM={sectionState(open)}
@@ -75,27 +76,38 @@ const showSection = (noteType: number, isSelected: boolean | undefined, open: nu
         </CssVarsProvider>
     );
 
-describe("which section lights up for the open note", () => {
+const header = (name: RegExp) => screen.getByRole("button", { name });
+
+describe("which section unfolds for the open note", () => {
     it("is Shared Notes when the open team note sits in a folder they lent us", () => {
         // Bucket 8 is open, and Shared Notes is nonetheless the section
         // holding that row.
         showSection(4, true, 8);
-        expect(screen.getByRole("button", { name: /shared notes/i }).className).toMatch(
-            /Mui-selected/
-        );
+        expect(header(/shared notes/i).getAttribute("aria-expanded")).toBe("true");
     });
 
     it("is not Team Notes at the same time", () => {
         showSection(8, false, 8);
-        expect(screen.getByRole("button", { name: /team notes/i }).className).not.toMatch(
-            /Mui-selected/
-        );
+        expect(header(/team notes/i).getAttribute("aria-expanded")).toBe("false");
     });
 
     it("still follows the bucket when nothing overrides it", () => {
         showSection(8, undefined, 8);
-        expect(screen.getByRole("button", { name: /team notes/i }).className).toMatch(
-            /Mui-selected/
-        );
+        expect(header(/team notes/i).getAttribute("aria-expanded")).toBe("true");
+    });
+});
+
+describe("a section header is never the selection (MIP-1429)", () => {
+    // It used to wear the selected tint whenever the open note's type matched, so a header
+    // looked like the current page and, with no note open, one was tinted for nothing.
+    it.each([
+        ["the section the open note is in", 8, undefined, 8],
+        ["a section the host forces open", 4, true, 8],
+        ["a section no note is open in", 4, false, 8],
+    ] as const)("%s", (_name, noteType, isCurrent, open) => {
+        showSection(noteType, isCurrent, open);
+        const button = screen.getByRole("button", { name: /notes/i });
+        expect(button.className).not.toMatch(/Mui-selected/);
+        expect(button.getAttribute("aria-current")).not.toBe("true");
     });
 });

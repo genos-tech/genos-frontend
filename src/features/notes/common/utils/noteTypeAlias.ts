@@ -101,3 +101,8 @@ export const resolvePersonalBucket = ({
     }
     return bucketFromNoteType(currentNoteType);
 };
+
+/** The family a note belongs to from its backend type plus, for a personal note, the bucket it
+ *  was opened from: 1 / 4 / 8 for a personal note, 2 task, 3 chat. */
+export const originOfNote = (noteType: number, bucket?: "my" | "shared" | "team"): number =>
+    noteType === 1 ? noteTypeFromBucket(bucket ?? "my") : noteType;

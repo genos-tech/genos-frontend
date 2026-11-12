@@ -73,6 +73,7 @@ export const notes = {
         taskNotes: "Task Notes",
         chatNotes: "Chat Notes",
         sharedNotes: "Shared Notes",
+        sharedBy: "Shared by {name}",
         teamNotes: "Team Notes",
         noFavorites: "No favorites yet. Star notes to add them here.",
         noRecents: "No recent notes yet.",

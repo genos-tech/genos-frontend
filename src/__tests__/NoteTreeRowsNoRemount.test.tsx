@@ -82,6 +82,13 @@ const makeUseNM = (selectedNoteId: number | null = null) =>
         currentMyNote: selectedNoteId === null ? null : { noteId: selectedNoteId },
         currentTaskNote: null,
         currentChatNote: null,
+        // The rows ask the ACTIVE TAB which note is open (MIP-1429), not `currentNoteType`.
+        tabsApi: {
+            activeTab:
+                selectedNoteId === null
+                    ? null
+                    : { kind: "my", noteType: 1, noteId: selectedNoteId, bucket: "my" },
+        },
         setCurrentNoteType: vi.fn(),
         loadNote: vi.fn(),
         // Every parent open, so the children are in the DOM.
@@ -306,7 +313,13 @@ describe("note rows still update when the tree really changes", () => {
         expect(buttonFor(container, "Beta")?.classList.contains("Mui-selected")).toBe(false);
         const betaButton = buttonFor(container, "Beta");
 
-        (useNM as unknown as { currentMyNote: { noteId: number } }).currentMyNote = { noteId: 2 };
+        // Switching tabs changes the active tab (what the rows read), in place.
+        (useNM as unknown as { tabsApi: { activeTab: unknown } }).tabsApi.activeTab = {
+            kind: "my",
+            noteType: 1,
+            noteId: 2,
+            bucket: "my",
+        };
         rerender(tree({ tree: base, useNM, selectedTabIndex: 1 }));
 
         expect(buttonFor(container, "Alpha")?.classList.contains("Mui-selected")).toBe(false);
