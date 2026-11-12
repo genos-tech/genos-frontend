@@ -3385,6 +3385,7 @@ export const hi: DeepPartial<Messages> = {
             taskNotes: "टास्क नोट",
             chatNotes: "चैट नोट",
             sharedNotes: "शेयर किए गए नोट",
+            sharedBy: "{name} द्वारा शेयर किया गया",
             teamNotes: "टीम नोट्स",
             favoriteFolders: "फ़ोल्डर",
             noFavorites: "अभी कोई पसंदीदा नहीं। नोट को स्टार करके यहाँ जोड़ें।",

@@ -1,5 +1,4 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
@@ -7,14 +6,7 @@ import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import MarkChatUnreadRoundedIcon from "@mui/icons-material/MarkChatUnreadRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
-import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import { Box, Button, Chip, List, ListItem, Sheet, Typography } from "@mui/joy";
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -26,6 +18,7 @@ import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -78,6 +71,7 @@ import {
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
+import { buildLocationSources, noteLocation, type LocationLabels } from "../utils/noteLocation";
 import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias";
 import { FavoriteFolderItem } from "./FavoriteFolderItem";
 import { FavoriteNoteItem } from "./FavoriteNoteItem";
@@ -87,6 +81,8 @@ import { ModalDeleteNote } from "./ModalDeleteNote";
 import { ExportFolderTarget, ModalExportFolder } from "./ModalExportFolder";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
 import { NoteListState } from "./NoteListState";
+import { NoteOriginIcon } from "./noteOrigin";
+import { NotePinnedSection } from "./NotePinnedSection";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
@@ -506,6 +502,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 return (
                     <RecentNoteItem
                         key={`unread-${bucket}-${n.noteId}`}
+                        locate={locateNote}
                         note={meta}
                         noteType={bucket}
                         useNM={useNM}
@@ -1584,6 +1581,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     ) => (
         <FavoriteNoteItem
             key={`fav-${noteType}-${note.noteId}`}
+            locate={locateFavoriteNote}
             note={note}
             noteType={noteType}
             useNM={useNM}
@@ -1667,7 +1665,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         defaultExpanded={true}
                         groupKey="fav-personal"
                         groupLabel={t.notes.sidebar.myNotes}
-                        icon={<WindowRoundedIcon sx={{ fontSize: 14 }} />}
+                        icon={<NoteOriginIcon noteType={1} sx={{ fontSize: 14 }} />}
                     >
                         {favMyNotes.map((note) => renderFavoriteNoteItem(note, 1))}
                     </FavoriteNoteSection>
@@ -1677,7 +1675,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         defaultExpanded={true}
                         groupKey="fav-shared"
                         groupLabel={t.notes.sidebar.sharedNotes}
-                        icon={<ShareRoundedIcon sx={{ fontSize: 14 }} />}
+                        icon={<NoteOriginIcon noteType={4} sx={{ fontSize: 14 }} />}
                     >
                         {favSharedNotes.map((note) => renderFavoriteNoteItem(note, 4))}
                     </FavoriteNoteSection>
@@ -1687,7 +1685,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         defaultExpanded={true}
                         groupKey="fav-team"
                         groupLabel={t.notes.sidebar.teamNotes}
-                        icon={<GroupsRoundedIcon sx={{ fontSize: 14 }} />}
+                        icon={<NoteOriginIcon noteType={8} sx={{ fontSize: 14 }} />}
                     >
                         {favTeamNotes.map((note) => renderFavoriteNoteItem(note, 8))}
                     </FavoriteNoteSection>
@@ -1697,7 +1695,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         defaultExpanded={true}
                         groupKey="fav-task"
                         groupLabel={t.notes.sidebar.taskNotes}
-                        icon={<AssignmentRoundedIcon sx={{ fontSize: 14 }} />}
+                        icon={<NoteOriginIcon noteType={2} sx={{ fontSize: 14 }} />}
                     >
                         {useNM.favoriteNotes.taskNotes.map((note) =>
                             renderFavoriteNoteItem(note, 2)
@@ -1709,7 +1707,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         defaultExpanded={true}
                         groupKey="fav-chat"
                         groupLabel={t.notes.sidebar.chatNotes}
-                        icon={<QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />}
+                        icon={<NoteOriginIcon noteType={3} sx={{ fontSize: 14 }} />}
                     >
                         {useNM.favoriteNotes.chatNotes.map((note) =>
                             renderFavoriteNoteItem(note, 3)
@@ -1748,6 +1746,53 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         (noteId: number): number =>
             teamNoteIds.has(noteId) ? 8 : sharedNoteIds.has(noteId) ? 4 : 1,
         [teamNoteIds, sharedNoteIds]
+    );
+
+    // "Where does this note live?" for Recents, Unread and Favorites (MIP-1429). Those endpoints
+    // send no display id, chat name or folder, so they are looked up in the lists this sidebar
+    // already has loaded (see `noteLocation`).
+    const locationSources = useMemo(
+        () =>
+            buildLocationSources({
+                myNoteMeta: useNM.myNoteMeta,
+                myNoteFolders: useNM.myNoteFolders,
+                teamNoteMeta: useNM.teamNoteMeta,
+                teamNoteFolders: useNM.teamNoteFolders,
+                sharedNoteMeta: useNM.sharedNoteMeta,
+                taskNoteMeta: useNM.taskNoteMeta,
+                chatNoteMeta: useNM.chatNoteMeta,
+            }),
+        [
+            useNM.myNoteMeta,
+            useNM.myNoteFolders,
+            useNM.teamNoteMeta,
+            useNM.teamNoteFolders,
+            useNM.sharedNoteMeta,
+            useNM.taskNoteMeta,
+            useNM.chatNoteMeta,
+        ]
+    );
+    const locationLabels = useMemo<LocationLabels>(
+        () => ({
+            myNotes: t.notes.sidebar.myNotes,
+            teamNotes: t.notes.sidebar.teamNotes,
+            sharedNotes: t.notes.sidebar.sharedNotes,
+            sharedBy: (name) => fmt(t.notes.sidebar.sharedBy, { name }),
+            chatType: (chatType) => (chatType == null ? "" : getChatTypeLabel(chatType, t)),
+        }),
+        [t]
+    );
+    // Recents and Unread mix every kind of note: the line names the space too.
+    const locateNote = useCallback(
+        (noteType: number, note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps) =>
+            noteLocation(noteType, note, locationSources, locationLabels),
+        [locationSources, locationLabels]
+    );
+    // Favorites are grouped under their space's header, which already says it.
+    const locateFavoriteNote = useCallback(
+        (noteType: number, note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps) =>
+            noteLocation(noteType, note, locationSources, locationLabels, { includeSpace: false }),
+        [locationSources, locationLabels]
     );
 
     const sortedRecentRows = useMemo<RecentRow[]>(() => {
@@ -1806,8 +1851,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 {rows.map((row) => (
                     <RecentNoteItem
                         key={`recent-${row.noteType}-${row.note.noteId}`}
+                        locate={locateNote}
                         note={row.note}
                         noteType={row.noteType}
+                        openedAt={row.tsOpenedAt}
                         useNM={useNM}
                     />
                 ))}
@@ -1819,7 +1866,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const noteTypesConfig = [
         {
             noteType: 1,
-            icon: <WindowRoundedIcon sx={{ fontSize: 18 }} />,
+            icon: <NoteOriginIcon noteType={1} sx={{ fontSize: 18 }} />,
             title: t.notes.sidebar.myNotes,
             state: myNoteState,
             renderTree: null,
@@ -1833,7 +1880,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         // task/chat sections that are anchored to other surfaces.
         {
             noteType: 4,
-            icon: <ShareRoundedIcon sx={{ fontSize: 18 }} />,
+            icon: <NoteOriginIcon noteType={4} sx={{ fontSize: 18 }} />,
             title: t.notes.sidebar.sharedNotes,
             state: sharedNoteState,
             renderTree: null,
@@ -1841,7 +1888,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             isGrouped: true,
             // Folders lent to us by another team live here, and their
             // notes are bucket 8 — see `openNoteIsInGuestFolder`.
-            isSelected: useNM.currentNoteType === 4 || openNoteIsInGuestFolder,
+            isCurrent: useNM.currentNoteType === 4 || openNoteIsInGuestFolder,
         },
         // Team Notes — the shared "general" space. Sits with the two
         // personal-note buckets it shares storage with (type 8 is the
@@ -1849,17 +1896,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         // tasks and channels.
         {
             noteType: 8,
-            icon: <GroupsRoundedIcon sx={{ fontSize: 18 }} />,
+            icon: <NoteOriginIcon noteType={8} sx={{ fontSize: 18 }} />,
             title: t.notes.sidebar.teamNotes,
             state: teamNoteState,
             renderTree: null,
             renderGrouped: renderTeamNotesSection,
             isGrouped: true,
-            isSelected: useNM.currentNoteType === 8 && !openNoteIsInGuestFolder,
+            isCurrent: useNM.currentNoteType === 8 && !openNoteIsInGuestFolder,
         },
         {
             noteType: 2,
-            icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+            icon: <NoteOriginIcon noteType={2} sx={{ fontSize: 18 }} />,
             title: t.notes.sidebar.taskNotes,
             state: taskNoteState,
             renderTree: null,
@@ -1868,7 +1915,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         },
         {
             noteType: 3,
-            icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />,
+            icon: <NoteOriginIcon noteType={3} sx={{ fontSize: 18 }} />,
             title: t.notes.sidebar.chatNotes,
             state: chatNoteState,
             renderTree: null,
@@ -1929,61 +1976,34 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             "--ListItem-radius": "8px",
                         }}
                     >
-                        {/* Favorites Section */}
-                        <NoteTypeSection
-                            icon={<StarRoundedIcon sx={{ fontSize: 18 }} />}
-                            noteType={5} // Use 5 for favorites (distinct from 0-4)
-                            title={t.notes.sidebar.favorites}
-                            useNM={useNM}
-                        >
+                        {/* Pinned above the workspaces: headings you can fold, not places
+                            you can be (MIP-1429). */}
+                        <NotePinnedSection id="favorites" title={t.notes.sidebar.favorites}>
                             {renderFavoriteNotes()}
-                        </NoteTypeSection>
+                        </NotePinnedSection>
 
-                        {/* Recents Section */}
-                        <NoteTypeSection
-                            icon={<HistoryRoundedIcon sx={{ fontSize: 18 }} />}
-                            noteType={6} // Use 6 for recents (distinct from 0-5)
-                            title={t.notes.sidebar.recents}
-                            useNM={useNM}
-                        >
+                        <NotePinnedSection id="recents" title={t.notes.sidebar.recents}>
                             {renderRecentNotes()}
-                        </NoteTypeSection>
+                        </NotePinnedSection>
 
-                        {/* Unread Section — bottom of the pinned sections (after
-                        Recents), only shown when there are unread @mentions. */}
+                        {/* Unread: after Recents, only when there are unread @mentions. */}
                         {unreadNotes.length > 0 && (
-                            <NoteTypeSection
-                                icon={<MarkChatUnreadRoundedIcon sx={{ fontSize: 18 }} />}
-                                noteType={7} // 7 = unread (distinct from 0-6)
+                            <NotePinnedSection
+                                id="unread"
                                 title={fmt(t.notes.sidebar.unread, { count: unreadNotes.length })}
-                                useNM={useNM}
                             >
                                 {renderUnreadNotes()}
-                            </NoteTypeSection>
+                            </NotePinnedSection>
                         )}
 
-                        {/* Section Divider */}
-                        <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    fontWeight: 600,
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.08em",
-                                    fontSize: 10,
-                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                                }}
-                            >
-                                {t.notes.sidebar.workspaces}
-                            </Typography>
-                        </Box>
+                        <SectionHeader label={t.notes.sidebar.workspaces} sx={{ mt: 1.5 }} />
 
                         {/* Note Type Sections */}
                         {noteTypesConfig.map((config) => (
                             <NoteTypeSection
                                 key={config.noteType}
                                 icon={config.icon}
-                                isSelected={config.isSelected}
+                                isCurrent={config.isCurrent}
                                 noteType={config.noteType}
                                 title={config.title}
                                 useNM={useNM}

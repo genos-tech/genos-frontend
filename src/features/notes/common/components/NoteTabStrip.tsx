@@ -1,10 +1,17 @@
 import { useMemo } from "react";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 
 import { TabStrip, type TabItem } from "../../../../components/ui/feedback/TabStrip";
 import { useTranslation } from "../../../../i18n";
+import { originOfNote } from "../utils/noteTypeAlias";
+import { NoteOriginIcon } from "./noteOrigin";
 
-type NoteTabLike = { noteType: number; noteId: number | string; title: string };
+type NoteTabLike = {
+    noteType: number;
+    noteId: number | string;
+    title: string;
+    // For a personal note: which space it was opened from (my / shared / team).
+    bucket?: "my" | "shared" | "team";
+};
 
 type NoteTabStripProps = {
     tabs: NoteTabLike[];
@@ -40,7 +47,8 @@ export const NoteTabStrip = ({ tabs, selectedIndex, onSelect, onCloseTab }: Note
                 id: ids[i],
                 label: tab.title,
                 title: tab.title,
-                icon: <DescriptionOutlinedIcon />,
+                // The family the note came from, as everywhere else it is listed (MIP-1429).
+                icon: <NoteOriginIcon noteType={originOfNote(tab.noteType, tab.bucket)} />,
                 closable: true,
             })),
         [tabs, ids]

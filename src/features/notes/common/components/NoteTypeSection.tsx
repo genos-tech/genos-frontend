@@ -15,15 +15,17 @@ interface NoteTypeSectionProps {
     useNM: NoteManagementState;
     isDisabled?: boolean;
     /**
-     * Override "is the open note mine?", which is otherwise the note's
+     * Override "is the open note in this section?", which is otherwise the note's
      * bucket matching this section's. Needed by the one case where a row
      * renders outside its bucket's section: a folder another team shared
      * with us keeps bucket 8 (it is a team note in storage and in every
      * bucket-keyed lookup) but hangs under Shared Notes. Without this,
-     * opening one lights up and unfolds Team Notes — a section the row
-     * isn't in.
+     * opening one unfolds Team Notes — a section the row isn't in.
+     *
+     * It decides what unfolds, never what is tinted: a section header is not a
+     * selection (MIP-1429). Only the open note's own row is.
      */
-    isSelected?: boolean;
+    isCurrent?: boolean;
 }
 
 export function NoteTypeSection({
@@ -33,20 +35,20 @@ export function NoteTypeSection({
     children,
     useNM,
     isDisabled = false,
-    isSelected: isSelectedOverride,
+    isCurrent: isCurrentOverride,
 }: NoteTypeSectionProps) {
     const { t } = useTranslation();
-    const isSelected = isSelectedOverride ?? useNM.currentNoteType === noteType;
+    const isCurrent = isCurrentOverride ?? useNM.currentNoteType === noteType;
 
-    // Initialize open state based on whether this section is selected
-    const [open, setOpen] = useState(isSelected);
+    // Initialize open state based on whether the open note is in this section
+    const [open, setOpen] = useState(isCurrent);
 
-    // Auto-expand when this note type becomes selected
+    // Auto-expand when the open note comes to live in this section
     useEffect(() => {
-        if (isSelected && !open) {
+        if (isCurrent && !open) {
             setOpen(true);
         }
-    }, [isSelected]);
+    }, [isCurrent]);
 
     const handleClick = () => {
         if (!isDisabled) {
@@ -73,7 +75,6 @@ export function NoteTypeSection({
                 expanded={isDisabled ? undefined : open}
                 icon={icon}
                 label={title}
-                selected={isSelected}
                 // The chevron is its own target: it folds the section without
                 // selecting the note type.
                 trailing={

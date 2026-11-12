@@ -1,4 +1,5 @@
 import { memo, ReactNode, useEffect, useRef, useState } from "react";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { Box, IconButton, List, ListItem } from "@mui/joy";
@@ -11,8 +12,8 @@ import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import { BaseNoteTreeNode } from "../types/noteTypes";
-import { isPersonalNoteBucket } from "../utils/noteTypeAlias";
-import { NoteDot } from "./NoteDot";
+import { isNoteOpen } from "../utils/openNote";
+import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     node: T;
@@ -53,23 +54,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     const open = useNM.isNodeExpanded(noteType, node.noteId);
     const hasChildren = node.children.length > 0;
 
-    // Check if this specific node is currently selected.
-    // noteType=4 (shared personal notes) shares the editor slot with
-    // myNote, so it highlights against `currentMyNote`.
-    const isSelected =
-        useNM.currentNoteType === noteType &&
-        node?.noteId ===
-            (noteType === 1
-                ? useNM.currentMyNote?.noteId
-                : noteType === 2
-                  ? useNM.currentTaskNote?.noteId
-                  : noteType === 3
-                    ? useNM.currentChatNote?.noteId
-                    : // 4 (shared) and 8 (team) are UI-only buckets over
-                      // personal notes, so both highlight off currentMyNote.
-                      isPersonalNoteBucket(noteType)
-                      ? useNM.currentMyNote?.noteId
-                      : 0);
+    // Is this the note that is open? Asked of the active tab, not of `currentNoteType`:
+    // clicking a section header changes that, and used to un-tint the open note (MIP-1429).
+    const isSelected = isNoteOpen(useNM.tabsApi.activeTab, noteType, node.noteId);
 
     // Bring the row for the newly-opened note into view. The folder rows
     // above it auto-expand (GroupedNoteSection / the expanded-node set),
@@ -143,8 +130,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     actionsVisible={rowMenuOpen}
                     as="div"
                     expanded={hasChildren ? open : undefined}
-                    icon={<NoteDot unread={hasUnread} />}
+                    icon={<DescriptionOutlinedIcon />}
                     selected={isSelected}
+                    trailing={hasUnread ? <NoteUnreadDot /> : undefined}
                     unread={hasUnread}
                     label={node.title || t.notes.defaults.untitled}
                     // Keep the "..." trigger visible while its portal menu is

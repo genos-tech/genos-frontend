@@ -7,13 +7,11 @@ import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
-import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import { Box, Button, Chip, Stack, Tab, TabList, TabPanel, Tabs, Typography } from "@mui/joy";
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
+import { NoteOriginIcon } from "../../features/notes/common/components/noteOrigin";
 import { StatusLabel } from "../../features/tasks/components/meta/StatusLabel";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import {
@@ -232,19 +230,19 @@ const NOTE_TYPE_VISUAL: Record<
 > = {
     1: {
         labelKey: "myNote",
-        icon: <WindowRoundedIcon sx={{ fontSize: 14 }} />,
+        icon: <NoteOriginIcon noteType={1} sx={{ fontSize: 14 }} />,
         light: "#6366f1",
         dark: "#818cf8",
     },
     2: {
         labelKey: "taskNote",
-        icon: <AssignmentRoundedIcon sx={{ fontSize: 14 }} />,
+        icon: <NoteOriginIcon noteType={2} sx={{ fontSize: 14 }} />,
         light: "#22c55e",
         dark: "#4ade80",
     },
     3: {
         labelKey: "chatNote",
-        icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />,
+        icon: <NoteOriginIcon noteType={3} sx={{ fontSize: 14 }} />,
         light: "#f97316",
         dark: "#fb923c",
     },
@@ -252,13 +250,13 @@ const NOTE_TYPE_VISUAL: Record<
     // entries or every shared / team note reads as "My note".
     4: {
         labelKey: "sharedNote",
-        icon: <ShareRoundedIcon sx={{ fontSize: 14 }} />,
+        icon: <NoteOriginIcon noteType={4} sx={{ fontSize: 14 }} />,
         light: "#0ea5e9",
         dark: "#38bdf8",
     },
     8: {
         labelKey: "teamNote",
-        icon: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
+        icon: <NoteOriginIcon noteType={8} sx={{ fontSize: 14 }} />,
         light: "#a855f7",
         dark: "#c084fc",
     },

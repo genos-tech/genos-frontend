@@ -2718,6 +2718,7 @@ export const zh: DeepPartial<Messages> = {
             taskNotes: "任务笔记",
             chatNotes: "聊天笔记",
             sharedNotes: "共享笔记",
+            sharedBy: "{name} 共享",
             teamNotes: "团队笔记",
             favoriteFolders: "文件夹",
             noFavorites: "暂无收藏。点击星标可加入这里。",
