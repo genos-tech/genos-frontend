@@ -40,7 +40,9 @@ export type TaskPreviewPaneInput = {
     loadFailedTaskId: number | null | undefined;
 };
 
-const hasRequest = (id: number | null | undefined): id is number => id != null && id !== -1;
+// Task ids are positive: -1 is "none", and 0 (a thread with no task, MIP-1422) is
+// none too. Counting 0 as a request made the chat pane wait for task 0 for good.
+const hasRequest = (id: number | null | undefined): id is number => id != null && Number(id) > 0;
 
 export const getTaskPreviewPaneState = ({
     workingCopyId,

@@ -32,6 +32,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { useDropStaleSurfacePreview } from "../../hooks/tasks/useDropStaleSurfacePreview";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { useSurfaceTaskPreviewVisible } from "../../hooks/tasks/useSurfaceTaskPreviewVisible";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
@@ -248,6 +249,17 @@ export const ChatHome = (props: ChatHomeProps) => {
         initialTaskPreviewVisible && useTM.isTaskPreviewVisible === true,
         useTM
     );
+
+    // The chat pane opens only when the user opens a task (MIP-1422): a surface
+    // flag left up while the pane is hidden (a pane that stood down before its
+    // task loaded) is put down, so the next task merely SELECTED cannot show it.
+    useDropStaleSurfacePreview({
+        isActiveRoute,
+        intentPending: useCM.isThreadTaskVisible === true,
+        surfaceVisible: initialTaskPreviewVisible,
+        paneVisible: isTaskPreviewPaneVisible,
+        setSurfaceVisible: setInitialTaskPreviewVisible,
+    });
 
     // Add a new todo from a message
     useEffect(() => {

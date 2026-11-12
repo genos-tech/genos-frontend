@@ -530,7 +530,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     tsLastSeen: "",
                     tsJoined: "",
                 },
-                taskId: activity.taskId,
+                // `activity.taskId` is 0 for a thread with no task (the v3 adapter's
+                // `msg.taskId ?? 0`). 0 is not "no task" to the hooks downstream, so
+                // say it the way the URL path does (`useChatRouting`): null (MIP-1422).
+                taskId: activity.taskId || null,
                 messages: threadMessages,
                 project: {
                     projectId: activity.projectId || -1,

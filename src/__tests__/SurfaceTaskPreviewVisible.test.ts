@@ -16,13 +16,17 @@ const useTMWith = (
     visible: boolean,
     taskId: number,
     // A milestone preview carries its id here and leaves `taskId` at -1.
-    milestone: { kind: "task" | "milestone"; id: number } = { kind: "task", id: -1 }
+    milestone: { kind: "task" | "milestone"; id: number } = { kind: "task", id: -1 },
+    // `useTM.previewOpenCount`: how many times something asked for the preview
+    // to be shown (every "open task" click). Selecting a task does not move it.
+    openCount = 0
 ): TaskManagementState =>
     ({
         currentPreviewKind: milestone.kind,
         currentPreviewMilestoneId: milestone.id,
         currentPreviewTaskId: taskId,
         isTaskPreviewVisible: visible,
+        previewOpenCount: openCount,
     }) as unknown as TaskManagementState;
 
 describe("useSurfaceTaskPreviewVisible", () => {
@@ -92,18 +96,56 @@ describe("useSurfaceTaskPreviewVisible", () => {
         expect(result.current[0]).toBe(false);
     });
 
-    it("adopts a task SWITCH made while in the foreground", () => {
+    it("does NOT open for a task that only became the SELECTION (MIP-1422)", () => {
+        // The global flag is up (a preview open on the task page) and the user
+        // opens a thread on chat: that SELECTS the thread's task. It used to be
+        // adopted as a "switch" and opened the pane by itself; with a thread that
+        // had no task the id was 0 and the pane waited for task 0 forever.
         const { result, rerender } = renderHook(
             ({ taskId, active }: { taskId: number; active: boolean }) =>
                 useSurfaceTaskPreviewVisible("chat", active, useTMWith(true, taskId)),
             { initialProps: { active: true, taskId: 1 } }
         );
-
-        // Seed: visible globally on mount but never adopted here.
         expect(result.current[0]).toBe(false);
 
         rerender({ active: true, taskId: 2 });
+        expect(result.current[0]).toBe(false);
+        rerender({ active: true, taskId: 0 });
+        expect(result.current[0]).toBe(false);
+    });
+
+    it("opens when an open is asked for while the flag is ALREADY up", () => {
+        // An "open task" click calls `setIsTaskPreviewVisible(true)`; when the
+        // global flag is already true (the task page has a preview) the flag does
+        // not move, so only the open counter says a click happened.
+        const { result, rerender } = renderHook(
+            ({ taskId, openCount }: { taskId: number; openCount: number }) =>
+                useSurfaceTaskPreviewVisible(
+                    "chat",
+                    true,
+                    useTMWith(true, taskId, undefined, openCount)
+                ),
+            { initialProps: { taskId: 1, openCount: 3 } }
+        );
+        expect(result.current[0]).toBe(false);
+
+        rerender({ taskId: 2, openCount: 4 });
         expect(result.current[0]).toBe(true);
+    });
+
+    it("an open asked for while this surface was in the background does not count", () => {
+        const { result, rerender } = renderHook(
+            ({ openCount, active }: { openCount: number; active: boolean }) =>
+                useSurfaceTaskPreviewVisible(
+                    "chat",
+                    active,
+                    useTMWith(true, 5, undefined, openCount)
+                ),
+            { initialProps: { active: true, openCount: 0 } }
+        );
+        rerender({ active: false, openCount: 1 });
+        rerender({ active: true, openCount: 1 });
+        expect(result.current[0]).toBe(false);
     });
 
     it("does NOT adopt a DESELECTION as an open", () => {
@@ -126,24 +168,37 @@ describe("useSurfaceTaskPreviewVisible", () => {
         expect(result.current[0]).toBe(false);
     });
 
-    it("still adopts a switch to a MILESTONE, which clears the task id", () => {
-        // The guard above must not swallow milestone previews: they set
-        // `currentPreviewTaskId` to -1 on purpose and carry the real
+    it("opens a MILESTONE the user opened, which clears the task id", () => {
+        // The "nothing selected" guard must not swallow milestone previews: they
+        // set `currentPreviewTaskId` to -1 on purpose and carry the real
         // selection in `currentPreviewMilestoneId`.
         const { result, rerender } = renderHook(
             ({
                 taskId,
                 milestone,
+                openCount,
             }: {
                 taskId: number;
                 milestone: { kind: "task" | "milestone"; id: number };
-            }) => useSurfaceTaskPreviewVisible("chat", true, useTMWith(true, taskId, milestone)),
-            { initialProps: { milestone: { id: -1, kind: "task" as const }, taskId: 5 } }
+                openCount: number;
+            }) =>
+                useSurfaceTaskPreviewVisible(
+                    "chat",
+                    true,
+                    useTMWith(true, taskId, milestone, openCount)
+                ),
+            {
+                initialProps: {
+                    milestone: { id: -1, kind: "task" as const },
+                    taskId: 5,
+                    openCount: 0,
+                },
+            }
         );
 
         expect(result.current[0]).toBe(false);
 
-        rerender({ milestone: { id: 9, kind: "milestone" }, taskId: -1 });
+        rerender({ milestone: { id: 9, kind: "milestone" }, taskId: -1, openCount: 1 });
         expect(result.current[0]).toBe(true);
     });
 

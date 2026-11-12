@@ -31,6 +31,18 @@ import { TaskManagementState } from "./useTaskManagement";
  * Closing is intentionally NOT scoped: when the global flag goes false
  * the preview really was closed, so every surface follows it down.
  *
+ * **Only an explicit open opens it (MIP-1422).** Something must have ASKED for
+ * the preview while this surface is in front: the global flag going true, or
+ * `setIsTaskPreviewVisible(true)` being called again while it already was
+ * (`useTM.previewOpenCount`). Every "open task" control does that. A task
+ * merely becoming the SELECTION does not: opening a thread selects its task
+ * (the bubble replay, the activity and flagged-message handlers,
+ * `useThreadTaskHandling`), and with the global flag already up from the task
+ * page that selection change used to be adopted as a "switch" and open the
+ * pane by itself. A thread with no task carried task id 0, so the pane it
+ * opened waited for task 0 forever. A selection now shows only in a pane the
+ * user opened.
+ *
  * The surface flag is persisted so a reload lands on the same layout the
  * user left. Chat has no URL segment for "preview is open" (the task
  * page does — its preview state lives in the route), so localStorage is
@@ -64,7 +76,7 @@ export const useSurfaceTaskPreviewVisible = (
     // transition from an unrelated re-render.
     const prevRef = useRef({
         visible: useTM.isTaskPreviewVisible,
-        taskId: useTM.currentPreviewTaskId,
+        openCount: useTM.previewOpenCount ?? 0,
     });
 
     // Was this surface the active route at the previous effect run? Used to
@@ -81,10 +93,10 @@ export const useSurfaceTaskPreviewVisible = (
         seenCloseCountRef.current = closeCount;
 
         const wasVisible = prevRef.current.visible;
-        const prevTaskId = prevRef.current.taskId;
+        const prevOpenCount = prevRef.current.openCount;
         prevRef.current = {
             visible: useTM.isTaskPreviewVisible,
-            taskId: useTM.currentPreviewTaskId,
+            openCount: useTM.previewOpenCount ?? 0,
         };
 
         if (!useTM.isTaskPreviewVisible) {
@@ -126,12 +138,14 @@ export const useSurfaceTaskPreviewVisible = (
         // deselection is not an open.
         if (!hasContent) return;
 
+        // An explicit open only: the flag went up, or an open was asked for
+        // again while it was up. A new selection on its own is not an open.
         const opened = !wasVisible;
-        const switched = prevTaskId !== useTM.currentPreviewTaskId;
-        if ((opened || switched) && !visible) setVisible(true);
+        const askedAgain = (useTM.previewOpenCount ?? 0) !== prevOpenCount;
+        if ((opened || askedAgain) && !visible) setVisible(true);
     }, [
         useTM.isTaskPreviewVisible,
-        useTM.currentPreviewTaskId,
+        useTM.previewOpenCount,
         useTM.previewCloseCount,
         hasContent,
         isActiveRoute,

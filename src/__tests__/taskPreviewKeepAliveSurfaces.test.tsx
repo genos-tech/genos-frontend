@@ -26,6 +26,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { FreezeRouterWhenHidden } from "../components/layout/FreezeRouterWhenHidden";
 import { FreezeWhenHidden } from "../components/layout/FreezeWhenHidden";
+import { useDropStaleSurfacePreview } from "../hooks/tasks/useDropStaleSurfacePreview";
 import { useSurfaceTaskPreviewVisible } from "../hooks/tasks/useSurfaceTaskPreviewVisible";
 import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 import { useTaskPreviewPaneVisible } from "../hooks/tasks/useTaskPreviewPaneVisible";
@@ -34,8 +35,15 @@ type FakeTM = TaskManagementState;
 
 // A fresh object every render, like the real `useTaskManagement` return.
 const useFakeTM = (): FakeTM => {
-    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
+    const [isTaskPreviewVisible, setIsTaskPreviewVisibleState] = useState(false);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState(-1);
+    // The open counter `useTaskManagement` keeps (MIP-1422): every request to show
+    // the preview counts, even one made while it is already showing.
+    const [previewOpenCount, setPreviewOpenCount] = useState(0);
+    const setIsTaskPreviewVisible = (visible: boolean) => {
+        if (visible) setPreviewOpenCount((n) => n + 1);
+        setIsTaskPreviewVisibleState(visible);
+    };
     // The same counter `useTaskManagement` keeps above the screens.
     const [previewCloseCount, setPreviewCloseCount] = useState(0);
     const wasVisibleRef = useRef(false);
@@ -47,6 +55,7 @@ const useFakeTM = (): FakeTM => {
     const [threadTaskIntent, setThreadTaskIntent] = useState(false);
     return {
         previewCloseCount,
+        previewOpenCount,
         threadTaskIntent,
         setThreadTaskIntent,
         isTaskPreviewVisible,
@@ -126,6 +135,14 @@ const ChatHome = ({ useTM, isActiveRoute }: { useTM: FakeTM; isActiveRoute: bool
         surfaceVisible && useTM.isTaskPreviewVisible === true,
         useTM
     );
+    // As chatHome.tsx: declared after the pane hook and the intent consumer.
+    useDropStaleSurfacePreview({
+        isActiveRoute,
+        intentPending: tm.threadTaskIntent,
+        surfaceVisible,
+        paneVisible,
+        setSurfaceVisible,
+    });
     return (
         <div>
             {/* The callers on the chat page (PM message card "Open Task",
@@ -138,6 +155,16 @@ const ChatHome = ({ useTM, isActiveRoute }: { useTM: FakeTM; isActiveRoute: bool
                 }}
             />
             <button data-testid="chat-switch" onClick={() => useTM.setCurrentPreviewTaskId(8)} />
+            {/* Opening a thread SELECTS its task and never asks for the pane
+                (the bubble replay, the activity handlers, useThreadTaskHandling).
+                A thread with no task used to carry id 0 (MIP-1422). */}
+            <button data-testid="chat-select" onClick={() => useTM.setCurrentPreviewTaskId(12)} />
+            <button data-testid="chat-select-0" onClick={() => useTM.setCurrentPreviewTaskId(0)} />
+            {/* A thread on a message with no task: MessageBubble.replayHandler. */}
+            <button
+                data-testid="chat-deselect"
+                onClick={() => useTM.setCurrentPreviewTaskId(-1)}
+            />
             <button
                 data-testid="chat-close"
                 onClick={() => {
@@ -326,6 +353,61 @@ describe("task preview across the keep-alive task and chat screens (MIP-981)", (
             click("go-chat");
             click("go-tasks");
             expect(tasksPreview()?.textContent).toBe("task 5");
+        });
+
+        it("opening a thread that has a task does NOT open the pane (MIP-1422)", () => {
+            mount(Wrap, "/workspace/chat/dm");
+            click("go-tasks");
+            click("tasks-open"); // the global flag is up from the task page
+            click("go-chat");
+            click("chat-select");
+            expect(chatPreview()).toBeNull();
+        });
+
+        it("a thread with no task (id 0) does NOT open a pane that waits forever (MIP-1422)", () => {
+            mount(Wrap, "/workspace/chat/dm");
+            click("go-tasks");
+            click("tasks-open");
+            click("go-chat");
+            click("chat-select-0");
+            expect(chatPreview()).toBeNull();
+        });
+
+        it("a persisted flag from an earlier session does not show the task page's preview on chat", () => {
+            // Held by the surface hook following the global "closed" down on its first
+            // run (the global flag starts false); pinned here as part of the rule.
+            localStorage.setItem("taskPreviewVisible:chat", "true");
+            mount(Wrap);
+            click("tasks-open");
+            click("go-chat");
+            expect(chatPreview()).toBeNull();
+            expect(screen.getByTestId("chat-flag").textContent).toBe("false");
+            click("chat-select");
+            expect(chatPreview()).toBeNull();
+            // ...and an explicit open still works afterwards.
+            click("chat-open");
+            expect(chatPreview()?.textContent).toBe("task 7");
+        });
+
+        it("a pane that stood down before its task loaded does not come back by itself (MIP-1422)", () => {
+            // The fake never loads a task object, so the latch that holds a pane up
+            // across an empty selection never sets: like a slow or failed load.
+            mount(Wrap, "/workspace/chat/dm");
+            click("chat-open");
+            expect(chatPreview()?.textContent).toBe("task 7");
+            click("chat-deselect");
+            expect(chatPreview()).toBeNull();
+            expect(screen.getByTestId("chat-flag").textContent).toBe("false");
+            click("chat-select");
+            expect(chatPreview()).toBeNull();
+        });
+
+        it("a pane the user opened follows the selection and stays open", () => {
+            mount(Wrap, "/workspace/chat/dm");
+            click("chat-open");
+            click("chat-select");
+            expect(chatPreview()?.textContent).toBe("task 12");
+            expect(screen.getByTestId("chat-flag").textContent).toBe("true");
         });
 
         it("the chat surface flag is persisted per surface when adopted in chat", () => {
