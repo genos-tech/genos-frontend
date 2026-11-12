@@ -1468,6 +1468,8 @@ export const ar: DeepPartial<Messages> = {
             description:
                 "الإجراءات التي ستبقى على شريط الأدوات الذي يظهر عند التمرير فوق رسائل الدردشة وردود المواضيع بدلًا من قائمة …. لا تتأثر تعليقات المهام.",
             limit: "اختر حتى {max}. تبقى البقية في قائمة ….",
+            flagHint: "رسالة لإعادة قراءتها لاحقًا لتتذكر ما فيها.",
+            addToTodoHint: "رسالة تتطلب منك اتخاذ إجراء.",
             reset: "إعادة تعيين",
         },
         quickAddRequiredFields: {
@@ -1864,6 +1866,7 @@ export const ar: DeepPartial<Messages> = {
             addCommentToTask: "إضافة تعليق إلى المهمة",
             replyInThread: "الرد في الموضوع",
             flagForLater: "تعليم لوقت لاحق",
+            addToTodo: "إضافة إلى قائمة المهام",
             removeFlag: "إزالة العلامة",
             remindMe: "ذكّرني…",
             reminderSetFor: "تذكير: {time}",

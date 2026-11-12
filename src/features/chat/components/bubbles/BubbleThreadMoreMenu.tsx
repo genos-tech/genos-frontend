@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -52,6 +53,8 @@ type BubbleThreadMoreMenuProps = {
      *  or a dialog opened from it. The parent keeps the hover toolbar
      *  mounted for as long as this is `true`; see `overlayOpen` below. */
     onMenuOpenChange?: (open: boolean) => void;
+    /** Puts this reply on the To-Do list (MIP-1433); the same call as the double-click. */
+    onAddToTodo?: () => void;
 };
 
 type MenuItemConfig = {
@@ -63,6 +66,7 @@ type MenuItemConfig = {
     visible: boolean;
     danger?: boolean;
     active?: boolean;
+    divider?: boolean;
 };
 
 export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
@@ -86,6 +90,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         unwrapCode,
         setUnwrapCode,
         onMenuOpenChange,
+        onAddToTodo,
     } = props;
 
     const { t, locale } = useTranslation();
@@ -235,6 +240,18 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             // open an empty modal.
             visible: Boolean(message.messageIdWithChatIdAndThreadId),
             active: reminder !== null,
+        },
+        {
+            // The other intent: Flag is a message to READ AGAIN, this is one that needs
+            // you to DO something. A different glyph (the To-Do list's own checklist) and
+            // no "later" in the label (MIP-1433).
+            id: "addToTodo",
+            kind: "addToTodo",
+            label: t.chat.messageActions.addToTodo,
+            icon: <ChecklistRoundedIcon sx={{ fontSize: 18 }} />,
+            onClick: () => onAddToTodo?.(),
+            visible: onAddToTodo !== undefined,
+            divider: true,
         },
         {
             id: "edit",

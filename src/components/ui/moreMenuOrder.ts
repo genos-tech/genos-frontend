@@ -25,7 +25,7 @@ export const MORE_MENU_GROUPS = [
     },
     { group: "share", kinds: ["share", "copyLink"] },
     // Marks that are yours alone, not the object's.
-    { group: "personal", kinds: ["favorite", "flag", "remindMe"] },
+    { group: "personal", kinds: ["favorite", "flag", "remindMe", "addToTodo"] },
     {
         group: "create",
         kinds: [

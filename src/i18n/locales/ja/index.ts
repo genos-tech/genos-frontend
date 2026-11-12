@@ -1301,6 +1301,7 @@ export const ja: DeepPartial<Messages> = {
             addCommentToTask: "タスクにコメントを追加",
             replyInThread: "スレッドで返信",
             flagForLater: "後で確認用にフラグを付ける",
+            addToTodo: "To-Do に追加",
             removeFlag: "フラグを外す",
             remindMe: "リマインドする…",
             reminderSetFor: "リマインド: {time}",
@@ -3779,6 +3780,8 @@ export const ja: DeepPartial<Messages> = {
             description:
                 "チャットのメッセージとスレッドの返信で、「…」メニューの中ではなくホバー時のツールバーに常に表示するアクションを選びます。タスクコメントには適用されません。",
             limit: "最大{max}個まで選べます。残りは「…」メニューに入ります。",
+            flagHint: "あとで読み返して内容を思い出すためのメッセージ。",
+            addToTodoHint: "対応が必要なメッセージ。",
             reset: "リセット",
         },
         quickAddRequiredFields: {

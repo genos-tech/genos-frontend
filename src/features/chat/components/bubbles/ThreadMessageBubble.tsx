@@ -306,6 +306,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 unwrapAll={unwrapAll}
                 unwrapCode={unwrapCode}
                 useCM={useCM}
+                onAddToTodo={() => setTodoFromMessageBubble(message)}
                 onMenuOpenChange={setIsMoreMenuOpen}
             />
         </Stack>
