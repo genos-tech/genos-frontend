@@ -159,6 +159,23 @@ export const ChatHome = (props: ChatHomeProps) => {
                 isThread: false,
                 messageId: todoFromMessageBubble.messageId,
                 messageText: getFirstLine(todoFromMessageBubble.content[0]),
+                // A project chat's message is usually a task's card: link the task. The card
+                // carries the task id; the project is the chat's (the message has none).
+                task: (() => {
+                    if (todoFromMessageBubble.chatType !== 3 || !todoFromMessageBubble.taskId) {
+                        return undefined;
+                    }
+                    const projectId =
+                        todoFromMessageBubble.project?.projectId ??
+                        useCM.allChats.find(
+                            (c) =>
+                                c.chatType === 3 &&
+                                c.chatId === String(todoFromMessageBubble.chatId)
+                        )?.project?.projectId;
+                    return projectId
+                        ? { projectId, taskId: todoFromMessageBubble.taskId }
+                        : undefined;
+                })(),
                 threadId: null,
             });
         } else if ("commentId" in todoFromMessageBubble) {
@@ -169,6 +186,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                 isThread: true,
                 messageId: todoFromMessageBubble.commentId,
                 messageText: getFirstLine(todoFromMessageBubble.commentBody[0]),
+                taskComment: {
+                    commentId: todoFromMessageBubble.commentId,
+                    projectId: todoFromMessageBubble.projectId,
+                    taskId: todoFromMessageBubble.taskId,
+                },
                 threadId: todoFromMessageBubble.taskId,
             });
         }

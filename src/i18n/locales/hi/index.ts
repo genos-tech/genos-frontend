@@ -1641,6 +1641,8 @@ export const hi: DeepPartial<Messages> = {
             sourceGmThread: "GM धागे से",
             sourceGm: "GM से",
             sourceTaskComment: "कार्य टिप्पणी से",
+            sourceTask: "कार्य से",
+            sourceProjectChat: "प्रोजेक्ट चैट से",
             sourceMdmThread: "बहु-उपयोगकर्ता DM थ्रेड से",
             sourceMdm: "बहु-उपयोगकर्ता DM से",
             existingTodayTooltip: "आज के लिए आपके पास पहले से एक टू-डू है।",

@@ -13,6 +13,10 @@ interface MessageSource {
     messageId: number;
     isThread: boolean;
     messageText: string;
+    /** A task comment: it is linked on the TASK page, not through a chat (MIP-1436). */
+    taskComment?: { projectId: number; taskId: number; commentId: number };
+    /** A project-chat message that is a task's card: linked to the task (MIP-1436). */
+    task?: { projectId: number; taskId: number };
 }
 
 const buildSourceLink = ({
@@ -21,9 +25,20 @@ const buildSourceLink = ({
     threadId,
     messageId,
     isThread,
+    taskComment,
+    task,
 }: MessageSource): { href: string; fromText: string } | null => {
     const strings = getMessages().chat.todoPane;
     const origin = window.location.origin;
+    // A task comment is addressed by project, task and comment id on the task page. The old
+    // link put the numeric project id where a chat URL now carries the channel's UUID, so
+    // it opened "No conversation selected" (MIP-1436).
+    if (taskComment) {
+        return {
+            href: `${origin}/workspace/tasks/project/${taskComment.projectId}/task/${taskComment.taskId}/comment/${taskComment.commentId}`,
+            fromText: strings.sourceTaskComment,
+        };
+    }
     if (chatType === 1) {
         if (isThread && threadId) {
             return {
@@ -46,6 +61,21 @@ const buildSourceLink = ({
         return {
             href: `${origin}/workspace/chat/gm/${chatId}/message/${messageId}`,
             fromText: strings.sourceGm,
+        };
+    }
+    if (chatType === 3 && !isThread) {
+        // A project-chat message: the task's own card links to the task; any other message
+        // to itself in the project chat. It returned no link at all before, so "Add to
+        // To-Do" on one did nothing.
+        if (task) {
+            return {
+                href: `${origin}/workspace/tasks/project/${task.projectId}/task/${task.taskId}`,
+                fromText: strings.sourceTask,
+            };
+        }
+        return {
+            href: `${origin}/workspace/chat/pm/${chatId}/message/${messageId}`,
+            fromText: strings.sourceProjectChat,
         };
     }
     if (chatType === 3 && threadId) {

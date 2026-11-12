@@ -1050,6 +1050,8 @@ export const fr: DeepPartial<Messages> = {
             sourceGmThread: "Depuis le fil du GM",
             sourceGm: "Depuis le GM",
             sourceTaskComment: "Depuis le commentaire de la tâche",
+            sourceTask: "Depuis la tâche",
+            sourceProjectChat: "Depuis le chat du projet",
             sourceMdmThread: "À partir du fil DM multi-utilisateurs",
             sourceMdm: "À partir d'un DM multi-utilisateurs",
             existingTodayTooltip: "Vous avez déjà une tâche pour aujourd'hui.",
