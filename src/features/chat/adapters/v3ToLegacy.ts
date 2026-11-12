@@ -1002,6 +1002,12 @@ export function v3FlagsToLegacy(args: {
                     : undefined,
             taskId,
             displayId,
+            taskCommentId:
+                channel.kind === ChannelKind.PM &&
+                message.isThreadReply &&
+                typeof meta.taskCommentId === "number"
+                    ? (meta.taskCommentId as number)
+                    : undefined,
             tsSent: message.tsSent,
         });
     }

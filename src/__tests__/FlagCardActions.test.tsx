@@ -7,6 +7,7 @@
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { cssOf } from "./utils/cssOf";
@@ -46,22 +47,24 @@ const FLAG = {
 
 const mount = (viewMode: "active" | "past" = "active") =>
     render(
-        <CssVarsProvider>
-            <ChatListItemForFlagMessages
-                flaggedMessage={FLAG as never}
-                myself={{ userId: "me" } as never}
-                selectedFlaggedMessageId=""
-                setCurrentProject={() => {}}
-                setMyself={() => {}}
-                setSelectedFlaggedMessageId={() => {}}
-                socket={null}
-                useCM={{ allChats: [] } as never}
-                useTEM={{} as never}
-                useTM={{} as never}
-                useUISM={{} as never}
-                viewMode={viewMode}
-            />
-        </CssVarsProvider>
+        <MemoryRouter>
+            <CssVarsProvider>
+                <ChatListItemForFlagMessages
+                    flaggedMessage={FLAG as never}
+                    myself={{ userId: "me" } as never}
+                    selectedFlaggedMessageId=""
+                    setCurrentProject={() => {}}
+                    setMyself={() => {}}
+                    setSelectedFlaggedMessageId={() => {}}
+                    socket={null}
+                    useCM={{ allChats: [] } as never}
+                    useTEM={{} as never}
+                    useTM={{} as never}
+                    useUISM={{} as never}
+                    viewMode={viewMode}
+                />
+            </CssVarsProvider>
+        </MemoryRouter>
     );
 
 const slot = () => document.querySelector(".NavItem-actions") as HTMLElement;

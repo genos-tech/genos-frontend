@@ -353,6 +353,9 @@ export type FlaggedMessageProps = {
     // Human-readable task identifier; falls back via
     // `formatTaskDisplayId` to "#<taskId>" when absent.
     displayId?: string | null;
+    // Set when the flagged message is a task comment's mirror: the comment's id on its task.
+    // The row says "Task comment" and opens the task's thread at that comment (MIP-1434).
+    taskCommentId?: number;
     tsSent: string;
 };
 
