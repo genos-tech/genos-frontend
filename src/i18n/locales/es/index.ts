@@ -1492,7 +1492,7 @@ export const es: DeepPartial<Messages> = {
         messageActions: {
             heading: "Acciones de mensajes",
             description:
-                "Acciones que se mantienen en la barra de herramientas al pasar el cursor sobre los mensajes del chat y las respuestas de los hilos, en lugar de estar en el menú …. Los comentarios de tareas no se ven afectados.",
+                "Acciones que se mantienen en la barra de herramientas al pasar el cursor sobre los mensajes del chat, las respuestas de los hilos y los comentarios de tareas, en lugar de estar en el menú ….",
             limit: "Elige hasta {max}. El resto se quedan en el menú ….",
             flagHint: "Un mensaje para volver a leer más tarde y recordar lo que dice.",
             addToTodoHint: "Un mensaje que requiere que hagas algo.",

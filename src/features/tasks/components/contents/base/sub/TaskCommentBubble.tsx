@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -18,6 +19,10 @@ import { TaskCommentEmojiReaction } from "../../../../../../components/ui/emoji/
 import { MoreMenu, MoreMenuItem } from "../../../../../../components/ui/MoreMenu";
 import { useAuth } from "../../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
+import {
+    PinnableBubbleAction,
+    useBubbleActionsPreference,
+} from "../../../../../../hooks/common/useBubbleActionsPreference";
 import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/useDoubleClickTodoPreference";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
@@ -34,6 +39,12 @@ import {
     extractYYYYMMDDHHMM,
     getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
+import {
+    BubblePinnedActions,
+    PinnedBubbleAction,
+    splitPinned,
+} from "../../../../../chat/components/bubbles/BubblePinnedActions";
+import { setTodoFromMessageBubble as requestTodoFromMessage } from "../../../../../chat/components/todo/addToTodoStore";
 import {
     deleteTaskComment,
     deleteTaskCommentOnExit,
@@ -112,6 +123,15 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const { style } = useBubbleStylePreference();
     const isCompact = style === "compact";
     const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
+    const { pinned } = useBubbleActionsPreference();
+    // Hosts that thread their own handler keep it; anywhere else (the task page, the task
+    // modal, a note preview) the request goes through the store and App's host (MIP-1434).
+    const todoProjectId = currentProjectId ?? comment.projectId ?? null;
+    const addToTodo = () =>
+        (setTodoFromMessageBubble ?? requestTodoFromMessage)({
+            ...comment,
+            projectId: todoProjectId,
+        });
     const isSent = comment.senderId === myself.userId;
     // The commenter's name is live-resolved by the `<ResolvedUserName>`
     // leaf in the name slot (so a rename shows on existing comments) —
@@ -381,6 +401,17 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // Keys sorted alphabetically (case-insensitive) per `sort-keys`.
     const moreMenuItems: MoreMenuItem[] = [
         {
+            // A comment that needs you to DO something. Same label, glyph and rule as on a
+            // chat message: "Flag for later" is the one to read again (MIP-1433, MIP-1434).
+            divider: true,
+            icon: <ChecklistRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "addToTodo",
+            kind: "addToTodo",
+            label: t.chat.messageActions.addToTodo,
+            onClick: addToTodo,
+            visible: todoProjectId != null,
+        },
+        {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             id: "copyLink",
             kind: "copyLink",
@@ -418,13 +449,32 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // The dropdown portals to document.body at zIndex 9999 — fine on
     // page mounts, but a UrlLinkModal-hosted preview (10020) would
     // cover it, so derive from the host's level when threaded down.
+    // The actions pinned in Settings → Message actions sit on the toolbar, as on a chat
+    // message; the rest stay in the menu (MIP-1434). Ones this bubble does not offer
+    // (reply, flag, remind me, edit has its own button) are simply not there.
+    const { pinnedItems, menuItems: menuOnlyItems } = splitPinned(moreMenuItems, pinned);
+    const pinnedActions: PinnedBubbleAction[] = pinnedItems.map((item) => ({
+        active: item.active,
+        danger: item.danger,
+        icon: item.icon,
+        id: item.id as PinnableBubbleAction,
+        label: item.label,
+        onClick: item.onClick,
+    }));
+    // A Box, not a Fragment: the Stack around it clones its direct children to space them,
+    // and a Fragment cannot take the props it adds.
     const moreMenu = (
-        <MoreMenu
-            items={moreMenuItems}
-            placement="bottom-end"
-            zIndex={hostZIndex !== undefined ? hostZIndex + 1 : undefined}
-            onOpenChange={setIsMoreMenuOpen}
-        />
+        <Box sx={{ alignItems: "center", display: "flex", gap: 0.25 }}>
+            <BubblePinnedActions actions={pinnedActions} />
+            {menuOnlyItems.length > 0 && (
+                <MoreMenu
+                    items={menuOnlyItems}
+                    placement="bottom-end"
+                    zIndex={hostZIndex !== undefined ? hostZIndex + 1 : undefined}
+                    onOpenChange={setIsMoreMenuOpen}
+                />
+            )}
+        </Box>
     );
 
     const reactionsDisplay = (
@@ -520,20 +570,9 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                 </>
             }
             onClick={handleCommentClick}
+            onDoubleClick={doubleClickTodoEnabled ? addToTodo : undefined}
             onMouseEnter={() => setShowUnderBarOption(true)}
             onMouseLeave={() => setShowUnderBarOption(false)}
-            onDoubleClick={
-                doubleClickTodoEnabled
-                    ? () => {
-                          if (setTodoFromMessageBubble) {
-                              setTodoFromMessageBubble({
-                                  ...comment,
-                                  projectId: currentProjectId ?? null,
-                              });
-                          }
-                      }
-                    : undefined
-            }
         >
             {commentBody}
         </Bubble>

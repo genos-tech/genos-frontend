@@ -3657,7 +3657,7 @@ export const zh: DeepPartial<Messages> = {
         messageActions: {
             heading: "消息操作",
             description:
-                "将这些操作固定在聊天消息和话题回复的悬停工具栏上，而不是收在 … 菜单里。任务评论不受影响。",
+                "将这些操作固定在聊天消息、话题回复和任务评论的悬停工具栏上，而不是收在 … 菜单里。",
             limit: "最多选择 {max} 项，其余的保留在 … 菜单中。",
             flagHint: "之后重读、用来回忆内容的消息。",
             addToTodoHint: "需要你采取行动的消息。",

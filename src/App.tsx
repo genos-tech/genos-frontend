@@ -51,6 +51,7 @@ import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
 import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
+import { AddToTodoHost } from "./features/chat/components/todo/AddToTodoHost";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { personalNoteScopes } from "./features/notes/common/utils/noteTypeAlias";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
@@ -1600,6 +1601,12 @@ const AppBody = () => {
                                                         />
                                                         <BillingReturnSnackbar />
                                                         <ToastHost />
+                                                        <AddToTodoHost
+                                                            accessToken={accessToken}
+                                                            allChats={useCM.allChats}
+                                                            myself={myself}
+                                                            useTG={useTG}
+                                                        />
                                                         <UndoableRouteFlush />
                                                         <QuickMeetClipboardHost
                                                             ref={meetClipboardRef}
