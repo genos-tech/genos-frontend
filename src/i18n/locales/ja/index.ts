@@ -1039,6 +1039,8 @@ export const ja: DeepPartial<Messages> = {
             sourceGmThread: "GMスレッドより",
             sourceGm: "GMより",
             sourceTaskComment: "タスクコメントより",
+            sourceTask: "タスクより",
+            sourceProjectChat: "プロジェクトチャットより",
             sourceMdmThread: "マルチユーザーDMスレッドから",
             sourceMdm: "マルチユーザーDMから",
             existingTodayTooltip: "今日の To-Do はすでに作成されています。",

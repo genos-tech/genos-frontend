@@ -1632,6 +1632,8 @@ export const ar: DeepPartial<Messages> = {
             sourceGmThread: "من GM الموضوع",
             sourceGm: "من GM",
             sourceTaskComment: "من تعليق المهمة",
+            sourceTask: "من المهمة",
+            sourceProjectChat: "من دردشة المشروع",
             sourceMdmThread: "من موضوع DM متعدد المستخدمين",
             sourceMdm: "من متعدد المستخدمين DM",
             copyLink: "نسخ الوصلة",

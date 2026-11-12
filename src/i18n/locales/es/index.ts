@@ -1661,6 +1661,8 @@ export const es: DeepPartial<Messages> = {
             sourceGmThread: "Del hilo GM",
             sourceGm: "Desde GM",
             sourceTaskComment: "Del comentario de la tarea",
+            sourceTask: "De la tarea",
+            sourceProjectChat: "Del chat del proyecto",
             sourceMdmThread: "Del hilo DM multiusuario",
             sourceMdm: "Desde multiusuario DM",
             copyLink: "Copiar enlace",

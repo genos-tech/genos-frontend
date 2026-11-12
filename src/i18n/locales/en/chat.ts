@@ -71,6 +71,8 @@ export const chat = {
         sourceGmThread: "From GM thread",
         sourceGm: "From GM",
         sourceTaskComment: "From task comment",
+        sourceTask: "From task",
+        sourceProjectChat: "From project chat",
         sourceMdmThread: "From multi-user DM thread",
         sourceMdm: "From multi-user DM",
         existingTodayTooltip: "You already have a todo for today.",

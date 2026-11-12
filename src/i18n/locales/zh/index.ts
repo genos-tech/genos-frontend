@@ -994,6 +994,8 @@ export const zh: DeepPartial<Messages> = {
             sourceGmThread: "来自 GM 话题",
             sourceGm: "来自GM",
             sourceTaskComment: "来自任务评论",
+            sourceTask: "来自任务",
+            sourceProjectChat: "来自项目聊天",
             sourceMdmThread: "来自多用户 DM 话题",
             sourceMdm: "来自多用户 DM",
             existingTodayTooltip: "今天已经有一项待办。",
