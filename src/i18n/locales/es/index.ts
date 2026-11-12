@@ -1916,6 +1916,8 @@ export const es: DeepPartial<Messages> = {
             title: "Recordarme esto",
             description:
                 "Recibirás una notificación y una actividad en la bandeja. El mensaje seguirá destacado.",
+            descriptionComment:
+                "Recibirás una notificación y una actividad en la bandeja. El comentario seguirá destacado.",
             currentlySetFor: "Recordatorio para {time}. Elige otra hora para cambiarlo.",
             presets: {
                 in20m: "En 20 minutos",

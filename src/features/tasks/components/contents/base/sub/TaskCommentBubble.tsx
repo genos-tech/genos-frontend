@@ -6,6 +6,7 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
@@ -30,7 +31,7 @@ import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/use
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { useUndoableAction } from "../../../../../../hooks/common/useUndoableAction";
-import { useTranslation } from "../../../../../../i18n";
+import { fmt, useTranslation } from "../../../../../../i18n";
 import { channelService } from "../../../../../../services/channel/channelService";
 import { g } from "../../../../../../theme/tokens";
 import { UserProps } from "../../../../../../types/admin";
@@ -52,8 +53,12 @@ import {
     pinnedForFlagState,
     withMarkDone,
 } from "../../../../../chat/components/bubbles/markDoneAction";
+import { ModalRemindMe } from "../../../../../chat/components/modals/ModalRemindMe";
 import { setTodoFromMessageBubble as requestTodoFromMessage } from "../../../../../chat/components/todo/addToTodoStore";
+import { TodoHostLayerProvider } from "../../../../../chat/components/todo/TodoHostLayer";
 import { useIsMessageFlagged } from "../../../../../chat/hooks/useIsMessageFlagged";
+import { useMessageReminder } from "../../../../../chat/hooks/useMessageReminder";
+import { formatReminderTime } from "../../../../../chat/utils/reminderPresets";
 import {
     deleteTaskComment,
     deleteTaskCommentOnExit,
@@ -126,7 +131,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         hostZIndex,
     } = props;
 
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const runUndoable = useUndoableAction();
     const { style } = useBubbleStylePreference();
@@ -145,6 +150,9 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // comment this client just made, until the list is read again) there is nothing to flag.
     const messageId = comment.messageId ?? null;
     const isFlagged = useIsMessageFlagged(messageId);
+    // "Remind me" is the flag with a time on it, and a message reminder on the mirror (MIP-1437).
+    const reminder = useMessageReminder(messageId);
+    const [openRemindMe, setOpenRemindMe] = useState(false);
     const handleFlagClick = () => {
         if (!messageId) return;
         const done = isFlagged
@@ -440,6 +448,21 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
             visible: messageId != null,
         },
         {
+            // The flag with a time on it, so it sits with the flag. A set reminder shows its
+            // time in the label, so the menu answers "when?" without opening the picker.
+            active: reminder !== null,
+            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "remindMe",
+            kind: "remindMe",
+            label: reminder
+                ? fmt(t.chat.messageActions.reminderSetFor, {
+                      time: formatReminderTime(new Date(reminder.remindAt), locale),
+                  })
+                : t.chat.messageActions.remindMe,
+            onClick: () => setOpenRemindMe(true),
+            visible: messageId != null,
+        },
+        {
             // A comment that needs you to DO something. Same label, glyph and rule as on a
             // chat message: "Flag for later" is the one to read again (MIP-1433, MIP-1434).
             divider: true,
@@ -622,6 +645,19 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                             showEmojiPicker={showEmojiPicker}
                             useFixedPosition={true}
                         />
+                    )}
+                    {messageId && (
+                        // Opens above the preview modal a comment may be hosted in.
+                        <TodoHostLayerProvider value={hostZIndex}>
+                            <ModalRemindMe
+                                description={t.chat.remindMe.descriptionComment}
+                                open={openRemindMe}
+                                remindAt={reminder?.remindAt}
+                                onClose={() => setOpenRemindMe(false)}
+                                onCommit={(at) => channelService.setReminder(messageId, at)}
+                                onRemove={() => channelService.cancelReminder(messageId)}
+                            />
+                        </TodoHostLayerProvider>
                     )}
                 </>
             }

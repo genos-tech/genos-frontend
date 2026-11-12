@@ -1883,6 +1883,7 @@ export const ar: DeepPartial<Messages> = {
         remindMe: {
             title: "ذكّرني بهذه الرسالة",
             description: "سيصلك إشعار ونشاط في صندوق الوارد. وتبقى الرسالة معلَّمة.",
+            descriptionComment: "سيصلك إشعار ونشاط في صندوق الوارد. ويبقى التعليق معلَّمًا.",
             currentlySetFor: "التذكير مضبوط على {time}. اختر وقتًا آخر لتغييره.",
             presets: {
                 in20m: "بعد 20 دقيقة",

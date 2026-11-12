@@ -1265,6 +1265,7 @@ export const zh: DeepPartial<Messages> = {
         remindMe: {
             title: "提醒我这条消息",
             description: "你会收到通知，并在收件箱动态中看到它。消息将保持标记状态。",
+            descriptionComment: "你会收到通知，并在收件箱动态中看到它。评论将保持标记状态。",
             currentlySetFor: "已设置在 {time} 提醒。选择其他时间即可更改。",
             presets: {
                 in20m: "20 分钟后",
