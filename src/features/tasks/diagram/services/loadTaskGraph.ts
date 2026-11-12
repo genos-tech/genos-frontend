@@ -1,7 +1,10 @@
 import { UserProps } from "../../../../types/admin";
 import { TaskDependencyRef, TaskTableProps } from "../../../../types/tasks";
+import { loadProjectTasks } from "../../services/loadProjectTasks";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
-import { loadTaskDependenciesForTasks } from "../../services/loadTaskDependencies";
+import { loadTaskDependenciesBatched } from "../../services/loadTaskDependencies";
+import { popSpecificProjectTasks } from "../../services/popSpecificProjectTasks";
+import { taskTypes } from "../../types/TaskTableTypes";
 import { TaskGraph, TaskGraphScope } from "../types";
 
 const MAX_DEPTH = 10; // mirrors backend `_cascade_tree_position_to_subtasks`
@@ -138,8 +141,39 @@ const refToGhostTask = (ref: TaskDependencyRef): TaskTableProps => {
 };
 
 /**
+ * The project's rows, the way the task table gets them (MIP-1416): bring the
+ * browser's copy up to date with a changes-since request, then read it.
+ *
+ * It used to ask the server for the WHOLE project on every open and every
+ * refresh. That answer is cached on the server for a few minutes and dropped by
+ * any task write in the project, so in a busy project most opens paid for a
+ * cold one: Ken's 7-second first open of a 288-task milestone in a 1,302-task
+ * project. A changes-since request sends only what moved.
+ *
+ * The browser copy is as fresh as the table's: the same sync runs first, and it
+ * heals itself when the server's count or id sum disagrees with it. If that
+ * path fails (no worker, a sync error) or finds nothing, the full request is
+ * still made, so the diagram never shows less than it did.
+ */
+const loadAllProjectTasks = async (
+    myself: UserProps,
+    projectId: number,
+    accessToken: string | null
+): Promise<TaskTableProps[] | null> => {
+    try {
+        await loadProjectTasks(myself, projectId, accessToken);
+        const rows = await popSpecificProjectTasks(projectId, taskTypes.all.statuses);
+        if (Array.isArray(rows) && rows.length > 0) return rows;
+    } catch (error: unknown) {
+        console.warn("[loadTaskGraph] cached project tasks unavailable; loading in full", error);
+    }
+    const response = await loadProjectTasksFromApi(myself, projectId, accessToken, null);
+    return Array.isArray(response?.tasks) ? (response.tasks as TaskTableProps[]) : null;
+};
+
+/**
  * Compose the data the diagram needs:
- *  1. Pull every task in the project (one network call, cache-warm).
+ *  1. The project's tasks (`loadAllProjectTasks`: the browser's copy, synced).
  *  1b. Resolve the chain top above `anchorTaskId` (see
  *     `resolveChainTop`) — callers may hand us a leaf sub-task.
  *  2. BFS-filter to the root's descendant tree.
@@ -160,23 +194,24 @@ export const loadTaskGraph = async (
     // the graph is the anchor and its subtasks. Same fetch; fewer dependency lookups.
     scope: TaskGraphScope = "tree"
 ): Promise<TaskGraph | null> => {
-    const response = await loadProjectTasksFromApi(myself, projectId, accessToken, null);
-    const allTasks = response?.tasks;
-    if (!Array.isArray(allTasks)) return null;
+    const allTasks = await loadAllProjectTasks(myself, projectId, accessToken);
+    if (!allTasks) return null;
 
-    const byId = indexById(allTasks as TaskTableProps[]);
+    const byId = indexById(allTasks);
     const rootTaskId = scope === "task" ? anchorTaskId : resolveChainTop(anchorTaskId, byId);
 
-    const visibleTasks = collectDescendantTree(rootTaskId, allTasks as TaskTableProps[], byId);
+    const visibleTasks = collectDescendantTree(rootTaskId, allTasks, byId);
     if (visibleTasks.length === 0) return null;
 
     const visibleIds = new Set(visibleTasks.map((t) => Number(t.id)));
 
-    // One batched request for the whole visible set (chunked at the
-    // backend's cap) — per-node GETs meant N requests + N CORS
-    // preflights for a single diagram open.
+    // One batched request per 500 tasks, a few at a time — per-node GETs
+    // meant N requests + N CORS preflights for a single diagram open. A batch
+    // that fails twice leaves its tasks without edges, and the graph says so
+    // (`dependenciesIncomplete`) instead of drawing them as unconnected.
     const visibleTaskIds = visibleTasks.filter((t) => t.id != null).map((t) => Number(t.id));
-    const depsByTask = await loadTaskDependenciesForTasks(visibleTaskIds, accessToken);
+    const batch = await loadTaskDependenciesBatched(visibleTaskIds, accessToken);
+    const depsByTask = batch?.byTask;
 
     const seen = new Set<number>();
     const dependencyEdges: TaskGraph["dependencyEdges"] = [];
@@ -228,5 +263,6 @@ export const loadTaskGraph = async (
         tasks: visibleTasks,
         externalTasks: Array.from(externalById.values()),
         dependencyEdges,
+        dependenciesIncomplete: !batch || batch.failedIds.length > 0,
     };
 };

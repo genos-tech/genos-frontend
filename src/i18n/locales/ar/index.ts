@@ -3147,6 +3147,8 @@ export const ar: DeepPartial<Messages> = {
                 update: "فشل التحديث.",
                 delete: "فشل الحذف.",
                 reparent: "فشلت عملية إعادة الوالدين.",
+                dependenciesPartial:
+                    "تعذر تحميل بعض خطوط التبعية. أعد فتح المخطط للمحاولة مرة أخرى.",
             },
             schedule: {
                 closed: "مغلق",

@@ -5468,6 +5468,7 @@ export const zh: DeepPartial<Messages> = {
                 update: "更新失败。",
                 delete: "删除失败。",
                 reparent: "重新设置父级失败。",
+                dependenciesPartial: "部分依赖关系连线无法加载。重新打开图表即可重试。",
             },
             schedule: {
                 closed: "关闭",
