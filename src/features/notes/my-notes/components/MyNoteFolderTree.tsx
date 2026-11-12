@@ -27,6 +27,7 @@ import {
     DroppableNoteList,
     myFolderContainerId,
 } from "../../common/dnd/sidebarNoteDnd";
+import { folderFavoriteMenuItem } from "../../common/utils/folderFavoriteMenuItem";
 
 // Actions bubbled up to the single modal host in NoteSidebar — one
 // modal instance serves every folder row.
@@ -88,6 +89,10 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                             placement="bottom-end"
                             triggerSize={20}
                             items={[
+                                folderFavoriteMenuItem(folder.folderId, useNM, {
+                                    add: t.notes.sidebar.addToFavorites,
+                                    remove: t.notes.sidebar.removeFromFavorites,
+                                }),
                                 {
                                     id: "new-note-here",
                                     kind: "newNote",

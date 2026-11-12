@@ -3,16 +3,22 @@ import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import { Box, List, ListItem } from "@mui/joy";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
-import { g } from "../../../../theme/tokens";
+import { g, type } from "../../../../theme/tokens";
 import { DroppableHeader, SidebarDndKind } from "../dnd/sidebarNoteDnd";
 
 interface GroupedNoteSectionProps {
     groupKey: string;
     groupLabel: string;
+    // A task's display id ("QR-2"), drawn as a chip BEFORE the title so it is still there
+    // when a long title is cut off by the narrow sidebar.
     subLabel?: string;
+    // Said on hover over the title: where a flattened row used to live (a task's milestone),
+    // or what kind of chat this is. The sidebar no longer has a folder level for either.
+    tooltip?: string;
     children: ReactNode;
     defaultExpanded?: boolean;
     // Replaces the default open/closed folder glyph for this row. Used
@@ -37,6 +43,7 @@ function GroupedNoteSectionComponent({
     groupKey,
     groupLabel,
     subLabel,
+    tooltip,
     children,
     defaultExpanded = false,
     droppableId,
@@ -94,11 +101,30 @@ function GroupedNoteSectionComponent({
             }
             label={
                 <>
-                    {groupLabel}
                     {subLabel && (
-                        <Box component="span" sx={{ ml: 0.75, color: "text.tertiary" }}>
+                        <Box
+                            className="GroupedNoteSection-chip"
+                            component="span"
+                            sx={{
+                                ...type("caption"),
+                                background: g.hover,
+                                borderRadius: g.radius.xs,
+                                color: g.text.tertiary,
+                                fontVariantNumeric: "tabular-nums",
+                                mr: 0.75,
+                                px: 0.5,
+                                whiteSpace: "nowrap",
+                            }}
+                        >
                             {subLabel}
                         </Box>
+                    )}
+                    {tooltip ? (
+                        <AppTooltip title={tooltip}>
+                            <span>{groupLabel}</span>
+                        </AppTooltip>
+                    ) : (
+                        groupLabel
                     )}
                 </>
             }

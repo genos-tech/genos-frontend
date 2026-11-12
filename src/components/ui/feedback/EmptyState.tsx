@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Box, Button, Typography } from "@mui/joy";
+import { Box, Button, Link, Typography } from "@mui/joy";
 
 import { focusRing, g } from "../../../theme/tokens";
 
@@ -25,6 +25,9 @@ type EmptyStateAction = {
     label: string;
     onClick: () => void;
     icon?: ReactNode;
+    /** `xs` only: a link at the end of the line ("No notes yet. New note") instead of a
+     *  button on a line of its own, for a dense list whose empty state should cost one row. */
+    inline?: boolean;
 };
 
 export type EmptyStateProps = {
@@ -59,15 +62,39 @@ export const EmptyState = ({
     "data-empty": dataEmpty,
 }: EmptyStateProps) => {
     if (size === "xs") {
+        const inline = action?.inline === true;
         return (
-            <Box data-empty={dataEmpty} sx={{ py: 0.5, minWidth: 0 }}>
+            <Box
+                data-empty={dataEmpty}
+                sx={{
+                    py: 0.5,
+                    minWidth: 0,
+                    ...(inline && {
+                        alignItems: "baseline",
+                        columnGap: 0.75,
+                        display: "flex",
+                        flexWrap: "wrap",
+                    }),
+                }}
+            >
                 <Typography
                     level="body-xs"
                     sx={{ color: g.text.tertiary, overflowWrap: "anywhere" }}
                 >
                     {body ?? title}
                 </Typography>
-                {action && (
+                {action && inline && (
+                    <Link
+                        component="button"
+                        level="body-xs"
+                        sx={{ color: g.accent.text, "&:focus-visible": focusRing }}
+                        underline="hover"
+                        onClick={action.onClick}
+                    >
+                        {action.label}
+                    </Link>
+                )}
+                {action && !inline && (
                     <Box sx={{ mt: 0.5 }}>
                         <Button
                             color="neutral"

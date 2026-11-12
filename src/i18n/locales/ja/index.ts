@@ -2813,8 +2813,11 @@ export const ja: DeepPartial<Messages> = {
             myNotes: "マイノート",
             taskNotes: "タスクノート",
             chatNotes: "チャットノート",
-            sharedNotes: "共有ノート",
+            sharedNotes: "自分と共有",
             sharedBy: "{name}さんが共有",
+            newMenu: "新規作成",
+            addToFavorites: "お気に入りに追加",
+            removeFromFavorites: "お気に入りから削除",
             teamNotes: "チームノート",
             favoriteFolders: "フォルダ",
             noFavorites:

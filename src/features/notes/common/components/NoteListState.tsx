@@ -20,11 +20,14 @@ export const NoteListState = ({
     scope,
     hasAny,
     body,
+    action,
     emptyMarker,
 }: {
     scope: NoteListScope;
     hasAny: boolean;
     body?: string;
+    /** The way out of the empty list, as a link at the end of its line (MIP-1430). */
+    action?: { label: string; onClick: () => void };
     emptyMarker: string;
 }) => {
     const { t } = useTranslation();
@@ -37,7 +40,15 @@ export const NoteListState = ({
                 loading={sync.retrying && !hasAny}
                 size="xs"
                 skeleton={<SkeletonRows count={3} />}
-                empty={body ? { body, "data-empty": emptyMarker } : undefined}
+                empty={
+                    body
+                        ? {
+                              body,
+                              "data-empty": emptyMarker,
+                              action: action && { ...action, inline: true },
+                          }
+                        : undefined
+                }
                 errorState={{
                     "data-error": `note-${scope}`,
                     onRetry: sync.retry,

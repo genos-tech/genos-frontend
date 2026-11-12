@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Typography } from "@mui/joy";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
+import { NAV_HIDE_ON_ACTIONS_CLASS } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
@@ -9,6 +10,7 @@ import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import { isNoteOpen } from "../utils/openNote";
+import { NoteFavoriteStar } from "./NoteFavoriteStar";
 import { NoteOriginIcon } from "./noteOrigin";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
@@ -55,6 +57,9 @@ function RecentNoteItemComponent({
 
     return (
         <NavItem
+            // The star takes the time's place while the row is hovered or focused, so the row
+            // is the same width either way (MIP-1430). A lit star stays beside the time.
+            actions={<NoteFavoriteStar noteId={note.noteId} noteType={noteType} useNM={useNM} />}
             as="div"
             icon={<NoteOriginIcon noteType={noteType} />}
             label={note.title || t.notes.defaults.untitled}
@@ -67,6 +72,7 @@ function RecentNoteItemComponent({
                     <>
                         {opened && (
                             <Typography
+                                className={NAV_HIDE_ON_ACTIONS_CLASS}
                                 level="body-xs"
                                 sx={{
                                     color: g.text.tertiary,
@@ -82,6 +88,7 @@ function RecentNoteItemComponent({
                     </>
                 ) : undefined
             }
+            actionsInPlace
             onClick={handleClick}
         />
     );

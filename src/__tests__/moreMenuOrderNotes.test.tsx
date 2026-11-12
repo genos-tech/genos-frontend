@@ -76,7 +76,7 @@ const shared = (a: (string | null)[], b: (string | null)[]) => [
     b.filter((l) => a.includes(l)),
 ];
 
-const { header, history, folders, exportZip, teamNotes } = en.notes;
+const { header, history, folders, exportZip, teamNotes, sidebar } = en.notes;
 const mute = en.services.notifications.muteButton.mute;
 
 describe("note header menu", () => {
@@ -284,6 +284,8 @@ describe("folder menus", () => {
     it("lists My Notes folder actions in the shared order", () => {
         renderMine();
         expect(menuLabels()).toEqual([
+            // "personal" group (a mark that is yours alone) comes before "create" (MIP-1430)
+            sidebar.addToFavorites,
             folders.newNoteHere,
             folders.newSubfolder,
             folders.rename,
@@ -297,6 +299,7 @@ describe("folder menus", () => {
     it("lists Team Notes folder actions in the shared order", () => {
         renderTeam();
         expect(menuLabels()).toEqual([
+            sidebar.addToFavorites,
             folders.newNoteHere,
             folders.newSubfolder,
             folders.rename,

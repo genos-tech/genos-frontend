@@ -26,6 +26,7 @@ import {
     FolderFavoriteStar,
     highlightedFolderSx,
 } from "../../common/components/FolderFavoriteStar";
+import { folderFavoriteMenuItem } from "../../common/utils/folderFavoriteMenuItem";
 import { NOTE_ROLE_VIEWER } from "../../common/utils/noteRoles";
 import { folderTagChipSx } from "../modals/ModalTeamFolderTags";
 
@@ -90,7 +91,12 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
     const shownVisibility = folder.visibility ?? folder.effectiveVisibility;
     const inherits = folder.visibility === null;
 
-    const menuItems: MoreMenuItem[] = [];
+    const menuItems: MoreMenuItem[] = [
+        folderFavoriteMenuItem(folder.folderId, useNM, {
+            add: t.notes.sidebar.addToFavorites,
+            remove: t.notes.sidebar.removeFromFavorites,
+        }),
+    ];
     if (canWrite) {
         menuItems.push(
             {

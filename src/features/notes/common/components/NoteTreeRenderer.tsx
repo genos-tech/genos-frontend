@@ -1,18 +1,16 @@
 import { memo, ReactNode, useEffect, useRef, useState } from "react";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
-import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import { Box, IconButton, List, ListItem } from "@mui/joy";
+import { Box, List, ListItem } from "@mui/joy";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
-import { NAV_KEEP_CLASS, navNestedListSx } from "../../../../components/ui/nav/navStyles";
+import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
-import { g } from "../../../../theme/tokens";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import { BaseNoteTreeNode } from "../types/noteTypes";
 import { isNoteOpen } from "../utils/openNote";
+import { NoteFavoriteStar } from "./NoteFavoriteStar";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
@@ -97,19 +95,11 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         useNM.toggleNodeExpanded(noteType, node.noteId);
     };
 
-    // Check if this note is favorited
-    const isFavorited = useNM.isNoteFavorited(node.noteId, noteType);
-
     // Keep the row-menu trigger visible while its portal menu is open —
     // otherwise the hover-reveal hides it the moment the pointer moves
     // onto the menu itself.
     const [rowMenuOpen, setRowMenuOpen] = useState(false);
     const menuItems = rowMenuItems ? rowMenuItems(node) : null;
-
-    const handleFavoriteClick = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        await useNM.toggleFavorite(node.noteId, noteType);
-    };
 
     if (!currentChain) return null;
 
@@ -140,30 +130,11 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     // pointer moves onto the menu itself.
                     actions={
                         <>
-                            {/* Favorite toggle: a lit star stays visible, an
-                                unlit one appears with the other actions. */}
-                            <IconButton
-                                className={`favorite-btn${isFavorited ? ` ${NAV_KEEP_CLASS}` : ""}`}
-                                size="sm"
-                                variant="plain"
-                                sx={{
-                                    minWidth: 20,
-                                    minHeight: 20,
-                                    borderRadius: g.radius.xs,
-                                    "--IconButton-size": "20px",
-                                }}
-                                onClick={handleFavoriteClick}
-                            >
-                                {isFavorited ? (
-                                    <StarRoundedIcon
-                                        sx={{ fontSize: 14, color: g.warning.solid }}
-                                    />
-                                ) : (
-                                    <StarOutlineRoundedIcon
-                                        sx={{ fontSize: 14, color: g.text.tertiary }}
-                                    />
-                                )}
-                            </IconButton>
+                            <NoteFavoriteStar
+                                noteId={node.noteId}
+                                noteType={noteType}
+                                useNM={useNM}
+                            />
 
                             {/* Optional per-row "..." menu. */}
                             {menuItems && menuItems.length > 0 && (
