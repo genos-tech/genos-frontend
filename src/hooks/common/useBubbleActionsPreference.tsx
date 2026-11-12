@@ -26,6 +26,7 @@ export const PINNABLE_BUBBLE_ACTIONS = [
     "copyLink",
     "flag",
     "remindMe",
+    "addToTodo",
     "unwrapAll",
     "edit",
     "delete",

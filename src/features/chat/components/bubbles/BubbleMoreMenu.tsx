@@ -4,6 +4,7 @@
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -62,6 +63,8 @@ type BubbleMoreMenuProps = {
      *  or a dialog opened from it. The parent keeps the hover toolbar
      *  mounted for as long as this is `true`; see `overlayOpen` below. */
     onMenuOpenChange?: (open: boolean) => void;
+    /** Puts this message on the To-Do list (MIP-1433); the same call as the double-click. */
+    onAddToTodo?: () => void;
 };
 
 const toPinnedAction = (item: MoreMenuItem): PinnedBubbleAction => ({
@@ -101,6 +104,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         unwrapAll,
         setUnwrapAll,
         onMenuOpenChange,
+        onAddToTodo,
         // `unwrapCode` / `setUnwrapCode` are still on the prop shape
         // (the wrap-code toggle menu item is commented out pending UX
         // review). They are intentionally not destructured here.
@@ -257,6 +261,19 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             // nothing to hand back to the user later. Same condition that
             // gates the dialog below, so the item can't open an empty modal.
             visible: Boolean(message.messageIdWithChatId),
+        },
+        {
+            // The other intent: Flag is a message to READ AGAIN, this is one that needs
+            // you to DO something. A different glyph (the To-Do list's own checklist, not
+            // a flag or a check mark) and no "later" in the label, so the two are not
+            // mistaken for each other (MIP-1433).
+            divider: true,
+            icon: <ChecklistRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "addToTodo",
+            kind: "addToTodo",
+            label: t.chat.messageActions.addToTodo,
+            onClick: () => onAddToTodo?.(),
+            visible: onAddToTodo !== undefined,
         },
         {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,

@@ -499,6 +499,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 useCM={useCM}
                 usePM={usePM}
                 useTM={useTM}
+                onAddToTodo={handleAddMessageToToDo}
                 onMenuOpenChange={setIsMoreMenuOpen}
             />
         </Stack>

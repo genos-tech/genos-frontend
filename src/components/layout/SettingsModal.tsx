@@ -4,6 +4,7 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -559,6 +560,8 @@ const QuickReactionsSection = () => {
     );
 };
 
+type ActionRow = { icon: ReactNode; label: string; hint?: string };
+
 /**
  * Which message actions sit on the hover toolbar instead of behind the "…"
  * menu (MIP-803). The checklist is in the menu's own order, which is also the
@@ -568,7 +571,14 @@ const QuickReactionsSection = () => {
 const MessageActionsSection = () => {
     const { pinned, setPinned, reset } = useBubbleActionsPreference();
     const { t } = useTranslation();
-    const labels: Record<PinnableBubbleAction, { icon: ReactNode; label: string }> = {
+    // `hint`: one line saying what the action is FOR, where two of them could be mistaken
+    // for each other. Flag is a message to read again; Add to To-Do is one to act on (MIP-1433).
+    const labels: Record<PinnableBubbleAction, ActionRow> = {
+        addToTodo: {
+            icon: <ChecklistRoundedIcon sx={{ fontSize: 18 }} />,
+            label: t.chat.messageActions.addToTodo,
+            hint: t.settings.messageActions.addToTodoHint,
+        },
         copyLink: {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             label: t.chat.messageActions.copyMessageLink,
@@ -584,6 +594,7 @@ const MessageActionsSection = () => {
         flag: {
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             label: t.chat.messageActions.flagForLater,
+            hint: t.settings.messageActions.flagHint,
         },
         remindMe: {
             icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 18 }} />,
@@ -622,7 +633,17 @@ const MessageActionsSection = () => {
                             label={
                                 <Stack alignItems="center" direction="row" spacing={1}>
                                     {labels[id].icon}
-                                    <span>{labels[id].label}</span>
+                                    <Stack>
+                                        <span>{labels[id].label}</span>
+                                        {labels[id].hint && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: g.text.tertiary }}
+                                            >
+                                                {labels[id].hint}
+                                            </Typography>
+                                        )}
+                                    </Stack>
                                 </Stack>
                             }
                             onChange={(e) => setPinned(id, e.target.checked)}

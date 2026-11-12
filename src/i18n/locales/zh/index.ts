@@ -1248,6 +1248,7 @@ export const zh: DeepPartial<Messages> = {
             addCommentToTask: "添加评论到任务",
             replyInThread: "在话题中回复",
             flagForLater: "标记以便稍后查看",
+            addToTodo: "添加到待办事项",
             removeFlag: "移除标记",
             remindMe: "提醒我…",
             reminderSetFor: "提醒：{time}",
@@ -3656,6 +3657,8 @@ export const zh: DeepPartial<Messages> = {
             description:
                 "将这些操作固定在聊天消息和话题回复的悬停工具栏上，而不是收在 … 菜单里。任务评论不受影响。",
             limit: "最多选择 {max} 项，其余的保留在 … 菜单中。",
+            flagHint: "之后重读、用来回忆内容的消息。",
+            addToTodoHint: "需要你采取行动的消息。",
             reset: "重置",
         },
         quickAddRequiredFields: {

@@ -934,6 +934,8 @@ export const hi: DeepPartial<Messages> = {
             description:
                 "वे कार्रवाइयाँ जो चैट मेसेज और थ्रेड जवाबों के होवर टूलबार पर रहेंगी, … मेन्यू के पीछे नहीं। टास्क टिप्पणी पर इसका असर नहीं पड़ता।",
             limit: "अधिकतम {max} चुनें। बाकी … मेन्यू में रहेंगी।",
+            flagHint: "बाद में दोबारा पढ़ने के लिए संदेश, ताकि उसकी बात याद रहे।",
+            addToTodoHint: "ऐसा संदेश जिस पर आपको कुछ करना है।",
             reset: "रीसेट करें",
         },
         quickAddRequiredFields: {
@@ -1902,6 +1904,7 @@ export const hi: DeepPartial<Messages> = {
             addCommentToTask: "टास्क में टिप्पणी जोड़ें",
             replyInThread: "थ्रेड में जवाब दें",
             flagForLater: "बाद के लिए फ्लैग करें",
+            addToTodo: "टू-डू में जोड़ें",
             removeFlag: "फ्लैग हटाएँ",
             remindMe: "मुझे याद दिलाएँ…",
             reminderSetFor: "रिमाइंडर: {time}",

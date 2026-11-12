@@ -1494,6 +1494,8 @@ export const es: DeepPartial<Messages> = {
             description:
                 "Acciones que se mantienen en la barra de herramientas al pasar el cursor sobre los mensajes del chat y las respuestas de los hilos, en lugar de estar en el menú …. Los comentarios de tareas no se ven afectados.",
             limit: "Elige hasta {max}. El resto se quedan en el menú ….",
+            flagHint: "Un mensaje para volver a leer más tarde y recordar lo que dice.",
+            addToTodoHint: "Un mensaje que requiere que hagas algo.",
             reset: "Restablecer",
         },
         quickAddRequiredFields: {
@@ -1896,6 +1898,7 @@ export const es: DeepPartial<Messages> = {
             addCommentToTask: "Añadir comentario a la tarea",
             replyInThread: "Responder en el hilo",
             flagForLater: "Destacar para después",
+            addToTodo: "Añadir a Por hacer",
             removeFlag: "Quitar destacado",
             remindMe: "Recordármelo…",
             reminderSetFor: "Recordatorio: {time}",

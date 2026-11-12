@@ -359,6 +359,7 @@ export const chat = {
         addCommentToTask: "Add comment to task",
         replyInThread: "Reply in thread",
         flagForLater: "Flag for later",
+        addToTodo: "Add to To-Do",
         removeFlag: "Remove flag",
         remindMe: "Remind me…",
         // Replaces the label above once a reminder exists, so the menu

@@ -1313,6 +1313,7 @@ export const fr: DeepPartial<Messages> = {
             addCommentToTask: "Ajouter un commentaire à la tâche",
             replyInThread: "Répondre dans le fil",
             flagForLater: "Marquer pour plus tard",
+            addToTodo: "Ajouter à « À faire »",
             removeFlag: "Retirer la marque",
             remindMe: "Me le rappeler…",
             reminderSetFor: "Rappel : {time}",
@@ -3829,6 +3830,8 @@ export const fr: DeepPartial<Messages> = {
             description:
                 "Actions à garder dans la barre d'outils qui apparaît au survol des messages du chat et des réponses de fil, plutôt que dans le menu …. Les commentaires de tâche ne sont pas concernés.",
             limit: "Choisissez-en {max} au maximum. Les autres restent dans le menu ….",
+            flagHint: "Un message à relire plus tard pour se rappeler son contenu.",
+            addToTodoHint: "Un message qui demande que vous agissiez.",
             reset: "Réinitialiser",
         },
         quickAddRequiredFields: {
