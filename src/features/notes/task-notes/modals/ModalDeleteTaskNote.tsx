@@ -3,69 +3,39 @@ import NoteIcon from "@mui/icons-material/Note";
 
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
-import { useAuth } from "../../../../context/AuthContext";
-import { NoteService } from "../../../../db/services/note.service";
-import { DatabaseUtils } from "../../../../db/utils/database";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
-import { UserProps } from "../../../../types/admin";
-import { deleteTaskNote } from "../services/deleteTaskNote";
 
 type Props = {
-    myself: UserProps;
     openDeleteNote: boolean;
     setOpenDeleteNote: (value: boolean) => void;
     useNM: NoteManagementState;
-    handleCloseTab: (tabIndex: number, closingNoteId: number) => void;
 };
 
 export const ModalDeleteTaskNote: React.FC<Props> = ({
-    myself,
     openDeleteNote,
     setOpenDeleteNote,
     useNM,
-    handleCloseTab,
 }) => {
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
     const hostZIndex = useNoteModalHostZIndex();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const noteService = new NoteService();
 
+    // `deleteTaskNoteById` deletes on the server and then takes the note out of every list,
+    // cache, tab and history (MIP-1435).
     const handleDeleteNote = async () => {
-        let childExist: boolean;
-        const childNotes = useNM.taskNoteMeta.filter(
-            (note) => note.parentNoteId === useNM.currentTaskNote?.noteId
-        );
-
-        if (childNotes.length === 0) {
-            childExist = false;
-        } else {
-            childExist = true;
+        const noteId = useNM.currentTaskNote?.noteId;
+        if (noteId === undefined) return;
+        if (useNM.taskNoteMeta.some((note) => note.parentNoteId === noteId)) {
+            setErrorMessage(t.notes.deleteModal.childExistsError);
+            return;
         }
-
-        if (childExist === false) {
-            // Delete from backend
-            await deleteTaskNote(myself, useNM.currentTaskNote?.noteId as number, accessToken);
-            // Delete from indexedDB
-            await noteService.deleteTaskNote(useNM.currentTaskNote?.noteId as number);
-            // Drop the per-document Yjs IndexedDB (`task-note:<id>`) — y-indexeddb
-            // creates one DB per editor document and never cleans up on its own.
-            if (useNM.currentTaskNote?.noteId !== undefined) {
-                await DatabaseUtils.deleteYjsDatabase(`task-note:${useNM.currentTaskNote.noteId}`);
-            }
-            // Delete the deleted noteId from the meta object
-            useNM.setTaskNoteMeta(
-                useNM.taskNoteMeta.filter(
-                    (note) => note.noteId !== (useNM.currentTaskNote?.noteId as number)
-                )
-            );
-            handleCloseTab(useNM.selectedTabIndex, useNM.currentTaskNote?.noteId as number);
+        if (await useNM.deleteTaskNoteById(noteId)) {
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {
-            setErrorMessage(t.notes.deleteModal.childExistsError);
+            setErrorMessage(t.notes.deleteModal.failed);
         }
     };
 

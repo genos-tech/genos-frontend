@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, MouseEvent } from "react";
 import { Typography } from "@mui/joy";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
@@ -22,6 +22,11 @@ interface RecentNoteItemProps {
     openedAt?: string | null;
     /** "Where it lives" for this note (see `noteLocation`); omitted: no second line. */
     locate?: (noteType: number, note: RecentNoteItemProps["note"]) => string | null;
+    /**
+     * Called when the row is opened (MIP-1435: the filter results close). `viaKeyboard` is true
+     * when the click came from the keyboard (Enter), which has no pointer: `detail` is 0.
+     */
+    onOpened?: (viaKeyboard: boolean) => void;
 }
 
 /**
@@ -35,6 +40,7 @@ function RecentNoteItemComponent({
     useNM,
     openedAt,
     locate,
+    onOpened,
 }: RecentNoteItemProps) {
     const { t } = useTranslation();
     const { isUnread, markRead } = useNoteUnread();
@@ -42,7 +48,7 @@ function RecentNoteItemComponent({
 
     const isSelected = isNoteOpen(useNM.tabsApi.activeTab, noteType, note.noteId);
 
-    const handleClick = () => {
+    const handleClick = (event: MouseEvent<HTMLElement>) => {
         useNM.setCurrentNoteType(noteType);
         localStorage.setItem("lastOpenNoteType", String(noteType));
         // loadNote internally calls recordNoteOpen on success, which in
@@ -50,6 +56,7 @@ function RecentNoteItemComponent({
         // don't need to call recordNoteOpen ourselves here.
         useNM.loadNote(noteType, note.noteId, -1);
         if (hasUnread) markRead(noteType, note.noteId);
+        onOpened?.(event.detail === 0);
     };
 
     const subLabel = locate?.(noteType, note) ?? null;

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { Ref, useRef } from "react";
 import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -20,10 +20,16 @@ export const NoteSearchBar = ({
     value,
     onChange,
     onNewNote,
+    onReopen,
+    barRef,
 }: {
     value: string;
     onChange: (value: string) => void;
     onNewNote: () => void;
+    /** The user asked for the results again (a click on the field, ArrowDown, "/"). */
+    onReopen?: () => void;
+    /** The element holding the field and the New note button (see `useNoteFilter`). */
+    barRef?: Ref<HTMLDivElement>;
 }) => {
     const { t } = useTranslation();
     const input = useRef<HTMLInputElement | null>(null);
@@ -33,10 +39,11 @@ export const NoteSearchBar = ({
     useShortcut("notes.filter", (event) => {
         event.preventDefault();
         input.current?.focus();
+        onReopen?.();
     });
 
     return (
-        <Box sx={{ alignItems: "center", display: "flex", gap: 0.5, minWidth: 0 }}>
+        <Box ref={barRef} sx={{ alignItems: "center", display: "flex", gap: 0.5, minWidth: 0 }}>
             <Input
                 aria-label={t.notes.sidebar.filterPlaceholder}
                 placeholder={t.notes.sidebar.filterPlaceholder}
@@ -69,7 +76,9 @@ export const NoteSearchBar = ({
                     "& input::-webkit-search-cancel-button": { display: "none" },
                 }}
                 onChange={(e) => onChange(e.target.value)}
+                onClick={onReopen}
                 onKeyDown={(e) => {
+                    if (e.key === "ArrowDown") onReopen?.();
                     if (e.key !== "Escape") return;
                     if (value) onChange("");
                     else input.current?.blur();

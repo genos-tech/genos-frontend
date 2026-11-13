@@ -3429,6 +3429,9 @@ export const hi: DeepPartial<Messages> = {
             filterResults: "परिणाम ({count})",
             filterNoMatch: "“{query}” से मेल खाने वाला कोई नोट नहीं",
             filterMore: "{count} और। सीमित करने के लिए टाइप करते रहें।",
+            recentsMore: "और देखें",
+            recentsMoreAria: "{count} और हाल के नोट दिखाएँ",
+            recentsLess: "कम दिखाएँ",
             addToFavorites: "पसंदीदा में जोड़ें",
             removeFromFavorites: "पसंदीदा से हटाएँ",
             teamNotes: "टीम नोट्स",
@@ -3627,6 +3630,7 @@ export const hi: DeepPartial<Messages> = {
             cancel: "रद्द करें",
             confirm: "नोट हटाएँ",
             childExistsError: "हटाया नहीं जा सकता क्योंकि चाइल्ड नोट मौजूद हैं।",
+            failed: "नोट हटाया नहीं जा सका। कुछ भी नहीं हटाया गया।",
         },
         sharing: {
             title: '"{title}" शेयर करें',

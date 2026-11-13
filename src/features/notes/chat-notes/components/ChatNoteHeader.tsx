@@ -81,7 +81,6 @@ interface ChatNoteHeaderProps {
     setOpenDeleteNote: (open: boolean) => void;
     openSearchBox: boolean;
     setOpenSearchBox: (open: boolean) => void;
-    handleCloseTab: (tabIndex: number, closingNoteId: number) => Promise<void>;
     onCreateChildNote: () => void;
     onDeleteNote: () => void;
     /** Set when rendered inside the UrlLinkModal (see ModalNoteView).
@@ -111,7 +110,6 @@ export const ChatNoteHeader = ({
     setOpenDeleteNote,
     openSearchBox,
     setOpenSearchBox,
-    handleCloseTab,
     onCreateChildNote,
     onDeleteNote,
     hostZIndex,
@@ -653,8 +651,6 @@ export const ChatNoteHeader = ({
                 {/* Delete Modal */}
                 {useNM.currentChatNote && (
                     <ModalDeleteChatNote
-                        handleCloseTab={handleCloseTab}
-                        myself={myself}
                         openDeleteNote={openDeleteNote}
                         setOpenDeleteNote={setOpenDeleteNote}
                         useNM={useNM}

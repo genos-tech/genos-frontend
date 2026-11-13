@@ -2889,6 +2889,9 @@ export const fr: DeepPartial<Messages> = {
             filterResults: "Résultats ({count})",
             filterNoMatch: "Aucune note ne correspond à « {query} »",
             filterMore: "{count} de plus. Continuez à saisir pour affiner.",
+            recentsMore: "Plus",
+            recentsMoreAria: "Afficher {count} notes récentes de plus",
+            recentsLess: "Afficher moins",
             addToFavorites: "Ajouter aux favoris",
             removeFromFavorites: "Retirer des favoris",
             teamNotes: "Notes d'équipe",
@@ -3093,6 +3096,7 @@ export const fr: DeepPartial<Messages> = {
             confirm: "Supprimer la note",
             childExistsError:
                 "Impossible de supprimer car une ou plusieurs notes enfants existent.",
+            failed: "Impossible de supprimer la note. Rien n’a été supprimé.",
         },
         sharing: {
             title: 'Partager "{title}"',

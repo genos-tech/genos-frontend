@@ -1,9 +1,10 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { activityChannel } from "../../../../db/workers/channels";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../types/admin";
 import { NoteUnreadValue, UnreadNote } from "../context/NoteUnreadContext";
+import { useNoteDeleted, type NoteDeletedDetail } from "../utils/noteDeleted";
 import { toBackendNoteType } from "../utils/noteTypeAlias";
 
 // Surface chatType (on activity rows) ↔ note_type. 6=my(1), 7=task(2), 8=chat(3).
@@ -32,6 +33,19 @@ export const useNoteMentionUnread = (
 ): NoteUnreadValue => {
     const activityMessages = useCM.activityMessages;
 
+    // A note deleted in this session has no unread mention worth showing: the row would open a
+    // note that is not there (MIP-1435). The activity row itself stays in the feed, so the
+    // note is hidden by key here ("<backend type>:<id>"), like `unreadKeys` below.
+    const [deletedKeys, setDeletedKeys] = useState<ReadonlySet<string>>(new Set());
+    const forgetDeleted = useCallback(({ noteType, noteIds }: NoteDeletedDetail) => {
+        setDeletedKeys((prev) => {
+            const next = new Set(prev);
+            for (const id of noteIds) next.add(`${noteType}:${id}`);
+            return next;
+        });
+    }, []);
+    useNoteDeleted(forgetDeleted);
+
     const unreadActivities = useMemo(
         () =>
             (activityMessages || []).filter(
@@ -44,9 +58,10 @@ export const useNoteMentionUnread = (
                     // your own note as "unread" (the live feed already skips
                     // self-sends; this also covers the REST-loaded rows). The
                     // notification toast already skips self via senderId too.
-                    a.senderId !== myself.userId
+                    a.senderId !== myself.userId &&
+                    !deletedKeys.has(`${SURFACE_TO_NOTE_TYPE[a.chatType]}:${a.chatId}`)
             ),
-        [activityMessages, myself.userId]
+        [activityMessages, myself.userId, deletedKeys]
     );
 
     const unreadKeys = useMemo(

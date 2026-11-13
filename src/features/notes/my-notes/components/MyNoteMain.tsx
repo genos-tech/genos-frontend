@@ -271,13 +271,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                     {useNM.currentMyNote && (
                         <ModalDeleteMyNote
                             currentMyNote={useNM.currentMyNote}
-                            currentTabIndex={useNM.selectedTabIndex}
-                            handleCloseTab={handleCloseTab}
-                            myNoteMeta={useNM.myNoteMeta}
-                            myself={myself}
                             openDeleteNote={openDeleteNote}
-                            setMyNoteMeta={useNM.setMyNoteMeta}
                             setOpenDeleteNote={setOpenDeleteNote}
+                            useNM={useNM}
                         />
                     )}
                 </Stack>
