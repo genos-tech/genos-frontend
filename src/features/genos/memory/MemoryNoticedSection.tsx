@@ -62,9 +62,11 @@ export const MemoryNoticedSection = ({
     const m = t.settings.genosMemory.control.noticed;
     const [open, setOpen] = useState(false);
     // Tasks marked from this list in this view (Undo is offered), and per-task trouble.
-    const [marked, setMarked] = useState<ReadonlySet<number>>(new Set());
-    const [busy, setBusy] = useState<ReadonlySet<number>>(new Set());
-    const [problems, setProblems] = useState<ReadonlyMap<number, string>>(new Map());
+    // Keyed `top:<task id>` or `suggestion:<task id>`: the same task can be in both lists, and a
+    // mark made from one must not read as made from the other.
+    const [marked, setMarked] = useState<ReadonlySet<string>>(new Set());
+    const [busy, setBusy] = useState<ReadonlySet<string>>(new Set());
+    const [problems, setProblems] = useState<ReadonlyMap<string, string>>(new Map());
     // Trouble clearing a mark from the marked list.
     const [clearProblem, setClearProblem] = useState<string | null>(null);
     const bodyId = useId();
@@ -95,7 +97,12 @@ export const MemoryNoticedSection = ({
         return filters[priority.toLowerCase()] ?? priority;
     };
 
-    const act = async (item: TopItem, next: "not_important" | null) => {
+    const act = async (
+        item: Markable,
+        next: "not_important" | "priority_is_right" | null,
+        list: "top" | "suggestion"
+    ) => {
+        const key = `${list}:${item.taskId}`;
         // Marking remembers what was there; Undo goes back to it (a clear when there was nothing).
         let target: MarkKey | null = next;
         if (next !== null) {
@@ -105,22 +112,22 @@ export const MemoryNoticedSection = ({
                 (MARKS as readonly string[]).includes(was ?? "") ? (was as MarkKey) : null
             );
         } else target = prior.current.get(item.taskId) ?? null;
-        setBusy((b) => new Set(b).add(item.taskId));
+        setBusy((b) => new Set(b).add(key));
         setProblems((p) => {
             const copy = new Map(p);
-            copy.delete(item.taskId);
+            copy.delete(key);
             return copy;
         });
         const failure = await mark(item, target);
         setBusy((b) => {
             const copy = new Set(b);
-            copy.delete(item.taskId);
+            copy.delete(key);
             return copy;
         });
         if (failure) {
             setProblems((p) =>
                 new Map(p).set(
-                    item.taskId,
+                    key,
                     failure.reason === "recording_off"
                         ? m.markRecordingOff
                         : failure.reason === "not_found"
@@ -132,8 +139,8 @@ export const MemoryNoticedSection = ({
         }
         setMarked((s) => {
             const copy = new Set(s);
-            if (next === null) copy.delete(item.taskId);
-            else copy.add(item.taskId);
+            if (next === null) copy.delete(key);
+            else copy.add(key);
             return copy;
         });
     };
@@ -240,12 +247,12 @@ export const MemoryNoticedSection = ({
                                     {view.top.map((item) => (
                                         <TopRow
                                             key={item.taskId}
-                                            busy={busy.has(item.taskId)}
+                                            busy={busy.has(`top:${item.taskId}`)}
                                             disabled={off}
                                             item={item}
-                                            marked={marked.has(item.taskId)}
-                                            problem={problems.get(item.taskId) ?? null}
-                                            onMark={(next) => void act(item, next)}
+                                            marked={marked.has(`top:${item.taskId}`)}
+                                            problem={problems.get(`top:${item.taskId}`) ?? null}
+                                            onMark={(next) => void act(item, next, "top")}
                                         />
                                     ))}
                                 </Box>
@@ -266,8 +273,15 @@ export const MemoryNoticedSection = ({
                                         {view.suggestions.slice(0, 2).map((s) => (
                                             <SuggestionRow
                                                 key={`${s.kind}:${s.taskId}`}
+                                                busy={busy.has(`suggestion:${s.taskId}`)}
+                                                disabled={off}
+                                                marked={marked.has(`suggestion:${s.taskId}`)}
                                                 priority={priorityName(s.priority)}
+                                                problem={
+                                                    problems.get(`suggestion:${s.taskId}`) ?? null
+                                                }
                                                 suggestion={s}
+                                                onMark={(next) => void act(s, next, "suggestion")}
                                             />
                                         ))}
                                     </Box>
@@ -394,8 +408,27 @@ const TopRow = ({
     );
 };
 
-const SuggestionRow = ({ suggestion, priority }: { suggestion: Suggestion; priority: string }) => {
+const SuggestionRow = ({
+    suggestion,
+    priority,
+    marked,
+    busy,
+    disabled,
+    problem,
+    onMark,
+}: {
+    suggestion: Suggestion;
+    priority: string;
+    marked: boolean;
+    busy: boolean;
+    /** Recording is off: a write would be refused (409), so the buttons rest. */
+    disabled: boolean;
+    problem: string | null;
+    onMark: (next: "priority_is_right" | null) => void;
+}) => {
     const { t } = useTranslation();
+    const m = t.settings.genosMemory.control.noticed;
+    const label = `${suggestion.displayId} ${suggestion.title}`.trim();
     return (
         <Box component="li" data-memory-suggestion={suggestion.kind} sx={rowSx}>
             <Typography level="body-xs" sx={{ color: g.text.tertiary, overflowWrap: "anywhere" }}>
@@ -405,8 +438,50 @@ const SuggestionRow = ({ suggestion, priority }: { suggestion: Suggestion; prior
                 {suggestion.title}
             </Typography>
             <Typography level="body-xs" sx={{ color: g.text.secondary, overflowWrap: "anywhere" }}>
-                {suggestionText(suggestion, priority, t.settings.genosMemory.control.noticed)}
+                {suggestionText(suggestion, priority, m)}
             </Typography>
+            <Stack
+                alignItems="center"
+                direction="row"
+                flexWrap="wrap"
+                sx={{ mt: 0.5, columnGap: 1.5, rowGap: 0.5 }}
+            >
+                {marked ? (
+                    <>
+                        <Typography level="body-xs" role="status" sx={{ color: g.text.secondary }}>
+                            {m.suggestionKeptNote}
+                        </Typography>
+                        <Button
+                            aria-label={fmt(m.undoAria, { task: label })}
+                            color="neutral"
+                            disabled={busy || disabled}
+                            loading={busy}
+                            size="sm"
+                            variant="plain"
+                            onClick={() => onMark(null)}
+                        >
+                            {m.undo}
+                        </Button>
+                    </>
+                ) : (
+                    <Button
+                        aria-label={fmt(m.priorityIsRightAria, { task: label })}
+                        color="neutral"
+                        disabled={busy || disabled}
+                        loading={busy}
+                        size="sm"
+                        variant="outlined"
+                        onClick={() => onMark("priority_is_right")}
+                    >
+                        {m.priorityIsRight}
+                    </Button>
+                )}
+            </Stack>
+            {problem && (
+                <Typography level="body-xs" role="alert" sx={{ mt: 0.5, color: g.danger.text }}>
+                    {problem}
+                </Typography>
+            )}
         </Box>
     );
 };

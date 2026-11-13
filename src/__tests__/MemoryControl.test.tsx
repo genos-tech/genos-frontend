@@ -494,9 +494,85 @@ describe("what Genos noticed", () => {
         expect(list.textContent).toContain("Busy this week, but its priority is Low. Raise it?");
         expect(list.textContent).toContain("Its priority is High, but nothing has happened");
         expect(list.textContent).not.toContain("english sentence");
-        // Never applied and nothing to press: no button inside, no write sent.
-        expect(within(list).queryAllByRole("button")).toHaveLength(0);
+        // Never applied: the only thing to press is the member's own "Priority is right" (MIP-1245),
+        // one per suggestion, and no write is sent until they press it.
+        expect(within(list).getAllByRole("button")).toHaveLength(2);
         for (const fn of [api.put, api.patch, api.delete]) expect(fn).not.toHaveBeenCalled();
+    });
+
+    describe("Priority is right (MIP-1245)", () => {
+        const suggestionRow = () =>
+            document.querySelector("[data-memory-suggestion]") as HTMLElement;
+
+        it("sends one PUT with priority_is_right, keeps the row with a note and Undo, and Undo clears it", async () => {
+            const user = await open();
+            const row = suggestionRow();
+            await user.click(
+                within(row).getByRole("button", {
+                    name: /Priority is right for: WRD-101 Fix the login/,
+                })
+            );
+            expect(api.put).toHaveBeenCalledTimes(1);
+            expect(api.put).toHaveBeenCalledWith(
+                "/user/memory/marks/8100/",
+                { mark: "priority_is_right" },
+                { suppressErrorToast: true, params: { team_id: "team-1" } }
+            );
+            expect(await within(row).findByText(c.noticed.suggestionKeptNote)).toBeTruthy();
+            await user.click(within(row).getByRole("button", { name: /Undo: WRD-101/ }));
+            expect(api.delete).toHaveBeenCalledWith("/user/memory/marks/8100/", {
+                suppressErrorToast: true,
+                params: { team_id: "team-1" },
+            });
+            expect(
+                await within(row).findByRole("button", { name: /Priority is right for/ })
+            ).toBeTruthy();
+            expect(within(row).queryByText(c.noticed.suggestionKeptNote)).toBeNull();
+        });
+
+        it("does not make the same task's ranked row read as marked, and the other way round", async () => {
+            const user = await open();
+            const top = document.querySelector("[data-memory-item='8100']") as HTMLElement;
+            await user.click(
+                within(suggestionRow()).getByRole("button", { name: /Priority is right for/ })
+            );
+            await within(suggestionRow()).findByText(c.noticed.suggestionKeptNote);
+            expect(within(top).queryByText(c.noticed.markedNote)).toBeNull();
+            expect(
+                within(top).getByRole("button", { name: /Mark as not important/ })
+            ).toBeTruthy();
+        });
+
+        it("says so when it could not be saved, and keeps the button", async () => {
+            api.put.mockRejectedValue(reject(500));
+            const user = await open();
+            const row = suggestionRow();
+            await user.click(within(row).getByRole("button", { name: /Priority is right for/ }));
+            expect(await within(row).findByRole("alert")).toHaveProperty(
+                "textContent",
+                c.noticed.markFailed
+            );
+            expect(within(row).queryByText(c.noticed.suggestionKeptNote)).toBeNull();
+            expect(
+                within(row).getByRole("button", { name: /Priority is right for/ })
+            ).toBeTruthy();
+        });
+
+        it("rests while recording is off, like the other buttons of the list", async () => {
+            api.put.mockRejectedValue(reject(409, "recording_off"));
+            const user = await open();
+            const row = suggestionRow();
+            await user.click(within(row).getByRole("button", { name: /Priority is right for/ }));
+            await within(row).findByRole("alert");
+            await waitFor(() =>
+                expect(document.querySelector("[data-memory-recording=off]")).not.toBeNull()
+            );
+            for (const button of within(
+                document.querySelector("[data-memory-suggestions]") as HTMLElement
+            ).getAllByRole("button")) {
+                expect((button as HTMLButtonElement).disabled).toBe(true);
+            }
+        });
     });
 
     it("lists the tasks already marked, each clearable, and says the list is stale afterwards", async () => {
