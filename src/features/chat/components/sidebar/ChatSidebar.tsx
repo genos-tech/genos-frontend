@@ -16,6 +16,11 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { MoreMenu } from "../../../../components/ui/MoreMenu";
+import {
+    chipHitAreaSx,
+    headerTouchTargetsSx,
+    touchTargetSx,
+} from "../../../../components/ui/touchTargets";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -446,6 +451,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             invisible={unreadCount === 0}
                                             size="sm"
                                             sx={{
+                                                // The count is not a target: a tap on it is a
+                                                // tap on the tab (44px on a touch screen).
+                                                "@media (pointer: coarse)": {
+                                                    "& .MuiBadge-badge": { pointerEvents: "none" },
+                                                },
                                                 "& .MuiBadge-badge": {
                                                     background: isDark
                                                         ? `linear-gradient(135deg, rgba(${item.colorScheme.darkRgb}, 1) 0%, rgba(${item.colorScheme.darkRgb}, 0.8) 100%)`
@@ -466,6 +476,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                 sx={{
                                                     width: 36,
                                                     height: 36,
+                                                    // 44px target on a touch screen (MIP-1319).
+                                                    ...touchTargetSx("&"),
                                                     borderRadius: "10px",
                                                     display: "flex",
                                                     alignItems: "center",
@@ -521,7 +533,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         </Stack>
 
                         {/* Actions */}
-                        <Stack alignItems="center" direction="row" spacing={0.5}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={0.5}
+                            sx={headerTouchTargetsSx}
+                        >
                             {/* Unread Filter Toggle */}
                             <Chip
                                 color={showOnlyUnreadItems ? "primary" : "neutral"}
@@ -533,6 +550,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     fontSize: "0.7rem",
                                     px: 1,
                                     height: 26,
+                                    // A 44px tap band around the 26px chip (MIP-1319).
+                                    ...chipHitAreaSx(26),
                                     borderRadius: "8px",
                                     transition: "all 0.2s ease",
                                     background: showOnlyUnreadItems

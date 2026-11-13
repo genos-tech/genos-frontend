@@ -26,7 +26,7 @@ import { MODAL_CHROME_CLEARANCE } from "../../../../../components/ui/modal/modal
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
-import { headerTouchTargetsSx } from "../../../../../components/ui/touchTargets";
+import { headerTouchTargetsSx, touchTargetSx } from "../../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -405,6 +405,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     color="warning"
                                     size="sm"
                                     startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
+                                    sx={touchTargetSx("&")}
                                     variant="soft"
                                     onClick={() =>
                                         handleStatusChange("WIP", statusSolid("WIP").color)
@@ -419,6 +420,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 color="success"
                                 size="sm"
                                 startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
+                                sx={touchTargetSx("&")}
                                 variant="soft"
                                 onClick={() =>
                                     handleStatusChange("Closed", statusSolid("Closed").color)

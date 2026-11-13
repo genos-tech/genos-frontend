@@ -69,6 +69,48 @@ export const compactChipRowTouchSx = {
 } as const;
 
 /**
+ * One Joy `Chip` of any height that is a button on its own, not in a row of chips (the Unread
+ * filter beside the chat list tabs, 26px): the same invisible hit area as `chipRowTouchSx`, grown
+ * to 44px high (not wider) around the chip, and nothing else (the row it sits in owns its height).
+ */
+export const chipHitAreaSx = (chipHeight: number) =>
+    ({
+        "@media (pointer: coarse)": {
+            "& .MuiChip-action::after": {
+                content: '""',
+                position: "absolute",
+                top: -(TOUCH_TARGET - chipHeight) / 2,
+                bottom: -(TOUCH_TARGET - chipHeight) / 2,
+                // Tall only: a lone chip's neighbours (the tabs beside it) can be 1px away.
+                left: 0,
+                right: 0,
+            },
+        },
+    }) as const;
+
+/**
+ * Like `invisibleHitAreaSx`, but only TALL: 44px high and exactly as wide as the control. For a
+ * control whose neighbours sit closer than 22px on the sides, where a 44px-wide area would
+ * cover them (avatars overlapped in a stack, the buttons of a toolbar). The target is then
+ * `width x 44`, not 44 x 44: a thumb misses a short control far more often than a narrow one.
+ */
+export const tallHitAreaSx = (selector = "&") =>
+    ({
+        "@media (pointer: coarse)": {
+            [selector]: { position: "relative" },
+            [`${selector}::after`]: {
+                content: '""',
+                position: "absolute",
+                top: "50%",
+                left: 0,
+                width: "100%",
+                height: TOUCH_TARGET,
+                transform: "translateY(-50%)",
+            },
+        },
+    }) as const;
+
+/**
  * A control that must keep its size and look (a task id chip in a row of text, an avatar in a
  * header) is still a 44 x 44 target on a touch screen: an invisible hit area, centred on it,
  * reaches out to 44px (and never narrower than the control itself). Nothing is painted, nothing

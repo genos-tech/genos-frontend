@@ -19,6 +19,7 @@ import { Handle, Position } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { invisibleHitAreaSx } from "../../../../components/ui/touchTargets";
 import { useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import { DEPENDENCY_COLOR, HANDLE } from "../types";
@@ -211,6 +212,8 @@ export const NodeIconButton = ({
         variant="plain"
         sx={{
             "--IconButton-size": `${size}px`,
+            // Drawn small, a 44px tap on a touch screen (MIP-1319): invisible, centred.
+            ...invisibleHitAreaSx("&"),
             color: g.text.tertiary,
             "--Icon-color": g.text.tertiary,
             borderRadius: g.radius.sm,

@@ -23,7 +23,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
-import { headerTouchTargetsSx } from "../../../../components/ui/touchTargets";
+import { headerTouchTargetsSx, tallHitAreaSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -436,6 +436,9 @@ export const NoteHeaderActions = ({
                                         borderRadius: "50%",
                                         boxShadow: `0 0 0 2px ${isDark ? "#1a1623" : "#ffffff"}`,
                                         lineHeight: 0,
+                                        // 26px drawn, 44px high to tap on a touch screen. Not
+                                        // wider: the avatars overlap by 8px.
+                                        ...tallHitAreaSx("& [role='button']"),
                                     }}
                                 >
                                     <AvatarWithStatus

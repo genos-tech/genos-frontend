@@ -5,6 +5,7 @@ import { Box, IconButton, Modal, ModalDialog } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
+import { touchTargetSx } from "../touchTargets";
 
 /**
  * The one dialog frame (MIP-1125, part of MIP-1106).
@@ -348,6 +349,8 @@ export const ModalFrame = ({
                             sx={{
                                 flexShrink: 0,
                                 mt: "-4px",
+                                // A 44px target on a touch screen (MIP-1319).
+                                ...touchTargetSx("&"),
                                 color: g.text.secondary,
                                 "&:hover": { background: g.hover, color: g.text.primary },
                                 "&:focus:not(:focus-visible)": { outline: "none" },

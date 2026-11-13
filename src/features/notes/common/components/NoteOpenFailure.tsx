@@ -4,6 +4,7 @@ import type { Socket } from "socket.io-client";
 
 import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
+import { touchTargetSx } from "../../../../components/ui/touchTargets";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import type { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
@@ -46,6 +47,7 @@ export const NoteOpenFailure = ({ useNM, onMobileBack, socket = null }: NoteOpen
                     <IconButton
                         aria-label={t.notes.labels.backToNotesList}
                         size="sm"
+                        sx={touchTargetSx("&")}
                         variant="plain"
                         onClick={onMobileBack}
                     >

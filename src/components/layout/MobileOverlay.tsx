@@ -3,6 +3,7 @@ import { Box, IconButton, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../i18n";
+import { headerTouchTargetsSx } from "../ui/touchTargets";
 
 type MobileOverlayProps = {
     children: React.ReactNode;
@@ -73,6 +74,8 @@ export const MobileOverlay = ({ children, onClose }: MobileOverlayProps) => {
                     flexShrink: 0,
                     borderBottom: "1px solid",
                     borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    // The Close is a 44px target on a touch screen, and so the bar grows with it.
+                    ...headerTouchTargetsSx,
                 }}
             >
                 <IconButton
