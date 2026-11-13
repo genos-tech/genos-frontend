@@ -2862,6 +2862,9 @@ export const ja: DeepPartial<Messages> = {
             filterResults: "検索結果 ({count})",
             filterNoMatch: "「{query}」に一致するノートはありません",
             filterMore: "ほかに{count}件あります。さらに絞り込んでください。",
+            recentsMore: "もっと見る",
+            recentsMoreAria: "最近のノートをあと{count}件表示",
+            recentsLess: "表示を減らす",
             addToFavorites: "お気に入りに追加",
             removeFromFavorites: "お気に入りから削除",
             teamNotes: "チームノート",
@@ -3060,6 +3063,7 @@ export const ja: DeepPartial<Messages> = {
             cancel: "キャンセル",
             confirm: "ノートを削除",
             childExistsError: "子ノートが存在するため削除できません。",
+            failed: "ノートを削除できませんでした。何も削除されていません。",
         },
         sharing: {
             title: "「{title}」を共有",

@@ -275,7 +275,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                 >
                     <ChatNoteHeader
                         chat={chat}
-                        handleCloseTab={handleCloseTab}
                         hostZIndex={hostZIndex}
                         isInChatPage={isInChatPage}
                         isInTaskPage={isInTaskPage}

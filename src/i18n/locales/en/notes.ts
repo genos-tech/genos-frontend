@@ -80,6 +80,9 @@ export const notes = {
         filterResults: "Results ({count})",
         filterNoMatch: "No notes match “{query}”",
         filterMore: "{count} more. Keep typing to narrow it down.",
+        recentsMore: "More",
+        recentsMoreAria: "Show {count} more recent notes",
+        recentsLess: "Show less",
         addToFavorites: "Add to favorites",
         removeFromFavorites: "Remove from favorites",
         teamNotes: "Team Notes",
@@ -299,6 +302,7 @@ export const notes = {
         cancel: "Cancel",
         confirm: "Delete Note",
         childExistsError: "Can't delete because child note(s) exists.",
+        failed: "Couldn't delete the note. Nothing was removed.",
     },
     sharing: {
         title: 'Share "{title}"',

@@ -306,8 +306,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                     {useNM.currentTaskNote && (
                         <ModalDeleteTaskNote
-                            handleCloseTab={handleCloseTab}
-                            myself={myself}
                             openDeleteNote={openDeleteNote}
                             setOpenDeleteNote={setOpenDeleteNote}
                             useNM={useNM}

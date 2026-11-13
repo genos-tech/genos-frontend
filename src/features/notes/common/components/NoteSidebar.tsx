@@ -20,6 +20,7 @@ import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { toast } from "../../../../components/ui/feedback/toastStore";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
@@ -72,6 +73,7 @@ import {
     SidebarNoteMove,
     taskContainerId,
 } from "../dnd/sidebarNoteDnd";
+import { useNoteFilter } from "../hooks/useNoteFilter";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
@@ -86,6 +88,7 @@ import { GroupedNoteSection } from "./GroupedNoteSection";
 import { ModalDeleteNote } from "./ModalDeleteNote";
 import { ExportFolderTarget, ModalExportFolder } from "./ModalExportFolder";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
+import { NoteFilterResults } from "./NoteFilterResults";
 import { NoteListState } from "./NoteListState";
 import { NoteOriginIcon } from "./noteOrigin";
 import { NotePinnedSection } from "./NotePinnedSection";
@@ -93,6 +96,7 @@ import { NoteSearchBar } from "./NoteSearchBar";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
+import { RecentNotesList, RecentRow } from "./RecentNotesList";
 
 // Types for grouped task notes (Project → Milestone → Task → Subtask).
 // `directNotes` on a milestone are notes attached to the milestone's own
@@ -1760,11 +1764,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // The previous implementation rebuilt the merged + sorted array inside
     // `renderRecentNotes` on every render — three spread map copies plus an
     // O(N log N) sort — even when no recents had moved.
-    type RecentRow = {
-        note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
-        noteType: number;
-        tsOpenedAt: string;
-    };
     // Same split Favorites does: the server groups recents by BACKEND
     // note type, so team and shared notes arrive inside `personalNotes`
     // (they're all note_type 1). Resolving each row to its sidebar
@@ -1829,8 +1828,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // The filter field (MIP-1431). While it has words, the families give way to a flat list of
     // the notes whose title matches, each saying where it lives. The families stay mounted
     // underneath (hidden), so what was folded or unfolded is as it was when the field is cleared.
-    const [filterQuery, setFilterQuery] = useState("");
-    const filterActive = filterQuery.trim().length > 0;
+    // `filterVisible` is false when the field is empty, or has words but the results were
+    // closed (a result opened, a click outside, MIP-1435): the families are shown then.
+    const noteFilter = useNoteFilter();
+    const { query: filterQuery, active: filterActive, visible: filterVisible } = noteFilter;
     const filterResult = useMemo(
         () =>
             filterActive
@@ -1914,20 +1915,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             );
         }
 
-        return (
-            <Box>
-                {rows.map((row) => (
-                    <RecentNoteItem
-                        key={`recent-${row.noteType}-${row.note.noteId}`}
-                        locate={locateNote}
-                        note={row.note}
-                        noteType={row.noteType}
-                        openedAt={row.tsOpenedAt}
-                        useNM={useNM}
-                    />
-                ))}
-            </Box>
-        );
+        return <RecentNotesList locate={locateNote} rows={rows} useNM={useNM} />;
     };
 
     // Note type configurations for cleaner code
@@ -2026,8 +2014,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         >
             <Box sx={{ flexShrink: 0, px: 1.5, pt: 1.5 }}>
                 <NoteSearchBar
+                    barRef={noteFilter.barRef}
                     value={filterQuery}
-                    onChange={setFilterQuery}
+                    onChange={noteFilter.setQuery}
+                    onReopen={noteFilter.reopen}
                     onNewNote={() => void useNM.handleCreateNewMyNote(null)}
                 />
             </Box>
@@ -2051,51 +2041,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 {/* One DragDropContext covers all three note sections so
                     the typed droppables ("note-1|2|3") can reject
                     cross-kind drags for free. */}
-                {filterResult && (
-                    <List
-                        data-testid="note-filter-results"
-                        size="sm"
-                        sx={{ gap: 0.5, "--ListItem-radius": "8px" }}
-                    >
-                        <SectionHeader
-                            as="li"
-                            label={fmt(t.notes.sidebar.filterResults, {
-                                count: filterResult.total,
-                            })}
-                        />
-                        {filterResult.hits.map(({ noteType, note }) => (
-                            <RecentNoteItem
-                                key={`filter-${noteType}-${note.noteId}`}
-                                locate={locateNote}
-                                note={note}
-                                noteType={noteType}
-                                useNM={useNM}
-                            />
-                        ))}
-                        {filterResult.total === 0 && (
-                            <Box sx={{ px: 1.5 }}>
-                                <EmptyState
-                                    data-empty="note-filter"
-                                    size="xs"
-                                    body={fmt(t.notes.sidebar.filterNoMatch, {
-                                        query: filterQuery.trim(),
-                                    })}
-                                />
-                            </Box>
-                        )}
-                        {filterResult.total > filterResult.hits.length && (
-                            <Box sx={{ px: 1.5 }}>
-                                <EmptyState
-                                    size="xs"
-                                    body={fmt(t.notes.sidebar.filterMore, {
-                                        count: filterResult.total - filterResult.hits.length,
-                                    })}
-                                />
-                            </Box>
-                        )}
-                    </List>
+                {filterResult && filterVisible && (
+                    <NoteFilterResults
+                        listRef={noteFilter.resultsRef}
+                        locate={locateNote}
+                        query={filterQuery}
+                        result={filterResult}
+                        useNM={useNM}
+                        onKeyDown={noteFilter.onResultsKeyDown}
+                        onOpened={noteFilter.onOpened}
+                    />
                 )}
-                <Box hidden={filterActive} sx={{ display: filterActive ? "none" : "block" }}>
+                <Box hidden={filterVisible} sx={{ display: filterVisible ? "none" : "block" }}>
                     <SidebarDndProvider onMove={handleSidebarMove}>
                         <List
                             size="sm"
@@ -2231,9 +2188,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     const { noteType, noteId } = deleteNoteModal;
                     // Buckets 4 and 8 are personal notes too, so they
                     // delete through the same action.
-                    if (isPersonalNoteBucket(noteType)) void useNM.deleteMyNoteById(noteId);
-                    else if (noteType === 2) void useNM.deleteTaskNoteById(noteId);
-                    else if (noteType === 3) void useNM.deleteChatNoteById(noteId);
+                    const deleted = isPersonalNoteBucket(noteType)
+                        ? useNM.deleteMyNoteById(noteId)
+                        : noteType === 2
+                          ? useNM.deleteTaskNoteById(noteId)
+                          : useNM.deleteChatNoteById(noteId);
+                    // The server did not delete it (the note is still listed): say so.
+                    void deleted.then((ok) => {
+                        if (!ok) toast.error(t.notes.deleteModal.failed);
+                    });
                 }}
             />
 

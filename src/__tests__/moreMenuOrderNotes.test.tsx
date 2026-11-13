@@ -181,7 +181,6 @@ describe("chat note header menu", () => {
                 <CssVarsProvider>
                     <ChatNoteHeader
                         chat={undefined as never}
-                        handleCloseTab={vi.fn()}
                         isInChatPage={true}
                         isInTaskPage={false}
                         myself={{ userId: "u1", teamId: "t1" } as never}

@@ -25,6 +25,7 @@ import { loadSpecificNote } from "../../features/notes/common/services/loadSpeci
 import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/notes/common/services/restoreNoteVersion";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
 import { folderChain } from "../../features/notes/common/utils/folderChain";
+import { emitNoteDeleted } from "../../features/notes/common/utils/noteDeleted";
 import { isNotePaneVisible } from "../../features/notes/common/utils/notePaneVisibility";
 import {
     bucketFromNoteType,
@@ -227,10 +228,9 @@ export interface NoteManagementState {
         channelId: string | number
     ) => Promise<void>;
 
-    // Sidebar note deletion — delete any note by id (not just the open
-    // one), so the sidebar "⋯" row menu can delete without opening the
-    // note first. Resolves to false when blocked because the note still
-    // has child notes (same guard as the note-header delete flow).
+    // Note deletion by id: the sidebar "⋯" row menu and the note header both use these.
+    // Resolves to false when blocked because the note still has child notes, or when the
+    // server did not delete it.
     deleteMyNoteById: (noteId: number) => Promise<boolean>;
     deleteTaskNoteById: (noteId: number) => Promise<boolean>;
     deleteChatNoteById: (noteId: number) => Promise<boolean>;
@@ -1030,11 +1030,13 @@ export const useNoteManagement = (
                     : { ...prev, chatNotes: fn(prev.chatNotes) }
         );
 
-    // LOCAL-ONLY cleanup for notes the server has ALREADY deleted (an approved
-    // agent delete_note / delete_note_folder). The by-id deletes above can't be
-    // reused: they call the delete endpoint first and refuse a note with
-    // children. This closes the tab / chat pane, drops the in-memory, IndexedDB
-    // and Yjs copies, and filters the note out of its meta list and Recents.
+    // LOCAL-ONLY cleanup for notes the server has ALREADY deleted: the ONE place every delete
+    // ends (MIP-1435), whether it came from the sidebar menu, a note header, a folder or an
+    // approved agent delete_note / delete_note_folder. The by-id deletes can't be reused for
+    // the agent path: they call the delete endpoint first and refuse a note with children.
+    // This closes the tab / chat pane, drops the in-memory, IndexedDB and Yjs copies, and
+    // filters the note out of its meta list, Recents and Favorites, then tells the history
+    // and unread lists (`noteDeleted`).
     // The list filter is what clears the LAST note of a list without waiting on
     // a refetch. `currentXNote` is left to closeTab and the active-tab sync
     // effect (see deleteMyNoteById). The Yjs name is spelled out rather than
@@ -1054,6 +1056,29 @@ export const useNoteManagement = (
         else if (family === "task") setTaskNoteMeta(without);
         else setChatNoteMeta(without);
         updateRecents(family, without);
+        // Favorites live apart from the meta lists too, in two places: the rows the sidebar
+        // renders and the set of ids the star reads (keyed by BACKEND type).
+        const backendType = family === "personal" ? 1 : family === "task" ? 2 : 3;
+        setFavoriteNotes((prev) => {
+            if (!prev) return prev;
+            const rowsKey =
+                family === "personal"
+                    ? "personalNotes"
+                    : family === "task"
+                      ? "taskNotes"
+                      : "chatNotes";
+            const rows: { noteId: number }[] = prev[rowsKey];
+            return rows.some((r) => ids.has(r.noteId))
+                ? { ...prev, [rowsKey]: rows.filter((r) => !ids.has(r.noteId)) }
+                : prev;
+        });
+        setFavoriteNoteIds((prev) => {
+            const next = new Set(prev);
+            for (const id of ids) next.delete(`${backendType}-${id}`);
+            return next.size === prev.size ? prev : next;
+        });
+        // The history list and the unread-mention list keep ids of their own.
+        emitNoteDeleted({ noteType: backendType, noteIds: [...ids] });
         await Promise.all(
             [...ids].map(async (id) => {
                 try {
@@ -1375,11 +1400,12 @@ export const useNoteManagement = (
         }
         // Server may have destroyed rows this client's meta didn't know
         // about (stale list) — sweep any extras too.
-        const extras = result.deletedNoteIds.filter((id) => !noteIds.has(id));
-        if (extras.length > 0) {
-            setMyNoteMeta((prev) => prev.filter((n) => !extras.includes(n.noteId)));
-            await purgeLocal(extras);
-        }
+        // Rows the server destroyed that this client's meta did not know about (a stale
+        // list) are swept here too. The notes are gone for good: out of the lists, Recents,
+        // Favorites, the note cache and the history, which `purgeLocal` above does not reach.
+        await dropDeletedNotesLocally("personal", [
+            ...new Set([...noteIds, ...result.deletedNoteIds]),
+        ]);
     };
 
     const moveMyNoteToFolderAction = async (noteId: number, folderId: number | null) => {
@@ -1560,65 +1586,31 @@ export const useNoteManagement = (
     // children are gone); we resolve false so the caller keeps the modal
     // open with the "child note(s) exist" message.
     // ------------------------------------------------------------------
+    // Each resolves true once the note is gone from the server AND from every client list;
+    // false when it has children or the server did not delete it (then nothing local changes).
+    // `closeTab` + the active-tab sync effect own `currentXNote`: a stray null-write here
+    // would blank the pane over a surviving neighbour tab (see dropDeletedNotesLocally).
     const deleteMyNoteById = async (noteId: number): Promise<boolean> => {
         if (!accessToken) return false;
         if (personalNoteHasChildren(noteId)) return false;
-        await deleteMyNote(myself, noteId, accessToken);
-        const tab = tabsApi.tabs.find((t) => t.kind === "my" && t.noteId === noteId);
-        if (tab) tabsApi.closeTab(tab.id);
-        try {
-            await noteService.deletePersonalNote(noteId);
-            await DatabaseUtils.deleteYjsDatabase(`my-note:${noteId}`);
-        } catch {
-            // Local cache cleanup is best-effort.
-        }
-        removePersonalNoteMeta(new Set([noteId]));
-        // Don't null `currentMyNote` here: `closeTab` above already settled
-        // the active tab (to a neighbour, or none), and the active-tab sync
-        // effect drives `currentMyNote` off THAT. An extra null-write races
-        // the effect and, when a neighbour tab remains, wins without a
-        // re-sync (the effect is keyed only on `activeTabId`, which didn't
-        // change) — leaving the note pane blank over a valid tab. The
-        // note-header delete path (ModalDeleteMyNote → handleCloseTab) never
-        // nulls it and works correctly; mirror that.
+        if (!(await deleteMyNote(myself, noteId, accessToken))) return false;
+        await dropDeletedNotesLocally("personal", [noteId]);
         return true;
     };
 
     const deleteTaskNoteById = async (noteId: number): Promise<boolean> => {
         if (!accessToken) return false;
         if (taskNoteMeta.some((n) => n.parentNoteId === noteId)) return false;
-        await deleteTaskNote(myself, noteId, accessToken);
-        const tab = tabsApi.tabs.find((t) => t.kind === "task" && t.noteId === noteId);
-        if (tab) tabsApi.closeTab(tab.id);
-        try {
-            await noteService.deleteTaskNote(noteId);
-            await DatabaseUtils.deleteYjsDatabase(`task-note:${noteId}`);
-        } catch {
-            // Local cache cleanup is best-effort.
-        }
-        setTaskNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
-        // See deleteMyNoteById: `closeTab` + the active-tab sync effect own
-        // `currentTaskNote`; a stray null-write here blanks the pane over a
-        // surviving neighbour tab.
+        if (!(await deleteTaskNote(myself, noteId, accessToken))) return false;
+        await dropDeletedNotesLocally("task", [noteId]);
         return true;
     };
 
     const deleteChatNoteById = async (noteId: number): Promise<boolean> => {
         if (!accessToken) return false;
         if (chatNoteMeta.some((n) => n.parentNoteId === noteId)) return false;
-        await deleteChatNote(myself, noteId, accessToken);
-        const tab = tabsApi.tabs.find((t) => t.kind === "chat" && t.noteId === noteId);
-        if (tab) tabsApi.closeTab(tab.id);
-        try {
-            await noteService.deleteChatNote(noteId);
-            await DatabaseUtils.deleteYjsDatabase(`chat-note:${noteId}`);
-        } catch {
-            // Local cache cleanup is best-effort.
-        }
-        setChatNoteMeta((prev) => prev.filter((n) => n.noteId !== noteId));
-        // See deleteMyNoteById: `closeTab` + the active-tab sync effect own
-        // `currentChatNote`; a stray null-write here blanks the pane over a
-        // surviving neighbour tab.
+        if (!(await deleteChatNote(myself, noteId, accessToken))) return false;
+        await dropDeletedNotesLocally("chat", [noteId]);
         return true;
     };
 
@@ -1985,21 +1977,10 @@ export const useNoteManagement = (
         if (!accessToken) return { ok: false, blocked: false };
         const result = await deleteTeamNoteFolderApi(myself, folderId, accessToken);
         if (result.ok) {
-            // Close tabs for every destroyed note and drop its local
-            // caches, mirroring the My Notes folder delete. Team notes
-            // are personal notes, so they live under the "my" tab kind
-            // and the `my-note:` Yjs room.
-            for (const noteId of result.deletedNoteIds) {
-                const tab = tabsApi.tabs.find((t) => t.kind === "my" && t.noteId === noteId);
-                if (tab) tabsApi.closeTab(tab.id);
-                try {
-                    await noteService.deletePersonalNote(noteId);
-                    await DatabaseUtils.deleteYjsDatabase(`my-note:${noteId}`);
-                } catch {
-                    // Local cache teardown is best-effort — the server
-                    // has already deleted the note.
-                }
-            }
+            // Every destroyed note leaves the tabs, the caches, the lists, Recents and
+            // Favorites. Team notes are personal notes, so they live under the "my" tab
+            // kind and the `my-note:` Yjs room.
+            await dropDeletedNotesLocally("personal", result.deletedNoteIds);
             const deletedFolders = new Set(result.deletedFolderIds);
             const deletedNotes = new Set(result.deletedNoteIds);
             setTeamNoteFolders((prev) => prev.filter((f) => !deletedFolders.has(f.folderId)));

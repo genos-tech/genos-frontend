@@ -3416,6 +3416,9 @@ export const es: DeepPartial<Messages> = {
             filterResults: "Resultados ({count})",
             filterNoMatch: "Ninguna nota coincide con «{query}»",
             filterMore: "{count} más. Sigue escribiendo para acotar.",
+            recentsMore: "Más",
+            recentsMoreAria: "Mostrar {count} notas recientes más",
+            recentsLess: "Mostrar menos",
             addToFavorites: "Añadir a favoritos",
             removeFromFavorites: "Quitar de favoritos",
             favoriteFolders: "Carpetas",
@@ -3500,6 +3503,7 @@ export const es: DeepPartial<Messages> = {
             cancel: "Cancelar",
             confirm: "Eliminar nota",
             childExistsError: "No se puede eliminar porque existen notas secundarias.",
+            failed: "No se pudo eliminar la nota. No se quitó nada.",
         },
         sharing: {
             title: 'Compartir "{title}"',

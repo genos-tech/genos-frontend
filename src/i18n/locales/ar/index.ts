@@ -3365,6 +3365,9 @@ export const ar: DeepPartial<Messages> = {
             filterResults: "النتائج ({count})",
             filterNoMatch: "لا توجد ملاحظات تطابق «{query}»",
             filterMore: "{count} أخرى. واصل الكتابة لتضييق النتائج.",
+            recentsMore: "المزيد",
+            recentsMoreAria: "عرض {count} من الملاحظات الأخيرة الأخرى",
+            recentsLess: "عرض أقل",
             addToFavorites: "إضافة إلى المفضلة",
             removeFromFavorites: "إزالة من المفضلة",
             favoriteFolders: "المجلدات",
@@ -3449,6 +3452,7 @@ export const ar: DeepPartial<Messages> = {
             cancel: "إلغاء",
             confirm: "حذف الملاحظة",
             childExistsError: "لا يمكن الحذف لوجود ملاحظة (ملاحظات) فرعية.",
+            failed: "تعذّر حذف الملاحظة. لم تُزل أي ملاحظة.",
         },
         sharing: {
             title: "مشاركة «{title}»",

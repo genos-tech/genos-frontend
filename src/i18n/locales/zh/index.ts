@@ -2764,6 +2764,9 @@ export const zh: DeepPartial<Messages> = {
             filterResults: "结果 ({count})",
             filterNoMatch: "没有与“{query}”匹配的笔记",
             filterMore: "还有 {count} 条。继续输入以缩小范围。",
+            recentsMore: "更多",
+            recentsMoreAria: "再显示 {count} 条最近笔记",
+            recentsLess: "收起",
             addToFavorites: "添加到收藏",
             removeFromFavorites: "取消收藏",
             teamNotes: "团队笔记",
@@ -2957,6 +2960,7 @@ export const zh: DeepPartial<Messages> = {
             cancel: "取消",
             confirm: "删除笔记",
             childExistsError: "存在子笔记，无法删除。",
+            failed: "无法删除该笔记，未做任何更改。",
         },
         sharing: {
             title: "分享“{title}”",

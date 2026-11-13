@@ -9,6 +9,12 @@ import {
     useState,
 } from "react";
 
+import {
+    useNoteDeleted,
+    type NoteDeletedDetail,
+} from "../../features/notes/common/utils/noteDeleted";
+import { toBackendNoteType } from "../../features/notes/common/utils/noteTypeAlias";
+
 // Browser-history-style activity log of opened entities. Tracks
 // navigations (which chat / thread / task / milestone / note the user
 // opened); does NOT track message reads or content edits. Storage is
@@ -307,6 +313,30 @@ export const HistoryProvider = ({
         },
         [teamId]
     );
+
+    // A deleted note goes from the list too: its row would open a note that is not there
+    // (MIP-1435). The row's noteType is the sidebar bucket (My 1, Shared 4, Team 8 are all backend
+    // type 1), so compare backend types.
+    const forgetNotes = useCallback(
+        ({ noteType, noteIds }: NoteDeletedDetail) => {
+            const gone = new Set(noteIds);
+            setEntries((prev) => {
+                const next = prev.filter(
+                    (e) =>
+                        !(
+                            e.kind === "note" &&
+                            toBackendNoteType(e.noteType) === noteType &&
+                            gone.has(e.noteId)
+                        )
+                );
+                if (next.length === prev.length) return prev;
+                writeToStorage(teamId, next);
+                return next;
+            });
+        },
+        [teamId]
+    );
+    useNoteDeleted(forgetNotes);
 
     const clear = useCallback(() => {
         setEntries([]);
