@@ -59,6 +59,7 @@ import { TodoHostLayerProvider } from "../../../../../chat/components/todo/TodoH
 import { useIsMessageFlagged } from "../../../../../chat/hooks/useIsMessageFlagged";
 import { useMessageReminder } from "../../../../../chat/hooks/useMessageReminder";
 import { formatReminderTime } from "../../../../../chat/utils/reminderPresets";
+import { reportFlagFailure } from "../../../../../chat/utils/reportFlagFailure";
 import {
     deleteTaskComment,
     deleteTaskCommentOnExit,
@@ -155,17 +156,19 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const [openRemindMe, setOpenRemindMe] = useState(false);
     const handleFlagClick = () => {
         if (!messageId) return;
+        const action = isFlagged ? "unflag" : "flag";
         const done = isFlagged
             ? channelService.unflagMessage(messageId)
             : channelService.flagMessage(messageId);
-        void done.catch((e) => console.error("[TaskCommentBubble] flag failed:", e));
+        // The service has rolled the flag back by the time this runs; say why it did (MIP-1441).
+        void done.catch((e) => reportFlagFailure(action, e, "TaskCommentBubble"));
     };
     // Finish the flag: kept as done (it moves to the history), unlike Remove flag.
     const handleMarkDoneClick = () => {
         if (!messageId) return;
         void channelService
             .completeFlag(messageId)
-            .catch((e) => console.error("[TaskCommentBubble] mark done failed:", e));
+            .catch((e) => reportFlagFailure("complete", e, "TaskCommentBubble"));
     };
     const isSent = comment.senderId === myself.userId;
     // The commenter's name is live-resolved by the `<ResolvedUserName>`

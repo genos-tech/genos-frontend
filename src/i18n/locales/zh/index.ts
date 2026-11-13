@@ -1252,6 +1252,12 @@ export const zh: DeepPartial<Messages> = {
             flagForLater: "标记以便稍后查看",
             addToTodo: "添加到待办事项",
             removeFlag: "移除标记",
+            failed: {
+                flag: "无法添加标记，请重试。",
+                unflag: "无法移除标记，请重试。",
+                complete: "无法标记为完成，请重试。",
+                reopen: "无法重新开放，请重试。",
+            },
             remindMe: "提醒我…",
             reminderSetFor: "提醒：{time}",
             copyMessageLink: "复制消息链接",

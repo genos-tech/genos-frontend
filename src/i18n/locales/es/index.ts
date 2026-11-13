@@ -1902,6 +1902,12 @@ export const es: DeepPartial<Messages> = {
             flagForLater: "Destacar para después",
             addToTodo: "Añadir a Por hacer",
             removeFlag: "Quitar destacado",
+            failed: {
+                flag: "No se pudo destacar. Inténtalo de nuevo.",
+                unflag: "No se pudo quitar el destacado. Inténtalo de nuevo.",
+                complete: "No se pudo marcar como hecho. Inténtalo de nuevo.",
+                reopen: "No se pudo reabrir. Inténtalo de nuevo.",
+            },
             remindMe: "Recordármelo…",
             reminderSetFor: "Recordatorio: {time}",
             copyMessageLink: "Copiar enlace del mensaje",

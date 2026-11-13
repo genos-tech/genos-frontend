@@ -52,6 +52,7 @@ import { loadV3SpecificMessages } from "../../services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { buildChatPath } from "../../utils/chatPaths";
 import { formatReminderTime } from "../../utils/reminderPresets";
+import { reportFlagFailure } from "../../utils/reportFlagFailure";
 
 // chat_type=4 carries two semantics in the wider codebase: legacy task
 // comments (live in the PM store, chat_id = project_id) and the newer MDM
@@ -211,7 +212,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             // `unflagMessage` already rolled the snapshot back; un-set
             // the local toggle so the icon matches state.
             setTmpIsFlagged(true);
-            console.error("Error updating flag status:", error);
+            reportFlagFailure("unflag", error, "ChatListItemForFlagMessages");
         }
     };
 
@@ -225,7 +226,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         try {
             await channelService.completeFlag(v3MessageUuid);
         } catch (error) {
-            console.error("Error completing flag:", error);
+            reportFlagFailure("complete", error, "ChatListItemForFlagMessages");
         }
     };
 
@@ -236,7 +237,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         try {
             await channelService.reopenFlag(v3MessageUuid);
         } catch (error) {
-            console.error("Error reopening flag:", error);
+            reportFlagFailure("reopen", error, "ChatListItemForFlagMessages");
         }
     };
 

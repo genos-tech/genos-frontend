@@ -1317,6 +1317,12 @@ export const fr: DeepPartial<Messages> = {
             flagForLater: "Marquer pour plus tard",
             addToTodo: "Ajouter à « À faire »",
             removeFlag: "Retirer la marque",
+            failed: {
+                flag: "Impossible de marquer. Réessayez.",
+                unflag: "Impossible de retirer la marque. Réessayez.",
+                complete: "Impossible de marquer comme terminé. Réessayez.",
+                reopen: "Impossible de rouvrir. Réessayez.",
+            },
             remindMe: "Me le rappeler…",
             reminderSetFor: "Rappel : {time}",
             copyMessageLink: "Copier le lien du message",
