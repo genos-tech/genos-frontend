@@ -4,8 +4,9 @@ import { useUiSettings } from "./useUiSettings";
 
 /**
  * Which message actions sit directly on the bubble's hover toolbar instead of
- * behind the "…" menu (MIP-803). Applies to chat messages and thread replies;
- * task comments have their own toolbar and are not affected.
+ * behind the "…" menu (MIP-803). One list for chat messages, thread replies and task comments
+ * (MIP-1434); an action a surface does not offer is simply not shown there (a comment has no
+ * Reply, and its Edit is its own button).
  *
  * Stored as a list of action ids. The ORDER stored does not matter: the
  * toolbar always follows `PINNABLE_BUBBLE_ACTIONS`, which is the order of the

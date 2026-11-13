@@ -3662,6 +3662,7 @@ export const zh: DeepPartial<Messages> = {
             limit: "最多选择 {max} 项，其余的保留在 … 菜单中。",
             flagHint: "之后重读、用来回忆内容的消息。",
             addToTodoHint: "需要你采取行动的消息。",
+            notOnComments: "不会出现在任务评论上。",
             reset: "重置",
         },
         quickAddRequiredFields: {

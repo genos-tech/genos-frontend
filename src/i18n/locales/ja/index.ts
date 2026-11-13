@@ -3786,6 +3786,7 @@ export const ja: DeepPartial<Messages> = {
             limit: "最大{max}個まで選べます。残りは「…」メニューに入ります。",
             flagHint: "あとで読み返して内容を思い出すためのメッセージ。",
             addToTodoHint: "対応が必要なメッセージ。",
+            notOnComments: "タスクコメントには表示されません。",
             reset: "リセット",
         },
         quickAddRequiredFields: {

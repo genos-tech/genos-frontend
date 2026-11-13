@@ -936,6 +936,7 @@ export const hi: DeepPartial<Messages> = {
             limit: "अधिकतम {max} चुनें। बाकी … मेन्यू में रहेंगी।",
             flagHint: "बाद में दोबारा पढ़ने के लिए संदेश, ताकि उसकी बात याद रहे।",
             addToTodoHint: "ऐसा संदेश जिस पर आपको कुछ करना है।",
+            notOnComments: "टास्क टिप्पणियों पर नहीं दिखता।",
             reset: "रीसेट करें",
         },
         quickAddRequiredFields: {

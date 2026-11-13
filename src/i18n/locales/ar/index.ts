@@ -1470,6 +1470,7 @@ export const ar: DeepPartial<Messages> = {
             limit: "اختر حتى {max}. تبقى البقية في قائمة ….",
             flagHint: "رسالة لإعادة قراءتها لاحقًا لتتذكر ما فيها.",
             addToTodoHint: "رسالة تتطلب منك اتخاذ إجراء.",
+            notOnComments: "لا يظهر في تعليقات المهام.",
             reset: "إعادة تعيين",
         },
         quickAddRequiredFields: {
