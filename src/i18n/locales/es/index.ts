@@ -1496,6 +1496,7 @@ export const es: DeepPartial<Messages> = {
             limit: "Elige hasta {max}. El resto se quedan en el menú ….",
             flagHint: "Un mensaje para volver a leer más tarde y recordar lo que dice.",
             addToTodoHint: "Un mensaje que requiere que hagas algo.",
+            notOnComments: "No aparece en los comentarios de tareas.",
             reset: "Restablecer",
         },
         quickAddRequiredFields: {

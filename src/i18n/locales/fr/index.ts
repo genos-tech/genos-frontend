@@ -3839,6 +3839,7 @@ export const fr: DeepPartial<Messages> = {
             limit: "Choisissez-en {max} au maximum. Les autres restent dans le menu ….",
             flagHint: "Un message à relire plus tard pour se rappeler son contenu.",
             addToTodoHint: "Un message qui demande que vous agissiez.",
+            notOnComments: "Absent des commentaires de tâche.",
             reset: "Réinitialiser",
         },
         quickAddRequiredFields: {

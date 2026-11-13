@@ -677,6 +677,9 @@ export const settings = {
         limit: "Pick up to {max}. The rest stay in the … menu.",
         flagHint: "A message to read again later, to remember what it says.",
         addToTodoHint: "A message that needs you to do something.",
+        // Under the actions a task comment does not offer (it has no thread, and its own Edit
+        // button), so a pin on them does nothing there (MIP-1446).
+        notOnComments: "Not shown on task comments.",
         reset: "Reset",
     },
     quickAddRequiredFields: {

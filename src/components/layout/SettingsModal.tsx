@@ -568,11 +568,14 @@ type ActionRow = { icon: ReactNode; label: string; hint?: string };
  * toolbar's; once the limit is reached the unticked rows turn off rather than
  * silently dropping an earlier pick.
  */
-const MessageActionsSection = () => {
+export const MessageActionsSection = () => {
     const { pinned, setPinned, reset } = useBubbleActionsPreference();
     const { t } = useTranslation();
     // `hint`: one line saying what the action is FOR, where two of them could be mistaken
     // for each other. Flag is a message to read again; Add to To-Do is one to act on (MIP-1433).
+    // Reply and Edit say where they do NOT show: the pins are one list for chat messages, thread
+    // replies and task comments, and a comment has neither a thread nor an Edit menu item
+    // (it has its own Edit button), so pinning them does nothing there (MIP-1446).
     const labels: Record<PinnableBubbleAction, ActionRow> = {
         addToTodo: {
             icon: <ChecklistRoundedIcon sx={{ fontSize: 18 }} />,
@@ -590,6 +593,7 @@ const MessageActionsSection = () => {
         edit: {
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             label: t.chat.messageActions.editMessage,
+            hint: t.settings.messageActions.notOnComments,
         },
         flag: {
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
@@ -605,6 +609,7 @@ const MessageActionsSection = () => {
         reply: {
             icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             label: t.chat.messageActions.replyInThread,
+            hint: t.settings.messageActions.notOnComments,
         },
         unwrapAll: {
             icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
