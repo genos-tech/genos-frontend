@@ -423,7 +423,10 @@ const LineRow = ({
                 alignItems: icon ? "flex-start" : "baseline",
                 gap: 1,
                 px: 1,
-                py: 0.75,
+                // The emoji's baseline alignment sits the first line 2px below the row's top
+                // padding; the extra 2px keeps the text exactly where it was (measured).
+                pt: icon ? 1 : 0.75,
+                pb: 0.75,
                 minHeight: g.row.default,
             }}
             onOpen={onOpen}
