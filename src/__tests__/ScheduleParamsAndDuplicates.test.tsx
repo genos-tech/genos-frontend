@@ -89,7 +89,7 @@ const JOBS = [
         title: "Milestone updates",
         description: "One milestone.",
         params: {
-            milestone_id: { type: "integer", minimum: 1 },
+            milestone_id: { type: "integer", minimum: 1, required: true },
             hours: { type: "integer", minimum: 1, maximum: 720 },
         },
     },

@@ -23,8 +23,8 @@ export interface JobParam {
      *  server provides is shown in preference to one made from the key. */
     title?: string;
     description?: string;
-    /** Optional, same as `title`: the catalog does not send it today (the form knows the
-     *  one parameter it must have, see `scheduleParams`), but the server may. */
+    /** True when the job cannot run without it: the catalog sends it (MIP-1216), so the form
+     *  marks it and shows the inline "required" without a client-side list. */
     required?: boolean;
 }
 
