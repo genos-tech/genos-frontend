@@ -110,7 +110,11 @@ type Open = (link: string) => void;
 const stopRowOpen = (e: MouseEvent) => e.stopPropagation();
 
 /** A row that is a link when the item has one. In-app links open through the URL-link modal
- *  (the Inbox stays where it is), falling back to navigation; https opens in a new tab. */
+ *  (the Inbox stays where it is), falling back to navigation; https opens in a new tab.
+ *
+ *  A row with no link is a `div`, not an `a`: an anchor without `href` is a placeholder the
+ *  accessibility tree does not treat as a link, so the two shapes are deliberate (MIP-1472). A
+ *  test or a selector that means "every row" asks for `a, div` under the item, never `a` alone. */
 const RowShell = ({
     link,
     onOpen,
@@ -183,6 +187,7 @@ const ProjectHeader = ({ project, avatar }: { project: ReportProject; avatar?: s
         </BaseAvatar>
         <Typography
             dir="auto"
+            title={project.name}
             sx={{
                 ...type("title-sm"),
                 color: g.text.secondary,
@@ -191,7 +196,6 @@ const ProjectHeader = ({ project, avatar }: { project: ReportProject; avatar?: s
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
             }}
-            title={project.name}
         >
             {project.name}
         </Typography>
@@ -289,6 +293,7 @@ const TaskRow = ({
                 <Box
                     component="span"
                     dir="auto"
+                    title={title}
                     sx={{
                         ...type("body-sm"),
                         fontWeight: 500,
@@ -298,7 +303,6 @@ const TaskRow = ({
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                     }}
-                    title={title}
                 >
                     {title}
                 </Box>
@@ -339,13 +343,13 @@ const TaskRow = ({
             {item.detail !== "" && (
                 <Typography
                     dir="auto"
+                    title={item.detail}
                     sx={{
                         ...type("body-xs"),
                         color: g.text.secondary,
                         gridColumn: "1 / -1",
                         ...clampSx(2),
                     }}
-                    title={item.detail}
                 >
                     {item.detail}
                 </Typography>
@@ -556,6 +560,7 @@ const Section = ({
                     <Box
                         component="span"
                         dir="auto"
+                        title={heading}
                         sx={{
                             ...type("title-sm"),
                             color: g.text.primary,
@@ -565,7 +570,6 @@ const Section = ({
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                         }}
-                        title={heading}
                     >
                         {heading}
                     </Box>
@@ -742,6 +746,7 @@ const StatStrip = ({ report }: { report: GenosReportV2 }) => {
                         {label !== "" && (
                             <Box
                                 component="span"
+                                title={label}
                                 sx={{
                                     ...type("body-xs"),
                                     color: g.text.secondary,
@@ -758,7 +763,6 @@ const StatStrip = ({ report }: { report: GenosReportV2 }) => {
                                               whiteSpace: "nowrap",
                                           }),
                                 }}
-                                title={label}
                             >
                                 {label}
                             </Box>
@@ -885,17 +889,17 @@ export const GenosReportCard = memo(
                         {report.sections.map((section, index) => (
                             <Section
                                 key={`${index}-${section.key ?? section.heading}`}
+                                answerer={answerer}
                                 avatars={avatars}
                                 chatMarks={chatMarks}
+                                index={index}
+                                section={section}
+                                todayIso={todayIso}
                                 count={Math.max(
                                     (section.key !== null ? counts.get(section.key) : undefined) ??
                                         0,
                                     section.items.filter((i) => i.kind !== "more").length
                                 )}
-                                index={index}
-                                section={section}
-                                answerer={answerer}
-                                todayIso={todayIso}
                                 onOpen={onOpen}
                             />
                         ))}

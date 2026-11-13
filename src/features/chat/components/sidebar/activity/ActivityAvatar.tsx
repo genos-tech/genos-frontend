@@ -1,8 +1,6 @@
 import React from "react";
-import AssignmentIcon from "@mui/icons-material/Assignment";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
-import GroupsIcon from "@mui/icons-material/Groups";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
@@ -10,6 +8,10 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../../components/ui/avatars/BaseAvatar";
+import {
+    GroupChatAvatar,
+    ProjectChatAvatar,
+} from "../../../../../components/ui/avatars/ChatKindAvatar";
 import { GMAvatar } from "../../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../../components/ui/avatars/ProjectAvatar";
@@ -109,11 +111,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                 />
             );
         } else {
-            return (
-                <BaseAvatar>
-                    <GroupsIcon />
-                </BaseAvatar>
-            );
+            return <GroupChatAvatar />;
         }
     }
 
@@ -132,11 +130,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                 />
             );
         } else {
-            return (
-                <BaseAvatar>
-                    <AssignmentIcon />
-                </BaseAvatar>
-            );
+            return <ProjectChatAvatar />;
         }
     }
 

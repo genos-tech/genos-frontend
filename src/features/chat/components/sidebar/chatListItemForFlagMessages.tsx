@@ -4,11 +4,9 @@
 
 import * as React from "react";
 import { useState } from "react";
-import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import FlagIcon from "@mui/icons-material/Flag";
-import GroupsIcon from "@mui/icons-material/Groups";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
@@ -21,6 +19,10 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
+import {
+    GroupChatAvatar,
+    ProjectChatAvatar,
+} from "../../../../components/ui/avatars/ChatKindAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
@@ -523,11 +525,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 />
             );
         }
-        return (
-            <BaseAvatar size="md">
-                <GroupsIcon />
-            </BaseAvatar>
-        );
+        return <GroupChatAvatar size="md" />;
     };
 
     const renderProjectAvatar = () => {
@@ -544,11 +542,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 />
             );
         }
-        return (
-            <BaseAvatar size="md">
-                <AssignmentIcon />
-            </BaseAvatar>
-        );
+        return <ProjectChatAvatar size="md" />;
     };
 
     const renderMDMAvatar = () => (

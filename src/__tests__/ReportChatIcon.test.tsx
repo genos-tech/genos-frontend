@@ -8,13 +8,14 @@
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { cleanup, render } from "@testing-library/react";
+import { act, cleanup, render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { GenosReportBody } from "../features/inbox/components/GenosReportBody";
 import type { UserProps } from "../types/admin";
+import { bumpGMProfileImageVersion } from "../utils/gmProfileImageVersion";
 
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
@@ -150,6 +151,14 @@ describe("a chat line's icon", () => {
         const { container } = renderBody([line("gm", GM, "Design crew: 4 messages")]);
         const slot = slotOf(rowOf(container, "Design crew"))!;
         expect(slot.querySelector("img")?.getAttribute("src")).toBe("https://m.example/gm.png");
+    });
+
+    it("group chat: a picture uploaded this session is refetched (?v=), as in the chat list (MIP-1472)", () => {
+        const { container } = renderBody([line("gm", GM, "Design crew: 4 messages")]);
+        const img = () => slotOf(rowOf(container, "Design crew"))!.querySelector("img");
+        expect(img()?.getAttribute("src")).toBe("https://m.example/gm.png");
+        act(() => bumpGMProfileImageVersion(2, GM as unknown as number));
+        expect(img()?.getAttribute("src")).toBe("https://m.example/gm.png?v=1");
     });
 
     it("group chat with no picture: the group icon, as the chat list", () => {

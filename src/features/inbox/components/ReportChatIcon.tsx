@@ -7,16 +7,17 @@
 // text; an avatar is drawn from what the chat list already holds, and nothing is requested here.
 
 import { memo, type ReactNode } from "react";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import GroupsIcon from "@mui/icons-material/Groups";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import { Box } from "@mui/joy";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
+import { GroupChatAvatar, ProjectChatAvatar } from "../../../components/ui/avatars/ChatKindAvatar";
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { TYPE_SCALE } from "../../../theme/tokens";
 import { AVATAR } from "../../../theme/tokens/scales";
+import { withAvatarVersion } from "../../../utils/avatarSrc";
+import { useGMProfileImageVersion } from "../../../utils/gmProfileImageVersion";
 import type { ReportChatMark } from "../utils/reportChatMarks";
 
 /** Width of the icon slot: the `xs` avatar, as wide as the emoji slot it replaces. */
@@ -40,6 +41,15 @@ const ChatIconSlot = ({ children }: { children: ReactNode }) => (
         {children}
     </Box>
 );
+
+/** A group chat's picture with its `?v=` cache buster (the same one `GMAvatar` adds), so a picture
+ *  uploaded this session is not served stale from the browser cache here. */
+const GroupMark = ({ mark }: { mark: Extract<ReportChatMark, { kind: "gm" }> }) => {
+    // `useGMProfileImageVersion` is keyed by the chat's (legacy numeric) id; as in `GMAvatar`,
+    // the string id is cast once at the boundary.
+    const version = useGMProfileImageVersion(mark.chatType, mark.chatId as unknown as number);
+    return <GroupChatAvatar size="xs" src={withAvatarVersion(mark.src, version)} />;
+};
 
 /** The avatar for a mark, in its slot. A DM outside the avatar context (an isolated render; the
  *  app always has one) cannot be drawn, so the slot holds `fallback`, the generic emoji. */
@@ -75,18 +85,10 @@ export const ReportChatIcon = memo(
                 avatar = <BaseAvatar name={mark.name} size="xs" />;
                 break;
             case "gm":
-                avatar = (
-                    <BaseAvatar size="xs" src={mark.src}>
-                        <GroupsIcon />
-                    </BaseAvatar>
-                );
+                avatar = <GroupMark mark={mark} />;
                 break;
             case "pm":
-                avatar = (
-                    <BaseAvatar size="xs" src={mark.src}>
-                        <AssignmentIcon />
-                    </BaseAvatar>
-                );
+                avatar = <ProjectChatAvatar size="xs" src={mark.src} />;
                 break;
             default:
                 avatar = (

@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import GroupsIcon from "@mui/icons-material/Groups";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";
@@ -9,11 +8,10 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
+import { buildVersionedAvatarSrc } from "../../../utils/avatarSrc";
 import { useGMProfileImageVersion } from "../../../utils/gmProfileImageVersion";
 import { Clickable } from "../Clickable";
-import { BaseAvatar } from "./BaseAvatar";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+import { GroupChatAvatar } from "./ChatKindAvatar";
 
 type GMAvatarProps = {
     useTEM: TeamManagementState;
@@ -55,9 +53,7 @@ export const GMAvatar = (props: GMAvatarProps) => {
         gmChat.chatType,
         gmChat.chatId as unknown as number
     );
-    const avatarSrc = liveChat.profileImagePath
-        ? `${media_url}/${liveChat.profileImagePath}${imageVersion > 0 ? `?v=${imageVersion}` : ""}`
-        : undefined;
+    const avatarSrc = buildVersionedAvatarSrc(liveChat.profileImagePath, imageVersion);
 
     return (
         <div>
@@ -67,9 +63,7 @@ export const GMAvatar = (props: GMAvatarProps) => {
                 width={_avatarSize}
                 onActivate={() => setOpenModalGMProfile(true)}
             >
-                <BaseAvatar size={_avatarSize} src={avatarSrc}>
-                    <GroupsIcon />
-                </BaseAvatar>
+                <GroupChatAvatar size={_avatarSize} src={avatarSrc} />
             </Clickable>
 
             <ModalGMProfile
