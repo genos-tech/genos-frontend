@@ -52,7 +52,8 @@ export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
     weekdays: [],
     monthDay: "1",
     runDate: "",
-    deliverPush: false,
+    // On for a new schedule (MIP-1374): a report nobody is told about goes unread.
+    deliverPush: true,
     aiEffort: "",
 });
 

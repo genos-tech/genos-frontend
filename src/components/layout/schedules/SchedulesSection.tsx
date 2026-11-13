@@ -253,7 +253,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
             params: sug.params,
             frequency: sug.frequency,
             timeOfDay: sug.timeOfDay,
-            deliverPush: false,
+            deliverPush: true,
         });
         setAdding(null);
         if (res.ok) await refresh();

@@ -93,7 +93,7 @@ describe("Suggested schedules", () => {
         expect(screen.queryByTestId("schedule-suggestions")).toBeNull();
     });
 
-    it("adding one is an ordinary create with push off, then the list is read again", async () => {
+    it("adding one is an ordinary create with push on, then the list is read again", async () => {
         createSchedule.mockResolvedValue({ ok: true, schedule: {} });
         const user = userEvent.setup();
         render(<SchedulesSection teamId="team-9" />);
@@ -106,7 +106,7 @@ describe("Suggested schedules", () => {
             params: { day: "today" },
             frequency: "daily",
             timeOfDay: "17:00",
-            deliverPush: false,
+            deliverPush: true,
         });
         await waitFor(() => expect(listSchedules).toHaveBeenCalledTimes(2));
     });

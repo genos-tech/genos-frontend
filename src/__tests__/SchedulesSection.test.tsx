@@ -346,7 +346,8 @@ describe("create and edit form", () => {
             const time = screen.getByLabelText("Time (24-hour)");
             await user.clear(time);
             await user.type(time, "07:30");
-            await user.click(screen.getByRole("switch"));
+            // Push is on for a new schedule (MIP-1374): nothing to click.
+            expect(screen.getByRole("switch")).toBeChecked();
             await user.click(screen.getByRole("button", { name: "Create schedule" }));
 
             await waitFor(() => expect(createSchedule).toHaveBeenCalledTimes(1));
