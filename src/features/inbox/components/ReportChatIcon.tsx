@@ -25,7 +25,7 @@ export const CHAT_ICON_SLOT = AVATAR.xs;
 export const ChatIconSlot = ({ children }: { children: ReactNode }) => (
     <Box
         aria-hidden="true"
-        component="span"
+        component="div"
         data-report-chat-icon=""
         sx={{
             display: "flex",
@@ -41,51 +41,61 @@ export const ChatIconSlot = ({ children }: { children: ReactNode }) => (
     </Box>
 );
 
-/** The avatar for a mark, or null when it cannot be drawn here (a DM outside the avatar
- *  context, as in an isolated render): the caller then keeps the emoji. */
-export const ReportChatIcon = memo(({ mark }: { mark: ReportChatMark }) => {
-    const avatarContext = useOptionalAvatarContext();
-    if (mark.kind === "dm" && !avatarContext) return null;
-    let avatar: ReactNode;
-    switch (mark.kind) {
-        case "dm":
-            // The other person's avatar, as the chat list's DM row: the roster decides the
-            // picture, the name fills the gap while it loads. Inert (no profile modal, no
-            // presence dot): it is a mark, not a control.
-            avatar = (
-                <UserAvatar
-                    clickable={false}
-                    fallbackName={mark.name}
-                    showPulseDot={false}
-                    size="xs"
-                    userId={mark.userId}
-                />
+/** The avatar for a mark, in its slot. A DM outside the avatar context (an isolated render; the
+ *  app always has one) cannot be drawn, so the slot holds `fallback`, the generic emoji. */
+export const ReportChatIcon = memo(
+    ({ mark, fallback }: { mark: ReportChatMark; fallback: string }) => {
+        const avatarContext = useOptionalAvatarContext();
+        if (mark.kind === "dm" && !avatarContext) {
+            return (
+                <ChatIconSlot>
+                    <Box component="span" sx={{ fontSize: 14, lineHeight: 1 }}>
+                        {fallback}
+                    </Box>
+                </ChatIconSlot>
             );
-            break;
-        case "initial":
-            avatar = <BaseAvatar name={mark.name} size="xs" />;
-            break;
-        case "gm":
-            avatar = (
-                <BaseAvatar size="xs" src={mark.src}>
-                    <GroupsIcon />
-                </BaseAvatar>
-            );
-            break;
-        case "pm":
-            avatar = (
-                <BaseAvatar size="xs" src={mark.src}>
-                    <AssignmentIcon />
-                </BaseAvatar>
-            );
-            break;
-        default:
-            avatar = (
-                <BaseAvatar size="xs">
-                    <PeopleRoundedIcon />
-                </BaseAvatar>
-            );
+        }
+        let avatar: ReactNode;
+        switch (mark.kind) {
+            case "dm":
+                // The other person's avatar, as the chat list's DM row: the roster decides the
+                // picture, the name fills the gap while it loads. Inert (no profile modal, no
+                // presence dot): it is a mark, not a control.
+                avatar = (
+                    <UserAvatar
+                        clickable={false}
+                        fallbackName={mark.name}
+                        showPulseDot={false}
+                        size="xs"
+                        userId={mark.userId}
+                    />
+                );
+                break;
+            case "initial":
+                avatar = <BaseAvatar name={mark.name} size="xs" />;
+                break;
+            case "gm":
+                avatar = (
+                    <BaseAvatar size="xs" src={mark.src}>
+                        <GroupsIcon />
+                    </BaseAvatar>
+                );
+                break;
+            case "pm":
+                avatar = (
+                    <BaseAvatar size="xs" src={mark.src}>
+                        <AssignmentIcon />
+                    </BaseAvatar>
+                );
+                break;
+            default:
+                avatar = (
+                    <BaseAvatar size="xs">
+                        <PeopleRoundedIcon />
+                    </BaseAvatar>
+                );
+        }
+        return <ChatIconSlot>{avatar}</ChatIconSlot>;
     }
-    return <ChatIconSlot>{avatar}</ChatIconSlot>;
-});
+);
 ReportChatIcon.displayName = "ReportChatIcon";

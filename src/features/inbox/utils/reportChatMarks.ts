@@ -18,6 +18,7 @@ export type ReportChatKind = "dm" | "gm" | "pm" | "mdm";
 
 const KINDS: ReadonlySet<string> = new Set<ReportChatKind>(["dm", "gm", "pm", "mdm"]);
 const APP_CHAT_PREFIX = "/workspace/chat/";
+const DEEP_LINK: ReadonlySet<string> = new Set(["thread", "message", "comment"]);
 // A chat id is a uuid (a numeric id from before the v3 move still parses). It is only ever a
 // lookup key, never drawn, but a segment that is not id-shaped is junk and ends the parse.
 const CHAT_ID = /^[0-9a-f-]{1,64}$/i;
@@ -26,8 +27,8 @@ const CHAT_ID = /^[0-9a-f-]{1,64}$/i;
 export const chatMarkKey = (kind: ReportChatKind, id: string): string =>
     `${kind}:${id.toLowerCase()}`;
 
-/** The chat a report link names, or null for anything else. Never throws. A `/thread/...`,
- *  query or hash after the chat id is ignored: the line is about the chat. */
+/** The chat a report link names, or null for anything else. Never throws. A `/thread/...`
+ *  (or message, comment), query or hash after the chat id is ignored: the line is about the chat. */
 export const parseReportChatLink = (
     link: string | null | undefined
 ): { kind: ReportChatKind; id: string } | null => {
@@ -35,9 +36,9 @@ export const parseReportChatLink = (
     const path = link.split(/[?#]/, 1)[0];
     const [kind, id, ...rest] = path.slice(APP_CHAT_PREFIX.length).split("/");
     if (!KINDS.has(kind) || id === undefined || !CHAT_ID.test(id)) return null;
-    // Only `/thread/...` (or a trailing slash) may follow the id: `/dm/<id>/anything-else` is
-    // not a chat line this card knows.
-    if (rest.length > 0 && rest[0] !== "" && rest[0] !== "thread") return null;
+    // Only what `parseChatRoute` knows may follow the id (a thread, message or comment, or a
+    // trailing slash); `/dm/<id>/anything-else` is not a chat line this card knows.
+    if (rest.length > 0 && rest[0] !== "" && !DEEP_LINK.has(rest[0])) return null;
     return { kind: kind as ReportChatKind, id };
 };
 

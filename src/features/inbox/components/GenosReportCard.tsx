@@ -412,7 +412,7 @@ const LineRow = ({
     // A chat line wears the chat's own avatar when the chat is in the member's list; otherwise
     // (and for every other kind) the emoji, as before.
     const mark = chatMarkOf(item, chatMarks);
-    const icon = mark ? <ReportChatIcon mark={mark} /> : null;
+    const icon = mark ? <ReportChatIcon fallback={emoji} mark={mark} /> : null;
     return (
         <RowShell
             link={item.link}
