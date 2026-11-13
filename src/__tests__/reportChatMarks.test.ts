@@ -257,13 +257,20 @@ describe("reportChatKeys", () => {
 
 describe("sameChatMarks", () => {
     const m = (marks: Array<[string, ReportChatMark]>) => new Map(marks);
+    const gm = (src: string, over: Partial<{ chatType: number; chatId: string }> = {}) =>
+        ({ kind: "gm", src, chatType: 2, chatId: "c1", ...over }) as ReportChatMark;
+    it("a group's mark also differs by the chat it is (its upload version is keyed by it)", () => {
+        const a = m([["k", gm("x")]]);
+        expect(sameChatMarks(a, m([["k", gm("x", { chatId: "c2" })]]))).toBe(false);
+        expect(sameChatMarks(a, m([["k", gm("x", { chatType: 3 })]]))).toBe(false);
+    });
     it("compares by value, per kind", () => {
-        const a = m([["k", { kind: "gm", src: "x" }]]);
-        expect(sameChatMarks(a, m([["k", { kind: "gm", src: "x" }]]))).toBe(true);
-        expect(sameChatMarks(a, m([["k", { kind: "gm", src: "y" }]]))).toBe(false);
+        const a = m([["k", gm("x")]]);
+        expect(sameChatMarks(a, m([["k", gm("x")]]))).toBe(true);
+        expect(sameChatMarks(a, m([["k", gm("y")]]))).toBe(false);
         expect(sameChatMarks(a, m([["k", { kind: "pm", src: "x" }]]))).toBe(false);
         expect(sameChatMarks(a, m([]))).toBe(false);
-        expect(sameChatMarks(a, m([["j", { kind: "gm", src: "x" }]]))).toBe(false);
+        expect(sameChatMarks(a, m([["j", gm("x")]]))).toBe(false);
         const dm = m([["k", { kind: "dm", userId: "u", name: "N" }]]);
         expect(sameChatMarks(dm, m([["k", { kind: "dm", userId: "u", name: "N" }]]))).toBe(true);
         expect(sameChatMarks(dm, m([["k", { kind: "dm", userId: "v", name: "N" }]]))).toBe(false);
