@@ -460,7 +460,7 @@ export const ar: DeepPartial<Messages> = {
         },
         mobile: {
             close: "إغلاق",
-            openGenos: "مفتوح Genos",
+            openGenos: "فتح Genos",
         },
     },
     settings: {

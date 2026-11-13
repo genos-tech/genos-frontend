@@ -13,6 +13,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { FAB_CLEARANCE_COMPONENTS } from "../../../../components/layout/FabClearanceFooter";
 import { DataState } from "../../../../components/ui/feedback/DataState";
 import { EmptyState as FeedbackEmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
@@ -370,6 +371,7 @@ const ChatListRenderer = ({
             atBottomThreshold={128}
             atTopThreshold={64}
             className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+            components={FAB_CLEARANCE_COMPONENTS}
             initialTopMostItemIndex={0}
             style={{ height: "100%", flex: 1 }}
             totalCount={targetChats.length}
@@ -449,6 +451,7 @@ const ActivityListRenderer = ({
         atBottomThreshold={128}
         atTopThreshold={64}
         className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+        components={FAB_CLEARANCE_COMPONENTS}
         initialTopMostItemIndex={0}
         style={{ height: "100%", flex: 1 }}
         totalCount={tmpActivityMessages.length}
@@ -539,6 +542,7 @@ const FlaggedListRenderer = ({
         atBottomThreshold={128}
         atTopThreshold={64}
         className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+        components={FAB_CLEARANCE_COMPONENTS}
         initialTopMostItemIndex={0}
         style={{ height: "100%", flex: 1 }}
         totalCount={tmpFlaggedMessages.length}

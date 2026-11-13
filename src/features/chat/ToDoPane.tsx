@@ -29,6 +29,7 @@ import {
     writeTagFilter,
 } from "./utils/todoTagFilter";
 
+import { FAB_CLEARANCE_COMPONENTS } from "../../components/layout/FabClearanceFooter";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { modalChromeEndPadding } from "../../components/ui/modal/modalChrome";
@@ -661,6 +662,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             <Virtuoso
                                 ref={virtuosoRef}
                                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                components={FAB_CLEARANCE_COMPONENTS}
                                 totalCount={displayGroups.length}
                                 initialTopMostItemIndex={
                                     focusGroupIndex >= 0 ? focusGroupIndex : 0

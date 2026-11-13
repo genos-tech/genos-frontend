@@ -9,6 +9,8 @@ import { purplePalette } from "../../theme/purplePalette";
 import {
     clampFabTop,
     FAB_AVOID_ATTR,
+    FAB_CLEARANCE,
+    FAB_CLEARANCE_VAR,
     FAB_EDGE_GAP,
     FAB_SIZE,
     fabLift,
@@ -105,6 +107,15 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
             window.removeEventListener("resize", reclamp);
             window.removeEventListener("orientationchange", reclamp);
         };
+    }, [isMobile]);
+
+    // Lists that scroll under the button leave this much room after their last
+    // row (MIP-1404), so the last row's controls can be scrolled clear of it.
+    useEffect(() => {
+        if (!isMobile) return undefined;
+        const root = document.documentElement;
+        root.style.setProperty(FAB_CLEARANCE_VAR, `${FAB_CLEARANCE}px`);
+        return () => root.style.removeProperty(FAB_CLEARANCE_VAR);
     }, [isMobile]);
 
     useEffect(() => {
