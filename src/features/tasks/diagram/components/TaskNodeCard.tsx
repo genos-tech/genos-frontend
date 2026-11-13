@@ -10,7 +10,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
-import { invisibleHitAreaSx } from "../../../../components/ui/touchTargets";
+import { invisibleHitAreaSx, tallHitAreaSx } from "../../../../components/ui/touchTargets";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import {
@@ -332,6 +332,9 @@ export const TaskNodeView = ({
                             borderRadius: g.radius.xs,
                             px: 0.5,
                             mx: -0.5,
+                            // A 20px label is a 44px-tall tap on a touch screen (MIP-1455):
+                            // invisible, exactly as wide as the dates, only when they can be edited.
+                            ...(dateEditable ? tallHitAreaSx("&") : null),
                             transition: `background ${g.motion.fast}, color ${g.motion.fast}`,
                             "&:hover": dateEditable
                                 ? { background: g.hover, color: g.accent.text }

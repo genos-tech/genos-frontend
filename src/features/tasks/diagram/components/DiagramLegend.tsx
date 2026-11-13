@@ -6,6 +6,7 @@ import { Panel } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
+import { touchTargetSx } from "../../../../components/ui/touchTargets";
 import { useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 
@@ -45,6 +46,8 @@ export const DiagramLegend = () => {
                         gap: 0.5,
                         px: 1.25,
                         py: 0.6,
+                        // The toggle is the whole header: 44px high on a touch screen (MIP-1455).
+                        ...touchTargetSx("&"),
                         cursor: "pointer",
                         background: open ? "transparent" : P.hoverBg,
                         "&:hover": { background: P.hoverBg },
@@ -78,6 +81,9 @@ export const DiagramLegend = () => {
                             variant="plain"
                             sx={{
                                 "--IconButton-size": "18px",
+                                // The +/- is drawn small and a 44px tap on a touch screen; it
+                                // sits in the header, which is that high (MIP-1455).
+                                "@media (pointer: coarse)": { "--IconButton-size": "44px" },
                                 color: P.textMuted,
                                 opacity: 0.7,
                             }}
