@@ -1,3 +1,4 @@
+import { AI_APP_SURFACE, aiAppHeadline } from "../../features/chat/utils/aiAppNotice";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { fmt, getMessages } from "../../i18n";
@@ -309,6 +310,25 @@ export const buildActivityIntent = (
     // Reactions are intentionally out of scope for the "balanced" coverage
     // option the user picked.
     if (activity.activityType === 2) return null;
+
+    // "Your AI app did X" (MIP-1432). The actor IS the recipient (an MCP write
+    // runs as its owner), so the self-sender rule below would drop it — this
+    // is the one activity that is meant to reach its own author. No `senderId`
+    // on the intent for the same reason (the manager has its own self check),
+    // and the id is the server push's tag (`ai_app:<activity id>`), so a push
+    // that lands as well replaces this card instead of stacking a second one.
+    if (activity.aiApp) {
+        const strings = getMessages().chat.activity.aiApp;
+        const first = activity.aiApp.items[0];
+        return {
+            body: truncate(first?.title || first?.displayId || ""),
+            category: "ai_app",
+            id: `ai_app:${activity.activityId}`,
+            source: { surfaceType: AI_APP_SURFACE },
+            title: aiAppHeadline(activity.aiApp, strings),
+        };
+    }
+
     if (!activity.senderId || activity.senderId === myself.userId) return null;
 
     // Task comments are mirrored as PM thread replies (chatType 3 +

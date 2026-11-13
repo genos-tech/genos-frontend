@@ -114,6 +114,7 @@ export const services = {
             agentRunDone: "AI answer ready",
             messageReminder: "Message reminders",
             todoReminder: "To-do reminders",
+            aiApp: "What my AI apps do",
         },
         // Email-channel category labels (emailCategories.ts). These use
         // the SERVER's coarser vocabulary — one "mention_task" where the
@@ -206,6 +207,7 @@ export const services = {
                     "When a reminder you set on a message comes due. Turning this off keeps the reminder in your inbox without a notification.",
                 todoReminder:
                     "When a reminder you set on a to-do comes due. Turning this off keeps the reminder in your inbox without a notification.",
+                aiApp: "When an AI app connected over MCP (Claude Code, Claude Desktop…) creates something or changes a status for you. Turning this off stops these notices altogether.",
             },
         },
         // Completion notice for an agent run that finished while its
