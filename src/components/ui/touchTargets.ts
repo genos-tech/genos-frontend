@@ -71,7 +71,7 @@ export const compactChipRowTouchSx = {
 /**
  * One Joy `Chip` of any height that is a button on its own, not in a row of chips (the Unread
  * filter beside the chat list tabs, 26px): the same invisible hit area as `chipRowTouchSx`, grown
- * to 44px around the chip, and nothing else (the row it sits in owns its height).
+ * to 44px high (not wider) around the chip, and nothing else (the row it sits in owns its height).
  */
 export const chipHitAreaSx = (chipHeight: number) =>
     ({
@@ -81,8 +81,9 @@ export const chipHitAreaSx = (chipHeight: number) =>
                 position: "absolute",
                 top: -(TOUCH_TARGET - chipHeight) / 2,
                 bottom: -(TOUCH_TARGET - chipHeight) / 2,
-                left: -4,
-                right: -4,
+                // Tall only: a lone chip's neighbours (the tabs beside it) can be 1px away.
+                left: 0,
+                right: 0,
             },
         },
     }) as const;
