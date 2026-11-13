@@ -20,9 +20,9 @@ import { AVATAR } from "../../../theme/tokens/scales";
 import type { ReportChatMark } from "../utils/reportChatMarks";
 
 /** Width of the icon slot: the `xs` avatar, as wide as the emoji slot it replaces. */
-export const CHAT_ICON_SLOT = AVATAR.xs;
+const CHAT_ICON_SLOT = AVATAR.xs;
 
-export const ChatIconSlot = ({ children }: { children: ReactNode }) => (
+const ChatIconSlot = ({ children }: { children: ReactNode }) => (
     <Box
         aria-hidden="true"
         component="div"
