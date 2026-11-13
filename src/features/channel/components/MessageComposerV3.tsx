@@ -44,6 +44,7 @@ import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
 import { DefaultReactSuggestionItem, SuggestionMenuController } from "@blocknote/react";
 
+import { useBlockNoteDictionary } from "../../../components/editors/blockNoteI18n";
 import {
     isSendShortcut,
     useChatComposer,
@@ -170,16 +171,23 @@ export function MessageComposerV3({
     // request is acked (`clear: "after"`), staged attachments count as content, and there is
     // no inline upload (the strip stages files). Emptiness is the shared `hasSendableContent`
     // (a lone space is not a message), tracked on change like every composer (MIP-1224).
+    // The shared dictionary (translated toolbar, no "Mod+K" hint under the link button since
+    // Cmd/Ctrl+K opens Spotlight everywhere: MIP-1310 / MIP-1392), with this composer's own
+    // placeholders: the hint text in the empty editor, none on a non-empty line or heading.
+    // It used to pass only `placeholders`, which left the toolbar's own strings out of it.
+    const blockNoteDictionary = useBlockNoteDictionary();
+    const dictionary = {
+        ...blockNoteDictionary,
+        placeholders: {
+            ...blockNoteDictionary.placeholders,
+            emptyDocument: placeholder,
+            default: "",
+            heading: "",
+        },
+    };
     const composer = useChatComposer<Message | null>({
         schema,
-        dictionary: {
-            placeholders: {
-                emptyDocument: placeholder,
-                default: "",
-                heading: "",
-            },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any,
+        dictionary,
         draftKey: draftKeyFor(channelId, parentId),
         // The Send button reads `editor.document` at render time (it never had state).
         isSendable: (blocks) => hasSendableContent(blocks) || hasAttachments,
