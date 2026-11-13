@@ -5376,6 +5376,7 @@ export const hi: DeepPartial<Messages> = {
             update_todo_item: "टू-डू अपडेट कर रहा है",
             delete_todo_item: "टू-डू हटा रहा है",
             list_my_chats: "आपकी चैट ढूँढ रहा है",
+            list_my_unread: "आपके अपठित आइटम देख रहा है",
             list_note_folders: "नोट फ़ोल्डर देख रहा है",
             create_note: "नोट बना रहा है",
             update_note: "नोट अपडेट कर रहा है",

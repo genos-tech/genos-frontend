@@ -392,6 +392,7 @@ export const agentApproval = {
         delete_todo_item: "Deleting a to-do",
         // chats
         list_my_chats: "Finding your chats",
+        list_my_unread: "Checking what you haven't read",
         // notes
         list_note_folders: "Looking through note folders",
         create_note: "Creating a note",
