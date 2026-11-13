@@ -1,7 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { loadV3SpecificMessages } from "../../features/chat/services/loadV3SpecificMessages";
 import { loadV3SpecificThreadMessages } from "../../features/chat/services/loadV3SpecificThreadMessages";
+import {
+    useNoteDeleted,
+    type NoteDeletedDetail,
+} from "../../features/notes/common/utils/noteDeleted";
 import { noteTypeFromBucket } from "../../features/notes/common/utils/noteTypeAlias";
 import { isV3Uuid } from "../../utils/legacyId";
 import { ChatManagementState } from "../chats/useChatManagement";
@@ -130,6 +134,16 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
     const lastTaskKeyRef = useRef<string | null>(null);
     const lastMilestoneKeyRef = useRef<string | null>(null);
     const lastNoteKeyRef = useRef<string | null>(null);
+
+    // Notes deleted in this session ("<backend type>:<id>"). A note's row must not come back
+    // after the delete: closing the open note's tab flips the active tab (and the bucket) a
+    // render before `currentMyNote` follows, which looked like opening the note again (MIP-1435).
+    const deletedNotesRef = useRef<Set<string>>(new Set());
+    useNoteDeleted(
+        useCallback(({ noteType, noteIds }: NoteDeletedDetail) => {
+            for (const id of noteIds) deletedNotesRef.current.add(`${noteType}:${id}`);
+        }, [])
+    );
 
     // Chats
     const currentMainChat = useCM.currentMainChat;
@@ -437,6 +451,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
     const teamNoteMeta = useNM.teamNoteMeta;
     useEffect(() => {
         if (!currentMyNote || !currentMyNote.noteId) return;
+        if (deletedNotesRef.current.has(`1:${currentMyNote.noteId}`)) return;
         const bucketNoteType = noteTypeFromBucket(myNoteBucket);
         const key = `note:${bucketNoteType}:${currentMyNote.noteId}`;
         if (lastNoteKeyRef.current === key) return;
@@ -467,6 +482,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
     const allTasksForNotes = useTM.allTasks;
     useEffect(() => {
         if (!currentTaskNote || !currentTaskNote.noteId) return;
+        if (deletedNotesRef.current.has(`2:${currentTaskNote.noteId}`)) return;
         const key = `note:${currentTaskNote.noteType}:${currentTaskNote.noteId}`;
         if (lastNoteKeyRef.current === key) return;
         lastNoteKeyRef.current = key;

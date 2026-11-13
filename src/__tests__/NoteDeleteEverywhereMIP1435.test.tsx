@@ -33,6 +33,7 @@ import { deleteTeamNoteFolder } from "../features/notes/team-notes/services/dele
 import { loadTeamNoteFolders } from "../features/notes/team-notes/services/loadTeamNoteFolders";
 import { loadTeamNotesMeta } from "../features/notes/team-notes/services/loadTeamNotesMeta";
 import { HistoryProvider, useHistory } from "../hooks/common/useHistory";
+import { useHistoryTracker } from "../hooks/common/useHistoryTracker";
 import { clearNoteCache, getCachedNote, upsertNoteCache } from "../hooks/notes/useNoteData";
 import { useNoteManagement } from "../hooks/notes/useNoteManagement";
 import { noteToTab } from "../hooks/notes/useNoteTabs";
@@ -432,6 +433,51 @@ describe("the history and the unread list let a deleted note go", () => {
         // My and Team 7 are the same note (backend type 1); Task note 7 is another note.
         expect(result.current.notesEntries.map((e) => e.label)).toEqual(["Task 7", "My 8"]);
         expect(JSON.parse(localStorage.getItem("genos.history.v1.team-1")!)).toHaveLength(2);
+    });
+
+    it("the history tracker does not record a deleted note again when its tab closes", () => {
+        // Closing the open Team note's tab makes a My tab the active one a render before
+        // `currentMyNote` follows: the bucket flips from team to my, which read as opening
+        // the note again.
+        const stubs = {
+            useCM: { allChats: [], currentMainChat: null, currentThreadChat: null },
+            useTM: {
+                allTasks: [],
+                currentPreviewKind: null,
+                currentPreviewTaskId: -1,
+                currentPreviewMilestoneId: -1,
+                currentPreviewTask: null,
+            },
+            useSM: { projectMilestones: [] },
+            usePM: { teamProjects: [] },
+        };
+        const nm = (bucket: string, team: unknown[]) => ({
+            currentMyNote: { noteId: 7, title: "Team 7" },
+            currentTaskNote: null,
+            currentChatNote: null,
+            tabsApi: { activeTab: { kind: "my", bucket } },
+            teamNoteFolders: [],
+            teamNoteMeta: team,
+        });
+        const { result, rerender } = renderHook(
+            ({ bucket, team }: { bucket: string; team: unknown[] }) => {
+                useHistoryTracker({ ...stubs, useNM: nm(bucket, team) } as never);
+                return useHistory();
+            },
+            {
+                initialProps: { bucket: "team", team: [{ noteId: 7, folderId: 1 }] },
+                wrapper: ({ children }) => (
+                    <HistoryProvider teamId="team-1">{children}</HistoryProvider>
+                ),
+            }
+        );
+        expect(result.current.notesEntries.map((e) => e.noteType)).toEqual([8]);
+
+        act(() => emitNoteDeleted({ noteType: 1, noteIds: [7] }));
+        expect(result.current.notesEntries).toEqual([]);
+        rerender({ bucket: "my", team: [] });
+
+        expect(result.current.notesEntries).toEqual([]);
     });
 
     it("the Unread list drops a note that was deleted, and keeps the rest", () => {
