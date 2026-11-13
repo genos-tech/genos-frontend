@@ -167,7 +167,10 @@ describe("usePreviewEditMirror", () => {
 
     it("a copy with the shown task's exact content (another object) is not handed to the slot, but the row follows it", () => {
         const shown = task(1, { tags: [{ tagId: 1, name: "bug" }] as never });
-        const sameContent = { ...shown, tags: [{ tagId: 1, name: "bug" }] } as TaskProps;
+        const sameContent = {
+            ...shown,
+            tags: [{ tagId: 1, name: "bug" }],
+        } as unknown as TaskProps;
         expect(sameContent).not.toBe(shown);
         const { calls } = setup({ working: sameContent, preview: shown });
 
