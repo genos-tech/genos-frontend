@@ -5419,6 +5419,7 @@ export const es: DeepPartial<Messages> = {
             update_todo_item: "Actualizando un pendiente",
             delete_todo_item: "Eliminando un pendiente",
             list_my_chats: "Buscando tus chats",
+            list_my_unread: "Revisando lo que no has leído",
             list_note_folders: "Revisando carpetas de notas",
             create_note: "Creando una nota",
             update_note: "Actualizando una nota",

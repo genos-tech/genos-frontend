@@ -5091,6 +5091,7 @@ export const ar: DeepPartial<Messages> = {
             update_todo_item: "تحديث عنصر في قائمة المهام",
             delete_todo_item: "حذف عنصر من قائمة المهام",
             list_my_chats: "البحث عن محادثاتك",
+            list_my_unread: "التحقق مما لم تقرأه",
             list_note_folders: "استعراض مجلدات الملاحظات",
             create_note: "إنشاء ملاحظة",
             update_note: "تحديث ملاحظة",

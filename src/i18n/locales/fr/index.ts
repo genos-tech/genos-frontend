@@ -800,6 +800,7 @@ export const fr: DeepPartial<Messages> = {
             update_todo_item: "Mise à jour d'une tâche à faire",
             delete_todo_item: "Suppression d'une tâche à faire",
             list_my_chats: "Recherche de vos chats",
+            list_my_unread: "Vérification de ce que vous n'avez pas lu",
             list_note_folders: "Parcours des dossiers de notes",
             create_note: "Création d'une note",
             update_note: "Mise à jour d'une note",

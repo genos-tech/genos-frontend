@@ -792,6 +792,7 @@ export const ja: DeepPartial<Messages> = {
             update_todo_item: "To-Do を更新中",
             delete_todo_item: "To-Do を削除中",
             list_my_chats: "あなたのチャットを探しています",
+            list_my_unread: "未読を確認しています",
             list_note_folders: "ノートのフォルダーを確認中",
             create_note: "ノートを作成中",
             update_note: "ノートを更新中",

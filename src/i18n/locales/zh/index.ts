@@ -756,6 +756,7 @@ export const zh: DeepPartial<Messages> = {
             update_todo_item: "正在更新待办",
             delete_todo_item: "正在删除待办",
             list_my_chats: "正在查找你的聊天",
+            list_my_unread: "正在查看你的未读内容",
             list_note_folders: "正在浏览笔记文件夹",
             create_note: "正在创建笔记",
             update_note: "正在更新笔记",
