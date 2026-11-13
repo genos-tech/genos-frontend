@@ -2192,9 +2192,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         ? useNM.deleteMyNoteById(noteId)
                         : noteType === 2
                           ? useNM.deleteTaskNoteById(noteId)
-                          : noteType === 3
-                            ? useNM.deleteChatNoteById(noteId)
-                            : Promise.resolve(true);
+                          : useNM.deleteChatNoteById(noteId);
                     // The server did not delete it (the note is still listed): say so.
                     void deleted.then((ok) => {
                         if (!ok) toast.error(t.notes.deleteModal.failed);

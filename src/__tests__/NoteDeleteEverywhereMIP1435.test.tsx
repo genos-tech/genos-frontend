@@ -480,6 +480,50 @@ describe("the history and the unread list let a deleted note go", () => {
         expect(result.current.notesEntries).toEqual([]);
     });
 
+    it("nor a deleted Chat note whose currentChatNote lags the delete", () => {
+        const stubs = {
+            useCM: { allChats: [], currentMainChat: null, currentThreadChat: null },
+            useTM: {
+                allTasks: [],
+                currentPreviewKind: null,
+                currentPreviewTaskId: -1,
+                currentPreviewMilestoneId: -1,
+                currentPreviewTask: null,
+            },
+            useSM: { projectMilestones: [] },
+            usePM: { teamProjects: [] },
+        };
+        const nm = (n: number) => ({
+            currentMyNote: n === 1 ? { noteId: 9, title: "Other" } : null,
+            currentTaskNote: null,
+            currentChatNote: { noteId: 6, noteType: 3, title: "Chat 6", chatType: 2, chatId: 4 },
+            tabsApi: { activeTab: null },
+            teamNoteFolders: [],
+            teamNoteMeta: [],
+            tick: n,
+        });
+        const { result, rerender } = renderHook(
+            ({ n }: { n: number }) => {
+                useHistoryTracker({ ...stubs, useNM: nm(n) } as never);
+                return useHistory();
+            },
+            {
+                initialProps: { n: 0 },
+                wrapper: ({ children }) => (
+                    <HistoryProvider teamId="team-1">{children}</HistoryProvider>
+                ),
+            }
+        );
+        expect(result.current.notesEntries.map((e) => e.noteId)).toEqual([6]);
+        act(() => emitNoteDeleted({ noteType: 3, noteIds: [6] }));
+        expect(result.current.notesEntries).toEqual([]);
+        // The tracker's inputs change again before currentChatNote follows the delete (another
+        // note becomes current for a render, which moves the "last recorded" key off the chat note).
+        rerender({ n: 1 });
+        rerender({ n: 2 });
+        expect(result.current.notesEntries.map((e) => e.noteId)).not.toContain(6);
+    });
+
     it("the Unread list drops a note that was deleted, and keeps the rest", () => {
         const activity = (chatType: number, chatId: number) => ({
             chatType,

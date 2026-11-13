@@ -1400,13 +1400,9 @@ export const useNoteManagement = (
         }
         // Server may have destroyed rows this client's meta didn't know
         // about (stale list) — sweep any extras too.
-        const extras = result.deletedNoteIds.filter((id) => !noteIds.has(id));
-        if (extras.length > 0) {
-            setMyNoteMeta((prev) => prev.filter((n) => !extras.includes(n.noteId)));
-            await purgeLocal(extras);
-        }
-        // The notes are gone for good: out of Recents, Favorites, the note cache and the
-        // history too (the lists above are only the meta ones).
+        // Rows the server destroyed that this client's meta did not know about (a stale
+        // list) are swept here too. The notes are gone for good: out of the lists, Recents,
+        // Favorites, the note cache and the history, which `purgeLocal` above does not reach.
         await dropDeletedNotesLocally("personal", [
             ...new Set([...noteIds, ...result.deletedNoteIds]),
         ]);

@@ -514,6 +514,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
     const allChatsForNotes = useCM.allChats;
     useEffect(() => {
         if (!currentChatNote || !currentChatNote.noteId) return;
+        if (deletedNotesRef.current.has(`3:${currentChatNote.noteId}`)) return;
         const key = `note:${currentChatNote.noteType}:${currentChatNote.noteId}`;
         if (lastNoteKeyRef.current === key) return;
         lastNoteKeyRef.current = key;
