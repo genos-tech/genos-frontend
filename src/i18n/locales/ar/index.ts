@@ -3738,6 +3738,9 @@ export const ar: DeepPartial<Messages> = {
             headlineFrom: "لقد طلبت تذكيرك برسالة {name}.",
             openMessage: "فتح الرسالة",
             openInNamed: "فتح في {chat}",
+            headlineComment: "لقد طلبت تذكيرك بهذا التعليق.",
+            headlineCommentFrom: "لقد طلبت تذكيرك بتعليق {name}.",
+            openComment: "فتح التعليق",
         },
         todoReminder: {
             headline: "لقد طلبت تذكيرك بهذه المهمة.",

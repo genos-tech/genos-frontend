@@ -308,6 +308,28 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     // same `preview` key, and its `href` opens the To-Do pane focused on
     // the row — so only the sentence and the chip's wording differ.
     const isTodoReminder = reminderOptionals?.kind === TODO_REMINDER_KIND;
+    // A message reminder about a TASK COMMENT (the server says so in `subject`, MIP-1444): it is a
+    // message underneath but the card, and its open button, should say "comment". Absent on every
+    // other message, and on cards from a server that predates it, which read as before. A to-do
+    // reminder is checked first below, so a `subject` on one changes nothing.
+    const isCommentReminder = reminderOptionals?.subject === "task_comment";
+    const reminderStrings = t.inbox.messageReminder;
+    const reminderHeadline = isTodoReminder
+        ? t.inbox.todoReminder.headline
+        : isCommentReminder
+          ? reminderSender
+              ? fmt(reminderStrings.headlineCommentFrom, { name: reminderSender })
+              : reminderStrings.headlineComment
+          : reminderSender
+            ? fmt(reminderStrings.headlineFrom, { name: reminderSender })
+            : reminderStrings.headline;
+    const reminderOpenLabel = isTodoReminder
+        ? t.inbox.todoReminder.openTodo
+        : reminderChatName
+          ? fmt(reminderStrings.openInNamed, { chat: reminderChatName })
+          : isCommentReminder
+            ? reminderStrings.openComment
+            : reminderStrings.openMessage;
     const typeLabelKey: RequestLabelKey | undefined = isTodoReminder
         ? "todoReminder"
         : config?.labelKey;
@@ -520,13 +542,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 {reminderOptionals && (
                     <Stack spacing={0.75}>
                         <Typography level="body-sm" sx={{ color: g.text.primary }}>
-                            {isTodoReminder
-                                ? t.inbox.todoReminder.headline
-                                : reminderSender
-                                  ? fmt(t.inbox.messageReminder.headlineFrom, {
-                                        name: reminderSender,
-                                    })
-                                  : t.inbox.messageReminder.headline}
+                            {reminderHeadline}
                         </Typography>
                         {/* The subject itself, quoted — the message, or the
                             to-do's title. A reminder whose
@@ -677,13 +693,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 })
                             }
                         >
-                            {isTodoReminder
-                                ? t.inbox.todoReminder.openTodo
-                                : reminderChatName
-                                  ? fmt(t.inbox.messageReminder.openInNamed, {
-                                        chat: reminderChatName,
-                                    })
-                                  : t.inbox.messageReminder.openMessage}
+                            {reminderOpenLabel}
                         </Chip>
                     </Box>
                 )}

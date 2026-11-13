@@ -119,6 +119,68 @@ describe("InboxBubble message reminder", () => {
     });
 });
 
+// A reminder about a TASK COMMENT is a message reminder underneath; the server says so in
+// `item_optionals.subject` (MIP-1444) and the card then says "comment" instead of "message".
+describe("InboxBubble message reminder — a task comment", () => {
+    const COMMENT_HREF = "/workspace/chat/pm/ch-1/thread/55/comment/9";
+    const commentOptionals = {
+        ...fullOptionals,
+        subject: "task_comment",
+        chat_name: "Q2 Roadmap",
+        href: COMMENT_HREF,
+    };
+
+    it("says who the comment was from, and not 'message'", () => {
+        renderBubble(reminderItem(commentOptionals));
+        expect(screen.getByText("You asked to be reminded about Alice's comment.")).toBeTruthy();
+        expect(screen.queryByText(/message/i)).toBeNull();
+    });
+
+    it("falls back to a generic comment sentence and an 'Open comment' chip", () => {
+        const open = renderBubble(
+            reminderItem({ ...commentOptionals, sender_name: "", chat_name: "" })
+        );
+        expect(screen.getByText("You asked to be reminded about this comment.")).toBeTruthy();
+        fireEvent.click(screen.getByRole("button", { name: /open comment/i }));
+        expect(open).toHaveBeenCalledWith(COMMENT_HREF, { fullPageHref: COMMENT_HREF });
+    });
+
+    it("keeps naming the project on the chip when it has a name", () => {
+        const open = renderBubble(reminderItem(commentOptionals));
+        fireEvent.click(screen.getByRole("button", { name: /Open in Q2 Roadmap/ }));
+        expect(open).toHaveBeenCalledWith(COMMENT_HREF, { fullPageHref: COMMENT_HREF });
+    });
+
+    it("quotes the comment and does not show the stored English fallback", () => {
+        renderBubble(reminderItem(commentOptionals));
+        expect(screen.getByText("ship the release notes")).toBeTruthy();
+        expect(screen.queryByText(/Reminder about Alice's/)).toBeNull();
+    });
+
+    it.each([[undefined], [""], ["task"], [null], [1]])(
+        "reads as a message for subject %j (an old server, or any other message)",
+        (subject) => {
+            renderBubble(reminderItem({ ...fullOptionals, subject }));
+            expect(screen.getByText(/reminded about Alice's message/)).toBeTruthy();
+            expect(screen.queryByText(/comment/i)).toBeNull();
+        }
+    );
+
+    it("a to-do reminder stays a to-do reminder whatever `subject` says", () => {
+        renderBubble(
+            reminderItem({
+                kind: "todo_reminder",
+                subject: "task_comment",
+                preview: "buy milk",
+                href: "/workspace/todo",
+                remind_at: "2026-08-05T09:00:00Z",
+            })
+        );
+        expect(screen.getByText("You asked to be reminded about this to-do.")).toBeTruthy();
+        expect(screen.queryByText(/comment/i)).toBeNull();
+    });
+});
+
 describe("InboxBubble message reminder — custom emoji in the quote", () => {
     // The preview is the message's stored `body_text`, where a team emoji
     // is its canonical `:name:` shortcode. Printed raw it reads as literal

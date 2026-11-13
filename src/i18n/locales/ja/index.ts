@@ -2384,6 +2384,9 @@ export const ja: DeepPartial<Messages> = {
             headlineFrom: "{name}さんのメッセージのリマインダーです。",
             openMessage: "メッセージを開く",
             openInNamed: "「{chat}」で開く",
+            headlineComment: "このコメントのリマインダーです。",
+            headlineCommentFrom: "{name}さんのコメントのリマインダーです。",
+            openComment: "コメントを開く",
         },
         todoReminder: {
             headline: "この To-Do のリマインダーです。",

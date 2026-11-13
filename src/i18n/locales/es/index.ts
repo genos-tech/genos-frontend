@@ -3796,6 +3796,9 @@ export const es: DeepPartial<Messages> = {
             headlineFrom: "Pediste que te recordáramos el mensaje de {name}.",
             openMessage: "Abrir mensaje",
             openInNamed: "Abrir en {chat}",
+            headlineComment: "Pediste que te recordáramos este comentario.",
+            headlineCommentFrom: "Pediste que te recordáramos el comentario de {name}.",
+            openComment: "Abrir comentario",
         },
         todoReminder: {
             headline: "Pediste que te recordáramos esta tarea pendiente.",

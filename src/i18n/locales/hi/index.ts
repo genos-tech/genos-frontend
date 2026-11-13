@@ -3771,6 +3771,9 @@ export const hi: DeepPartial<Messages> = {
             headlineFrom: "आपने {name} के मेसेज की याद दिलाने के लिए कहा था।",
             openMessage: "मेसेज खोलें",
             openInNamed: "{chat} में खोलें",
+            headlineComment: "आपने इस टिप्पणी की याद दिलाने के लिए कहा था।",
+            headlineCommentFrom: "आपने {name} की टिप्पणी की याद दिलाने के लिए कहा था।",
+            openComment: "टिप्पणी खोलें",
         },
         todoReminder: {
             headline: "आपने इस टू-डू की याद दिलाने के लिए कहा था।",
