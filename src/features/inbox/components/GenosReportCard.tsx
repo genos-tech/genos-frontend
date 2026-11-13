@@ -36,6 +36,8 @@ import type {
     ReportProject,
     ReportSectionV2,
 } from "../utils/genosReportV2";
+import { chatMarkKey, parseReportChatLink, type ReportChatMark } from "../utils/reportChatMarks";
+import { ReportChatIcon } from "./ReportChatIcon";
 import { ANSWER_SLOT_WIDTH, ReportRowAnswers } from "./ReportRowAnswers";
 
 /** Sections open on first draw; the rest are folded so the card stays short. */
@@ -371,7 +373,26 @@ const TaskRow = ({
     return row;
 };
 
-const LineRow = ({ item, onOpen }: { item: ReportItemV2; onOpen: Open }) => {
+/** The mark of a chat line's chat: only for a `chat` line whose link names a chat the member
+ *  has. Anything else (no link, a link that is not a chat, a chat not in the list) has none. */
+const chatMarkOf = (
+    item: ReportItemV2,
+    chatMarks: ReadonlyMap<string, ReportChatMark>
+): ReportChatMark | undefined => {
+    if (item.kind !== "chat" || chatMarks.size === 0) return undefined;
+    const parsed = parseReportChatLink(item.link);
+    return parsed ? chatMarks.get(chatMarkKey(parsed.kind, parsed.id)) : undefined;
+};
+
+const LineRow = ({
+    item,
+    onOpen,
+    chatMarks,
+}: {
+    item: ReportItemV2;
+    onOpen: Open;
+    chatMarks: ReadonlyMap<string, ReportChatMark>;
+}) => {
     // The closing "and N more ..." line is a quiet note, not an item.
     if (item.kind === "more") {
         return (
@@ -388,12 +409,18 @@ const LineRow = ({ item, onOpen }: { item: ReportItemV2; onOpen: Open }) => {
     }
     // A kind the card does not know (or none): the text, behind a plain bullet.
     const emoji = item.kind !== null ? KIND_EMOJI[item.kind] : "•";
+    // A chat line wears the chat's own avatar when the chat is in the member's list; otherwise
+    // (and for every other kind) the emoji, as before.
+    const mark = chatMarkOf(item, chatMarks);
+    const icon = mark ? <ReportChatIcon mark={mark} /> : null;
     return (
         <RowShell
             link={item.link}
             sx={{
                 display: "flex",
-                alignItems: "baseline",
+                // The avatar slot is one text line high, so it lines up with the first line from
+                // the top; the emoji keeps its baseline alignment.
+                alignItems: icon ? "flex-start" : "baseline",
                 gap: 1,
                 px: 1,
                 py: 0.75,
@@ -401,13 +428,15 @@ const LineRow = ({ item, onOpen }: { item: ReportItemV2; onOpen: Open }) => {
             }}
             onOpen={onOpen}
         >
-            <Box
-                aria-hidden="true"
-                component="span"
-                sx={{ width: 20, textAlign: "center", flexShrink: 0, fontSize: 14 }}
-            >
-                {emoji}
-            </Box>
+            {icon ?? (
+                <Box
+                    aria-hidden="true"
+                    component="span"
+                    sx={{ width: 20, textAlign: "center", flexShrink: 0, fontSize: 14 }}
+                >
+                    {emoji}
+                </Box>
+            )}
             <Box
                 component="span"
                 dir="auto"
@@ -443,6 +472,7 @@ const Section = ({
     index,
     count,
     avatars,
+    chatMarks,
     onOpen,
     todayIso,
     answerer,
@@ -452,6 +482,7 @@ const Section = ({
     /** The server's count for this section (a capped list shows fewer lines than it counts). */
     count: number;
     avatars: ReadonlyMap<number, string>;
+    chatMarks: ReadonlyMap<string, ReportChatMark>;
     onOpen: Open;
     todayIso: string;
     answerer?: Answerer;
@@ -601,7 +632,11 @@ const Section = ({
                                                 onOpen={onOpen}
                                             />
                                         ) : (
-                                            <LineRow item={item} onOpen={onOpen} />
+                                            <LineRow
+                                                chatMarks={chatMarks}
+                                                item={item}
+                                                onOpen={onOpen}
+                                            />
                                         )}
                                     </li>
                                 ))}
@@ -733,12 +768,17 @@ const StatStrip = ({ report }: { report: GenosReportV2 }) => {
 };
 
 const NO_AVATARS: ReadonlyMap<number, string> = new Map();
+const NO_CHAT_MARKS: ReadonlyMap<string, ReportChatMark> = new Map();
 
 type CardProps = {
     report: GenosReportV2;
     /** Project id to picture, from what is already in memory (no request is made). Hand the
      *  SAME map while its entries are the same, or the memoized card renders again. */
     avatars?: ReadonlyMap<number, string>;
+    /** The avatar of each chat a "Messages sent" line names, by `chatMarkKey`, from the member's
+     *  chat list (MIP-1333; no request). A chat not in it keeps the emoji. Same rule as
+     *  `avatars`: hand the SAME map while its entries are the same. */
+    chatMarks?: ReadonlyMap<string, ReportChatMark>;
     /** The footer slot: MIP-1209 puts "AI usage used" and "Turn this off" here. */
     footer?: ReactNode;
     /** The member and team the answers are for (MIP-1211). Both, or no buttons are drawn. They
@@ -748,7 +788,14 @@ type CardProps = {
 };
 
 export const GenosReportCard = memo(
-    ({ report, avatars = NO_AVATARS, footer, userId, teamId }: CardProps) => {
+    ({
+        report,
+        avatars = NO_AVATARS,
+        chatMarks = NO_CHAT_MARKS,
+        footer,
+        userId,
+        teamId,
+    }: CardProps) => {
         const { t } = useTranslation();
         const navigate = useNavigate();
         const urlLinkModal = useUrlLinkModal();
@@ -836,6 +883,7 @@ export const GenosReportCard = memo(
                             <Section
                                 key={`${index}-${section.key ?? section.heading}`}
                                 avatars={avatars}
+                                chatMarks={chatMarks}
                                 count={Math.max(
                                     (section.key !== null ? counts.get(section.key) : undefined) ??
                                         0,

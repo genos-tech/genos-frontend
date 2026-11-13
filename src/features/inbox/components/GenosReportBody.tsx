@@ -21,6 +21,12 @@ import {
     parseGenosReport,
 } from "../utils/genosReport";
 import { isReportV2, parseGenosReportV2, type GenosReportV2 } from "../utils/genosReportV2";
+import {
+    reportChatKeys,
+    reportChatMarkMap,
+    sameChatMarks,
+    type ReportChatMark,
+} from "../utils/reportChatMarks";
 import { GenosReportCard } from "./GenosReportCard";
 
 const itemLinkSx = {
@@ -180,6 +186,27 @@ const useProjectAvatars = (
     }, [report, allChats]);
 };
 
+const NO_CHAT_MARKS: ReadonlyMap<string, ReportChatMark> = new Map();
+
+/** The chat avatars of a typed report's "Messages sent" lines (MIP-1333), from the member's
+ *  chats. Same rule as the project pictures: the list is replaced on almost every message, so
+ *  the map is handed on unchanged while its entries are, and a report with no chat line never
+ *  scans the chats. */
+const useChatMarks = (
+    report: GenosReportV2 | null,
+    allChats: GenosReportBodyProps["allChats"]
+): ReadonlyMap<string, ReportChatMark> => {
+    const last = useRef<ReadonlyMap<string, ReportChatMark>>(NO_CHAT_MARKS);
+    // Which chats the report names depends on the report alone, not on the chat list.
+    const keys = useMemo(() => reportChatKeys(report), [report]);
+    return useMemo(() => {
+        if (keys.size === 0) return NO_CHAT_MARKS;
+        const next = reportChatMarkMap(keys, allChats);
+        if (!sameChatMarks(last.current, next)) last.current = next;
+        return last.current;
+    }, [keys, allChats]);
+};
+
 /** The card body for an inbox item of type 10. A body with `version` 2 gets the rich card; one
  *  without it (a report stored before the typed fields) is drawn exactly as it always was.
  *  Renders nothing for a body that is not a report. The body is parsed once per body object and
@@ -200,10 +227,12 @@ export const GenosReportBody = ({
         [itemBody]
     );
     const avatars = useProjectAvatars(typed, allChats);
+    const chatMarks = useChatMarks(typed, allChats);
     if (typed) {
         return (
             <GenosReportCard
                 avatars={avatars}
+                chatMarks={chatMarks}
                 footer={footer}
                 report={typed}
                 teamId={teamId}
