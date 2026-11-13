@@ -181,6 +181,19 @@ export const NOTIFICATION_CATEGORIES = [
         descriptionKey: "todoReminder",
         defaultEnabled: true,
     },
+    {
+        // What the member's own AI app did over MCP (MIP-1432): the API files
+        // a notice for the key's owner, because an MCP write runs AS them and
+        // so raises none of the notifications another member's write would.
+        // One switch for every app. Off stops the notice being made at all
+        // (feed row, toast and push), and on rides the `enable_inbox` column
+        // like the two reminders above (`webpush_gating._COARSE_FIELD`).
+        key: "ai_app",
+        group: "inbox",
+        labelKey: "aiApp",
+        descriptionKey: "aiApp",
+        defaultEnabled: true,
+    },
 ] as const satisfies readonly CategoryEntry[];
 
 /** Union of every fine category key — derived from the registry so the

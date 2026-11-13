@@ -17,6 +17,7 @@
 import { channelService } from "../../../services/channel/channelService";
 import type { UserProps } from "../../../types/admin";
 import type { ActivityMessageProps } from "../../../types/chat";
+import { AI_APP_SURFACE, parseAiAppNotice } from "../utils/aiAppNotice";
 import { derivePreviewMediaKind } from "../utils/common";
 
 interface V3ActivityWire {
@@ -104,6 +105,47 @@ function resolveChatName(a: V3ActivityWire): string {
     return "?";
 }
 
+function aiAppActivity(
+    a: V3ActivityWire,
+    myself: UserProps,
+    meta: Record<string, unknown>
+): ActivityMessageProps {
+    const aiApp = parseAiAppNotice(meta);
+    const projectId = typeof meta.projectId === "number" ? meta.projectId : undefined;
+    const taskId = typeof meta.taskId === "number" ? meta.taskId : 0;
+    return {
+        activityId: a.id,
+        activityType: a.activityType,
+        teamId: a.teamId,
+        chatType: AI_APP_SURFACE,
+        chatId: 0 as unknown as number,
+        chatName: aiApp.app,
+        dmPartnerUserId: "",
+        dmPartnerUserName: "",
+        dmPartnerUserEmail: "",
+        isThread: false,
+        threadId: 0 as unknown as number,
+        messageId: 0,
+        messageUniqueKey: a.id,
+        threadMessageUniqueKey: "",
+        taskId,
+        displayId: aiApp.items[0]?.displayId ?? null,
+        projectId,
+        firstLineContent: aiApp.items[0]?.title ?? "",
+        latestReaction: { emoji: "", sender: EMPTY_USER, tsSent: a.tsCreated },
+        // The key's owner is both actor and recipient; the router bypasses
+        // its self-sender check for this surface.
+        senderId: a.actor?.userId ?? a.recipientUserId,
+        receiver: myself,
+        reactions: [],
+        tsSent: a.tsCreated,
+        mentionedUserIds: [],
+        isRead: a.isRead,
+        systemUserId: undefined,
+        aiApp,
+    } as ActivityMessageProps;
+}
+
 export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): ActivityMessageProps {
     // Channel-less "surface" mention (task body / note). There's no
     // backing Message/Channel, so render + route from `meta`. `chatType`
@@ -113,6 +155,9 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
     //   - notes (6/7/8) open the note via chatId (== the note id)
     if (a.surfaceType != null) {
         const meta = (a.meta ?? {}) as Record<string, unknown>;
+        // An AI app acted as this member over MCP (surface 10): no task or
+        // note behind it to route by, only facts in `meta`.
+        if (a.surfaceType === AI_APP_SURFACE) return aiAppActivity(a, myself, meta);
         const num = (v: unknown): number | undefined => (typeof v === "number" ? v : undefined);
         const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
         const taskId = num(meta.taskId) ?? 0;

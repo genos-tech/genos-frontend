@@ -11,6 +11,7 @@ import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import StickyNote2OutlinedIcon from "@mui/icons-material/StickyNote2Outlined";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -122,6 +123,7 @@ const ACTIVITY_FILTERS: Array<{
 // the record's own iteration order).
 type ChipMeta = { icon: React.ElementType; labelKey: ActivityFilterKey };
 const CHIP_META: Record<ChipId, ChipMeta> = {
+    aiApp: { icon: SmartToyOutlinedIcon, labelKey: "chipAiApp" },
     dm: { icon: PersonOutlineRoundedIcon, labelKey: "chipDM" },
     gm: { icon: GroupsOutlinedIcon, labelKey: "chipGM" },
     mention: { icon: AlternateEmailRoundedIcon, labelKey: "chipMention" },

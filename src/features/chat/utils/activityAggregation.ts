@@ -70,6 +70,9 @@ export const getAggregatedIds = (a: ActivityMessageProps): string[] =>
  */
 export const activityTopicKey = (a: ActivityMessageProps): string => {
     const t = a.activityType;
+    // An AI-app notice is one act by one call; two of them are never "the
+    // same topic", so each stands on its own row.
+    if (a.chatType === 10) return `${t}|aiapp:${a.activityId}`;
     if (a.chatType >= 6 && a.chatType <= 8) return `${t}|note:${a.chatType}:${String(a.chatId)}`;
     if (a.chatType === 5) return `${t}|taskbody:${a.taskId}`;
     if (isTaskCommentActivity(a)) return `${t}|taskcomment:${a.taskId}`;

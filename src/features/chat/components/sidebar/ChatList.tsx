@@ -31,6 +31,7 @@ import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { ChatListItemLive } from "../../hooks/useChatListItem";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { ChipId, selectVisibleActivityMessages } from "../../utils/activityChipFilters";
+import { AiAppActivityRow } from "./activity/AiAppActivityRow";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
@@ -468,22 +469,34 @@ const ActivityListRenderer = ({
                     {/* A column, not a row: Joy's ListItem is `flex: none`, so in a row it kept
                         its content's width, past the sidebar's, and widened every card. */}
                     <Stack>
-                        <ChatListItemForActivity
-                            key={`${activityMessage.activityId}-${activityMessage.isRead}`}
-                            activity={activityMessage}
-                            activityMessages={activityMessages}
-                            myself={data.myself}
-                            selectedActivityId={selectedActivityId}
-                            setCurrentProject={usePM.setCurrentProject}
-                            setMyself={data.setMyself}
-                            setSelectedActivityId={setSelectedActivityId}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
+                        {activityMessage.aiApp ? (
+                            <AiAppActivityRow
+                                key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                activity={activityMessage}
+                                activityMessages={activityMessages}
+                                myself={data.myself}
+                                selectedActivityId={selectedActivityId}
+                                setSelectedActivityId={setSelectedActivityId}
+                                useCM={useCM}
+                            />
+                        ) : (
+                            <ChatListItemForActivity
+                                key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                activity={activityMessage}
+                                activityMessages={activityMessages}
+                                myself={data.myself}
+                                selectedActivityId={selectedActivityId}
+                                setCurrentProject={usePM.setCurrentProject}
+                                setMyself={data.setMyself}
+                                setSelectedActivityId={setSelectedActivityId}
+                                socket={socket}
+                                useCM={useCM}
+                                useNM={useNM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        )}
                     </Stack>
                 </Box>
             );

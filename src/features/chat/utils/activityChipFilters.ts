@@ -14,6 +14,7 @@ export { isTaskCommentActivity };
 // payload (`Set<ChipId>`) so the value space is closed at the type
 // level and the predicate map below stays exhaustive.
 export type ChipId =
+    | "aiApp"
     | "project"
     | "dm"
     | "gm"
@@ -36,6 +37,7 @@ type Predicate = (a: ActivityMessageProps) => boolean;
 // sorted alphabetically to satisfy `sort-keys`; semantic render order
 // lives in `CHIP_ORDER` below.
 export const CHIP_PREDICATES: Record<ChipId, Predicate> = {
+    aiApp: (a) => a.chatType === 10,
     // "MDM" (multi-user DM) is an internal term — to end users it's just
     // a DM. The `dm` chip therefore covers chatType 1 AND chatType 4
     // without a taskId (chatType 4 with a taskId is a task comment,
@@ -93,7 +95,8 @@ export const CHIP_PREDICATES: Record<ChipId, Predicate> = {
 export const ACTIVITY_PRIMARY_FILTERS: Record<number, Predicate> = {
     0: () => true,
     1: (a) => a.isThread === true && !isTaskCommentActivity(a),
-    2: (a) => a.chatType > 2,
+    // An AI-app notice (surface 10) is not a task or a note.
+    2: (a) => a.chatType > 2 && a.chatType !== 10,
     3: (a) => a.activityType === 3,
     4: (a) => a.activityType === 2,
 };
@@ -121,6 +124,7 @@ export const makeChipFilter =
 // note-surface chips. Lines up roughly with how
 // `ActivityTypeChips` groups them visually.
 export const CHIP_ORDER: readonly ChipId[] = [
+    "aiApp",
     "project",
     "dm",
     "gm",

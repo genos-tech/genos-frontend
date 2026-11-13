@@ -189,6 +189,31 @@ export type ActivityMessageProps = {
     // old data). Coercing to a number drops the UUID, breaking thread
     // deep-links — carry it as-is, same as `noteChatId`.
     noteThreadId?: number | string;
+    // An AI app (a key or connected app over MCP) did something as this
+    // member (surface 10, MIP-1432). Facts, not sentences: the row and the
+    // toast are worded here, in the member's language.
+    aiApp?: AiAppNotice;
+};
+
+export type AiAppNoticeItem = {
+    kind?: string;
+    id?: number | string | null;
+    displayId?: string | null;
+    title?: string | null;
+    url?: string | null;
+    projectId?: number | null;
+    taskId?: number | null;
+};
+
+export type AiAppNotice = {
+    app: string;
+    verb: "created" | "status" | "commented" | "deleted" | string;
+    kind: string;
+    count: number;
+    status?: string;
+    taskCount?: number;
+    url: string;
+    items: AiAppNoticeItem[];
 };
 
 export type MessageProps = {
