@@ -2301,6 +2301,9 @@ export const zh: DeepPartial<Messages> = {
             headlineFrom: "你要求提醒你 {name} 的这条消息。",
             openMessage: "打开消息",
             openInNamed: "在「{chat}」中打开",
+            headlineComment: "你要求提醒你这条评论。",
+            headlineCommentFrom: "你要求提醒你 {name} 的这条评论。",
+            openComment: "打开评论",
         },
         todoReminder: {
             headline: "你要求提醒你这个待办事项。",

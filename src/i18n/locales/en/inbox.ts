@@ -106,6 +106,11 @@ export const inbox = {
         headlineFrom: "You asked to be reminded about {name}'s message.",
         openMessage: "Open message",
         openInNamed: "Open in {chat}",
+        // A reminder about a task comment (item_optionals.subject "task_comment", MIP-1444).
+        // It is a message underneath, but nobody calls it that.
+        headlineComment: "You asked to be reminded about this comment.",
+        headlineCommentFrom: "You asked to be reminded about {name}'s comment.",
+        openComment: "Open comment",
     },
     // The other kind of item_type 9, told apart by `item_optionals.kind`.
     // Same card, different subject: a to-do of the reader's own, quoted
