@@ -19,6 +19,8 @@ interface NotificationPreferenceWire {
     enable_mentions: boolean;
     enable_task_comments: boolean;
     enable_inbox: boolean;
+    // Optional: an older backend (pre AI-apps group) omits it.
+    enable_ai_apps?: boolean;
     email_enabled?: boolean;
     category_settings?: Record<string, boolean>;
     muted_chats: Array<{ chat_type: number; chat_id: string; chat_name?: string }>;
@@ -35,6 +37,7 @@ const fromWire = (wire: NotificationPreferenceWire): NotificationPreference => (
     enableMentions: wire.enable_mentions,
     enableTaskComments: wire.enable_task_comments,
     enableInbox: wire.enable_inbox,
+    enableAiApps: wire.enable_ai_apps ?? true,
     // Optional: an older backend (pre email channel) simply omits it.
     emailEnabled: wire.email_enabled ?? true,
     categorySettings: wire.category_settings ?? {},
@@ -72,6 +75,7 @@ export const toWire = (
     if (patch.enableTaskComments !== undefined)
         wire.enable_task_comments = patch.enableTaskComments;
     if (patch.enableInbox !== undefined) wire.enable_inbox = patch.enableInbox;
+    if (patch.enableAiApps !== undefined) wire.enable_ai_apps = patch.enableAiApps;
     if (patch.emailEnabled !== undefined) wire.email_enabled = patch.emailEnabled;
     if (patch.categorySettings !== undefined) {
         // JSON field replace: always send the FULL map, never a single-key

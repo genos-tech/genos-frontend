@@ -71,6 +71,7 @@ describe("notificationApi", () => {
                 enableMentions: false,
                 enableTaskComments: true,
                 enableInbox: false,
+                enableAiApps: false,
             });
             expect(out).toEqual({
                 master_enabled: true,
@@ -79,6 +80,7 @@ describe("notificationApi", () => {
                 enable_mentions: false,
                 enable_task_comments: true,
                 enable_inbox: false,
+                enable_ai_apps: false,
             });
         });
 
@@ -183,6 +185,8 @@ describe("notificationApi", () => {
                 enableMentions: true,
                 enableTaskComments: false,
                 enableInbox: true,
+                // Absent on the wire fixture (an older backend) -> on.
+                enableAiApps: true,
                 // Absent on the wire fixture -> defaulted by fromWire.
                 emailEnabled: true,
                 categorySettings: {},
@@ -375,6 +379,7 @@ describe("NotificationManager", () => {
                 ["mentions", "enableMentions"],
                 ["task_comments", "enableTaskComments"],
                 ["inbox", "enableInbox"],
+                ["ai_apps", "enableAiApps"],
             ];
 
         it.each(groupCases)("setGroupEnabled(%s) patches the coarse %s column", (group, key) => {
@@ -384,10 +389,12 @@ describe("NotificationManager", () => {
             expect(onPreferencesChange).toHaveBeenCalledWith({ [key]: false });
         });
 
-        it("every registry category is enabled by default", () => {
+        it("every registry category is enabled by default, bar the named exceptions", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
+            // "Note edited" (MIP-1452): an AI app can edit one note dozens of times in a row.
+            const offByDefault = new Set(["ai_app_note_edited"]);
             for (const c of NOTIFICATION_CATEGORIES) {
-                expect(mgr.isCategoryEnabled(c.key)).toBe(true);
+                expect(mgr.isCategoryEnabled(c.key), c.key).toBe(!offByDefault.has(c.key));
             }
         });
 

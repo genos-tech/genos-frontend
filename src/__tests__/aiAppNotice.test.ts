@@ -14,6 +14,7 @@ import {
 } from "../features/chat/utils/activityChipFilters";
 import {
     AI_APP_SURFACE,
+    aiAppCategory,
     aiAppHeadline,
     aiAppSentence,
     parseAiAppNotice,
@@ -128,6 +129,9 @@ describe("aiAppNotice wording", () => {
         expect(headline(meta({ verb: "commented", kind: "comment" }))).toBe(
             "Claude Code commented on QR-7"
         );
+        expect(
+            headline(meta({ verb: "edited", kind: "note", items: [item({ displayId: null })] }))
+        ).toBe("Claude Code edited note Fix login");
         expect(headline(meta({ verb: "deleted", kind: "comment" }))).toBe(
             "Claude Code deleted a comment on QR-7"
         );
@@ -168,11 +172,17 @@ describe("aiAppNotice wording", () => {
             }
             expect(loc.chat!.sidebar!.chipAiApp, `${name} chipAiApp`).toBeTruthy();
             const cats = loc.services!.notifications!;
-            expect(cats.categories!.aiApp, `${name} category label`).toBeTruthy();
-            expect(
-                cats.settings!.categoryDescriptions!.aiApp,
-                `${name} category description`
-            ).toBeTruthy();
+            for (const entry of NOTIFICATION_CATEGORIES.filter((c) => c.group === "ai_apps")) {
+                const label = (cats.categories as Record<string, string>)[entry.labelKey];
+                expect(label, `${name} category label ${entry.labelKey}`).toBeTruthy();
+            }
+            // The two rows that need a sentence of explanation.
+            for (const key of ["aiApps", "aiAppNoteEdited"] as const) {
+                expect(
+                    cats.settings!.categoryDescriptions![key],
+                    `${name} category description ${key}`
+                ).toBeTruthy();
+            }
         }
     });
 });
@@ -233,19 +243,68 @@ describe("notification", () => {
     const useCM = { allChats: [] } as never;
     const row = () => v3ActivityToLegacy(wire(), myself);
 
-    it("is registered once, in the inbox group, on by default", () => {
-        const entries = NOTIFICATION_CATEGORIES.filter((c) => c.key === "ai_app");
-        expect(entries).toHaveLength(1);
-        expect(entries[0].group).toBe("inbox");
-        expect(entries[0].defaultEnabled).toBe(true);
+    it("has its own group: a lead entry and one switch per action, only note-edited off", () => {
+        const entries = NOTIFICATION_CATEGORIES.filter((c) => c.group === "ai_apps");
+        expect(entries.map((e) => e.key)).toEqual([
+            "ai_apps",
+            "ai_app_task_created",
+            "ai_app_task_status",
+            "ai_app_task_commented",
+            "ai_app_comment_deleted",
+            "ai_app_milestone_created",
+            "ai_app_milestone_status",
+            "ai_app_milestone_deleted",
+            "ai_app_note_created",
+            "ai_app_note_edited",
+            "ai_app_note_deleted",
+            "ai_app_todo_created",
+            "ai_app_todo_deleted",
+        ]);
+        expect(entries.filter((e) => !e.defaultEnabled).map((e) => e.key)).toEqual([
+            "ai_app_note_edited",
+        ]);
+        // The lead only titles the group; the twelve below it are the switches.
+        expect(entries.filter((e) => !("hideSubToggle" in e && e.hideSubToggle))).toHaveLength(12);
+        // And the old single and per-kind keys are gone.
+        const keys = new Set<string>(NOTIFICATION_CATEGORIES.map((c) => c.key));
+        for (const gone of ["ai_app", "ai_app_tasks", "ai_app_notes", "ai_app_todos"]) {
+            expect(keys.has(gone), gone).toBe(false);
+        }
+    });
+
+    it("answers to the switch of what happened to what", () => {
+        const cases: Array<[string, string, string]> = [
+            ["created", "task", "ai_app_task_created"],
+            ["status", "task", "ai_app_task_status"],
+            ["commented", "comment", "ai_app_task_commented"],
+            ["deleted", "comment", "ai_app_comment_deleted"],
+            ["created", "milestone", "ai_app_milestone_created"],
+            ["status", "milestone", "ai_app_milestone_status"],
+            ["deleted", "milestone", "ai_app_milestone_deleted"],
+            ["created", "note", "ai_app_note_created"],
+            ["edited", "note", "ai_app_note_edited"],
+            ["deleted", "note", "ai_app_note_deleted"],
+            ["created", "todo", "ai_app_todo_created"],
+            ["deleted", "todo", "ai_app_todo_deleted"],
+        ];
+        for (const [verb, kind, want] of cases) {
+            expect(aiAppCategory(verb, kind), `${verb} ${kind}`).toBe(want);
+            // and the registry really has that switch
+            expect(
+                NOTIFICATION_CATEGORIES.some((c) => c.key === want),
+                want
+            ).toBe(true);
+        }
+        // An action nothing names answers to the group's master alone.
+        expect(aiAppCategory("teleported", "task")).toBe("ai_apps");
     });
 
     it("builds an intent even though the actor is the recipient", () => {
         const intent = buildActivityIntent(row(), myself, useTEM, useCM);
         expect(intent).not.toBeNull();
-        expect(intent!.category).toBe("ai_app");
+        expect(intent!.category).toBe("ai_app_task_created");
         // The server push's tag, so the two collapse into one card.
-        expect(intent!.id).toBe("ai_app:act-1");
+        expect(intent!.id).toBe("ai_app_task_created:act-1");
         expect(intent!.title).toBe("Claude Code created task QR-7 Fix login");
         expect(intent!.body).toBe("Fix login");
         // Carrying a senderId would trip the manager's own self check.
@@ -255,6 +314,16 @@ describe("notification", () => {
     it("still ignores a row that is not an AI-app notice from me", () => {
         const plain = { ...row(), aiApp: undefined, chatType: 3 };
         expect(buildActivityIntent(plain as never, myself, useTEM, useCM)).toBeNull();
+    });
+
+    it("takes the category of its action", () => {
+        const note = v3ActivityToLegacy(
+            wire(meta({ kind: "note", items: [item({ kind: "note", displayId: null })] })),
+            myself
+        );
+        expect(buildActivityIntent(note, myself, useTEM, useCM)!.category).toBe(
+            "ai_app_note_created"
+        );
     });
 
     it("toasts by default and stays silent once the member switches it off", () => {
@@ -267,15 +336,64 @@ describe("notification", () => {
         const off = new NotificationManager({ currentUserId: "me" });
         off.hydratePreferences({
             ...DEFAULT_NOTIFICATION_PREFERENCE,
-            categorySettings: { ai_app: false },
+            categorySettings: { ai_app_task_created: false },
         });
-        expect(off.notify({ ...intent, id: "ai_app:other" })).toBe("ignored-disabled");
+        expect(off.notify({ ...intent, id: "ai_app_task_created:other" })).toBe(
+            "ignored-disabled"
+        );
     });
 
-    it("rides the Inbox group: that group off silences it", () => {
+    it("one action off leaves the others on: mute task-created, keep task-commented", () => {
         const mgr = new NotificationManager({ currentUserId: "me" });
-        mgr.setGroupEnabled("inbox", false);
+        mgr.hydratePreferences({
+            ...DEFAULT_NOTIFICATION_PREFERENCE,
+            categorySettings: { ai_app_task_created: false },
+        });
+        const intentFor = (id: string, m: Record<string, unknown>) =>
+            buildActivityIntent(
+                v3ActivityToLegacy(wire(m, { id }), myself),
+                myself,
+                useTEM,
+                useCM
+            )!;
+        const created = intentFor("c1", meta());
+        const commented = intentFor("c2", meta({ verb: "commented", kind: "comment" }));
+        const status = intentFor("c3", meta({ verb: "status", status: "WIP" }));
+        expect(mgr.notify(created)).toBe("ignored-disabled");
+        expect(mgr.notify(commented)).toBe("toast");
+        expect(mgr.notify(status)).toBe("toast");
+    });
+
+    it("note edited starts off and turns on when the member opts in", () => {
+        const edited = buildActivityIntent(
+            v3ActivityToLegacy(
+                wire(meta({ verb: "edited", kind: "note", items: [item({ kind: "note" })] })),
+                myself
+            ),
+            myself,
+            useTEM,
+            useCM
+        )!;
+        expect(edited.category).toBe("ai_app_note_edited");
+        expect(edited.title).toBe("Claude Code edited note QR-7 Fix login");
+        const byDefault = new NotificationManager({ currentUserId: "me" });
+        expect(byDefault.notify(edited)).toBe("ignored-disabled");
+        const optedIn = new NotificationManager({ currentUserId: "me" });
+        optedIn.hydratePreferences({
+            ...DEFAULT_NOTIFICATION_PREFERENCE,
+            categorySettings: { ai_app_note_edited: true },
+        });
+        expect(optedIn.notify(edited)).toBe("toast");
+    });
+
+    it("is a group of its own: the group off silences every kind, the Inbox group does not", () => {
         const intent = buildActivityIntent(row(), myself, useTEM, useCM)!;
-        expect(mgr.notify(intent)).toBe("ignored-disabled");
+        const inboxOff = new NotificationManager({ currentUserId: "me" });
+        inboxOff.setGroupEnabled("inbox", false);
+        expect(inboxOff.notify(intent)).toBe("toast");
+
+        const groupOff = new NotificationManager({ currentUserId: "me" });
+        groupOff.setGroupEnabled("ai_apps", false);
+        expect(groupOff.notify(intent)).toBe("ignored-disabled");
     });
 });

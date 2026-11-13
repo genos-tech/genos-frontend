@@ -1260,6 +1260,7 @@ export const ja: DeepPartial<Messages> = {
                 createdMilestoneWithTasks:
                     "マイルストーン {name} とタスク {taskCount} 件を作成しました",
                 createdNote: "ノート {name} を作成しました",
+                editedNote: "ノート {name} を編集しました",
                 createdTodo: "To-Do {name} を追加しました",
                 statusTask: "{name} を {status} にしました",
                 statusTasks: "{count} 件のタスクを {status} にしました",
@@ -3220,7 +3221,19 @@ export const ja: DeepPartial<Messages> = {
                 agentRunDone: "AIによる回答準備完了",
                 messageReminder: "メッセージリマインダー",
                 todoReminder: "To-Do リマインダー",
-                aiApp: "AI アプリの操作",
+                aiApps: "AI アプリの操作",
+                aiAppTaskCreated: "タスクの作成",
+                aiAppTaskStatus: "タスクのステータス変更",
+                aiAppTaskCommented: "タスクへのコメント",
+                aiAppCommentDeleted: "タスクコメントの削除",
+                aiAppMilestoneCreated: "マイルストーンの作成",
+                aiAppMilestoneStatus: "マイルストーンのステータス変更",
+                aiAppMilestoneDeleted: "マイルストーンの削除",
+                aiAppNoteCreated: "ノートの作成",
+                aiAppNoteEdited: "ノートの編集",
+                aiAppNoteDeleted: "ノートの削除",
+                aiAppTodoCreated: "To-Do の追加",
+                aiAppTodoDeleted: "To-Do の削除",
             },
             emailCategories: {
                 mentionChat: "チャットでのメンション",
@@ -3301,7 +3314,9 @@ export const ja: DeepPartial<Messages> = {
                         "メッセージに設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信箱に残ります。",
                     todoReminder:
                         "To-Do に設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信箱に残ります。",
-                    aiApp: "MCP で接続した AI アプリ（Claude Code、Claude Desktop など）があなたの代わりに何かを作成したりステータスを変更したときに通知します。オフにすると通知自体が作られなくなります。",
+                    aiApps: "MCP で接続した AI アプリ（Claude Code、Claude Desktop など）があなたの代わりに行った操作の通知です。知りたい操作を選べます。",
+                    aiAppNoteEdited:
+                        "初期設定はオフです。AI アプリは同じノートを続けて何度も編集することがあり、編集のたびに通知されます。",
                 },
             },
             agentRun: {

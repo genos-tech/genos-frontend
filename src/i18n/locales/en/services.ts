@@ -114,7 +114,19 @@ export const services = {
             agentRunDone: "AI answer ready",
             messageReminder: "Message reminders",
             todoReminder: "To-do reminders",
-            aiApp: "What my AI apps do",
+            aiApps: "What my AI apps do",
+            aiAppTaskCreated: "Task created",
+            aiAppTaskStatus: "Task status changed",
+            aiAppTaskCommented: "Task commented",
+            aiAppCommentDeleted: "Task comment deleted",
+            aiAppMilestoneCreated: "Milestone created",
+            aiAppMilestoneStatus: "Milestone status changed",
+            aiAppMilestoneDeleted: "Milestone deleted",
+            aiAppNoteCreated: "Note created",
+            aiAppNoteEdited: "Note edited",
+            aiAppNoteDeleted: "Note deleted",
+            aiAppTodoCreated: "To-do added",
+            aiAppTodoDeleted: "To-do deleted",
         },
         // Email-channel category labels (emailCategories.ts). These use
         // the SERVER's coarser vocabulary — one "mention_task" where the
@@ -207,7 +219,9 @@ export const services = {
                     "When a reminder you set on a message comes due. Turning this off keeps the reminder in your inbox without a notification.",
                 todoReminder:
                     "When a reminder you set on a to-do comes due. Turning this off keeps the reminder in your inbox without a notification.",
-                aiApp: "When an AI app connected over MCP (Claude Code, Claude Desktop…) creates something or changes a status for you. Turning this off stops these notices altogether.",
+                aiApps: "What AI apps connected over MCP (Claude Code, Claude Desktop…) do for you. Choose which actions you want to hear about.",
+                aiAppNoteEdited:
+                    "Off by default: an AI app can edit the same note many times in a row, and each edit is a notice.",
             },
         },
         // Completion notice for an agent run that finished while its

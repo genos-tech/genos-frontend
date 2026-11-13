@@ -9,9 +9,15 @@
 // sub-category under it (so an old client that turned `enableMentions` off
 // still suppresses every `mention_*` key, regardless of `categorySettings`).
 
-/** The five coarse groups == the legacy NotificationPreference boolean
+/** The coarse groups == the legacy NotificationPreference boolean
  *  columns that act as master switches over their sub-categories. */
-export type CoarseGroup = "chats" | "thread_replies" | "mentions" | "task_comments" | "inbox";
+export type CoarseGroup =
+    | "chats"
+    | "thread_replies"
+    | "mentions"
+    | "task_comments"
+    | "inbox"
+    | "ai_apps";
 
 /** The NotificationPreference boolean field that backs each coarse group.
  *  Declared as a literal union (rather than importing NotificationPreference)
@@ -21,7 +27,8 @@ export type CoarseField =
     | "enableThreadReplies"
     | "enableMentions"
     | "enableTaskComments"
-    | "enableInbox";
+    | "enableInbox"
+    | "enableAiApps";
 
 export interface CategoryEntry {
     /** Stable persisted key. NEVER rename — it lives in `categorySettings`
@@ -182,16 +189,104 @@ export const NOTIFICATION_CATEGORIES = [
         defaultEnabled: true,
     },
     {
-        // What the member's own AI app did over MCP (MIP-1432): the API files
-        // a notice for the key's owner, because an MCP write runs AS them and
-        // so raises none of the notifications another member's write would.
-        // One switch for every app. Off stops the notice being made at all
-        // (feed row, toast and push), and on rides the `enable_inbox` column
-        // like the two reminders above (`webpush_gating._COARSE_FIELD`).
-        key: "ai_app",
-        group: "inbox",
-        labelKey: "aiApp",
-        descriptionKey: "aiApp",
+        // What the member's own AI apps did over MCP (MIP-1432, MIP-1452): the API files
+        // a notice for the key's owner, because an MCP write runs AS them and so raises
+        // none of the notifications another member's write would. Their own group (the
+        // `enable_ai_apps` column), whose master hard-gates a switch per ACTION (12; the table is genos-api's
+        // `services/ai_app_switches.py`, mirrored by `aiAppCategory`).
+        // Off stops the notice being made at all (feed row, toast and push): the API reads
+        // the same keys (`mcp_notice._enabled`, `webpush_gating`). This lead entry only
+        // titles the group, like `mentions`; the rows below are the switches.
+        key: "ai_apps",
+        group: "ai_apps",
+        labelKey: "aiApps",
+        descriptionKey: "aiApps",
+        defaultEnabled: true,
+        hideSubToggle: true,
+    },
+    {
+        key: "ai_app_task_created",
+        group: "ai_apps",
+        labelKey: "aiAppTaskCreated",
+        descriptionKey: "aiAppTaskCreated",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_task_status",
+        group: "ai_apps",
+        labelKey: "aiAppTaskStatus",
+        descriptionKey: "aiAppTaskStatus",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_task_commented",
+        group: "ai_apps",
+        labelKey: "aiAppTaskCommented",
+        descriptionKey: "aiAppTaskCommented",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_comment_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppCommentDeleted",
+        descriptionKey: "aiAppCommentDeleted",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_milestone_created",
+        group: "ai_apps",
+        labelKey: "aiAppMilestoneCreated",
+        descriptionKey: "aiAppMilestoneCreated",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_milestone_status",
+        group: "ai_apps",
+        labelKey: "aiAppMilestoneStatus",
+        descriptionKey: "aiAppMilestoneStatus",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_milestone_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppMilestoneDeleted",
+        descriptionKey: "aiAppMilestoneDeleted",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_note_created",
+        group: "ai_apps",
+        labelKey: "aiAppNoteCreated",
+        descriptionKey: "aiAppNoteCreated",
+        defaultEnabled: true,
+    },
+    {
+        // Off until the member opts in: an app can edit one note dozens of times in a row.
+        key: "ai_app_note_edited",
+        group: "ai_apps",
+        labelKey: "aiAppNoteEdited",
+        descriptionKey: "aiAppNoteEdited",
+        defaultEnabled: false,
+    },
+    {
+        key: "ai_app_note_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppNoteDeleted",
+        descriptionKey: "aiAppNoteDeleted",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_todo_created",
+        group: "ai_apps",
+        labelKey: "aiAppTodoCreated",
+        descriptionKey: "aiAppTodoCreated",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_todo_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppTodoDeleted",
+        descriptionKey: "aiAppTodoDeleted",
         defaultEnabled: true,
     },
 ] as const satisfies readonly CategoryEntry[];
@@ -215,6 +310,7 @@ export const COARSE_FIELD: Record<CoarseGroup, CoarseField> = {
     mentions: "enableMentions",
     task_comments: "enableTaskComments",
     inbox: "enableInbox",
+    ai_apps: "enableAiApps",
 };
 
 const GROUP_ORDER: readonly CoarseGroup[] = [
@@ -223,6 +319,7 @@ const GROUP_ORDER: readonly CoarseGroup[] = [
     "mentions",
     "task_comments",
     "inbox",
+    "ai_apps",
 ];
 
 /** Display-ordered groups with their member sub-categories — used by the

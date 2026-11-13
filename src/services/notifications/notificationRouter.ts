@@ -1,4 +1,8 @@
-import { AI_APP_SURFACE, aiAppHeadline } from "../../features/chat/utils/aiAppNotice";
+import {
+    AI_APP_SURFACE,
+    aiAppCategory,
+    aiAppHeadline,
+} from "../../features/chat/utils/aiAppNotice";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { fmt, getMessages } from "../../i18n";
@@ -315,15 +319,18 @@ export const buildActivityIntent = (
     // runs as its owner), so the self-sender rule below would drop it — this
     // is the one activity that is meant to reach its own author. No `senderId`
     // on the intent for the same reason (the manager has its own self check),
-    // and the id is the server push's tag (`ai_app:<activity id>`), so a push
+    // and the id is the server push's tag (`ai_app_<kind>:<activity id>`), so a push
     // that lands as well replaces this card instead of stacking a second one.
     if (activity.aiApp) {
         const strings = getMessages().chat.activity.aiApp;
         const first = activity.aiApp.items[0];
         return {
             body: truncate(first?.title || first?.displayId || ""),
-            category: "ai_app",
-            id: `ai_app:${activity.activityId}`,
+            category: aiAppCategory(
+                activity.aiApp.verb,
+                activity.aiApp.kind
+            ) as NotificationCategory,
+            id: `${aiAppCategory(activity.aiApp.verb, activity.aiApp.kind)}:${activity.activityId}`,
             source: { surfaceType: AI_APP_SURFACE },
             title: aiAppHeadline(activity.aiApp, strings),
         };
