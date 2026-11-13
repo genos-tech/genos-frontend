@@ -1,8 +1,12 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { activityChannel } from "../../../../db/workers/channels";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../types/admin";
+import {
+    forgetNoteActivities,
+    withoutNoteActivities,
+} from "../../../chat/components/sidebar/activity/services/dropNoteActivities";
 import { NoteUnreadValue, UnreadNote } from "../context/NoteUnreadContext";
 import { useNoteDeleted, type NoteDeletedDetail } from "../utils/noteDeleted";
 import { toBackendNoteType } from "../utils/noteTypeAlias";
@@ -34,15 +38,24 @@ export const useNoteMentionUnread = (
     const activityMessages = useCM.activityMessages;
 
     // A note deleted in this session has no unread mention worth showing: the row would open a
-    // note that is not there (MIP-1435). The activity row itself stays in the feed, so the
-    // note is hidden by key here ("<backend type>:<id>"), like `unreadKeys` below.
+    // note that is not there (MIP-1435). Its rows also leave the Activity feed and IndexedDB
+    // (MIP-1457). The note is also hidden by key here ("<backend type>:<id>"), like
+    // `unreadKeys` below, so the dot goes even if a late sync puts a row back.
     const [deletedKeys, setDeletedKeys] = useState<ReadonlySet<string>>(new Set());
+    // The latest feed and setter, read when a delete arrives, so the listener does not
+    // re-subscribe on every activity row.
+    const feedRef = useRef({ list: activityMessages, set: useCM.setActivityMessages });
+    feedRef.current = { list: activityMessages, set: useCM.setActivityMessages };
     const forgetDeleted = useCallback(({ noteType, noteIds }: NoteDeletedDetail) => {
         setDeletedKeys((prev) => {
             const next = new Set(prev);
             for (const id of noteIds) next.add(`${noteType}:${id}`);
             return next;
         });
+        const { list, set } = feedRef.current;
+        const kept = withoutNoteActivities(list || [], noteType, noteIds);
+        if (kept !== list) set(kept);
+        forgetNoteActivities(noteType, noteIds);
     }, []);
     useNoteDeleted(forgetDeleted);
 
