@@ -489,8 +489,16 @@ const roleRows = (r: RoleColors): { group: string; rows: RoleRow[] }[] => {
                     name: "text-code",
                     value: r.codeInk,
                     paint: r.codeInk,
-                    use: "Inline code in a chat bubble, over the active wash (dark: 7.4:1 on every bubble fill)",
+                    use: "Inline code in a received bubble or comment, over the active wash (dark: 7.4:1, light: 4.5:1 on every bubble fill)",
                     ratio: onSurface(r.codeInk),
+                    min: 4.5,
+                },
+                {
+                    name: "text-code-sent",
+                    value: r.codeInkSent,
+                    paint: r.codeInkSent,
+                    use: "Inline code in a sent bubble (light: the accent family, 4.5:1 on every bubble fill)",
+                    ratio: onSurface(r.codeInkSent),
                     min: 4.5,
                 },
                 {

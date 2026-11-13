@@ -112,8 +112,9 @@ describe("@theme inline maps the design tokens into Tailwind", () => {
             "--g-link-visited",
             "--g-link-hover",
             "--g-text-quote",
-            // Inline code ink in the dark bubbles (MIP-1388): App.css only.
+            // Inline code ink in the bubbles (MIP-1388, MIP-1454): App.css only.
             "--g-text-code",
+            "--g-text-code-sent",
         ]);
         const roleNames = [...defined].filter(
             (v) => !/^--g-(type|space|control|row|motion|ease|font|radius)/.test(v)

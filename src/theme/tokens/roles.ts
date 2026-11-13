@@ -79,10 +79,15 @@ export type RoleColors = {
     /** Quoted text in a bubble: dimmer than the body text, but 7:1 on every bubble fill (the
      *  secondary text role is 5.5-6.6:1 there). */
     textQuote: string;
-    /** Inline code ink in a chat bubble or comment, over the `active` wash that is its chip.
-     *  Dark: the warning amber lightened until it reads at least as well as the orange it
-     *  replaced on every bubble fill (`warning.text` is 1.1:1 lower on some). Light: `warning.text`. */
+    /** Inline code ink in a received chat bubble or comment, over the `active` wash that is its
+     *  chip. Dark: the warning amber lightened until it reads at least as well as the orange it
+     *  replaced on every bubble fill (`warning.text` is 1.1:1 lower on some). Light: the pink it
+     *  always was (`#be185d`), darker only where a fill needs it, 4.5:1 on every bubble fill. */
     codeInk: string;
+    /** Inline code ink in a SENT bubble, over the `active` wash that is its chip. Light: the
+     *  accent family (the `link` stops), darker than `link` where the chip's wash takes it
+     *  under 4.5:1. Dark: `warning.text`, as the sent bubble always had. */
+    codeInkSent: string;
     /** Selected-row / selected-nav background. */
     accentSubtle: Alpha;
     accentBorder: Alpha;
@@ -221,6 +226,11 @@ const QUOTE_TEXT_FLOOR = { light: 7, dark: 9.5 } as const;
 /** Inline code ink on its chip in the dark bubbles: the worst case the orange `#fb923c` on black
  *  at .3 measured over the bubble fills (7.2 to 8.9), rounded up. */
 const CODE_INK_FLOOR = 7.4;
+/** Light code ink on the chip over every bubble fill: AA (the chip's wash costs the link up to
+ *  0.6, which took the sent bubble's code to 3.9 in purple, teal and emerald). */
+const CODE_INK_FLOOR_LIGHT = AA;
+/** The light received bubble's code pink: Tailwind pink 700 / 800 / 900. */
+const CODE_PINK_LIGHT = ["#be185d", "#9d174d", "#831843"];
 
 /** Neutral lightness / chroma steps, per mode. Read off the references
  *  (Linear, Vercel Geist): near-white canvas with white cards in light,
@@ -365,7 +375,10 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
                   codeFills,
                   CODE_INK_FLOOR
               )
-            : warning.text;
+            : firstAtLeast(CODE_PINK_LIGHT, codeFills, CODE_INK_FLOOR_LIGHT);
+    // The sent bubble's code: the accent family in light, walked darker until the chip reads.
+    const codeInkSent =
+        mode === "dark" ? warning.text : firstAtLeast(linkStops, codeFills, CODE_INK_FLOOR_LIGHT);
 
     const g1 = accent;
     const g2 = t.ramp[stepFrom(solidStop, 2)];
@@ -413,6 +426,7 @@ export const buildRoles = (themeId: ThemeId, mode: Mode): RoleColors => {
         linkHover,
         textQuote,
         codeInk,
+        codeInkSent,
         accentSubtle,
         accentBorder: { hex: accent, a: 0.35 },
         focus: accentText,
