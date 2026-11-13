@@ -19,6 +19,7 @@ import { Bubble, BubbleAuthor, BubbleMeta } from "../../../../../../components/u
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { TaskCommentEmojiReaction } from "../../../../../../components/ui/emoji/TaskCommentEmojiReaction";
+import { ViaChip } from "../../../../../../components/ui/misc/ViaChip";
 import { MoreMenu, MoreMenuItem } from "../../../../../../components/ui/MoreMenu";
 import { useAuth } from "../../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
@@ -65,6 +66,7 @@ import {
     deleteTaskCommentOnExit,
     taskCommentKey,
 } from "../../../../services/deleteTaskComment";
+import type { ViaKind } from "../../../../utils/viaSource";
 
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
@@ -109,6 +111,11 @@ type TaskCommentBubbleProps = {
      * the preview modal instead of invisibly behind it (the known
      * 10010-family bug). Absent on page-hosted mounts. */
     hostZIndex?: number;
+    /** How this comment's latest write arrived, when it came through a connected
+     *  AI app or an API key (MIP-1376): a chip in the header. Primitives, so the
+     *  memo compare below stays exact. `viaName` is the owner's alone. */
+    viaKind?: ViaKind;
+    viaName?: string | null;
 };
 
 const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
@@ -130,6 +137,8 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         commentLink,
         setTodoFromMessageBubble,
         hostZIndex,
+        viaKind,
+        viaName,
     } = props;
 
     const { t, locale } = useTranslation();
@@ -599,6 +608,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
             <BubbleMeta>
                 {isEdited ? `${sentLabel} ${t.chat.bubble.edited}` : sentLabel}
             </BubbleMeta>
+            {viaKind && <ViaChip source={{ kind: viaKind, name: viaName ?? null }} />}
         </Stack>
     );
 
@@ -687,6 +697,8 @@ const areEqual = (prev: TaskCommentBubbleProps, next: TaskCommentBubbleProps): b
     prev.commentLink === next.commentLink &&
     prev.onCommentClick === next.onCommentClick &&
     prev.hostZIndex === next.hostZIndex &&
+    prev.viaKind === next.viaKind &&
+    prev.viaName === next.viaName &&
     prev.currentProjectId === next.currentProjectId &&
     prev.currentProjectName === next.currentProjectName &&
     prev.currentTaskDisplayId === next.currentTaskDisplayId &&

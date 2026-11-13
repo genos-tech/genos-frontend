@@ -5233,6 +5233,17 @@ export const ja: DeepPartial<Messages> = {
             loadFailed: "アクティビティを読み込めませんでした",
             empty: "まだ活動はありません",
             emptyBody: "項目を変更するかコメントを追加すると、履歴が始まります。",
+            via: {
+                mcp: "MCP 経由",
+                apiKey: "API キー経由",
+                mcpHint:
+                    "接続された AI アプリ（MCP）から行われた操作です。Genos 上で入力されたものではありません",
+                mcpHintNamed:
+                    "あなたの接続アプリ「{name}」（MCP）から行われた操作です。Genos 上で入力されたものではありません",
+                apiKeyHint: "API キーから行われた操作です。Genos 上で入力されたものではありません",
+                apiKeyHintNamed:
+                    "あなたの API キー「{name}」から行われた操作です。Genos 上で入力されたものではありません",
+            },
             restore: {
                 button: "以前の説明に戻す",
                 viaAgent: "Genos AI が書き換えました",
