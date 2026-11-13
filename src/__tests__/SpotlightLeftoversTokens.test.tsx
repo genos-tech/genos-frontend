@@ -280,7 +280,9 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
             expect(body).toMatch(/border-left-color:\s*var\(--g-link\)/);
             expect(body).toMatch(/(?:^|[;\s])color:\s*var\(--g-text-quote\)/);
         }
-        expect(rule(".bn-message-bubble-box-light-me code")).toMatch(/color:\s*var\(--g-link\)/);
+        expect(rule(".bn-message-bubble-box-light-me code")).toMatch(
+            /color:\s*var\(--g-text-code-sent\)/
+        );
     });
 
     it("no bubble link or quote rule keeps a hex or brand variable", () => {
@@ -301,14 +303,52 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
             regressions(
                 "light",
                 (id) => THEME_PRIMITIVES[id].ramp[700],
-                (r) => r.link,
+                (r) => r.codeInkSent,
                 { old: { hex: "#6366f1", a: 0.15 }, new: (r) => r.active }
             )
         ).toEqual([]);
         const body = rule(".bn-message-bubble-box-light-me code");
         expect(body).toMatch(/background-color:\s*var\(--g-active\)/);
-        expect(body).toMatch(/color:\s*var\(--g-link\)/);
+        expect(body).toMatch(/color:\s*var\(--g-text-code-sent\)/);
         expect(body).not.toMatch(/rgba?\(|#[0-9a-f]{3,6}/i);
+    });
+
+    // ---- MIP-1454: light code ink holds 4.5:1 on its chip, on every fill ----------------
+    /** Every (theme, fill) where `ink` over the `active` chip reads under `floor`. */
+    const belowFloor = (mode: "light" | "dark", ink: (r: Roles) => string, floor: number) =>
+        THEME_IDS.flatMap((id) => {
+            const r = buildRoles(id, mode);
+            return fillsOf(r).flatMap(([fill, f]) => {
+                const ratio = contrast(ink(r), composite(r.active.hex, r.active.a, f));
+                return ratio < floor ? [`${id}/${fill}: ${ratio.toFixed(2)}`] : [];
+            });
+        });
+
+    it("light sent code (--g-text-code-sent) and light received code (--g-text-code) are 4.5:1 on every fill of every theme", () => {
+        expect(belowFloor("light", (r) => r.codeInkSent, 4.5)).toEqual([]);
+        expect(belowFloor("light", (r) => r.codeInk, 4.5)).toEqual([]);
+        // The reason the sent role exists: the link role over the chip's wash is under 4.5.
+        expect(belowFloor("light", (r) => r.link, 4.5).length).toBeGreaterThan(0);
+    });
+
+    it("light received code keeps the pink it had (was #be185d on black .08), darker only where a fill needs it", () => {
+        expect(
+            regressions("light", "#be185d", (r) => r.codeInk, {
+                old: { hex: "#000000", a: 0.08 },
+                new: (r) => r.active,
+            })
+        ).toEqual([]);
+        expect(buildRoles("purple", "light").codeInk).toMatch(/^#(be185d|9d174d|831843)$/);
+    });
+
+    it("the light code rules in App.css ask for the roles, not for a hex", () => {
+        for (const root of [".bn-message-bubble-box-light", ".task-comment-preview-light"]) {
+            const body = rule(`${root} code`);
+            expect(body).toMatch(/color:\s*var\(--g-text-code\)/);
+            expect(body).toMatch(/background-color:\s*var\(--g-active\)/);
+            expect(body).not.toMatch(/rgba?\(|#[0-9a-f]{3,6}/i);
+        }
+        expect(css).not.toMatch(/be185d/i);
     });
 
     it("received dark bubble: body text on --g-text (was #f3f4f6; the role was up to 0.65:1 lower until its dark lightness moved to 0.97)", () => {
