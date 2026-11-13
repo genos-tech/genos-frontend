@@ -16,6 +16,7 @@ import {
 
 import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { MenuDivider, MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
+import { SettingRow } from "../../components/ui/settings/SettingRow";
 import { NotificationPauseState } from "../../hooks/common/useNotificationPause";
 import { fmt, useTranslation } from "../../i18n";
 import { Messages } from "../../i18n/types";
@@ -245,13 +246,23 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
 
             {/* Recurring daily schedule */}
             <Divider sx={{ my: 1 }} />
-            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
-                <ScheduleRoundedIcon fontSize="small" />
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={1}
+                sx={{ mb: 1 }}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">{p.scheduleHeading}</Typography>
+                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                        <ScheduleRoundedIcon fontSize="small" />
+                        <Typography level="title-sm">{p.scheduleHeading}</Typography>
+                    </Stack>
+                    <Typography level="body-xs">{p.scheduleDescription}</Typography>
                 </Box>
                 <Switch
                     checked={schedEnabled}
+                    slotProps={{ input: { "aria-label": p.scheduleHeading } }}
                     onChange={(e) =>
                         commitSchedule({
                             enabled: e.target.checked,
@@ -260,10 +271,7 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                         })
                     }
                 />
-            </Stack>
-            <Typography level="body-xs" sx={{ mb: 1 }}>
-                {p.scheduleDescription}
-            </Typography>
+            </SettingRow>
             <Stack
                 alignItems="center"
                 direction="row"
