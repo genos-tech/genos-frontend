@@ -192,10 +192,11 @@ export const NOTIFICATION_CATEGORIES = [
         // What the member's own AI apps did over MCP (MIP-1432, MIP-1452): the API files
         // a notice for the key's owner, because an MCP write runs AS them and so raises
         // none of the notifications another member's write would. Their own group (the
-        // `enable_ai_apps` column), whose master hard-gates a switch per kind of work.
+        // `enable_ai_apps` column), whose master hard-gates a switch per ACTION (12; the table is genos-api's
+        // `services/ai_app_switches.py`, mirrored by `aiAppCategory`).
         // Off stops the notice being made at all (feed row, toast and push): the API reads
         // the same keys (`mcp_notice._enabled`, `webpush_gating`). This lead entry only
-        // titles the group, like `mentions`; the three below are the switches.
+        // titles the group, like `mentions`; the rows below are the switches.
         key: "ai_apps",
         group: "ai_apps",
         labelKey: "aiApps",
@@ -204,25 +205,88 @@ export const NOTIFICATION_CATEGORIES = [
         hideSubToggle: true,
     },
     {
-        // A task, a milestone, or a comment on a task.
-        key: "ai_app_tasks",
+        key: "ai_app_task_created",
         group: "ai_apps",
-        labelKey: "aiAppTasks",
-        descriptionKey: "aiAppTasks",
+        labelKey: "aiAppTaskCreated",
+        descriptionKey: "aiAppTaskCreated",
         defaultEnabled: true,
     },
     {
-        key: "ai_app_notes",
+        key: "ai_app_task_status",
         group: "ai_apps",
-        labelKey: "aiAppNotes",
-        descriptionKey: "aiAppNotes",
+        labelKey: "aiAppTaskStatus",
+        descriptionKey: "aiAppTaskStatus",
         defaultEnabled: true,
     },
     {
-        key: "ai_app_todos",
+        key: "ai_app_task_commented",
         group: "ai_apps",
-        labelKey: "aiAppTodos",
-        descriptionKey: "aiAppTodos",
+        labelKey: "aiAppTaskCommented",
+        descriptionKey: "aiAppTaskCommented",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_comment_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppCommentDeleted",
+        descriptionKey: "aiAppCommentDeleted",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_milestone_created",
+        group: "ai_apps",
+        labelKey: "aiAppMilestoneCreated",
+        descriptionKey: "aiAppMilestoneCreated",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_milestone_status",
+        group: "ai_apps",
+        labelKey: "aiAppMilestoneStatus",
+        descriptionKey: "aiAppMilestoneStatus",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_milestone_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppMilestoneDeleted",
+        descriptionKey: "aiAppMilestoneDeleted",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_note_created",
+        group: "ai_apps",
+        labelKey: "aiAppNoteCreated",
+        descriptionKey: "aiAppNoteCreated",
+        defaultEnabled: true,
+    },
+    {
+        // Off until the member opts in: an app can edit one note dozens of times in a row.
+        key: "ai_app_note_edited",
+        group: "ai_apps",
+        labelKey: "aiAppNoteEdited",
+        descriptionKey: "aiAppNoteEdited",
+        defaultEnabled: false,
+    },
+    {
+        key: "ai_app_note_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppNoteDeleted",
+        descriptionKey: "aiAppNoteDeleted",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_todo_created",
+        group: "ai_apps",
+        labelKey: "aiAppTodoCreated",
+        descriptionKey: "aiAppTodoCreated",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_todo_deleted",
+        group: "ai_apps",
+        labelKey: "aiAppTodoDeleted",
+        descriptionKey: "aiAppTodoDeleted",
         defaultEnabled: true,
     },
 ] as const satisfies readonly CategoryEntry[];

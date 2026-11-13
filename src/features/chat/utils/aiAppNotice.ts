@@ -8,9 +8,26 @@
 
 import type { AiAppNotice, AiAppNoticeItem } from "../../../types/chat";
 
-/** The switch a notice answers to, by what it is about (mirrors `mcp_notice.category_for_kind`). */
-export const aiAppCategory = (kind: string): "ai_app_tasks" | "ai_app_notes" | "ai_app_todos" =>
-    kind === "note" ? "ai_app_notes" : kind === "todo" ? "ai_app_todos" : "ai_app_tasks";
+/** The switch a notice answers to, by what happened to what. Mirrors `ACTIONS` in genos-api's
+ *  `services/ai_app_switches.py`; the registry (`categories.ts`) has an entry for each. */
+const ACTION_CATEGORY: Record<string, string> = {
+    "created:task": "ai_app_task_created",
+    "status:task": "ai_app_task_status",
+    "commented:comment": "ai_app_task_commented",
+    "deleted:comment": "ai_app_comment_deleted",
+    "created:milestone": "ai_app_milestone_created",
+    "status:milestone": "ai_app_milestone_status",
+    "deleted:milestone": "ai_app_milestone_deleted",
+    "created:note": "ai_app_note_created",
+    "edited:note": "ai_app_note_edited",
+    "deleted:note": "ai_app_note_deleted",
+    "created:todo": "ai_app_todo_created",
+    "deleted:todo": "ai_app_todo_deleted",
+};
+
+/** An action no rule names answers to the group's lead entry (the master alone). */
+export const aiAppCategory = (verb: string, kind: string): string =>
+    ACTION_CATEGORY[`${verb}:${kind}`] ?? "ai_apps";
 
 /** Activity `surface_type` of an AI-app notice (mirrors SURFACE_AI_APP in genos-api). */
 export const AI_APP_SURFACE = 10;
@@ -22,6 +39,7 @@ export interface AiAppStrings {
     createdMilestone: string;
     createdMilestoneWithTasks: string;
     createdNote: string;
+    editedNote: string;
     createdTodo: string;
     statusTask: string;
     statusTasks: string;
@@ -99,6 +117,9 @@ export function aiAppSentence(notice: AiAppNotice, s: AiAppStrings): string {
                 case "todo":
                     return fill(s.createdTodo, { name });
             }
+            break;
+        case "edited":
+            if (notice.kind === "note") return fill(s.editedNote, { name });
             break;
         case "status":
             if (notice.kind === "milestone") return fill(s.statusMilestone, { name, status });

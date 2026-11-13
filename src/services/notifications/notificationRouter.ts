@@ -326,8 +326,11 @@ export const buildActivityIntent = (
         const first = activity.aiApp.items[0];
         return {
             body: truncate(first?.title || first?.displayId || ""),
-            category: aiAppCategory(activity.aiApp.kind),
-            id: `${aiAppCategory(activity.aiApp.kind)}:${activity.activityId}`,
+            category: aiAppCategory(
+                activity.aiApp.verb,
+                activity.aiApp.kind
+            ) as NotificationCategory,
+            id: `${aiAppCategory(activity.aiApp.verb, activity.aiApp.kind)}:${activity.activityId}`,
             source: { surfaceType: AI_APP_SURFACE },
             title: aiAppHeadline(activity.aiApp, strings),
         };
