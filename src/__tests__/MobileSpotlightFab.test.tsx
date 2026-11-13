@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MobileSpotlightFab } from "../components/layout/MobileSpotlightFab";
+import { FAB_CLEARANCE, FAB_CLEARANCE_VAR } from "../components/layout/spotlightFabPosition";
 
 let isMobileViewport = true;
 vi.mock("../hooks/common/useIsMobile", () => ({
@@ -61,6 +62,26 @@ const drag = (from: { x: number; y: number }, to?: { x: number; y: number }) => 
 };
 
 describe("MobileSpotlightFab", () => {
+    // MIP-1404: lists that scroll under the button read this variable to leave
+    // room after their last row, so it must exist only while the button does.
+    it("publishes the list clearance while shown and removes it with the button", () => {
+        const root = document.documentElement;
+        const { unmount } = render(
+            <CssVarsProvider>
+                <MobileSpotlightFab onPress={vi.fn()} />
+            </CssVarsProvider>
+        );
+        expect(root.style.getPropertyValue(FAB_CLEARANCE_VAR)).toBe(`${FAB_CLEARANCE}px`);
+        unmount();
+        expect(root.style.getPropertyValue(FAB_CLEARANCE_VAR)).toBe("");
+    });
+
+    it("publishes no clearance on desktop, where the button is not shown", () => {
+        isMobileViewport = false;
+        renderFab();
+        expect(document.documentElement.style.getPropertyValue(FAB_CLEARANCE_VAR)).toBe("");
+    });
+
     it("renders nothing on desktop", () => {
         isMobileViewport = false;
         renderFab();

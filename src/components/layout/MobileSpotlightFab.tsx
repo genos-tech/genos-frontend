@@ -115,7 +115,9 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
         if (!isMobile) return undefined;
         const root = document.documentElement;
         root.style.setProperty(FAB_CLEARANCE_VAR, `${FAB_CLEARANCE}px`);
-        return () => root.style.removeProperty(FAB_CLEARANCE_VAR);
+        return () => {
+            root.style.removeProperty(FAB_CLEARANCE_VAR);
+        };
     }, [isMobile]);
 
     useEffect(() => {

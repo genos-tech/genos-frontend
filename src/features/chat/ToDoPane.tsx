@@ -68,6 +68,9 @@ type ToDoPaneProps = {
     focusTarget?: { localDate: string; itemId?: number };
 };
 
+// Virtuoso reads `components.*` unguarded, so "none" is an empty object, not undefined.
+const NO_COMPONENTS = {};
+
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
         useCM,
@@ -662,7 +665,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             <Virtuoso
                                 ref={virtuosoRef}
                                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                                components={FAB_CLEARANCE_COMPONENTS}
+                                // In the page the list ends above the tab bar, under
+                                // the floating "Open Genos" button; in a modal it is
+                                // the modal that sits above the button (MIP-1404).
+                                components={
+                                    hostedInModal ? NO_COMPONENTS : FAB_CLEARANCE_COMPONENTS
+                                }
                                 totalCount={displayGroups.length}
                                 initialTopMostItemIndex={
                                     focusGroupIndex >= 0 ? focusGroupIndex : 0
