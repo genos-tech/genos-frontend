@@ -7,6 +7,7 @@
  * stay (nothing is removed), the web app's own edits are NOT marked, and the NAME
  * of a key or app reaches only its owner, anywhere in the rendered output.
  */
+import type { ReactNode } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -18,6 +19,7 @@ import { TaskCommentList } from "../features/tasks/components/contents/base/sub/
 import type { ChatManagementState } from "../hooks/chats/useChatManagement";
 import type { TeamManagementState } from "../hooks/common/useTeamManagement";
 import type { UIStateManagementState } from "../hooks/common/useUIStateManagement";
+import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 import type { UserProps } from "../types/admin";
 import type { TaskActivityProps, TaskCommentProps } from "../types/tasks";
 
@@ -46,7 +48,7 @@ vi.mock("react-virtuoso", () => ({
         itemContent,
     }: {
         totalCount: number;
-        itemContent: (i: number) => React.ReactNode;
+        itemContent: (i: number) => ReactNode;
     }) => (
         <div>
             {Array.from({ length: totalCount }, (_, i) => (
@@ -253,6 +255,7 @@ describe("comment cards", () => {
                         taskComments={comments}
                         useCM={{} as unknown as ChatManagementState}
                         useTEM={{} as unknown as TeamManagementState}
+                        useTM={{} as unknown as TaskManagementState}
                         useUISM={{} as unknown as UIStateManagementState}
                     />
                 </MemoryRouter>
@@ -315,6 +318,7 @@ describe("comment cards", () => {
                         taskComments={[comment(1)]}
                         useCM={{} as unknown as ChatManagementState}
                         useTEM={{} as unknown as TeamManagementState}
+                        useTM={{} as unknown as TaskManagementState}
                         useUISM={{} as unknown as UIStateManagementState}
                     />
                 </MemoryRouter>
