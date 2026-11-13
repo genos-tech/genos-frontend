@@ -29,29 +29,47 @@
  * and drop the gap between them.
  */
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SRC = resolve(__dirname, "..");
 
 /**
- * Joy components that clone their direct children. Verified against the
- * installed package rather than hardcoded from memory — `List`, for one, looks
- * like it should inject and does not.
+ * Joy components that clone their direct children. Checked against the installed package (see
+ * "every Joy component that clones is guarded" below), not remembered: an earlier version of
+ * this list said `List` "looks like it should inject and does not". It does: `List`, `Menu`,
+ * `MenuList`, `Select` and `TabList` all render through `ListProvider`, which clones the first and
+ * the LAST child. That hid a fragment as the last child of the task sidebar's `List`, which logged
+ * the warning on every re-render of the task page until MIP-1445.
  */
 const CLONING_PARENTS = [
     "ModalDialog",
     "Card",
     "CardOverflow",
+    "CardCover",
     "Accordion",
     "AccordionGroup",
+    "AspectRatio",
     "Step",
     "Stepper",
     "RadioGroup",
     "ButtonGroup",
     "ToggleButtonGroup",
+    "List",
+    "ListItem",
+    "Menu",
+    "MenuList",
+    "Select",
+    "TabList",
+    "Skeleton",
 ];
+
+/**
+ * Clone their children too, but what they clone is the option list they build themselves, never
+ * JSX an app passes as direct children, so there is nothing to scan for.
+ */
+const CLONES_ITS_OWN_ITEMS = ["Autocomplete", "AutocompleteListbox"];
 
 const collectTsx = (dir: string, out: string[] = []): string[] => {
     for (const entry of readdirSync(dir)) {
@@ -112,6 +130,34 @@ describe("Joy cloning parents get element children, never fragments", () => {
             ).toEqual([]);
         });
     }
+
+    it("every Joy component that clones its children is guarded (a Joy upgrade can add one)", () => {
+        const joy = join(SRC, "..", "node_modules/@mui/joy");
+        const cloners = readdirSync(joy).filter((dir) => {
+            const entry = join(joy, dir, `${dir}.js`);
+            if (!existsSync(entry)) return false;
+            const js = readFileSync(entry, "utf8");
+            return js.includes("Children.map") || js.includes("ListProvider");
+        });
+        // A real list, so a changed package layout cannot make this pass on nothing.
+        expect(cloners).toEqual(expect.arrayContaining(["ModalDialog", "Card", "List", "Menu"]));
+        const unguarded = cloners.filter(
+            (name) => !CLONING_PARENTS.includes(name) && !CLONES_ITS_OWN_ITEMS.includes(name)
+        );
+        expect(
+            unguarded,
+            `Joy's ${unguarded.join(", ")} now clone(s) direct children. Add to CLONING_PARENTS.`
+        ).toEqual([]);
+    });
+
+    it("List really does inject the attribute (it was once thought not to)", () => {
+        const provider = readFileSync(
+            join(SRC, "..", "node_modules/@mui/joy/List/ListProvider.js"),
+            "utf8"
+        );
+        expect(provider).toContain("data-last-child");
+        expect(provider).toContain("React.Children.map");
+    });
 
     it("ModalDialog really does inject the attribute (the premise)", () => {
         // If a Joy upgrade stops cloning children, these tests are obsolete
