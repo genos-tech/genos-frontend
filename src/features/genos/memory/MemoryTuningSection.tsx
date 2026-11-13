@@ -115,6 +115,12 @@ export const MemoryTuningSection = ({ overview, setLevel, resetTuning }: Props) 
                             <Select
                                 disabled={off || busy !== null}
                                 size="sm"
+                                sx={{
+                                    flex: "0 1 11rem",
+                                    minWidth: 0,
+                                    width: "11rem",
+                                    maxWidth: "100%",
+                                }}
                                 value={row.level}
                                 renderValue={(option) =>
                                     option ? levelName(String(option.value), "") : null
@@ -126,12 +132,6 @@ export const MemoryTuningSection = ({ overview, setLevel, resetTuning }: Props) 
                                         }),
                                     },
                                 }}
-                                sx={{
-                                    flex: "0 1 11rem",
-                                    minWidth: 0,
-                                    width: "11rem",
-                                    maxWidth: "100%",
-                                }}
                                 onChange={(_, next) => {
                                     if (next && isLevel(next) && isSignal(row.signal)) {
                                         const signal = row.signal;
@@ -142,8 +142,8 @@ export const MemoryTuningSection = ({ overview, setLevel, resetTuning }: Props) 
                                 {options.map((level) => (
                                     <Option
                                         key={level}
-                                        sx={{ alignItems: "flex-start" }}
                                         value={level}
+                                        sx={{ alignItems: "flex-start" }}
                                     >
                                         <Box sx={{ minWidth: 0 }}>
                                             <Typography level="body-sm">

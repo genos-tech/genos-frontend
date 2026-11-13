@@ -277,10 +277,10 @@ export const MemoryNoticedSection = ({
                                                 disabled={off}
                                                 marked={marked.has(`suggestion:${s.taskId}`)}
                                                 priority={priorityName(s.priority)}
-                                                suggestion={s}
                                                 problem={
                                                     problems.get(`suggestion:${s.taskId}`) ?? null
                                                 }
+                                                suggestion={s}
                                                 onMark={(next) => void act(s, next, "suggestion")}
                                             />
                                         ))}
@@ -533,14 +533,14 @@ const MarkedList = ({
                             </Typography>
                         </Box>
                         <Button
+                            aria-label={fmt(m.clearAria, {
+                                task: `${row.displayId} ${row.title}`,
+                            })}
                             color="neutral"
                             disabled={disabled}
                             size="sm"
                             sx={{ flexShrink: 0 }}
                             variant="plain"
-                            aria-label={fmt(m.clearAria, {
-                                task: `${row.displayId} ${row.title}`,
-                            })}
                             onClick={() => onClear(row)}
                         >
                             {m.clear}
