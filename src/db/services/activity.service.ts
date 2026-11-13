@@ -65,4 +65,16 @@ export class ActivityService {
         }
         return stale.length;
     }
+
+    // Delete the @mention rows of notes that no longer exist. A note's row is a surface
+    // activity: chatType = backend note type + 5 (6 my, 7 task, 8 chat), chatId = note id.
+    async deleteNoteActivities(noteType: number, noteIds: readonly number[]): Promise<number> {
+        const ids = new Set(noteIds.map(Number));
+        const all = await this.getAllActivityMessages();
+        const gone = all.filter((m) => m.chatType === noteType + 5 && ids.has(Number(m.chatId)));
+        for (const m of gone) {
+            await this.activityRepo.delete(m.activityId);
+        }
+        return gone.length;
+    }
 }

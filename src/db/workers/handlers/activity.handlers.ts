@@ -134,6 +134,9 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
         );
     },
 
+    deleteNoteActivities: ({ noteType, noteIds }) =>
+        activityService.deleteNoteActivities(noteType, noteIds),
+
     updateActivityReadStatus: async ({
         accessToken,
         myself: _myself,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -7,6 +7,10 @@ import { ChatNoteEditorPanel } from "../../../features/notes/chat-notes/componen
 import { ChatNoteMain } from "../../../features/notes/chat-notes/components/ChatNoteMain";
 import { NoteAccessRequestPanel } from "../../../features/notes/common/components/NoteAccessRequestPanel";
 import { loadSpecificNote } from "../../../features/notes/common/services/loadSpecificNote";
+import {
+    useNoteDeleted,
+    type NoteDeletedDetail,
+} from "../../../features/notes/common/utils/noteDeleted";
 import { MyNoteEditorPanel } from "../../../features/notes/my-notes/components/MyNoteEditorPanel";
 import { MyNoteMain } from "../../../features/notes/my-notes/components/MyNoteMain";
 import { TaskNoteEditorPanel } from "../../../features/notes/task-notes/components/TaskNoteEditorPanel";
@@ -136,6 +140,17 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
             : target.kind === "taskNote"
               ? 2
               : 3;
+
+    // The note on screen was deleted (from this modal's own header, the sidebar, or an approved
+    // agent delete): there is nothing left to show, so the modal closes (MIP-1457). A modal for
+    // a note someone else deleted while it was open closes the same way.
+    const closeIfDeleted = useCallback(
+        ({ noteType, noteIds }: NoteDeletedDetail) => {
+            if (noteType === backendNoteType && noteIds.includes(target.noteId)) onClose();
+        },
+        [backendNoteType, target.noteId, onClose]
+    );
+    useNoteDeleted(closeIfDeleted);
 
     useEffect(() => {
         let cancelled = false;

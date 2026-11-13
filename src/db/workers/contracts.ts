@@ -86,6 +86,11 @@ export type ActivityRequests = {
         req: { myself: UserProps };
         res: ActivityMessageProps[];
     };
+    /** Forget the activity rows of notes that no longer exist (MIP-1457). `res` = rows removed. */
+    deleteNoteActivities: {
+        req: { noteType: 1 | 2 | 3; noteIds: number[] };
+        res: number;
+    };
     updateActivityReadStatus: {
         req: {
             accessToken: string;

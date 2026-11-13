@@ -20,11 +20,12 @@
 import "fake-indexeddb/auto";
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ModalNoteView } from "../components/modals/views/ModalNoteView";
 import { loadSpecificNote } from "../features/notes/common/services/loadSpecificNote";
+import { emitNoteDeleted } from "../features/notes/common/utils/noteDeleted";
 import type {
     ChatNoteTarget,
     MyNoteTarget,
@@ -133,5 +134,43 @@ describe("ModalNoteView other outcomes", () => {
         expect(await screen.findByTestId("my-note-main")).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Request Access" })).toBeNull();
         expect(screen.queryByText("This note isn't available.")).toBeNull();
+    });
+});
+
+describe("ModalNoteView closes when its note is deleted (MIP-1457)", () => {
+    beforeEach(() => {
+        mockedLoad.mockReset();
+        baseProps.onClose.mockClear();
+    });
+
+    const openNote = async (target: NoteTarget) => {
+        mockedLoad.mockResolvedValue({
+            noteId: 433,
+            noteType: 1,
+            title: "Q3 Strategy",
+            parentNoteId: null,
+            tsUpdated: "2026-07-13T00:00:00Z",
+        } as never);
+        renderView(target);
+        await screen.findByTestId("my-note-main");
+    };
+
+    it("closes when the note it shows is deleted", async () => {
+        await openNote({ kind: "myNote", noteId: 433 });
+        act(() => emitNoteDeleted({ noteType: 1, noteIds: [433] }));
+        expect(baseProps.onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("closes a shared note too (backend type 1)", async () => {
+        await openNote({ kind: "sharedNote", noteId: 433 });
+        act(() => emitNoteDeleted({ noteType: 1, noteIds: [12, 433] }));
+        expect(baseProps.onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it("stays open for another note, or the same id in another note family", async () => {
+        await openNote({ kind: "myNote", noteId: 433 });
+        act(() => emitNoteDeleted({ noteType: 1, noteIds: [434] }));
+        act(() => emitNoteDeleted({ noteType: 2, noteIds: [433] }));
+        expect(baseProps.onClose).not.toHaveBeenCalled();
     });
 });

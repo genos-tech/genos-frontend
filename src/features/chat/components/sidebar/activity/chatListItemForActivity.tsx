@@ -12,6 +12,9 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { forgetNoteActivities, withoutNoteActivities } from "./services/dropNoteActivities";
+
+import { toast } from "../../../../../components/ui/feedback/toastStore";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/AuthContext";
@@ -611,6 +614,17 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         // deep-link coordinates we don't require here.
         if (fetched?.error === "forbidden") {
             setDeniedNote({ noteId, noteType: noteTypeForActivity });
+            return;
+        }
+        // A 404: the note was deleted, so its mention rows are dead ends. Drop them from the feed
+        // and IndexedDB instead of leaving a row that does nothing when clicked (MIP-1457). The
+        // server keeps them, so this is the check that catches rows from before this session.
+        if (fetched?.error === "not_found") {
+            useCM.setActivityMessages(
+                withoutNoteActivities(useCM.activityMessages, noteTypeForActivity, [noteId])
+            );
+            forgetNoteActivities(noteTypeForActivity, [noteId]);
+            toast.neutral(t.notes.placeholder.noteNotFoundTitle);
             return;
         }
         // Any other non-note result (undefined = load failure) still
