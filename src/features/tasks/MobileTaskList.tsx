@@ -5,6 +5,7 @@ import { Box, Stack, Typography } from "@mui/joy";
 import { TaskCard } from "./components/card";
 import { effectiveStatusOf, selectAncestorVerdicts } from "./utils/closedByAncestor";
 
+import { FAB_CLEARANCE_VAR } from "../../components/layout/spotlightFabPosition";
 import { DataState } from "../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -106,6 +107,9 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
             spacing={1}
             sx={{
                 p: 1,
+                // Room under the last card for the floating "Open Genos"
+                // button on a phone (0 elsewhere): MIP-1404.
+                pb: `calc(8px + var(${FAB_CLEARANCE_VAR}, 0px))`,
                 overflowY: "auto",
                 flex: 1,
                 minHeight: 0,

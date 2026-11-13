@@ -13,6 +13,7 @@ import { Box, Button, Chip, IconButton, List, Sheet, Typography } from "@mui/joy
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { FAB_CLEARANCE_VAR } from "../../../../components/layout/spotlightFabPosition";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
@@ -2041,7 +2042,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     display: "flex",
                     flexDirection: "column",
                     px: 1.5,
-                    py: 1.5,
+                    pt: 1.5,
+                    // Room under the last row for the floating "Open Genos"
+                    // button on a phone (0 elsewhere): MIP-1404.
+                    pb: `calc(12px + var(${FAB_CLEARANCE_VAR}, 0px))`,
                 }}
             >
                 {/* One DragDropContext covers all three note sections so

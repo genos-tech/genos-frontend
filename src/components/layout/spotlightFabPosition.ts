@@ -37,6 +37,21 @@ export const FAB_AVOID_ATTR = "data-fab-avoid";
 export const FAB_AVOID_GAP = 12;
 
 /**
+ * Root custom property the mounted FAB publishes: how much room a list that
+ * scrolls under it should leave after its last row. `0px` (unset) wherever
+ * the button is not shown (desktop, the Genos page), so a list reads the
+ * variable instead of re-deciding "is the button here".
+ */
+export const FAB_CLEARANCE_VAR = "--fab-clearance";
+
+/**
+ * The button parks `FAB_EDGE_GAP` above the tab bar and is `FAB_SIZE` tall, so
+ * a list that ends at the tab bar needs that much, plus the same air a
+ * composer leaves, to scroll its last row clear of the button.
+ */
+export const FAB_CLEARANCE = FAB_SIZE + FAB_EDGE_GAP + FAB_AVOID_GAP;
+
+/**
  * Movement (px) below which a pointer sequence counts as a tap, not a
  * drag. Mirrors `useLongPress`'s `moveTolerance` so the two touch
  * gestures agree on what "held still" means.

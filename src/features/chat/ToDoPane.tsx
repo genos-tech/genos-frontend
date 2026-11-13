@@ -29,6 +29,7 @@ import {
     writeTagFilter,
 } from "./utils/todoTagFilter";
 
+import { FAB_CLEARANCE_COMPONENTS } from "../../components/layout/FabClearanceFooter";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { modalChromeEndPadding } from "../../components/ui/modal/modalChrome";
@@ -66,6 +67,9 @@ type ToDoPaneProps = {
     // the item (highlight threads down to TodoItemRow).
     focusTarget?: { localDate: string; itemId?: number };
 };
+
+// Virtuoso reads `components.*` unguarded, so "none" is an empty object, not undefined.
+const NO_COMPONENTS = {};
 
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
@@ -661,6 +665,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             <Virtuoso
                                 ref={virtuosoRef}
                                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                // In the page the list ends above the tab bar, under
+                                // the floating "Open Genos" button; in a modal it is
+                                // the modal that sits above the button (MIP-1404).
+                                components={
+                                    hostedInModal ? NO_COMPONENTS : FAB_CLEARANCE_COMPONENTS
+                                }
                                 totalCount={displayGroups.length}
                                 initialTopMostItemIndex={
                                     focusGroupIndex >= 0 ? focusGroupIndex : 0
