@@ -148,7 +148,7 @@ describe("MobileSpotlightFab", () => {
         );
         window.innerHeight = 400;
         renderFab();
-        // 400 - 60 (inset fallback) - 38 - 16 = 286.
-        expect(anchorOf(fab())).toMatchObject({ top: "286px" });
+        // 400 - 60 (inset fallback) - 44 - 16 = 280.
+        expect(anchorOf(fab())).toMatchObject({ top: "280px" });
     });
 });
