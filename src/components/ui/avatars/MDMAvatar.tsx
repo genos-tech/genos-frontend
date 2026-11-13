@@ -1,9 +1,9 @@
 import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import { Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { fmt, useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import { UserProps } from "../../../types/admin";
 import { MDMMemberProps } from "../../../types/chat";
 import { initialOf } from "../../../utils/initials";
@@ -12,6 +12,10 @@ import { PulseDot } from "../misc/PulseDot";
 import { BaseAvatar } from "./BaseAvatar";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
+// A stacked member with no picture is tinted by position, so neighbours read apart: blue, the
+// theme's accent, amber (the blue / violet / orange the hsl formula gave).
+const MEMBER_TONES = ["info", "accent", "warning"] as const;
 
 type MDMAvatarProps = {
     members?: MDMMemberProps[];
@@ -33,9 +37,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
     teamMemberProfiles,
     avatarSize,
 }) => {
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
 
     const miniSize = avatarSize ?? (size === "sm" ? 28 : 32);
     const maxVisible = 3;
@@ -44,13 +46,8 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
         return (
             <BaseAvatar
                 size={avatarSize ?? (size === "sm" ? "md" : "lg")}
-                sx={{
-                    background: isDark
-                        ? "linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%)"
-                        : "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)",
-                    border: "1px solid",
-                    borderColor: isDark ? "rgba(59, 130, 246, 0.4)" : "rgba(59, 130, 246, 0.3)",
-                }}
+                sx={{ border: "1px solid", borderColor: g.info.border }}
+                tone="info"
             >
                 <PeopleRoundedIcon
                     sx={{
@@ -59,7 +56,6 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                             : size === "sm"
                               ? 18
                               : 22,
-                        color: isDark ? "#60a5fa" : "#3b82f6",
                     }}
                 />
             </BaseAvatar>
@@ -111,17 +107,12 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                             sx={{
                                 fontSize: 10,
                                 fontWeight: 600,
+                                // The ring that separates the overlapped circles: the surface
+                                // they sit on, in either mode.
                                 border: "1.5px solid",
-                                borderColor: isDark
-                                    ? "var(--joy-palette-background-surface)"
-                                    : "#fff",
-                                background: isDark
-                                    ? `hsl(${(index * 90 + 200) % 360}, 50%, 30%)`
-                                    : `hsl(${(index * 90 + 200) % 360}, 60%, 85%)`,
-                                color: isDark
-                                    ? `hsl(${(index * 90 + 200) % 360}, 70%, 75%)`
-                                    : `hsl(${(index * 90 + 200) % 360}, 60%, 40%)`,
+                                borderColor: g.surface.default,
                             }}
+                            tone={MEMBER_TONES[index % MEMBER_TONES.length]}
                         >
                             {initialOf(member.userName)}
                         </BaseAvatar>

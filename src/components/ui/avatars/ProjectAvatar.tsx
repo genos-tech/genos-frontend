@@ -1,5 +1,4 @@
 import { useState } from "react";
-import AssignmentIcon from "@mui/icons-material/Assignment";
 import { Socket } from "socket.io-client";
 
 import { ModalProjectProfile } from "../../../features/admin/components/modals/ModalProjectProfile";
@@ -11,7 +10,7 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { Clickable } from "../Clickable";
-import { BaseAvatar } from "./BaseAvatar";
+import { ProjectChatAvatar } from "./ChatKindAvatar";
 
 type ProjectAvatarProps = {
     socket: Socket | null;
@@ -37,9 +36,10 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                 width={_avatarSize}
                 onActivate={() => setOpenModalProjectProfile(true)}
             >
-                <BaseAvatar size={_avatarSize} src={buildAvatarSrc(pmChat.profileImagePath)}>
-                    <AssignmentIcon />
-                </BaseAvatar>
+                <ProjectChatAvatar
+                    size={_avatarSize}
+                    src={buildAvatarSrc(pmChat.profileImagePath)}
+                />
             </Clickable>
 
             <ModalProjectProfile

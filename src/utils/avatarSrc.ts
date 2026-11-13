@@ -19,3 +19,21 @@ export const buildAvatarSrc = (path: string | null | undefined): string | undefi
     if (!MEDIA_URL) return undefined;
     return `${MEDIA_URL}/${path}`;
 };
+
+/**
+ * `src` with the `?v=` cache buster of a picture that was just uploaded over the same file name
+ * (see `gmProfileImageVersion`). `version` 0 (nothing uploaded this session) adds none.
+ */
+export const withAvatarVersion = (
+    src: string | undefined,
+    version: number
+): string | undefined => {
+    if (!src || version <= 0) return src;
+    return `${src}${src.includes("?") ? "&" : "?"}v=${version}`;
+};
+
+/** `buildAvatarSrc` plus `withAvatarVersion`. */
+export const buildVersionedAvatarSrc = (
+    path: string | null | undefined,
+    version: number
+): string | undefined => withAvatarVersion(buildAvatarSrc(path), version);

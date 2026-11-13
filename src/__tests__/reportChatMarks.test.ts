@@ -140,9 +140,12 @@ describe("reportChatMarkMap: one mark per chat type", () => {
             chat({ chatType: 2, profileImagePath: "https://m.example/gm.png" }),
             chat({ chatType: 3, chatId: UUID2, profileImagePath: "https://m.example/pm.png" }),
         ]);
+        // A group's mark also carries the key of its upload version (MIP-1472).
         expect(marks.get(chatMarkKey("gm", UUID))).toEqual({
             kind: "gm",
             src: "https://m.example/gm.png",
+            chatType: 2,
+            chatId: UUID,
         });
         expect(marks.get(chatMarkKey("pm", UUID2))).toEqual({
             kind: "pm",
@@ -155,7 +158,12 @@ describe("reportChatMarkMap: one mark per chat type", () => {
             chat({ chatType: 2 }),
             chat({ chatType: 3, chatId: UUID2, profileImagePath: "" }),
         ]);
-        expect(marks.get(chatMarkKey("gm", UUID))).toEqual({ kind: "gm", src: undefined });
+        expect(marks.get(chatMarkKey("gm", UUID))).toEqual({
+            kind: "gm",
+            src: undefined,
+            chatType: 2,
+            chatId: UUID,
+        });
         expect(marks.get(chatMarkKey("pm", UUID2))).toEqual({ kind: "pm", src: undefined });
     });
 

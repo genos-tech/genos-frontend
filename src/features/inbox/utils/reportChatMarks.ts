@@ -49,7 +49,9 @@ export type ReportChatMark =
     | { kind: "dm"; userId: string; name: string }
     /** A DM whose partner is not known yet: the chat name's first letter, as the chat list does. */
     | { kind: "initial"; name: string }
-    | { kind: "gm"; src: string | undefined }
+    /** A group chat: its picture, and the key of its upload version (`?v=`), so a picture
+     *  uploaded this session is refetched here as in the chat list. */
+    | { kind: "gm"; src: string | undefined; chatType: number; chatId: string }
     | { kind: "pm"; src: string | undefined }
     | { kind: "mdm" };
 
@@ -61,7 +63,12 @@ export const sameChatMark = (a: ReportChatMark, b: ReportChatMark): boolean => {
         case "initial":
             return b.kind === "initial" && a.name === b.name;
         case "gm":
-            return b.kind === "gm" && a.src === b.src;
+            return (
+                b.kind === "gm" &&
+                a.src === b.src &&
+                a.chatType === b.chatType &&
+                a.chatId === b.chatId
+            );
         case "pm":
             return b.kind === "pm" && a.src === b.src;
         default:
@@ -91,7 +98,7 @@ export const reportChatKeys = (report: GenosReportV2 | null): Set<string> => {
     return keys;
 };
 
-const markOf = (kind: ReportChatKind, chat: ChatLike): ReportChatMark => {
+const markOf = (kind: ReportChatKind, chat: ChatLike, chatType: number): ReportChatMark => {
     switch (kind) {
         case "dm": {
             const userId = chat.dmPartnerUser?.userId ?? "";
@@ -102,7 +109,12 @@ const markOf = (kind: ReportChatKind, chat: ChatLike): ReportChatMark => {
                 : { kind: "initial", name: chat.chatName ?? "" };
         }
         case "gm":
-            return { kind: "gm", src: buildAvatarSrc(chat.profileImagePath) };
+            return {
+                kind: "gm",
+                src: buildAvatarSrc(chat.profileImagePath),
+                chatType,
+                chatId: chat.chatId,
+            };
         case "pm":
             return { kind: "pm", src: buildAvatarSrc(chat.profileImagePath) };
         default:
@@ -119,11 +131,12 @@ export const reportChatMarkMap = (
     const marks = new Map<string, ReportChatMark>();
     if (keys.size === 0 || !allChats) return marks;
     for (const chat of allChats) {
-        const kind = CHAT_TYPE_REVERSE_MAP[chat.chatType];
+        const chatType = chat.chatType;
+        const kind = CHAT_TYPE_REVERSE_MAP[chatType];
         if (!KINDS.has(kind) || typeof chat.chatId !== "string") continue;
         const key = chatMarkKey(kind as ReportChatKind, chat.chatId);
         if (!keys.has(key) || marks.has(key)) continue;
-        marks.set(key, markOf(kind as ReportChatKind, chat));
+        marks.set(key, markOf(kind as ReportChatKind, chat, chatType));
         if (marks.size === keys.size) break;
     }
     return marks;
