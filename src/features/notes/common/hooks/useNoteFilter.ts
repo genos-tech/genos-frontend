@@ -7,8 +7,11 @@ import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
  * the field is still filled. Typing, a click on the field, ArrowDown and "/" open it again.
  * It closes when:
  *   - a result is opened (`onOpened`);
- *   - the pointer goes down anywhere outside the field and the results (a tree row, the editor,
- *     another page area; capture phase, so a click that something stops still counts);
+ *   - a click or a tap lands anywhere outside the field and the results (the editor, a tab,
+ *     the blank area under the list; capture phase, so a click that something stops still
+ *     counts). It is the click and not the pointer going DOWN on purpose: closing swaps the
+ *     results for the families, and on a phone the click that finishes the same tap would then
+ *     land on whatever row appeared under the finger and open it;
  *   - the words are cleared: Escape in the field (see `NoteSearchBar`), or Escape on a result,
  *     which also puts the focus back in the field instead of dropping it on the page.
  *
@@ -36,14 +39,14 @@ export const useNoteFilter = () => {
 
     useEffect(() => {
         if (!visible) return;
-        const onPointerDown = (event: Event) => {
+        const onClick = (event: Event) => {
             const target = event.target as Node | null;
             if (!target) return;
             if (barRef.current?.contains(target) || resultsRef.current?.contains(target)) return;
             setOpen(false);
         };
-        document.addEventListener("pointerdown", onPointerDown, true);
-        return () => document.removeEventListener("pointerdown", onPointerDown, true);
+        document.addEventListener("click", onClick, true);
+        return () => document.removeEventListener("click", onClick, true);
     }, [visible]);
 
     /**

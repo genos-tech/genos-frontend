@@ -2,7 +2,7 @@
  * MIP-1435: the notes sidebar's filter results close.
  *
  *   - when a result is opened (click, or Enter, which puts the focus back in the field);
- *   - when the pointer goes down outside the field and the results, but not inside them
+ *   - when a click lands outside the field and the results, but not inside them
  *     (the star on a result is a click inside);
  *   - Escape in the field clears it (as before); Escape on a result clears it and focuses the field;
  *   - closing keeps the words; typing, a click on the field, ArrowDown and "/" open it again.
@@ -106,43 +106,43 @@ describe("closing the results", () => {
         expect(document.activeElement).toBe(field());
     });
 
-    it("closes when the pointer goes down outside the field and the results", () => {
+    it("closes when a click lands outside the field and the results", () => {
         open();
-        fireEvent.pointerDown(screen.getByTestId("outside"));
+        fireEvent.click(screen.getByTestId("outside"));
         expect(results()).toBeNull();
         expect((field() as HTMLInputElement).value).toBe("plan");
     });
 
-    it("stays open for a pointer down on the field, the results and a row's star", () => {
+    it("stays open for a click on the field, the results and a row's star", () => {
         open();
-        fireEvent.pointerDown(field());
+        fireEvent.click(field());
         expect(results()).not.toBeNull();
-        fireEvent.pointerDown(screen.getByTestId("note-filter-results"));
+        fireEvent.click(screen.getByTestId("note-filter-results"));
         expect(results()).not.toBeNull();
-        fireEvent.pointerDown(screen.getAllByRole("button", { name: /favorites/i })[0]);
+        fireEvent.click(screen.getAllByRole("button", { name: /favorites/i })[0]);
         expect(results()).not.toBeNull();
     });
 
     it("opens again on typing, a click on the field, ArrowDown", () => {
         open();
-        fireEvent.pointerDown(screen.getByTestId("outside"));
+        fireEvent.click(screen.getByTestId("outside"));
         expect(results()).toBeNull();
 
         fireEvent.click(field());
         expect(results()).not.toBeNull();
 
-        fireEvent.pointerDown(screen.getByTestId("outside"));
+        fireEvent.click(screen.getByTestId("outside"));
         fireEvent.keyDown(field(), { key: "ArrowDown" });
         expect(results()).not.toBeNull();
 
-        fireEvent.pointerDown(screen.getByTestId("outside"));
+        fireEvent.click(screen.getByTestId("outside"));
         type("roadmap plan");
         expect(results()).not.toBeNull();
     });
 
     it("opens again on '/'", () => {
         open();
-        fireEvent.pointerDown(screen.getByTestId("outside"));
+        fireEvent.click(screen.getByTestId("outside"));
         expect(results()).toBeNull();
         fireEvent.keyDown(document.body, { key: "/" });
         expect(results()).not.toBeNull();
@@ -152,9 +152,9 @@ describe("closing the results", () => {
     it("does not listen for outside clicks while there is nothing to close", () => {
         const useNM = makeUseNM();
         render(<Page useNM={useNM} />);
-        fireEvent.pointerDown(screen.getByTestId("outside"));
+        fireEvent.click(screen.getByTestId("outside"));
         type("plan");
-        // Typing after a pointer down still opens it: the state was never closed.
+        // Typing after a click outside still opens it: the state was never closed.
         expect(results()).not.toBeNull();
     });
 });

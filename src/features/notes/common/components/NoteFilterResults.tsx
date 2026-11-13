@@ -39,7 +39,9 @@ export const NoteFilterResults = ({
             ref={listRef}
             data-testid="note-filter-results"
             size="sm"
-            sx={{ gap: 0.5, "--ListItem-radius": "8px" }}
+            // `flex: none`: in the column the sidebar scrolls in, the list is as tall as its rows, so the
+            // blank area under it is outside it (a tap there closes it, see `useNoteFilter`).
+            sx={{ flex: "none", gap: 0.5, "--ListItem-radius": "8px" }}
             onKeyDown={onKeyDown}
         >
             <SectionHeader
