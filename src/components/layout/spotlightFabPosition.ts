@@ -19,8 +19,12 @@ export type FabSide = "left" | "right";
  */
 export type FabPosition = { side: FabSide; top: number };
 
-/** Rendered button size (px). Matches the `width`/`height` in the sx. */
-export const FAB_SIZE = 38;
+/**
+ * Rendered button size (px). Matches the `width`/`height` in the sx and Joy's
+ * `size="lg"` IconButton (2.75rem = 44px): its min-width/height beat a smaller
+ * width, which is how 38 here once left the lift maths 6px short (MIP-1456).
+ */
+export const FAB_SIZE = 44;
 
 /** Gap kept between the button and the viewport edges (px). */
 export const FAB_EDGE_GAP = 16;

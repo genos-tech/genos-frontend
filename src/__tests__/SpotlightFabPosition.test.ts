@@ -12,12 +12,12 @@ import {
 
 // A 390 x 844 phone (iPhone 14) with the 60px tab bar up.
 const phone = { bottomInset: 60, viewportHeight: 844, viewportWidth: 390 };
-// Highest legal `top`: 844 - 60 - 38 - 16 = 730.
-const PHONE_MAX_TOP = 730;
+// Highest legal `top`: 844 - 60 - 44 - 16 = 724.
+const PHONE_MAX_TOP = 724;
 
 describe("resolveFabDrop", () => {
     it("snaps to the left edge when the button's centre lands left of the midpoint", () => {
-        // Centre at 100 + 19 = 119 < 195.
+        // Centre at 100 + 22 = 122 < 195.
         expect(resolveFabDrop({ x: 100, y: 400 }, phone)).toEqual({ side: "left", top: 400 });
     });
 
@@ -27,7 +27,7 @@ describe("resolveFabDrop", () => {
 
     it("decides the side on the button's centre, not its left edge", () => {
         // Left edge (180) is left of the 195 midpoint, but the centre
-        // (199) is not — so this belongs on the right.
+        // (202) is not — so this belongs on the right.
         expect(resolveFabDrop({ x: 180, y: 300 }, phone).side).toBe("right");
     });
 
@@ -46,8 +46,8 @@ describe("clampFabTop", () => {
     });
 
     it("pulls a stored position up when the keyboard shrinks the usable area", () => {
-        // Keyboard up: 336px of inset. Max top becomes 844-336-38-16 = 454.
-        expect(clampFabTop(700, { ...phone, bottomInset: 336 })).toBe(454);
+        // Keyboard up: 336px of inset. Max top becomes 844-336-44-16 = 448.
+        expect(clampFabTop(700, { ...phone, bottomInset: 336 })).toBe(448);
     });
 
     it("pulls a position up after rotating to a shorter viewport", () => {
