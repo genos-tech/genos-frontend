@@ -77,6 +77,10 @@ const ALLOWED: Record<string, { count: number; reason: string }> = {
         count: 1,
         reason: "aria-hidden chevron, a mouse shortcut: the row's own keydown handler expands with ArrowRight / ArrowLeft",
     },
+    "components/ui/settings/SettingRow.tsx": {
+        count: 1,
+        reason: "a mouse shortcut (MIP-1463): a click on the row's text clicks the switch inside it, which is the keyboard and screen-reader path (a Tab stop with its own name)",
+    },
     "components/ui/feedback/TabStrip.tsx": {
         count: 1,
         reason: "aria-hidden close x, a pointer/touch shortcut: a tablist may own only tabs (MIP-1173), so the keyboard path is Delete on the tab and screen readers get real buttons in a hidden group",
@@ -256,6 +260,7 @@ describe("no clickable Box / div / span (MIP-1129)", () => {
                 entry.count
             );
         }
-        expect(Object.keys(ALLOWED).length).toBeLessThanOrEqual(10);
+        // 11 since MIP-1463 (SettingRow): a new entry needs a reason as good as the others.
+        expect(Object.keys(ALLOWED).length).toBeLessThanOrEqual(11);
     });
 });

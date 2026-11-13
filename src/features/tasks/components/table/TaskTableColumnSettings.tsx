@@ -333,6 +333,11 @@ export const TaskTableColumnSettings = ({ open, onClose, customColumns }: Props)
                                                         <Switch
                                                             checked={isVisible(col)}
                                                             size="sm"
+                                                            slotProps={{
+                                                                input: {
+                                                                    "aria-label": labelFor(col),
+                                                                },
+                                                            }}
                                                             onChange={(e) =>
                                                                 setVisibility(
                                                                     col.field,

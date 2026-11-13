@@ -7,6 +7,7 @@ import { Box, Divider, Option, Select, Stack, Typography } from "@mui/joy";
 import { useDensityPreference } from "../../hooks/common/densityContext";
 import { useTranslation } from "../../i18n";
 import { Density, isDensity } from "../../theme/density";
+import { SettingRow } from "../ui/settings/SettingRow";
 
 /**
  * Settings -> General -> Appearance -> Density (MIP-1119): the row height of
@@ -35,7 +36,12 @@ export const DensitySetting = () => {
     return (
         <>
             <Divider sx={{ my: 1.5 }} />
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography id="density-setting-label" level="title-sm">
                         {a.densityLabel}
@@ -64,7 +70,7 @@ export const DensitySetting = () => {
                         );
                     })}
                 </Select>
-            </Stack>
+            </SettingRow>
         </>
     );
 };

@@ -55,6 +55,8 @@ export const UserProfileLocationShare = ({ myself, setMyself, user }: Props) => 
             <Switch
                 checked={isShared}
                 size="sm"
+                // The visible text below is the state, not the name: name it by the hint.
+                slotProps={{ input: { "aria-label": t.admin.userProfile.locationShareHint } }}
                 onChange={(e) => persistSharing(e.target.checked)}
             />
             <Typography sx={{ color: g.text.secondary, fontSize: "12px" }}>
