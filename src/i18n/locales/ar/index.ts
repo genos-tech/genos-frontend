@@ -1871,6 +1871,12 @@ export const ar: DeepPartial<Messages> = {
             flagForLater: "تعليم لوقت لاحق",
             addToTodo: "إضافة إلى قائمة المهام",
             removeFlag: "إزالة العلامة",
+            failed: {
+                flag: "تعذّر وضع العلامة. يُرجى المحاولة مرة أخرى.",
+                unflag: "تعذّرت إزالة العلامة. يُرجى المحاولة مرة أخرى.",
+                complete: "تعذّر وضع علامة الانتهاء. يُرجى المحاولة مرة أخرى.",
+                reopen: "تعذّرت إعادة الفتح. يُرجى المحاولة مرة أخرى.",
+            },
             remindMe: "ذكّرني…",
             reminderSetFor: "تذكير: {time}",
             copyMessageLink: "نسخ رابط الرسالة",

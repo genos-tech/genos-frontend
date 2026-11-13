@@ -363,6 +363,13 @@ export const chat = {
         flagForLater: "Flag for later",
         addToTodo: "Add to To-Do",
         removeFlag: "Remove flag",
+        // A flag change the server refused (MIP-1441). No noun: it is also said of task comments.
+        failed: {
+            flag: "Couldn't flag it. Please try again.",
+            unflag: "Couldn't remove the flag. Please try again.",
+            complete: "Couldn't mark it as done. Please try again.",
+            reopen: "Couldn't reopen it. Please try again.",
+        },
         remindMe: "Remind me…",
         // Replaces the label above once a reminder exists, so the menu
         // states the promise instead of hiding it behind another click.

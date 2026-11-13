@@ -24,6 +24,7 @@ import { UserProps } from "../../../../types/admin";
 import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { formatReminderTime } from "../../utils/reminderPresets";
+import { reportFlagFailure } from "../../utils/reportFlagFailure";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
 import { BubblePinnedActions, PinnedBubbleAction, splitPinned } from "./BubblePinnedActions";
@@ -125,25 +126,29 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         // `flaggedMessages` list automatically.
         const v3MessageId = message.messageIdWithChatIdAndThreadId;
         if (!v3MessageId) return;
-        if (!isFlagged) {
-            void channelService
-                .flagMessage(v3MessageId)
-                .catch((e) => console.error("[BubbleThreadMoreMenu] flag failed:", e));
+        // The service rolls its own store back when the server refuses; this menu keeps a local
+        // copy of the state, so it goes back too, and the person is told (MIP-1441).
+        const wasFlagged = isFlagged;
+        const failed = (action: "flag" | "unflag") => (e: unknown) => {
+            setIsFlagged(wasFlagged);
+            reportFlagFailure(action, e, "BubbleThreadMoreMenu");
+        };
+        if (!wasFlagged) {
+            void channelService.flagMessage(v3MessageId).catch(failed("flag"));
         } else {
-            void channelService
-                .unflagMessage(v3MessageId)
-                .catch((e) => console.error("[BubbleThreadMoreMenu] unflag failed:", e));
+            void channelService.unflagMessage(v3MessageId).catch(failed("unflag"));
         }
-        setIsFlagged(!isFlagged);
+        setIsFlagged(!wasFlagged);
     };
 
     // Finish the flag (MIP-1423): the same call as the Flagged list's Mark done.
     const handleMarkDoneClick = () => {
         const v3MessageId = message.messageIdWithChatIdAndThreadId;
         if (!v3MessageId) return;
-        void channelService
-            .completeFlag(v3MessageId)
-            .catch((e) => console.error("[BubbleThreadMoreMenu] mark done failed:", e));
+        void channelService.completeFlag(v3MessageId).catch((e) => {
+            setIsFlagged(true);
+            reportFlagFailure("complete", e, "BubbleThreadMoreMenu");
+        });
         setIsFlagged(false);
     };
 

@@ -1305,6 +1305,12 @@ export const ja: DeepPartial<Messages> = {
             flagForLater: "後で確認用にフラグを付ける",
             addToTodo: "To-Do に追加",
             removeFlag: "フラグを外す",
+            failed: {
+                flag: "フラグを付けられませんでした。もう一度お試しください。",
+                unflag: "フラグを外せませんでした。もう一度お試しください。",
+                complete: "完了にできませんでした。もう一度お試しください。",
+                reopen: "再開できませんでした。もう一度お試しください。",
+            },
             remindMe: "リマインドする…",
             reminderSetFor: "リマインド: {time}",
             copyMessageLink: "メッセージリンクをコピー",
