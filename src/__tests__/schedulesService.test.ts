@@ -50,12 +50,23 @@ describe("every call names the member's team", () => {
             // An API that predates the plan gate sends neither key: allowed.
             planAllowed: true,
             planMessage: "",
+            // Same for an API that predates MIP-1309: AI is available, as before.
+            aiAvailable: true,
             timeZone: "Asia/Tokyo",
             limit: 20,
             jobs: [],
             schedules: [],
             suggestions: [],
         });
+    });
+
+    it("GET carries aiAvailable; only an explicit false means AI cannot run here (MIP-1309)", async () => {
+        api.get.mockResolvedValue({ data: { aiAvailable: false, jobs: [], schedules: [] } });
+        expect((await listSchedules("tok", TEAM))?.aiAvailable).toBe(false);
+        api.get.mockResolvedValue({ data: { aiAvailable: true, jobs: [], schedules: [] } });
+        expect((await listSchedules("tok", TEAM))?.aiAvailable).toBe(true);
+        api.get.mockResolvedValue({ data: { jobs: [], schedules: [] } });
+        expect((await listSchedules("tok", TEAM))?.aiAvailable).toBe(true);
     });
 
     it("GET passes the suggestions on, and an older API without them gives none", async () => {

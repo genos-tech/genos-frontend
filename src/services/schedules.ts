@@ -112,6 +112,11 @@ export interface ScheduleList {
     /** The upgrade sentence the server wrote ("" when allowed). English only, so the page writes
      *  its own words and does not show it. */
     planMessage?: string;
+    /** Whether AI reports can run on this deployment at all (MIP-1309): the operator switch is
+     *  on, the cost meter is on and the model's credentials exist. Absent on a server that
+     *  predates it: read it as available (`aiAvailable !== false`). When false the form shows no
+     *  AI switch, effort or estimate, because they would do nothing. */
+    aiAvailable?: boolean;
     timeZone: string;
     limit: number;
     jobs: ScheduleJob[];
@@ -188,6 +193,8 @@ export const listSchedules = async (
             // A server that predates the plan gate sends neither key: that is "allowed".
             planAllowed: res.data.planAllowed !== false,
             planMessage: typeof res.data.planMessage === "string" ? res.data.planMessage : "",
+            // Same for a server that predates MIP-1309: available, as before.
+            aiAvailable: res.data.aiAvailable !== false,
             timeZone: res.data.timeZone ?? "",
             limit: res.data.limit ?? 0,
             jobs: res.data.jobs ?? [],

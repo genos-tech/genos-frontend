@@ -7,7 +7,7 @@ import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui
 import { useAuth } from "../../../context/AuthContext";
 import { runScheduleAndAnnounce } from "../../../features/schedules/runScheduleAndAnnounce";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
-import { rowEffort } from "../../../features/schedules/scheduleEffort";
+import { rowEffort, withoutAi } from "../../../features/schedules/scheduleEffort";
 import {
     formatMoment,
     STATUS_KEYS,
@@ -130,7 +130,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         }
         setLoadFailed(false);
         setPlanBlocked(false); // the list is the truth: its `planAllowed` decides from here
-        setData(list);
+        // AI cannot run on this deployment (MIP-1309): draw the jobs without their AI controls.
+        setData(list.aiAvailable === false ? { ...list, jobs: list.jobs.map(withoutAi) } : list);
     }, [accessToken, teamId]);
 
     useEffect(() => {

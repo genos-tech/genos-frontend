@@ -20,6 +20,18 @@ export const asEffortLevel = (value: unknown): EffortLevel | null =>
 /** Whether the job has an effort to choose. A job without the flag (an older server) has none. */
 export const jobUsesAi = (job: ScheduleJob | undefined): boolean => job?.usesAi === true;
 
+/** A job as the form draws it when AI reports cannot run on this deployment (MIP-1309): no AI
+ *  flag, no default level, no estimate and no AI switch, so nothing offers a control that does
+ *  nothing. A job without AI is returned as it is. Saved schedules keep their stored values; the
+ *  form only stops drawing what the server cannot honour. */
+export const withoutAi = (job: ScheduleJob): ScheduleJob => {
+    if (!jobUsesAi(job)) return job;
+    const params = Object.fromEntries(
+        Object.entries(job.params ?? {}).filter(([key]) => knownParam(key)?.aiSwitch !== true)
+    );
+    return { ...job, params, usesAi: false, effortDefault: null, effortCost: null };
+};
+
 /** The key of the parameter that turns the job's AI step off (`ai_sentences`), if it has one. */
 export const aiSwitchKey = (job: ScheduleJob | undefined): string | undefined =>
     Object.keys(job?.params ?? {}).find((key) => knownParam(key)?.aiSwitch === true);
