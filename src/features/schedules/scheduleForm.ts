@@ -170,7 +170,7 @@ export const validateForm = (
         const raw = (form.params[key] ?? "").trim();
         if (raw === "") {
             // A parameter the report cannot run without (the milestone one).
-            if (isRequiredParam(key, spec)) problems.params[key] = "required";
+            if (isRequiredParam(spec)) problems.params[key] = "required";
             continue;
         }
         const v = wireValue(spec, raw);

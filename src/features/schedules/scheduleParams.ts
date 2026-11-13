@@ -21,9 +21,6 @@ export interface KnownParam {
     label: keyof ScheduleStrings;
     hint: keyof ScheduleStrings;
     picker?: ParamPicker;
-    /** The catalog does not say which parameters a job requires (the server
-     *  enforces it), so the one the form must not send without is named here. */
-    required?: boolean;
     /** A true/false parameter, drawn as a switch. `defaultOn`: what "not set" means, because the
      *  catalog states no default (`ai_sentences` is on unless turned off). */
     boolean?: { defaultOn: boolean };
@@ -43,7 +40,6 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         label: "paramMilestone",
         hint: "paramMilestoneHint",
         picker: "milestone",
-        required: true,
     },
     hours: { label: "paramHours", hint: "paramHoursHint" },
     ai_sentences: {
@@ -60,8 +56,9 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
 export const knownParam = (key: string): KnownParam | undefined =>
     Object.prototype.hasOwnProperty.call(KNOWN_PARAMS, key) ? KNOWN_PARAMS[key] : undefined;
 
-export const isRequiredParam = (key: string, spec: JobParam & { required?: boolean }): boolean =>
-    spec.required === true || knownParam(key)?.required === true;
+/** Whether the job requires the parameter: the catalog says so (`required: true`, MIP-1216), so a
+ *  job added on the server needs no change here. */
+export const isRequiredParam = (spec: JobParam): boolean => spec.required === true;
 
 /** The values a job's enum offers, in the member's language. Unknown value: the caller falls back. */
 export const ENUM_LABELS = {

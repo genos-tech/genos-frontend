@@ -309,7 +309,7 @@ export const ScheduleFormPanel = ({
                             const kind = paramKind(spec);
                             const known = knownParam(key);
                             const problem = show ? problems.params[key] : undefined;
-                            const required = isRequiredParam(key, spec);
+                            const required = isRequiredParam(spec);
                             const range =
                                 spec.minimum !== undefined && spec.maximum !== undefined
                                     ? fmt(s.paramRangeNote, {

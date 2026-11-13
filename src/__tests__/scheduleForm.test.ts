@@ -210,6 +210,42 @@ describe("a create sends only the fields its frequency uses", () => {
     });
 });
 
+describe("a required parameter comes from the catalog (MIP-1473)", () => {
+    // A job the client has never heard of, with a parameter it must have.
+    const NEW_JOB: ScheduleJob = {
+        job: "brand_new_job",
+        title: "Brand new",
+        description: "A job added on the server after this client was built.",
+        params: {
+            workspace_code: { type: "string", required: true },
+            note: { type: "string" },
+        },
+    };
+
+    it("marks it required with no client-side list, and the optional one is not", () => {
+        const f = form({ job: "brand_new_job", params: {} });
+        const p = validateForm(f, NEW_JOB);
+        expect(p.params.workspace_code).toBe("required");
+        expect(p.params.note).toBeUndefined();
+        expect(hasProblems(validateForm({ ...f, params: { workspace_code: "x" } }, NEW_JOB))).toBe(
+            false
+        );
+    });
+
+    it("no longer guesses from the parameter's name: milestone_id is required only when the catalog says so", () => {
+        const optional: ScheduleJob = {
+            ...NEW_JOB,
+            params: { milestone_id: { type: "integer", minimum: 1 } },
+        };
+        expect(validateForm(form({ params: {} }), optional).params.milestone_id).toBeUndefined();
+        const required: ScheduleJob = {
+            ...NEW_JOB,
+            params: { milestone_id: { type: "integer", minimum: 1, required: true } },
+        };
+        expect(validateForm(form({ params: {} }), required).params.milestone_id).toBe("required");
+    });
+});
+
 describe("validation", () => {
     it("accepts a good form", () => {
         expect(hasProblems(validateForm(form(), WHAT_TO_DO))).toBe(false);
