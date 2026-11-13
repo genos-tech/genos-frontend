@@ -997,6 +997,10 @@ export const es: DeepPartial<Messages> = {
                     markedNote: "Marcada como no importante. Genos no volverá a ofrecerla.",
                     undo: "Deshacer",
                     undoAria: "Deshacer: {task}",
+                    priorityIsRight: "La prioridad es correcta",
+                    priorityIsRightAria: "La prioridad es correcta: {task}",
+                    suggestionKeptNote:
+                        "Anotado. Genos no volverá a preguntar por esta prioridad.",
                     markFailed: "No se pudo guardar. Inténtalo de nuevo.",
                     markGone: "Ya no puedes abrir esa tarea, así que no se puede marcar.",
                     markRecordingOff:

@@ -1228,6 +1228,10 @@ export const hi: DeepPartial<Messages> = {
                         "महत्वपूर्ण नहीं के रूप में चिह्नित। Genos इसे दोबारा नहीं सुझाएगा।",
                     undo: "पूर्ववत करें",
                     undoAria: "पूर्ववत करें: {task}",
+                    priorityIsRight: "प्राथमिकता सही है",
+                    priorityIsRightAria: "प्राथमिकता सही है: {task}",
+                    suggestionKeptNote:
+                        "ठीक है। Genos इस प्राथमिकता के बारे में दोबारा नहीं पूछेगा।",
                     markFailed: "सहेजा नहीं जा सका। कृपया फिर कोशिश करें।",
                     markGone: "अब आप वह कार्य नहीं खोल सकते, इसलिए उसे चिह्नित नहीं किया जा सकता।",
                     markRecordingOff:

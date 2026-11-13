@@ -831,6 +831,9 @@ export const settings = {
                 markedNote: "Marked not important. Genos won't offer it again.",
                 undo: "Undo",
                 undoAria: "Undo: {task}",
+                priorityIsRight: "Priority is right",
+                priorityIsRightAria: "Priority is right for: {task}",
+                suggestionKeptNote: "Noted. Genos won't ask about this priority again.",
                 markFailed: "Couldn't save that. Please try again.",
                 markGone: "You can't open that task any more, so it can't be marked.",
                 markRecordingOff:

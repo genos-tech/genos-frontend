@@ -4134,6 +4134,10 @@ export const ja: DeepPartial<Messages> = {
                     markedNote: "重要ではないと印を付けました。Genos は今後これを挙げません。",
                     undo: "元に戻す",
                     undoAria: "元に戻す: {task}",
+                    priorityIsRight: "優先度はこのままでよい",
+                    priorityIsRightAria: "優先度はこのままでよい: {task}",
+                    suggestionKeptNote:
+                        "了解しました。Genos はこの優先度について今後は尋ねません。",
                     markFailed: "保存できませんでした。もう一度お試しください。",
                     markGone: "このタスクはもう開けないため、印を付けられません。",
                     markRecordingOff:
