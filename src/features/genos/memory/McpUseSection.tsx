@@ -4,6 +4,7 @@ import { Box, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
+import { SettingRow } from "../../../components/ui/settings/SettingRow";
 import { useMemberEventsPreference } from "../../../hooks/common/useMemberEventsPreference";
 import { useTranslation } from "../../../i18n";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "./confirmLayer";
@@ -70,7 +71,13 @@ export const McpUseSection = ({ onChanged }: Props) => {
                     {m.heading}
                 </Typography>
             </Stack>
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                disabled={!known || pref.saving}
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">{m.switchLabel}</Typography>
                     <Typography id={helperId} level="body-xs">
@@ -85,7 +92,7 @@ export const McpUseSection = ({ onChanged }: Props) => {
                     }}
                     onChange={(e) => void onSwitch(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
             {!pref.loading && !known && (
                 <ErrorState
                     data-error="mcp-use"

@@ -6,6 +6,7 @@ import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
+import { SettingRow } from "../../../components/ui/settings/SettingRow";
 import { useShareAnswersPreference } from "../../../hooks/common/useShareAnswersPreference";
 import { fmt, useTranslation } from "../../../i18n";
 import type { SharedAnswer } from "../../../services/agentApi";
@@ -200,9 +201,10 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
                 </Typography>
             </Stack>
 
-            <Stack
+            <SettingRow
                 alignItems="center"
                 direction="row"
+                disabled={!known || pref.saving}
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mb: 1.5 }}
@@ -217,7 +219,7 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
                     slotProps={{ input: { "aria-label": m.switchLabel } }}
                     onChange={(e) => void onSwitch(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
             {toggleError && (
                 <Typography level="body-xs" role="alert" sx={{ mb: 1, color: "danger.500" }}>
                     {m.toggleFailed}

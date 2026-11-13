@@ -152,11 +152,15 @@ export const ModalCustomizeTaskFields: React.FC<Props> = ({
         })),
     ];
 
+    // Named by its row ("Priority: Required"): the column header is the only other text.
     const requiredSwitch = (field: ConfigurableTaskField, disabled = false) => (
         <Switch
             checked={rules[field]?.required === true}
             disabled={disabled}
             size="sm"
+            slotProps={{
+                input: { "aria-label": `${t.tasks.fields[field]}: ${tc.requiredLabel}` },
+            }}
             onChange={(e) => patchRule(field, { required: e.target.checked })}
         />
     );

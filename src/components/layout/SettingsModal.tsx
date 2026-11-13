@@ -105,6 +105,7 @@ import {
     navFocusSx,
     navRowSx,
 } from "../ui/nav/navStyles";
+import { SettingRow } from "../ui/settings/SettingRow";
 import { AccountSettingsSection } from "./AccountSettingsSection";
 import { ConnectedAppsSection } from "./ConnectedAppsSection";
 import { DensitySetting } from "./DensitySetting";
@@ -260,7 +261,12 @@ const AppearanceSection = () => {
                 {t.settings.appearance.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">{t.settings.appearance.themeLabel}</Typography>
                     <Typography level="body-xs">{t.settings.appearance.themeHelper}</Typography>
@@ -298,7 +304,7 @@ const AppearanceSection = () => {
                         </Stack>
                     </Option>
                 </Select>
-            </Stack>
+            </SettingRow>
 
             <Divider sx={{ my: 1.5 }} />
 
@@ -309,7 +315,7 @@ const AppearanceSection = () => {
                 into the text. Stacked, each gets the full width.
                 `alignItems` has to flip too: `center` follows the axis, so
                 a column would centre the label text and the swatch row. */}
-            <Stack
+            <SettingRow
                 direction={{ xs: "column", md: "row" }}
                 spacing={{ xs: 1, md: 2 }}
                 sx={{
@@ -326,7 +332,7 @@ const AppearanceSection = () => {
                     </Typography>
                 </Box>
                 <ColorThemeRow />
-            </Stack>
+            </SettingRow>
 
             <DensitySetting />
         </Sheet>
@@ -346,7 +352,12 @@ const MessageLayoutSection = () => {
                 {t.settings.messageLayout.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">{t.settings.messageLayout.styleLabel}</Typography>
                     <Typography level="body-xs">{t.settings.messageLayout.styleHelper}</Typography>
@@ -376,7 +387,7 @@ const MessageLayoutSection = () => {
                         </Stack>
                     </Option>
                 </Select>
-            </Stack>
+            </SettingRow>
         </Sheet>
     );
 };
@@ -408,10 +419,11 @@ const SidebarSection = () => {
                 but the first. `useFlexGap` uses real `gap`, sidestepping both. */}
             <Stack spacing={1.5} useFlexGap>
                 {HIDEABLE_SIDEBAR_ITEMS.map((key: SidebarItemKey) => (
-                    <Stack
+                    <SettingRow
                         key={key}
                         alignItems="center"
                         direction="row"
+                        disabled={loading}
                         justifyContent="space-between"
                         spacing={2}
                     >
@@ -423,9 +435,10 @@ const SidebarSection = () => {
                         <Switch
                             checked={isVisible(key)}
                             disabled={loading}
+                            slotProps={{ input: { "aria-label": t.settings.sidebar.items[key] } }}
                             onChange={(e) => setVisible(key, e.target.checked)}
                         />
-                    </Stack>
+                    </SettingRow>
                 ))}
             </Stack>
         </Sheet>
@@ -490,7 +503,7 @@ const QuickReactionsSection = () => {
                 reason: the slot buttons (`minWidth: 44`) plus Reset can't
                 shrink, so side by side they squeeze the label. See that
                 row for why `alignItems` has to flip with the direction. */}
-            <Stack
+            <SettingRow
                 direction={{ xs: "column", md: "row" }}
                 spacing={{ xs: 1, md: 2 }}
                 sx={{
@@ -537,7 +550,7 @@ const QuickReactionsSection = () => {
                         {t.settings.quickReactions.reset}
                     </Button>
                 </Stack>
-            </Stack>
+            </SettingRow>
 
             {editingSlot !== null && pickerPos !== null && (
                 <EmojiPicker
@@ -686,7 +699,12 @@ const DoubleClickTodoSection = () => {
                 {t.settings.doubleClickTodo.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">
                         {t.settings.doubleClickTodo.toggleLabel}
@@ -695,8 +713,14 @@ const DoubleClickTodoSection = () => {
                         {t.settings.doubleClickTodo.toggleHelper}
                     </Typography>
                 </Box>
-                <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-            </Stack>
+                <Switch
+                    checked={enabled}
+                    slotProps={{
+                        input: { "aria-label": t.settings.doubleClickTodo.toggleLabel },
+                    }}
+                    onChange={(e) => setEnabled(e.target.checked)}
+                />
+            </SettingRow>
         </Sheet>
     );
 };
@@ -872,7 +896,7 @@ export const LlmModelSection = () => {
                     : t.settings.llmModel.description}
             </Typography>
 
-            <Stack
+            <SettingRow
                 alignItems="center"
                 direction="row"
                 justifyContent="space-between"
@@ -932,10 +956,10 @@ export const LlmModelSection = () => {
                         );
                     })}
                 </Select>
-            </Stack>
+            </SettingRow>
 
             {effortMode ? (
-                <Stack
+                <SettingRow
                     alignItems="center"
                     direction="row"
                     justifyContent="space-between"
@@ -978,9 +1002,9 @@ export const LlmModelSection = () => {
                             );
                         })}
                     </Select>
-                </Stack>
+                </SettingRow>
             ) : (
-                <Stack
+                <SettingRow
                     alignItems="center"
                     direction="row"
                     justifyContent="space-between"
@@ -1008,7 +1032,7 @@ export const LlmModelSection = () => {
                             </Option>
                         ))}
                     </Select>
-                </Stack>
+                </SettingRow>
             )}
 
             <Divider sx={{ my: 1.5 }} />
@@ -1135,7 +1159,7 @@ export const SpotlightSection = () => {
                 {t.settings.spotlight.description}
             </Typography>
 
-            <Stack
+            <SettingRow
                 alignItems="center"
                 direction="row"
                 justifyContent="space-between"
@@ -1146,14 +1170,19 @@ export const SpotlightSection = () => {
                     <Typography level="title-sm">{t.settings.spotlight.aiAnswersLabel}</Typography>
                     <Typography level="body-xs">{t.settings.spotlight.aiAnswersHelper}</Typography>
                 </Box>
-                <Switch checked={aiAnswers} onChange={(e) => setAiAnswers(e.target.checked)} />
-            </Stack>
+                <Switch
+                    checked={aiAnswers}
+                    slotProps={{ input: { "aria-label": t.settings.spotlight.aiAnswersLabel } }}
+                    onChange={(e) => setAiAnswers(e.target.checked)}
+                />
+            </SettingRow>
 
             <Divider />
 
-            <Stack
+            <SettingRow
                 alignItems="center"
                 direction="row"
+                disabled={!aiAnswers}
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mt: 1.5, opacity: aiAnswers ? 1 : 0.5 }}
@@ -1165,9 +1194,10 @@ export const SpotlightSection = () => {
                 <Switch
                     checked={webSearch}
                     disabled={!aiAnswers}
+                    slotProps={{ input: { "aria-label": t.settings.spotlight.webSearchLabel } }}
                     onChange={(e) => setWebSearch(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
         </Sheet>
     );
 };
@@ -1185,13 +1215,22 @@ const PrivacySection = () => {
                 {t.settings.privacy.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">{t.settings.privacy.shareLabel}</Typography>
                     <Typography level="body-xs">{t.settings.privacy.shareHelper}</Typography>
                 </Box>
-                <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-            </Stack>
+                <Switch
+                    checked={enabled}
+                    slotProps={{ input: { "aria-label": t.settings.privacy.shareLabel } }}
+                    onChange={(e) => setEnabled(e.target.checked)}
+                />
+            </SettingRow>
         </Sheet>
     );
 };
@@ -1208,7 +1247,12 @@ const LanguageSection = () => {
                 {t.settings.language.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">{t.settings.language.label}</Typography>
                     <Typography level="body-xs">{t.settings.language.helper}</Typography>
@@ -1244,7 +1288,7 @@ const LanguageSection = () => {
                         <Typography level="body-sm">{t.settings.language.hindi}</Typography>
                     </Option>
                 </Select>
-            </Stack>
+            </SettingRow>
         </Sheet>
     );
 };
@@ -1264,7 +1308,12 @@ const QuickAddRequiredFieldsSection = () => {
                 {t.settings.quickAddRequiredFields.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">
                         {t.settings.quickAddRequiredFields.toggleLabel}
@@ -1273,8 +1322,14 @@ const QuickAddRequiredFieldsSection = () => {
                         {t.settings.quickAddRequiredFields.toggleHelper}
                     </Typography>
                 </Box>
-                <Switch checked={enforce} onChange={(e) => setEnforce(e.target.checked)} />
-            </Stack>
+                <Switch
+                    checked={enforce}
+                    slotProps={{
+                        input: { "aria-label": t.settings.quickAddRequiredFields.toggleLabel },
+                    }}
+                    onChange={(e) => setEnforce(e.target.checked)}
+                />
+            </SettingRow>
         </Sheet>
     );
 };
@@ -1292,7 +1347,13 @@ const AutoCloseOnPrMergeSection = () => {
                 {t.settings.autoCloseOnPrMerge.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                disabled={loading}
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">
                         {t.settings.autoCloseOnPrMerge.toggleLabel}
@@ -1304,9 +1365,12 @@ const AutoCloseOnPrMergeSection = () => {
                 <Switch
                     checked={enabled}
                     disabled={loading}
+                    slotProps={{
+                        input: { "aria-label": t.settings.autoCloseOnPrMerge.toggleLabel },
+                    }}
                     onChange={(e) => setEnabled(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
         </Sheet>
     );
 };
@@ -1461,7 +1525,13 @@ const AutoSyncCalendarSection = () => {
                 {t.settings.autoSyncCalendar.description}
             </Typography>
 
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                disabled={togglesDisabled}
+                justifyContent="space-between"
+                spacing={2}
+            >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">
                         {t.settings.autoSyncCalendar.toggleLabel}
@@ -1471,9 +1541,12 @@ const AutoSyncCalendarSection = () => {
                 <Switch
                     checked={enabled}
                     disabled={togglesDisabled}
+                    slotProps={{
+                        input: { "aria-label": t.settings.autoSyncCalendar.toggleLabel },
+                    }}
                     onChange={(e) => setEnabled(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
 
             {/* Connected but missing calendar scope → inline Grant
                 button. Skipping when not connected at all keeps the
