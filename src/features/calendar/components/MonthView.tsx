@@ -17,7 +17,7 @@ import {
     type RovingConfig,
 } from "../../../hooks/common/roving";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
-import { useTranslation } from "../../../i18n";
+import { fmt, useTranslation } from "../../../i18n";
 import { focusRing } from "../../../theme/tokens";
 import { CalendarEvent } from "../../integrations/services/calendar";
 import { eventLabel } from "../utils/eventLabel";
@@ -126,7 +126,7 @@ export const MonthView = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const isMobile = useIsMobile();
-    const { locale } = useTranslation();
+    const { t, locale } = useTranslation();
 
     const grid = useMemo(() => buildMonthGrid(focused, 0), [focused]);
     const weekLabels = useMemo(() => weekdayLabels(0, locale), [locale]);
@@ -142,25 +142,28 @@ export const MonthView = ({
         [events, grid]
     );
 
-    // Days that have something on them, spans and the ones the lane cap folded included: Enter on
-    // such a day opens the list of its events (the "+N" popover), on an empty one it creates.
-    const busyDays = useMemo(() => {
-        const busy = new Set<string>();
+    // How many events each day has, spans and the ones the lane cap folded included. A day with
+    // any is "busy": Enter on it opens the list of its events (the "+N" popover), on an empty one
+    // it creates. The count is also what the cell's accessible name says (MIP-1405): the list of
+    // titles it used to read out was long on a busy day.
+    const eventCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+        const add = (key: string, n: number) => counts.set(key, (counts.get(key) ?? 0) + n);
         grid.forEach((week, weekIndex) => {
             const { visible, hiddenPerColumn } = weekSpans[weekIndex];
             week.forEach((day, dayIndex) => {
-                const key = dayKey(day);
-                if ((eventsByDay[key]?.length ?? 0) > 0 || (hiddenPerColumn[dayIndex] ?? 0) > 0) {
-                    busy.add(key);
-                }
+                add(
+                    dayKey(day),
+                    (eventsByDay[dayKey(day)]?.length ?? 0) + (hiddenPerColumn[dayIndex] ?? 0)
+                );
             });
             for (const segment of visible) {
                 for (let i = segment.startIndex; i <= segment.endIndex; i++) {
-                    busy.add(dayKey(week[i]));
+                    add(dayKey(week[i]), 1);
                 }
             }
         });
-        return busy;
+        return counts;
     }, [grid, weekSpans, eventsByDay]);
 
     // ONE Tab stop for the month (the WAI-ARIA date grid, MIP-1402): the day the stop is on is
@@ -175,7 +178,7 @@ export const MonthView = ({
         move: monthMove,
         groupOrder: "dom",
         activate: ({ item }) => {
-            if (busyDays.has(item)) onShowMore(item);
+            if ((eventCounts.get(item) ?? 0) > 0) onShowMore(item);
             else onCellClick(dayjs(item));
         },
         onOutside: ({ item }) => onNavigateToDay(dayjs(item)),
@@ -367,6 +370,7 @@ export const MonthView = ({
                                     // have to be reachable, so they count
                                     // toward this day's overflow.
                                     const hiddenSpans = hiddenPerColumn[dayIndex] ?? 0;
+                                    const eventCount = eventCounts.get(key) ?? 0;
                                     const total = dayEvents.length + hiddenSpans;
                                     const needsOverflow = total > chipSlots;
                                     // Reserve one slot for the "+N" chip
@@ -380,6 +384,11 @@ export const MonthView = ({
                                         <Sheet
                                             key={key}
                                             aria-current={isToday ? "date" : undefined}
+                                            aria-description={
+                                                eventCount > 0
+                                                    ? t.calendar.dayEnterOpens
+                                                    : t.calendar.dayEnterCreates
+                                            }
                                             aria-label={[
                                                 formatCalendarDate(day, locale, {
                                                     weekday: "long",
@@ -387,9 +396,13 @@ export const MonthView = ({
                                                     day: "numeric",
                                                     year: "numeric",
                                                 }),
-                                                ...dayEvents.map((e) =>
-                                                    eventLabel(e, freeBusySources, busyLabel)
-                                                ),
+                                                ...(eventCount > 0
+                                                    ? [
+                                                          fmt(t.calendar.dayEventCount, {
+                                                              count: eventCount,
+                                                          }),
+                                                      ]
+                                                    : []),
                                             ].join(", ")}
                                             role="gridcell"
                                             tabIndex={-1}

@@ -5465,6 +5465,9 @@ export const hi: DeepPartial<Messages> = {
         },
         allDay: "पूरे दिन",
         nowLabel: "अब",
+        dayEventCount: "{count, plural, one {# ईवेंट} other {# ईवेंट}}",
+        dayEnterOpens: "दिन के ईवेंट देखने के लिए Enter दबाएँ।",
+        dayEnterCreates: "ईवेंट बनाने के लिए Enter दबाएँ।",
         busy: "व्यस्त",
         repeat: {
             label: "दोहराना",

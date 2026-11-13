@@ -890,6 +890,9 @@ export const ja: DeepPartial<Messages> = {
         },
         allDay: "終日",
         nowLabel: "今",
+        dayEventCount: "{count}件の予定",
+        dayEnterOpens: "Enterキーでこの日の予定を表示します。",
+        dayEnterCreates: "Enterキーで予定を作成します。",
         busy: "Busy",
         repeat: {
             label: "リピート",

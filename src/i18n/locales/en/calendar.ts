@@ -24,6 +24,11 @@ export const calendar = {
     },
     allDay: "All day",
     nowLabel: "Now",
+    // A month cell reads as its date and how many events it has (the titles were long on a busy day),
+    // then says what Enter does there (MIP-1405).
+    dayEventCount: "{count, plural, one {# event} other {# events}}",
+    dayEnterOpens: "Press Enter to see the day's events.",
+    dayEnterCreates: "Press Enter to create an event.",
     // Shown instead of "(no title)" for an event on a calendar shared at
     // Google's "See only free/busy (hide details)" level. Google strips
     // the title upstream, so nothing is missing — labelling it

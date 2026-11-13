@@ -5169,6 +5169,9 @@ export const ar: DeepPartial<Messages> = {
         },
         allDay: "طوال اليوم",
         nowLabel: "الآن",
+        dayEventCount: "{count, plural, one {حدث واحد} other {# أحداث}}",
+        dayEnterOpens: "اضغط Enter لعرض أحداث اليوم.",
+        dayEnterCreates: "اضغط Enter لإنشاء حدث.",
         busy: "مشغول",
         repeat: {
             label: "يكرر",
