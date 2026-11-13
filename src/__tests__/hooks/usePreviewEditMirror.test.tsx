@@ -19,6 +19,12 @@
  *     be mounted on one slot (the Tasks page and another Home's panel), and
  *     each handing over a copy the other has not caught up with sent them back
  *     and forth, dozens of whole-pane renders per click;
+ *   - a copy that says exactly what the shown task says (another object, same content)
+ *     does NOT go to the slot: handing it over made the slot and TaskPreview's sync
+ *     effect swap their two objects forever, a React "Maximum update depth exceeded"
+ *     that blanked the Tasks page on some opens (MIP-1439). It still reaches the row,
+ *     which a refused save relies on (the stored task goes back into the working copy
+ *     and the slot as two objects of one content, and the row has to follow);
  *   - the chips always show the people of the working copy that arrived.
  */
 import { useEffect, useState } from "react";
@@ -157,6 +163,61 @@ describe("usePreviewEditMirror", () => {
 
         expect(calls.setPreview).not.toHaveBeenCalled();
         expect(calls.syncRow).not.toHaveBeenCalled();
+    });
+
+    it("a copy with the shown task's exact content (another object) is not handed to the slot, but the row follows it", () => {
+        const shown = task(1, { tags: [{ tagId: 1, name: "bug" }] as never });
+        const sameContent = { ...shown, tags: [{ tagId: 1, name: "bug" }] } as TaskProps;
+        expect(sameContent).not.toBe(shown);
+        const { calls } = setup({ working: sameContent, preview: shown });
+
+        expect(calls.setPreview).not.toHaveBeenCalled();
+        expect(calls.syncRow).toHaveBeenCalledTimes(1);
+        expect(calls.syncRow).toHaveBeenCalledWith(sameContent);
+        // The chips still follow whatever working copy arrived.
+        expect(calls.setAssignee).toHaveBeenCalledWith(sameContent.assignee);
+    });
+
+    it("any difference from the shown task is still an edit (a field, a nested value, a removed key)", () => {
+        const shown = task(1, {
+            tags: [{ tagId: 1, name: "bug" }] as never,
+            dueDate: "2026-11-20",
+        });
+        const differing: Array<[string, TaskProps]> = [
+            ["a field", { ...shown, title: "Edited" }],
+            ["a nested value", { ...shown, tags: [{ tagId: 1, name: "chore" }] as never }],
+            [
+                "an added element",
+                { ...shown, tags: [...(shown.tags as never[]), { tagId: 2 }] } as never,
+            ],
+            [
+                "a removed key",
+                Object.fromEntries(
+                    Object.entries(shown).filter(([key]) => key !== "dueDate")
+                ) as unknown as TaskProps,
+            ],
+        ];
+        for (const [what, working] of differing) {
+            const { calls } = setup({ working, preview: shown });
+            expect(calls.setPreview, what).toHaveBeenCalledWith(working);
+            expect(calls.syncRow, what).toHaveBeenCalledWith(working);
+        }
+    });
+
+    it("reverting an edit is an edit: the slot holds the edited copy, so the original content goes over again", () => {
+        const original = task(1);
+        const edited = { ...original, title: "Edited" };
+        const { calls, view } = setup({ working: edited, preview: original });
+        // The host stored the edit.
+        view.rerender({ working: edited, preview: edited });
+        calls.setPreview.mockClear();
+        calls.syncRow.mockClear();
+
+        const reverted = { ...original };
+        view.rerender({ working: reverted, preview: edited });
+
+        expect(calls.setPreview).toHaveBeenCalledWith(reverted);
+        expect(calls.syncRow).toHaveBeenCalledWith(reverted);
     });
 
     it("a copy with an id still fills a host slot that is empty or holds no task", () => {
@@ -379,5 +440,63 @@ describe("usePreviewEditMirror with two previews on one host slot", () => {
         expect(view.getByTestId("tasks").textContent).toBe("7");
         expect(view.getByTestId("other").textContent).toBe("7");
         expect(renders).toBeLessThan(6);
+    });
+});
+
+describe("usePreviewEditMirror beside TaskPreview's sync effect (MIP-1439)", () => {
+    // TaskPreview pulls the host's task into its working copy whenever the slot
+    // changes (its sync effect), and this hook pushes the working copy into the
+    // slot whenever it changes. Given two objects with the same content, one in
+    // each place, both effects fire in the same commit and each takes the other's
+    // object, so the next commit they have swapped, and so on for ever.
+    const Host = ({
+        shown,
+        working0,
+        counters,
+    }: {
+        shown: TaskProps;
+        working0: TaskProps;
+        counters: { renders: number; pushes: number; rows: number };
+    }) => {
+        counters.renders += 1;
+        // Fail fast instead of waiting for React's 50 nested updates.
+        if (counters.renders > 40) throw new Error("the slot and the working copy are swapping");
+        const [slot, setSlot] = useState<TaskProps | undefined>(shown);
+        const [working, setWorking] = useState<TaskProps>(working0);
+        // TaskPreview's sync effect, as it matters here: take the slot's task when it is not the
+        // working copy. Keyed on the slot alone, like the real one.
+        useEffect(() => {
+            if (slot && slot !== working) setWorking(slot);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [slot]);
+        usePreviewEditMirror({
+            working,
+            preview: slot,
+            myself: me,
+            setPreview: (t) => {
+                counters.pushes += 1;
+                setSlot(t);
+            },
+            syncRow: () => {
+                counters.rows += 1;
+            },
+            setAssignee: () => {},
+            setReporter: () => {},
+        });
+        return <span data-testid="seen">{`${slot?.title}|${working.title}`}</span>;
+    };
+
+    it("two objects with the same content settle at once instead of swapping", async () => {
+        const shown = task(7, { title: "Same" });
+        const counters = { renders: 0, pushes: 0, rows: 0 };
+
+        const view = render(<Host counters={counters} shown={shown} working0={{ ...shown }} />);
+        await act(async () => {});
+
+        expect(counters.pushes).toBe(0);
+        // The row hears about it once, not every commit.
+        expect(counters.rows).toBeLessThanOrEqual(2);
+        expect(counters.renders).toBeLessThan(6);
+        expect(view.getByTestId("seen").textContent).toBe("Same|Same");
     });
 });
