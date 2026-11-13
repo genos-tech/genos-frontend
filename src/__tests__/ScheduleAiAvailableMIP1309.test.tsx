@@ -12,6 +12,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SchedulesSection } from "../components/layout/schedules/SchedulesSection";
 import { HashMentionDataProvider } from "../context/HashMentionDataContext";
 import { withoutAi } from "../features/schedules/scheduleEffort";
+import type { EffortCost, ScheduleJob } from "../services/schedules";
 
 vi.setConfig({ testTimeout: 30000 });
 
@@ -54,7 +55,7 @@ const render = (ui: React.ReactElement) =>
         </CssVarsProvider>
     );
 
-const COST = {
+const COST: EffortCost = {
     estimate: true,
     basis: "a report listing 10 tasks with comments, nothing cached",
     levels: {
@@ -64,7 +65,7 @@ const COST = {
     },
 };
 
-const AI_JOB = {
+const AI_JOB: ScheduleJob = {
     job: "what_to_do_today",
     title: "What to do today",
     description: "Your plan.",
@@ -76,7 +77,7 @@ const AI_JOB = {
     effortDefault: "low" as const,
     effortCost: COST,
 };
-const PLAIN_JOB = {
+const PLAIN_JOB: ScheduleJob = {
     job: "what_you_did",
     title: "What you did",
     description: "A recap of your day.",
