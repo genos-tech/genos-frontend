@@ -3,6 +3,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { focusRing, g, type } from "../../../theme/tokens";
+import { touchTargetSx } from "../touchTargets";
 
 /**
  * The one tab strip (MIP-1132). The thread tabs, the inbox tabs and three
@@ -270,6 +271,9 @@ export const TabStrip = ({
                                     gap: 0.75,
                                     height,
                                     px: 1.25,
+                                    // A tab is a 44px tap on a touch screen (MIP-1455): the strip
+                                    // is that tall there, with a mouse it keeps its 28 / 32.
+                                    ...touchTargetSx("&"),
                                     cursor: tab.disabled ? "default" : "pointer",
                                     color: selected ? g.text.primary : g.text.secondary,
                                     opacity: tab.disabled ? 0.5 : 1,
@@ -345,6 +349,21 @@ export const TabStrip = ({
                                         color: g.text.tertiary,
                                         "--Icon-color": "currentColor",
                                         "&:hover": { background: g.active, color: g.text.primary },
+                                        // The x keeps its 18px look and is a 44 x 44 tap on a
+                                        // touch screen (MIP-1455): an invisible area reaching up
+                                        // and down to the strip's 44px, 20px back over the label
+                                        // and the 6px of margin after it (not into the next tab).
+                                        "@media (pointer: coarse)": {
+                                            position: "relative",
+                                            "&::after": {
+                                                content: '""',
+                                                position: "absolute",
+                                                top: -13,
+                                                bottom: -13,
+                                                insetInlineStart: -20,
+                                                insetInlineEnd: -6,
+                                            },
+                                        },
                                     }}
                                     aria-hidden
                                     onClick={(e) => {
