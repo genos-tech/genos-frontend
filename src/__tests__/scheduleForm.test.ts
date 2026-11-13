@@ -181,6 +181,12 @@ describe("a create sends only the fields its frequency uses", () => {
             params: {},
             frequency: "daily",
             timeOfDay: "09:00",
+            deliverPush: true,
+        });
+    });
+
+    it("a member who switched push off sends false (MIP-1374)", () => {
+        expect(buildCreate(form({ deliverPush: false }), WHAT_TO_DO)).toMatchObject({
             deliverPush: false,
         });
     });
