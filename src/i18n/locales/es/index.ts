@@ -3098,6 +3098,14 @@ export const es: DeepPartial<Messages> = {
                 milestoneAssigneeRemoved: "remoto",
                 prUnlinked: "quitó el vínculo con",
             },
+            via: {
+                mcp: "vía MCP",
+                apiKey: "vía clave de API",
+                mcpHint: "Hecho desde una app de IA conectada (MCP), no escrito en Genos",
+                mcpHintNamed: "Hecho desde tu app conectada «{name}» (MCP), no escrito en Genos",
+                apiKeyHint: "Hecho con una clave de API, no escrito en Genos",
+                apiKeyHintNamed: "Hecho con tu clave de API «{name}», no escrito en Genos",
+            },
             restore: {
                 button: "Restaurar la descripción anterior",
                 viaAgent: "Reescrita por la IA de Genos",

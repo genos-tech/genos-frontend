@@ -8,22 +8,28 @@ import { fmt, useTranslation } from "../../../../../../i18n";
 import { TaskActivityProps } from "../../../../../../types/tasks";
 import { restoreTaskBody } from "../../../../services/restoreTaskBody";
 import { emitTaskTouched } from "../../../../services/taskEvents";
+import { viaSourceOfRow } from "../../../../utils/viaSource";
 
 type Props = {
     taskId: number;
     activity: TaskActivityProps;
+    /** The viewer. A key's name is its owner's alone (MIP-1376): it is printed
+     *  only when the viewer is the row's actor. Absent, no name is shown. */
+    viewerId?: string | number | null;
 };
 
 /** Who rewrote the description, from the surface the server stamped on the row. */
 const viaText = (
-    via: unknown,
+    activity: TaskActivityProps,
+    viewerId: string | number | null | undefined,
     r: ReturnType<typeof useTranslation>["t"]["tasks"]["activity"]["restore"]
 ): string => {
+    const via = activity.metadata?.via;
     const kind = (via as { kind?: unknown } | null | undefined)?.kind;
     if (kind === "agent") return r.viaAgent;
     if (kind === "api_key") {
-        const name = (via as { key_name?: unknown }).key_name;
-        return typeof name === "string" && name ? fmt(r.viaApiKey, { name }) : r.viaApiKeyUnnamed;
+        const name = viaSourceOfRow(activity, viewerId)?.name;
+        return name ? fmt(r.viaApiKey, { name }) : r.viaApiKeyUnnamed;
     }
     return r.viaUnknown;
 };
@@ -40,7 +46,7 @@ const viaText = (
  * The server pushes the restored body into the open editor itself, so after a
  * success the only thing left to do is refresh the history.
  */
-export const RestoreBodyControl = ({ taskId, activity }: Props) => {
+export const RestoreBodyControl = ({ taskId, activity, viewerId }: Props) => {
     const { t } = useTranslation();
     const { accessToken } = useAuth();
     const r = t.tasks.activity.restore;
@@ -73,7 +79,7 @@ export const RestoreBodyControl = ({ taskId, activity }: Props) => {
         <Box sx={{ width: "100%", pl: 5.5 }}>
             <Stack alignItems="center" direction="row" flexWrap="wrap" spacing={1}>
                 <Typography level="body-xs" sx={{ opacity: 0.65 }}>
-                    {viaText(activity.metadata?.via, r)}
+                    {viaText(activity, viewerId, r)}
                 </Typography>
                 <Button
                     size="sm"

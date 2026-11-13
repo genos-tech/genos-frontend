@@ -5112,6 +5112,14 @@ export const zh: DeepPartial<Messages> = {
                 milestoneAssigneeRemoved: "已删除",
                 prUnlinked: "移除了以下链接：",
             },
+            via: {
+                mcp: "通过 MCP",
+                apiKey: "通过 API 密钥",
+                mcpHint: "通过已连接的 AI 应用（MCP）完成，并非在 Genos 中直接输入",
+                mcpHintNamed: "通过你已连接的应用“{name}”（MCP）完成，并非在 Genos 中直接输入",
+                apiKeyHint: "使用 API 密钥完成，并非在 Genos 中直接输入",
+                apiKeyHintNamed: "使用你的 API 密钥“{name}”完成，并非在 Genos 中直接输入",
+            },
             restore: {
                 button: "恢复之前的描述",
                 viaAgent: "由 Genos AI 重写",

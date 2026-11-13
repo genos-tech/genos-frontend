@@ -24,6 +24,7 @@ import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../../../components/ui/avatars/BaseAvatar";
 import { DataState } from "../../../../../../components/ui/feedback/DataState";
+import { ViaChip } from "../../../../../../components/ui/misc/ViaChip";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
@@ -38,6 +39,7 @@ import { isPriorityName, isStatusName } from "../../../../meta/taskTone";
 import { formatRelativeAge } from "../../../../utils/relativeAge";
 import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
+import { viaSourceOfRow } from "../../../../utils/viaSource";
 import { PriorityIcon } from "../../../meta/PriorityIcon";
 import { StatusLabel } from "../../../meta/StatusLabel";
 import { EffortLabel } from "../../../table/cellEditors";
@@ -1015,6 +1017,9 @@ export const TaskActivityFeed = ({
                 // back to `row.actor` when the actor isn't a current
                 // team member (e.g. ex-member, system actor).
                 const actorId = row.actor?.userId;
+                // Made through a connected AI app or an API key (MIP-1376): a chip,
+                // beside the avatar and name, which stay as they were.
+                const via = viaSourceOfRow(row, myself.userId);
                 const avatarUser =
                     (actorId != null
                         ? (teamMemberProfiles[String(actorId)] as UserProps | undefined)
@@ -1127,6 +1132,7 @@ export const TaskActivityFeed = ({
                                         label={created?.status ?? newFmt.label}
                                     />
                                 )}
+                                {via && <ViaChip source={via} />}
                                 <Box sx={{ flexGrow: 1 }} />
                                 <Typography
                                     level="body-xs"
@@ -1143,7 +1149,11 @@ export const TaskActivityFeed = ({
                         </Stack>
                         {taskId != null && keepsPreviousBody(row) && (
                             <Box sx={{ pb: 1, px: 1 }}>
-                                <RestoreBodyControl activity={row} taskId={taskId} />
+                                <RestoreBodyControl
+                                    activity={row}
+                                    taskId={taskId}
+                                    viewerId={myself.userId}
+                                />
                             </Box>
                         )}
                     </Box>

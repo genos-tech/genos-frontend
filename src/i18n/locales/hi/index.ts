@@ -2776,6 +2776,16 @@ export const hi: DeepPartial<Messages> = {
                 milestoneAssigneeRemoved: "निकाला गया",
                 prUnlinked: "यह लिंक हटाया:",
             },
+            via: {
+                mcp: "MCP के ज़रिए",
+                apiKey: "API कुंजी के ज़रिए",
+                mcpHint: "कनेक्टेड AI ऐप (MCP) से किया गया, Genos में टाइप नहीं किया गया",
+                mcpHintNamed:
+                    "आपके कनेक्टेड ऐप “{name}” (MCP) से किया गया, Genos में टाइप नहीं किया गया",
+                apiKeyHint: "API कुंजी से किया गया, Genos में टाइप नहीं किया गया",
+                apiKeyHintNamed:
+                    "आपकी API कुंजी “{name}” से किया गया, Genos में टाइप नहीं किया गया",
+            },
             restore: {
                 button: "पिछला विवरण वापस लाएँ",
                 viaAgent: "Genos AI ने दोबारा लिखा",

@@ -683,6 +683,15 @@ export const tasks = {
             loadMore: "Load more",
             deleted: "deleted",
         },
+        // The mark on a change made through a connected AI app or an API key (MIP-1376).
+        via: {
+            mcp: "via MCP",
+            apiKey: "via API key",
+            mcpHint: "Made through a connected AI app (MCP), not typed in Genos",
+            mcpHintNamed: "Made through your connected app “{name}” (MCP), not typed in Genos",
+            apiKeyHint: "Made with an API key, not typed in Genos",
+            apiKeyHintNamed: "Made with your API key “{name}”, not typed in Genos",
+        },
         // Restoring the description an agent, an API key or MCP replaced
         // (MIP-738). Offered on the history row that kept the old body.
         restore: {
