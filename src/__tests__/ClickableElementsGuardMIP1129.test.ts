@@ -103,7 +103,7 @@ const ALLOWED: Record<string, { count: number; reason: string }> = {
     },
     "features/calendar/components/TimelineView.tsx": {
         count: 1,
-        reason: "day column: the click creates an event at the HOUR under the pointer (position-based); the toolbar's New event button is the keyboard path",
+        reason: "day column: the click creates an event at the HOUR under the pointer (position-based); the keyboard path is the day header's New event stop (MIP-1405)",
     },
 };
 

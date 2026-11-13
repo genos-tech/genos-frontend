@@ -849,6 +849,9 @@ export const zh: DeepPartial<Messages> = {
         },
         allDay: "全天",
         nowLabel: "现在",
+        dayEventCount: "{count} 个日程",
+        dayEnterOpens: "按 Enter 查看当天的日程。",
+        dayEnterCreates: "按 Enter 新建日程。",
         busy: "忙碌",
         repeat: {
             label: "重复",

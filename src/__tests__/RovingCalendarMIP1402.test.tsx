@@ -98,13 +98,30 @@ describe("MonthView", () => {
         ]);
     });
 
-    it("is a named grid of rows and cells, each cell named by its date and its events", () => {
+    it("is a named grid of rows and cells, each cell named by its date and how many events it has", () => {
         const { container, getByRole } = setup();
         expect(getByRole("grid").getAttribute("aria-label")).toBe("November 2026");
         expect(container.querySelectorAll('[role="row"]')).toHaveLength(6);
         expect(container.querySelectorAll('[role="gridcell"]')).toHaveLength(42);
+        // MIP-1405: a count, not every title (long on a busy day), and what Enter does
         expect(cell(container, "2026-11-11").getAttribute("aria-label")).toBe(
-            "Wednesday, November 11, 2026, Planning, Retro, Lunch"
+            "Wednesday, November 11, 2026, 3 events"
+        );
+        expect(cell(container, "2026-11-11").getAttribute("aria-description")).toBe(
+            "Press Enter to see the day's events."
+        );
+        expect(cell(container, "2026-11-03").getAttribute("aria-label")).toBe(
+            "Tuesday, November 3, 2026, 1 event"
+        );
+        // a day only a span covers counts the span
+        expect(cell(container, "2026-11-18").getAttribute("aria-label")).toBe(
+            "Wednesday, November 18, 2026, 1 event"
+        );
+        expect(cell(container, "2026-11-13").getAttribute("aria-label")).toBe(
+            "Friday, November 13, 2026"
+        );
+        expect(cell(container, "2026-11-13").getAttribute("aria-description")).toBe(
+            "Press Enter to create an event."
         );
         expect(cell(container, "2026-11-11").getAttribute("aria-current")).toBe("date");
         expect(cell(container, "2026-11-10").hasAttribute("aria-current")).toBe(false);
@@ -194,43 +211,117 @@ describe("TimelineView", () => {
         timed("e", "Lunch", 11, 12),
         allDay("f", "Trip", 12, 14),
     ];
-    const setup = () => {
+    const setup = (view: "week" | "day" | "3day" = "week", anchor = "2026-11-11") => {
         const onEventClick = vi.fn();
-        const view = render(
+        const onCreateAt = vi.fn();
+        const utils = render(
             <CssVarsProvider>
                 <TimelineView
-                    anchor={dayjs("2026-11-11")}
+                    anchor={dayjs(anchor)}
                     busyLabel="Busy"
                     colorBySource={{}}
                     events={events}
                     freeBusySources={new Set()}
-                    view="week"
-                    onCreateAt={() => {}}
+                    view={view}
+                    onCreateAt={onCreateAt}
                     onEventClick={onEventClick}
                 />
             </CssVarsProvider>
         );
-        return { ...view, onEventClick };
+        return { ...utils, onEventClick, onCreateAt };
     };
+    const createStop = (c: HTMLElement, day: string) =>
+        c.querySelector<HTMLElement>(`[data-roving-item="create|${day}"]`)!;
     const byName = (c: HTMLElement, text: string) =>
         Array.from(c.querySelectorAll<HTMLElement>("[data-roving-item]")).find((el) =>
             el.textContent?.startsWith(text)
         )!;
 
-    it("is one Tab stop per day that has events, not one per event", async () => {
+    it("is one Tab stop per day, empty or not, and not one per event", async () => {
         const { container } = setup();
         await flush();
         const stops = tabbable(container).map((s) => s.getAttribute("data-roving-group"));
-        expect(new Set(stops)).toEqual(new Set(["2026-11-09", "2026-11-11", "2026-11-12"]));
-        expect(stops).toHaveLength(3);
-        // 6 events before
-        expect(container.querySelectorAll("[data-roving-item]")).toHaveLength(6);
+        // 7 days of the week of Nov 8; MIP-1402 had 3 (the days with events), an empty day had none
+        expect(new Set(stops)).toEqual(
+            new Set([
+                "2026-11-08",
+                "2026-11-09",
+                "2026-11-10",
+                "2026-11-11",
+                "2026-11-12",
+                "2026-11-13",
+                "2026-11-14",
+            ])
+        );
+        expect(stops).toHaveLength(7);
+        // 6 events + a "New event" item for each of the 7 days
+        expect(container.querySelectorAll("[data-roving-item]")).toHaveLength(13);
     });
 
-    it("a day's stop is its first all-day item, then its events by start time", async () => {
+    it("an empty day's only stop is its New event item, named by the day", async () => {
         const { container } = setup();
         await flush();
-        expect(byName(container, "Offsite").getAttribute("tabindex")).toBe("0");
+        const stop = createStop(container, "2026-11-10");
+        expect(stop.getAttribute("tabindex")).toBe("0");
+        expect(stop.getAttribute("role")).toBe("button");
+        expect(stop.getAttribute("aria-label")).toBe("New event, Tuesday, November 10, 2026");
+    });
+
+    it("a day with events starts on New event too, its events are one ArrowDown away", async () => {
+        const { container } = setup();
+        await flush();
+        // Tab walks the day headers left to right; the events are inside the day
+        expect(createStop(container, "2026-11-11").getAttribute("tabindex")).toBe("0");
+        const offsite = byName(container, "Offsite");
+        expect(offsite.getAttribute("tabindex")).toBe("-1");
+        createStop(container, "2026-11-11").focus();
+        fireEvent.keyDown(document.activeElement!, { key: "ArrowDown" });
+        expect(document.activeElement).toBe(offsite);
+        await flush();
+        // the stop followed the focus
+        expect(offsite.getAttribute("tabindex")).toBe("0");
+        expect(createStop(container, "2026-11-11").getAttribute("tabindex")).toBe("-1");
+        fireEvent.keyDown(offsite, { key: "ArrowUp" });
+        expect(document.activeElement).toBe(createStop(container, "2026-11-11"));
+    });
+
+    it("Enter and Space on New event create at 9:00 of that day, on an empty day too", () => {
+        const { container, onCreateAt, onEventClick } = setup();
+        const empty = createStop(container, "2026-11-10");
+        empty.focus();
+        fireEvent.keyDown(empty, { key: "Enter" });
+        expect(onCreateAt).toHaveBeenCalledTimes(1);
+        expect(onCreateAt.mock.calls[0][0].format("YYYY-MM-DD HH:mm")).toBe("2026-11-10 09:00");
+        fireEvent.keyDown(empty, { key: " " });
+        expect(onCreateAt).toHaveBeenCalledTimes(2);
+        const busy = createStop(container, "2026-11-11");
+        busy.focus();
+        fireEvent.keyDown(busy, { key: "Enter" });
+        expect(onCreateAt.mock.calls[2][0].format("YYYY-MM-DD HH:mm")).toBe("2026-11-11 09:00");
+        expect(onEventClick).not.toHaveBeenCalled();
+    });
+
+    it("is one stop in the day view, empty or not", async () => {
+        for (const day of ["2026-11-10", "2026-11-11"]) {
+            const { container } = setup("day", day);
+            await flush();
+            expect(tabbable(container).map((s) => s.getAttribute("data-roving-item"))).toEqual([
+                `create|${day}`,
+            ]);
+        }
+    });
+
+    it("the New event item does not take mouse clicks (the header stays inert)", () => {
+        const { container, onCreateAt } = setup();
+        const stop = createStop(container, "2026-11-10");
+        expect(getComputedStyle(stop).pointerEvents).toBe("none");
+        expect(onCreateAt).not.toHaveBeenCalled();
+    });
+
+    it("after New event a day has its all-day items, then its events by start time", async () => {
+        const { container } = setup();
+        await flush();
+        expect(byName(container, "Offsite").getAttribute("tabindex")).toBe("-1");
         expect(byName(container, "Planning").getAttribute("tabindex")).toBe("-1");
         byName(container, "Offsite").focus();
         fireEvent.keyDown(byName(container, "Offsite"), { key: "ArrowDown" });
@@ -241,16 +332,22 @@ describe("TimelineView", () => {
         expect(document.activeElement).toBe(byName(container, "Lunch"));
     });
 
-    it("Left / Right go to the neighbouring day that has events, Home / End to the day's ends", async () => {
+    it("Left / Right go to the neighbouring day (an empty one too), Home / End to the day's ends", async () => {
         const { container } = setup();
         await flush();
+        // Nov 11: New event, Offsite, Planning, Lunch. Nov 10 is empty: its last item is New event.
         byName(container, "Planning").focus();
         fireEvent.keyDown(document.activeElement!, { key: "ArrowLeft" });
-        expect(document.activeElement).toBe(byName(container, "Design")); // Nov 9 has two: index 1
+        expect(document.activeElement).toBe(createStop(container, "2026-11-10"));
+        fireEvent.keyDown(document.activeElement!, { key: "ArrowLeft" });
+        // Nov 9: New event, Standup, Design: index 0 of the empty day
+        expect(document.activeElement).toBe(createStop(container, "2026-11-09"));
+        fireEvent.keyDown(document.activeElement!, { key: "End" });
+        expect(document.activeElement).toBe(byName(container, "Design"));
         fireEvent.keyDown(document.activeElement!, { key: "Home" });
+        expect(document.activeElement).toBe(createStop(container, "2026-11-09"));
+        fireEvent.keyDown(document.activeElement!, { key: "ArrowDown" });
         expect(document.activeElement).toBe(byName(container, "Standup"));
-        fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" });
-        expect(document.activeElement).toBe(byName(container, "Offsite"));
     });
 
     it("a multi-day bar belongs to its first day's column", async () => {

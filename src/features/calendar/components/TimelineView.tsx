@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -71,12 +72,23 @@ const hourLabel = (h: number): string => {
 
 /**
  * The roving tab stops of the week / 3-day / day views (MIP-1402): ONE Tab stop per day
- * column, the active event of that day. Up / Down move between the day's events (all-day
- * first, then by start time), Left / Right between days, Home / End the first / last event
- * of the day. An event belongs to the column of its first visible day (a bar over three days
- * is reached from the first), and a day with nothing on it has no stop.
+ * column. Up / Down move between the day's items, Left / Right between days, Home / End the
+ * first / last item of the day. An event belongs to the column of its first visible day (a bar
+ * over three days is reached from the first).
+ *
+ * Every day also has a "New event" item, first in its column (MIP-1405): an empty day would
+ * otherwise have no stop at all, and creating an event is a click on an hour slot, which a
+ * keyboard cannot make. It is drawn in the day's header, so Tab walks the days left to right
+ * there and ArrowDown goes into the day's events (the stop of a day moves with the focus).
  */
-const TIMELINE_NAV: RovingConfig = { move: columnMove, groupOrder: "sorted" };
+const CREATE_PREFIX = "create|";
+const CREATE_SORT = -3;
+/** Hour (local) a keyboard-created event starts at: the month's "New event" uses the same. */
+const CREATE_HOUR = 9;
+const TIMELINE_NAV: RovingConfig = {
+    move: columnMove,
+    groupOrder: "sorted",
+};
 
 /** The nav's id of an event: ids are unique per calendar, not globally (see `CalendarEvent`). */
 const itemId = (kind: "bar" | "all-day" | "timed", e: CalendarEvent): string =>
@@ -209,11 +221,54 @@ export const TimelineView = ({
                         <Box
                             key={d.toString()}
                             sx={{
+                                position: "relative",
                                 textAlign: "center",
                                 py: 0.5,
                                 borderLeft: `1px solid ${gridLine}`,
                             }}
                         >
+                            {/* The keyboard's way to create an event on this day (MIP-1405): a
+                                stop of the day's column that only shows when it has the focus.
+                                `pointerEvents: none` keeps the header inert for the mouse, which
+                                creates by clicking an hour slot. */}
+                            <Clickable
+                                {...navAttrs(
+                                    d,
+                                    `${CREATE_PREFIX}${d.format("YYYY-MM-DD")}`,
+                                    CREATE_SORT
+                                )}
+                                label={`${t.calendar.event.newTitle}, ${formatCalendarDate(
+                                    d,
+                                    locale,
+                                    {
+                                        weekday: "long",
+                                        month: "long",
+                                        day: "numeric",
+                                        year: "numeric",
+                                    }
+                                )}`}
+                                sx={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    justifyContent: "flex-end",
+                                    p: 0.25,
+                                    pointerEvents: "none",
+                                    color: "text.secondary",
+                                    "& > svg": { opacity: 0 },
+                                    "&:focus-visible > svg": { opacity: 1 },
+                                    // inside the header: the scroll box above clips an outer ring
+                                    "&:focus-visible": { outlineOffset: "-2px" },
+                                }}
+                                onActivate={() =>
+                                    onCreateAt(
+                                        d.startOf("day").hour(CREATE_HOUR).minute(0).second(0)
+                                    )
+                                }
+                            >
+                                <AddRoundedIcon aria-hidden sx={{ fontSize: 16 }} />
+                            </Clickable>
                             <Typography
                                 level="body-xs"
                                 sx={{

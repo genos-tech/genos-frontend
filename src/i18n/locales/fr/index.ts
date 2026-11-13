@@ -898,6 +898,9 @@ export const fr: DeepPartial<Messages> = {
         },
         allDay: "Toute la journée",
         nowLabel: "Maintenant",
+        dayEventCount: "{count, plural, one {# événement} other {# événements}}",
+        dayEnterOpens: "Appuyez sur Entrée pour voir les événements du jour.",
+        dayEnterCreates: "Appuyez sur Entrée pour créer un événement.",
         busy: "Occupé",
         repeat: {
             label: "Répéter",
