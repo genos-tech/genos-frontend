@@ -4108,7 +4108,10 @@ export const es: DeepPartial<Messages> = {
                 agentRunDone: "Respuesta de IA lista",
                 messageReminder: "Recordatorios de mensajes",
                 todoReminder: "Recordatorios de tareas pendientes",
-                aiApp: "Lo que hacen mis apps de IA",
+                aiApps: "Lo que hacen mis apps de IA",
+                aiAppTasks: "Tareas",
+                aiAppNotes: "Notas",
+                aiAppTodos: "Tareas pendientes",
             },
             emailCategories: {
                 mentionChat: "Menciones en chats",
@@ -4172,7 +4175,11 @@ export const es: DeepPartial<Messages> = {
                         "Cuando vence un recordatorio que estableciste en un mensaje. Desactivar esta opción mantiene el recordatorio en su bandeja de entrada sin notificación.",
                     todoReminder:
                         "Cuando vence un recordatorio que estableciste en una tarea pendiente. Desactivar esta opción mantiene el recordatorio en su bandeja de entrada sin notificación.",
-                    aiApp: "Cuando una app de IA conectada por MCP (Claude Code, Claude Desktop…) crea algo o cambia un estado en tu nombre. Si lo desactivas, estos avisos dejan de generarse por completo.",
+                    aiApps: "Avisos de lo que hace en tu nombre una app de IA conectada por MCP (Claude Code, Claude Desktop…). Elige de qué tipos quieres enterarte.",
+                    aiAppTasks:
+                        "Tareas, hitos y comentarios de tarea que una app de IA crea, cuyo estado cambia o que elimina.",
+                    aiAppNotes: "Notas que una app de IA crea o elimina.",
+                    aiAppTodos: "Tareas pendientes que una app de IA añade o elimina.",
                 },
                 permissionStates: {
                     granted: "Otorgada",

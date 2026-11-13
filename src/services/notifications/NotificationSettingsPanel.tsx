@@ -39,6 +39,8 @@ const groupLabel = (group: CoarseGroup, t: Messages): string => {
             return cats.taskComments;
         case "inbox":
             return cats.inbox;
+        case "ai_apps":
+            return cats.aiApps;
     }
 };
 

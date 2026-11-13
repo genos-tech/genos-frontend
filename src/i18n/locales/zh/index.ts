@@ -3111,7 +3111,10 @@ export const zh: DeepPartial<Messages> = {
                 agentRunDone: "AI 答案已准备就绪",
                 messageReminder: "消息提醒",
                 todoReminder: "待办提醒",
-                aiApp: "我的 AI 应用的操作",
+                aiApps: "我的 AI 应用的操作",
+                aiAppTasks: "任务",
+                aiAppNotes: "笔记",
+                aiAppTodos: "待办",
             },
             emailCategories: {
                 mentionChat: "聊天中的提及",
@@ -3188,7 +3191,10 @@ export const zh: DeepPartial<Messages> = {
                         "当你在消息上设置的提醒到期时。关闭此功能会将提醒保留在收件箱中，而不会发出通知。",
                     todoReminder:
                         "当你在待办事项上设置的提醒到期时。关闭此功能会将提醒保留在收件箱中，而不会发出通知。",
-                    aiApp: "当通过 MCP 连接的 AI 应用（Claude Code、Claude Desktop 等）代你创建内容或更改状态时通知你。关闭后将不再生成这些通知。",
+                    aiApps: "通过 MCP 连接的 AI 应用（Claude Code、Claude Desktop 等）代你所做操作的通知。可选择想收到的类型。",
+                    aiAppTasks: "AI 应用对任务、里程碑和任务评论的创建、状态更改与删除。",
+                    aiAppNotes: "AI 应用对笔记的创建与删除。",
+                    aiAppTodos: "AI 应用对待办的添加与删除。",
                 },
             },
             agentRun: {

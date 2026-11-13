@@ -3220,7 +3220,10 @@ export const ja: DeepPartial<Messages> = {
                 agentRunDone: "AIによる回答準備完了",
                 messageReminder: "メッセージリマインダー",
                 todoReminder: "To-Do リマインダー",
-                aiApp: "AI アプリの操作",
+                aiApps: "AI アプリの操作",
+                aiAppTasks: "タスク",
+                aiAppNotes: "ノート",
+                aiAppTodos: "To-Do",
             },
             emailCategories: {
                 mentionChat: "チャットでのメンション",
@@ -3301,7 +3304,11 @@ export const ja: DeepPartial<Messages> = {
                         "メッセージに設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信箱に残ります。",
                     todoReminder:
                         "To-Do に設定したリマインダーの期限が来たとき。これをオフにすると、通知なしでリマインダーが受信箱に残ります。",
-                    aiApp: "MCP で接続した AI アプリ（Claude Code、Claude Desktop など）があなたの代わりに何かを作成したりステータスを変更したときに通知します。オフにすると通知自体が作られなくなります。",
+                    aiApps: "MCP で接続した AI アプリ（Claude Code、Claude Desktop など）があなたの代わりに行った操作の通知です。知りたい種類を選べます。",
+                    aiAppTasks:
+                        "AI アプリが行ったタスク・マイルストーン・タスクコメントの作成、ステータス変更、削除。",
+                    aiAppNotes: "AI アプリが行ったノートの作成と削除。",
+                    aiAppTodos: "AI アプリが行った To-Do の追加と削除。",
                 },
             },
             agentRun: {

@@ -3256,7 +3256,10 @@ export const fr: DeepPartial<Messages> = {
                 agentRunDone: "Réponse IA prête",
                 messageReminder: "Rappels de messages",
                 todoReminder: "Rappels de tâches",
-                aiApp: "Ce que font mes apps IA",
+                aiApps: "Ce que font mes apps IA",
+                aiAppTasks: "Tâches",
+                aiAppNotes: "Notes",
+                aiAppTodos: "Tâches à faire",
             },
             emailCategories: {
                 mentionChat: "Mentions dans les conversations",
@@ -3342,7 +3345,11 @@ export const fr: DeepPartial<Messages> = {
                         "Lorsqu'un rappel que vous avez défini sur un message arrive à échéance. En désactivant cette option, le rappel reste dans votre boîte de réception sans notification.",
                     todoReminder:
                         "Lorsqu'un rappel que vous avez défini sur une tâche arrive à échéance. En désactivant cette option, le rappel reste dans votre boîte de réception sans notification.",
-                    aiApp: "Quand une app IA connectée via MCP (Claude Code, Claude Desktop…) crée quelque chose ou change un statut pour vous. Si vous le désactivez, ces avis ne sont plus générés du tout.",
+                    aiApps: "Avis sur ce qu'une app IA connectée via MCP (Claude Code, Claude Desktop…) fait pour vous. Choisissez les types qui vous intéressent.",
+                    aiAppTasks:
+                        "Tâches, jalons et commentaires de tâche qu'une app IA crée, dont elle change le statut ou qu'elle supprime.",
+                    aiAppNotes: "Notes qu'une app IA crée ou supprime.",
+                    aiAppTodos: "Tâches à faire qu'une app IA ajoute ou supprime.",
                 },
             },
             agentRun: {

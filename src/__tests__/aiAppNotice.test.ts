@@ -14,6 +14,7 @@ import {
 } from "../features/chat/utils/activityChipFilters";
 import {
     AI_APP_SURFACE,
+    aiAppCategory,
     aiAppHeadline,
     aiAppSentence,
     parseAiAppNotice,
@@ -168,11 +169,13 @@ describe("aiAppNotice wording", () => {
             }
             expect(loc.chat!.sidebar!.chipAiApp, `${name} chipAiApp`).toBeTruthy();
             const cats = loc.services!.notifications!;
-            expect(cats.categories!.aiApp, `${name} category label`).toBeTruthy();
-            expect(
-                cats.settings!.categoryDescriptions!.aiApp,
-                `${name} category description`
-            ).toBeTruthy();
+            for (const key of ["aiApps", "aiAppTasks", "aiAppNotes", "aiAppTodos"] as const) {
+                expect(cats.categories![key], `${name} category label ${key}`).toBeTruthy();
+                expect(
+                    cats.settings!.categoryDescriptions![key],
+                    `${name} category description ${key}`
+                ).toBeTruthy();
+            }
         }
     });
 });
@@ -233,19 +236,38 @@ describe("notification", () => {
     const useCM = { allChats: [] } as never;
     const row = () => v3ActivityToLegacy(wire(), myself);
 
-    it("is registered once, in the inbox group, on by default", () => {
-        const entries = NOTIFICATION_CATEGORIES.filter((c) => c.key === "ai_app");
-        expect(entries).toHaveLength(1);
-        expect(entries[0].group).toBe("inbox");
-        expect(entries[0].defaultEnabled).toBe(true);
+    it("has its own group: a lead entry and one switch per kind, all on by default", () => {
+        const entries = NOTIFICATION_CATEGORIES.filter((c) => c.group === "ai_apps");
+        expect(entries.map((e) => e.key)).toEqual([
+            "ai_apps",
+            "ai_app_tasks",
+            "ai_app_notes",
+            "ai_app_todos",
+        ]);
+        expect(entries.every((e) => e.defaultEnabled)).toBe(true);
+        // The lead only titles the group; the three below it are the switches.
+        expect(entries.filter((e) => !("hideSubToggle" in e && e.hideSubToggle))).toHaveLength(3);
+        // And nothing else sits in it, nor does it sit in the Inbox group any more.
+        expect(NOTIFICATION_CATEGORIES.filter((c) => (c.key as string) === "ai_app")).toHaveLength(
+            0
+        );
+    });
+
+    it("answers to the switch of what it is about", () => {
+        expect(aiAppCategory("task")).toBe("ai_app_tasks");
+        expect(aiAppCategory("milestone")).toBe("ai_app_tasks");
+        expect(aiAppCategory("comment")).toBe("ai_app_tasks");
+        expect(aiAppCategory("note")).toBe("ai_app_notes");
+        expect(aiAppCategory("todo")).toBe("ai_app_todos");
+        expect(aiAppCategory("something new")).toBe("ai_app_tasks");
     });
 
     it("builds an intent even though the actor is the recipient", () => {
         const intent = buildActivityIntent(row(), myself, useTEM, useCM);
         expect(intent).not.toBeNull();
-        expect(intent!.category).toBe("ai_app");
+        expect(intent!.category).toBe("ai_app_tasks");
         // The server push's tag, so the two collapse into one card.
-        expect(intent!.id).toBe("ai_app:act-1");
+        expect(intent!.id).toBe("ai_app_tasks:act-1");
         expect(intent!.title).toBe("Claude Code created task QR-7 Fix login");
         expect(intent!.body).toBe("Fix login");
         // Carrying a senderId would trip the manager's own self check.
@@ -255,6 +277,14 @@ describe("notification", () => {
     it("still ignores a row that is not an AI-app notice from me", () => {
         const plain = { ...row(), aiApp: undefined, chatType: 3 };
         expect(buildActivityIntent(plain as never, myself, useTEM, useCM)).toBeNull();
+    });
+
+    it("takes the category of its kind", () => {
+        const note = v3ActivityToLegacy(
+            wire(meta({ kind: "note", items: [item({ kind: "note", displayId: null })] })),
+            myself
+        );
+        expect(buildActivityIntent(note, myself, useTEM, useCM)!.category).toBe("ai_app_notes");
     });
 
     it("toasts by default and stays silent once the member switches it off", () => {
@@ -267,15 +297,39 @@ describe("notification", () => {
         const off = new NotificationManager({ currentUserId: "me" });
         off.hydratePreferences({
             ...DEFAULT_NOTIFICATION_PREFERENCE,
-            categorySettings: { ai_app: false },
+            categorySettings: { ai_app_tasks: false },
         });
-        expect(off.notify({ ...intent, id: "ai_app:other" })).toBe("ignored-disabled");
+        expect(off.notify({ ...intent, id: "ai_app_tasks:other" })).toBe("ignored-disabled");
     });
 
-    it("rides the Inbox group: that group off silences it", () => {
+    it("one kind off leaves the others on: task updates only", () => {
         const mgr = new NotificationManager({ currentUserId: "me" });
-        mgr.setGroupEnabled("inbox", false);
+        mgr.hydratePreferences({
+            ...DEFAULT_NOTIFICATION_PREFERENCE,
+            categorySettings: { ai_app_notes: false, ai_app_todos: false },
+        });
+        const task = buildActivityIntent(row(), myself, useTEM, useCM)!;
+        const note = buildActivityIntent(
+            v3ActivityToLegacy(
+                wire(meta({ kind: "note", items: [item({ kind: "note" })] }), { id: "act-n" }),
+                myself
+            ),
+            myself,
+            useTEM,
+            useCM
+        )!;
+        expect(mgr.notify(task)).toBe("toast");
+        expect(mgr.notify(note)).toBe("ignored-disabled");
+    });
+
+    it("is a group of its own: the group off silences every kind, the Inbox group does not", () => {
         const intent = buildActivityIntent(row(), myself, useTEM, useCM)!;
-        expect(mgr.notify(intent)).toBe("ignored-disabled");
+        const inboxOff = new NotificationManager({ currentUserId: "me" });
+        inboxOff.setGroupEnabled("inbox", false);
+        expect(inboxOff.notify(intent)).toBe("toast");
+
+        const groupOff = new NotificationManager({ currentUserId: "me" });
+        groupOff.setGroupEnabled("ai_apps", false);
+        expect(groupOff.notify(intent)).toBe("ignored-disabled");
     });
 });

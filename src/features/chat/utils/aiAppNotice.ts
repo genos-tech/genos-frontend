@@ -8,6 +8,10 @@
 
 import type { AiAppNotice, AiAppNoticeItem } from "../../../types/chat";
 
+/** The switch a notice answers to, by what it is about (mirrors `mcp_notice.category_for_kind`). */
+export const aiAppCategory = (kind: string): "ai_app_tasks" | "ai_app_notes" | "ai_app_todos" =>
+    kind === "note" ? "ai_app_notes" : kind === "todo" ? "ai_app_todos" : "ai_app_tasks";
+
 /** Activity `surface_type` of an AI-app notice (mirrors SURFACE_AI_APP in genos-api). */
 export const AI_APP_SURFACE = 10;
 

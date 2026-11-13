@@ -56,6 +56,7 @@ export interface NotificationPreference {
     enableMentions: boolean;
     enableTaskComments: boolean;
     enableInbox: boolean;
+    enableAiApps: boolean;
     /** Independent master for the EMAIL channel (sibling of the backend's
      *  `push_enabled`). Gates only email — in-app and push are untouched. */
     emailEnabled: boolean;
@@ -94,6 +95,7 @@ export const DEFAULT_NOTIFICATION_PREFERENCE: NotificationPreference = {
     enableMentions: true,
     enableTaskComments: true,
     enableInbox: true,
+    enableAiApps: true,
     emailEnabled: true,
     categorySettings: {},
     mutedChats: [],
