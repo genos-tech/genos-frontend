@@ -382,16 +382,18 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                         refused for a guest. A guest is here to work in the one
                         project that was shared with their team, so offering
                         either can only produce an error. */}
+                    {/* Two guards, not one fragment around both: this is the LAST child of a
+                        Joy `List`, and `List` clones its direct children to inject
+                        `data-last-child`, which a `React.Fragment` cannot take (it logged
+                        "Invalid prop `data-last-child` supplied to `React.Fragment`" on every
+                        re-render of the task page). MIP-1445. */}
                     {!useTEM.currentTeam.isGuest && (
-                        <>
-                            <JoinProjectListItem
-                                setOpenJoinProject={setOpenJoinProject}
-                                usePM={usePM}
-                            />
-
-                            <NewProjectListItem usePM={usePM} />
-                        </>
+                        <JoinProjectListItem
+                            setOpenJoinProject={setOpenJoinProject}
+                            usePM={usePM}
+                        />
                     )}
+                    {!useTEM.currentTeam.isGuest && <NewProjectListItem usePM={usePM} />}
                 </List>
             </Toggler>
         </ListItem>
