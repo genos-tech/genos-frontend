@@ -14,6 +14,7 @@ import {
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { SettingRow } from "../../components/ui/settings/SettingRow";
 import { chatDisplayName } from "../../features/chat/utils/chatDisplayName";
 import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
@@ -204,22 +205,30 @@ export const NotificationSettingsPanel = ({
 
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
-            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
-                {preferences.masterEnabled ? (
-                    <NotificationsActiveRounded />
-                ) : (
-                    <NotificationsOffRounded />
-                )}
-                <Typography level="title-md">{settingsMessages.heading}</Typography>
-                <Box sx={{ flex: 1 }} />
+            <SettingRow
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={1}
+                sx={{ mb: 1 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                        {preferences.masterEnabled ? (
+                            <NotificationsActiveRounded />
+                        ) : (
+                            <NotificationsOffRounded />
+                        )}
+                        <Typography level="title-md">{settingsMessages.heading}</Typography>
+                    </Stack>
+                    <Typography level="body-xs">{settingsMessages.description}</Typography>
+                </Box>
                 <Switch
                     checked={preferences.masterEnabled}
+                    slotProps={{ input: { "aria-label": settingsMessages.heading } }}
                     onChange={(e) => setMasterEnabled(e.target.checked)}
                 />
-            </Stack>
-            <Typography level="body-xs" sx={{ mb: 1 }}>
-                {settingsMessages.description}
-            </Typography>
+            </SettingRow>
 
             {/* Pause notifications (Slack-style DND / snooze). Placed near the
                 master switch — it's the most-reached-for control — and reads
@@ -264,7 +273,7 @@ export const NotificationSettingsPanel = ({
             {/* Category groups: each group is a master switch (drives the
                 coarse boolean); the mentions group also exposes per-surface
                 sub-toggles (driven by categorySettings). */}
-            <Stack spacing={1.5} sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}>
+            <Stack spacing={1} sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}>
                 {CATEGORY_GROUPS.map((g, idx) => {
                     const groupOn = preferences[g.field] as boolean;
                     // Sub-toggles to render under this group (single-sub
@@ -276,9 +285,10 @@ export const NotificationSettingsPanel = ({
                     const headRowDesc = categoryDescription(g.entries[0].key, t);
                     return (
                         <Box key={g.group}>
-                            <Stack
+                            <SettingRow
                                 alignItems="center"
                                 direction="row"
+                                disabled={masterDisabled}
                                 justifyContent="space-between"
                                 spacing={2}
                             >
@@ -291,21 +301,25 @@ export const NotificationSettingsPanel = ({
                                 <Switch
                                     checked={groupOn}
                                     disabled={masterDisabled}
+                                    slotProps={{
+                                        input: { "aria-label": groupLabel(g.group, t) },
+                                    }}
                                     onChange={(e) => setGroupEnabled(g.group, e.target.checked)}
                                 />
-                            </Stack>
+                            </SettingRow>
 
                             {subEntries.length > 0 && (
-                                <Stack spacing={1} sx={{ mt: 1, pl: 2 }}>
+                                <Stack spacing={0} sx={{ mt: 0.5, pl: 2 }}>
                                     {subEntries.map((entry) => {
                                         const subOn =
                                             preferences.categorySettings[entry.key] ??
                                             entry.defaultEnabled;
                                         return (
-                                            <Stack
+                                            <SettingRow
                                                 key={entry.key}
                                                 alignItems="center"
                                                 direction="row"
+                                                disabled={masterDisabled || !groupOn}
                                                 justifyContent="space-between"
                                                 spacing={2}
                                             >
@@ -321,6 +335,11 @@ export const NotificationSettingsPanel = ({
                                                     checked={subOn}
                                                     disabled={masterDisabled || !groupOn}
                                                     size="sm"
+                                                    slotProps={{
+                                                        input: {
+                                                            "aria-label": `${groupLabel(g.group, t)}: ${categoryLabel(entry.key, t)}`,
+                                                        },
+                                                    }}
                                                     onChange={(e) =>
                                                         setSubCategoryEnabled(
                                                             entry.key as NotificationCategory,
@@ -328,7 +347,7 @@ export const NotificationSettingsPanel = ({
                                                         )
                                                     }
                                                 />
-                                            </Stack>
+                                            </SettingRow>
                                         );
                                     })}
                                 </Stack>
@@ -347,9 +366,10 @@ export const NotificationSettingsPanel = ({
                 hard-gate email server-side, so a group turned off also
                 silences its emails. */}
             <Divider sx={{ mt: 2 }} />
-            <Stack
+            <SettingRow
                 alignItems="center"
                 direction="row"
+                disabled={masterDisabled}
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}
@@ -361,13 +381,14 @@ export const NotificationSettingsPanel = ({
                 <Switch
                     checked={preferences.emailEnabled}
                     disabled={masterDisabled}
+                    slotProps={{ input: { "aria-label": settingsMessages.emailHeading } }}
                     onChange={(e) => setEmailEnabled(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
             <Stack
-                spacing={1}
+                spacing={0}
                 sx={{
-                    mt: 1,
+                    mt: 0.5,
                     pl: 2,
                     opacity: masterDisabled || !preferences.emailEnabled ? 0.5 : 1,
                 }}
@@ -379,10 +400,11 @@ export const NotificationSettingsPanel = ({
                         string
                     >;
                     return (
-                        <Stack
+                        <SettingRow
                             key={entry.serverKey}
                             alignItems="center"
                             direction="row"
+                            disabled={masterDisabled || !preferences.emailEnabled}
                             justifyContent="space-between"
                             spacing={2}
                         >
@@ -393,11 +415,16 @@ export const NotificationSettingsPanel = ({
                                 checked={on}
                                 disabled={masterDisabled || !preferences.emailEnabled}
                                 size="sm"
+                                slotProps={{
+                                    input: {
+                                        "aria-label": `${settingsMessages.emailHeading}: ${labels[entry.labelKey] || entry.serverKey}`,
+                                    },
+                                }}
                                 onChange={(e) =>
                                     setEmailCategoryEnabled(entry.serverKey, e.target.checked)
                                 }
                             />
-                        </Stack>
+                        </SettingRow>
                     );
                 })}
             </Stack>
@@ -420,10 +447,11 @@ export const NotificationSettingsPanel = ({
                     {preferences.mutedChats.map((m) => {
                         const displayName = mutedChatName(m, nameLookup, t);
                         return (
-                            <Stack
+                            <SettingRow
                                 key={`${m.chatType}:${m.chatId}`}
                                 alignItems="center"
                                 direction="row"
+                                filled
                                 justifyContent="space-between"
                                 spacing={1}
                                 sx={{
@@ -464,7 +492,7 @@ export const NotificationSettingsPanel = ({
                                 >
                                     <NotificationsActiveRounded />
                                 </IconButton>
-                            </Stack>
+                            </SettingRow>
                         );
                     })}
                 </Stack>
@@ -488,7 +516,7 @@ export const NotificationSettingsPanel = ({
                     {preferences.mutedTargets.map((target) => {
                         const displayName = mutedTargetName(target, nameLookup, t);
                         return (
-                            <Stack
+                            <SettingRow
                                 // `noteType` is part of a note target's
                                 // identity, so it belongs in the key too:
                                 // personal note 42 and task note 42 are two
@@ -496,6 +524,7 @@ export const NotificationSettingsPanel = ({
                                 key={`${target.targetType}:${target.targetId}:${target.noteType ?? ""}`}
                                 alignItems="center"
                                 direction="row"
+                                filled
                                 justifyContent="space-between"
                                 spacing={1}
                                 sx={{
@@ -546,7 +575,7 @@ export const NotificationSettingsPanel = ({
                                 >
                                     <NotificationsActiveRounded />
                                 </IconButton>
-                            </Stack>
+                            </SettingRow>
                         );
                     })}
                 </Stack>
@@ -557,9 +586,10 @@ export const NotificationSettingsPanel = ({
             {/* Proactive digest (UX tier model §8). Disabled while the
                 server value is unknown — flashing a default that then
                 snaps reads like the setting changed itself. */}
-            <Stack
+            <SettingRow
                 alignItems="center"
                 direction="row"
+                disabled={digestEnabled === null}
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mt: 1.5 }}
@@ -571,17 +601,19 @@ export const NotificationSettingsPanel = ({
                 <Switch
                     checked={digestEnabled ?? true}
                     disabled={digestEnabled === null}
+                    slotProps={{ input: { "aria-label": settingsMessages.digestHeading } }}
                     onChange={(e) => setDigestEnabled(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
 
             {/* Email digest — the plain unread-summary email (all tiers),
                 a separate opt-out from the agent digest above. Disabled
                 while unknown, including against a backend that doesn't
                 support it yet. */}
-            <Stack
+            <SettingRow
                 alignItems="center"
                 direction="row"
+                disabled={emailDigestEnabled === null}
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mt: 1.5 }}
@@ -595,9 +627,10 @@ export const NotificationSettingsPanel = ({
                 <Switch
                     checked={emailDigestEnabled ?? true}
                     disabled={emailDigestEnabled === null}
+                    slotProps={{ input: { "aria-label": settingsMessages.emailDigestHeading } }}
                     onChange={(e) => setEmailDigestEnabled(e.target.checked)}
                 />
-            </Stack>
+            </SettingRow>
         </Sheet>
     );
 };
