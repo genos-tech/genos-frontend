@@ -34,6 +34,7 @@ import { FileUploadStatusBadge } from "../../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../../ui/feedback/useUploadCounter";
 import { GifPicker } from "../../ui/gif/GifPicker";
+import { headerTouchTargetsSx } from "../../ui/touchTargets";
 import { useBlockNoteDictionary } from "../blockNoteI18n";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "../sub/bodySync";
 import { CommentsWithMentions } from "../sub/CommentEditorWithMentions";
@@ -337,7 +338,15 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                     left to clear the panel; this button stays put as the
                     open/close affordance. */}
                 {threadStore && (
-                    <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 11 }}>
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            zIndex: 11,
+                            ...headerTouchTargetsSx,
+                        }}
+                    >
                         <CommentsSidebarToggle
                             open={showComments}
                             threadStore={threadStore}
@@ -360,6 +369,15 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                         right: showComments ? COMMENTS_SIDEBAR_WIDTH + 12 : 52,
                         // Above the editor: the title used to sit at 100 on its own.
                         zIndex: 100,
+                        // The buttons are 44px on a touch screen (MIP-1319): the row is 44px
+                        // tall, centred on the 44px comments toggle (top 8), and clears that
+                        // toggle, not the 32px one.
+                        "@media (pointer: coarse)": {
+                            ...headerTouchTargetsSx["@media (pointer: coarse)"],
+                            top: 8,
+                            minHeight: 44,
+                            right: showComments ? COMMENTS_SIDEBAR_WIDTH + 12 : 60,
+                        },
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "flex-end",

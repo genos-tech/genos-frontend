@@ -1412,6 +1412,12 @@ const CanvasInner = ({
                 border: `1px solid ${P.border}`,
                 "&:hover": { background: P.hoverBg },
             },
+            // Touch (MIP-1319): zoom / fit are 44px buttons, and the stack moves to the top-left
+            // corner: bottom-left it sat under the legend, which covers it on a phone.
+            "@media (pointer: coarse)": {
+                "& .react-flow__panel.react-flow__controls": { top: 0, bottom: "auto" },
+                "& .react-flow__controls-button": { width: 44, height: 44 },
+            },
             "& .react-flow__minimap": {
                 background: P.surface,
                 border: `1px solid ${P.border}`,

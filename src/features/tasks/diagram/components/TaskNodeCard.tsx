@@ -10,6 +10,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
+import { invisibleHitAreaSx } from "../../../../components/ui/touchTargets";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import {
@@ -181,7 +182,15 @@ export const TaskNodeView = ({
                                 },
                             }}
                         >
-                            <StatusLabel status={task.status} />
+                            {/* The 19px label is a 44px-tall tap on a touch screen: the area is
+                                on this wrapper because the button above is a bare `button`
+                                slot, which drops `sx`. */}
+                            <Box
+                                component="span"
+                                sx={{ display: "inline-flex", ...invisibleHitAreaSx("&") }}
+                            >
+                                <StatusLabel status={task.status} />
+                            </Box>
                         </MenuButton>
                         {/* Escape closes the menu and stops there (MenuSurface keeps
                             keys from reaching the graph dialog it is rendered in). */}

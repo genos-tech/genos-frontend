@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChrome";
+import { touchTargetSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -224,7 +225,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         <IconButton
                             aria-label={t.notes.labels.backToNotesList}
                             size="sm"
-                            sx={{ flexShrink: 0 }}
+                            sx={{ flexShrink: 0, ...touchTargetSx("&") }}
                             variant="plain"
                             onClick={onMobileBack}
                         >

@@ -31,7 +31,7 @@ import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { MODAL_CHROME_CLEARANCE } from "../../../../components/ui/modal/modalChrome";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
-import { headerTouchTargetsSx } from "../../../../components/ui/touchTargets";
+import { headerTouchTargetsSx, touchTargetSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
@@ -2339,6 +2339,7 @@ const MilestonePreviewInner = ({
                                 color="warning"
                                 size="sm"
                                 startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
+                                sx={touchTargetSx("&")}
                                 variant="soft"
                                 onClick={() => handleMilestoneStatusChange("WIP")}
                             >
@@ -2350,6 +2351,7 @@ const MilestonePreviewInner = ({
                                 color="success"
                                 size="sm"
                                 startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
+                                sx={touchTargetSx("&")}
                                 variant="soft"
                                 onClick={() => handleMilestoneStatusChange("Closed")}
                             >
