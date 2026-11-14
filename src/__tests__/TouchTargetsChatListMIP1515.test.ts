@@ -133,10 +133,14 @@ describe.skipIf(!chrome)("chat list touch targets, laid out in a real browser", 
         browser = await launchChrome(chrome!);
     }, 180_000);
 
+    // Closing Chrome and the dev server is clean-up, not the thing under test: a CI runner can
+    // take longer than the default 10s hook timeout, and a stuck close must not fail the file.
     afterAll(async () => {
-        await browser?.close();
-        await closeServer?.();
-    });
+        const bounded = (p: Promise<unknown> | undefined) =>
+            Promise.race([p, new Promise((r) => setTimeout(r, 20_000))]).catch(() => undefined);
+        await bounded(browser?.close());
+        await bounded(closeServer?.());
+    }, 60_000);
 
     for (const mode of ["light", "dark"] as const) {
         it(`at 390px with touch (${mode}): a tap reaches the row, and each control is its own 44px target`, async () => {
