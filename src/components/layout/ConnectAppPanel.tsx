@@ -71,6 +71,8 @@ const useCopy = (text: string) => {
 
 const visuallyHidden = {
     position: "absolute",
+    top: 0,
+    insetInlineStart: 0,
     width: 1,
     height: 1,
     overflow: "hidden",
@@ -100,7 +102,7 @@ const CopyBox = ({
     const { ref, state, copy } = useCopy(text);
     const labelId = useId();
     return (
-        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+        <Stack spacing={0.75} sx={{ minWidth: 0, position: "relative" }}>
             <Typography id={labelId} level="body-xs" sx={{ color: g.text.secondary }}>
                 {label}
             </Typography>
@@ -121,14 +123,14 @@ const CopyBox = ({
                         flex: 1,
                         minWidth: 0,
                         m: 0,
-                        px: 1.25,
+                        px: 1,
                         py: 0.75,
                         borderRadius: g.radius.sm,
                         border: `1px solid ${g.border.default}`,
                         bgcolor: g.bg.subtle,
                         color: g.text.primary,
                         fontFamily: g.font.mono,
-                        fontSize: "0.8125rem",
+                        fontSize: { xs: "0.75rem", sm: "0.8125rem" },
                         lineHeight: 1.5,
                         textAlign: "left",
                         whiteSpace: "pre-wrap",
@@ -176,18 +178,14 @@ const Steps = ({
     items: readonly string[];
     afterFirst?: React.ReactNode;
 }) => (
-    <Box
-        component="ol"
-        sx={{
-            m: 0,
-            paddingInlineStart: "1.25rem",
-            display: "flex",
-            flexDirection: "column",
-            gap: 0.75,
-        }}
-    >
+    <Box component="ol" sx={{ m: 0, paddingInlineStart: "1.25rem", listStyleType: "decimal" }}>
         {items.map((step, i) => (
-            <Typography key={step} component="li" level="body-sm">
+            <Typography
+                key={step}
+                component="li"
+                level="body-sm"
+                sx={{ display: "list-item", mb: 0.75, "&::marker": { color: g.text.secondary } }}
+            >
                 {step}
                 {i === 0 && afterFirst && <Box sx={{ mt: 0.75 }}>{afterFirst}</Box>}
             </Typography>

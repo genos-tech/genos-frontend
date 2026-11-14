@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";
+import { connectApp } from "../i18n/locales/en/connectApp";
 import { es } from "../i18n/locales/es";
 import { fr } from "../i18n/locales/fr";
 import { hi } from "../i18n/locales/hi";
@@ -51,6 +52,10 @@ describe("Connect an AI app has every string in every locale", () => {
     it.each(NAMES)("%s never bakes the address or the command into the catalog", (name) => {
         const text = JSON.stringify(OTHERS[name].settings?.connectedApps?.connect);
         expect(text).not.toMatch(/api\/public|https?:\/\/|claude mcp add/);
+    });
+
+    it("English is the one object the public /developers page also prints", () => {
+        expect(en.settings.connectedApps.connect).toBe(connectApp);
     });
 
     it("English does not either", () => {
