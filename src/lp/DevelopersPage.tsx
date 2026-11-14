@@ -2,6 +2,8 @@ import { useEffect, useId } from "react";
 import { ExternalLink } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
+import { connectApp } from "../i18n/locales/en/connectApp";
+import { claudeCodeAddCommand, mcpServerUrl } from "../utils/mcpConnect";
 import { Code } from "./Code";
 import { LpShell } from "./kit/LpShell";
 import {
@@ -43,6 +45,10 @@ import {
 const API_BASE = import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev";
 const WS_BASE = import.meta.env.VITE_WS_BASE_URL || "wss://ws.genosai.dev";
 const SPEC_URL = `${API_BASE}/api/public/v1/openapi.json`;
+// What an AI app is told to paste (OAuth, no key): the API origin + the MCP path, exactly. Built by the
+// same function as Settings → Connected apps, and its steps are the same English sentences
+// (`i18n/locales/en/connectApp.ts`), so the two cannot drift.
+const MCP_ADDRESS = mcpServerUrl(API_BASE);
 
 // Consistent throughout so an example can be followed end to end.
 const TEAM_ID = "7f3a91c2-4d5e-4a1b-9c8d-2e6f0b4a7d13";
@@ -291,20 +297,20 @@ export default function DevelopersPage() {
                             {/* ── mcp ──────────────────────────────────────────── */}
                             <Section
                                 id="mcp"
-                                subtitle="One endpoint. An MCP client reads and updates your tasks with an API key."
+                                subtitle="One endpoint. Connect an AI app, or use a key for scripts."
                                 title="MCP"
                             >
                                 <p className="lp-note">
-                                    Available on the Pro plan and above. The REST API below is on
+                                    Available on the Core plan and above. The REST API below is on
                                     every plan.
                                 </p>
                                 <p>
                                     With this endpoint an agent works the task itself, instead of
                                     you pasting the description into it and pasting the result
-                                    back. Point Claude Code — or any MCP client — at it with an API
-                                    key and it can find a task, read its description and its
-                                    blockers, search the workspace, and, with a write key, update
-                                    the task or leave a comment.
+                                    back. Connect Claude — or any MCP client — to it and it can
+                                    find a task, read its description and its blockers, search the
+                                    workspace, and, if you let it write, update the task or leave a
+                                    comment.
                                 </p>
                                 <p>
                                     There is no model on this side of the connection. The endpoint
@@ -313,6 +319,51 @@ export default function DevelopersPage() {
                                     for outside clients, like the briefing below. Your client does
                                     the reasoning; Genos answers questions about the workspace and
                                     writes what it is told to.
+                                </p>
+
+                                <h3 id="connect-an-ai-app">Connect an AI app (no API key)</h3>
+                                <p>{connectApp.intro}</p>
+                                <Pre label="the address to paste">{MCP_ADDRESS}</Pre>
+                                <p>
+                                    Type it exactly: no trailing slash and no query string. Unlike
+                                    the API-key form below it carries no <Code>?team_id=</Code>:
+                                    you choose the team on the approval page.
+                                </p>
+
+                                <h4>{connectApp.claudeTitle}</h4>
+                                <ol>
+                                    {connectApp.claudeSteps.map((step) => (
+                                        <li key={step}>{step}</li>
+                                    ))}
+                                </ol>
+
+                                <h4>{connectApp.claudeCodeTitle}</h4>
+                                <ol>
+                                    <li>{connectApp.claudeCodeSteps[0]}</li>
+                                </ol>
+                                <Pre label="the whole setup, no key">
+                                    {claudeCodeAddCommand(MCP_ADDRESS)}
+                                </Pre>
+                                <ol start={2}>
+                                    {connectApp.claudeCodeSteps.slice(1).map((step) => (
+                                        <li key={step}>{step}</li>
+                                    ))}
+                                </ol>
+
+                                <h4>{connectApp.chatgptTitle}</h4>
+                                <p>{connectApp.chatgptBody}</p>
+
+                                <p className="lp-note">{connectApp.trap}</p>
+                                <p>{connectApp.plan}</p>
+                                <p>{connectApp.revoke}</p>
+                                <p className="lp-small">{connectApp.menuNote}</p>
+
+                                <h3 id="scripts-and-automation">
+                                    Scripts and automation (API key)
+                                </h3>
+                                <p>
+                                    For a script, a CI job, or an MCP client that is given a key
+                                    instead of signing in. A key acts as the person who made it.
                                 </p>
 
                                 <Pre label="the whole setup">{`claude mcp add --transport http genos \\
@@ -379,14 +430,16 @@ export default function DevelopersPage() {
                                     </p>
                                 </Endpoint>
 
+                                <h3>Tools and prompts, either way</h3>
                                 <Params rows={MCP_TOOLS} title="Tools · scope" />
                                 <p>
                                     {MCP_TOOLS.length} tools, {MCP_READS.length} reads and{" "}
                                     {MCP_WRITES.length} writes — the ones worth a round trip from
                                     outside, rather than the in-app agent&apos;s whole surface. A
-                                    read-scoped key&apos;s <Code>tools/list</Code> returns the{" "}
-                                    {MCP_READS.length} reads only: the writes are not listed at
-                                    all, so an agent never plans around a tool it would be refused.
+                                    read-scoped key&apos;s <Code>tools/list</Code> (or a connection
+                                    that may only read) returns the {MCP_READS.length} reads only:
+                                    the writes are not listed at all, so an agent never plans
+                                    around a tool it would be refused.
                                 </p>
 
                                 <Params rows={MCP_PROMPTS} title="Prompts · commands" />
@@ -413,20 +466,24 @@ export default function DevelopersPage() {
                                 <h3>No confirmation step</h3>
                                 <p>
                                     In the Genos app, every write the agent proposes waits for you
-                                    to approve it. Over MCP none of them do: the key&apos;s write
-                                    scope is the approval, given once when you created it. There is
-                                    nobody watching this connection to click a confirmation, so a
-                                    write takes effect the moment it is called, and there is no
-                                    undo. Give an agent a read key unless it needs to write.
+                                    to approve it. Over MCP none of them do: the approval is given
+                                    once, up front. For a connected app that is the approval page
+                                    (read is always on; making changes is its own tick, and
+                                    deleting another that starts unticked); for a key it is the
+                                    key&apos;s write scope. There is nobody watching the connection
+                                    to click a confirmation, so a write takes effect the moment it
+                                    is called, and there is no undo. Give an agent read access
+                                    unless it needs to write.
                                 </p>
 
                                 <h3>What the agent can see</h3>
                                 <p>
-                                    A key acts as the person who created it, and every tool
-                                    re-checks that person&apos;s permissions on the call. The agent
-                                    sees exactly what you see — a private project you are not in
-                                    does not exist as far as it is concerned — and anything it
-                                    writes is attributed to you in the task&apos;s activity feed.
+                                    A connected app or a key acts as the person who made it, and
+                                    every tool re-checks that person&apos;s permissions on the
+                                    call. The agent sees exactly what you see — a private project
+                                    you are not in does not exist as far as it is concerned — and
+                                    anything it writes is attributed to you in the task&apos;s
+                                    activity feed.
                                 </p>
                                 <p>
                                     A team-scoped key is the same principal pinned to one team: it
@@ -440,7 +497,7 @@ export default function DevelopersPage() {
                                     <Code>list_my_chats</Code> and <Code>get_chat_thread</Code>{" "}
                                     read your own chats, direct messages included, and a
                                     read-scoped key can call both. A key handed to an outside agent
-                                    exposes all of them.
+                                    exposes all of them. A connected app that may read is the same.
                                 </p>
 
                                 <h3>Naming a task</h3>
