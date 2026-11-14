@@ -1,6 +1,9 @@
 import { invalidateCachedFullTask } from "../../db/services/task-full.service";
-import type { ToolResultTaskAttachmentRef } from "../../services/agentApi";
-import { emitTaskTouched } from "../tasks/services/taskEvents";
+import type {
+    ToolResultMilestoneChangeRef,
+    ToolResultTaskAttachmentRef,
+} from "../../services/agentApi";
+import { emitTasksBulkChanged, emitTaskTouched } from "../tasks/services/taskEvents";
 import { forgetInFlightTask } from "../tasks/services/taskLoadInFlight";
 
 // What an approved agent write to a task's files changes in the browser, beyond the transcript
@@ -45,4 +48,44 @@ const forgetTaskCopy = async (taskId: number): Promise<void> => {
     }
     forgetInFlightTask(taskId);
     emitTaskTouched(taskId, "update");
+};
+
+// What an approved agent convert or project move of a milestone changes in the browser (MIP-1564,
+// genos-api AGENT_PARITY_TOOLS). `emitMilestoneChangeToolResult` is called once per result.
+//
+//   convert   a root task became a milestone, or a milestone became a task, on the SAME row. The
+//             browser's cached full copy of that row describes the other kind of thing (its
+//             `isMilestone`, its milestone link), so it is dropped, as the app's own conversion
+//             drops it (`useConvertTaskMilestone`), and the project is re-read: the table rows below
+//             it joined or left the milestone, and the milestone list gained or lost one.
+//   move      the milestone, its tasks and their sub-tasks are in another project with new display
+//             ids. Nothing is dropped one by one (the app's own move does not either): BOTH
+//             projects are re-read, as the milestone page does after a move.
+//
+// Not covered: a milestone that is OPEN in the preview pane while the agent turns it into a task
+// is told by the re-read of the milestone (the pane shows the row's 410, which the app already
+// follows to the task), and a task pane left open on a row that has become a milestone shows the
+// old kind until the next load. Neither could be looked at in a browser here.
+export const emitMilestoneChangeToolResult = (
+    toolName: string,
+    ref?: ToolResultMilestoneChangeRef
+): void => {
+    // The ref comes off the wire: take it only from the tool that sends it, with real ids.
+    if (toolName !== "manage_milestone" || !ref) return;
+    const ids = (value: unknown): number | null => {
+        const n = Number(value);
+        return Number.isInteger(n) && n > 0 ? n : null;
+    };
+    const projectId = ids(ref.project_id);
+    if (ref.kind === "convert") {
+        const taskId = ids(ref.task_id);
+        if (taskId !== null) void forgetTaskCopy(taskId);
+        if (projectId !== null) emitTasksBulkChanged(projectId);
+        return;
+    }
+    if (ref.kind === "move") {
+        const fromProjectId = ids(ref.from_project_id);
+        if (fromProjectId !== null) emitTasksBulkChanged(fromProjectId);
+        if (projectId !== null) emitTasksBulkChanged(projectId);
+    }
 };
