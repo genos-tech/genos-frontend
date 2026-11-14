@@ -1421,6 +1421,20 @@ export const hi: DeepPartial<Messages> = {
             effortHighNote: "जटिल प्रश्नों के लिए गहनतम तर्क-वितर्क में अधिक समय लगता है।",
             effortLockedHint: "अनलॉक करने के लिए अपग्रेड करें",
         },
+        contentLength: {
+            heading: "Genos कितना लिखता है",
+            description:
+                "Genos आपके लिए जो टास्क, माइलस्टोन, नोट और प्लान लिखता है, उनकी लंबाई। चैट के जवाब हर स्तर पर संक्षिप्त रहते हैं।",
+            shortLabel: "छोटा",
+            shortHelper: "टास्क और नोट की संक्षिप्त सामग्री।",
+            standardLabel: "सामान्य",
+            standardHelper: "आम लंबाई, जैसा अभी है।",
+            longLabel: "लंबा",
+            longHelper: "ज़्यादा विस्तृत सामग्री और प्लान।",
+            saveFailed:
+                "Genos कितना लिखता है, यह सेटिंग सहेजी नहीं जा सकी। आपकी सेटिंग नहीं बदली है।",
+            loadFailed: "यह सेटिंग लोड नहीं हो सकी",
+        },
         privacy: {
             heading: "प्राइवेसी और एनालिटिक्स",
             description:
