@@ -5073,6 +5073,14 @@ export const ar: DeepPartial<Messages> = {
                 reminderRequired: "{field}: اختر تاريخًا ووقتًا.",
             },
         },
+        rejectReason: {
+            add: "رفض مع ذكر السبب",
+            label: "السبب (اختياري)",
+            placeholder: "ما الذي يجب أن يفعله Genos بشكل مختلف؟",
+            hint: "يقرأ Genos هذا ويأخذه في الاعتبار.",
+            back: "رجوع",
+            counter: "{count}/{max}",
+        },
         undo: {
             chip: "لا يمكن التراجع عنه",
             reasons: {

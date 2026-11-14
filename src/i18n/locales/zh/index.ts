@@ -636,6 +636,14 @@ export const zh: DeepPartial<Messages> = {
                 reminderRequired: "{field}：请选择日期和时间。",
             },
         },
+        rejectReason: {
+            add: "填写理由并拒绝",
+            label: "理由（可选）",
+            placeholder: "希望 Genos 怎样改？",
+            hint: "Genos 会阅读并参考这条理由。",
+            back: "返回",
+            counter: "{count}/{max}",
+        },
         undo: {
             chip: "无法撤销",
             reasons: {

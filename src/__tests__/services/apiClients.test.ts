@@ -1382,6 +1382,53 @@ describe("agentApi.decideAgent", () => {
         });
         expect(h.onDone).toHaveBeenCalledWith("S1", undefined, undefined);
     });
+
+    // MIP-889: `reason` rides on a reject only, trimmed, and only when there is one.
+    const decideBody = async (over: Partial<Parameters<typeof decideAgent>[0]>) => {
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValue(streamResponse(['{"type":"done","session_id":"S1"}\n']));
+        vi.stubGlobal("fetch", fetchMock);
+        await decideAgent({
+            ...makeHandlers(),
+            runId: "RID",
+            approvalToken: "TOKEN",
+            decision: "reject",
+            accessToken: "tok",
+            ...over,
+        });
+        return JSON.parse(fetchMock.mock.calls[0][1].body);
+    };
+
+    it("sends a reject's reason as `reason`, trimmed", async () => {
+        expect(await decideBody({ reason: "  Wrong project.  " })).toEqual({
+            run_id: "RID",
+            approval_token: "TOKEN",
+            decision: "reject",
+            reason: "Wrong project.",
+        });
+    });
+
+    it("a blank reason is exactly today's reject body", async () => {
+        expect(await decideBody({ reason: "   " })).toEqual({
+            run_id: "RID",
+            approval_token: "TOKEN",
+            decision: "reject",
+        });
+    });
+
+    it("never sends a reason with an approve (the server answers 400)", async () => {
+        expect(await decideBody({ decision: "approve", reason: "why" })).toEqual({
+            run_id: "RID",
+            approval_token: "TOKEN",
+            decision: "approve",
+        });
+    });
+
+    it("caps the reason at the server's 500", async () => {
+        const body = await decideBody({ reason: "z".repeat(600) });
+        expect(body.reason).toHaveLength(500);
+    });
 });
 
 // ===========================================================================

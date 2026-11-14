@@ -670,6 +670,14 @@ export const ja: DeepPartial<Messages> = {
                 reminderRequired: "{field}：日付と時刻を選んでください。",
             },
         },
+        rejectReason: {
+            add: "理由を書いて却下",
+            label: "理由（任意）",
+            placeholder: "Genos にどう変えてほしいですか？",
+            hint: "Genos はこれを読んで考慮します。",
+            back: "戻る",
+            counter: "{count}/{max}",
+        },
         undo: {
             chip: "元に戻せません",
             reasons: {

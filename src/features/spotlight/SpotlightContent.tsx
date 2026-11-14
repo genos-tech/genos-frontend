@@ -156,7 +156,7 @@ export interface SpotlightContentProps {
         origin?: SpotlightAskOrigin
     ) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
-    onReject: () => void;
+    onReject: (reason?: string) => void;
     // Undo one approved write of a turn (`useSpotlight.undoStep`). Required, so a
     // host that renders Spotlight cannot forget it: the overlay and the Genos page
     // both show the same conversation, and each needs the control to work.
@@ -1390,7 +1390,7 @@ interface ConversationPanelProps {
     turns: CompletedTurn[];
     onPreview: (r: SpotlightResult) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
-    onReject: () => void;
+    onReject: (reason?: string) => void;
     // Required: see `SpotlightContentProps.onUndo`.
     onUndo: (request: UndoRequest) => void;
     onNewConversation: () => void;

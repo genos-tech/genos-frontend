@@ -37,6 +37,7 @@ import {
     type PendingApprovalPayload,
     type ToolResultUndoRef,
 } from "../../services/agentApi";
+import { cleanRejectReason } from "../../services/agentRejectReason";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import { emitProjectToolResult } from "./approvedProjectWrites";
@@ -582,7 +583,11 @@ export const useAgentQA = ({
     //     dropped (that request was aborted or superseded).
     const decidedApprovalTokenRef = useRef<string | null>(null);
     const decide = useCallback(
-        (decision: "approve" | "reject", editedArgs?: Record<string, unknown>) => {
+        (
+            decision: "approve" | "reject",
+            editedArgs?: Record<string, unknown>,
+            reason?: unknown
+        ) => {
             const payload = ask.pendingApproval;
             if (!payload) return;
             if (decidedApprovalTokenRef.current === payload.approval_token) return;
@@ -592,6 +597,10 @@ export const useAgentQA = ({
             // wires `onClick={onApprove}` hands over the click event instead.
             const edits =
                 decision === "approve" && isEditPatch(editedArgs) ? editedArgs : undefined;
+            // REJECT REASON (MIP-889): only a string is a reason (a card that
+            // wires `onClick={onReject}` hands over the click event), trimmed and
+            // capped; none at all is exactly the old request.
+            const why = decision === "reject" ? cleanRejectReason(reason) : "";
 
             // Reuse the abort handle — the new request supersedes
             // anything older.
@@ -619,6 +628,7 @@ export const useAgentQA = ({
                 approvalToken: payload.approval_token,
                 decision,
                 ...(edits ? { editedArgs: edits } : {}),
+                ...(why ? { reason: why } : {}),
                 accessToken,
                 signal: controller.signal,
                 ...buildStreamHandlers(askedTurnId, payload.run_id),
@@ -648,8 +658,12 @@ export const useAgentQA = ({
         (editedArgs?: Record<string, unknown>) => decide("approve", editedArgs),
         [decide]
     );
-    // Takes no edits: a reject that carried any would be a 400.
-    const onReject = useCallback(() => decide("reject"), [decide]);
+    // Takes no edits (a reject that carried any would be a 400), only the
+    // person's optional reason.
+    const onReject = useCallback(
+        (reason?: string) => decide("reject", undefined, reason),
+        [decide]
+    );
 
     // ---- Cancel the in-flight answer. ----
     // Aborting the fetch throws AbortError which is silently swallowed

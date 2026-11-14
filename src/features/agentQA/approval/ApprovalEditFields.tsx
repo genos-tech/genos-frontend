@@ -41,7 +41,7 @@ import {
 } from "./editableFields";
 import type { ApprovalEdit } from "./useApprovalEdit";
 
-const controlSx = (invalid: boolean) => ({
+export const controlSx = (invalid: boolean) => ({
     width: "100%",
     boxSizing: "border-box" as const,
     font: "inherit",

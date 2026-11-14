@@ -5368,6 +5368,14 @@ export const hi: DeepPartial<Messages> = {
                 reminderRequired: "{field}: तारीख और समय चुनें।",
             },
         },
+        rejectReason: {
+            add: "कारण बताकर अस्वीकार करें",
+            label: "कारण (वैकल्पिक)",
+            placeholder: "Genos को क्या अलग करना चाहिए?",
+            hint: "Genos इसे पढ़ता है और ध्यान में रखता है।",
+            back: "वापस",
+            counter: "{count}/{max}",
+        },
         undo: {
             chip: "पूर्ववत नहीं किया जा सकता",
             reasons: {

@@ -33,6 +33,7 @@
 
 import type { SpotlightResult } from "../features/spotlight/types";
 import { fmt, getMessages, resolveInitialLocale } from "../i18n";
+import { cleanRejectReason } from "./agentRejectReason";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -269,6 +270,10 @@ export interface DecideAgentArgs extends BaseStreamHandlers {
     // answers 400 to that); an empty patch is a plain approve and is left off
     // the wire.
     editedArgs?: Record<string, unknown>;
+    // The person's own reason for a reject (MIP-889), already trimmed and capped
+    // by the card (`services/agentRejectReason.ts`). Sent on a reject only, and only
+    // when there is something in it: no reason is exactly the old body.
+    reason?: string;
     accessToken: string | null;
     signal?: AbortSignal;
     // Called INSTEAD of `onError` when the server refuses the edits with a 422
@@ -944,6 +949,9 @@ export async function decideAgent(args: DecideAgentArgs): Promise<void> {
         args.decision === "approve" && args.editedArgs && Object.keys(args.editedArgs).length > 0
             ? args.editedArgs
             : undefined;
+    // A reason rides only on a reject (the server answers 400 to one on an
+    // approve), and an empty one is left off the wire.
+    const reason = args.decision === "reject" ? cleanRejectReason(args.reason) : "";
     await runNdjsonStream(
         `${API_BASE}/agent/decide/`,
         {
@@ -951,6 +959,7 @@ export async function decideAgent(args: DecideAgentArgs): Promise<void> {
             approval_token: args.approvalToken,
             decision: args.decision,
             ...(edits ? { edited_args: edits } : {}),
+            ...(reason ? { reason } : {}),
         },
         args.accessToken,
         args.signal,

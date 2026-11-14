@@ -211,6 +211,16 @@ export const agentApproval = {
             reminderRequired: "{field}: choose a date and a time.",
         },
     },
+    // A reason on Reject (MIP-889): a small "Reject with a reason" beside
+    // Reject opens a text field; the reason goes to Genos with the rejection.
+    rejectReason: {
+        add: "Reject with a reason",
+        label: "Reason (optional)",
+        placeholder: "What should Genos do differently?",
+        hint: "Genos reads this and takes it into account.",
+        back: "Back",
+        counter: "{count}/{max}",
+    },
     // Undo of an approved write (genos-api `agent/undo.py`, `undo_apply.py`). The
     // server's own English `error` / `summary` is only a fallback: these are what
     // people read. One namespace for every host of an answer turn

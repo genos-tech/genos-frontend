@@ -237,9 +237,10 @@ export interface UseAgentQAReturn {
     // `editedArgs` is the card's edit payload: ONLY the fields the person
     // changed, as `{path: value}`; absent or empty = approve as proposed. A
     // card must call this explicitly (never `onClick={onApprove}`: that would
-    // pass the click event). A reject takes nothing, and never carries edits.
+    // pass the click event). A reject never carries edits; it takes only the
+    // person's optional reason (MIP-889), and a plain Reject passes nothing.
     onApprove: (editedArgs?: Record<string, unknown>) => void;
-    onReject: () => void;
+    onReject: (reason?: string) => void;
     // Wipes turns + session locally and sets a one-shot flag so the
     // next /ask/ call tells the backend to start a fresh session even
     // if a per-context one already exists.

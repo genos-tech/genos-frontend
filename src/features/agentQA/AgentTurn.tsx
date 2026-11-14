@@ -52,7 +52,8 @@
 //     untouched. The card calls it `onApprove(edits)` when the person changed
 //     a field before approving (edit before approve), so the payload flows
 //     through here with no wrapper: `AgentTurn` never sees it, and cannot
-//     drop it.
+//     drop it. `onReject` likewise: the card calls `onReject(reason)` when the
+//     person typed a reason, plain `onReject()` otherwise (MIP-889).
 //   - `undoSteps` / `onUndo`: Undo of the turn's approved writes, in a slot of its
 //     own under the steps (not the hover-revealed action bar: it is the person's
 //     way back and must be visible). The list is derived from `toolEvents` (the
@@ -175,7 +176,7 @@ export interface AgentTurnProps {
     onPreview: (source: SpotlightResult) => void;
     // Handed to the ApprovalCard untouched; see the header.
     onApprove?: React.ComponentProps<typeof ApprovalCard>["onApprove"];
-    onReject?: () => void;
+    onReject?: React.ComponentProps<typeof ApprovalCard>["onReject"];
     // Takes the question rather than being pre-bound, so the host's callback
     // can stay one stable identity across every turn.
     onRetry?: (askedQuery: string, mentions?: AgentMentionRef[]) => void;
