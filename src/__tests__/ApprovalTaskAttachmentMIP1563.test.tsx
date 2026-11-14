@@ -14,7 +14,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getToolLabel } from "../features/agentQA";
 import { getApprovalRenderer } from "../features/agentQA/approval/approvalRenderers";
 import { ApprovalCard } from "../features/agentQA/ApprovalCard";
-import { fmt, getMessages } from "../i18n";
+import { fmt } from "../i18n";
 import type { PendingApprovalPayload } from "../services/agentApi";
 
 const mount = (args: Record<string, unknown>, over: Partial<PendingApprovalPayload> = {}) => {
