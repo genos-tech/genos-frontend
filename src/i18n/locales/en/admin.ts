@@ -104,6 +104,9 @@ export const admin = {
                 "This reset link is invalid or has expired. Request a new one from the sign-in page.",
             invalidToken: "This reset link is invalid or has expired.",
             backToSignIn: "Back to sign in",
+            credentialsEnded:
+                "Your connected AI apps and API keys were ended. Reconnect your apps and create new keys when you need them.",
+            signInNow: "Sign in now",
         },
         emailVerification: {
             verifyingTitle: "Verifying your email…",

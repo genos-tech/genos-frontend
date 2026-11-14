@@ -284,6 +284,7 @@ export const settings = {
             blurb: "Claude, ChatGPT and other AI apps that members connected and that can work in this team. The owner can end any of them; an editor can end a viewer's. Ending one removes only this team: that person's other teams keep working.",
             empty: "No AI apps are connected to this team.",
             connectedBy: "Connected by {name}",
+            unknownMember: "a team member",
             otherTeams: "also {count, plural, one {# other team} other {# other teams}}",
             end: "End access to this team",
             endNamed: "End {app} for {name}",

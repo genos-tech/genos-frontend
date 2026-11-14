@@ -40,7 +40,9 @@ export const TeamConnectedAppsSection = ({ teamId }: { teamId: string }) => {
     if (rows == null) return null;
 
     const appName = (c: TeamMcpConnection) => c.client.name || t.settings.connectedApps.unnamed;
-    const person = (c: TeamMcpConnection) => c.userName || c.userEmail;
+    // An editor gets no email (only the owner does) and a name can be empty: never render a
+    // blank or "undefined" label, a sentence needs somebody in it.
+    const person = (c: TeamMcpConnection) => c.userName || c.userEmail || a.unknownMember;
 
     return (
         <Stack spacing={1.5} data-testid="team-connected-apps">

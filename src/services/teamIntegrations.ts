@@ -5,7 +5,8 @@ export interface TeamMcpConnection {
     id: string;
     userId: string;
     userName: string;
-    userEmail: string;
+    /** Owner only: the server leaves the key out for an editor (api #825), so never assume it. */
+    userEmail?: string;
     client: { name: string; kind: string; host: string; url: string };
     scope: "read" | "write";
     allowDestructive: boolean;
