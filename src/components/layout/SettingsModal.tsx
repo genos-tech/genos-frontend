@@ -51,6 +51,7 @@ import {
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../context/AuthContext";
+import { ContentLengthSection } from "../../features/genos/ContentLengthSection";
 import { GenosSettingsPanel } from "../../features/genos/memory/GenosSettingsPanel";
 import { ConnectionsSection } from "../../features/integrations/components/ConnectionsSection";
 import { GithubRepoAccessSection } from "../../features/integrations/components/GithubRepoAccessSection";
@@ -1867,6 +1868,7 @@ export const SettingsModal = ({
                         >
                             <LlmModelSection />
                             <SpotlightSection />
+                            <ContentLengthSection />
                             {/* Genos Assist Schedules (MIP-1200): the member's own
                                 morning plan, recaps and reports live with the
                                 rest of Genos, not under Developer. */}

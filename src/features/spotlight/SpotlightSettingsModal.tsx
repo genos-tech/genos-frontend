@@ -18,6 +18,7 @@ import { LlmModelSection, SpotlightSection } from "../../components/layout/Setti
 import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../i18n";
 import { g } from "../../theme/tokens";
+import { ContentLengthSection } from "../genos/ContentLengthSection";
 import { GenosSettingsPanel } from "../genos/memory/GenosSettingsPanel";
 
 interface Props {
@@ -49,6 +50,7 @@ export const SpotlightSettingsModal = ({ open, onClose, teamId }: Props) => {
             <GenosSettingsPanel teamId={teamId}>
                 <LlmModelSection />
                 <SpotlightSection />
+                <ContentLengthSection />
             </GenosSettingsPanel>
         </ModalFrame>
     );

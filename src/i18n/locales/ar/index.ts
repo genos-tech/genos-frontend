@@ -1532,6 +1532,19 @@ export const ar: DeepPartial<Messages> = {
             effortHighNote: "يستغرق وقتًا أطول ويحلّل الأسئلة المعقدة بعمق أكبر.",
             effortLockedHint: "رقِّ خطتك لإتاحته",
         },
+        contentLength: {
+            heading: "مقدار ما يكتبه Genos",
+            description:
+                "طول المهام والمعالم والملاحظات والخطط التي يكتبها Genos لك. تبقى ردود الدردشة موجزة في جميع المستويات.",
+            shortLabel: "قصير",
+            shortHelper: "نصوص موجزة للمهام والملاحظات.",
+            standardLabel: "قياسي",
+            standardHelper: "الطول المعتاد، كما هو الآن.",
+            longLabel: "طويل",
+            longHelper: "نصوص وخطط أكثر اكتمالاً.",
+            saveFailed: "تعذّر حفظ مقدار ما يكتبه Genos. لم يتغير إعدادك.",
+            loadFailed: "تعذّر تحميل هذا الإعداد",
+        },
         autoSyncCalendar: {
             heading: "المزامنة التلقائية مع Google Calendar",
             description:

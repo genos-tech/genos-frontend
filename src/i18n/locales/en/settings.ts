@@ -1050,6 +1050,19 @@ export const settings = {
         // (the server would clamp them anyway — see max_effort).
         effortLockedHint: "Upgrade to unlock",
     },
+    contentLength: {
+        heading: "How much Genos writes",
+        description:
+            "How long the tasks, milestones, notes and plans Genos writes for you are. Chat answers stay concise at every level.",
+        shortLabel: "Short",
+        shortHelper: "Lean task and note bodies.",
+        standardLabel: "Standard",
+        standardHelper: "The usual length, as it is today.",
+        longLabel: "Long",
+        longHelper: "Fuller bodies and plans.",
+        saveFailed: "Couldn't save how much Genos writes. Your setting was not changed.",
+        loadFailed: "Couldn't load this setting",
+    },
     privacy: {
         heading: "Privacy & analytics",
         description:
