@@ -373,6 +373,7 @@ const CalendarTab = ({
             <CalendarEventModal
                 accessToken={accessToken}
                 calendars={sources.calendars}
+                closeForAsk={() => setModalOpen(false)}
                 editingEventId={editingEventId}
                 initial={modalInitial}
                 open={modalOpen}

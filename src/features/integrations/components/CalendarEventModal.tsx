@@ -476,14 +476,15 @@ export const CalendarEventModal = ({
         }
     };
 
-    // The event as a mention, for the ask. Read from the form (the account and calendar it was opened
-    // with, the title as it stands): null when the event has none of them, which hides the button.
+    // The event as a mention, for the ask: the event that exists (the account, calendar and title it
+    // was opened with), not what is half-typed in the form. Null when it has no account, which hides the
+    // button.
     const askRef = editingEventId
         ? askGenosRefForCalendarEvent({
-              accountId: form.accountId,
-              calendarId: form.calendarId,
+              accountId: initial?.account_id,
+              calendarId: initial?.calendar_id,
               eventId: editingEventId,
-              summary: form.summary,
+              summary: initial?.summary,
               fallbackLabel: t.calendar.event.askGenosUntitled,
           })
         : null;
@@ -545,6 +546,7 @@ export const CalendarEventModal = ({
                 {closeForAsk && askRef ? (
                     <Button
                         color="neutral"
+                        disabled={submitting || deleting}
                         size="sm"
                         startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />}
                         sx={{ alignSelf: "flex-start", maxWidth: "100%", textAlign: "start" }}

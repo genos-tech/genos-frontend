@@ -65,6 +65,12 @@ describe("askGenosRefForCalendarEvent", () => {
         expect(askGenosRefForCalendarEvent(EVENT)).toEqual(REF);
     });
 
+    it("cuts a long title by character, never in the middle of an emoji", () => {
+        const emoji = askGenosRefForCalendarEvent({ ...EVENT, summary: "😀".repeat(80) });
+        expect(Array.from(emoji?.label ?? "")).toHaveLength(60);
+        expect(emoji?.label).toBe(`${"😀".repeat(59)}…`);
+    });
+
     it("puts the title on one line and caps it, so the draft stays a line", () => {
         const long = askGenosRefForCalendarEvent({
             ...EVENT,
@@ -113,6 +119,12 @@ describe("the mention on the wire", () => {
         ]);
     });
 
+    it("keeps two different calendar/event pairs apart even when they hold colons", () => {
+        const a = { ...REF, calendarId: "a:b", eventId: "c" } as AgentMentionRef;
+        const b = { ...REF, calendarId: "a", eventId: "b:c" } as AgentMentionRef;
+        expect(mentionKey(a)).not.toBe(mentionKey(b));
+    });
+
     it("is one mention per event, and two accounts' same id are two", () => {
         const other = {
             ...REF,
@@ -144,6 +156,8 @@ describe("the mention on the wire", () => {
 });
 
 // ---- the dialog -------------------------------------------------------------------------------
+
+const updateEvent = vi.hoisted(() => vi.fn());
 
 const modal = (props: Record<string, unknown> = {}) =>
     render(
@@ -185,7 +199,7 @@ describe("the event dialog's Ask Genos button", () => {
         off();
     });
 
-    it("takes the title as it stands in the form, not as it was opened", async () => {
+    it("names the event that exists, not a title half-typed in the form", async () => {
         const { refs, off } = heard();
         modal({ closeForAsk: vi.fn() });
         fireEvent.change(screen.getByDisplayValue("Dentist appointment"), {
@@ -194,7 +208,18 @@ describe("the event dialog's Ask Genos button", () => {
         fireEvent.click(screen.getByRole("button", { name: ASK }));
         await waitFor(() => expect(refs).toHaveLength(1));
         off();
-        expect(refs[0].label).toBe("Dentist, moved");
+        expect(refs[0]).toEqual(REF);
+    });
+
+    it("cannot be clicked while a save or delete is under way", async () => {
+        const closeForAsk = vi.fn();
+        updateEvent.mockReturnValue(new Promise(() => undefined));
+        modal({ closeForAsk });
+        fireEvent.click(screen.getByRole("button", { name: "Save" }));
+        const ask = await screen.findByRole("button", { name: ASK });
+        await waitFor(() => expect((ask as HTMLButtonElement).disabled).toBe(true));
+        fireEvent.click(ask);
+        expect(closeForAsk).not.toHaveBeenCalled();
     });
 
     it("is not there unless the opener supplies the way to close (a task's linked event)", () => {
@@ -226,7 +251,7 @@ const calendarApi = vi.hoisted(() => ({ listCalendars: vi.fn(), listEventsAggreg
 vi.mock("../features/integrations/services/calendar", async (importOriginal) => {
     const actual =
         await importOriginal<typeof import("../features/integrations/services/calendar")>();
-    return { ...actual, ...calendarApi };
+    return { ...actual, ...calendarApi, updateEvent };
 });
 vi.mock("../features/integrations/services/connections", () => ({
     listConnections: vi.fn(async () => ({ connections: [] })),

@@ -59,8 +59,12 @@ export const askGenosRefForCalendarEvent = (event: {
     const eventId = event.eventId?.trim();
     if (!accountId || !eventId) return null;
     const title = (event.summary ?? "").replace(/\s+/g, " ").trim();
+    // By code point, so an emoji or a CJK character is never cut in half.
+    const chars = Array.from(title);
     const label =
-        title.length > EVENT_LABEL_MAX ? `${title.slice(0, EVENT_LABEL_MAX - 1)}…` : title;
+        chars.length > EVENT_LABEL_MAX
+            ? `${chars.slice(0, EVENT_LABEL_MAX - 1).join("")}…`
+            : title;
     return {
         kind: "calendar_event",
         accountId,

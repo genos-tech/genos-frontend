@@ -125,7 +125,9 @@ export const mentionKey = (ref: AgentMentionRef): string => {
         case "todo":
             return `todo:${ref.itemId}`;
         case "calendar_event":
-            return `calendar_event:${ref.accountId}:${ref.calendarId}:${ref.eventId}`;
+            // JSON, because a calendar id and an event id can hold `:` (a group calendar's id, a recurring
+            // instance's): joined with `:` two different pairs could give one key.
+            return `calendar_event:${JSON.stringify([ref.accountId, ref.calendarId, ref.eventId])}`;
     }
 };
 

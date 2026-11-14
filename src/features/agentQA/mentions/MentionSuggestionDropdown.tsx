@@ -110,7 +110,6 @@ const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPa
         case "project":
             return PROJECT_PALETTE;
         case "todo":
-            return TODO_PALETTE;
         case "calendar_event":
             return TODO_PALETTE;
     }
