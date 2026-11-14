@@ -53,7 +53,9 @@ import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { onTaskTouched } from "../../services/taskEvents";
 import { forgetInFlightTask } from "../../services/taskLoadInFlight";
 import { Sprint } from "../../sprint-milestone/types";
+import { isOpenBlockerStatus } from "../../utils/blockerStatus";
 import {
+    effectiveStatusOf,
     isUnderClosedAncestor,
     isUnderDeletedAncestor,
     selectAncestorVerdicts,
@@ -126,11 +128,23 @@ type Props = {
 // source of truth — both surfaces need to know "which visible task is
 // blocked by how many open blockers" and recomputing it twice would
 // drift if the rules changed.
-const buildOpenBlockerCountByTask = (graph: TaskGraph): Map<number, number> => {
+//
+// A blocker counts while it reads open: not Closed or Deleted, and not under a Closed or Deleted
+// ancestor (MIP-1549, the same rule as the server's auto-Blocked flip). Its reading comes from the
+// server when the edge carries one (`blockerStatus`: exact, whatever lies above this tree), else
+// from the blocker's row in the graph through the one client implementation of the ancestor rule.
+// `otherStatus` is the OTHER endpoint's: the BLOCKED task's for an edge that came from a
+// `blocking` list, so it is only the last resort.
+export const buildOpenBlockerCountByTask = (graph: TaskGraph): Map<number, number> => {
     const out = new Map<number, number>();
+    const verdicts = selectAncestorVerdicts(graph.tasks);
+    const byId = new Map(graph.tasks.map((t) => [String(t.id), t]));
     for (const edge of graph.dependencyEdges) {
-        const blockerStatus = edge.otherStatus?.status?.toLowerCase?.() ?? "";
-        if (blockerStatus !== "closed") {
+        const blocker = byId.get(String(edge.blockerTaskId));
+        const status =
+            edge.blockerStatus ??
+            (blocker ? effectiveStatusOf(blocker, verdicts) : edge.otherStatus?.status);
+        if (isOpenBlockerStatus(status)) {
             out.set(edge.blockedTaskId, (out.get(edge.blockedTaskId) ?? 0) + 1);
         }
     }

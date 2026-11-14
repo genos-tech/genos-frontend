@@ -239,6 +239,10 @@ export type TaskDependencyRef = {
     projectName: string | null;
     title: string;
     status: TaskStatusProps;
+    /** The status the closed-ancestor rule reads for that task (a task under a Closed or
+     *  Deleted parent or milestone reads Closed or Deleted); `status` stays its own. Absent
+     *  from an older server: read it through `refEffectiveStatus`, which falls back (MIP-1549). */
+    effectiveStatus?: string | null;
     assigneeUserId: string | number | null;
     isMilestone: boolean;
 };

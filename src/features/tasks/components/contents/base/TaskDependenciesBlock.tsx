@@ -14,6 +14,7 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { fmt, useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskDependencyRef, TaskProps } from "../../../../../types/tasks";
+import { refBlocks } from "../../../utils/blockerStatus";
 import { StatusChip } from "../../autocompletes/ACTaskSelector";
 import { TaskIdText } from "../../card";
 import { ModalManageDependencies } from "../../modals/ModalManageDependencies";
@@ -402,7 +403,8 @@ const DependencyChip = ({
     );
 };
 
-// Helper: true when the task has at least one *open* (non-Closed) blocker.
+// Helper: true when the task has at least one *open* blocker: one that does not read as Closed or
+// Deleted, by the server's closed-ancestor rule (`effectiveStatus`, MIP-1549; see blockerStatus.ts).
 // Plain function (no hooks) so TaskMainBlock can call it inline without
 // breaking the rules of hooks.
 export const isCurrentlyBlocked = (
@@ -412,5 +414,5 @@ export const isCurrentlyBlocked = (
     if (taskId == null) return false;
     const entry = useTM.taskDependencies[taskId];
     if (!entry) return false;
-    return entry.blockedBy.some((d) => (d.status.status ?? "").toLowerCase() !== "closed");
+    return entry.blockedBy.some(refBlocks);
 };
