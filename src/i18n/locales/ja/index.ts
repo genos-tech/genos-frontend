@@ -4797,6 +4797,8 @@ export const ja: DeepPartial<Messages> = {
             unauthorizedNoToken: "認証されていません。認証トークンが見つかりません。",
             messageIdExists: "メッセージIDはすでに存在します。",
             unauthorizedPleaseLogin: "認証されていません。再度サインインしてください。",
+            collaboratorNotOnProject:
+                "{name} さんはこのプロジェクトのメンバーではなく、タスクを開けないため、コラボレーターにできません。先にプロジェクトに追加してください。",
             subTaskProjectMoveForbidden:
                 "このタスクは、その上位にあるタスクまたはマイルストーンのプロジェクトに属します。一緒に移動するには、そちらを移動してください。",
         },
@@ -5006,6 +5008,8 @@ export const ja: DeepPartial<Messages> = {
             sprintFallback: "スプリント",
             addAssignees: "担当者を追加",
             addCollaborators: "コラボレーターを追加する",
+            collaboratorsProjectOnly:
+                "追加できる人がいません。コラボレーターはこのプロジェクトのメンバーである必要があります。",
             tasksSuffix: " 件のタスク",
         },
         milestones: {

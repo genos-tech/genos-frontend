@@ -928,57 +928,78 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         }
         setIsCreatingMilestone(true);
         const projectId = taskContent.project.projectId;
-        const created = await useSM.createNewMilestone({
-            projectId,
-            title: taskTitle.trim(),
-            // Live editor content, not the debounced `body` state — see
-            // `getLiveBody`. Cmd/Ctrl+Enter never blurs the editor, so the
-            // state can lag the last keystrokes at submit time.
-            description: getSubmitBody(),
-            // Thread origin (milestone created from a DM/GM/MDM thread).
-            // Persisted on the backing task row server-side; drives the
-            // milestone preview's "Check thread" button.
-            chatType: fromThread?.chatType ?? null,
-            chatId: fromThread?.chatId ?? null,
-            threadId: fromThread?.threadId ?? null,
-            sprintId: (taskContent as any)?.sprintId ?? null,
-            // Folder picked in the form (MIP-847). Dropped unless it is one of the
-            // chosen project's folders: the form can switch project after the pick.
-            folderId: (() => {
-                const picked = (taskContent as any)?.folderId ?? null;
-                return picked != null &&
-                    (useSM.projectFolders[projectId] ?? []).some((f) => f.folderId === picked)
-                    ? picked
-                    : null;
-            })(),
-            dueDate: taskContent.dueDate || null,
-            priority: taskContent.priority?.priority || null,
-            // Mirror the priority pattern: backend stores both the
-            // human-readable label and the numeric code, and was
-            // silently dropping `effort_level` here because we never
-            // sent it. Treat empty `level`/`code` as null so an
-            // unselected dropdown doesn't write blanks to the row.
-            effortLevel: taskContent.effortLevel?.level || null,
-            effortLevelCode:
-                typeof taskContent.effortLevel?.code === "number" &&
-                taskContent.effortLevel.code >= 0
-                    ? taskContent.effortLevel.code
-                    : null,
-            tags: taskContent.tags || [],
-            // Forward any links the user added in the create form so a
-            // milestone can be created with its URL/Link section
-            // already populated (matches how a regular task carries
-            // `links` straight through `addTask`).
-            links: taskContent.links || [],
-            reporterId: myself.userId,
-            assigneeIds: assignee?.userId ? [assignee.userId] : [],
-            // Custom-field values picked in the form's CustomFieldsBlock
-            // — seeded onto the backing task row server-side.
-            customFieldValues: taskContent.customFieldValues,
-            // Collaborators picked in the form — seeded onto the backing
-            // task M2M server-side.
-            collaborators: (taskContent.collaborators ?? []).map((c) => c.userId),
-        });
+        const created = await useSM.createNewMilestone(
+            {
+                projectId,
+                title: taskTitle.trim(),
+                // Live editor content, not the debounced `body` state — see
+                // `getLiveBody`. Cmd/Ctrl+Enter never blurs the editor, so the
+                // state can lag the last keystrokes at submit time.
+                description: getSubmitBody(),
+                // Thread origin (milestone created from a DM/GM/MDM thread).
+                // Persisted on the backing task row server-side; drives the
+                // milestone preview's "Check thread" button.
+                chatType: fromThread?.chatType ?? null,
+                chatId: fromThread?.chatId ?? null,
+                threadId: fromThread?.threadId ?? null,
+                sprintId: (taskContent as any)?.sprintId ?? null,
+                // Folder picked in the form (MIP-847). Dropped unless it is one of the
+                // chosen project's folders: the form can switch project after the pick.
+                folderId: (() => {
+                    const picked = (taskContent as any)?.folderId ?? null;
+                    return picked != null &&
+                        (useSM.projectFolders[projectId] ?? []).some((f) => f.folderId === picked)
+                        ? picked
+                        : null;
+                })(),
+                dueDate: taskContent.dueDate || null,
+                priority: taskContent.priority?.priority || null,
+                // Mirror the priority pattern: backend stores both the
+                // human-readable label and the numeric code, and was
+                // silently dropping `effort_level` here because we never
+                // sent it. Treat empty `level`/`code` as null so an
+                // unselected dropdown doesn't write blanks to the row.
+                effortLevel: taskContent.effortLevel?.level || null,
+                effortLevelCode:
+                    typeof taskContent.effortLevel?.code === "number" &&
+                    taskContent.effortLevel.code >= 0
+                        ? taskContent.effortLevel.code
+                        : null,
+                tags: taskContent.tags || [],
+                // Forward any links the user added in the create form so a
+                // milestone can be created with its URL/Link section
+                // already populated (matches how a regular task carries
+                // `links` straight through `addTask`).
+                links: taskContent.links || [],
+                reporterId: myself.userId,
+                assigneeIds: assignee?.userId ? [assignee.userId] : [],
+                // Custom-field values picked in the form's CustomFieldsBlock
+                // — seeded onto the backing task row server-side.
+                customFieldValues: taskContent.customFieldValues,
+                // Collaborators picked in the form — seeded onto the backing
+                // task M2M server-side.
+                collaborators: (taskContent.collaborators ?? []).map((c) => c.userId),
+            },
+            {
+                // A collaborator the server says could not open the milestone
+                // (the picker should not have offered them; a race with a member
+                // being removed): the reason is shown, the form stays as it is,
+                // and that one person comes off the list so the next try can land.
+                people: taskContent.collaborators,
+                onCollaboratorRefused: (userId) =>
+                    setTaskContent((prev) =>
+                        prev
+                            ? {
+                                  ...prev,
+                                  collaborators: (prev.collaborators ?? []).filter(
+                                      (c) =>
+                                          String(c.userId).toLowerCase() !== userId.toLowerCase()
+                                  ),
+                              }
+                            : prev
+                    ),
+            }
+        );
         setIsCreatingMilestone(false);
         if (created) {
             // Milestone landed — the draft no longer represents in-progress

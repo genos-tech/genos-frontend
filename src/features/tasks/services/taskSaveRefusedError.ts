@@ -16,11 +16,22 @@ export class TaskSaveRefusedError extends Error {
     readonly serverMessage: string | null;
     /** The server's machine-readable `code`, when it sent one. */
     readonly code: string | null;
+    /** The id of the COLLABORATOR the server refused because they could not
+     *  open the task (a teammate who is not on the project, MIP-1567), or
+     *  `null` for any other refusal. Nothing else in the save was at fault,
+     *  so a caller can drop that one person and send the rest again instead
+     *  of discarding the whole edit. */
+    readonly refusedCollaboratorId: string | null;
 
-    constructor(serverMessage: string | null, code: string | null = null) {
+    constructor(
+        serverMessage: string | null,
+        code: string | null = null,
+        refusedCollaboratorId: string | null = null
+    ) {
         super(serverMessage ?? "The server refused to save this task.");
         this.name = "TaskSaveRefusedError";
         this.serverMessage = serverMessage;
         this.code = code;
+        this.refusedCollaboratorId = refusedCollaboratorId;
     }
 }
