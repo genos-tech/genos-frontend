@@ -293,7 +293,7 @@ describe("DevelopersPage", () => {
         expect(rowOf("restore_note_version")).toContain("can itself be undone");
     });
 
-    it("says manage_milestone can convert and move, that neither can be undone, and asks no opt-in for them", () => {
+    it("says manage_milestone can convert and move, that neither can be undone, and which two need the opt-in", () => {
         renderPage();
         const row = [...document.querySelectorAll("tr")].find(
             (tr) => tr.querySelector("td")?.textContent === "manage_milestone"
@@ -305,8 +305,12 @@ describe("DevelopersPage", () => {
         expect(text).toContain("moves the milestone, and its tasks with it, to another project");
         expect(text).toContain("the sprint, folder and tags are cleared");
         expect(text).toContain("Neither can be undone");
-        // Nothing is deleted for good, so a key with write scope may do both.
-        expect(text).not.toContain("destructive opt-in");
+        // They drop what nothing can put back (the folder, the sprint, the old ids), so a milestone
+        // turned into a task and a move need the opt-in like a delete; a task turned into a milestone
+        // drops nothing and the row says only these two need it.
+        expect(text).toContain(
+            "a milestone turned into a task and a move need a key that also has the destructive opt-in"
+        );
     });
 
     it("says the destructive opt-in on exactly the tools that need it", () => {
@@ -319,6 +323,7 @@ describe("DevelopersPage", () => {
             "delete_task_attachment",
             "delete_todo_item",
             "delete_calendar_event",
+            "manage_milestone",
             "delete_milestone",
             "delete_sprint",
             "manage_project_members",
