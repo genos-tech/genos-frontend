@@ -192,7 +192,7 @@ export interface UseSpotlightReturn {
         origin?: SpotlightAskOrigin
     ) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
-    onReject: () => void;
+    onReject: (reason?: string) => void;
     // Undo one approved write: the shared machine's `undoStep`. The step's state
     // lives in the undo store, so the overlay and the Genos page agree.
     undoStep: (request: UndoRequest) => void;

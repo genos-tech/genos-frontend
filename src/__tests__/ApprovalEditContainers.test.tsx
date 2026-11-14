@@ -6,6 +6,8 @@
  * public entry point (as `AnswerTurnContainers.test.tsx` does) with the same
  * fixtures.
  *
+ * The optional reason on Reject (MIP-889) is pinned here on the same hosts.
+ *
  * What differs by host and so is pinned separately: Escape. Spotlight closes on
  * a document-level Escape listener, the Joy modals on their own Escape handler;
  * an Escape that only cancels an edit must not close either.
@@ -311,6 +313,46 @@ describe.each(SURFACES)("$name: edit before approve", (surface) => {
     });
 });
 
+// MIP-889: a reason on Reject, the same on every host (one card, one `decide`).
+const REASON_ADD = "Reject with a reason";
+const reasonField = () => screen.getByLabelText("Reason (optional)") as HTMLTextAreaElement;
+
+describe.each(SURFACES)("$name: a reason on reject", (surface) => {
+    it("plain Reject is still one click and reaches the host's onReject with nothing", () => {
+        const h = surface.mount(liveAsk());
+        fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+        expect(h.reject).toHaveBeenCalledTimes(1);
+        expect(h.reject.mock.calls[0]).toEqual([]);
+    });
+
+    it("a typed reason reaches the host's onReject trimmed", () => {
+        const h = surface.mount(liveAsk());
+        fireEvent.click(screen.getByRole("button", { name: REASON_ADD }));
+        fireEvent.change(reasonField(), { target: { value: "  Wrong project.  " } });
+        fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+        expect(h.reject.mock.calls).toEqual([["Wrong project."]]);
+        expect(h.approve).not.toHaveBeenCalled();
+    });
+
+    it("Escape in the reason field closes it and does not close the host", () => {
+        const h = surface.mount(liveAsk());
+        fireEvent.click(screen.getByRole("button", { name: REASON_ADD }));
+        fireEvent.keyDown(reasonField(), { key: "Escape" });
+        expect(screen.queryByLabelText("Reason (optional)")).toBeNull();
+        expect(h.close).not.toHaveBeenCalled();
+        expect(h.reject).not.toHaveBeenCalled();
+    });
+
+    it("Enter in the reason field rejects nothing and does not close the host", () => {
+        const h = surface.mount(liveAsk());
+        fireEvent.click(screen.getByRole("button", { name: REASON_ADD }));
+        fireEvent.change(reasonField(), { target: { value: "Wrong project." } });
+        fireEvent.keyDown(reasonField(), { key: "Enter" });
+        expect(h.reject).not.toHaveBeenCalled();
+        expect(h.close).not.toHaveBeenCalled();
+    });
+});
+
 describe("the Spotlight overlay (the real hook, above everything at z-index 13100)", () => {
     const Harness = () => {
         const s = useSpotlight({ accessToken: "tok", teamId: "1" });
@@ -386,6 +428,44 @@ describe("the Spotlight overlay (the real hook, above everything at z-index 1310
         expect(spot().isOpen).toBe(true);
         escape(screen.getByRole("button", { name: "Edit" }));
         expect(spot().isOpen).toBe(false);
+    });
+
+    it("Escape in the reason field closes it; the overlay stays open until the NEXT Escape", () => {
+        openWithApproval();
+        fireEvent.click(screen.getByRole("button", { name: REASON_ADD }));
+        escape(reasonField());
+        expect(screen.queryByLabelText("Reason (optional)")).toBeNull();
+        expect(spot().isOpen).toBe(true);
+        expect(decideAgent).not.toHaveBeenCalled();
+        escape(screen.getByRole("button", { name: REASON_ADD }));
+        expect(spot().isOpen).toBe(false);
+    });
+
+    it("a reason goes through the one decision path, once, however fast the clicks", () => {
+        openWithApproval();
+        fireEvent.click(screen.getByRole("button", { name: REASON_ADD }));
+        fireEvent.change(reasonField(), { target: { value: " Wrong project. " } });
+        const button = screen.getByRole("button", { name: "Reject" });
+        fireEvent.click(button);
+        fireEvent.click(button);
+        expect(decideAgent).toHaveBeenCalledTimes(1);
+        const call = vi.mocked(decideAgent).mock.calls[0][0];
+        expect(call).toMatchObject({
+            decision: "reject",
+            runId: "run-3",
+            approvalToken: "ap-1",
+            reason: "Wrong project.",
+        });
+        expect(call).not.toHaveProperty("editedArgs");
+        // The card is gone while the request is in flight.
+        expect(screen.queryByLabelText("Reason (optional)")).toBeNull();
+    });
+
+    it("a plain Reject through the real hook sends no reason at all", () => {
+        openWithApproval();
+        fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+        expect(decideAgent).toHaveBeenCalledTimes(1);
+        expect(vi.mocked(decideAgent).mock.calls[0][0]).not.toHaveProperty("reason");
     });
 
     it("approving an edit sends it through the one decision path, and a 422 brings the card back", async () => {

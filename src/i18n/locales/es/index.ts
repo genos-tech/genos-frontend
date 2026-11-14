@@ -5399,6 +5399,14 @@ export const es: DeepPartial<Messages> = {
                 reminderRequired: "{field}: elige una fecha y una hora.",
             },
         },
+        rejectReason: {
+            add: "Rechazar con un motivo",
+            label: "Motivo (opcional)",
+            placeholder: "¿Qué debería hacer Genos de otra manera?",
+            hint: "Genos lo lee y lo tiene en cuenta.",
+            back: "Volver",
+            counter: "{count}/{max}",
+        },
         undo: {
             chip: "No se puede deshacer",
             reasons: {
