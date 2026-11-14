@@ -2,7 +2,8 @@
  * MIP-1455 (touch targets, round 4): the tab strip's tab and close x, the graph's "Click to edit
  * dates" and legend toggle are 44px taps on a touch screen, and nothing changes with a mouse. The
  * chat list row's pin / "..." / avatar and the search box's "Open" arrow were taken OUT again
- * (a phone could not open a chat): see the chat list test below.
+ * (a phone could not open a chat) and went back in as ANCHORED hit areas (MIP-1515); their layout
+ * is proved in a real browser by `TouchTargetsChatListMIP1515.test.ts`.
  *
  * jsdom evaluates no `@media` and lays nothing out, so the CSS the components emit is read as text
  * (`cssWithMediaOf`) and the call sites that need a graph or a chat list are pinned by their
@@ -79,20 +80,22 @@ describe("call sites, by source", () => {
         expect(text).toMatch(/"@media \(pointer: coarse\)": \{ "--IconButton-size": "44px" \}/);
     });
 
-    it("chat list row: NO invisible hit areas on the pin, '...' or avatar (a phone could not open a chat)", () => {
-        // On a phone `NavItem` forces `position: static` on the row's action buttons
-        // (`ACTION_IN_FLOW`, more specific than the `position: relative` the hit-area helpers set),
-        // so the helpers' `::after` found the ROW as its containing block: 100% of the row wide,
-        // so a tap anywhere on the row hit "...". They stay off the chat list row until the hit
-        // area is built so a `position` rule elsewhere cannot move its anchor.
+    it("chat list row: only the ANCHORED hit-area helpers (the layout itself is the MIP-1515 real-browser test)", () => {
+        // MIP-1455 first used `tallHitAreaSx` / `invisibleHitAreaSx` here, and on a phone a tap
+        // anywhere on a row hit "...": `NavItem` forces `position: static` on the row's action
+        // buttons (`ACTION_IN_FLOW`), which beat the `position: relative` those helpers anchor
+        // on. The anchored variants (`contain: layout`) cannot be moved by a `position` rule.
+        // This is only a tripwire against the plain helpers coming back by a copy-paste: the proof
+        // that a tap reaches the row, the pin, the "..." and the avatar is
+        // `TouchTargetsChatListMIP1515.test.ts`, which lays the real row out in Chrome at 390px.
         for (const file of [
             "features/chat/components/sidebar/ChatListItemActions.tsx",
             "features/chat/components/sidebar/chatListItem.tsx",
             "features/chat/components/sidebar/ChatSearch.tsx",
         ]) {
             const text = source(file);
-            expect(text, file).not.toContain("tallHitAreaSx");
-            expect(text, file).not.toContain("invisibleHitAreaSx");
+            expect(text, file).not.toMatch(/\b(tall|invisible)HitAreaSx\b/);
+            expect(text, file).toMatch(/\banchored(Tall|Invisible)HitAreaSx\b/);
         }
     });
 });
