@@ -5318,6 +5318,12 @@ export const ja: DeepPartial<Messages> = {
                 apiKeyHint: "API キーから行われた操作です。Genos 上で入力されたものではありません",
                 apiKeyHintNamed:
                     "あなたの API キー「{name}」から行われた操作です。Genos 上で入力されたものではありません",
+                apps: { claude: "Claude", chatgpt: "ChatGPT" },
+                viaApp: "{app} 経由",
+                appHint:
+                    "接続された AI アプリ（{app}）から行われた操作です。Genos 上で入力されたものではありません",
+                appHintNamed:
+                    "あなたの接続アプリ「{name}」（{app}）から行われた操作です。Genos 上で入力されたものではありません",
             },
             restore: {
                 button: "以前の説明に戻す",

@@ -5,7 +5,8 @@
  * The server stamps every task change with `metadata.via` (`TaskActivity`,
  * `_record` in task_signals.py). Kinds that matter here:
  *
- *   - `oauth`   a connected app (MCP over OAuth)        -> "via MCP"
+ *   - `oauth`   a connected app (MCP over OAuth)        -> "via MCP", or the app's
+ *               own small mark when `app` is "claude" / "chatgpt" (MIP-1568)
  *   - `api_key` an API key (MCP or the public REST API;
  *               the row cannot tell which)              -> "via API key"
  *   - `app`     the web app itself (also an Undo click) -> NO chip. This is every
@@ -27,10 +28,20 @@ import type { TaskActivityProps, TaskCommentProps } from "../../../types/tasks";
 
 export type ViaKind = "mcp" | "apiKey";
 
+/** The official apps whose small mark can stand in for the generic chip (MIP-1568). */
+export type ViaApp = "claude" | "chatgpt";
+
 export type ViaSource = {
     kind: ViaKind;
     /** The key's or app's name. Present ONLY when the viewer is the owner. */
     name: string | null;
+    /**
+     * Which official AI app made the change, when the server says so (a coarse family
+     * the API derives from the registered client, for every viewer: `{ kind: "oauth",
+     * app: "claude" }`). Never the name. `null` for an API key, for any other app, for
+     * an older API and for any value this build does not know: the generic chip shows.
+     */
+    app: ViaApp | null;
 };
 
 /** A registered app name is text a stranger chose: keep it short. */
@@ -49,6 +60,14 @@ export const isOwnRow = (
     return actor !== null && me !== null && actor === me;
 };
 
+/**
+ * Only the two exact family strings count. Anything else (a stranger's spoof such as
+ * "Claude " or "claude-evil", a different case, a number, an object) is `null`, so
+ * what a viewer sees is always one of our two marks or today's generic chip.
+ */
+const parseApp = (value: unknown): ViaApp | null =>
+    value === "claude" || value === "chatgpt" ? value : null;
+
 const cleanName = (value: unknown): string | null => {
     if (typeof value !== "string") return null;
     const trimmed = value.trim();
@@ -61,12 +80,16 @@ const cleanName = (value: unknown): string | null => {
  */
 export const viaSourceFromVia = (via: unknown, ownRow: boolean): ViaSource | null => {
     if (via === null || typeof via !== "object") return null;
-    const v = via as { kind?: unknown; key_name?: unknown; client_name?: unknown };
+    const v = via as { kind?: unknown; app?: unknown; key_name?: unknown; client_name?: unknown };
     if (v.kind === "oauth") {
-        return { kind: "mcp", name: ownRow ? cleanName(v.client_name) : null };
+        return {
+            kind: "mcp",
+            name: ownRow ? cleanName(v.client_name) : null,
+            app: parseApp(v.app),
+        };
     }
     if (v.kind === "api_key") {
-        return { kind: "apiKey", name: ownRow ? cleanName(v.key_name) : null };
+        return { kind: "apiKey", name: ownRow ? cleanName(v.key_name) : null, app: null };
     }
     return null;
 };

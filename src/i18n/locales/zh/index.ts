@@ -5189,6 +5189,10 @@ export const zh: DeepPartial<Messages> = {
                 mcpHintNamed: "通过你已连接的应用“{name}”（MCP）完成，并非在 Genos 中直接输入",
                 apiKeyHint: "使用 API 密钥完成，并非在 Genos 中直接输入",
                 apiKeyHintNamed: "使用你的 API 密钥“{name}”完成，并非在 Genos 中直接输入",
+                apps: { claude: "Claude", chatgpt: "ChatGPT" },
+                viaApp: "通过 {app}",
+                appHint: "通过已连接的 AI 应用（{app}）完成，并非在 Genos 中直接输入",
+                appHintNamed: "通过你已连接的应用“{name}”（{app}）完成，并非在 Genos 中直接输入",
             },
             restore: {
                 button: "恢复之前的描述",
