@@ -4180,6 +4180,19 @@ export const zh: DeepPartial<Messages> = {
             effortHighNote: "需要更长的时间——对复杂问题进行最深入的推理。",
             effortLockedHint: "升级解锁",
         },
+        contentLength: {
+            heading: "Genos 的撰写篇幅",
+            description:
+                "Genos 为你撰写的任务、里程碑、笔记和计划的详略程度。无论选哪一档，聊天回答都保持简洁。",
+            shortLabel: "简短",
+            shortHelper: "精简的任务和笔记正文。",
+            standardLabel: "标准",
+            standardHelper: "常规篇幅，与目前一致。",
+            longLabel: "详尽",
+            longHelper: "更完整的正文和计划。",
+            saveFailed: "无法保存 Genos 的撰写篇幅，设置未更改。",
+            loadFailed: "无法加载此设置",
+        },
         privacy: {
             heading: "隐私与分析",
             description: "帮助我们了解哪些功能被使用，以便专注于真正重要的部分。",

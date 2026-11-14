@@ -4388,6 +4388,20 @@ export const fr: DeepPartial<Messages> = {
                 "Prend plus de temps – raisonnement le plus approfondi pour des questions complexes.",
             effortLockedHint: "Mettre à niveau pour débloquer",
         },
+        contentLength: {
+            heading: "Longueur des textes de Genos",
+            description:
+                "La longueur des tâches, jalons, notes et plans que Genos rédige pour vous. Les réponses du chat restent concises à tous les niveaux.",
+            shortLabel: "Court",
+            shortHelper: "Contenus de tâches et de notes concis.",
+            standardLabel: "Standard",
+            standardHelper: "La longueur habituelle, comme aujourd'hui.",
+            longLabel: "Long",
+            longHelper: "Contenus et plans plus complets.",
+            saveFailed:
+                "Impossible d'enregistrer la longueur des textes de Genos. Votre réglage n'a pas changé.",
+            loadFailed: "Impossible de charger ce réglage",
+        },
         privacy: {
             heading: "Confidentialité et analyses",
             description:

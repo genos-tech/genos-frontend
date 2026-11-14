@@ -1561,6 +1561,19 @@ export const es: DeepPartial<Messages> = {
                 "Lleva más tiempo: razonamiento más profundo para preguntas complejas.",
             effortLockedHint: "Actualizar para desbloquear",
         },
+        contentLength: {
+            heading: "Cuánto escribe Genos",
+            description:
+                "La extensión de las tareas, hitos, notas y planes que Genos escribe por ti. Las respuestas del chat se mantienen concisas en todos los niveles.",
+            shortLabel: "Corto",
+            shortHelper: "Cuerpos de tareas y notas breves.",
+            standardLabel: "Estándar",
+            standardHelper: "La extensión habitual, igual que hasta ahora.",
+            longLabel: "Largo",
+            longHelper: "Cuerpos y planes más completos.",
+            saveFailed: "No se pudo guardar cuánto escribe Genos. Tu ajuste no ha cambiado.",
+            loadFailed: "No se pudo cargar este ajuste",
+        },
         autoSyncCalendar: {
             heading: "Sincronización automática con Google Calendar",
             description:

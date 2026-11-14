@@ -4329,6 +4329,19 @@ export const ja: DeepPartial<Messages> = {
             effortHighNote: "時間がかかります - 複雑な質問に対する最も深い推論。",
             effortLockedHint: "アップグレードしてロックを解除する",
         },
+        contentLength: {
+            heading: "Genosの書く量",
+            description:
+                "Genos があなたのために書くタスク・マイルストーン・ノートの本文や計画の長さです。チャットの回答は、どのレベルでも簡潔なままです。",
+            shortLabel: "短め",
+            shortHelper: "タスクとノートの本文を簡潔にします。",
+            standardLabel: "標準",
+            standardHelper: "いつもの長さです。これまでと同じです。",
+            longLabel: "長め",
+            longHelper: "本文と計画をより詳しく書きます。",
+            saveFailed: "Genos の書く量を保存できませんでした。設定は変更されていません。",
+            loadFailed: "この設定を読み込めませんでした",
+        },
         privacy: {
             heading: "プライバシーと分析",
             description:
