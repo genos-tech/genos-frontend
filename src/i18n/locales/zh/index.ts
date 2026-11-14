@@ -79,6 +79,7 @@ export const zh: DeepPartial<Messages> = {
                     backToSignIn: "返回登录",
                 },
                 invitedEmailHint: "你正在使用邀请邮箱进行注册。",
+                providerHint: "请先勾选复选框，然后使用 {provider} 继续。",
                 consent: {
                     label: "我同意{terms}和{privacy}。",
                     terms: "服务条款",

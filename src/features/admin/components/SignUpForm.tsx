@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -32,6 +32,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
+import { parseOAuthProvider, type OAuthProvider } from "../../integrations/oauthProvider";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
 import { resendVerificationEmail } from "../services/emailVerification";
 import { signUp } from "../services/signup";
@@ -57,6 +58,8 @@ interface SignUpFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
+const PROVIDER_HINT_ID = "signup-provider-hint";
+
 export const SignUpForm = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -72,6 +75,14 @@ export const SignUpForm = () => {
     // plain signup either.
     const invitedEmail = searchParams.get("invite_email") ?? "";
     const inviteToken = invitedEmail ? (localStorage.getItem("pendingInviteToken") ?? "") : "";
+
+    // `?provider=google|github`: the person just tried that button on the
+    // sign-in page and was sent here to agree first. Only a known name counts;
+    // anything else is ignored. It highlights a button and moves focus to the
+    // box, nothing more: the box stays unticked and nothing is submitted.
+    const preselected: OAuthProvider | null = OAUTH_INTEGRATIONS_ENABLED
+        ? parseOAuthProvider(searchParams.get("provider"))
+        : null;
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [password, setPassword] = useState("");
@@ -90,6 +101,53 @@ export const SignUpForm = () => {
     const isDark = mode === "dark";
     const styles = isDark ? SignUpFormStyles.dark : SignUpFormStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
+
+    useEffect(() => {
+        if (preselected) consentRef.current?.focus();
+    }, [preselected]);
+
+    // One box, one state. Normally it sits above the submit button; when a
+    // provider is preselected it moves up beside the hint and the highlighted
+    // button, so on a phone "tick, then press" is one screen, not a scroll.
+    const consentBox = (
+        <SignUpConsent
+            ref={consentRef}
+            checked={acceptedTerms}
+            linkColor={styles.linkColor}
+            linkHover={styles.linkHover}
+            showError={consentError && !acceptedTerms}
+            errorColor={palette.dangerTint}
+            textColor={styles.labelColor}
+            onChange={(checked) => {
+                setAcceptedTerms(checked);
+                if (checked) setConsentError(false);
+            }}
+        />
+    );
+
+    // The button for the provider the person just used is the primary action;
+    // the other stays the quiet outlined one. Plain sign-up: both outlined.
+    const providerButtonProps = (name: OAuthProvider) => ({
+        variant: preselected === name ? ("solid" as const) : ("outlined" as const),
+        "aria-describedby": preselected === name ? PROVIDER_HINT_ID : undefined,
+    });
+    const providerButtonSx = (name: OAuthProvider) => ({
+        py: 1.25,
+        borderRadius: "12px",
+        fontWeight: 600,
+        fontSize: "15px",
+        ...(preselected === name
+            ? {}
+            : {
+                  borderColor: styles.inputBorder,
+                  color: styles.labelColor,
+                  background: styles.inputBg,
+                  "&:hover": {
+                      borderColor: styles.accentColor,
+                      background: `rgba(${styles.accentColorRgb}, 0.063)`,
+                  },
+              }),
+    });
 
     const validation = useMemo(() => validatePassword(password), [password]);
     const showMeter = passwordFocused || password.length > 0;
@@ -322,23 +380,24 @@ export const SignUpForm = () => {
                     <>
                         {OAUTH_INTEGRATIONS_ENABLED && (
                             <>
+                                {preselected && (
+                                    <Typography
+                                        id={PROVIDER_HINT_ID}
+                                        level="body-sm"
+                                        sx={{ color: styles.labelColor, mb: 1.25 }}
+                                        textAlign="center"
+                                    >
+                                        {fmt(t.admin.auth.signUp.providerHint, {
+                                            provider: t.admin.auth.oauth.methods[preselected],
+                                        })}
+                                    </Typography>
+                                )}
+                                {preselected && <Box sx={{ mb: 1.5 }}>{consentBox}</Box>}
                                 <Stack sx={{ gap: 1.25, mb: 2.5 }}>
                                     <Button
                                         startDecorator={<GoogleIcon />}
-                                        variant="outlined"
-                                        sx={{
-                                            py: 1.25,
-                                            borderRadius: "12px",
-                                            fontWeight: 600,
-                                            fontSize: "15px",
-                                            borderColor: styles.inputBorder,
-                                            color: styles.labelColor,
-                                            background: styles.inputBg,
-                                            "&:hover": {
-                                                borderColor: styles.accentColor,
-                                                background: `rgba(${styles.accentColorRgb}, 0.063)`,
-                                            },
-                                        }}
+                                        sx={providerButtonSx("google")}
+                                        {...providerButtonProps("google")}
                                         fullWidth
                                         onClick={() => {
                                             if (requireConsent()) {
@@ -350,20 +409,8 @@ export const SignUpForm = () => {
                                     </Button>
                                     <Button
                                         startDecorator={<GitHubIcon sx={{ fontSize: 20 }} />}
-                                        variant="outlined"
-                                        sx={{
-                                            py: 1.25,
-                                            borderRadius: "12px",
-                                            fontWeight: 600,
-                                            fontSize: "15px",
-                                            borderColor: styles.inputBorder,
-                                            color: styles.labelColor,
-                                            background: styles.inputBg,
-                                            "&:hover": {
-                                                borderColor: styles.accentColor,
-                                                background: `rgba(${styles.accentColorRgb}, 0.063)`,
-                                            },
-                                        }}
+                                        sx={providerButtonSx("github")}
+                                        {...providerButtonProps("github")}
                                         fullWidth
                                         onClick={() => {
                                             if (requireConsent()) {
@@ -651,19 +698,7 @@ export const SignUpForm = () => {
                                     />
                                 </FormControl>
 
-                                <SignUpConsent
-                                    ref={consentRef}
-                                    checked={acceptedTerms}
-                                    linkColor={styles.linkColor}
-                                    linkHover={styles.linkHover}
-                                    showError={consentError && !acceptedTerms}
-                                    errorColor={palette.dangerTint}
-                                    textColor={styles.labelColor}
-                                    onChange={(checked) => {
-                                        setAcceptedTerms(checked);
-                                        if (checked) setConsentError(false);
-                                    }}
-                                />
+                                {!preselected && consentBox}
 
                                 <Button
                                     size="lg"

@@ -74,6 +74,7 @@ export const admin = {
                 backToSignIn: "Back to sign in",
             },
             invitedEmailHint: "You're signing up with your invited email.",
+            providerHint: "Tick the box, then continue with {provider}.",
             consent: {
                 label: "I agree to the {terms} and the {privacy}.",
                 terms: "Terms of Service",

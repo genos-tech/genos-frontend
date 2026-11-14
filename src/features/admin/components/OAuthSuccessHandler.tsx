@@ -13,6 +13,11 @@ import { authApi } from "../../../services/api";
 import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { takeReturn } from "../../../utils/pendingReturn";
+import {
+    forgetRememberedOAuthProvider,
+    peekRememberedOAuthProvider,
+    signUpPathFor,
+} from "../../integrations/oauthProvider";
 
 interface MeResponse {
     id: string;
@@ -49,6 +54,10 @@ export const OAuthSuccessHandler = () => {
     // Set when the refusal is "agree to the Terms first": the way forward is the
     // sign-up page, where the checkbox is, not the sign-in page.
     const [needsTerms, setNeedsTerms] = useState(false);
+    // The provider button the person pressed on the sign-in page (the redirect
+    // does not name it), so sign-up can highlight the same one. Read, not
+    // taken: the click handler clears it, so a re-run reads the same value.
+    const [provider, setProvider] = useState(peekRememberedOAuthProvider);
     const oauth = t.admin.auth.oauth;
 
     const failureMessage = (reason: string, primary: string | null): string => {
@@ -74,6 +83,11 @@ export const OAuthSuccessHandler = () => {
         if (failureFromQuery) {
             setError(failureMessage(failureFromQuery, query.get("primary")));
             setNeedsTerms(failureFromQuery === "terms_required");
+            // Any other refusal is a dead end for the hint; forget it.
+            if (failureFromQuery !== "terms_required") {
+                forgetRememberedOAuthProvider();
+                setProvider(null);
+            }
             return;
         }
 
@@ -96,6 +110,8 @@ export const OAuthSuccessHandler = () => {
         // after we navigate away. History replaceState is silent —
         // no extra browser history entry.
         window.history.replaceState({}, "", window.location.pathname);
+        // A sign-in that worked has no use for the hint.
+        forgetRememberedOAuthProvider();
 
         const completeSession = async () => {
             const api = authApi(access);
@@ -194,7 +210,10 @@ export const OAuthSuccessHandler = () => {
                         {needsTerms ? (
                             <Button
                                 size="lg"
-                                onClick={() => navigate("/signup", { replace: true })}
+                                onClick={() => {
+                                    forgetRememberedOAuthProvider();
+                                    navigate(signUpPathFor(provider), { replace: true });
+                                }}
                             >
                                 {oauth.goToSignUp}
                             </Button>
