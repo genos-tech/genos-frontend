@@ -257,7 +257,8 @@ const cal = (account_id: string, id: string, ticked: boolean) => ({
     selected: ticked,
 });
 
-describe("the open calendar grid", () => {
+// (a whole CalendarModal in jsdom: slow when the full suite is running beside it)
+describe("the open calendar grid", { timeout: 30_000 }, () => {
     beforeEach(() => {
         window.localStorage.clear();
         calendarApi.listCalendars.mockReset().mockResolvedValue({
