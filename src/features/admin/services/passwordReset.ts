@@ -35,23 +35,41 @@ export const requestPasswordReset = async (
 };
 
 /**
+ * Did the reset end any connected AI app or API key? A reset now ends all of them and the
+ * confirm response carries only the counts: `{connections_ended, api_keys_revoked}`. An older
+ * API answers with an empty body, so anything that is not a count (nothing, "", a string, a
+ * negative or a non-finite number) counts as zero and the caller shows no notice.
+ */
+export const credentialsWereEnded = (data: unknown): boolean => {
+    if (data === null || typeof data !== "object") return false;
+    const { connections_ended, api_keys_revoked } = data as Record<string, unknown>;
+    const count = (n: unknown) => (typeof n === "number" && Number.isFinite(n) && n > 0 ? n : 0);
+    return count(connections_ended) + count(api_keys_revoked) > 0;
+};
+
+export interface PasswordResetOutcome {
+    /** The reset ended at least one connected AI app or API key. */
+    credentialsEnded: boolean;
+}
+
+/**
  * Step 2 of the reset flow: submit the token from the email plus the
- * new password. Returns true on success. On a 400 the backend's
- * `detail` message is surfaced verbatim (covers invalid/expired token
- * and Django password-validator failures).
+ * new password. Returns the outcome on success and `null` on failure. On a 400
+ * the backend's `detail` message is surfaced verbatim (covers invalid/expired
+ * token and Django password-validator failures).
  */
 export const confirmPasswordReset = async (
     token: string,
     newPassword: string,
     setErrorMessage?: (value: string) => void
-): Promise<boolean> => {
+): Promise<PasswordResetOutcome | null> => {
     try {
         const api = nonAuthApi();
-        await api.post("/user/password-reset/confirm/", {
+        const res = await api.post("/user/password-reset/confirm/", {
             token,
             new_password: newPassword,
         });
-        return true;
+        return { credentialsEnded: credentialsWereEnded(res?.data) };
     } catch (error: unknown) {
         const m = getMessages().admin.auth.errors;
         if (axios.isAxiosError(error)) {
@@ -69,6 +87,6 @@ export const confirmPasswordReset = async (
             console.error("Unexpected error:", error);
             setErrorMessage?.(m.unexpected);
         }
-        return false;
+        return null;
     }
 };

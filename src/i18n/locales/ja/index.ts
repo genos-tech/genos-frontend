@@ -109,6 +109,9 @@ export const ja: DeepPartial<Messages> = {
                     "この再設定リンクは無効か、有効期限が切れています。サインイン画面から新しいリンクをリクエストしてください。",
                 invalidToken: "この再設定リンクは無効か、有効期限が切れています。",
                 backToSignIn: "サインインに戻る",
+                credentialsEnded:
+                    "接続していた AI アプリと API キーはすべて終了しました。必要に応じて、アプリを再接続し、新しい API キーを作成してください。",
+                signInNow: "今すぐサインイン",
             },
             emailVerification: {
                 verifyingTitle: "メールアドレスを確認しています…",
@@ -3505,6 +3508,7 @@ export const ja: DeepPartial<Messages> = {
                 blurb: "メンバーが接続した、このチームで動作できる Claude や ChatGPT などの AI アプリです。オーナーはすべて、編集者は閲覧者のものを終了できます。終了するとこのチームだけが外れ、その人のほかのチームはそのまま使えます。",
                 empty: "このチームに接続されている AI アプリはありません。",
                 connectedBy: "接続した人: {name}",
+                unknownMember: "メンバー",
                 otherTeams: "ほか {count, plural, one {# チーム} other {# チーム}}でも使用",
                 end: "このチームへのアクセスを終了",
                 endNamed: "{name} の {app} を終了",

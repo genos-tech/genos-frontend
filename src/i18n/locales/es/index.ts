@@ -1375,6 +1375,7 @@ export const es: DeepPartial<Messages> = {
                 blurb: "Claude, ChatGPT y otras apps de IA que los miembros conectaron y que pueden trabajar en este equipo. El propietario puede terminar cualquiera; un editor, las de un lector. Terminarla quita solo este equipo: los demás equipos de esa persona siguen funcionando.",
                 empty: "No hay apps de IA conectadas a este equipo.",
                 connectedBy: "Conectada por {name}",
+                unknownMember: "un miembro del equipo",
                 otherTeams:
                     "también en {count, plural, one {# otro equipo} other {# otros equipos}}",
                 end: "Terminar el acceso a este equipo",
@@ -4410,6 +4411,9 @@ export const es: DeepPartial<Messages> = {
                     "Este enlace de restablecimiento no es válido o ha caducado. Solicite uno nuevo desde la página de inicio de sesión.",
                 invalidToken: "Este enlace de restablecimiento no es válido o ha caducado.",
                 backToSignIn: "Volver para iniciar sesión",
+                credentialsEnded:
+                    "Tus apps de IA conectadas y tus claves de API han terminado. Vuelve a conectar tus apps y crea claves nuevas cuando las necesites.",
+                signInNow: "Iniciar sesión ahora",
             },
             emailVerification: {
                 verifyingTitle: "Verificando tu correo electrónico...",

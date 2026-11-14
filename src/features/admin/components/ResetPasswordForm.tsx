@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
@@ -28,6 +29,8 @@ import { purplePalette } from "../../../theme/purplePalette";
 import { confirmPasswordReset } from "../services/passwordReset";
 import { validatePassword } from "../utils/passwordValidation";
 
+const CREDENTIALS_NOTICE_REDIRECT_MS = 10000;
+
 export const ResetPasswordForm = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -42,6 +45,9 @@ export const ResetPasswordForm = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [succeeded, setSucceeded] = useState(false);
+    // The reset also ended the member's connected AI apps and API keys: say so, because they
+    // will otherwise find their apps silently disconnected.
+    const [credentialsEnded, setCredentialsEnded] = useState(false);
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -78,12 +84,16 @@ export const ResetPasswordForm = () => {
     ];
 
     // After a successful reset show a brief confirmation then bounce
-    // the user to /signin so they can log in with the new password.
+    // the user to /signin so they can log in with the new password. With the notice about
+    // ended apps and keys there is something to read, so wait longer and offer a button.
     useEffect(() => {
         if (!succeeded) return;
-        const handle = setTimeout(() => navigate("/signin"), 1500);
+        const handle = setTimeout(
+            () => navigate("/signin"),
+            credentialsEnded ? CREDENTIALS_NOTICE_REDIRECT_MS : 1500
+        );
         return () => clearTimeout(handle);
-    }, [succeeded, navigate]);
+    }, [succeeded, credentialsEnded, navigate]);
 
     const inputStyle = {
         "--Input-focusedThickness": "2px",
@@ -193,9 +203,27 @@ export const ResetPasswordForm = () => {
                         </Link>
                     </Stack>
                 ) : succeeded ? (
-                    <Stack alignItems="center" sx={{ py: 2 }}>
-                        <Spinner size="lg" />
-                    </Stack>
+                    credentialsEnded ? (
+                        <Stack spacing={2}>
+                            <Alert
+                                color="primary"
+                                data-testid="reset-credentials-ended"
+                                role="status"
+                                startDecorator={<InfoOutlinedIcon />}
+                                sx={{ borderRadius: "12px", alignItems: "flex-start" }}
+                                variant="soft"
+                            >
+                                {t.admin.auth.passwordReset.credentialsEnded}
+                            </Alert>
+                            <Button fullWidth size="lg" onClick={() => navigate("/signin")}>
+                                {t.admin.auth.passwordReset.signInNow}
+                            </Button>
+                        </Stack>
+                    ) : (
+                        <Stack alignItems="center" sx={{ py: 2 }}>
+                            <Spinner size="lg" />
+                        </Stack>
+                    )
                 ) : (
                     <form
                         onSubmit={async (event: React.FormEvent<HTMLFormElement>) => {
@@ -210,13 +238,16 @@ export const ResetPasswordForm = () => {
                                 return;
                             }
                             setSubmitting(true);
-                            const ok = await confirmPasswordReset(
+                            const outcome = await confirmPasswordReset(
                                 token,
                                 password,
                                 setErrorMessage
                             );
                             setSubmitting(false);
-                            if (ok) setSucceeded(true);
+                            if (outcome) {
+                                setCredentialsEnded(outcome.credentialsEnded);
+                                setSucceeded(true);
+                            }
                         }}
                     >
                         <Stack sx={{ gap: 2.5 }}>

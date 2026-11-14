@@ -106,6 +106,9 @@ export const zh: DeepPartial<Messages> = {
                 missingToken: "此重置链接无效或已过期。从登录页面请求一个新的。",
                 invalidToken: "此重置链接无效或已过期。",
                 backToSignIn: "返回登录",
+                credentialsEnded:
+                    "你已连接的 AI 应用和 API 密钥均已终止。需要时，请重新连接应用并创建新的密钥。",
+                signInNow: "立即登录",
             },
             emailVerification: {
                 verifyingTitle: "正在验证你的邮箱…",
@@ -3390,6 +3393,7 @@ export const zh: DeepPartial<Messages> = {
                 blurb: "成员连接的、可在此团队中工作的 Claude、ChatGPT 等 AI 应用。所有者可终止任意一个，编辑可终止查看者的。终止只会移除此团队，该成员的其他团队不受影响。",
                 empty: "此团队没有已连接的 AI 应用。",
                 connectedBy: "连接者：{name}",
+                unknownMember: "某位成员",
                 otherTeams: "另有 {count, plural, one {# 个团队} other {# 个团队}}",
                 end: "终止对此团队的访问",
                 endNamed: "终止 {name} 的 {app}",

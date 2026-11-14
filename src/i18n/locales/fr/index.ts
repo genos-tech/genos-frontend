@@ -115,6 +115,9 @@ export const fr: DeepPartial<Messages> = {
                     "Ce lien de réinitialisation n'est pas valide ou a expiré. Demandez-en un nouveau depuis la page de connexion.",
                 invalidToken: "Ce lien de réinitialisation n'est pas valide ou a expiré.",
                 backToSignIn: "Retour pour vous connecter",
+                credentialsEnded:
+                    "Vos apps d’IA connectées et vos clés d’API ont été révoquées. Reconnectez vos apps et créez de nouvelles clés quand vous en avez besoin.",
+                signInNow: "Se connecter maintenant",
             },
             emailVerification: {
                 verifyingTitle: "Vérification de votre adresse e-mail…",
@@ -3546,6 +3549,7 @@ export const fr: DeepPartial<Messages> = {
                 blurb: "Claude, ChatGPT et autres apps d’IA que des membres ont connectées et qui peuvent travailler dans cette équipe. Le propriétaire peut mettre fin à n’importe laquelle ; un éditeur, à celles d’un lecteur. Cela retire seulement cette équipe : les autres équipes de la personne continuent de fonctionner.",
                 empty: "Aucune app d’IA n’est connectée à cette équipe.",
                 connectedBy: "Connectée par {name}",
+                unknownMember: "un membre de l’équipe",
                 otherTeams:
                     "aussi dans {count, plural, one {# autre équipe} other {# autres équipes}}",
                 end: "Mettre fin à l’accès à cette équipe",
