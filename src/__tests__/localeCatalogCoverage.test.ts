@@ -96,6 +96,8 @@ const ARABIC_SAME_AS_ENGLISH_OK: Record<string, string> = {
     "settings.language.english": "a language is named in its own language",
     "settings.language.spanish": "a language is named in its own language",
     "settings.language.french": "a language is named in its own language",
+    "settings.connectedApps.connect.claudeCodeTitle": "the product name Claude Code",
+    "settings.connectedApps.connect.chatgptTitle": "the product name ChatGPT",
     "common.editor.emojiTypingHint": "the literal `:+typing` trigger the user types",
     "settings.developer.webhooks.urlPlaceholder": "an example URL",
     "tasks.linkedPr.paste": "an example URL",
