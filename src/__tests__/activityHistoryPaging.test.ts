@@ -267,3 +267,148 @@ describe("the worker handler stores every row of a long history", () => {
         expect(stored.map((a) => a.activityId)).toEqual(["keep-me"]);
     });
 });
+
+/**
+ * MIP-1559: the feed's `tombstones` (api #846, MIP-1513). A row a client cached
+ * before the member lost access to its chat is older than the next `since`, so
+ * the incremental sync never re-fetches it; the server names its id instead and
+ * the loader turns each id into an `isDeleted` stub for the applier.
+ */
+describe("loadActivityHistory turns tombstones into deletes", () => {
+    beforeEach(() => {
+        vi.mocked(axios.get).mockReset();
+    });
+
+    const respond = (...bodies: Record<string, unknown>[]) => {
+        const mock = vi.mocked(axios.get);
+        for (const data of bodies) {
+            mock.mockResolvedValueOnce({ data: { server_time: "t", ...data } } as never);
+        }
+    };
+
+    it("appends each id as a stub AFTER the adapted rows", async () => {
+        respond({ activities: [wire(1)], tombstones: ["gone-1", "gone-2"] });
+
+        const res = await loadActivityHistory(myself, "tok", "2026-07-01T00:00:00Z");
+
+        expect(res?.activity.map((a) => a.activityId)).toEqual(["a-1", "gone-1", "gone-2"]);
+        expect(res?.activity[1]).toEqual({ activityId: "gone-1", isDeleted: true });
+        expect(res?.activity[0].isDeleted).toBeUndefined();
+    });
+
+    it("reads them from the first page only", async () => {
+        respond(
+            { activities: [wire(1)], tombstones: ["gone-1"], has_more: true, next_cursor: "1" },
+            { activities: [wire(2)], tombstones: ["late-1"] }
+        );
+
+        const res = await loadActivityHistory(myself, "tok", "2026-07-01T00:00:00Z");
+
+        expect(res?.activity.map((a) => a.activityId)).toEqual(["a-1", "a-2", "gone-1"]);
+    });
+
+    it.each([
+        ["missing", undefined],
+        ["empty", []],
+        ["null", null],
+        ["not a list", "gone-1"],
+        ["an object", { 0: "gone-1" }],
+    ])("keeps today's behaviour when tombstones is %s", async (_label, tombstones) => {
+        respond({ activities: [wire(1), wire(2)], tombstones });
+
+        const res = await loadActivityHistory(myself, "tok", "2026-07-01T00:00:00Z");
+
+        expect(res?.activity.map((a) => a.activityId)).toEqual(["a-1", "a-2"]);
+        expect(res?.activity.some((a) => a.isDeleted)).toBe(false);
+    });
+
+    it("skips entries that are not ids", async () => {
+        respond({ activities: [], tombstones: ["gone-1", "", null, 7, { id: "x" }] });
+
+        const res = await loadActivityHistory(myself, "tok", "2026-07-01T00:00:00Z");
+
+        expect(res?.activity).toEqual([{ activityId: "gone-1", isDeleted: true }]);
+    });
+});
+
+describe("the worker handler applies tombstones", () => {
+    const service = () => new ActivityService();
+    const ids = async () =>
+        (await service().getAllActivityMessages()).map((a) => a.activityId).sort();
+
+    beforeEach(async () => {
+        vi.mocked(axios.get).mockReset();
+        await deleteDB(DB_NAME);
+    });
+
+    /** The first sync (no checkpoint, so a full load) that caches a-1..a-3. */
+    const firstSync = async () => {
+        serve(3, 10);
+        await activityHandlers.loadActivityHistory({ myself, accessToken: "tok" } as never);
+        expect(await ids()).toEqual(["a-1", "a-2", "a-3"]);
+        vi.mocked(axios.get).mockReset();
+    };
+
+    it("removes a tombstoned row from the store on an incremental sync", async () => {
+        await firstSync();
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: { activities: [], tombstones: ["a-2"], server_time: "2026-08-04T00:00:09Z" },
+        } as never);
+
+        await activityHandlers.loadActivityHistory({ myself, accessToken: "tok" } as never);
+
+        // It was an incremental request, not a full reload.
+        expect(urlOf(0)).toContain("since=2026-08-04T00%3A00%3A01Z");
+        expect(await ids()).toEqual(["a-1", "a-3"]);
+    });
+
+    it("keeps every row when tombstones is missing or empty", async () => {
+        await firstSync();
+        vi.mocked(axios.get)
+            .mockResolvedValueOnce({
+                data: { activities: [], server_time: "2026-08-04T00:00:09Z" },
+            } as never)
+            .mockResolvedValueOnce({
+                data: { activities: [], tombstones: [], server_time: "2026-08-04T00:00:10Z" },
+            } as never);
+
+        await activityHandlers.loadActivityHistory({ myself, accessToken: "tok" } as never);
+        await activityHandlers.loadActivityHistory({ myself, accessToken: "tok" } as never);
+
+        expect(await ids()).toEqual(["a-1", "a-2", "a-3"]);
+    });
+
+    it("an id the store does not hold is a no-op, and the rest of the page still lands", async () => {
+        await firstSync();
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: {
+                activities: [wire(4)],
+                tombstones: ["never-cached"],
+                server_time: "2026-08-04T00:00:09Z",
+            },
+        } as never);
+
+        await activityHandlers.loadActivityHistory({ myself, accessToken: "tok" } as never);
+
+        expect(await ids()).toEqual(["a-1", "a-2", "a-3", "a-4"]);
+    });
+
+    it("a full reload still ends up without the tombstoned row", async () => {
+        await firstSync();
+        vi.mocked(axios.get).mockResolvedValueOnce({
+            data: {
+                activities: [wire(1), wire(3)],
+                tombstones: ["a-2"],
+                server_time: "2026-08-04T00:00:09Z",
+            },
+        } as never);
+
+        await activityHandlers.loadActivityHistory({
+            myself,
+            accessToken: "tok",
+            forceFull: true,
+        } as never);
+
+        expect(await ids()).toEqual(["a-1", "a-3"]);
+    });
+});
