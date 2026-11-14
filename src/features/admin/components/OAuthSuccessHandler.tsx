@@ -46,6 +46,9 @@ export const OAuthSuccessHandler = () => {
     const styles = isDark ? SignInFormStyles.dark : SignInFormStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [error, setError] = useState<string | null>(null);
+    // Set when the refusal is "agree to the Terms first": the way forward is the
+    // sign-up page, where the checkbox is, not the sign-in page.
+    const [needsTerms, setNeedsTerms] = useState(false);
     const oauth = t.admin.auth.oauth;
 
     const failureMessage = (reason: string, primary: string | null): string => {
@@ -70,6 +73,7 @@ export const OAuthSuccessHandler = () => {
         const failureFromQuery = query.get("error");
         if (failureFromQuery) {
             setError(failureMessage(failureFromQuery, query.get("primary")));
+            setNeedsTerms(failureFromQuery === "terms_required");
             return;
         }
 
@@ -187,9 +191,21 @@ export const OAuthSuccessHandler = () => {
                         >
                             {error}
                         </Alert>
-                        <Button size="lg" onClick={() => navigate("/signin", { replace: true })}>
-                            {oauth.backToSignIn}
-                        </Button>
+                        {needsTerms ? (
+                            <Button
+                                size="lg"
+                                onClick={() => navigate("/signup", { replace: true })}
+                            >
+                                {oauth.goToSignUp}
+                            </Button>
+                        ) : (
+                            <Button
+                                size="lg"
+                                onClick={() => navigate("/signin", { replace: true })}
+                            >
+                                {oauth.backToSignIn}
+                            </Button>
+                        )}
                     </Stack>
                 ) : (
                     <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>

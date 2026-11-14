@@ -74,6 +74,14 @@ export const admin = {
                 backToSignIn: "Back to sign in",
             },
             invitedEmailHint: "You're signing up with your invited email.",
+            consent: {
+                label: "I agree to the {terms} and the {privacy}.",
+                terms: "Terms of Service",
+                privacy: "Privacy Policy",
+                required:
+                    "Please agree to the Terms of Service and the Privacy Policy to create an account.",
+                opensInNewTab: "(opens in a new tab)",
+            },
         },
         forgotPassword: {
             title: "Forgot Password?",
@@ -143,6 +151,8 @@ export const admin = {
                 provider_already_connected:
                     "You already have an account connected for this provider. Disconnect it first.",
                 unknown_provider: "Unknown OAuth provider.",
+                terms_required:
+                    "To create an account, first agree to the Terms of Service and the Privacy Policy on the sign-up page.",
                 fallback: "OAuth flow failed.",
             },
             methods: {
@@ -157,6 +167,7 @@ export const admin = {
             profileFailed: "Could not load your user profile.",
             title: "Sign-in failed",
             backToSignIn: "Back to sign in",
+            goToSignUp: "Go to sign up",
             finishing: "Finishing sign-in…",
         },
     },

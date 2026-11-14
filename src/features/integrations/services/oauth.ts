@@ -23,11 +23,24 @@ const apiBase = (): string => (import.meta.env.VITE_API_BASE_URL as string).repl
 // a team, and existing users either auto-redirect from there or pick
 // from their team list. Landing on `/workspace/*` directly would crash
 // because the team-scoped endpoints expect a `teamId` in localStorage.
-export const oauthLoginUrl = (provider: "google" | "github", next = "/jointeam"): string =>
-    `${apiBase()}/oauth/${provider}/initiate/?intent=login&next=${encodeURIComponent(next)}`;
+//
+// `acceptedTerms` is the sign-up screen's consent checkbox. The server carries
+// it through the provider round trip and needs it to create a NEW account;
+// signing in to an existing one never asks. Only the sign-up screen sets it.
+export const oauthLoginUrl = (
+    provider: "google" | "github",
+    next = "/jointeam",
+    acceptedTerms = false
+): string =>
+    `${apiBase()}/oauth/${provider}/initiate/?intent=login&next=${encodeURIComponent(next)}` +
+    (acceptedTerms ? "&accepted_terms=true" : "");
 
-export const redirectToOAuthLogin = (provider: "google" | "github", next?: string): void => {
-    window.location.href = oauthLoginUrl(provider, next);
+export const redirectToOAuthLogin = (
+    provider: "google" | "github",
+    next?: string,
+    acceptedTerms?: boolean
+): void => {
+    window.location.href = oauthLoginUrl(provider, next, acceptedTerms);
 };
 
 /**

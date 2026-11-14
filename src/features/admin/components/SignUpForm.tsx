@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -38,6 +38,7 @@ import { signUp } from "../services/signup";
 import { validatePassword } from "../utils/passwordValidation";
 import { GoogleIcon } from "./icons/GoogleIcon";
 import { LanguageSwitchButton } from "./LanguageSwitchButton";
+import { SignUpConsent } from "./SignUpConsent";
 
 const maskEmail = (email: string): string => {
     const [local, domain] = email.split("@");
@@ -80,6 +81,11 @@ export const SignUpForm = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [verificationSentTo, setVerificationSentTo] = useState<string | null>(null);
     const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
+    // The "I agree to the Terms and the Privacy Policy" box. Unchecked until the
+    // person ticks it; one box covers the form and the Google/GitHub buttons.
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [consentError, setConsentError] = useState(false);
+    const consentRef = useRef<HTMLInputElement>(null);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? SignUpFormStyles.dark : SignUpFormStyles.light;
@@ -115,13 +121,24 @@ export const SignUpForm = () => {
         { ok: validation.number, label: t.admin.auth.signUp.passwordRequirements.number },
     ];
 
+    // True when the box is ticked. Otherwise shows the error, moves focus to the
+    // box (so a keyboard or screen-reader user lands on what to fix) and says no.
+    const requireConsent = (): boolean => {
+        if (acceptedTerms) return true;
+        setConsentError(true);
+        consentRef.current?.focus();
+        consentRef.current?.scrollIntoView?.({ block: "center" });
+        return false;
+    };
+
     const _signup = async (username: string, email: string, password: string) => {
         const signUpRes = await signUp(
             username,
             email,
             password,
             setErrorMessage,
-            inviteToken || undefined
+            inviteToken || undefined,
+            acceptedTerms
         );
         if (signUpRes && "access" in signUpRes) {
             // Invite signup: the backend auto-verified the email and issued
@@ -323,7 +340,11 @@ export const SignUpForm = () => {
                                             },
                                         }}
                                         fullWidth
-                                        onClick={() => redirectToOAuthLogin("google")}
+                                        onClick={() => {
+                                            if (requireConsent()) {
+                                                redirectToOAuthLogin("google", undefined, true);
+                                            }
+                                        }}
                                     >
                                         {t.admin.auth.signIn.continueWithGoogle}
                                     </Button>
@@ -344,7 +365,11 @@ export const SignUpForm = () => {
                                             },
                                         }}
                                         fullWidth
-                                        onClick={() => redirectToOAuthLogin("github")}
+                                        onClick={() => {
+                                            if (requireConsent()) {
+                                                redirectToOAuthLogin("github", undefined, true);
+                                            }
+                                        }}
                                     >
                                         {t.admin.auth.signIn.continueWithGithub}
                                     </Button>
@@ -371,6 +396,7 @@ export const SignUpForm = () => {
                                     setErrorMessage(t.admin.auth.signUp.passwordMismatch);
                                     return;
                                 }
+                                if (!requireConsent()) return;
                                 _signup(name, email, password);
                             }}
                         >
@@ -624,6 +650,19 @@ export const SignUpForm = () => {
                                         onChange={(e) => setConfirmPassword(e.target.value)}
                                     />
                                 </FormControl>
+
+                                <SignUpConsent
+                                    ref={consentRef}
+                                    checked={acceptedTerms}
+                                    linkColor={styles.linkColor}
+                                    linkHover={styles.linkHover}
+                                    showError={consentError && !acceptedTerms}
+                                    textColor={styles.labelColor}
+                                    onChange={(checked) => {
+                                        setAcceptedTerms(checked);
+                                        if (checked) setConsentError(false);
+                                    }}
+                                />
 
                                 <Button
                                     size="lg"

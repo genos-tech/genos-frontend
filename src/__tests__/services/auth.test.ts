@@ -66,6 +66,7 @@ describe("signUp", () => {
             username: "newuser",
             email: "new@test.com",
             password: "pass123",
+            accepted_terms: false,
         });
         // The page never asks for a system user: the server makes a project's own.
         expect(mockPost.mock.calls[0][1]).not.toHaveProperty("is_system_user");
@@ -85,5 +86,31 @@ describe("signUp", () => {
         const setError = vi.fn();
         await signUp("user", "dup@test.com", "pass", setError);
         expect(setError).toHaveBeenCalledWith("Please try with a different email.");
+    });
+
+    it("sends accepted_terms=true when the form's checkbox was ticked", async () => {
+        const mockPost = vi.fn().mockResolvedValue({ data: {} });
+        (nonAuthApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
+
+        await signUp("newuser", "new@test.com", "pass123", undefined, undefined, true);
+
+        expect(mockPost.mock.calls[0][1]).toMatchObject({ accepted_terms: true });
+    });
+
+    it("explains a terms_not_accepted refusal instead of blaming the email", async () => {
+        const mockPost = vi.fn().mockRejectedValue({
+            isAxiosError: true,
+            response: { status: 400, data: { code: "terms_not_accepted" } },
+        });
+        (nonAuthApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
+
+        const axios = await import("axios");
+        vi.spyOn(axios.default, "isAxiosError").mockReturnValue(true);
+
+        const setError = vi.fn();
+        await signUp("user", "u@test.com", "pass", setError);
+        expect(setError).toHaveBeenCalledWith(
+            "Please agree to the Terms of Service and the Privacy Policy to create an account."
+        );
     });
 });

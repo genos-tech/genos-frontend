@@ -79,6 +79,13 @@ export const zh: DeepPartial<Messages> = {
                     backToSignIn: "返回登录",
                 },
                 invitedEmailHint: "你正在使用邀请邮箱进行注册。",
+                consent: {
+                    label: "我同意{terms}和{privacy}。",
+                    terms: "服务条款",
+                    privacy: "隐私政策",
+                    required: "请先同意服务条款和隐私政策，才能创建账号。",
+                    opensInNewTab: "（在新标签页中打开）",
+                },
             },
             forgotPassword: {
                 title: "忘记密码？",
@@ -142,6 +149,7 @@ export const zh: DeepPartial<Messages> = {
                     not_a_login_account: "该账号仅用于日历访问而连接，因此无法让你登录。",
                     provider_already_connected: "你已经有一个为此提供商连接的账号。先断开它。",
                     unknown_provider: "未知的 OAuth 提供商。",
+                    terms_required: "创建账号前，请先在注册页面同意服务条款和隐私政策。",
                     fallback: "OAuth 流程失败。",
                 },
                 methods: {
@@ -155,6 +163,7 @@ export const zh: DeepPartial<Messages> = {
                 profileFailed: "无法加载你的用户个人资料。",
                 title: "登录失败",
                 backToSignIn: "返回登录",
+                goToSignUp: "前往注册",
                 finishing: "正在完成登录…",
             },
         },

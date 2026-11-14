@@ -84,6 +84,14 @@ export const fr: DeepPartial<Messages> = {
                     backToSignIn: "Retour pour me connecter",
                 },
                 invitedEmailHint: "Vous vous inscrivez avec votre e-mail d'invitation.",
+                consent: {
+                    label: "J'accepte les {terms} et la {privacy}.",
+                    terms: "Conditions d'utilisation",
+                    privacy: "Politique de confidentialité",
+                    required:
+                        "Pour créer un compte, vous devez accepter les Conditions d'utilisation et la Politique de confidentialité.",
+                    opensInNewTab: "(s'ouvre dans un nouvel onglet)",
+                },
             },
             forgotPassword: {
                 title: "Mot de passe oublié ?",
@@ -158,6 +166,8 @@ export const fr: DeepPartial<Messages> = {
                     provider_already_connected:
                         "Vous disposez déjà d'un compte connecté pour ce fournisseur. Déconnectez-le d'abord.",
                     unknown_provider: "Fournisseur OAuth inconnu.",
+                    terms_required:
+                        "Pour créer un compte, acceptez d'abord les Conditions d'utilisation et la Politique de confidentialité sur la page d'inscription.",
                     fallback: "Le flux OAuth a échoué.",
                 },
                 methods: {
@@ -172,6 +182,7 @@ export const fr: DeepPartial<Messages> = {
                 profileFailed: "Impossible de charger votre profil utilisateur.",
                 title: "Échec de la connexion",
                 backToSignIn: "Retour pour me connecter",
+                goToSignUp: "Aller à l'inscription",
                 finishing: "Fin de la connexion…",
             },
         },

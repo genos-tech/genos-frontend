@@ -79,6 +79,14 @@ export const ja: DeepPartial<Messages> = {
                     backToSignIn: "サインインに戻る",
                 },
                 invitedEmailHint: "招待メールを使用してサインアップしています。",
+                consent: {
+                    label: "{terms}と{privacy}に同意します。",
+                    terms: "利用規約",
+                    privacy: "プライバシーポリシー",
+                    required:
+                        "アカウントを作成するには、利用規約とプライバシーポリシーへの同意が必要です。",
+                    opensInNewTab: "（新しいタブで開きます）",
+                },
             },
             forgotPassword: {
                 title: "パスワードをお忘れですか？",
@@ -153,6 +161,8 @@ export const ja: DeepPartial<Messages> = {
                     provider_already_connected:
                         "このプロバイダーに接続されたアカウントがすでにあります。まず接続を外してください。",
                     unknown_provider: "不明な OAuth プロバイダーです。",
+                    terms_required:
+                        "アカウントを作成するには、まずサインアップ画面で利用規約とプライバシーポリシーに同意してください。",
                     fallback: "OAuth フローが失敗しました。",
                 },
                 methods: {
@@ -167,6 +177,7 @@ export const ja: DeepPartial<Messages> = {
                 profileFailed: "ユーザープロファイルをロードできませんでした。",
                 title: "サインインに失敗しました",
                 backToSignIn: "サインインに戻る",
+                goToSignUp: "サインアップへ",
                 finishing: "サインインを終了しています…",
             },
         },
