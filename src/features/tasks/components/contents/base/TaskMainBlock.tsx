@@ -548,8 +548,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // milestone's collaborators are judged on project membership alone.
     // The project's owner is known without a request once its field rules are
     // loaded for THIS project; until then the roster has to carry them.
+    // The working copy's project (the picker can change it), or the open one
+    // while the copy has none yet, so the roster is still read.
+    const collaboratorProjectId =
+        taskContent.project?.projectId ?? usePM.currentProject?.projectId;
     const collaboratorOwnerId =
-        useTM.taskFieldRules?.projectId === taskContent.project?.projectId
+        useTM.taskFieldRules?.projectId === collaboratorProjectId
             ? useTM.taskFieldRules?.ownerUserId
             : null;
     const holderIds = collaboratorHolderIds({
@@ -723,7 +727,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             myself={myself}
                             ownerUserId={collaboratorOwnerId}
                             placeholder={t.tasks.picker.addCollaborators}
-                            projectId={taskContent.project?.projectId}
+                            projectId={collaboratorProjectId}
                             selected={taskContent.collaborators ?? []}
                             setMyself={setMyself}
                             socket={socket}
