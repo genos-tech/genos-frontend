@@ -50,7 +50,7 @@ const CommentQuote = ({ quoted }: { quoted: QuotedComment }) => {
             }}
         >
             {quoted.author ? (
-                <Typography level="body-xs" sx={{ color: g.text.secondary, fontWeight: 700 }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary, fontWeight: 600 }}>
                     {quoted.author}
                 </Typography>
             ) : null}
@@ -99,7 +99,7 @@ export const UpdateCommentPreview = ({ args }: ApprovalPreviewProps) => {
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 0.75 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
                     <Icon sx={{ fontSize: 16, color: g.warning.text }} />
-                    <Typography level="body-sm" sx={{ fontWeight: 700, color: g.text.primary }}>
+                    <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                         {heading}
                     </Typography>
                 </Box>
