@@ -3519,10 +3519,47 @@ export const fr: DeepPartial<Messages> = {
             defaultFor: "Définir {team} comme équipe par défaut",
             removeTeam: "Retirer",
             removeTeamNamed: "Retirer {team} de cette app",
+            // The "Connect an AI app" panel. Menu names (Customize, Connectors, Add custom connector) stay English: they are another app's own labels.
+            connect: {
+                title: "Connecter une app d'IA",
+                intro: "Aucune clé API n'est nécessaire. Ajoutez l'adresse ci-dessous à l'app, connectez-vous à Genos quand elle vous le demande, puis choisissez ce que l'app peut faire.",
+                urlLabel: "Adresse à coller dans l'app",
+                copy: "Copier",
+                copied: "Copié",
+                copyAria: "Copier l'adresse",
+                copyFailed:
+                    "Copie automatique impossible. Le texte est sélectionné : copiez-le avec le clavier.",
+                codeLabel: "Commande à exécuter",
+                copyCommandAria: "Copier la commande",
+                claudeTitle: "claude.ai et Claude Desktop",
+                claudeSteps: [
+                    "Dans Claude, ouvrez Customize, puis Connectors, et choisissez Add custom connector.",
+                    "Collez l'adresse ci-dessus et confirmez.",
+                    "Connectez-vous à Genos quand Claude vous le demande.",
+                    "Sur la page d'approbation, choisissez l'équipe et ce que l'app peut faire : lire, effectuer des modifications et supprimer, qui est décoché au départ.",
+                    "Appuyez sur Autoriser.",
+                ],
+                claudeCodeTitle: "Claude Code",
+                claudeCodeSteps: [
+                    "Exécutez cette commande dans votre terminal.",
+                    "Dans Claude Code, exécutez /mcp et connectez-vous à Genos.",
+                    "Sur la page d'approbation, choisissez l'équipe et ce qu'elle peut faire, puis appuyez sur Autoriser.",
+                ],
+                chatgptTitle: "ChatGPT",
+                chatgptBody:
+                    "Bientôt : Genos est en cours de référencement dans l'annuaire de ChatGPT.",
+                plan: "La connexion nécessite le forfait Core ou supérieur. Avec Free, la page d'approbation indique que ce n'est pas inclus dans votre forfait.",
+                revoke: "Pour déconnecter une app, révoquez-la dans Réglages → Développeur → Apps connectées.",
+                trap: "Collez l'adresse complète, avec le chemin à la fin. Sans lui, Claude indique qu'il s'est connecté, puis signale que Genos a refusé sa requête.",
+                menuNote:
+                    "Les noms de menu des autres apps changent : cherchez les connecteurs ou les serveurs MCP personnalisés.",
+            },
         },
         developer: {
             keys: {
                 title: "Clés API",
+                connectPointer: "Aucune clé n'est nécessaire pour connecter Claude ou ChatGPT :",
+                connectPointerLink: "connectez plutôt une app.",
                 blurb: "Utilisez une touche pour appeler le Genos API à partir de vos propres scripts et outils. Une clé agit comme vous, elle ne peut donc voir que ce que vous pouvez voir.",
                 namePlaceholder: "A quoi sert cette clé ? par ex. Bot CI",
                 scopeRead: "Lire",

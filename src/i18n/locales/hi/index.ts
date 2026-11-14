@@ -557,10 +557,46 @@ export const hi: DeepPartial<Messages> = {
             defaultFor: "{team} को डिफ़ॉल्ट टीम बनाएँ",
             removeTeam: "हटाएँ",
             removeTeamNamed: "इस ऐप से {team} हटाएँ",
+            // The "Connect an AI app" panel. Menu names (Customize, Connectors, Add custom connector) stay English: they are another app's own labels.
+            connect: {
+                title: "AI ऐप कनेक्ट करें",
+                intro: "API कुंजी की ज़रूरत नहीं है। नीचे दिया गया पता ऐप में जोड़ें, पूछे जाने पर Genos में साइन इन करें, फिर चुनें कि ऐप क्या कर सकता है।",
+                urlLabel: "ऐप में चिपकाने के लिए पता",
+                copy: "कॉपी करें",
+                copied: "कॉपी हो गया",
+                copyAria: "पता कॉपी करें",
+                copyFailed: "अपने आप कॉपी नहीं हो सका। टेक्स्ट चुना हुआ है: कीबोर्ड से कॉपी करें।",
+                codeLabel: "चलाने के लिए कमांड",
+                copyCommandAria: "कमांड कॉपी करें",
+                claudeTitle: "claude.ai और Claude Desktop",
+                claudeSteps: [
+                    "Claude में Customize खोलें, फिर Connectors, और Add custom connector चुनें।",
+                    "ऊपर दिया गया पता चिपकाएँ और पुष्टि करें।",
+                    "Claude के कहने पर Genos में साइन इन करें।",
+                    "अनुमोदन पेज पर टीम चुनें और यह कि ऐप क्या कर सकता है: पढ़ना, बदलाव करना और हटाना, जो शुरू में अनचेक रहता है।",
+                    "“अनुमति दें” दबाएँ।",
+                ],
+                claudeCodeTitle: "Claude Code",
+                claudeCodeSteps: [
+                    "अपने टर्मिनल में यह कमांड चलाएँ।",
+                    "Claude Code में /mcp चलाएँ और Genos में साइन इन करें।",
+                    "अनुमोदन पेज पर टीम और अनुमतियाँ चुनें, फिर “अनुमति दें” दबाएँ।",
+                ],
+                chatgptTitle: "ChatGPT",
+                chatgptBody:
+                    "जल्द आ रहा है: Genos को ChatGPT की डायरेक्टरी में सूचीबद्ध किया जा रहा है।",
+                plan: "कनेक्ट करने के लिए Core प्लान या उससे ऊपर चाहिए। Free पर अनुमोदन पेज बताता है कि यह आपके प्लान में नहीं है।",
+                revoke: "किसी ऐप को डिसकनेक्ट करने के लिए सेटिंग्स → डेवलपर → कनेक्टेड ऐप में उसे रद्द करें।",
+                trap: "पूरा पता चिपकाएँ, अंत के पाथ सहित। इसके बिना Claude बताता है कि साइन इन हो गया, फिर रिपोर्ट करता है कि Genos ने उसका अनुरोध अस्वीकार कर दिया।",
+                menuNote:
+                    "दूसरे ऐप में मेनू के नाम बदलते रहते हैं: कनेक्टर या कस्टम MCP सर्वर देखें।",
+            },
         },
         developer: {
             keys: {
                 title: "API कुंजियाँ",
+                connectPointer: "Claude या ChatGPT कनेक्ट करने के लिए कुंजी की ज़रूरत नहीं:",
+                connectPointerLink: "इसके बजाय ऐप कनेक्ट करें।",
                 blurb: "अपनी स्क्रिप्ट और टूल से Genos API को कॉल करने के लिए एक कुंजी का उपयोग करें। कुंजी आपकी तरह कार्य करती है, इसलिए यह केवल वही देख सकती है जो आप देख सकते हैं।",
                 namePlaceholder: "यह कुंजी किस लिए है? जैसे CI बॉट",
                 scopeRead: "पढ़ना",

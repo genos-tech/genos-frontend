@@ -1,3 +1,5 @@
+import { connectApp } from "./connectApp";
+
 export const settings = {
     title: "Settings",
     tabs: {
@@ -87,6 +89,8 @@ export const settings = {
         defaultFor: "Make {team} the default team",
         removeTeam: "Remove",
         removeTeamNamed: "Remove {team} from this app",
+        // The "Connect an AI app" panel (sentences live in connectApp.ts: the public /developers page prints them too).
+        connect: connectApp,
     },
     // Settings → Genos → Genos Assist Schedules: reports Genos prepares at the member's chosen times (MIP-1150).
     schedules: {
@@ -246,6 +250,9 @@ export const settings = {
     developer: {
         keys: {
             title: "API keys",
+            // One line above the key form: Claude and ChatGPT connect with a sign-in, not a key. Links to the Connected apps panel.
+            connectPointer: "No key needed to connect Claude or ChatGPT:",
+            connectPointerLink: "connect an app instead.",
             blurb: "Use a key to call the Genos API from your own scripts and tools. A key acts as you, so it can only see what you can see.",
             namePlaceholder: "What is this key for? e.g. CI bot",
             scopeRead: "Read",

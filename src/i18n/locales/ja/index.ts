@@ -3479,10 +3479,46 @@ export const ja: DeepPartial<Messages> = {
             defaultFor: "{team} を既定のチームにする",
             removeTeam: "外す",
             removeTeamNamed: "{team} をこのアプリから外す",
+            // The "Connect an AI app" panel. Menu names (Customize, Connectors, Add custom connector) stay English: they are another app's own labels.
+            connect: {
+                title: "AI アプリを接続する",
+                intro: "API キーは不要です。下のアドレスをアプリに追加し、求められたら Genos にサインインして、アプリに許可する内容を選びます。",
+                urlLabel: "アプリに貼り付けるアドレス",
+                copy: "コピー",
+                copied: "コピーしました",
+                copyAria: "アドレスをコピー",
+                copyFailed:
+                    "自動でコピーできませんでした。テキストを選択済みです。キーボードでコピーしてください。",
+                codeLabel: "実行するコマンド",
+                copyCommandAria: "コマンドをコピー",
+                claudeTitle: "claude.ai と Claude Desktop",
+                claudeSteps: [
+                    "Claude で Customize、Connectors の順に開き、Add custom connector を選びます。",
+                    "上のアドレスを貼り付けて確定します。",
+                    "Claude から求められたら、Genos にサインインします。",
+                    "承認ページで、チームと、アプリに許可する内容（読み取り、変更、削除）を選びます。削除は最初はオフです。",
+                    "「許可」を押します。",
+                ],
+                claudeCodeTitle: "Claude Code",
+                claudeCodeSteps: [
+                    "ターミナルで次のコマンドを実行します。",
+                    "Claude Code で /mcp を実行し、Genos にサインインします。",
+                    "承認ページでチームと許可する内容を選び、「許可」を押します。",
+                ],
+                chatgptTitle: "ChatGPT",
+                chatgptBody: "近日対応: Genos は ChatGPT のディレクトリへの掲載を準備中です。",
+                plan: "接続には Core プラン以上が必要です。Free では、承認ページに「現在のプランでは利用できません」と表示されます。",
+                revoke: "接続を解除するには、「設定 → Developer → 接続済みアプリ」で取り消します。",
+                trap: "アドレスは末尾のパスまで含めて、そのまま貼り付けてください。パスがないと、Claude はサインインできたと表示したあと、Genos にリクエストを拒否されたと報告します。",
+                menuNote:
+                    "他のアプリのメニュー名は変わることがあります。コネクタ、またはカスタム MCP サーバーの項目を探してください。",
+            },
         },
         developer: {
             keys: {
                 title: "APIキー",
+                connectPointer: "Claude や ChatGPT の接続にキーは不要です。",
+                connectPointerLink: "代わりにアプリを接続する",
                 blurb: "キーを使用して、独自のスクリプトやツールから Genos API を呼び出します。キーはユーザーとして機能するため、ユーザーが表示できるものだけを見ることができます。",
                 namePlaceholder: "この鍵は何のためにあるのでしょうか？例えばCIボット",
                 scopeRead: "Read",

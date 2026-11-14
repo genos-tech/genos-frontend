@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ExtensionRoundedIcon from "@mui/icons-material/ExtensionRounded";
 import { Alert, Box, Button, Checkbox, Chip, Radio, Sheet, Stack, Typography } from "@mui/joy";
 
@@ -18,7 +18,10 @@ import {
     revokeMcpConnection,
     updateMcpConnection,
 } from "../../services/mcpConnections";
+import { v3ApiBaseURL } from "../../services/v3Api";
+import { mcpServerUrl } from "../../utils/mcpConnect";
 import { EmptyState } from "../ui/feedback/EmptyState";
+import { ConnectAppPanel } from "./ConnectAppPanel";
 
 /**
  * Settings → Developer → Connected apps (MIP-1079): the AI apps this member has
@@ -43,6 +46,8 @@ export const ConnectedAppsSection = () => {
     const [confirming, setConfirming] = useState<string | null>(null);
     const [busy, setBusy] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    // The API's own origin (the app's is a different host), so it is derived, never typed in.
+    const address = useMemo(() => mcpServerUrl(v3ApiBaseURL()), []);
 
     const refresh = useCallback(async () => {
         const list = await listMcpConnections(accessToken);
@@ -357,6 +362,11 @@ export const ConnectedAppsSection = () => {
                     </Sheet>
                 );
             })}
+
+            {/* Not before the list has answered: its default (open when empty) would flip. */}
+            {(connections !== null || loadFailed) && (
+                <ConnectAppPanel address={address} defaultOpen={!connections?.length} />
+            )}
         </Stack>
     );
 };

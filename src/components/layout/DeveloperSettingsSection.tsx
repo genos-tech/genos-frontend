@@ -46,6 +46,7 @@ import {
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
+import { openConnectAppPanel } from "./ConnectAppPanel";
 import { SecurityLogSection } from "./SecurityLogSection";
 import { TeamConnectedAppsSection } from "./TeamConnectedAppsSection";
 
@@ -243,6 +244,15 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                         new tab so it never costs them an unsaved form. */}
                     <Link href="/developers" target="_blank" rel="noreferrer">
                         {d.docsLink}
+                    </Link>
+                </Typography>
+                {/* Claude and ChatGPT connect with a sign-in, not a key: point the
+                    person who came here for one at the panel above. A button, not
+                    a #hash link: the hash would be the router's to handle. */}
+                <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                    {d.keys.connectPointer}{" "}
+                    <Link component="button" type="button" onClick={openConnectAppPanel}>
+                        {d.keys.connectPointerLink}
                     </Link>
                 </Typography>
 
