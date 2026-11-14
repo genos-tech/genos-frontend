@@ -16,8 +16,11 @@ import { forgetInFlightTask } from "../tasks/services/taskLoadInFlight";
 //                            dropped, and the open task is told it was touched so its Activity feed
 //                            shows the removal. Nothing here calls the delete endpoint.
 //
-// Not covered: a task that is OPEN in the preview pane keeps the attachment list it already loaded
-// until it is opened again.
+// Not covered: a task that is OPEN in the preview pane keeps the attachment list it already loaded,
+// and if that pane is then edited and saved, the save writes that list (the deleted file still on it)
+// back into the cached copy (`sendUpdatedSpecificTask`), so the ghost can return until the task is
+// loaded from the server again (a reload). Fixing it needs the open pane to drop the file from its own
+// state, which the task pane has no event for.
 
 export const emitTaskAttachmentToolResult = (
     toolName: string,
