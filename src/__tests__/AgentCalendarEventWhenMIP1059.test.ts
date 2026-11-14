@@ -8,7 +8,7 @@
  * instants and not as strings, and that an all-day event's exclusive end reads as one day.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
     formatEventWhen,
@@ -118,6 +118,32 @@ describe("formatEventWhen", () => {
         expect(formatEventWhen({ start: "2026-12-01", withEnd: false }, "en-US")).toContain(
             "Dec 1"
         );
+    });
+
+    it("takes the year in the zone it prints in, not the browser's", () => {
+        // It is already 2027 in Tokyo (05:00 on 1 January) while the browser's own zone (UTC here) is
+        // still on 31 December 2026: an event in Tokyo on 1 January is "this year", with no year.
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-12-31T20:00:00Z"));
+        try {
+            const text = formatEventWhen(
+                { start: "2027-01-01T09:00:00", zone: "Asia/Tokyo", withEnd: false },
+                "en-US"
+            );
+            expect(text).toContain("Jan 1");
+            expect(text).not.toContain("2027");
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("leaves the weekday out when asked", () => {
+        const text = formatEventWhen(
+            { start: "2026-12-01T01:00:00Z", zone: "UTC", withEnd: false, weekday: false },
+            "en-US"
+        );
+        expect(text).not.toMatch(/Tue/);
+        expect(text).toContain("Dec 1");
     });
 
     it("shows only the start when asked (a chip)", () => {

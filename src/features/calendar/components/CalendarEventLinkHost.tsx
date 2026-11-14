@@ -33,9 +33,10 @@ import { emitCalendarChanged } from "../calendarChanges";
 import { onOpenCalendarEvent, type CalendarEventRef } from "../calendarEventLink";
 
 // Above everything a chip can be clicked in: Spotlight (13100), the link preview that opens over it
-// (13200 is where it sits there) and the thread, note and chat dialogs (Joy's layer, or a preview's
-// host plus one). Tooltips (13300) stay above it.
-const DIALOG_Z_INDEX = 13200;
+// (13200) and the thread and note Ask dialogs inside that preview (its layer plus one), as well as
+// the ones on Joy's own layer. Tooltips (13300) stay above it, and so do none of its own lists:
+// the pickers inside the dialog open ten above it (`CalendarEventModal`).
+const DIALOG_Z_INDEX = 13250;
 
 type View =
     | { state: "loading" }

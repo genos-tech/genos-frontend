@@ -132,8 +132,13 @@ export const formatEventWhen = (input: EventWhenInput, locale?: string): string 
         const from = instantOf(start, zone);
         if (from === null) return null;
         const to = withEnd ? instantOf(input.end, zone) : null;
-        const thisYear = new Date().getFullYear();
-        const yearOf = (t: number) => new Date(t).getFullYear();
+        // The year of an instant is the year in the zone it is printed in (just after New Year the
+        // browser's year can be the previous one).
+        const yearOf = (t: number) =>
+            Number(
+                new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric" }).format(t)
+            );
+        const thisYear = yearOf(Date.now());
         const day = (t: number) =>
             new Intl.DateTimeFormat(locale, {
                 ...(weekday ? { weekday: "short" } : {}),

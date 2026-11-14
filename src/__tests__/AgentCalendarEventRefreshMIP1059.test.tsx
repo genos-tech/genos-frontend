@@ -317,6 +317,63 @@ describe("the open calendar grid", () => {
         await waitFor(() => expect(reads()).toBe(4));
     });
 
+    it("does not let a slow read that was asked for before a change overwrite the newer one", async () => {
+        // The first window is slow; the agent's change asks for a second read, which answers at once.
+        let releaseSlow: (v: unknown) => void = () => undefined;
+        calendarApi.listEventsAggregate.mockReset();
+        calendarApi.listEventsAggregate
+            .mockReturnValueOnce(new Promise((r) => (releaseSlow = r)))
+            .mockResolvedValue({ items: [], failed_sources: [] });
+        render(
+            <CssVarsProvider>
+                <CalendarModal open onClose={() => undefined} />
+            </CssVarsProvider>
+        );
+        await waitFor(() => expect(reads()).toBe(1));
+        act(() => emitCalendarChanged({ action: "update", accountId: A, calendarId: "primary" }));
+        await waitFor(() => expect(reads()).toBe(2));
+        // The slow, older answer carries the event as it was before the write; it must not be shown.
+        await act(async () =>
+            releaseSlow({
+                items: [
+                    {
+                        id: "old",
+                        summary: "STALE TITLE",
+                        start: { dateTime: new Date().toISOString() },
+                        end: { dateTime: new Date(Date.now() + 1800000).toISOString() },
+                    },
+                ],
+                failed_sources: [],
+            })
+        );
+        expect(screen.queryByText(/STALE TITLE/)).toBeNull();
+    });
+
+    it("matches a source exactly: a change to `me@work.com` leaves the windows of `me@work.com.au`", async () => {
+        // One calendar's id is the start of the other's, so a substring test would drop the wrong windows.
+        calendarApi.listCalendars.mockResolvedValue({
+            calendars: [
+                { ...cal(A, "me@work.com", false), primary: false },
+                { ...cal(A, "me@work.com.au", true), primary: false },
+            ],
+            failed_accounts: [],
+            accounts: [],
+        });
+        await mount();
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+        await waitFor(() => expect(reads()).toBe(2));
+        fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+        await new Promise((r) => setTimeout(r, 30));
+        expect(reads()).toBe(2);
+        act(() =>
+            emitCalendarChanged({ action: "update", accountId: A, calendarId: "me@work.com" })
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+        await new Promise((r) => setTimeout(r, 30));
+        // the window of the other calendar is still cached
+        expect(reads()).toBe(2);
+    });
+
     it("keeps the windows of a change to a source it does not hold", async () => {
         await mount();
         fireEvent.click(screen.getByRole("button", { name: "Next" }));

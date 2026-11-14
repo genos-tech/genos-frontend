@@ -325,13 +325,14 @@ const EventIdLine = ({ args, facts }: { args: Args; facts: Facts }) => {
 
 const NotFoundLine = ({ facts, delete: isDelete }: { facts: Facts; delete: boolean }) => {
     const { t } = useTranslation();
-    if (!facts.notFound) return null;
+    // (An account that is not the member's has its own line; there is no account to name here.)
+    if (!facts.notFound || facts.accountLabel === null) return null;
     const template = isDelete
         ? t.agentApproval.calendarDeleteNotFound
         : t.agentApproval.calendarUpdateNotFound;
     return (
         <Typography level="body-xs" sx={{ color: g.danger.text }}>
-            {withIslands(template, { account: facts.accountLabel ?? "" })}
+            {withIslands(template, { account: facts.accountLabel })}
         </Typography>
     );
 };
@@ -380,10 +381,12 @@ export const UpdateCalendarEventPreview = ({ args }: ApprovalPreviewProps) => {
     let timeRow = false;
     if (start || end) {
         const allDay = start ? isDateOnly(start) : undefined;
+        // Only the sides the call sent are compared: a call that sends just one of the two leaves the
+        // other as it is, which is no change to it.
         const unchanged =
             current &&
-            sameWhen(start, current.start_iso, facts.zone) &&
-            sameWhen(end, current.end_iso, facts.zone);
+            (!start || sameWhen(start, current.start_iso, facts.zone)) &&
+            (!end || sameWhen(end, current.end_iso, facts.zone));
         if (!unchanged) {
             timed = !!start && !isDateOnly(start);
             const after = when(start, end, allDay);

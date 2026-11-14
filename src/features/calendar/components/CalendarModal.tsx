@@ -269,14 +269,20 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         };
     }, [open, accessToken, probeAttempt]);
 
+    // The latest read: an answer that arrives after a newer one was asked for (the agent changed an
+    // event while a window was still loading, or the person paged on) is not shown or cached.
+    const fetchSeq = useRef(0);
     const fetchEvents = useCallback(
         async (key: string, useCache: boolean) => {
             if (!accessToken) return;
+            const mine = ++fetchSeq.current;
             if (useCache) {
                 const cached = cacheRef.current.get(key);
                 if (cached) {
                     setEvents(cached.items);
                     setFailedSourceKeys(cached.failed);
+                    // A read for another window may still be out; it is no longer the one shown.
+                    setLoading(false);
                     return;
                 }
             }
@@ -292,6 +298,7 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 },
                 setError
             );
+            if (mine !== fetchSeq.current) return;
             setLoading(false);
             setEventsFailed(res === null);
             if (!res || typeof res === "string") {

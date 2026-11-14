@@ -231,6 +231,42 @@ describe("update_calendar_event", () => {
         expect(t).toContain("Times in Asia/Tokyo");
     });
 
+    it("compares only the side of the time the call sent", () => {
+        // only the start is sent, and it is the event's own start: nothing changes
+        const { container } = mount("update_calendar_event", {
+            ...base,
+            start_iso: "2026-12-01T10:00:00",
+        });
+        const t = text(container);
+        expect(t).not.toMatch(/Time(?!s in)/);
+        expect(t).toContain("already has these values");
+    });
+
+    it("compares only the end when only the end was sent", () => {
+        const { container } = mount("update_calendar_event", {
+            ...base,
+            end_iso: "2026-12-01T10:30:00",
+        });
+        const t = text(container);
+        expect(t).not.toMatch(/Time(?!s in)/);
+        expect(t).toContain("already has these values");
+    });
+
+    it("has no empty account in a not-found sentence for an account that is not the member's", () => {
+        const { container } = mount("update_calendar_event", {
+            ...TWO,
+            account: "made-up",
+            account_label: null,
+            account_default: false,
+            event_id: "evt1",
+            event_found: false,
+            summary: "Weekly standup",
+        });
+        const t = text(container);
+        expect(t).toContain("not one of your connected Google accounts");
+        expect(t).not.toContain("No event with this id is on .");
+    });
+
     it("compares guests ignoring case and order, and shows 'cleared' for an empty list", () => {
         const same = mount("update_calendar_event", {
             ...base,
