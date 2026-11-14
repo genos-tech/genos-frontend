@@ -3443,6 +3443,7 @@ export const zh: DeepPartial<Messages> = {
                 blurb: "所有可代表此团队操作的密钥，无论由谁创建。作为所有者，你可以撤销其中任何一个。密钥的创建者离开团队后，该密钥也会失效。",
                 empty: "目前没有团队密钥。",
                 createdBy: "创建者：{name}",
+                unknownMember: "一位团队成员",
                 revokeNamed: "撤销 {name}",
             },
             securityLog: {

@@ -443,7 +443,10 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                     </Typography>
                                     <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
                                         {fmt(d.teamKeys.createdBy, {
-                                            name: k.userName || k.userEmail,
+                                            name:
+                                                k.userName ||
+                                                k.userEmail ||
+                                                d.teamKeys.unknownMember,
                                         })}
                                     </Typography>
                                     <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>

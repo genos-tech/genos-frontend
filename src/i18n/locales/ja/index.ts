@@ -3561,6 +3561,7 @@ export const ja: DeepPartial<Messages> = {
                 blurb: "このチームとして動作できるすべてのキーです（作成者を問いません）。オーナーはどのキーでも取り消せます。作成者がチームを抜けると、そのキーも使えなくなります。",
                 empty: "現在、チームのキーはありません。",
                 createdBy: "作成者: {name}",
+                unknownMember: "チームのメンバー",
                 revokeNamed: "{name} を取り消す",
             },
             securityLog: {

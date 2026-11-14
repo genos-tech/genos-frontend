@@ -168,7 +168,8 @@ export const revokeApiKey = async (accessToken: string | null, id: string): Prom
 export interface TeamApiKey extends ApiKey {
     userId: string;
     userName: string;
-    userEmail: string;
+    /** Owner only: the server leaves the key out for an editor (genos-api #836), so never assume it. */
+    userEmail?: string;
     /** May THIS caller revoke it? The owner any key; an editor a viewer's, their own (MIP-1371).
      *  Absent from an older server: treated as revocable, and the server decides. */
     revocable?: boolean;
