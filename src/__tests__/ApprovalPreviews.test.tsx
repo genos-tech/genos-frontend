@@ -676,6 +676,77 @@ describe("Comment previews (update_comment / delete_comment approvals)", () => {
         renderCard("delete_comment", { task_id: "Ship the public API", comment_id: "12" });
         expect(screen.getByText("Delete your comment #12 on Ship the public API")).toBeTruthy();
     });
+
+    // MIP-1562 (AGENT_PARITY_TOOLS): a reaction or a flag on ANY comment, through update_comment.
+    describe("a reaction or a flag instead of an edit", () => {
+        const quoted = { author: "Chris Dev", excerpt: "Fixed and shipped, Y is solved" };
+
+        it("says a reaction is added, to whose comment, and quotes it", () => {
+            renderCard("update_comment", {
+                task_id: "WRD-5",
+                comment_id: 3,
+                reaction: "👍",
+                comment: quoted,
+            });
+            expect(screen.getByText("React 👍 to comment #3 on WRD-5")).toBeTruthy();
+            expect(screen.getByText("Chris Dev")).toBeTruthy();
+            expect(screen.getByText("Fixed and shipped, Y is solved")).toBeTruthy();
+            // Not the edit's wording: it is not the caller's own comment, and nothing is replaced.
+            expect(screen.queryByText(/Replace your comment/)).toBeNull();
+            expect(screen.queryByText("reaction:")).toBeNull();
+        });
+
+        it("says a reaction is taken back", () => {
+            renderCard("update_comment", {
+                task_id: "WRD-5",
+                comment_id: 3,
+                reaction: "🎉",
+                remove_reaction: true,
+            });
+            expect(screen.getByText("Take back your 🎉 on comment #3 on WRD-5")).toBeTruthy();
+        });
+
+        it("says each flag action in the app's own words", () => {
+            const cases: Array<[string, string]> = [
+                ["flag", "Flag comment #3 on WRD-5 for later"],
+                ["unflag", "Remove your flag from comment #3 on WRD-5"],
+                ["done", "Mark your flag on comment #3 on WRD-5 done"],
+            ];
+            for (const [flag, heading] of cases) {
+                const { unmount } = renderCard("update_comment", {
+                    task_id: "WRD-5",
+                    comment_id: 3,
+                    flag,
+                    comment: quoted,
+                });
+                expect(screen.getByText(heading)).toBeTruthy();
+                unmount();
+            }
+        });
+
+        it("still names the comment when the backend sent nothing to quote", () => {
+            renderCard("update_comment", { task_id: "WRD-5", comment_id: 3, flag: "flag" });
+            expect(screen.getByText("Flag comment #3 on WRD-5 for later")).toBeTruthy();
+            expect(screen.queryByText("Chris Dev")).toBeNull();
+        });
+
+        it("shows the quoted text as text, never as markup or a link", () => {
+            const { container } = renderCard("update_comment", {
+                task_id: "WRD-5",
+                comment_id: 3,
+                reaction: "👍",
+                comment: { author: "<b>x</b>", excerpt: "[click](javascript:alert(1))" },
+            });
+            expect(screen.getByText("<b>x</b>")).toBeTruthy();
+            expect(container.querySelector("a")).toBeNull();
+            expect(container.querySelector("b")).toBeNull();
+        });
+
+        it("an unknown flag value falls back to the card's plain heading, not a blank one", () => {
+            renderCard("update_comment", { task_id: "WRD-5", comment_id: 3, flag: "star" });
+            expect(screen.getByText("Replace your comment #3 on WRD-5")).toBeTruthy();
+        });
+    });
 });
 
 describe("RestoreTaskBodyPreview (restore_task_body approval)", () => {
@@ -767,6 +838,27 @@ describe("Todo previews (update / create / delete_todo_item approvals)", () => {
         expect(screen.getByText("Day: 2026-11-06")).toBeTruthy();
         expect(screen.getByText("Reminder: in 45 min")).toBeTruthy();
         expect(screen.getByText("Use the November template.")).toBeTruthy();
+    });
+
+    it("says where a new to-do comes from when it links to a task comment or a task (MIP-1562)", () => {
+        renderCard("create_todo_item", {
+            title: "Follow up on the permission",
+            task_id: "WRD-5",
+            comment_id: 3,
+        });
+        expect(screen.getByText("From comment #3 on WRD-5")).toBeTruthy();
+        expect(screen.queryByText("task_id:")).toBeNull();
+        expect(screen.queryByText("comment_id:")).toBeNull();
+    });
+
+    it("says a new to-do comes from a task when no comment is named", () => {
+        renderCard("create_todo_item", { title: "Review the fix", task_id: "WRD-5" });
+        expect(screen.getByText("From task WRD-5")).toBeTruthy();
+    });
+
+    it("gives a new to-do no source chip when none is proposed", () => {
+        renderCard("create_todo_item", { title: "Send the invoice" });
+        expect(screen.queryByText(/^From /)).toBeNull();
     });
 
     it("gives a new to-do no reminder chip when none is proposed", () => {
@@ -1978,7 +2070,8 @@ describe("getToolLabel", () => {
     });
 
     it("labels the comment edit, comment delete and description restore tools", () => {
-        expect(getToolLabel("update_comment", en)).toBe("Replacing one of your comments");
+        // Neutral since MIP-1562: the tool also reacts to and flags other people's comments.
+        expect(getToolLabel("update_comment", en)).toBe("Updating a comment");
         expect(getToolLabel("delete_comment", en)).toBe("Deleting one of your comments");
         expect(getToolLabel("restore_task_body", en)).toBe("Restoring a task's description");
     });
