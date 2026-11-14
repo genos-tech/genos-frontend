@@ -174,7 +174,7 @@ export const CalendarEventLinkHost = () => {
     return (
         <ModalFrame size="sm" title={t.calendar.linked.title} zIndex={zIndex} open onClose={close}>
             <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                <Spinner />
+                <Spinner caption={t.common.feedback.loading} size="md" />
             </Box>
         </ModalFrame>
     );
