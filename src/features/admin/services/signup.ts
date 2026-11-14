@@ -9,7 +9,8 @@ export const signUp = async (
     email: string,
     password: string,
     setErrorMessage?: (value: string) => void,
-    inviteToken?: string
+    inviteToken?: string,
+    acceptedTerms = false
 ): Promise<SignUpResponse | SignUpVerificationResponse | undefined> => {
     try {
         const api = nonAuthApi();
@@ -17,6 +18,10 @@ export const signUp = async (
             username,
             email,
             password,
+            // The signup checkbox. The server refuses a signup without it
+            // (400, code "terms_not_accepted") and records when and which
+            // text was accepted.
+            accepted_terms: acceptedTerms,
         };
         // When present, the backend validates the token + email match,
         // auto-verifies, auto-joins the team, and returns a SignUpResponse
@@ -30,6 +35,12 @@ export const signUp = async (
             if (!error.response) {
                 console.error("Network error:", error.message);
                 setErrorMessage?.(m.network);
+            } else if (
+                error.response.status === 400 &&
+                (error.response.data as { code?: string } | undefined)?.code ===
+                    "terms_not_accepted"
+            ) {
+                setErrorMessage?.(getMessages().admin.auth.signUp.consent.required);
             } else if (error.response.status === 400) {
                 console.error("HTTP 400 error:", error.response.data);
                 setErrorMessage?.(m.duplicateEmail);

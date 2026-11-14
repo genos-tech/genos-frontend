@@ -4299,6 +4299,14 @@ export const ar: DeepPartial<Messages> = {
                     backToSignIn: "العودة لتسجيل الدخول",
                 },
                 invitedEmailHint: "أنت تقوم بالتسجيل باستخدام بريدك الإلكتروني الذي تمت دعوته.",
+                consent: {
+                    label: "أوافق على {terms} و{privacy}.",
+                    terms: "شروط الخدمة",
+                    privacy: "سياسة الخصوصية",
+                    required:
+                        "للمتابعة وإنشاء حساب، يجب الموافقة على شروط الخدمة وسياسة الخصوصية.",
+                    opensInNewTab: "(يفتح في علامة تبويب جديدة)",
+                },
             },
             forgotPassword: {
                 title: "هل نسيت كلمة المرور؟",
@@ -4368,6 +4376,8 @@ export const ar: DeepPartial<Messages> = {
                         "تم ربط هذا الحساب فقط للوصول إلى التقويم، لذا لا يمكنه تسجيل دخولك.",
                     provider_already_connected: "لديك بالفعل حساب متصل بهذا المزود. افصله أولاً.",
                     unknown_provider: "موفر OAuth غير معروف.",
+                    terms_required:
+                        "لإنشاء حساب، وافق أولًا على شروط الخدمة وسياسة الخصوصية في صفحة التسجيل.",
                     fallback: "فشل تدفق OAuth.",
                 },
                 methods: {
@@ -4382,6 +4392,7 @@ export const ar: DeepPartial<Messages> = {
                 profileFailed: "تعذر تحميل ملف تعريف المستخدم الخاص بك.",
                 title: "فشل تسجيل الدخول",
                 backToSignIn: "العودة لتسجيل الدخول",
+                goToSignUp: "الانتقال إلى التسجيل",
                 finishing: "جارٍ إنهاء تسجيل الدخول…",
             },
         },

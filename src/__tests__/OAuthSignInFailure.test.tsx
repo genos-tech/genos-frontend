@@ -58,4 +58,13 @@ describe("OAuth sign-in failure", () => {
             await screen.findByText(/the method you originally signed up with/i)
         ).toBeInTheDocument();
     });
+
+    it("sends someone who skipped the consent box to the sign-up page", async () => {
+        renderAt("?error=terms_required");
+        expect(
+            await screen.findByText(/agree to the Terms of Service and the Privacy Policy/i)
+        ).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Go to sign up" })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Back to sign in" })).toBeNull();
+    });
 });

@@ -4744,6 +4744,14 @@ export const hi: DeepPartial<Messages> = {
                     backToSignIn: "साइन इन करने के लिए वापस जाएँ",
                 },
                 invitedEmailHint: "आप अपने आमंत्रित ईमेल से साइन अप कर रहे हैं.",
+                consent: {
+                    label: "मैं {terms} और {privacy} से सहमत हूँ.",
+                    terms: "सेवा की शर्तें",
+                    privacy: "गोपनीयता नीति",
+                    required:
+                        "खाता बनाने के लिए सेवा की शर्तों और गोपनीयता नीति से सहमत होना ज़रूरी है.",
+                    opensInNewTab: "(नए टैब में खुलता है)",
+                },
             },
             forgotPassword: {
                 title: "पासवर्ड भूल गए?",
@@ -4816,6 +4824,8 @@ export const hi: DeepPartial<Messages> = {
                     provider_already_connected:
                         "आपके पास इस प्रदाता के लिए पहले से ही एक खाता जुड़ा हुआ है। पहले इसे डिस्कनेक्ट करें.",
                     unknown_provider: "अज्ञात OAuth प्रदाता.",
+                    terms_required:
+                        "खाता बनाने के लिए पहले साइन अप पेज पर सेवा की शर्तों और गोपनीयता नीति से सहमत हों.",
                     fallback: "OAuth प्रवाह विफल रहा.",
                 },
                 methods: {
@@ -4830,6 +4840,7 @@ export const hi: DeepPartial<Messages> = {
                 profileFailed: "आपकी उपयोगकर्ता प्रोफ़ाइल लोड नहीं हो सकी.",
                 title: "भाग लेना विफल हुआ",
                 backToSignIn: "साइन इन करने के लिए वापस जाएँ",
+                goToSignUp: "साइन अप पर जाएँ",
                 finishing: "साइन-इन समाप्त हो रहा है...",
             },
         },
