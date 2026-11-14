@@ -9,9 +9,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    commentViaByCommentId,
     isOwnRow,
     viaSourceFromVia,
+    viaSourceOfComment,
     viaSourceOfRow,
 } from "../features/tasks/utils/viaSource";
 import { ar } from "../i18n/locales/ar";
@@ -134,71 +134,40 @@ describe("viaSourceOfRow: the owner is the row's actor", () => {
     });
 });
 
-describe("commentViaByCommentId: a comment card's mark", () => {
-    const write = (
-        activityId: number,
-        commentId: unknown,
-        via: unknown,
-        over: Partial<TaskActivityProps> = {}
-    ) =>
-        row({
-            activityId,
-            actionType: "comment_added",
-            fieldName: "comment",
-            oldValue: null,
-            newValue: null,
-            metadata: { commentId, via },
-            ...over,
-        });
-
+describe("viaSourceOfComment: a comment card's mark, from the comment's own `via` (MIP-1508)", () => {
+    // The server already picked the comment's latest write and reduced it for this
+    // viewer (api #758/#760), so these are exactly the shapes it sends.
     it("a comment written through an app is marked, one typed in Genos is not", () => {
-        const map = commentViaByCommentId(
-            [write(2, 11, APP), write(1, 10, { kind: "app" })],
-            "u1"
-        );
-        expect(map.get(11)).toEqual({ kind: "mcp", name: "Claude" });
-        expect(map.get(10)).toBeNull();
+        expect(viaSourceOfComment({ via: APP })).toEqual({ kind: "mcp", name: "Claude" });
+        expect(viaSourceOfComment({ via: { kind: "app" } })).toBeNull();
     });
 
-    it("the LATEST write decides, whatever order the rows arrive in", () => {
-        // Added through an app, then fixed by hand: the person's now.
-        const handFixed = [
-            write(5, 11, { kind: "app" }, { actionType: "comment_edited" }),
-            write(2, 11, APP),
-        ];
-        expect(commentViaByCommentId(handFixed, "u1").get(11)).toBeNull();
-        expect(commentViaByCommentId([...handFixed].reverse(), "u1").get(11)).toBeNull();
-        // Typed by hand, then rewritten through an app: marked.
-        const appRewrote = [
-            write(5, 12, APP, { actionType: "comment_edited" }),
-            write(2, 12, { kind: "app" }),
-        ];
-        expect(commentViaByCommentId(appRewrote, "u1").get(12)?.kind).toBe("mcp");
-        expect(commentViaByCommentId([...appRewrote].reverse(), "u1").get(12)?.kind).toBe("mcp");
+    it("the owner's name is shown as the server gave it; a colleague's `via` is the kind only", () => {
+        expect(viaSourceOfComment({ via: KEY })).toEqual({
+            kind: "apiKey",
+            name: "my-laptop-claude",
+        });
+        expect(viaSourceOfComment({ via: { kind: "api_key" } })).toEqual({
+            kind: "apiKey",
+            name: null,
+        });
+        expect(viaSourceOfComment({ via: { kind: "oauth" } })).toEqual({
+            kind: "mcp",
+            name: null,
+        });
     });
 
-    it("a colleague's comment shows the kind only", () => {
-        const map = commentViaByCommentId([write(2, 11, KEY)], "u2");
-        expect(map.get(11)).toEqual({ kind: "apiKey", name: null });
+    it("no `via` (an older API, a comment just made here), null (unknown) or {} earn no chip", () => {
+        expect(viaSourceOfComment({})).toBeNull();
+        expect(viaSourceOfComment({ via: undefined })).toBeNull();
+        expect(viaSourceOfComment({ via: null })).toBeNull();
+        expect(viaSourceOfComment({ via: {} })).toBeNull();
     });
 
-    it("a comment with no row in the loaded page is simply absent: no chip, never a guess", () => {
-        expect(commentViaByCommentId([write(2, 11, APP)], "u1").has(99)).toBe(false);
-        expect(commentViaByCommentId([], "u1").size).toBe(0);
-    });
-
-    it("rows that are not comment writes, or carry no usable comment id, are ignored", () => {
-        const map = commentViaByCommentId(
-            [
-                write(3, 11, APP, { actionType: "comment_deleted" }),
-                write(4, null, APP),
-                write(5, undefined, APP),
-                write(6, "11", APP),
-                row({ activityId: 7, metadata: { commentId: 11, via: APP } }),
-            ],
-            "u1"
-        );
-        expect(map.size).toBe(0);
+    it("kinds that are not MCP or API key earn none", () => {
+        for (const kind of ["agent", "pr_merge", "github", "unknown", "something-new"]) {
+            expect(viaSourceOfComment({ via: { kind } }), kind).toBeNull();
+        }
     });
 });
 

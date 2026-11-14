@@ -14,13 +14,16 @@
  *   - anything else, or nothing                         -> no chip
  *
  * Privacy (Ken, 2026-11-13): the NAME of a key or app belongs to its owner. A key
- * writes as its owner, so the row's actor is the owner: the name is read only
- * when the viewer IS that actor. Everyone else gets the kind and nothing more.
- * (The API still sends the name to every reader of the task; this is what keeps
- * it off the screen. See the follow-up on `_serialize_activity`.)
+ * writes as its owner, so the row's actor is the owner. The API enforces it (api
+ * #758, MIP-1485): to everyone but the actor it reduces `via` to its kind
+ * (`{ kind: "api_key" }`), and only the actor reads it whole. This file adds a
+ * second lock on the activity rows (the name is read only when the viewer IS the
+ * row's actor), so a reader never depends on the server alone. A comment's `via`
+ * is the server's answer for this viewer already and carries no actor: see
+ * `viaSourceOfComment`.
  */
 
-import type { TaskActivityProps } from "../../../types/tasks";
+import type { TaskActivityProps, TaskCommentProps } from "../../../types/tasks";
 
 export type ViaKind = "mcp" | "apiKey";
 
@@ -76,36 +79,14 @@ export const viaSourceOfRow = (
     myselfId: string | number | null | undefined
 ): ViaSource | null => viaSourceFromVia(row.metadata?.via, isOwnRow(row.actor?.userId, myselfId));
 
-const COMMENT_WRITES = new Set(["comment_added", "comment_edited"]);
-
 /**
- * For each comment the history knows of, how its LATEST write arrived.
- *
- * A comment's card has no `via` of its own: the server records it on the
- * `comment_added` / `comment_edited` rows (`metadata.commentId`). The newest of
- * those decides, so a comment an app wrote and the person then fixed by hand is
- * the person's now and carries no chip, while one the person wrote and an app
- * later rewrote does. A comment with no row in the loaded page (the feed is the
- * newest 100) is absent from the map: no chip, which is "unknown", not "typed".
- *
- * Absent from the map and `null` both mean "no chip".
+ * The chip for one comment, from the `via` the comment list carries (api #760,
+ * MIP-1486). The server picked the comment's LATEST write (a comment an app wrote
+ * and the person then fixed by hand is the person's now: `{ kind: "app" }`, no
+ * chip; one the person wrote and an app later rewrote carries the app) and already
+ * reduced it for this viewer, so a name is present only for the owner and is shown
+ * as given. No `via` (an older API, a comment just made here) or `null` (unknown,
+ * not "typed") earns no chip.
  */
-export const commentViaByCommentId = (
-    activities: readonly TaskActivityProps[],
-    myselfId: string | number | null | undefined
-): Map<number, ViaSource | null> => {
-    const newest = new Map<number, TaskActivityProps>();
-    for (const row of activities) {
-        if (!COMMENT_WRITES.has(row.actionType)) continue;
-        const id = row.metadata?.commentId;
-        // A number only: `Number(null)` is 0, which would pin a stray row to comment 0.
-        if (typeof id !== "number" || !Number.isFinite(id)) continue;
-        const seen = newest.get(id);
-        // `activityId` only ever grows, so it orders rows even when the feed's
-        // order is not what we assume.
-        if (!seen || row.activityId > seen.activityId) newest.set(id, row);
-    }
-    const out = new Map<number, ViaSource | null>();
-    for (const [id, row] of newest) out.set(id, viaSourceOfRow(row, myselfId));
-    return out;
-};
+export const viaSourceOfComment = (comment: Pick<TaskCommentProps, "via">): ViaSource | null =>
+    viaSourceFromVia(comment.via, true);

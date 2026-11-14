@@ -8,7 +8,7 @@ import { g } from "../../../theme/tokens";
 import { AppTooltip } from "../AppTooltip";
 
 type ViaChipProps = {
-    /** What `viaSourceOfRow` / `commentViaByCommentId` decided. `name` is only
+    /** What `viaSourceOfRow` / `viaSourceOfComment` decided. `name` is only
      *  ever set for the owner; this component shows what it is given. */
     source: ViaSource;
     /** `sm` on a history row or comment header. */
