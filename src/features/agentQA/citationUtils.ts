@@ -23,16 +23,25 @@ import { SpotlightResult } from "../spotlight/types";
 // "[pm:notes]" isn't swallowed.
 const _CHAT_LABEL_TOKEN = "(?:dm|gm|pm|mdm):[0-9a-fA-F]";
 
+// A calendar event (MIP-1059, AGENT_PARITY_TOOLS): `calendar_event:<account_id>:<event_id>`. Unlike the
+// generic `type:id` tokens it REQUIRES the account's UUID in the tail, so bracketed prose such as
+// "[calendar_event: standup]" is not eaten (the server's `_CITATION_TOKEN_RE` does the same). The
+// event id is Google's own alphabet (letters, digits, `_`) plus `-`; a recurring instance ends in an
+// upper-case `_20261201T010000Z`, so the tail is matched in either case. `[\w-]` stops at a `,` `;`
+// `]` `)` or a space, which is why one tail pattern serves every site below.
+const _UUID_SOURCE = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+const _CALENDAR_EVENT_TOKEN = `calendar_event:${_UUID_SOURCE}:[\\w-]+`;
+
 // Matches `[type:id...]` tokens emitted by the LLM. Anchored to the
 // known entity prefixes so a free-form sentence with literal brackets
 // ("[reminder: ship by Friday]") doesn't trip the pattern. This set
 // must cover every entity type the agent can inline-cite AND the
 // chip row can render (see `sourceIcon` in `AgentTurnSources`):
-// chat / task / note / project / todo / milestone. A type missing here
+// chat / task / note / project / todo / milestone / calendar_event. A type missing here
 // renders its raw `[todo:...]` token in the prose instead of being
 // stripped into a chip — the exact bug this list guards against.
 export const CITATION_PATTERN = new RegExp(
-    `\\[((?:chat|task|note|project|todo|milestone):[^\\]\\s]+|${_CHAT_LABEL_TOKEN}[^\\]\\s]*)\\]`,
+    `\\[((?:chat|task|note|project|todo|milestone):[^\\]\\s]+|${_CALENDAR_EVENT_TOKEN}|${_CHAT_LABEL_TOKEN}[^\\]\\s]*)\\]`,
     "g"
 );
 
@@ -44,7 +53,7 @@ export const CITATION_PATTERN = new RegExp(
 // because the URL must start with a known entity prefix — they pass
 // through untouched and render as normal external links.
 export const CITATION_LINK_PATTERN = new RegExp(
-    `\\[([^\\]]+?)\\]\\(((?:chat|task|note|project|todo|milestone):[^)\\s]+|${_CHAT_LABEL_TOKEN}[^)\\s]*)\\)`,
+    `\\[([^\\]]+?)\\]\\(((?:chat|task|note|project|todo|milestone):[^)\\s]+|${_CALENDAR_EVENT_TOKEN}|${_CHAT_LABEL_TOKEN}[^)\\s]*)\\)`,
     "g"
 );
 
@@ -103,7 +112,7 @@ export const buildSourcesById = (sources: SpotlightResult[]): Map<string, Spotli
 // naked `(spotlight-citation:…)` URL as visible text (the exact bug seen
 // with gemini-flash).
 const _CITATION_STRIP_PATTERN = new RegExp(
-    `[ \\t]?\\[(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s]+|${_CHAT_LABEL_TOKEN}[^\\]\\s]*)\\](?!\\()`,
+    `[ \\t]?\\[(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s]+|${_CALENDAR_EVENT_TOKEN}|${_CHAT_LABEL_TOKEN}[^\\]\\s]*)\\](?!\\()`,
     "g"
 );
 
@@ -115,7 +124,7 @@ const _CITATION_STRIP_PATTERN = new RegExp(
 // debris. Each member is a typed token exactly like the bare form's.
 const _GROUP_SEPS = ",;\\u3001\\uFF0C";
 const _GROUP_SEP = `[${_GROUP_SEPS}]`;
-const _GROUP_MEMBER = `(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s,;\\u3001\\uFF0C]+|${_CHAT_LABEL_TOKEN}[^\\]\\s,;\\u3001\\uFF0C]*)`;
+const _GROUP_MEMBER = `(?:(?:chat|task|note|project|todo|milestone):[^\\]\\s,;\\u3001\\uFF0C]+|${_CALENDAR_EVENT_TOKEN}|${_CHAT_LABEL_TOKEN}[^\\]\\s,;\\u3001\\uFF0C]*)`;
 const _GROUP_BODY = `${_GROUP_MEMBER}(?:\\s*${_GROUP_SEP}\\s*${_GROUP_MEMBER})+`;
 const _CITATION_GROUP_PATTERN = new RegExp(`\\[\\s*(${_GROUP_BODY})\\s*\\](?!\\()`, "g");
 const _CITATION_GROUP_STRIP_PATTERN = new RegExp(`[ \\t]?${_CITATION_GROUP_PATTERN.source}`, "g");
@@ -187,11 +196,11 @@ const _SPACE_BEFORE_MARKER_PATTERN = new RegExp(`[ \\t]+${_STRIPPED}`, "g");
 // optional leading space/tab is consumed so stripping mid-sentence leaves
 // no double space (matching `_CITATION_STRIP_PATTERN`); newlines are left
 // alone (paragraph significance).
-const _UUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+const _UUID = _UUID_SOURCE;
 const _RAW_LEAK_STRIP_PATTERN = new RegExp(
     `[ \\t]?(?<![\\w:/.-])(?:` +
         // any type/label token that carries a UUID (highest confidence)
-        `(?:chat|task|note|project|todo|milestone|dm|gm|pm|mdm):[\\w:-]*${_UUID}[\\w:-]*` +
+        `(?:chat|task|note|project|todo|milestone|calendar_event|dm|gm|pm|mdm):[\\w:-]*${_UUID}[\\w:-]*` +
         // OR the exact vocabulary with a digit-bearing id tail. The
         // pre-digit run allows colons so nested ids resolve — the digit
         // in `note:personal:50` / `todo:2026-07-03:item:117` lives past a
@@ -209,7 +218,7 @@ const _RAW_LEAK_STRIP_PATTERN = new RegExp(
 // labels are swapped for the source title (resolved) or dropped
 // (unresolved) instead of showing the user a raw id/UUID.
 const _RAW_TOKEN_LABEL = new RegExp(
-    `^(?:(?:chat|task|note|project|todo|milestone):\\S+|${_CHAT_LABEL_TOKEN}\\S*)$`
+    `^(?:(?:chat|task|note|project|todo|milestone):\\S+|${_CALENDAR_EVENT_TOKEN}|${_CHAT_LABEL_TOKEN}\\S*)$`
 );
 
 // A UUID anywhere in a link label is the same tell in a wordier form —
@@ -261,6 +270,18 @@ export const resolveCitationToken = (
     const token = normalizeCitationToken(rawToken);
     const exact = sourcesById.get(token);
     if (exact) return { key: token, source: exact };
+    // A calendar event's token is matched ignoring case, and only against events this turn really
+    // retrieved: the token carries a recurring instance's upper-case `T` and `Z`, and the server
+    // lower-cases tokens in places. A different id still resolves to nothing.
+    if (token.startsWith("calendar_event:")) {
+        const lower = token.toLowerCase();
+        for (const [k, s] of sourcesById) {
+            if (k.startsWith("calendar_event:") && k.toLowerCase() === lower) {
+                return { key: k, source: s };
+            }
+        }
+        return null;
+    }
     if (!token.startsWith("chat:")) return null;
     const parts = token.split(":");
     // Need at least `chat:<label>:<chat_id>` to anchor recovery.
@@ -567,5 +588,6 @@ const entitySubtitle = (s: SpotlightResult): string => {
     }
     if (s.entity_type === "note") return "Note";
     if (s.entity_type === "todo") return "Todo";
+    if (s.entity_type === "calendar_event") return "Event";
     return "Source";
 };

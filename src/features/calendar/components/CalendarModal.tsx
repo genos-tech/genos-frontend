@@ -29,6 +29,8 @@ import {
     type ConnectionsResponse,
 } from "../../integrations/services/connections";
 import { redirectToOAuthConnect } from "../../integrations/services/oauth";
+import { eventToFormInitial } from "../../integrations/utils/eventFormInitial";
+import { onCalendarChanged, type CalendarChange } from "../calendarChanges";
 import { isWritableCalendar, useCalendarSources } from "../hooks/useCalendarSources";
 import { useStickyPeriodScroll } from "../hooks/useStickyPeriodScroll";
 import { eventLabel } from "../utils/eventLabel";
@@ -39,6 +41,7 @@ import {
     visibleRange,
 } from "../utils/monthGrid";
 import { isMultiDaySpan } from "../utils/multiDay";
+import { resolveCalendarId } from "../utils/primaryCalendar";
 import { CalendarSourcePicker } from "./CalendarSourcePicker";
 import { MonthView } from "./MonthView";
 import { TimelineView } from "./TimelineView";
@@ -168,10 +171,16 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     // hit returns early, so keeping them apart left the banner showing
     // failures from whichever window was fetched last while the user
     // paged back to a healthy one.
+    // `keys` are the sources the window was fetched for (their `sourceKey`s), so a change to one source
+    // can drop exactly the windows that hold it (`onCalendarChanged` below).
     const cacheRef = useRef<
         Map<
             string,
-            { items: CalendarEvent[]; failed: Array<{ accountId: string; reason: string }> }
+            {
+                items: CalendarEvent[];
+                failed: Array<{ accountId: string; reason: string }>;
+                keys: string[];
+            }
         >
     >(new Map());
     const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -296,7 +305,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 accountId: f.account_id,
                 reason: f.reason,
             }));
-            cacheRef.current.set(key, { items, failed });
+            cacheRef.current.set(key, {
+                items,
+                failed,
+                keys: selectedSources.map((src) => sourceKey(src.accountId, src.calendarId)),
+            });
             setEvents(items);
             setFailedSourceKeys(failed);
         },
@@ -341,6 +354,29 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         cacheRef.current.delete(cacheKey);
         void fetchEvents(cacheKey, false);
     }, [cacheKey, fetchEvents]);
+
+    // An event of one source changed outside this grid: an approved agent write, or the dialog an
+    // agent chip opened (MIP-1059). Drop every window fetched for that source, and read the one on
+    // screen again when its selection holds it. Membership is exact (`keys`), never a substring of the
+    // selection's fingerprint: a source key holds `:` and calendar ids hold `@` and `.`. Held in a ref
+    // so the listener is subscribed once while the grid is open and always acts on the latest state.
+    const onChangeRef = useRef<(change: CalendarChange) => void>(() => undefined);
+    onChangeRef.current = (change) => {
+        const key = sourceKey(
+            change.accountId,
+            resolveCalendarId(calendars, change.accountId, change.calendarId)
+        );
+        for (const [windowKey, entry] of cacheRef.current) {
+            if (entry.keys.includes(key)) cacheRef.current.delete(windowKey);
+        }
+        if (selectedSources.some((src) => sourceKey(src.accountId, src.calendarId) === key)) {
+            void fetchEvents(cacheKey, false);
+        }
+    };
+    useEffect(() => {
+        if (!open) return;
+        return onCalendarChanged((change) => onChangeRef.current(change));
+    }, [open]);
 
     const showGrid = !needsConnect && !needsScope;
     // The calendar list never loaded: there is no grid to draw yet, only Retry.
@@ -426,40 +462,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
 
     const openEdit = (e: CalendarEvent) => {
         setEditingEventId(e.id);
-        // All-day events carry `start.date`/`end.date` (no `dateTime`).
-        // Pass the date strings + the flag so the modal opens in all-day
-        // mode instead of showing empty datetime fields.
-        const isAllDay = !!e.start?.date && !e.start?.dateTime;
-        setEventModalInitial({
-            // Carry the event's origin through to the edit modal. Event
-            // ids are unique per calendar, not globally, and the account
-            // decides which credential the PATCH authenticates with —
-            // without both, an edit on the personal calendar would be
-            // sent to the work account and 404.
-            account_id: e._source?.account_id,
-            calendar_id: e._source?.calendar_id,
-            // Present only on an occurrence of a repeating series; it's
-            // what lets the modal offer "this event / all events".
-            recurring_event_id: e.recurringEventId,
-            add_meet: !!e.hangoutLink,
-            all_day: isAllDay,
-            // Pre-populate the attendee picker so the user sees
-            // who's already invited and can prune / add. We drop
-            // `self`-flagged entries (Google echoes the organizer
-            // back) so the modal doesn't insist on re-inviting the
-            // current user. External attendees without a team-member
-            // match still appear, with email used as displayName.
-            attendees: (e.attendees ?? [])
-                .filter((a) => !a.self && !!a.email)
-                .map((a) => ({
-                    email: a.email,
-                    displayName: a.displayName,
-                })),
-            description: e.description,
-            end: isAllDay ? e.end?.date : e.end?.dateTime,
-            start: isAllDay ? e.start?.date : e.start?.dateTime,
-            summary: e.summary,
-        });
+        // The event's origin, all-day shape, series master and guests carry through to the edit dialog
+        // (`eventToFormInitial`): without the account an edit on a second account is sent to the
+        // default one and 404s.
+        setEventModalInitial(eventToFormInitial(e));
         setEventModalOpen(true);
     };
 

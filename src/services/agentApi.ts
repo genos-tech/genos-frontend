@@ -105,6 +105,23 @@ export interface ToolResultMilestoneChangeRef {
     from_project_id?: number;
 }
 
+/** Ref the backend attaches to an approved `create_`, `update_` or `delete_calendar_event` result
+ * (MIP-1059, AGENT_PARITY_TOOLS): the event the write made, changed or removed. Nothing is pushed to
+ * the browser when a calendar changes, so the calendar grid re-reads the source this names. `start`,
+ * `end` and `all_day` are present when the write returned the event (a create, an update that changed
+ * something); a delete carries none, and its `deleted` is true. `calendar_id` is Google's id, or
+ * `primary`. Absent on every other result, on a write that was refused, and on older backends. */
+export interface ToolResultCalendarEventRef {
+    action: "create" | "update" | "delete";
+    account_id: string;
+    calendar_id: string;
+    event_id: string;
+    start?: string;
+    end?: string;
+    all_day?: boolean;
+    deleted?: boolean;
+}
+
 /** What an approved write's result carries when what undo needs was really
  * stored (genos-api `agent/undo.py`, `event_info`). It, and not `undoable` on
  * the approval card, decides whether Undo is offered. `available_until` is an
@@ -136,6 +153,7 @@ export interface ToolCallResultPayload {
     project?: ToolResultProjectRef;
     task_attachment?: ToolResultTaskAttachmentRef;
     milestone_change?: ToolResultMilestoneChangeRef;
+    calendar_event?: ToolResultCalendarEventRef;
     undo?: ToolResultUndoRef;
 }
 
@@ -1434,6 +1452,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 project: evt.project,
                 task_attachment: evt.task_attachment,
                 milestone_change: evt.milestone_change,
+                calendar_event: evt.calendar_event,
                 undo: asUndoRef(evt.undo),
             });
             return false;

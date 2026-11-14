@@ -94,7 +94,7 @@ export const ApprovalCard = ({
     const { t } = useTranslation();
     const args = pending.arguments || {};
     const argEntries = Object.entries(args);
-    const PreviewRenderer = getApprovalRenderer(pending.tool_name);
+    const PreviewRenderer = getApprovalRenderer(pending.tool_name, args);
     const edit = useApprovalEdit({
         tool: pending.tool_name,
         args,

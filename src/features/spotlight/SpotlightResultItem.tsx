@@ -6,6 +6,7 @@
 import { memo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import FolderSpecialRoundedIcon from "@mui/icons-material/FolderSpecialRounded";
@@ -87,6 +88,8 @@ const ENTITY_ICON = {
     note_folder: FolderSpecialRoundedIcon,
     project: FolderRoundedIcon,
     todo: TaskAltRoundedIcon,
+    // A Google Calendar event the agent read or wrote (an agent source chip, never a search hit).
+    calendar_event: EventRoundedIcon,
     // A collected past Spotlight answer — sparkle signals "AI answer".
     spotlight_answer: AutoAwesomeRoundedIcon,
 };
@@ -150,6 +153,7 @@ export const entitySubtitle = (
     if (r.entity_type === "task") return ts.entitySubtitle.task;
     if (r.entity_type === "milestone") return ts.entitySubtitle.milestone;
     if (r.entity_type === "project") return ts.entitySubtitle.project;
+    if (r.entity_type === "calendar_event") return ts.entitySubtitle.calendarEvent;
     if (r.entity_type === "spotlight_answer") return ts.entitySubtitle.previousAnswer;
     if (r.entity_type === "todo") {
         // Pull the local_date out of `entity_id` for a date-flavored

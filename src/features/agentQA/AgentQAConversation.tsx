@@ -19,6 +19,10 @@ import { Stack } from "@mui/joy";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
+import {
+    calendarEventRefFromSource,
+    requestOpenCalendarEvent,
+} from "../calendar/calendarEventLink";
 import { SpotlightResult } from "../spotlight/types";
 import { AgentTurn } from "./AgentTurn";
 import type { AgentTurnLabels } from "./agentTurnLabels";
@@ -86,6 +90,12 @@ export const AgentQAConversation = ({
     const onSelectSourceRef = useRef(onSelectSource);
     onSelectSourceRef.current = onSelectSource;
     const onPreview = useCallback((source: SpotlightResult) => {
+        // A calendar event opens its own dialog (MIP-1059): it has no URL for a preview to parse.
+        const calendarRef = calendarEventRefFromSource(source);
+        if (calendarRef) {
+            requestOpenCalendarEvent(calendarRef);
+            return;
+        }
         const previewHref = sourceToUrl(source);
         const modal = urlLinkModalRef.current;
         if (previewHref && modal) {

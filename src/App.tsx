@@ -49,6 +49,11 @@ import { ToastHost } from "./components/ui/feedback/Toast";
 import { UndoableRouteFlush } from "./components/ui/feedback/UndoableRouteFlush";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
+import {
+    calendarEventRefFromSource,
+    requestOpenCalendarEvent,
+} from "./features/calendar/calendarEventLink";
+import { CalendarEventLinkHost } from "./features/calendar/components/CalendarEventLinkHost";
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
 import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
 import { AddToTodoHost } from "./features/chat/components/todo/AddToTodoHost";
@@ -1074,6 +1079,14 @@ const AppBody = () => {
 
             spotlight.close();
 
+            // A calendar event has no page of its own: Cmd/Ctrl-click opens the same event dialog,
+            // with the overlay closed (MIP-1059).
+            const calendarRef = calendarEventRefFromSource(r);
+            if (calendarRef) {
+                requestOpenCalendarEvent(calendarRef);
+                return;
+            }
+
             // Milestones deep-link to the milestone route (the id rides
             // in entity_id — see canonicalSpotlightHref for why routing
             // through the backing task broke fresh milestones).
@@ -1236,6 +1249,13 @@ const AppBody = () => {
     // answers (rendered inline in the conversation instead).
     const handleSpotlightPreview = useCallback(
         (r: SpotlightResult) => {
+            // A calendar event opens its own dialog over the overlay (above Spotlight's layer, see
+            // `CalendarEventLinkHost`), so the conversation stays where it is (MIP-1059).
+            const calendarRef = calendarEventRefFromSource(r);
+            if (calendarRef) {
+                requestOpenCalendarEvent(calendarRef);
+                return;
+            }
             const href = canonicalSpotlightHref(r);
             if (!href) {
                 handleSpotlightSelect(r);
@@ -1742,6 +1762,7 @@ const AppBody = () => {
                                                                                                         calendarModal.close
                                                                                                     }
                                                                                                 />
+                                                                                                <CalendarEventLinkHost />
                                                                                                 <MentionGroupModal
                                                                                                     myself={
                                                                                                         myself

@@ -137,6 +137,7 @@ export const spotlight = {
         milestone: "Milestone",
         project: "Project",
         previousAnswer: "Previous answer",
+        calendarEvent: "Event",
         todo: "Todo",
         todoWithDate: "Todo · {date}",
         notePersonal: "My note",
@@ -165,5 +166,8 @@ export const spotlight = {
         notePlain: "{subtitle}{sep}",
         projectPlain: "{subtitle}{sep}",
         todo: "{subtitle}{sep}",
+        calendarEvent: "{subtitle}{sep}{when}",
+        calendarEventDeleted: "Deleted calendar event",
+        calendarEventUntitled: "(no title)",
     },
 } as const;
