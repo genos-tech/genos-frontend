@@ -5,6 +5,7 @@ import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi"
 import { loadTaskDependenciesBatched } from "../../services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../services/popSpecificProjectTasks";
 import { taskTypes } from "../../types/TaskTableTypes";
+import { refEffectiveStatus } from "../../utils/blockerStatus";
 import { TaskGraph, TaskGraphScope } from "../types";
 
 const MAX_DEPTH = 10; // mirrors backend `_cascade_tree_position_to_subtasks`
@@ -254,6 +255,9 @@ export const loadTaskGraph = async (
                 blockerTaskId: d.otherTaskId,
                 blockedTaskId: ownerTaskId,
                 otherStatus: d.status,
+                // The ref is the blocker here, so the server's reading of it (a blocker under a
+                // Closed parent reads Closed) is its status for the blocker count (MIP-1549).
+                blockerStatus: refEffectiveStatus(d),
             });
         }
     });

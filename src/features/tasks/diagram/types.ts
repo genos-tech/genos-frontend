@@ -168,6 +168,11 @@ export type TaskGraph = {
         /** Status of the OTHER endpoint, kept so the dependency edge
          *  renderer can dim resolved (Closed) blockers. */
         otherStatus: TaskDependencyRef["status"];
+        /** What the server says the BLOCKER reads as (closed-ancestor rule, MIP-1549). Only
+         *  set when the edge came from the blocked side's `blockedBy` list, where the ref IS
+         *  the blocker; from the blocker's `blocking` list `otherStatus` is the BLOCKED
+         *  task's, never the blocker's. */
+        blockerStatus?: string | null;
     }>;
     /** True when some dependency edges could not be loaded (MIP-1416): the
      *  graph is drawn, but lines may be missing, and the canvas says so. */
