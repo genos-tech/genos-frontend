@@ -72,6 +72,20 @@ describe("TaskPlanPreview (create_task_plan approval)", () => {
         expect(screen.queryByText(/tasks:/)).toBeNull();
     });
 
+    it("shows each task's starting status and template (AGENT_PARITY_TOOLS)", () => {
+        renderCard("create_task_plan", {
+            project_id: "Website Redesign",
+            tasks: [
+                { title: "Collect the copy", status: "Closed" },
+                { title: "Crash on save", template: "bug" },
+                { title: "Plain" },
+            ],
+        });
+        expect(screen.getByText("Status: Closed")).toBeTruthy();
+        expect(screen.getByText("Template: bug")).toBeTruthy();
+        expect(screen.getAllByText(/^Status:/)).toHaveLength(1);
+    });
+
     it("orders a non-adjacent sub-task directly under its parent", () => {
         renderCard("create_task_plan", planArgs);
         const text = document.body.textContent || "";
@@ -364,6 +378,44 @@ describe("CreateTaskPreview (create_task approval)", () => {
         renderCard("create_task", { title: "Ship the perf fix", priority: "High" });
         expect(screen.queryByText(/^Start /)).toBeNull();
         expect(screen.queryByText(/Collaborators:/)).toBeNull();
+        expect(screen.queryByText(/Status:/)).toBeNull();
+        expect(screen.queryByText(/Reporter:/)).toBeNull();
+        expect(screen.queryByText(/Template:/)).toBeNull();
+        expect(screen.queryByText("Links")).toBeNull();
+    });
+
+    it("shows the starting status, reporter, template and links (AGENT_PARITY_TOOLS)", () => {
+        renderCard("create_task", {
+            title: "Login fails",
+            project_id: "Website Redesign",
+            status: "WIP",
+            // A username, or the raw id for someone the caller can't name.
+            reporter_id: "carol",
+            template: "bug",
+            links: [
+                { url: "https://example.com/spec", title: "Spec" },
+                { url: "https://example.com/bare" },
+            ],
+            // What the server filled in from the template: shown like any body.
+            content_text: "### Summary\n\nLogin fails",
+        });
+        expect(screen.getByText("Status: WIP")).toBeTruthy();
+        expect(screen.getByText("Reporter: carol")).toBeTruthy();
+        expect(screen.getByText("Template: bug")).toBeTruthy();
+        expect(screen.getByText("Links")).toBeTruthy();
+        expect(screen.getByText("Spec · https://example.com/spec")).toBeTruthy();
+        // A link without a title is its URL, once.
+        expect(screen.getByText("https://example.com/bare")).toBeTruthy();
+        expect(screen.queryByText("links:")).toBeNull();
+    });
+
+    it("draws a link as text, never as an anchor", () => {
+        renderCard("create_task", {
+            title: "T",
+            links: [{ url: "javascript:alert(1)", title: "Click me" }],
+        });
+        expect(screen.getByText("Click me · javascript:alert(1)")).toBeTruthy();
+        expect(document.querySelector("a")).toBeNull();
     });
 });
 
@@ -500,6 +552,32 @@ describe("UpdateTaskPreview (update_task approval)", () => {
         second.unmount();
         renderCard("update_task", { task_id: "WRD-5", start_date: null, priority: "High" });
         expect(screen.queryByText(/Start:/)).toBeNull();
+    });
+
+    it("shows the reporter as old → new, by name", () => {
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            reporter_id: "carol",
+            current: { reporter_id: "alice" },
+        });
+        expect(screen.getByText("Reporter: alice → carol")).toBeTruthy();
+    });
+
+    it("shows the links it replaces as old → new titles, and an empty list as cleared", () => {
+        const { unmount } = renderCard("update_task", {
+            task_id: "WRD-5",
+            links: [{ url: "https://example.com/new", title: "New spec" }],
+            current: { links: [{ url: "https://example.com/old", title: "Old spec" }] },
+        });
+        expect(screen.getByText("Links: Old spec → New spec")).toBeTruthy();
+        expect(screen.getByText("New spec · https://example.com/new")).toBeTruthy();
+        unmount();
+        renderCard("update_task", {
+            task_id: "WRD-5",
+            links: [],
+            current: { links: [{ url: "https://example.com/old", title: "Old spec" }] },
+        });
+        expect(screen.getByText("Links: Old spec → none")).toBeTruthy();
     });
 
     it("shows collaborators as old → new, and an empty list as cleared", () => {

@@ -16,6 +16,10 @@
 // same name. `due_date: ''` / `content_text: ''` / `milestone_id: ''` /
 // `parent_task_id: ''` / `start_date: ''` / `collaborators: []` are the tool's
 // "clear this field" sentinels and render as a clear rather than a blank.
+//
+// MIP-1561 (AGENT_PARITY_TOOLS): `reporter_id` (a username) reads "Reporter: old
+// → new" from `current.reporter_id`, and `links` (the FULL new set; [] clears)
+// reads as a chip with the old → new titles plus one text line per new link.
 
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { Box, Typography } from "@mui/joy";
@@ -23,7 +27,7 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { diffValue, MetaChip, placeValue } from "./previewHelpers";
+import { diffValue, linkEntries, LinkLines, MetaChip, placeValue } from "./previewHelpers";
 
 const CHIP_FIELDS = ["status", "priority", "effort_level", "due_date"] as const;
 type ChipField = (typeof CHIP_FIELDS)[number];
@@ -36,6 +40,7 @@ const MOVE_FIELDS = [
     "project_id",
     "start_date",
     "collaborators",
+    "reporter_id",
 ] as const;
 
 interface CustomFieldEntry {
@@ -99,6 +104,18 @@ export const UpdateTaskPreview = ({ args }: ApprovalPreviewProps) => {
             `${t.agentApproval.fieldLabels.tags}: ${placeValue(args.tags, t.agentApproval.cleared)}`
         );
     }
+    // The links REPLACE the task's links; [] clears them. Old and new by title.
+    const proposedLinks = Array.isArray(args.links) ? linkEntries(args.links) : null;
+    if (Array.isArray(args.links)) {
+        const present = Array.isArray(currents?.links) ? linkEntries(currents?.links) : undefined;
+        chips.push(
+            `${t.agentApproval.fieldLabels.links}: ${diffValue(
+                (proposedLinks ?? []).map((l) => l.title),
+                present?.map((l) => l.title),
+                t.agentApproval.cleared
+            )}`
+        );
+    }
     // A passage added to the description, the other way to change a body.
     const added: Array<{ label: string; text: string }> = [];
     const prepend = asString(args.body_prepend);
@@ -141,6 +158,10 @@ export const UpdateTaskPreview = ({ args }: ApprovalPreviewProps) => {
                 >
                     {body}
                 </Box>
+            ) : null}
+
+            {proposedLinks?.length ? (
+                <LinkLines links={proposedLinks} label={t.agentApproval.fieldLabels.links} />
             ) : null}
 
             {added.map(({ label, text }) => (

@@ -5,6 +5,12 @@
 // name; nothing exists in the DB yet at approval time. content_text is
 // plain text (the tool takes no markdown), so it is shown verbatim rather
 // than parsed.
+//
+// MIP-1561 (AGENT_PARITY_TOOLS): a call may also carry the starting `status`, a
+// `reporter_id` (arrives as a username), a `template` name and `links`. Each is
+// shown, so the person is never approving a field the card does not name. Links
+// are drawn as TEXT (title and URL), never as anchors: the card shows them before
+// the server has judged the scheme.
 
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import { Box, Typography } from "@mui/joy";
@@ -12,7 +18,7 @@ import { Box, Typography } from "@mui/joy";
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { MetaChip, placeValue } from "./previewHelpers";
+import { linkEntries, LinkLines, MetaChip, placeValue } from "./previewHelpers";
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;
@@ -36,14 +42,21 @@ export const CreateTaskPreview = ({ args }: ApprovalPreviewProps) => {
     const priority = asString(args.priority);
     const effort = asString(args.effort_level);
     const dueDate = asString(args.due_date);
+    const status = asString(args.status);
+    const reporter = asString(args.reporter_id);
+    const template = asString(args.template);
+    const links = linkEntries(args.links);
 
     const chips: string[] = [];
     if (projectLabel) chips.push(`${t.agentApproval.project}: ${projectLabel}`);
     if (parentLabel) chips.push(`${t.agentApproval.fieldLabels.parent_task_id}: ${parentLabel}`);
+    if (status) chips.push(`${t.agentApproval.fieldLabels.status}: ${status}`);
     if (priority) chips.push(priority);
     if (effort) chips.push(effort);
     if (dueDate) chips.push(`${t.agentApproval.due} ${dueDate}`);
     if (startDate) chips.push(`${t.agentApproval.start} ${startDate}`);
+    if (reporter) chips.push(`${t.agentApproval.fieldLabels.reporter_id}: ${reporter}`);
+    if (template) chips.push(`${t.agentApproval.fieldLabels.template}: ${template}`);
     if (collaborators.length)
         chips.push(`${t.agentApproval.fieldLabels.collaborators}: ${collaborators.join(", ")}`);
     for (const entry of customFields) {
@@ -71,6 +84,10 @@ export const CreateTaskPreview = ({ args }: ApprovalPreviewProps) => {
                 <Typography level="body-sm" sx={{ fontWeight: 600, color: g.text.primary }}>
                     {title}
                 </Typography>
+            ) : null}
+
+            {links.length ? (
+                <LinkLines links={links} label={t.agentApproval.fieldLabels.links} />
             ) : null}
 
             {body ? (
