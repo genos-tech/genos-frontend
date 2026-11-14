@@ -384,6 +384,19 @@ describe("the token palettes keep the contrast of the hex they replaced, on ever
         ).toBeGreaterThan(0);
     });
 
+    it("inbox preview code: both modes use the code roles, no hex or rgba (MIP-1490)", () => {
+        const css = src("App.css");
+        const vars = css.slice(
+            css.indexOf("--code-light-bg"),
+            css.indexOf("}", css.indexOf("--code-light-bg"))
+        );
+        expect(vars).toMatch(/--code-dark-color:\s*var\(--g-text-code\)/);
+        expect(vars).toMatch(/--code-dark-bg:\s*var\(--g-active\)/);
+        expect(vars).not.toMatch(/#[0-9a-f]{3,6}|rgba?\(/i);
+        expect(rule(".inbox-preview-dark code")).toMatch(/color:\s*var\(--code-dark-color\)/);
+        expect(rule(".inbox-preview-light code")).toMatch(/color:\s*var\(--code-light-color\)/);
+    });
+
     it("the roles are what the contrast rows promise on a spread of themes", () => {
         // Floors, not exact colors: link 9.5 (dark) / AA (light), quote text 9.5 / 7.
         for (const id of THEME_IDS) {
