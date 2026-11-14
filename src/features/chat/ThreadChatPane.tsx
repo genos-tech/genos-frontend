@@ -208,7 +208,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setMyself={setMyself}
                         setTodoFromMessageBubble={setTodoFromMessageBubble}
                         socket={socket}
-                        taskActivities={threadTaskActivities}
                         threadTaskId={threadTaskId}
                         useCM={useCM}
                         useTEM={useTEM}

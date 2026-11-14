@@ -580,7 +580,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 setIsInEdit={setIsInEdit}
                                 setMyself={setMyself}
                                 socket={socket}
-                                taskActivities={taskActivities}
                                 taskComments={taskComments}
                                 useCM={useCM}
                                 useTEM={useTEM}

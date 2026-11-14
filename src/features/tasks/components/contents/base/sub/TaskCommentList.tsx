@@ -13,11 +13,11 @@ import { useUndoHidden } from "../../../../../../hooks/common/useUndoableAction"
 import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
-import { TaskActivityProps, TaskCommentProps } from "../../../../../../types/tasks";
+import { TaskCommentProps } from "../../../../../../types/tasks";
 import { useFollowOwnOutput } from "../../../../../chat/hooks/useFollowOwnOutput";
 import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
 import { taskCommentKey } from "../../../../services/deleteTaskComment";
-import { commentViaByCommentId } from "../../../../utils/viaSource";
+import { viaSourceOfComment } from "../../../../utils/viaSource";
 import { TaskCommentBubble } from "./TaskCommentBubble";
 
 // Render this many extra pixels of rows above/below the viewport —
@@ -78,11 +78,6 @@ type TaskCommentListProps = {
      * preview. Supplied by the `TaskTabBlock` mount; the chat-thread
      * mount doesn't thread one (page-hosted default). */
     hostZIndex?: number;
-    /** The task's history rows, already loaded by the host. A comment's card has
-     *  no `via` of its own; the `comment_added` / `comment_edited` rows carry it,
-     *  so this is what lets a card say it was made through a connected AI app
-     *  (MIP-1376). Omitted, or a comment older than the loaded page: no chip. */
-    taskActivities?: TaskActivityProps[];
 };
 
 /**
@@ -114,7 +109,6 @@ export const TaskCommentList = ({
     focusedCommentId,
     setTodoFromMessageBubble,
     hostZIndex,
-    taskActivities,
 }: TaskCommentListProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -134,14 +128,6 @@ export const TaskCommentList = ({
                   )
                 : allTaskComments,
         [allTaskComments, hiddenKeys]
-    );
-
-    // How each comment's latest write arrived (MIP-1376). Rebuilt only when the
-    // history or the viewer changes; each row then gets two PRIMITIVES, so a
-    // refreshed history re-renders only the bubbles whose answer changed.
-    const viaByComment = useMemo(
-        () => commentViaByCommentId(taskActivities ?? [], myself.userId),
-        [taskActivities, myself.userId]
     );
 
     // Scroll-time hover suppression (bubbles sliding under a stationary
@@ -219,7 +205,7 @@ export const TaskCommentList = ({
     const itemContent = useCallback(
         (index: number) => {
             const comment = taskComments[index];
-            const via = viaByComment.get(comment.commentId);
+            const via = viaSourceOfComment(comment);
             return (
                 // `comment-row` carries two things (see App.css):
                 //  - `contain: layout` bounds each row's reflow so Virtuoso's
@@ -273,7 +259,6 @@ export const TaskCommentList = ({
             useTEM,
             useUISM,
             onCommentClick,
-            viaByComment,
         ]
     );
 

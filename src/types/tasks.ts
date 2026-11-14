@@ -145,6 +145,14 @@ export type TaskCommentProps = {
     tsSent: string;
     tsUpdated: string;
     isEdited: boolean;
+    /**
+     * How the comment's LATEST write arrived, as the server reads it for THIS viewer
+     * (genos-api `GET /task/comment/`, MIP-1486): `{ kind: "oauth" | "api_key" | ... }`,
+     * with the key's or app's name only when the viewer is its owner. `null` when the
+     * server does not know. Absent on an older API and on a comment this client just
+     * made, until the list is read again: all of those mean "no chip".
+     */
+    via?: Record<string, unknown> | null;
 };
 
 // Audit-log row backing the new "Activity" tab. Mirrors `TaskActivity`

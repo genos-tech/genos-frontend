@@ -210,8 +210,12 @@ describe("history rows (the task's Activity tab, the PM thread's Activities tab)
     });
 });
 
-describe("comment cards", () => {
-    const comment = (commentId: number, senderId = "u1"): TaskCommentProps => ({
+describe("comment cards (MIP-1508: the chip comes from the comment's own `via`)", () => {
+    const comment = (
+        commentId: number,
+        via?: Record<string, unknown> | null,
+        senderId = "u1"
+    ): TaskCommentProps => ({
         projectId: 7,
         taskId: 42,
         senderId,
@@ -221,49 +225,35 @@ describe("comment cards", () => {
         tsSent: "2026-07-17T00:00:00Z",
         tsUpdated: "2026-07-17T00:00:00Z",
         isEdited: false,
+        ...(via === undefined ? {} : { via }),
     });
 
-    const write = (activityId: number, commentId: number, via: unknown, actorId = "u1") =>
-        act({
-            activityId,
-            actionType: "comment_added",
-            fieldName: "comment",
-            oldValue: null,
-            newValue: null,
-            metadata: { commentId, via },
-            actor: { userId: actorId, userName: "x", avatarImgPath: null },
-        });
-
-    const renderList = (
-        comments: TaskCommentProps[],
-        activities: TaskActivityProps[] | undefined,
-        viewer: UserProps = me
-    ) =>
-        render(
-            <CssVarsProvider>
-                <MemoryRouter>
-                    <TaskCommentList
-                        currentProjectId={3}
-                        currentProjectName="Proj"
-                        currentTaskDisplayId="PRJ-42"
-                        myself={viewer}
-                        setEditTargetComment={vi.fn()}
-                        setIsInEdit={vi.fn()}
-                        setMyself={vi.fn()}
-                        socket={null}
-                        taskActivities={activities}
-                        taskComments={comments}
-                        useCM={{} as unknown as ChatManagementState}
-                        useTEM={{} as unknown as TeamManagementState}
-                        useTM={{} as unknown as TaskManagementState}
-                        useUISM={{} as unknown as UIStateManagementState}
-                    />
-                </MemoryRouter>
-            </CssVarsProvider>
-        );
+    const list = (comments: TaskCommentProps[], viewer: UserProps = me) => (
+        <CssVarsProvider>
+            <MemoryRouter>
+                <TaskCommentList
+                    currentProjectId={3}
+                    currentProjectName="Proj"
+                    currentTaskDisplayId="PRJ-42"
+                    myself={viewer}
+                    setEditTargetComment={vi.fn()}
+                    setIsInEdit={vi.fn()}
+                    setMyself={vi.fn()}
+                    socket={null}
+                    taskComments={comments}
+                    useCM={{} as unknown as ChatManagementState}
+                    useTEM={{} as unknown as TeamManagementState}
+                    useTM={{} as unknown as TaskManagementState}
+                    useUISM={{} as unknown as UIStateManagementState}
+                />
+            </MemoryRouter>
+        </CssVarsProvider>
+    );
+    const renderList = (comments: TaskCommentProps[], viewer: UserProps = me) =>
+        render(list(comments, viewer));
 
     it("a comment an app wrote carries the chip, the one typed in Genos does not, avatars kept", () => {
-        renderList([comment(1), comment(2)], [write(10, 1, APP), write(11, 2, { kind: "app" })]);
+        renderList([comment(1, APP), comment(2, { kind: "app" })]);
         expect(screen.getAllByText("via MCP")).toHaveLength(1);
         expect(screen.getAllByTestId("avatar")).toHaveLength(2);
         expect(screen.getAllByText("Ken")).toHaveLength(2);
@@ -273,57 +263,35 @@ describe("comment cards", () => {
         expect(rows[1].textContent).not.toContain("via MCP");
     });
 
-    it("no history loaded (or none for a comment) means no chip, and nothing breaks", () => {
-        renderList([comment(1)], undefined);
-        expect(screen.queryByText(/^via /)).toBeNull();
-        cleanup();
-        renderList([comment(1)], [write(10, 99, APP)]);
-        expect(screen.queryByText(/^via /)).toBeNull();
-        expect(screen.getByTestId("avatar")).toBeInTheDocument();
+    it("needs no history: the chip shows with the activity feed never loaded (an old comment)", () => {
+        // This is the MIP-1508 fix: the list answers by itself, so a comment older
+        // than the newest 100 feed rows is marked like any other.
+        renderList([comment(1, KEY)]);
+        expect(screen.getByText("via API key")).toBeInTheDocument();
     });
 
-    it("a comment by a colleague's key shows the kind only to me", () => {
-        const { container } = renderList([comment(1, "u2")], [write(10, 1, KEY, "u2")], me);
+    it("no `via` (older API, comment just made) or a null one means no chip, and nothing breaks", () => {
+        renderList([comment(1), comment(2, null), comment(3, {})]);
+        expect(screen.queryByText(/^via /)).toBeNull();
+        expect(screen.getAllByTestId("avatar")).toHaveLength(3);
+    });
+
+    it("a comment by a colleague's key arrives as the kind only and shows it, no name", () => {
+        // What api #758/#760 send a non-owner: `{ kind: "api_key" }`.
+        const { container } = renderList([comment(1, { kind: "api_key" }, "u2")], me);
         expect(screen.getByText("via API key")).toBeInTheDocument();
         for (const secret of SECRETS) expect(everything(container), secret).not.toContain(secret);
     });
 
-    it("the owner's own comment keeps the name in the explanation", () => {
-        renderList([comment(1)], [write(10, 1, KEY)], me);
+    it("the owner's own comment arrives whole and keeps the name in the explanation", () => {
+        renderList([comment(1, KEY)], me);
         expect(screen.getByLabelText(/my-laptop-claude/)).toBeInTheDocument();
     });
 
-    it("a refreshed history updates the chip (a comment an app has just rewritten)", () => {
-        const { rerender } = renderList([comment(1)], [write(10, 1, { kind: "app" })]);
+    it("a re-read list updates the chip (a comment an app has just rewritten)", () => {
+        const { rerender } = renderList([comment(1, { kind: "app" })]);
         expect(screen.queryByText("via MCP")).toBeNull();
-        rerender(
-            <CssVarsProvider>
-                <MemoryRouter>
-                    <TaskCommentList
-                        currentProjectId={3}
-                        currentProjectName="Proj"
-                        currentTaskDisplayId="PRJ-42"
-                        myself={me}
-                        setEditTargetComment={vi.fn()}
-                        setIsInEdit={vi.fn()}
-                        setMyself={vi.fn()}
-                        socket={null}
-                        taskActivities={[
-                            write(10, 1, { kind: "app" }),
-                            {
-                                ...write(12, 1, APP),
-                                actionType: "comment_edited",
-                            },
-                        ]}
-                        taskComments={[comment(1)]}
-                        useCM={{} as unknown as ChatManagementState}
-                        useTEM={{} as unknown as TeamManagementState}
-                        useTM={{} as unknown as TaskManagementState}
-                        useUISM={{} as unknown as UIStateManagementState}
-                    />
-                </MemoryRouter>
-            </CssVarsProvider>
-        );
+        rerender(list([{ ...comment(1, APP), tsUpdated: "2026-07-17T00:05:00Z" }]));
         expect(screen.getByText("via MCP")).toBeInTheDocument();
     });
 });

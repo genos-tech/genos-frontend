@@ -11,7 +11,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
-import { TaskActivityProps, TaskCommentProps, TaskProps } from "../../../../types/tasks";
+import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
 import { TaskCommentEditorBlock } from "../../../tasks/components/contents/base/sub/TaskCommentEditorBlock";
 import { TaskCommentList } from "../../../tasks/components/contents/base/sub/TaskCommentList";
 import { loadTaskComments } from "../../../tasks/services/loadTaskComments";
@@ -32,9 +32,6 @@ type ThreadCommentsViewProps = {
     setTodoFromMessageBubble: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
-    /** The task's history rows, loaded by the pane for its Activities tab: what
-     *  lets a comment card say it came through a connected AI app (MIP-1376). */
-    taskActivities?: TaskActivityProps[];
 };
 
 /**
@@ -60,7 +57,6 @@ export const ThreadCommentsView = ({
     useUISM,
     threadTaskId,
     setTodoFromMessageBubble,
-    taskActivities,
 }: ThreadCommentsViewProps) => {
     const { accessToken } = useAuth();
 
@@ -178,7 +174,6 @@ export const ThreadCommentsView = ({
                     setMyself={setMyself}
                     setTodoFromMessageBubble={setTodoFromMessageBubble}
                     socket={socket}
-                    taskActivities={taskActivities}
                     taskComments={useTM.taskComments}
                     useCM={useCM}
                     useTEM={useTEM}
