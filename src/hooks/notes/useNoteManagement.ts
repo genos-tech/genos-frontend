@@ -10,6 +10,7 @@ import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadC
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { moveChatNote as moveChatNoteApi } from "../../features/notes/chat-notes/services/moveChatNote";
 import { addNote } from "../../features/notes/common/services/addNote";
+import { bumpVersionsHead } from "../../features/notes/common/services/bumpVersionsHead";
 // NOTE: `applyNoteBodyToYjs` is imported DYNAMICALLY at its single call
 // site below, not here. Its module statically pulls @blocknote/core,
 // @blocknote/core/yjs, @hocuspocus/provider and yjs — i.e. the whole
@@ -1780,8 +1781,6 @@ export const useNoteManagement = (
     };
 
     // Note version history
-    const VERSION_COALESCE_MS = 5 * 60 * 1000; // mirror the backend window
-
     const loadNoteVersionsFor = async (noteType: number, noteId: number) => {
         if (!accessToken) {
             setCurrentNoteVersions([]);
@@ -1799,38 +1798,9 @@ export const useNoteManagement = (
         }
     };
 
-    // Optimistic head bump after a local save. Same coalesce rules as
-    // the backend so the chip flips to "by me · just now" without
-    // waiting for a fresh GET.
+    // Optimistic head bump after a local save (rules: `bumpVersionsHead`).
     const bumpNoteVersionsHead = (_noteType: number, _noteId: number) => {
-        setCurrentNoteVersions((prev) => {
-            const nowIso = new Date().toISOString();
-            const head = prev[0];
-            const isMine = head?.editor && String(head.editor.userId) === String(myself.userId);
-            const withinWindow =
-                head &&
-                Date.now() - new Date(head.tsUpdatedAt).getTime() < VERSION_COALESCE_MS &&
-                head.restoredFromVersionNo == null &&
-                // The server only coalesces into a row whose source is the
-                // write's own: typing never lands on a row an AI app wrote.
-                !head.via;
-            if (head && isMine && withinWindow) {
-                return [{ ...head, tsUpdatedAt: nowIso }, ...prev.slice(1)];
-            }
-            const synthetic: NoteVersionMeta = {
-                versionNo: (head?.versionNo ?? 0) + 1,
-                editor: {
-                    userId: String(myself.userId),
-                    userName: myself.userName,
-                    avatarUrl: myself.avatarImgPath || null,
-                },
-                title: head?.title ?? "",
-                restoredFromVersionNo: null,
-                tsCreatedAt: nowIso,
-                tsUpdatedAt: nowIso,
-            };
-            return [synthetic, ...prev];
-        });
+        setCurrentNoteVersions((prev) => bumpVersionsHead(prev, myself));
     };
 
     const restoreNoteVersion = async (

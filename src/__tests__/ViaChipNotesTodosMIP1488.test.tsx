@@ -12,6 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { TodoItemRow } from "../features/chat/components/todo/TodoItemRow";
 import { ModalNoteHistory } from "../features/notes/common/components/ModalNoteHistory";
+import { bumpVersionsHead } from "../features/notes/common/services/bumpVersionsHead";
 import { viaSourceOfNoteVersion, viaSourceOfTodoItem } from "../features/tasks/utils/viaSource";
 import type { ChatManagementState } from "../hooks/chats/useChatManagement";
 import type { TeamManagementState } from "../hooks/common/useTeamManagement";
@@ -20,6 +21,8 @@ import type { UserProps } from "../types/admin";
 import type { TodoItemProps } from "../types/chat";
 import type { NoteVersionMeta } from "../types/notes";
 
+let isMobileViewport = false;
+vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => isMobileViewport }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/ui/avatars/avatarWithStatus", () => ({
     AvatarWithStatus: () => <span data-testid="avatar" />,
@@ -296,5 +299,46 @@ describe("to-do rows", () => {
         renderTodo(todo({ via: { kind: "oauth", app: "Claude " } }));
         expect(screen.getByText("via MCP")).toBeInTheDocument();
         expect(screen.queryByRole("img")).toBeNull();
+    });
+});
+
+describe("a local save never extends a row an app wrote (MIP-1488)", () => {
+    const meNow = { userId: "u1", userName: "Me", avatarImgPath: "" };
+    const now = Date.parse("2026-11-14T12:00:00Z");
+    const head = (over: Partial<NoteVersionMeta> = {}): NoteVersionMeta =>
+        version({ versionNo: 4, tsUpdatedAt: "2026-11-14T11:58:00Z", ...over });
+
+    it("my own recent typed head is extended, as before", () => {
+        const out = bumpVersionsHead([head()], meNow, now);
+        expect(out).toHaveLength(1);
+        expect(out[0].versionNo).toBe(4);
+        expect(out[0].tsUpdatedAt).toBe("2026-11-14T12:00:00.000Z");
+    });
+
+    it("my own recent head written through an API key or app starts a new row without via", () => {
+        for (const via of [KEY, APP, CLAUDE]) {
+            const out = bumpVersionsHead([head({ via })], meNow, now);
+            expect(out).toHaveLength(2);
+            expect(out[0].versionNo).toBe(5);
+            expect(out[0].via).toBeUndefined();
+            expect(out[1].via).toEqual(via);
+        }
+    });
+});
+
+describe("to-do rows on a phone", () => {
+    it("the generic chip is icon-only: the words are its accessible name", async () => {
+        isMobileViewport = true;
+        renderTodo(todo({ via: KEY }));
+        expect(screen.getByRole("img", { name: "via API key" })).toBeInTheDocument();
+        expect(screen.queryByText("via API key")).toBeNull();
+        cleanup();
+        renderTodo(todo({ via: APP }));
+        expect(screen.getByRole("img", { name: "via MCP" })).toBeInTheDocument();
+        expect(screen.queryByText("via MCP")).toBeNull();
+        cleanup();
+        renderTodo(todo({ via: CLAUDE }));
+        expect(screen.getByRole("img", { name: "via Claude" })).toBeInTheDocument();
+        isMobileViewport = false;
     });
 });

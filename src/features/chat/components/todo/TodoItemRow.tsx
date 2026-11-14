@@ -424,7 +424,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     title, so the title keeps the room and nothing shifts. */}
                 {via && (
                     <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
-                        <ViaChip size="sm" source={via} />
+                        <ViaChip compact={isMobile} size="sm" source={via} />
                     </Box>
                 )}
                 {/* A reminder is a promise made about this row, and the only
