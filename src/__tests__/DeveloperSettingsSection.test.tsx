@@ -364,6 +364,37 @@ describe("DeveloperSettingsSection", () => {
     });
 
     /**
+     * genos-api #836: an editor's list has no `userEmail` on any row. The holder
+     * line falls back through name, then email, then a neutral label, and never
+     * prints "undefined".
+     */
+    describe("a team key row without the holder's email", () => {
+        const withoutEmail = (over: Record<string, unknown>) => {
+            const { userEmail: _omit, ...rest } = TEAM_KEY;
+            return { ...rest, ...over };
+        };
+
+        it("names the holder by userName when the email is absent", async () => {
+            listTeamApiKeys.mockResolvedValue([withoutEmail({})]);
+            render(<DeveloperSettingsSection teamId="t1" />);
+            expect(await screen.findByText("Made by Editor Ed")).toBeInTheDocument();
+        });
+
+        it("says 'a team member' when neither name nor email is there", async () => {
+            listTeamApiKeys.mockResolvedValue([withoutEmail({ userName: "" })]);
+            render(<DeveloperSettingsSection teamId="t1" />);
+            expect(await screen.findByText("Made by a team member")).toBeInTheDocument();
+            expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
+        });
+
+        it("still falls back to the email for an owner's row with no name", async () => {
+            listTeamApiKeys.mockResolvedValue([{ ...TEAM_KEY, userName: "" }]);
+            render(<DeveloperSettingsSection teamId="t1" />);
+            expect(await screen.findByText("Made by ed@example.com")).toBeInTheDocument();
+        });
+    });
+
+    /**
      * MIP-1301: revoke and delete were one click on an icon. A revoked key and a
      * deleted webhook (its signing secret goes with it) cannot be brought back,
      * so each asks first, and Cancel must send nothing.

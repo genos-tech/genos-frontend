@@ -3566,6 +3566,7 @@ export const fr: DeepPartial<Messages> = {
                 blurb: "Toutes les clés qui peuvent agir sur cette équipe, quel que soit leur créateur. En tant que propriétaire, vous pouvez révoquer n'importe laquelle. Une clé cesse aussi de fonctionner quand son créateur quitte l'équipe.",
                 empty: "Aucune clé d'équipe pour le moment.",
                 createdBy: "Créée par {name}",
+                unknownMember: "un membre de l'équipe",
                 revokeNamed: "Révoquer {name}",
             },
             securityLog: {

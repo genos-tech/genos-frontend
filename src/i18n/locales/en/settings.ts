@@ -299,6 +299,7 @@ export const settings = {
             blurb: "Every key that can act on this team, whoever made it. The owner can revoke any of them; an editor can revoke a viewer's, or their own. A key also stops working when its creator leaves the team.",
             empty: "No team keys right now.",
             createdBy: "Made by {name}",
+            unknownMember: "a team member",
             revokeNamed: "Revoke {name}",
         },
         // Owner-only, like the team keys. The team's audit trail: who
