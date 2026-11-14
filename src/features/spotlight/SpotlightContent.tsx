@@ -1777,7 +1777,6 @@ const ConversationPanel = memo(
                                 isStreaming={ask.isStreaming}
                                 labels={turnLabels}
                                 layout={turnLayout}
-                                droppedReferences={ask.droppedReferences}
                                 mentions={ask.askedMentions}
                                 noteScopes={noteScopes}
                                 pendingApproval={ask.pendingApproval}

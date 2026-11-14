@@ -198,7 +198,6 @@ export const AgentQAConversation = ({
                     isStreaming={ask.isStreaming}
                     labels={turnLabels}
                     layout={layout}
-                    droppedReferences={ask.droppedReferences}
                     mentions={ask.askedMentions}
                     noteScopes={noteScopes}
                     pendingApproval={ask.pendingApproval}
