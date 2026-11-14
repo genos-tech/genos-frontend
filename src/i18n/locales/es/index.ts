@@ -4364,6 +4364,7 @@ export const es: DeepPartial<Messages> = {
                     backToSignIn: "Volver para iniciar sesión",
                 },
                 invitedEmailHint: "Te estás registrando con tu correo electrónico de invitación.",
+                providerHint: "Marca la casilla y luego continúa con {provider}.",
                 consent: {
                     label: "Acepto los {terms} y la {privacy}.",
                     terms: "Términos del servicio",

@@ -4744,6 +4744,7 @@ export const hi: DeepPartial<Messages> = {
                     backToSignIn: "साइन इन करने के लिए वापस जाएँ",
                 },
                 invitedEmailHint: "आप अपने आमंत्रित ईमेल से साइन अप कर रहे हैं.",
+                providerHint: "बॉक्स पर टिक करें, फिर {provider} से जारी रखें।",
                 consent: {
                     label: "मैं {terms} और {privacy} से सहमत हूँ.",
                     terms: "सेवा की शर्तें",

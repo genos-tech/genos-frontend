@@ -4299,6 +4299,7 @@ export const ar: DeepPartial<Messages> = {
                     backToSignIn: "العودة لتسجيل الدخول",
                 },
                 invitedEmailHint: "أنت تقوم بالتسجيل باستخدام بريدك الإلكتروني الذي تمت دعوته.",
+                providerHint: "ضع علامة في المربع، ثم تابع باستخدام {provider}.",
                 consent: {
                     label: "أوافق على {terms} و{privacy}.",
                     terms: "شروط الخدمة",

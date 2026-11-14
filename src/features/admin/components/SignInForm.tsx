@@ -39,6 +39,7 @@ import { purplePalette } from "../../../theme/purplePalette";
 import { g } from "../../../theme/tokens";
 import { takeReturn } from "../../../utils/pendingReturn";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
+import { rememberOAuthProvider } from "../../integrations/oauthProvider";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
 import { demoSignIn } from "../services/demoSignin";
 import { resendVerificationEmail } from "../services/emailVerification";
@@ -357,7 +358,10 @@ export const SignInForm = () => {
                                         },
                                     }}
                                     fullWidth
-                                    onClick={() => redirectToOAuthLogin("google")}
+                                    onClick={() => {
+                                        rememberOAuthProvider("google");
+                                        redirectToOAuthLogin("google");
+                                    }}
                                 >
                                     {t.admin.auth.signIn.continueWithGoogle}
                                 </Button>
@@ -378,7 +382,10 @@ export const SignInForm = () => {
                                         },
                                     }}
                                     fullWidth
-                                    onClick={() => redirectToOAuthLogin("github")}
+                                    onClick={() => {
+                                        rememberOAuthProvider("github");
+                                        redirectToOAuthLogin("github");
+                                    }}
                                 >
                                     {t.admin.auth.signIn.continueWithGithub}
                                 </Button>

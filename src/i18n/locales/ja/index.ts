@@ -79,6 +79,8 @@ export const ja: DeepPartial<Messages> = {
                     backToSignIn: "サインインに戻る",
                 },
                 invitedEmailHint: "招待メールを使用してサインアップしています。",
+                providerHint:
+                    "チェックボックスにチェックを入れてから、{provider}で続行してください。",
                 consent: {
                     label: "{terms}と{privacy}に同意します。",
                     terms: "利用規約",
