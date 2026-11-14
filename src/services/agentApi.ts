@@ -80,6 +80,16 @@ export interface ToolResultProjectRef {
     deleted: true;
 }
 
+/** Ref the backend attaches to an approved delete_task_attachment result (MIP-1563,
+ * AGENT_PARITY_TOOLS): the server has already deleted the file, so the client only forgets
+ * its own cached copy of the task, which still lists it. Absent on every other tool (and on
+ * older backends). */
+export interface ToolResultTaskAttachmentRef {
+    task_id: number;
+    attachment_id?: number;
+    deleted: true;
+}
+
 /** What an approved write's result carries when what undo needs was really
  * stored (genos-api `agent/undo.py`, `event_info`). It, and not `undoable` on
  * the approval card, decides whether Undo is offered. `available_until` is an
@@ -109,6 +119,7 @@ export interface ToolCallResultPayload {
     // session-cache hits (nothing executed).
     duration_ms?: number;
     project?: ToolResultProjectRef;
+    task_attachment?: ToolResultTaskAttachmentRef;
     undo?: ToolResultUndoRef;
 }
 
@@ -1405,6 +1416,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 note_folder: evt.note_folder,
                 duration_ms: evt.duration_ms,
                 project: evt.project,
+                task_attachment: evt.task_attachment,
                 undo: asUndoRef(evt.undo),
             });
             return false;

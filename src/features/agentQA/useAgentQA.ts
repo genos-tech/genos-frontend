@@ -41,6 +41,7 @@ import { cleanRejectReason } from "../../services/agentRejectReason";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import { emitProjectToolResult } from "./approvedProjectWrites";
+import { emitTaskAttachmentToolResult } from "./approvedTaskWrites";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import { mergeSources } from "./mergeSources";
 import { emitNoteChanged } from "./noteWriteTools";
@@ -296,6 +297,7 @@ export const useAgentQA = ({
                     note_folder,
                     duration_ms,
                     project,
+                    task_attachment,
                     undo,
                 }: {
                     step: number;
@@ -307,6 +309,7 @@ export const useAgentQA = ({
                     note_folder?: import("../../services/agentApi").ToolResultNoteFolderRef;
                     duration_ms?: number;
                     project?: import("../../services/agentApi").ToolResultProjectRef;
+                    task_attachment?: import("../../services/agentApi").ToolResultTaskAttachmentRef;
                     undo?: ToolResultUndoRef;
                 }) => {
                     setAsk((prev) => {
@@ -375,6 +378,9 @@ export const useAgentQA = ({
                     // A deleted project leaves the sidebar, and an answered
                     // join request changes its inbox row on the server.
                     emitProjectToolResult(tool_name, project);
+                    // A deleted task file leaves the browser's cached copy of the task listing
+                    // it (MIP-1563).
+                    emitTaskAttachmentToolResult(tool_name, task_attachment);
                 },
                 onToolError: ({
                     step,
