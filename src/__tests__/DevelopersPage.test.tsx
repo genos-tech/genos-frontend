@@ -293,6 +293,22 @@ describe("DevelopersPage", () => {
         expect(rowOf("restore_note_version")).toContain("can itself be undone");
     });
 
+    it("says manage_milestone can convert and move, that neither can be undone, and asks no opt-in for them", () => {
+        renderPage();
+        const row = [...document.querySelectorAll("tr")].find(
+            (tr) => tr.querySelector("td")?.textContent === "manage_milestone"
+        );
+        const text = row?.textContent ?? "";
+        expect(text).toContain("The convert action turns a root task into a milestone");
+        expect(text).toContain("back into a task, on the same row");
+        expect(text).toContain("its folder and sprint are dropped");
+        expect(text).toContain("moves the milestone, and its tasks with it, to another project");
+        expect(text).toContain("the sprint, folder and tags are cleared");
+        expect(text).toContain("Neither can be undone");
+        // Nothing is deleted for good, so a key with write scope may do both.
+        expect(text).not.toContain("destructive opt-in");
+    });
+
     it("says the destructive opt-in on exactly the tools that need it", () => {
         renderPage();
         const rows = [...document.querySelectorAll("tr")].filter((tr) =>
