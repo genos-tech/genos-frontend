@@ -279,7 +279,11 @@ const AgentTurnInner = ({
     );
 
     const handleRetry = useCallback(() => {
-        if (onRetry) onRetry(askedQuery, mentions, selection);
+        if (!onRetry) return;
+        // The third argument only when the turn had a passage, so an ordinary retry calls the host
+        // exactly as before.
+        if (selection) onRetry(askedQuery, mentions, selection);
+        else onRetry(askedQuery, mentions);
     }, [onRetry, askedQuery, mentions, selection]);
 
     // Look-up table for `rewriteCitations` and the anchor override below,
