@@ -16,7 +16,6 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
-import { invisibleHitAreaSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -340,9 +339,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                     );
                 }}
                 slotProps={{
-                    // The "Open" arrow is 24px: a 44 x 44 tap on a touch screen, by an invisible
-                    // area (MIP-1455).
-                    popupIndicator: { sx: invisibleHitAreaSx("&") },
                     listbox: {
                         sx: {
                             borderRadius: "12px",

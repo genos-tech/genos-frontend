@@ -1,7 +1,8 @@
 /**
  * MIP-1455 (touch targets, round 4): the tab strip's tab and close x, the graph's "Click to edit
- * dates" and legend toggle, the chat list row's pin / "..." / avatar and the search box's "Open"
- * arrow are 44px taps on a touch screen, and nothing changes with a mouse.
+ * dates" and legend toggle are 44px taps on a touch screen, and nothing changes with a mouse. The
+ * chat list row's pin / "..." / avatar and the search box's "Open" arrow were taken OUT again
+ * (a phone could not open a chat): see the chat list test below.
  *
  * jsdom evaluates no `@media` and lays nothing out, so the CSS the components emit is read as text
  * (`cssWithMediaOf`) and the call sites that need a graph or a chat list are pinned by their
@@ -78,19 +79,20 @@ describe("call sites, by source", () => {
         expect(text).toMatch(/"@media \(pointer: coarse\)": \{ "--IconButton-size": "44px" \}/);
     });
 
-    it("chat list row: pin and '...' are tall hit areas, the avatar a 44 x 44 one", () => {
-        const actions = source("features/chat/components/sidebar/ChatListItemActions.tsx");
-        expect(actions).toContain('const TOUCH_ACTION_SX = tallHitAreaSx("&");');
-        expect(actions.match(/\.\.\.TOUCH_ACTION_SX/g)?.length).toBe(2);
-        const row = source("features/chat/components/sidebar/chatListItem.tsx");
-        expect(row).toContain(`invisibleHitAreaSx("& [role='button']")`);
-        // The wrapper must not take part in layout.
-        expect(row).toMatch(/display: "contents", \.\.\.AVATAR_TOUCH_SX/);
-    });
-
-    it("search box: the Open arrow carries the invisible hit area", () => {
-        expect(source("features/chat/components/sidebar/ChatSearch.tsx")).toContain(
-            'popupIndicator: { sx: invisibleHitAreaSx("&") }'
-        );
+    it("chat list row: NO invisible hit areas on the pin, '...' or avatar (a phone could not open a chat)", () => {
+        // On a phone `NavItem` forces `position: static` on the row's action buttons
+        // (`ACTION_IN_FLOW`, more specific than the `position: relative` the hit-area helpers set),
+        // so the helpers' `::after` found the ROW as its containing block: 100% of the row wide,
+        // so a tap anywhere on the row hit "...". They stay off the chat list row until the hit
+        // area is built so a `position` rule elsewhere cannot move its anchor.
+        for (const file of [
+            "features/chat/components/sidebar/ChatListItemActions.tsx",
+            "features/chat/components/sidebar/chatListItem.tsx",
+            "features/chat/components/sidebar/ChatSearch.tsx",
+        ]) {
+            const text = source(file);
+            expect(text, file).not.toContain("tallHitAreaSx");
+            expect(text, file).not.toContain("invisibleHitAreaSx");
+        }
     });
 });
