@@ -100,6 +100,8 @@ export const EDITABLE_FIELDS: Record<string, Record<string, FieldSpec>> = {
         effort_level: EFFORT,
         due_date: day("due", true),
         start_date: day("start", true),
+        // Present only while the API publishes it (AGENT_PARITY_TOOLS, MIP-1561).
+        status: STATUS,
     },
     update_task: {
         title: title(TASK_TITLE),

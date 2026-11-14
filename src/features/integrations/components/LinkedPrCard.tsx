@@ -25,12 +25,9 @@ import {
     CheckNoneIcon,
     CheckPassingIcon,
     CheckPendingIcon,
-    PrClosedIcon,
-    PrDraftIcon,
-    PrMergedIcon,
-    PrOpenIcon,
 } from "./icons/Octicons";
 import { PrHoverDetails } from "./PrHoverDetails";
+import { PrStateIcon } from "./PrStateIcon";
 
 interface Props {
     url: string;
@@ -41,22 +38,6 @@ interface Props {
      *  message. Task metadata view keeps the default (prompt visible). */
     hideOnNotConnected?: boolean;
 }
-
-const PrStateIcon = ({ state, size = 16 }: { state: PrState; size?: number }) => {
-    const color = prStateColor(state);
-    const common = { width: size, height: size, style: { color } };
-    switch (state) {
-        case "merged":
-            return <PrMergedIcon {...common} />;
-        case "draft":
-            return <PrDraftIcon {...common} />;
-        case "closed":
-            return <PrClosedIcon {...common} />;
-        case "open":
-        default:
-            return <PrOpenIcon {...common} />;
-    }
-};
 
 const CiBadge = ({ state, size = 16 }: { state: CiState; size?: number }) => {
     const color = ciStateColor(state);

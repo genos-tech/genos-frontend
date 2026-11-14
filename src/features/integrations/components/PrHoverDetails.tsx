@@ -1,9 +1,12 @@
-import { Divider, Stack, Typography } from "@mui/joy";
+import { Chip, Divider, Stack, Typography } from "@mui/joy";
 
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
+import { g } from "../../../theme/tokens";
 import type { PrDetailResponse } from "../services/prTypes";
+import { deriveCiState, derivePrState, type CiState, type PrState } from "../utils/prState";
+import { PrStateIcon } from "./PrStateIcon";
 
 // "5 minutes ago" / "2 hours ago" / "3 days ago" — no extra dep,
 // good enough for a tooltip subtitle.
@@ -41,6 +44,34 @@ const relativeAgo = (iso: string, t: ReturnType<typeof useTranslation>["t"]): st
     });
 };
 
+// Chip ink + fill per state, from the mode-aware roles: GitHub's own greens and reds are
+// too dim on the dark card to read as text (the icon takes the same ink).
+const PR_CHIP: Record<PrState, { color: string; bg: string }> = {
+    open: { color: g.success.text, bg: g.success.subtle },
+    merged: { color: g.accent.text, bg: g.accent.subtle },
+    closed: { color: g.danger.text, bg: g.danger.subtle },
+    draft: { color: g.text.secondary, bg: g.hover },
+};
+const CI_CHIP: Record<Exclude<CiState, "none">, { color: string; bg: string }> = {
+    passing: PR_CHIP.open,
+    failing: PR_CHIP.closed,
+    pending: { color: g.warning.text, bg: g.warning.subtle },
+};
+
+const prStateLabel = (state: PrState, t: ReturnType<typeof useTranslation>["t"]): string =>
+    t.integrations.pullRequest.state[state];
+
+const ciStateLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"]): string =>
+    t.integrations.pullRequest.ci[state];
+
+// A PR whose payload says none of merged / draft / open / closed gets no state chip:
+// `derivePrState` falls back to "closed", and a wrong "Closed" is worse than no chip.
+const hasKnownState = (pull: PrDetailResponse["pull"]): boolean =>
+    pull.merged === true ||
+    pull.draft === true ||
+    pull.state === "open" ||
+    pull.state === "closed";
+
 interface Props {
     payload: PrDetailResponse;
     isDark: boolean;
@@ -71,6 +102,10 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
     const commits = pull.commits;
     const comments = (pull.comments ?? 0) + (pull.review_comments ?? 0);
 
+    const prState = hasKnownState(pull) ? derivePrState(pull) : null;
+    // "No CI" is the absence of a signal, not a status: only say CI when something ran.
+    const ci = deriveCiState(payload.combined_status, payload.check_runs);
+
     return (
         <Stack
             spacing={0.75}
@@ -87,6 +122,44 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
                 boxShadow: palette.shadow,
             }}
         >
+            {(prState != null || ci !== "none") && (
+                <Stack alignItems="center" direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
+                    {prState != null && (
+                        <Chip
+                            size="sm"
+                            startDecorator={
+                                <PrStateIcon
+                                    color={PR_CHIP[prState].color}
+                                    size={12}
+                                    state={prState}
+                                />
+                            }
+                            variant="soft"
+                            sx={{
+                                backgroundColor: PR_CHIP[prState].bg,
+                                color: PR_CHIP[prState].color,
+                                fontWeight: 600,
+                            }}
+                        >
+                            {prStateLabel(prState, t)}
+                        </Chip>
+                    )}
+                    {ci !== "none" && (
+                        <Chip
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: CI_CHIP[ci].bg,
+                                color: CI_CHIP[ci].color,
+                                fontWeight: 500,
+                            }}
+                        >
+                            {ciStateLabel(ci, t)}
+                        </Chip>
+                    )}
+                </Stack>
+            )}
+
             {includeHeader && (
                 <Stack spacing={0.25}>
                     <Typography

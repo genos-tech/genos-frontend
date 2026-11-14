@@ -43,6 +43,9 @@ const SAME_AS_ENGLISH_OK = new Set([
     "linkedPr.paste",
     "dashboard.velocity.barTooltip",
     "diagram.tooltips.parentChild",
+    // Brand names of the two AI apps (MIP-1568): the vendors' own spelling in every locale.
+    "activity.via.apps.claude",
+    "activity.via.apps.chatgpt",
 ]);
 
 describe("tasks catalog: every locale has every English key", () => {

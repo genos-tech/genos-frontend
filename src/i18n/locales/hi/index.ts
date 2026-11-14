@@ -2837,6 +2837,11 @@ export const hi: DeepPartial<Messages> = {
                 apiKeyHint: "API कुंजी से किया गया, Genos में टाइप नहीं किया गया",
                 apiKeyHintNamed:
                     "आपकी API कुंजी “{name}” से किया गया, Genos में टाइप नहीं किया गया",
+                apps: { claude: "Claude", chatgpt: "ChatGPT" },
+                viaApp: "{app} के ज़रिए",
+                appHint: "कनेक्टेड AI ऐप ({app}) से किया गया, Genos में टाइप नहीं किया गया",
+                appHintNamed:
+                    "आपके कनेक्टेड ऐप “{name}” ({app}) से किया गया, Genos में टाइप नहीं किया गया",
             },
             restore: {
                 button: "पिछला विवरण वापस लाएँ",
@@ -5216,6 +5221,9 @@ export const hi: DeepPartial<Messages> = {
             project_id: "प्रोजेक्ट",
             start_date: "शुरू",
             collaborators: "सहयोगी",
+            reporter_id: "रिपोर्टर",
+            links: "लिंक",
+            template: "टेम्पलेट",
             tags: "टैग",
             assignee_ids: "असाइनी",
             milestone_folder_id: "फ़ोल्डर",

@@ -114,8 +114,8 @@ describe("ViaChip", () => {
     it("says via MCP for an app and via API key for a key, in words", () => {
         render(
             <CssVarsProvider>
-                <ViaChip source={{ kind: "mcp", name: null }} />
-                <ViaChip source={{ kind: "apiKey", name: null }} />
+                <ViaChip source={{ kind: "mcp", name: null, app: null }} />
+                <ViaChip source={{ kind: "apiKey", name: null, app: null }} />
             </CssVarsProvider>
         );
         expect(screen.getByText("via MCP")).toBeInTheDocument();
@@ -125,13 +125,13 @@ describe("ViaChip", () => {
     it("puts the name in its explanation only when it is given one", () => {
         const { container, rerender } = render(
             <CssVarsProvider>
-                <ViaChip source={{ kind: "apiKey", name: null }} />
+                <ViaChip source={{ kind: "apiKey", name: null, app: null }} />
             </CssVarsProvider>
         );
         expect(everything(container)).not.toContain("my-laptop-claude");
         rerender(
             <CssVarsProvider>
-                <ViaChip source={{ kind: "apiKey", name: "my-laptop-claude" }} />
+                <ViaChip source={{ kind: "apiKey", name: "my-laptop-claude", app: null }} />
             </CssVarsProvider>
         );
         expect(screen.getByLabelText(/my-laptop-claude/)).toBeInTheDocument();
@@ -145,6 +145,32 @@ describe("history rows (the task's Activity tab, the PM thread's Activities tab)
         expect(screen.getByTestId("avatar")).toBeInTheDocument();
         expect(screen.getByText("Ken")).toBeInTheDocument();
         expect(screen.getByText("changed status from")).toBeInTheDocument();
+    });
+
+    it("MIP-1568: a recognised app shows its own mark instead of the words, for the owner and a colleague, never the name", () => {
+        const claude = { ...APP, app: "claude" };
+        const { container, unmount } = renderFeed(
+            [act({ activityId: 1, metadata: { via: claude } })],
+            colleague
+        );
+        expect(screen.getByRole("img", { name: "via Claude" })).toBeInTheDocument();
+        expect(screen.queryByText("via MCP")).toBeNull();
+        for (const secret of SECRETS) expect(everything(container), secret).not.toContain(secret);
+        expect(screen.getByText("Ken")).toBeInTheDocument();
+        unmount();
+
+        renderFeed([act({ activityId: 1, metadata: { via: { ...APP, app: "chatgpt" } } })], me);
+        expect(screen.getByRole("img", { name: "via ChatGPT" })).toBeInTheDocument();
+    });
+
+    it("MIP-1568: a family this build does not know, or none, keeps the generic chip", () => {
+        renderFeed([
+            act({ activityId: 1, metadata: { via: { ...APP, app: "gemini" } } }),
+            act({ activityId: 2, metadata: { via: { ...APP, app: "Claude " } } }),
+            act({ activityId: 3, metadata: { via: APP } }),
+        ]);
+        expect(screen.getAllByText("via MCP")).toHaveLength(3);
+        expect(screen.queryByRole("img")).toBeNull();
     });
 
     it("a change made with an API key carries the via API key chip", () => {
@@ -251,6 +277,16 @@ describe("comment cards (MIP-1508: the chip comes from the comment's own `via`)"
     );
     const renderList = (comments: TaskCommentProps[], viewer: UserProps = me) =>
         render(list(comments, viewer));
+
+    it("MIP-1568: a comment from a recognised app carries its mark, and a colleague sees no name", () => {
+        const { container } = renderList(
+            [comment(1, { ...APP, app: "claude" }), comment(2, { kind: "app" })],
+            colleague
+        );
+        expect(screen.getAllByRole("img", { name: "via Claude" })).toHaveLength(1);
+        expect(screen.queryByText("via MCP")).toBeNull();
+        for (const secret of SECRETS) expect(everything(container), secret).not.toContain(secret);
+    });
 
     it("a comment an app wrote carries the chip, the one typed in Genos does not, avatars kept", () => {
         renderList([comment(1, APP), comment(2, { kind: "app" })]);

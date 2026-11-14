@@ -521,6 +521,9 @@ export const fr: DeepPartial<Messages> = {
             project_id: "Projet",
             start_date: "Début",
             collaborators: "Collaborateurs",
+            reporter_id: "Rapporteur",
+            links: "Liens",
+            template: "Modèle",
             tags: "Balises",
             assignee_ids: "Assignés",
             milestone_folder_id: "Dossier",
@@ -5438,6 +5441,11 @@ export const fr: DeepPartial<Messages> = {
                     "Fait depuis votre app connectée « {name} » (MCP), pas saisi dans Genos",
                 apiKeyHint: "Fait avec une clé API, pas saisi dans Genos",
                 apiKeyHintNamed: "Fait avec votre clé API « {name} », pas saisi dans Genos",
+                apps: { claude: "Claude", chatgpt: "ChatGPT" },
+                viaApp: "via {app}",
+                appHint: "Fait depuis une app IA connectée ({app}), pas saisi dans Genos",
+                appHintNamed:
+                    "Fait depuis votre app connectée « {name} » ({app}), pas saisi dans Genos",
             },
             restore: {
                 button: "Restaurer la description précédente",
