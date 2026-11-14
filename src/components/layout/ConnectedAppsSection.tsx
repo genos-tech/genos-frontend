@@ -26,9 +26,10 @@ import { EmptyState } from "../ui/feedback/EmptyState";
  * deleting, which of its teams, which one is the default) or revoked, which
  * ends every token it holds at once: its next request fails.
  *
- * Adding a team is not here: that is a new decision, so it goes through the
- * app's own connect flow again. Revoking asks first, in the page, because a
- * browser confirm dialog is not available inside every host this runs in.
+ * Adding a team is here too: each team the member belongs to that the app does
+ * not have yet is listed under it, and ticking one saves it (`addTeam`). Revoking
+ * asks first, in the page, because a browser confirm dialog is not available
+ * inside every host this runs in.
  */
 export const ConnectedAppsSection = () => {
     const { t, locale } = useTranslation();
