@@ -56,6 +56,9 @@ export const loadActivityHistory = async (
         // everything past the cut for good (MIP-740).
         const base = `${v3ApiBaseURL()}/api/v3/activities/?${params.join("&")}`;
         const activities: unknown[] = [];
+        // Ids of cached rows the server no longer lists because the member lost
+        // access to their chat (MIP-1513). Ids only, no content.
+        const tombstones: string[] = [];
         let serverTime: string | undefined;
         let cursor: string | null = null;
         for (let page = 0; ; page += 1) {
@@ -74,6 +77,16 @@ export const loadActivityHistory = async (
             if (Array.isArray(res.data?.activities)) {
                 activities.push(...res.data.activities);
             }
+            // Only the first page carries them: the server sends `[]` on a
+            // `cursor` page, and ignoring later pages here keeps a server that
+            // repeats the list from queueing it once per page.
+            if (page === 0 && Array.isArray(res.data?.tombstones)) {
+                for (const id of res.data.tombstones) {
+                    if (typeof id === "string" && id) {
+                        tombstones.push(id);
+                    }
+                }
+            }
             // The FIRST page's clock, not the last: a later page's is later
             // still, and the next `since` would then skip rows created while
             // the pages were being fetched. Using the first can only re-fetch
@@ -88,9 +101,18 @@ export const loadActivityHistory = async (
         }
         return {
             serverTime: serverTime as string,
-            activity: activities.map((a: unknown) =>
-                v3ActivityToLegacy(a as Parameters<typeof v3ActivityToLegacy>[0], myself)
-            ),
+            activity: [
+                ...activities.map((a: unknown) =>
+                    v3ActivityToLegacy(a as Parameters<typeof v3ActivityToLegacy>[0], myself)
+                ),
+                // After the map, never through it: a tombstone is an id with no
+                // content, which the adapter would throw on. The applier deletes
+                // the cached row for `isDeleted` on an incremental sync (and a
+                // full load has just cleared the store, so it is a no-op there).
+                ...tombstones.map(
+                    (id) => ({ activityId: id, isDeleted: true }) as ActivityDeltaItem
+                ),
+            ],
             forceFull: false,
         };
     } catch (error: unknown) {
