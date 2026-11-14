@@ -568,8 +568,8 @@ const AgentTurnInner = ({
                                     color: g.text.secondary,
                                 }}
                             >
+                                {/* A decorative icon: MUI hides it from screen readers. */}
                                 <InfoOutlinedIcon
-                                    aria-hidden="true"
                                     sx={{ fontSize: 14, mt: "2px", flexShrink: 0 }}
                                 />
                                 <Box sx={{ minWidth: 0 }}>
