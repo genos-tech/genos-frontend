@@ -1810,7 +1810,10 @@ export const useNoteManagement = (
             const withinWindow =
                 head &&
                 Date.now() - new Date(head.tsUpdatedAt).getTime() < VERSION_COALESCE_MS &&
-                head.restoredFromVersionNo == null;
+                head.restoredFromVersionNo == null &&
+                // The server only coalesces into a row whose source is the
+                // write's own: typing never lands on a row an AI app wrote.
+                !head.via;
             if (head && isMine && withinWindow) {
                 return [{ ...head, tsUpdatedAt: nowIso }, ...prev.slice(1)];
             }
