@@ -139,3 +139,44 @@ export const invisibleHitAreaSx = (selector = "&") =>
             },
         },
     }) as const;
+
+/**
+ * The hit-area helpers above anchor their invisible `::after` to the control by giving the control
+ * `position: relative`. That is a rule a PARENT can override: `NavItem` forces `position: static`
+ * on its row actions (`ACTION_IN_FLOW`), and the `::after` then anchored to the whole ROW, so on a
+ * phone a tap anywhere on a chat row hit the "..." button (MIP-1455, reverted by #952).
+ *
+ * `contain: layout` makes the control the containing block for its absolutely positioned
+ * descendants whatever its `position` is, so no `position` rule from a parent can move the anchor.
+ * The whole hit area sits inside `@supports (contain: layout)`: a browser without layout
+ * containment (before Safari 15.4) gets NO hit area, i.e. today's plain 32px control, never the
+ * `position: relative` anchor that a parent can override. Use these two, not the plain ones, for a
+ * control inside a row that is positioned by somebody else's CSS (a `NavItem` action or icon, a
+ * Joy part). The layout is probed in a real browser at 390px by
+ * `TouchTargetsChatListMIP1515.test.ts`.
+ *
+ * `contain: layout` also makes the control the containing block of any `position: fixed`
+ * descendant and gives it its own stacking context: use it on a control that has no popup in its
+ * own subtree (a menu is portalled to `body`, which the probe checks for the "...").
+ */
+const ANCHORED = { position: "relative", contain: "layout" } as const;
+
+/** `tallHitAreaSx`, anchored so that a `position` rule from a parent cannot move it. */
+export const anchoredTallHitAreaSx = (selector = "&") => {
+    const base = tallHitAreaSx(selector)["@media (pointer: coarse)"];
+    return {
+        "@media (pointer: coarse)": {
+            "@supports (contain: layout)": { ...base, [selector]: ANCHORED },
+        },
+    } as const;
+};
+
+/** `invisibleHitAreaSx`, anchored so that a `position` rule from a parent cannot move it. */
+export const anchoredInvisibleHitAreaSx = (selector = "&") => {
+    const base = invisibleHitAreaSx(selector)["@media (pointer: coarse)"];
+    return {
+        "@media (pointer: coarse)": {
+            "@supports (contain: layout)": { ...base, [selector]: ANCHORED },
+        },
+    } as const;
+};
