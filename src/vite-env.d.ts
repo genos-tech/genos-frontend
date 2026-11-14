@@ -43,6 +43,14 @@ interface ImportMetaEnv {
      */
     readonly VITE_POSTHOG_KEY?: string;
     readonly VITE_POSTHOG_HOST?: string;
+    /**
+     * Publishes the public Terms of Service page (`/terms`) and its footer
+     * link when `"true"`. Unset / anything else (the default): no route (the
+     * URL is a 404), no link, and the page's text is not built into `dist/`.
+     * Leave OFF until counsel's approved text is in `src/lp/termsContent.ts`
+     * (expected mid-December 2026). See `src/lp/termsFlag.ts`.
+     */
+    readonly VITE_SHOW_TERMS_PAGE?: string;
 }
 
 interface ImportMeta {

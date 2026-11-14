@@ -133,7 +133,7 @@ describe("/support route registration", () => {
         expect(route).toBeLessThan(main.indexOf("<AuthLayout />"));
     });
 
-    it("does not register a /terms route (the terms are an unpublished draft)", () => {
+    it("does not register a /terms route outright (the terms are an unpublished draft; the route exists only behind VITE_SHOW_TERMS_PAGE, see TermsPage.test.tsx)", () => {
         expect(main).not.toContain('path="/terms"');
     });
 });
