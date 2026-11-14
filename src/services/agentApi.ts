@@ -214,7 +214,18 @@ export type AgentMentionPayload =
     | { type: "chat"; chat_type: number; chat_id: string; label: string }
     | { type: "project"; project_id: number; label: string }
     | { type: "group"; group_id: number; label: string }
-    | { type: "todo"; item_id: number; label: string };
+    | { type: "todo"; item_id: number; label: string }
+    // MIP-1059 (AGENT_PARITY_TOOLS): the event is named by its three ids. The server checks only that
+    // `account_id` is one of the requester's own Google accounts, drops anything malformed or foreign
+    // silently, reads nothing from Google at ask time, and never puts `label` into a prompt. With the
+    // flag off it drops the entry as an unknown kind and the question goes without it.
+    | {
+          type: "calendar_event";
+          account_id: string;
+          calendar_id: string;
+          event_id: string;
+          label: string;
+      };
 
 export interface AskAgentArgs extends BaseStreamHandlers {
     query: string;

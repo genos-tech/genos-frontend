@@ -113,6 +113,8 @@ export const calendar = {
     event: {
         editTitle: "Edit event",
         newTitle: "New event",
+        askGenos: "Ask Genos about this event",
+        askGenosUntitled: "Untitled event",
         titleLabel: "Title",
         allDay: "All day",
         startLabel: "Start",

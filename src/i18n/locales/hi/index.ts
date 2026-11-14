@@ -5640,6 +5640,8 @@ export const hi: DeepPartial<Messages> = {
         event: {
             editTitle: "इवेंट संपादित करें",
             newTitle: "नया ईवेंट",
+            askGenos: "इस इवेंट के बारे में Genos से पूछें",
+            askGenosUntitled: "बिना शीर्षक का इवेंट",
             titleLabel: "शीर्षक",
             allDay: "पूरे दिन",
             startLabel: "शुरुआत",

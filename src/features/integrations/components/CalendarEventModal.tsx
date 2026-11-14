@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
 import {
     Autocomplete,
@@ -35,6 +36,10 @@ import {
     type RecurrenceSpec,
 } from "../../calendar/utils/rrule";
 import { endForNewStart, startForNewEnd } from "../../calendar/utils/timedRange";
+import {
+    askGenosRefForCalendarEvent,
+    type AskGenosCalendarEventRef,
+} from "../../spotlight/askGenosAbout";
 import {
     CalendarEvent,
     CalendarSummary,
@@ -126,6 +131,10 @@ interface CalendarEventModalProps {
     onDeleted?: (eventId: string) => void;
     /** Optional error sink — defaults to displaying inside the modal. */
     onError?: (message: string) => void;
+    /** "Ask Genos about this event" (MIP-1059, AGENT_PARITY_TOOLS): given the event as a mention, the
+     *  opener closes what it must and hands it to the app-level ask. Offered only when this is given
+     *  (an event that is being edited, in a calendar the opener owns) and the event can be named. */
+    onAskGenos?: (ref: AskGenosCalendarEventRef) => void;
 }
 
 interface FormState {
@@ -218,6 +227,7 @@ export const CalendarEventModal = ({
     onSaved,
     onDeleted,
     onError,
+    onAskGenos,
 }: CalendarEventModalProps) => {
     const { t } = useTranslation();
     const theme = useTheme();
@@ -469,6 +479,18 @@ export const CalendarEventModal = ({
         }
     };
 
+    // The event as a mention, for the ask. Read from the form (the account and calendar it was opened
+    // with, the title as it stands): null when the event has none of them, which hides the button.
+    const askRef = editingEventId
+        ? askGenosRefForCalendarEvent({
+              accountId: form.accountId,
+              calendarId: form.calendarId,
+              eventId: editingEventId,
+              summary: form.summary,
+              fallbackLabel: t.calendar.event.askGenosUntitled,
+          })
+        : null;
+
     return (
         <ModalFrame
             open={open}
@@ -514,6 +536,18 @@ export const CalendarEventModal = ({
             onClose={onClose}
         >
             <Stack spacing={2}>
+                {onAskGenos && askRef ? (
+                    <Button
+                        color="neutral"
+                        size="sm"
+                        startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />}
+                        sx={{ alignSelf: "flex-start", maxWidth: "100%", textAlign: "start" }}
+                        variant="soft"
+                        onClick={() => onAskGenos(askRef)}
+                    >
+                        {t.calendar.event.askGenos}
+                    </Button>
+                ) : null}
                 {localError && (
                     <Typography level="body-sm" sx={{ color: g.danger.text }}>
                         {localError}

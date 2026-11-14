@@ -26,6 +26,7 @@
 // BlockNote import here drags the whole editor runtime into it.
 
 import type { ElementType, ReactNode } from "react";
+import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
@@ -56,6 +57,8 @@ export const MENTION_ICONS = {
     project: FolderRoundedIcon,
     group: GroupRoundedIcon,
     todo: TaskAltRoundedIcon,
+    // An agent mention made by "Ask Genos about this event"; never a row of the `#` menu.
+    calendarEvent: EventRoundedIcon,
 } as const satisfies Record<string, ElementType>;
 
 /**

@@ -88,6 +88,9 @@ const kindIcon = (ref: Exclude<AgentMentionRef, { kind: "user" }>) => {
             return MENTION_ICONS.group;
         case "todo":
             return MENTION_ICONS.todo;
+        case "calendar_event":
+            // Never a candidate (events are not indexed for the `#` menu): no row is drawn for one.
+            return MENTION_ICONS.calendarEvent;
     }
 };
 
@@ -107,6 +110,8 @@ const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPa
         case "project":
             return PROJECT_PALETTE;
         case "todo":
+            return TODO_PALETTE;
+        case "calendar_event":
             return TODO_PALETTE;
     }
 };
@@ -208,6 +213,8 @@ const kindSubtitle = (t: Messages, c: AgentMentionCandidate): string => {
             return e.hashProject;
         case "todo":
             return e.mentionTodo;
+        case "calendar_event":
+            return "";
     }
 };
 

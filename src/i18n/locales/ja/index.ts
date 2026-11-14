@@ -992,6 +992,8 @@ export const ja: DeepPartial<Messages> = {
         event: {
             editTitle: "イベントの編集",
             newTitle: "新しいイベント",
+            askGenos: "このイベントについてGenosに質問",
+            askGenosUntitled: "無題の予定",
             titleLabel: "タイトル",
             allDay: "終日",
             startLabel: "開始日",

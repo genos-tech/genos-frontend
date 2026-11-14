@@ -1000,6 +1000,8 @@ export const fr: DeepPartial<Messages> = {
         event: {
             editTitle: "Modifier l'événement",
             newTitle: "Nouvel événement",
+            askGenos: "Demander à Genos à propos de cet événement",
+            askGenosUntitled: "Événement sans titre",
             titleLabel: "Titre",
             allDay: "Toute la journée",
             startLabel: "Démarrer",

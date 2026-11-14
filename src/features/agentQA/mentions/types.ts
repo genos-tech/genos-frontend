@@ -28,7 +28,18 @@ export type AgentMentionRef =
     | { kind: "project"; projectId: number; label: string }
     // Mention group — expands to its member list server-side.
     | { kind: "group"; groupId: number; label: string }
-    | { kind: "todo"; itemId: number; label: string };
+    | { kind: "todo"; itemId: number; label: string }
+    // A Google Calendar event (MIP-1059, AGENT_PARITY_TOOLS). Only ever made by "Ask Genos about this
+    // event" (`askGenosRefForCalendarEvent`), never picked from the `#` menu: the app does not index
+    // events. The three ids are the event's whole identity (ids are unique per calendar, not
+    // globally, and the account decides which Google credential reads it).
+    | {
+          kind: "calendar_event";
+          accountId: string;
+          calendarId: string;
+          eventId: string;
+          label: string;
+      };
 
 // One dropdown row. `trigger` decides which menu ("@" members vs "#"
 // entities) the candidate belongs to; `key` is a stable identity used
@@ -113,6 +124,8 @@ export const mentionKey = (ref: AgentMentionRef): string => {
             return `group:${ref.groupId}`;
         case "todo":
             return `todo:${ref.itemId}`;
+        case "calendar_event":
+            return `calendar_event:${ref.accountId}:${ref.calendarId}:${ref.eventId}`;
     }
 };
 
@@ -144,5 +157,13 @@ export const toWireMentions = (refs: AgentMentionRef[]): AgentMentionPayload[] =
                 return { type: "group", group_id: ref.groupId, label: ref.label };
             case "todo":
                 return { type: "todo", item_id: ref.itemId, label: ref.label };
+            case "calendar_event":
+                return {
+                    type: "calendar_event",
+                    account_id: ref.accountId,
+                    calendar_id: ref.calendarId,
+                    event_id: ref.eventId,
+                    label: ref.label,
+                };
         }
     });
