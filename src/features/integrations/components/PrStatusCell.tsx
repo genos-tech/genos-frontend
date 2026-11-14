@@ -22,7 +22,6 @@ import {
     ciStateColor,
     deriveCiState,
     derivePrState,
-    prStateColor,
     type CiState,
     type PrState,
 } from "../utils/prState";
@@ -31,12 +30,9 @@ import {
     CheckNoneIcon,
     CheckPassingIcon,
     CheckPendingIcon,
-    PrClosedIcon,
-    PrDraftIcon,
-    PrMergedIcon,
-    PrOpenIcon,
 } from "./icons/Octicons";
 import { PrHoverDetails } from "./PrHoverDetails";
+import { PrStateIcon } from "./PrStateIcon";
 
 // Compact PR/CI badge for the task table's PR column.
 //
@@ -64,22 +60,6 @@ type Props = {
     /** Task ID to look up auto-linked PRs for. */
     taskId: number | string;
     accessToken: string | null;
-};
-
-const PrStateIcon = ({ state, size = 14 }: { state: PrState; size?: number }) => {
-    const color = prStateColor(state);
-    const common = { width: size, height: size, style: { color } };
-    switch (state) {
-        case "merged":
-            return <PrMergedIcon {...common} />;
-        case "draft":
-            return <PrDraftIcon {...common} />;
-        case "closed":
-            return <PrClosedIcon {...common} />;
-        case "open":
-        default:
-            return <PrOpenIcon {...common} />;
-    }
 };
 
 const CiBadge = ({ state, size = 10 }: { state: CiState; size?: number }) => {
