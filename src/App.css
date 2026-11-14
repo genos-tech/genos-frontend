@@ -39,8 +39,8 @@
        carry theirs in their own rules below). */
     --code-light-bg: var(--g-active);
     --code-light-color: var(--g-text-code);
-    --code-dark-bg: rgba(0, 0, 0, 0.3);
-    --code-dark-color: #fb923c;
+    --code-dark-bg: var(--g-active);
+    --code-dark-color: var(--g-text-code);
 }
 
 /* ==========================================================================
