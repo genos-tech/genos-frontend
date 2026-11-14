@@ -5293,7 +5293,8 @@ export const es: DeepPartial<Messages> = {
         deleteMilestone: "Eliminar hito: {milestone}",
         milestoneTasksKept: "{count} tarea(s) permanecen en el proyecto, fuera de cualquier hito",
         folderUnfiles: "{count} hito(s) salen de la carpeta",
-        convertKeeps: "Es la misma fila: el id, el cuerpo, los comentarios y el historial se conservan",
+        convertKeeps:
+            "Es la misma fila: el id, el cuerpo, los comentarios y el historial se conservan",
         convertSubTasksJoin: "{count} subtarea(s) pasan al hito",
         convertTasksStay: "{count} tarea(s) quedan debajo como subtareas",
         convertAssignee: "Asignado: {name}",

@@ -563,7 +563,8 @@ export const fr: DeepPartial<Messages> = {
         deleteMilestone: "Supprimer le jalon : {milestone}",
         milestoneTasksKept: "{count} tâche(s) restent dans le projet, en dehors de tout jalon",
         folderUnfiles: "{count} jalon(s) quittent le dossier",
-        convertKeeps: "Même ligne : l'identifiant, le corps, les commentaires et l'historique sont conservés",
+        convertKeeps:
+            "Même ligne : l'identifiant, le corps, les commentaires et l'historique sont conservés",
         convertSubTasksJoin: "{count} sous-tâche(s) rejoignent le jalon",
         convertTasksStay: "{count} tâche(s) restent dessous comme sous-tâches",
         convertAssignee: "Assigné : {name}",
