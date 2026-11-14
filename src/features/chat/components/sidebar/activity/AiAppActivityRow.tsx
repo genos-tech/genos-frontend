@@ -3,6 +3,7 @@ import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import { Box, ListDivider, Stack, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
+import { ViaAppIcon } from "../../../../../components/ui/misc/ViaAppIcon";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
@@ -74,22 +75,29 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
                 onClick={onClick}
             >
                 <Stack direction="row" spacing={1} sx={{ minWidth: 0, alignItems: "flex-start" }}>
-                    <Box
-                        sx={{
-                            alignItems: "center",
-                            bgcolor: "background.level2",
-                            borderRadius: "50%",
-                            color: "text.secondary",
-                            display: "flex",
-                            flex: "none",
-                            height: 32,
-                            justifyContent: "center",
-                            width: 32,
-                        }}
-                        aria-hidden
-                    >
-                        <SmartToyRoundedIcon fontSize="small" />
-                    </Box>
+                    {notice.appFamily ? (
+                        // The official app's own round mark in place of the robot
+                        // (MIP-1571); the same 32px slot, labelled "via Claude" /
+                        // "via ChatGPT" (the family only, never the app's name).
+                        <ViaAppIcon app={notice.appFamily} size={32} />
+                    ) : (
+                        <Box
+                            sx={{
+                                alignItems: "center",
+                                bgcolor: "background.level2",
+                                borderRadius: "50%",
+                                color: "text.secondary",
+                                display: "flex",
+                                flex: "none",
+                                height: 32,
+                                justifyContent: "center",
+                                width: 32,
+                            }}
+                            aria-hidden
+                        >
+                            <SmartToyRoundedIcon fontSize="small" />
+                        </Box>
+                    )}
                     <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0 }}>
                         <Stack direction="row" spacing={1} sx={{ alignItems: "baseline" }}>
                             <Typography
