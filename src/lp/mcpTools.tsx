@@ -252,7 +252,7 @@ export const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Status, title, description, priority, effort, due date, start date, milestone, parent task, project, collaborators or custom fields. A new description replaces the whole body.",
+            "Status, title, description, priority, effort, due date, start date, milestone, parent task, project, collaborators, custom fields, links or reporter. A new description replaces the whole body.",
     },
     { name: "add_comment", type: "write", taskRef: true, meaning: "A comment on a task." },
     {
@@ -301,7 +301,9 @@ export const MCP_TOOLS: McpTool[] = [
         meaning: (
             <>
                 Needs a project id from <Code>list_projects</Code>. Can be filed under a parent
-                task, and can set a start date, collaborators and custom fields.
+                task, and can set a start date, collaborators, custom fields, links, a reporter and
+                a starting status. With no description it starts from a body template, as a task
+                made in the app does; <Code>template</Code> picks one by name.
             </>
         ),
     },
@@ -321,7 +323,8 @@ export const MCP_TOOLS: McpTool[] = [
         name: "create_task_plan",
         type: "write",
         taskRef: true,
-        meaning: "A milestone with its tasks and dependencies, in one call.",
+        meaning:
+            "A milestone with its tasks and dependencies, in one call. Each task can start in a status and from a body template.",
     },
     {
         name: "create_note",
