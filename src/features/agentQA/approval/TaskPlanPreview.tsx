@@ -24,6 +24,9 @@ import { MetaChip } from "./previewHelpers";
 interface PlanTaskArg {
     title?: string;
     content_markdown?: string;
+    // MIP-1561 (AGENT_PARITY_TOOLS): the starting status and a body template name.
+    status?: string;
+    template?: string;
     priority?: string;
     effort_level?: string;
     start_date?: string;
@@ -73,6 +76,8 @@ const TaskRow = ({
         .filter(Boolean) as string[];
 
     const chips: string[] = [];
+    if (task.status) chips.push(`${t.agentApproval.fieldLabels.status}: ${task.status}`);
+    if (task.template) chips.push(`${t.agentApproval.fieldLabels.template}: ${task.template}`);
     if (task.due_date) chips.push(`${t.agentApproval.due} ${task.due_date}`);
     if (task.assignee_id) chips.push(String(task.assignee_id));
 
