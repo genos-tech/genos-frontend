@@ -657,6 +657,7 @@ export const SignUpForm = () => {
                                     linkColor={styles.linkColor}
                                     linkHover={styles.linkHover}
                                     showError={consentError && !acceptedTerms}
+                                    errorColor={palette.dangerTint}
                                     textColor={styles.labelColor}
                                     onChange={(checked) => {
                                         setAcceptedTerms(checked);

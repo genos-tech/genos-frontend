@@ -12,6 +12,8 @@ interface SignUpConsentProps {
     linkColor: string;
     linkHover: string;
     textColor: string;
+    /** Colour of the error message; legible on the card in both modes. */
+    errorColor: string;
 }
 
 // Read by screen readers only: says the link leaves the form.
@@ -38,7 +40,7 @@ const TOKEN = /(\{terms\}|\{privacy\})/;
  */
 export const SignUpConsent = forwardRef<HTMLInputElement, SignUpConsentProps>(
     function SignUpConsent(
-        { checked, showError, onChange, linkColor, linkHover, textColor },
+        { checked, showError, onChange, linkColor, linkHover, textColor, errorColor },
         ref
     ) {
         const { t } = useTranslation();
@@ -84,7 +86,7 @@ export const SignUpConsent = forwardRef<HTMLInputElement, SignUpConsentProps>(
                     onChange={(event) => onChange(event.target.checked)}
                 />
                 {showError && (
-                    <FormHelperText role="alert" sx={{ mt: 0.5 }}>
+                    <FormHelperText role="alert" sx={{ mt: 0.5, color: errorColor }}>
                         {c.required}
                     </FormHelperText>
                 )}
