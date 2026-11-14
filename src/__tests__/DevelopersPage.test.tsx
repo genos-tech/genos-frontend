@@ -10,11 +10,16 @@
  * A docs page is unusually prone to passing review while being wrong,
  * because nothing else in the system depends on it.
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 
+import { connectApp } from "../i18n/locales/en/connectApp";
 import DevelopersPage from "../lp/DevelopersPage";
+import { mcpServerUrl } from "../utils/mcpConnect";
+
+// What the page itself uses (VITE_DJANGO_URL, else the production API origin).
+const API_BASE = import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev";
 
 const renderPage = () =>
     render(
@@ -421,5 +426,81 @@ describe("DevelopersPage", () => {
         expect(text).toMatch(/read your own chats, direct messages included/);
         expect(text).toMatch(/a read-scoped key can call both/);
         expect(text).toMatch(/A key handed to an outside agent\s+exposes all of them/);
+    });
+});
+
+/**
+ * The MCP section leads with connecting an AI app (OAuth, no key) and keeps the
+ * API-key setup below it, for scripts. The address and the steps are the same ones
+ * Settings → Connected apps shows (`mcpServerUrl`, `i18n/locales/en/connectApp.ts`).
+ */
+describe("DevelopersPage: MCP section", () => {
+    const mcp = () => document.getElementById("mcp") as HTMLElement;
+    const pre = (label: string) =>
+        within(mcp())
+            .getByText(label, { exact: true })
+            .closest(".lp-block")
+            ?.querySelector("pre") as HTMLElement;
+
+    it("says one endpoint: connect an AI app, or use a key for scripts", () => {
+        renderPage();
+        expect(
+            within(mcp()).getByText("One endpoint. Connect an AI app, or use a key for scripts.")
+        ).toBeTruthy();
+    });
+
+    it("leads with connecting an app, then the API key, then the shared tool list", () => {
+        renderPage();
+        const headings = [...mcp().querySelectorAll("h3")].map((h) => h.textContent);
+        const connect = headings.indexOf("Connect an AI app (no API key)");
+        const keys = headings.indexOf("Scripts and automation (API key)");
+        const tools = headings.indexOf("Tools and prompts, either way");
+        expect(connect).toBeGreaterThanOrEqual(0);
+        expect(keys).toBeGreaterThan(connect);
+        expect(tools).toBeGreaterThan(keys);
+    });
+
+    it("gives the address exactly: the MCP path, no trailing slash, no query, no team_id", () => {
+        renderPage();
+        const address = pre("the address to paste").textContent ?? "";
+        expect(address).toBe(mcpServerUrl(API_BASE));
+        expect(address).toMatch(/^https?:\/\/[^?#\s]+\/api\/public\/v1\/mcp$/);
+        expect(address.endsWith("/")).toBe(false);
+        expect(new URL(address).search).toBe("");
+    });
+
+    it("gives Claude Code the key-free command with that same address", () => {
+        renderPage();
+        const command = pre("the whole setup, no key").textContent ?? "";
+        expect(command).toBe(`claude mcp add --transport http genos ${mcpServerUrl(API_BASE)}`);
+        expect(command).not.toMatch(/--header|ApiKey|team_id/);
+    });
+
+    it("prints the same steps Settings shows, word for word", () => {
+        renderPage();
+        for (const step of [...connectApp.claudeSteps, ...connectApp.claudeCodeSteps]) {
+            expect(within(mcp()).getByText(step)).toBeTruthy();
+        }
+        // ChatGPT is coming: a line, no steps.
+        expect(within(mcp()).getByText(connectApp.chatgptBody)).toBeTruthy();
+        for (const line of [connectApp.plan, connectApp.revoke, connectApp.trap]) {
+            expect(within(mcp()).getByText(line)).toBeTruthy();
+        }
+    });
+
+    it("keeps the API-key setup below, unchanged: the ApiKey scheme and ?team_id=", () => {
+        renderPage();
+        const setup = pre("the whole setup").textContent ?? "";
+        expect(setup).toContain('--header "Authorization: ApiKey gnos_…"');
+        expect(setup).toContain("?team_id=");
+        expect(mcp().textContent).not.toMatch(/Bearer/);
+        // The curl example too.
+        expect(mcp().textContent).toMatch(/-H "Authorization: ApiKey gnos_…"/);
+    });
+
+    it("says the plan is Core and above (the key's rule), not Pro", () => {
+        renderPage();
+        expect(mcp().textContent).toContain("Available on the Core plan and above.");
+        expect(mcp().textContent).not.toMatch(/Pro plan/);
     });
 });
