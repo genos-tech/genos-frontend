@@ -213,6 +213,7 @@ describe("DevelopersPage", () => {
             "add_comment",
             "update_comment",
             "delete_comment",
+            "delete_task_attachment",
             "restore_task_body",
             "add_task_delivery",
             "remove_task_delivery",
@@ -292,13 +293,14 @@ describe("DevelopersPage", () => {
         expect(rowOf("restore_note_version")).toContain("can itself be undone");
     });
 
-    it("says the destructive opt-in on exactly the eleven tools that need it", () => {
+    it("says the destructive opt-in on exactly the tools that need it", () => {
         renderPage();
         const rows = [...document.querySelectorAll("tr")].filter((tr) =>
             tr.textContent?.includes("destructive opt-in")
         );
         expect(rows.map((tr) => tr.querySelector("td")?.textContent)).toEqual([
             "delete_comment",
+            "delete_task_attachment",
             "delete_todo_item",
             "delete_calendar_event",
             "delete_milestone",

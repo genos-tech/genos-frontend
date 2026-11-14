@@ -25,7 +25,8 @@ export const MCP_TOOLS: McpTool[] = [
             <>
                 One task in full. Read <Code>content_markdown</Code> for the description — it keeps
                 headings, checklists and code fences. Also its start date, sprint, collaborators,
-                links and custom fields (by name).
+                links and custom fields (by name), and the files attached to it (name, type, size,
+                who added it and when: never the file or a link to it).
             </>
         ),
     },
@@ -268,6 +269,13 @@ export const MCP_TOOLS: McpTool[] = [
         taskRef: true,
         meaning:
             "Delete one of your own comments on a task. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "delete_task_attachment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Delete one file attached to a task, by the id get_task lists. The file leaves the task and storage and nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
     },
     {
         name: "restore_task_body",
