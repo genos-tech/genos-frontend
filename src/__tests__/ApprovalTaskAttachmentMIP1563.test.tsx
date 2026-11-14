@@ -98,6 +98,12 @@ describe("the delete_task_attachment card", () => {
         expect(screen.queryByText(/KB|MB| B$/)).toBeNull();
     });
 
+    it("never prints a heading that names nothing", () => {
+        mount({}, IRREVERSIBLE);
+        expect(screen.getByText("Deleting a file from a task")).toBeTruthy();
+        expect(screen.queryByText(/Delete file #/)).toBeNull();
+    });
+
     it("leaves out a size or type that is missing, empty or not a number", () => {
         mount(
             {

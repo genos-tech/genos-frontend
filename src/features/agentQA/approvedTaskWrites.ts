@@ -29,8 +29,20 @@ export const emitTaskAttachmentToolResult = (
     // The ref comes off the wire: take it only from the tool that sends it, and only with a real id.
     if (toolName !== "delete_task_attachment" || ref?.deleted !== true) return;
     const taskId = Number(ref.task_id);
-    if (!Number.isFinite(taskId) || taskId <= 0) return;
-    void invalidateCachedFullTask(taskId);
+    if (!Number.isInteger(taskId) || taskId <= 0) return;
+    void forgetTaskCopy(taskId);
+};
+
+// In the page's own order (`deleteTaskAttachment`): the cached copy goes first, and only then is a
+// load already in flight cut loose and the open task told, so nothing that reacts to the event can
+// read the old copy. A failing IndexedDB must not leave the rest undone or surface as an unhandled
+// rejection: the worst case is the stale copy the call was there to drop.
+const forgetTaskCopy = async (taskId: number): Promise<void> => {
+    try {
+        await invalidateCachedFullTask(taskId);
+    } catch (error) {
+        console.error("Could not drop the cached task after an agent deleted its file:", error);
+    }
     forgetInFlightTask(taskId);
     emitTaskTouched(taskId, "update");
 };

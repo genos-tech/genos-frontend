@@ -40,12 +40,14 @@ export const DeleteTaskAttachmentPreview = ({ args, undoKnown }: ApprovalPreview
     const name = nonEmpty(current?.name);
     const task = asString(args.task_id) ?? "";
 
+    const fileId = asString(args.attachment_id);
+    // Never a heading that names nothing: with neither the file's name nor its number, the tool's own
+    // progress label ("Deleting a file from a task") is what is left.
     const heading = name
         ? fmt(t.agentApproval.deleteTaskAttachment, { file: name, task })
-        : fmt(t.agentApproval.deleteTaskAttachmentUnnamed, {
-              id: asString(args.attachment_id) ?? "",
-              task,
-          });
+        : fileId
+          ? fmt(t.agentApproval.deleteTaskAttachmentUnnamed, { id: fileId, task })
+          : t.agentApproval.toolNames.delete_task_attachment;
 
     const chips: string[] = [];
     const size = current?.size_bytes;
@@ -64,8 +66,8 @@ export const DeleteTaskAttachmentPreview = ({ args, undoKnown }: ApprovalPreview
                 >
                     {heading}
                 </Typography>
-                {chips.map((c) => (
-                    <MetaChip key={c} label={c} />
+                {chips.map((c, i) => (
+                    <MetaChip key={`${i}-${c}`} label={c} />
                 ))}
                 {undoKnown ? null : <MetaChip label={t.agentApproval.cannotUndo} />}
             </Box>
