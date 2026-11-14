@@ -6,10 +6,8 @@
 /* eslint-disable react/jsx-sort-props */
 import * as React from "react";
 import { memo, useEffect, useRef, useState } from "react";
-import { Box } from "@mui/joy";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
-import { invisibleHitAreaSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/AuthContext";
 import { prefetchChannel } from "../../../../services/channel/channelPrefetch";
 import { useChatListItem } from "../../hooks/useChatListItem";
@@ -26,8 +24,6 @@ import { ChatListItemTitle } from "./ChatListItemTitle";
 // so dragging the cursor across the list doesn't prefetch every row it
 // passes over. Short enough that a deliberate hover→click still wins.
 const HOVER_PREFETCH_DELAY_MS = 120;
-
-const AVATAR_TOUCH_SX = invisibleHitAreaSx("& [role='button']");
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
@@ -115,22 +111,17 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                 unread={Boolean(hasUnread)}
                 sx={{ mx: 1 }}
                 icon={
-                    // The avatar opens a profile and is 32px: a 44 x 44 tap on a touch screen,
-                    // by an invisible area (MIP-1455). `display: contents` keeps the row's
-                    // layout exactly as it was.
-                    <Box sx={{ display: "contents", ...AVATAR_TOUCH_SX }}>
-                        <ChatListItemAvatar
-                            chat={chat}
-                            chatType={chat.chatType}
-                            useCM={useCM}
-                            isYou={isYou}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
+                    <ChatListItemAvatar
+                        chat={chat}
+                        chatType={chat.chatType}
+                        useCM={useCM}
+                        isYou={isYou}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
                 }
                 label={
                     <ChatListItemTitle chat={chat} isYou={isYou} myself={myself} useTEM={useTEM} />

@@ -15,16 +15,11 @@ import {
     NAV_HIDE_ON_ACTIONS_CLASS,
     NAV_KEEP_CLASS,
 } from "../../../../components/ui/nav/navStyles";
-import { tallHitAreaSx } from "../../../../components/ui/touchTargets";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
-
-// The pin and "..." are 32px buttons side by side: on a touch screen each is a 44px-tall tap,
-// invisible and exactly as wide as the button, so the two never cover each other (MIP-1455).
-const TOUCH_ACTION_SX = tallHitAreaSx("&");
 
 interface ChatListItemActionsProps {
     chat: AllChatProps;
@@ -107,7 +102,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     className={chat.isPinned ? NAV_KEEP_CLASS : undefined}
                     color={chat.isPinned ? "danger" : "neutral"}
                     size="sm"
-                    sx={{ borderRadius: g.radius.sm, ...TOUCH_ACTION_SX }}
+                    sx={{ borderRadius: g.radius.sm }}
                     variant="plain"
                     onClick={onPinClick}
                 >
@@ -127,7 +122,6 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             color: "neutral",
                             sx: {
                                 borderRadius: g.radius.sm,
-                                ...TOUCH_ACTION_SX,
                             },
                         },
                     }}
