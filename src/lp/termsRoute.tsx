@@ -20,12 +20,12 @@ export function termsRoutes() {
     const TermsPage = lazy(() => import("./TermsPage"));
     return (
         <Route
+            path="/terms"
             element={
                 <Suspense fallback={null}>
                     <TermsPage />
                 </Suspense>
             }
-            path="/terms"
         />
     );
 }
