@@ -36,10 +36,7 @@ import {
     type RecurrenceSpec,
 } from "../../calendar/utils/rrule";
 import { endForNewStart, startForNewEnd } from "../../calendar/utils/timedRange";
-import {
-    askGenosRefForCalendarEvent,
-    type AskGenosCalendarEventRef,
-} from "../../spotlight/askGenosAbout";
+import { askGenosRefForCalendarEvent, requestAskGenosAbout } from "../../spotlight/askGenosAbout";
 import {
     CalendarEvent,
     CalendarSummary,
@@ -121,6 +118,10 @@ interface CalendarEventModalProps {
      *  a new one. The fields displayed come from `initial`; this prop
      *  carries only the upstream identifier. */
     editingEventId?: string;
+    /** "Ask Genos about this event" (MIP-1059, AGENT_PARITY_TOOLS): the opener's way to close what is
+     *  under this dialog (and this dialog) before the ask opens. Given, and the event being edited
+     *  can be named, the dialog offers the button; omitted (a task's linked event), it does not. */
+    closeForAsk?: () => void;
     /** Fires after a successful create or update with the upstream
      *  event payload. Callers wire task-side persistence (e.g. saving
      *  `event.id` to `linked_calendar_event_id`) through this. */
@@ -131,10 +132,6 @@ interface CalendarEventModalProps {
     onDeleted?: (eventId: string) => void;
     /** Optional error sink — defaults to displaying inside the modal. */
     onError?: (message: string) => void;
-    /** "Ask Genos about this event" (MIP-1059, AGENT_PARITY_TOOLS): given the event as a mention, the
-     *  opener closes what it must and hands it to the app-level ask. Offered only when this is given
-     *  (an event that is being edited, in a calendar the opener owns) and the event can be named. */
-    onAskGenos?: (ref: AskGenosCalendarEventRef) => void;
 }
 
 interface FormState {
@@ -224,10 +221,10 @@ export const CalendarEventModal = ({
     calendars = [],
     initial,
     editingEventId,
+    closeForAsk,
     onSaved,
     onDeleted,
     onError,
-    onAskGenos,
 }: CalendarEventModalProps) => {
     const { t } = useTranslation();
     const theme = useTheme();
@@ -491,6 +488,15 @@ export const CalendarEventModal = ({
           })
         : null;
 
+    // Close first, then hand the event to the app-level ask: it opens with `#Title ` in its draft and
+    // sends nothing until the person presses Ask. A dialog still open under Spotlight keeps focus
+    // inside itself and the draft would not get it, so the hand-off waits one tick, until they are gone.
+    const askGenos = () => {
+        if (!askRef || !closeForAsk) return;
+        closeForAsk();
+        window.setTimeout(() => requestAskGenosAbout(askRef), 0);
+    };
+
     return (
         <ModalFrame
             open={open}
@@ -536,14 +542,14 @@ export const CalendarEventModal = ({
             onClose={onClose}
         >
             <Stack spacing={2}>
-                {onAskGenos && askRef ? (
+                {closeForAsk && askRef ? (
                     <Button
                         color="neutral"
                         size="sm"
                         startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />}
                         sx={{ alignSelf: "flex-start", maxWidth: "100%", textAlign: "start" }}
                         variant="soft"
-                        onClick={() => onAskGenos(askRef)}
+                        onClick={askGenos}
                     >
                         {t.calendar.event.askGenos}
                     </Button>

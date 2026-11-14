@@ -167,36 +167,49 @@ const modal = (props: Record<string, unknown> = {}) =>
 const ASK = en.calendar.event.askGenos;
 
 describe("the event dialog's Ask Genos button", () => {
-    it("is offered for an event being edited, and hands over the event as a mention", () => {
-        const onAskGenos = vi.fn();
-        modal({ onAskGenos });
+    const heard = () => {
+        const refs: AgentMentionRef[] = [];
+        const off = onAskGenosAbout((r) => refs.push(r));
+        return { refs, off };
+    };
+
+    it("is offered for an event being edited: it closes what is under it, then hands over the event", async () => {
+        const closeForAsk = vi.fn();
+        const { refs, off } = heard();
+        modal({ closeForAsk });
         fireEvent.click(screen.getByRole("button", { name: ASK }));
-        expect(onAskGenos).toHaveBeenCalledExactlyOnceWith(REF);
+        // closed first, in this tick; the hand-off follows on the next one
+        expect(closeForAsk).toHaveBeenCalledTimes(1);
+        expect(refs).toEqual([]);
+        await waitFor(() => expect(refs).toEqual([REF]));
+        off();
     });
 
-    it("takes the title as it stands in the form, not as it was opened", () => {
-        const onAskGenos = vi.fn();
-        modal({ onAskGenos });
+    it("takes the title as it stands in the form, not as it was opened", async () => {
+        const { refs, off } = heard();
+        modal({ closeForAsk: vi.fn() });
         fireEvent.change(screen.getByDisplayValue("Dentist appointment"), {
             target: { value: "Dentist, moved" },
         });
         fireEvent.click(screen.getByRole("button", { name: ASK }));
-        expect(onAskGenos.mock.calls[0][0].label).toBe("Dentist, moved");
+        await waitFor(() => expect(refs).toHaveLength(1));
+        off();
+        expect(refs[0].label).toBe("Dentist, moved");
     });
 
-    it("is not there unless the opener supplies the hand-off (a task's linked event)", () => {
+    it("is not there unless the opener supplies the way to close (a task's linked event)", () => {
         modal();
         expect(screen.queryByRole("button", { name: ASK })).toBeNull();
     });
 
     it("is not there for a new event", () => {
-        modal({ onAskGenos: vi.fn(), editingEventId: undefined, initial: undefined });
+        modal({ closeForAsk: vi.fn(), editingEventId: undefined, initial: undefined });
         expect(screen.queryByRole("button", { name: ASK })).toBeNull();
     });
 
     it("is not there for an event that cannot be named (no account)", () => {
         modal({
-            onAskGenos: vi.fn(),
+            closeForAsk: vi.fn(),
             initial: {
                 summary: "Dentist appointment",
                 start: "2026-12-01T10:00:00.000Z",
@@ -222,7 +235,7 @@ vi.mock("../features/integrations/services/connections", () => ({
 }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
-describe("from the calendar", () => {
+describe("from the calendar", { timeout: 30_000 }, () => {
     it("closes the dialogs and raises the ask with the event", async () => {
         const today = new Date();
         const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0);

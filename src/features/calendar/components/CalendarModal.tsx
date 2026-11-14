@@ -29,10 +29,6 @@ import {
     type ConnectionsResponse,
 } from "../../integrations/services/connections";
 import { redirectToOAuthConnect } from "../../integrations/services/oauth";
-import {
-    requestAskGenosAbout,
-    type AskGenosCalendarEventRef,
-} from "../../spotlight/askGenosAbout";
 import { isWritableCalendar, useCalendarSources } from "../hooks/useCalendarSources";
 import { useStickyPeriodScroll } from "../hooks/useStickyPeriodScroll";
 import { eventLabel } from "../utils/eventLabel";
@@ -467,17 +463,6 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         setEventModalOpen(true);
     };
 
-    // "Ask Genos about this event" (MIP-1059): close the event dialog and the calendar, then hand the
-    // event to the app-level ask, which opens with `#Title ` in its draft and sends nothing until the
-    // person presses Ask. Closed first: the ask opens above Joy's modal layer, but a dialog still
-    // open under it keeps focus inside itself, and the draft would not get it. The hand-off waits one
-    // tick, until the dialogs are gone.
-    const askGenosAbout = (ref: AskGenosCalendarEventRef) => {
-        setEventModalOpen(false);
-        onClose();
-        window.setTimeout(() => requestAskGenosAbout(ref), 0);
-    };
-
     const viewButton = (target: CalendarView, label: string) => (
         <Button
             key={target}
@@ -867,7 +852,12 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                         open={eventModalOpen}
                         onClose={() => setEventModalOpen(false)}
                         onError={setError}
-                        onAskGenos={askGenosAbout}
+                        closeForAsk={() => {
+                            // "Ask Genos about this event": the event dialog and the calendar close, so the
+                            // ask (which opens above them) gets the focus (MIP-1059).
+                            setEventModalOpen(false);
+                            onClose();
+                        }}
                         onDeleted={() => {
                             refreshCurrent();
                         }}
