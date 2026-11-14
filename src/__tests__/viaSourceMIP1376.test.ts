@@ -86,13 +86,17 @@ describe("viaSourceFromVia: what earns a chip", () => {
 
 describe("viaSourceFromVia: the name is the owner's", () => {
     it("the owner reads the name of the key or app", () => {
-        expect(viaSourceFromVia(KEY, true)).toEqual({ kind: "apiKey", name: "my-laptop-claude" });
-        expect(viaSourceFromVia(APP, true)).toEqual({ kind: "mcp", name: "Claude" });
+        expect(viaSourceFromVia(KEY, true)).toEqual({
+            kind: "apiKey",
+            name: "my-laptop-claude",
+            app: null,
+        });
+        expect(viaSourceFromVia(APP, true)).toEqual({ kind: "mcp", name: "Claude", app: null });
     });
 
     it("anyone else gets the kind and NO name", () => {
-        expect(viaSourceFromVia(KEY, false)).toEqual({ kind: "apiKey", name: null });
-        expect(viaSourceFromVia(APP, false)).toEqual({ kind: "mcp", name: null });
+        expect(viaSourceFromVia(KEY, false)).toEqual({ kind: "apiKey", name: null, app: null });
+        expect(viaSourceFromVia(APP, false)).toEqual({ kind: "mcp", name: null, app: null });
     });
 
     it("an owner whose key has no usable name gets none, not a placeholder", () => {
@@ -112,12 +116,13 @@ describe("viaSourceOfRow: the owner is the row's actor", () => {
         expect(viaSourceOfRow(row({ metadata: { via: KEY } }), "u1")).toEqual({
             kind: "apiKey",
             name: "my-laptop-claude",
+            app: null,
         });
     });
 
     it("a colleague's row shows the kind only, and the name is nowhere in the result", () => {
         const seen = viaSourceOfRow(row({ metadata: { via: KEY } }), "u2");
-        expect(seen).toEqual({ kind: "apiKey", name: null });
+        expect(seen).toEqual({ kind: "apiKey", name: null, app: null });
         expect(JSON.stringify(seen)).not.toContain("my-laptop-claude");
         expect(JSON.stringify(seen)).not.toContain("gk_ab");
     });
@@ -126,6 +131,7 @@ describe("viaSourceOfRow: the owner is the row's actor", () => {
         expect(viaSourceOfRow(row({ actor: null, metadata: { via: APP } }), "u1")).toEqual({
             kind: "mcp",
             name: null,
+            app: null,
         });
     });
 
@@ -138,7 +144,11 @@ describe("viaSourceOfComment: a comment card's mark, from the comment's own `via
     // The server already picked the comment's latest write and reduced it for this
     // viewer (api #758/#760), so these are exactly the shapes it sends.
     it("a comment written through an app is marked, one typed in Genos is not", () => {
-        expect(viaSourceOfComment({ via: APP })).toEqual({ kind: "mcp", name: "Claude" });
+        expect(viaSourceOfComment({ via: APP })).toEqual({
+            kind: "mcp",
+            name: "Claude",
+            app: null,
+        });
         expect(viaSourceOfComment({ via: { kind: "app" } })).toBeNull();
     });
 
@@ -146,14 +156,17 @@ describe("viaSourceOfComment: a comment card's mark, from the comment's own `via
         expect(viaSourceOfComment({ via: KEY })).toEqual({
             kind: "apiKey",
             name: "my-laptop-claude",
+            app: null,
         });
         expect(viaSourceOfComment({ via: { kind: "api_key" } })).toEqual({
             kind: "apiKey",
             name: null,
+            app: null,
         });
         expect(viaSourceOfComment({ via: { kind: "oauth" } })).toEqual({
             kind: "mcp",
             name: null,
+            app: null,
         });
     });
 

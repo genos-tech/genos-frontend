@@ -6,6 +6,7 @@ import type { ViaSource } from "../../../features/tasks/utils/viaSource";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { AppTooltip } from "../AppTooltip";
+import { ViaAppIcon } from "./ViaAppIcon";
 
 type ViaChipProps = {
     /** What `viaSourceOfRow` / `viaSourceOfComment` decided. `name` is only
@@ -27,6 +28,12 @@ type ViaChipProps = {
  * The words carry the meaning, so they are always visible; the icon is
  * decoration. The key's or app's name is in the tooltip, and only the owner is
  * ever handed one.
+ *
+ * When the server names the official app behind a connected app (`source.app`:
+ * "claude" or "chatgpt", MIP-1568), the chip is that app's own small round mark
+ * instead, and the words move to its accessible name and tooltip ("via Claude").
+ * Any other app, an API key, or an older server that sends no family keeps the
+ * generic chip above, unchanged.
  */
 export const ViaChip = ({ source, size = "sm" }: ViaChipProps) => {
     const { t } = useTranslation();
@@ -39,6 +46,18 @@ export const ViaChip = ({ source, size = "sm" }: ViaChipProps) => {
           ? v.mcpHint
           : v.apiKeyHint;
     const iconSize = size === "sm" ? 12 : 14;
+
+    if (isMcp && source.app) {
+        const appName = v.apps[source.app];
+        const appHint = source.name
+            ? fmt(v.appHintNamed, { app: appName, name: source.name })
+            : fmt(v.appHint, { app: appName });
+        return (
+            <AppTooltip size="sm" title={appHint}>
+                <ViaAppIcon app={source.app} size={size === "sm" ? 16 : 18} />
+            </AppTooltip>
+        );
+    }
 
     return (
         <AppTooltip size="sm" title={hint}>

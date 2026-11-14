@@ -3107,6 +3107,10 @@ export const ar: DeepPartial<Messages> = {
                 mcpHintNamed: "تم عبر تطبيقك المتصل «{name}» (MCP)، وليس كتابةً في Genos",
                 apiKeyHint: "تم باستخدام مفتاح API، وليس كتابةً في Genos",
                 apiKeyHintNamed: "تم باستخدام مفتاح API الخاص بك «{name}»، وليس كتابةً في Genos",
+                apps: { claude: "Claude", chatgpt: "ChatGPT" },
+                viaApp: "عبر {app}",
+                appHint: "تم عبر تطبيق ذكاء اصطناعي متصل ({app})، وليس كتابةً في Genos",
+                appHintNamed: "تم عبر تطبيقك المتصل «{name}» ({app})، وليس كتابةً في Genos",
             },
             restore: {
                 button: "استعادة الوصف السابق",

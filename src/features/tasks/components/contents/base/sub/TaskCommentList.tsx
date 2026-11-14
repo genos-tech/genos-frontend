@@ -234,6 +234,7 @@ export const TaskCommentList = ({
                         useCM={useCM}
                         useTEM={useTEM}
                         useUISM={useUISM}
+                        viaApp={via?.app}
                         viaKind={via?.kind}
                         viaName={via?.name}
                         onCommentClick={onCommentClick}
