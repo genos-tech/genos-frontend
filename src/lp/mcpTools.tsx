@@ -260,7 +260,7 @@ export const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Replace the text of one of your own comments on a task. The new text is the whole comment.",
+            "Replace the text of one of your own comments on a task. The new text is the whole comment. Can also react to any comment on a task you can open, or flag it to read later, mark the flag done or remove it.",
     },
     {
         name: "delete_comment",
@@ -333,7 +333,8 @@ export const MCP_TOOLS: McpTool[] = [
     {
         name: "create_todo_item",
         type: "write",
-        meaning: "A personal to-do, optionally with a reminder.",
+        meaning:
+            "A personal to-do, optionally with a reminder. Can link back to the task or comment it comes from.",
     },
     {
         name: "update_todo_item",
