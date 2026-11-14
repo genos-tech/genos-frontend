@@ -67,6 +67,8 @@ describe("the allow-list table (pinned to genos-api approval_edits.EDITABLE_FIEL
             effort_level: ["enum", false, null, false],
             due_date: ["date", false, null, true],
             start_date: ["date", false, null, true],
+            // Only a call that carries it shows it: the API publishes it behind a flag.
+            status: ["enum", false, null, false],
         });
     });
 
