@@ -50,6 +50,10 @@ describe("the message mention", () => {
 });
 
 describe("the selection", () => {
+    it("the cap is the server's: 4,000", () => {
+        expect(SELECTED_TEXT_MAX).toBe(4000);
+    });
+
     it("cuts at 4,000 code points and says it cut", () => {
         const long = "a".repeat(SELECTED_TEXT_MAX + 25);
         const { text, truncated } = clipSelectionText(long);
