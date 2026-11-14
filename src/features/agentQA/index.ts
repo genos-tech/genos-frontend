@@ -14,6 +14,13 @@ export {
 } from "./agentTurnLabels";
 export { ApprovalCard } from "./ApprovalCard";
 export {
+    type AskSelection,
+    clipSelectionText,
+    makeAskSelection,
+    SELECTED_TEXT_MAX,
+    toWireSelection,
+} from "./askSelection";
+export {
     agentQAUrlTransform,
     buildSourcesById,
     CITATION_HREF_PREFIX,

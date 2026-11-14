@@ -20,7 +20,7 @@
 //        "approval_token", "run_id"}
 //   {"type": "sources", "sources": [...]}
 //   {"type": "answer_delta", "text": "..."}
-//   {"type": "done", "session_id": "...", "elapsed_ms"?}   ← session_id added in Phase 8
+//   {"type": "done", "session_id": "...", "elapsed_ms"?, "dropped_references"?}   ← session_id added in Phase 8
 //   {"type": "error", "message": "..."}
 //
 // `duration_ms` (per-tool execution wall time) and `elapsed_ms` (whole
@@ -31,6 +31,7 @@
 // as a ReadableStream in the browser. Native fetch + the body reader
 // gives us token-by-token streaming.
 
+import { clipSelectionText } from "../features/agentQA/askSelection";
 import type { SpotlightResult } from "../features/spotlight/types";
 import { fmt, getMessages, resolveInitialLocale } from "../i18n";
 import { cleanRejectReason } from "./agentRejectReason";
@@ -210,7 +211,13 @@ export interface EditsRejected {
 export type AgentEvent =
     | { type: "sources"; sources: SpotlightResult[] }
     | { type: "answer_delta"; text: string }
-    | { type: "done"; session_id?: string; run_id?: string; elapsed_ms?: number }
+    | {
+          type: "done";
+          session_id?: string;
+          run_id?: string;
+          elapsed_ms?: number;
+          dropped_references?: unknown;
+      }
     | { type: "error"; message: string }
     | ({ type: "tool_call_start" } & ToolCallStartPayload)
     | ({ type: "tool_call_result" } & ToolCallResultPayload)
@@ -223,13 +230,48 @@ interface BaseStreamHandlers {
     // `elapsedMs` = the stream's total wall time, server-measured
     // (undefined on older backends). On a /decide/ resume it covers the
     // resumed segment only — the human approval wait isn't counted.
-    onDone: (sessionId?: string, runId?: string, elapsedMs?: number) => void;
+    // `droppedReferences` (MIP-1058) = what the ask pointed at and the server could not use,
+    // as kinds; see `DroppedReference`. Absent when nothing was dropped, with the flag off, and
+    // on any stream that is not an /ask/ (the server sets it on the ask's own `done`).
+    onDone: (
+        sessionId?: string,
+        runId?: string,
+        elapsedMs?: number,
+        droppedReferences?: DroppedReference[]
+    ) => void;
     onError: (message: string) => void;
     onToolStart?: (payload: ToolCallStartPayload) => void;
     onToolResult?: (payload: ToolCallResultPayload) => void;
     onToolError?: (payload: ToolCallErrorPayload) => void;
     onPendingApproval?: (payload: PendingApprovalPayload) => void;
 }
+
+/** What the server could not use of what an ask pointed at (genos-api `agent_views`, MIP-1058): the
+ *  terminal `done` event's `dropped_references`. Kinds only, never counts, and the same word whether
+ *  the thing was missing, deleted, unreadable, out of the member's history window or malformed, so
+ *  nothing is learned about which. `"message"` also comes back when MORE than 3 messages were sent
+ *  and all of them resolved (the first 3 are read, the rest dropped). The run itself still happened,
+ *  as a plain question. Absent when nothing was dropped; a run that pauses for a write approval sends
+ *  no `done`, so it carries none. */
+export const DROPPED_REFERENCES = ["message", "selection", "selected_from"] as const;
+export type DroppedReference = (typeof DROPPED_REFERENCES)[number];
+
+/** The `dropped_references` of a `done` event as a clean list: only kinds this client knows, each
+ *  once, in the server's order. Anything else (not an array, a kind from a newer server) is ignored,
+ *  so an unknown word can never reach a sentence. `undefined` when there is nothing to say. */
+export const asDroppedReferences = (raw: unknown): DroppedReference[] | undefined => {
+    if (!Array.isArray(raw)) return undefined;
+    const out: DroppedReference[] = [];
+    for (const kind of raw) {
+        if (
+            (DROPPED_REFERENCES as readonly unknown[]).includes(kind) &&
+            !out.includes(kind as DroppedReference)
+        ) {
+            out.push(kind as DroppedReference);
+        }
+    }
+    return out.length > 0 ? out : undefined;
+};
 
 export interface ThreadContext {
     chatType: number;
@@ -253,6 +295,11 @@ export interface NoteContext {
 // silently dropping what the user can't read). Built from the picker's
 // refs via `toWireMentions` in features/agentQA/mentions.
 export type AgentMentionPayload =
+    // MIP-1058 (AGENT_PARITY_TOOLS): a chat message, by its v3 `Message.id` (never the per-channel
+    // sequence number). The server reads it with the asker's own chat access, drops one it cannot
+    // read, and never puts `label` into a prompt. With the flag off it drops the entry as an unknown
+    // kind and the question goes without it.
+    | { type: "message"; message_id: string; label: string }
     | { type: "user"; user_id: string; label: string }
     | { type: "task"; task_id: number; label: string }
     | { type: "note"; note_type: 1 | 2 | 3; note_id: number; label: string }
@@ -269,6 +316,12 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // Structured @/# mentions the user picked in the input. Omitted
     // entirely when empty so older backends see an unchanged payload.
     mentions?: AgentMentionPayload[];
+    // A passage of text the member selected (MIP-1058): `selected_text` on the wire, with
+    // `selectedFrom` (`selected_from`) naming where it came from when that has an id. Both are
+    // omitted unless the text has something in it; the text is cut at the server's 4,000 characters
+    // before it is sent. With the server flag off they are ignored, no error.
+    selectedText?: string;
+    selectedFrom?: AgentMentionPayload;
     // Web-search gating is server-side only: the backend reads the user's
     // persisted `spotlight_web_search_enabled` preference (the Settings
     // toggle writes it via PATCH /user/preferences/spotlight-web-search/).
@@ -942,12 +995,21 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
         args.onError(getMessages().services.agent.notSignedIn);
         return;
     }
+    // A blank selection is no selection, and its source goes with it (the server ignores a
+    // `selected_from` without text).
+    const selectedText = clipSelectionText(args.selectedText ?? "").text;
     await runNdjsonStream(
         `${API_BASE}/agent/ask/`,
         {
             query: args.query,
             team_id: args.teamId,
             ...(args.mentions?.length ? { mentions: args.mentions } : {}),
+            ...(selectedText
+                ? {
+                      selected_text: selectedText,
+                      ...(args.selectedFrom ? { selected_from: args.selectedFrom } : {}),
+                  }
+                : {}),
             ...(args.sessionId ? { session_id: args.sessionId } : {}),
             ...(args.threadContext
                 ? {
@@ -1426,9 +1488,14 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
         case "answer_delta":
             if (evt.text) h.onDelta(evt.text);
             return false;
-        case "done":
-            h.onDone(evt.session_id, evt.run_id, evt.elapsed_ms);
+        case "done": {
+            // The fourth argument only when there is something in it, so a stream that
+            // dropped nothing calls `onDone` exactly as before.
+            const dropped = asDroppedReferences(evt.dropped_references);
+            if (dropped) h.onDone(evt.session_id, evt.run_id, evt.elapsed_ms, dropped);
+            else h.onDone(evt.session_id, evt.run_id, evt.elapsed_ms);
             return true; // terminal: clean finish
+        }
         case "error":
             h.onError(evt.message || getMessages().services.agent.unknownError);
             return true; // terminal: backend already reported the failure

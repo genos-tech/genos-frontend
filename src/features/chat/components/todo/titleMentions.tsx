@@ -427,6 +427,8 @@ export const resolveTitleMentions = (
 
 const paletteForRef = (ref: AgentMentionRef, myselfUserId: string | undefined): MentionPalette => {
     switch (ref.kind) {
+        case "message":
+            return CHAT_PALETTE;
         case "user":
             // Being mentioned yourself pops in a different colour, the
             // same signal the message-body chips use.

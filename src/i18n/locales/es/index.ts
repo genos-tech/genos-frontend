@@ -3982,6 +3982,14 @@ export const es: DeepPartial<Messages> = {
             untitled: "(sin título)",
             noAnswer: "(sin respuesta)",
         },
+        dropped: {
+            message: "Genos no pudo usar el mensaje que indicaste, así que respondió sin él.",
+            messages:
+                "Genos no pudo usar algunos de los mensajes que indicaste, así que respondió sin ellos.",
+            selection: "Genos no pudo usar el texto que seleccionaste, así que respondió sin él.",
+            selectedFrom:
+                "Genos no pudo usar el origen del texto seleccionado, así que usó solo el texto.",
+        },
         empty: {
             initial: "Empieza a escribir para buscar en chats, tareas y notas.",
             noMatches: "Aún no hay coincidencias — prueba con otras palabras clave.",

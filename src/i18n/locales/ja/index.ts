@@ -4690,6 +4690,16 @@ export const ja: DeepPartial<Messages> = {
             untitled: "（無題）",
             noAnswer: "（回答なし）",
         },
+        dropped: {
+            message:
+                "Genos は指定されたメッセージを使えなかったため、メッセージなしで回答しました。",
+            messages:
+                "Genos は指定されたメッセージの一部を使えなかったため、使えた分だけで回答しました。",
+            selection:
+                "Genos は選択されたテキストを使えなかったため、テキストなしで回答しました。",
+            selectedFrom:
+                "Genos は選択されたテキストの出典を使えなかったため、テキストだけで回答しました。",
+        },
         empty: {
             initial: "入力を開始すると、チャット・タスク・ノートを横断検索します。",
             noMatches: "該当する結果はありません — 別のキーワードで試してください。",
