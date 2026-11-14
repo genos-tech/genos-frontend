@@ -159,6 +159,15 @@ export const CreateTodoPreview = ({ args }: ApprovalPreviewProps) => {
         chips.push(`${t.agentApproval.fieldLabels.reminder_at}: ${reminder.proposed}`);
     const category = asString(args.category);
     if (category) chips.push(`${t.agentApproval.category}: ${category}`);
+    // MIP-1562 (AGENT_PARITY_TOOLS): the task or comment the to-do links back to, as the app's
+    // Add to To-Do does. `task_id` arrives friendly-ized to the task's display id.
+    const sourceTask = asString(args.task_id);
+    const sourceComment = asString(args.comment_id);
+    if (sourceTask && sourceComment)
+        chips.push(
+            fmt(t.agentApproval.todoFromComment, { comment: sourceComment, task: sourceTask })
+        );
+    else if (sourceTask) chips.push(fmt(t.agentApproval.todoFromTask, { task: sourceTask }));
 
     const title = asString(args.title);
     const notes = asString(args.notes_text);
