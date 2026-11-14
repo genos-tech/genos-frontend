@@ -3156,6 +3156,10 @@ export const es: DeepPartial<Messages> = {
                 mcpHintNamed: "Hecho desde tu app conectada «{name}» (MCP), no escrito en Genos",
                 apiKeyHint: "Hecho con una clave de API, no escrito en Genos",
                 apiKeyHintNamed: "Hecho con tu clave de API «{name}», no escrito en Genos",
+                apps: { claude: "Claude", chatgpt: "ChatGPT" },
+                viaApp: "vía {app}",
+                appHint: "Hecho desde una app de IA conectada ({app}), no escrito en Genos",
+                appHintNamed: "Hecho desde tu app conectada «{name}» ({app}), no escrito en Genos",
             },
             restore: {
                 button: "Restaurar la descripción anterior",

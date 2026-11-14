@@ -101,6 +101,8 @@ const ARABIC_SAME_AS_ENGLISH_OK: Record<string, string> = {
     "common.editor.emojiTypingHint": "the literal `:+typing` trigger the user types",
     "settings.developer.webhooks.urlPlaceholder": "an example URL",
     "tasks.linkedPr.paste": "an example URL",
+    "tasks.activity.via.apps.claude": "the product name Claude",
+    "tasks.activity.via.apps.chatgpt": "the product name ChatGPT",
     "admin.inviteMembers.emailPlaceholder": "an example e-mail address",
     "integrations.github.webhook.contentTypeLabel": "GitHub's own `application/json` option",
     "integrations.github.webhook.eventSelectionLabel": "quotes GitHub's English radio label",

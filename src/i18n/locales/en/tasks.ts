@@ -691,6 +691,13 @@ export const tasks = {
             mcpHintNamed: "Made through your connected app “{name}” (MCP), not typed in Genos",
             apiKeyHint: "Made with an API key, not typed in Genos",
             apiKeyHintNamed: "Made with your API key “{name}”, not typed in Genos",
+            // Which official AI app a connected-app change came through (MIP-1568): the
+            // app's small mark replaces the chip, these words are its name and tooltip.
+            // Brand names are not translated.
+            apps: { claude: "Claude", chatgpt: "ChatGPT" },
+            viaApp: "via {app}",
+            appHint: "Made through {app}, a connected AI app, not typed in Genos",
+            appHintNamed: "Made through {app} (your connected app “{name}”), not typed in Genos",
         },
         // Restoring the description an agent, an API key or MCP replaced
         // (MIP-738). Offered on the history row that kept the old body.

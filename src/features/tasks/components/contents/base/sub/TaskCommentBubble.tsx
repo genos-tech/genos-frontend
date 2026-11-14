@@ -66,7 +66,7 @@ import {
     deleteTaskCommentOnExit,
     taskCommentKey,
 } from "../../../../services/deleteTaskComment";
-import type { ViaKind } from "../../../../utils/viaSource";
+import type { ViaApp, ViaKind } from "../../../../utils/viaSource";
 
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
@@ -116,6 +116,8 @@ type TaskCommentBubbleProps = {
      *  memo compare below stays exact. `viaName` is the owner's alone. */
     viaKind?: ViaKind;
     viaName?: string | null;
+    /** The official app behind a connected-app comment (MIP-1568); its mark replaces the chip. */
+    viaApp?: ViaApp | null;
 };
 
 const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
@@ -139,6 +141,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
         hostZIndex,
         viaKind,
         viaName,
+        viaApp,
     } = props;
 
     const { t, locale } = useTranslation();
@@ -608,7 +611,9 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
             <BubbleMeta>
                 {isEdited ? `${sentLabel} ${t.chat.bubble.edited}` : sentLabel}
             </BubbleMeta>
-            {viaKind && <ViaChip source={{ kind: viaKind, name: viaName ?? null }} />}
+            {viaKind && (
+                <ViaChip source={{ kind: viaKind, name: viaName ?? null, app: viaApp ?? null }} />
+            )}
         </Stack>
     );
 
@@ -699,6 +704,7 @@ const areEqual = (prev: TaskCommentBubbleProps, next: TaskCommentBubbleProps): b
     prev.hostZIndex === next.hostZIndex &&
     prev.viaKind === next.viaKind &&
     prev.viaName === next.viaName &&
+    prev.viaApp === next.viaApp &&
     prev.currentProjectId === next.currentProjectId &&
     prev.currentProjectName === next.currentProjectName &&
     prev.currentTaskDisplayId === next.currentTaskDisplayId &&
