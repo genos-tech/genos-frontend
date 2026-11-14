@@ -81,6 +81,7 @@ import {
     type AgentMentionCandidate,
     type AgentMentionRef,
     type AgentTurnLabels,
+    type AskSelection,
     type AskState,
     type CompletedTurn,
     type UndoRequest,
@@ -149,11 +150,13 @@ export interface SpotlightContentProps {
     onPreview: (r: SpotlightResult) => void;
     // `mentions` carries the structured @/# refs the input's picker
     // collected for the live query (absent on retry — see useSpotlight).
-    // `origin` is analytics-only; omitted means "typed".
+    // `origin` is analytics-only; omitted means "typed". `selection` (MIP-1058) is the passage of
+    // selected text a retry re-sends; `null` = send none.
     onAsk: (
         overrideQuery?: string,
         mentions?: AgentMentionRef[],
-        origin?: SpotlightAskOrigin
+        origin?: SpotlightAskOrigin,
+        selection?: AskSelection | null
     ) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: (reason?: string) => void;
@@ -1397,7 +1400,8 @@ interface ConversationPanelProps {
     onAsk: (
         overrideQuery?: string,
         mentions?: AgentMentionRef[],
-        origin?: SpotlightAskOrigin
+        origin?: SpotlightAskOrigin,
+        selection?: AskSelection | null
     ) => void;
     onFeedback?: (runId: string, rating: number) => void;
     askDisabled: boolean;
@@ -1482,8 +1486,10 @@ const ConversationPanel = memo(
         const onAskRef = useRef(onAsk);
         onAskRef.current = onAsk;
         const onRetry = useCallback(
-            (askedQuery: string, mentions?: AgentMentionRef[]) =>
-                onAskRef.current(askedQuery, mentions, "retry"),
+            (askedQuery: string, mentions?: AgentMentionRef[], selection?: AskSelection) =>
+                // The passage the turn was asked with goes again verbatim; null = this turn had none
+                // (an ask the member is typing never lends its own attached text to a retry).
+                onAskRef.current(askedQuery, mentions, "retry", selection ?? null),
             []
         );
         // True when the user has scrolled away from the bottom. We pause
@@ -1742,9 +1748,11 @@ const ConversationPanel = memo(
                                 isCurrent={false}
                                 labels={turnLabels}
                                 layout={turnLayout}
+                                droppedReferences={turn.droppedReferences}
                                 mentions={turn.mentions}
                                 noteScopes={noteScopes}
                                 runId={turn.runId}
+                                selection={turn.selection}
                                 toolEvents={turn.toolEvents}
                                 renderAnswerStatus={renderSaveAnswerStatus}
                                 renderExtraActions={renderSaveAnswerActions}
@@ -1773,6 +1781,7 @@ const ConversationPanel = memo(
                                 noteScopes={noteScopes}
                                 pendingApproval={ask.pendingApproval}
                                 runId={ask.runId}
+                                selection={ask.askedSelection}
                                 toolEvents={ask.toolEvents}
                                 isCurrent
                                 onApprove={onApprove}

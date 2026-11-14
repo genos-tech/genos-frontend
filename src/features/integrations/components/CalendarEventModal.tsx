@@ -65,7 +65,7 @@ interface AttendeeOption {
 
 const attendeeKey = (a: AttendeeOption) => a.email.trim().toLowerCase();
 
-interface EventFormInitial {
+export interface EventFormInitial {
     /** Pre-check the "Add Google Meet" box. Callers typically derive
      *  this from `!!event.hangoutLink` when editing an existing
      *  event. */
@@ -132,6 +132,9 @@ interface CalendarEventModalProps {
     onDeleted?: (eventId: string) => void;
     /** Optional error sink — defaults to displaying inside the modal. */
     onError?: (message: string) => void;
+    /** The layer to open at, for an opener above Joy's modal layer (the dialog an agent chip opens
+     *  over Spotlight). Omitted: Joy's modal layer, where this dialog has always opened. */
+    zIndex?: number;
 }
 
 interface FormState {
@@ -225,9 +228,13 @@ export const CalendarEventModal = ({
     onSaved,
     onDeleted,
     onError,
+    zIndex,
 }: CalendarEventModalProps) => {
     const { t } = useTranslation();
     const theme = useTheme();
+    // Raised, the lists its pickers open go above it too (per picker: a sibling rule would claim every
+    // list on the page). Joy pins a list to the modal layer plus one, which is behind a raised dialog.
+    const popupZIndex = zIndex !== undefined ? zIndex + 10 : undefined;
     const [form, setForm] = useState<FormState>(formFromInitial(initial));
     const [submitting, setSubmitting] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -503,8 +510,8 @@ export const CalendarEventModal = ({
             open={open}
             size="lg"
             title={editingEventId ? t.calendar.event.editTitle : t.calendar.event.newTitle}
-            // Joy's modal layer, where this dialog has always opened.
-            zIndex={theme.zIndex.modal}
+            // Joy's modal layer, where this dialog has always opened, unless the opener is above it.
+            zIndex={zIndex ?? theme.zIndex.modal}
             actions={
                 <>
                     {/* Delete only on edit. Two-step (first click
@@ -652,6 +659,7 @@ export const CalendarEventModal = ({
                 <FormControl>
                     <FormLabel>{t.calendar.attendees.label}</FormLabel>
                     <Autocomplete
+                        slotProps={{ listbox: { sx: { zIndex: popupZIndex } } }}
                         getOptionLabel={(o) => o.displayName}
                         isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
                         noOptionsText={t.calendar.attendees.noResults}
@@ -741,6 +749,7 @@ export const CalendarEventModal = ({
                         see. */}
                 <RepeatPicker
                     disabled={isRecurring && scope !== "all"}
+                    popupZIndex={popupZIndex}
                     startISO={form.startISO}
                     value={form.recurrence}
                     onChange={(recurrence) => setForm((f) => ({ ...f, recurrence }))}

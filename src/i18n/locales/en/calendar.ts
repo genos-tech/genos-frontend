@@ -35,6 +35,13 @@ export const calendar = {
     // "(no title)" reads as a bug on our side rather than the sharing
     // setting working as intended.
     busy: "Busy",
+    linked: {
+        title: "Calendar event",
+        deletedTitle: "This event was deleted",
+        deletedBody: "It was removed from Google Calendar, so there is nothing left to open.",
+        failedTitle: "Couldn't open this event",
+        failedBody: "Google Calendar didn't answer. Try again in a moment.",
+    },
     // Recurring events. Google expands a series server-side, so what the
     // user sees on the grid are individual occurrences of one rule.
     repeat: {

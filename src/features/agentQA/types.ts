@@ -4,8 +4,13 @@
 // They live here so `useAgentQA` and every surface built on it (thread
 // ask, note ask, Spotlight) reference one source of truth.
 
-import type { AskAgentArgs, PendingApprovalPayload } from "../../services/agentApi";
+import type {
+    AskAgentArgs,
+    DroppedReference,
+    PendingApprovalPayload,
+} from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
+import type { AskSelection } from "./askSelection";
 import type { AgentMentionRef } from "./mentions/types";
 import type { UndoRequest, UndoStepRef } from "./undoSteps";
 
@@ -87,6 +92,14 @@ export interface AskState {
     // turn can carry them and Retry re-sends the identical refs instead
     // of degrading to plain text.
     askedMentions?: AgentMentionRef[];
+    // The passage of selected text sent WITH this ask (MIP-1058), held for the same reason as
+    // `askedMentions`: the completed turn carries it so Retry re-sends it verbatim.
+    askedSelection?: AskSelection;
+    // What the server said it could not use of what this ask pointed at (the `done` event's
+    // `dropped_references`, kinds only). Absent when nothing was dropped, with the server flag off,
+    // and on a turn that paused for approval (no `done` carries it there). Drives the calm notice
+    // under the answer.
+    droppedReferences?: DroppedReference[];
 }
 
 // Immutable snapshot of a finished turn. Promoted into the `turns` array
@@ -106,6 +119,11 @@ export interface CompletedTurn {
     // them verbatim (labels are advisory; the server re-resolves + ACL-
     // checks on every ask, so a stale ref degrades to a silent drop).
     mentions?: AgentMentionRef[];
+    // The passage of selected text this turn was asked with (MIP-1058): Retry re-sends it and
+    // its source verbatim, as it does `mentions`.
+    selection?: AskSelection;
+    // What the server could not use of what this turn pointed at (see AskState).
+    droppedReferences?: DroppedReference[];
     // Total response time snapshot from AskState.elapsedMs (see there).
     elapsedMs?: number | null;
     // The approved writes of this turn that can be undone, oldest first. From
@@ -230,9 +248,15 @@ export interface UseAgentQAReturn {
     // original question without stomping the live input. `mentions` are
     // the structured @/# refs the input's picker collected for the live
     // query (retry re-sends the ones stored on the turn). `meta` is handed
-    // back untouched as `AgentRunResult.meta`. Returns true when a request
-    // was dispatched.
-    onAsk: (overrideQuery?: string, mentions?: AgentMentionRef[], meta?: unknown) => boolean;
+    // back untouched as `AgentRunResult.meta`. `selection` (MIP-1058) is the passage of
+    // text this one ask points at, sent as `selected_text` / `selected_from`; Retry passes the
+    // one stored on the turn. Returns true when a request was dispatched.
+    onAsk: (
+        overrideQuery?: string,
+        mentions?: AgentMentionRef[],
+        meta?: unknown,
+        selection?: AskSelection | null
+    ) => boolean;
     onCancel: () => void;
     // `editedArgs` is the card's edit payload: ONLY the fields the person
     // changed, as `{path: value}`; absent or empty = approve as proposed. A

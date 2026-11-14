@@ -67,6 +67,7 @@ import {
     useAgentSessionsDeleted,
     type AgentMentionRef,
     type AgentRunResult,
+    type AskSelection,
     type AskState,
     type CompletedTurn,
     type ToolEvent,
@@ -186,10 +187,13 @@ export interface UseSpotlightReturn {
     onChangeFilterProjects: (projectIds: number[]) => void;
     // `origin` is analytics-only and optional — every existing caller keeps
     // working and lands in the "typed" default.
+    // `selection` (MIP-1058): the passage of selected text this ask points at. A retry passes the
+    // one its turn was asked with (`null` for none).
     onAsk: (
         overrideQuery?: string,
         mentions?: AgentMentionRef[],
-        origin?: SpotlightAskOrigin
+        origin?: SpotlightAskOrigin,
+        selection?: AskSelection | null
     ) => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: (reason?: string) => void;
@@ -514,6 +518,9 @@ export const useSpotlight = ({
                 const toStore = turns.slice(-MAX_STORED_TURNS).map((t) => ({
                     ...t,
                     toolEvents: [], // strip large blobs
+                    // A note about the run that just ended (MIP-1058), not part of the
+                    // conversation: a reload does not bring it back.
+                    droppedReferences: undefined,
                 }));
                 localStorage.setItem(
                     STORAGE_KEY(teamId),
@@ -726,7 +733,8 @@ export const useSpotlight = ({
         (
             overrideQuery?: string,
             mentions?: AgentMentionRef[],
-            origin: SpotlightAskOrigin = "typed"
+            origin: SpotlightAskOrigin = "typed",
+            selection?: AskSelection | null
         ) => {
             // AI answers disabled in Settings — silently ignore. The UI
             // also disables the Ask button + Enter, so reaching here
@@ -738,7 +746,8 @@ export const useSpotlight = ({
             const started = qaOnAsk(
                 overrideQuery !== undefined ? overrideQuery : query,
                 mentions,
-                { origin }
+                { origin },
+                selection
             );
             // Clear the input immediately after submitting. The question is
             // already captured in `ask.askedQuery` and visible in the

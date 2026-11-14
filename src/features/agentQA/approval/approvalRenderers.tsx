@@ -17,6 +17,12 @@ import type { FC } from "react";
 
 import { AddCommentPreview } from "./AddCommentPreview";
 import { BulkUpdatePreview } from "./BulkUpdatePreview";
+import { hasCalendarCardFacts } from "./calendarCardFacts";
+import {
+    CreateCalendarEventPreview,
+    DeleteCalendarEventPreview,
+    UpdateCalendarEventPreview,
+} from "./CalendarEventPreview";
 import { DeleteCommentPreview, UpdateCommentPreview } from "./CommentWritePreview";
 import { CreateTaskPreview } from "./CreateTaskPreview";
 import { ApproveJoinRequestPreview, DeclineJoinRequestPreview } from "./JoinRequestPreview";
@@ -34,6 +40,7 @@ import { ManageProjectMembersPreview, ManageProjectPreview } from "./ProjectWrit
 import { RestoreTaskBodyPreview } from "./RestoreBodyPreview";
 import { RestoreNoteVersionPreview } from "./RestoreNoteVersionPreview";
 import { DeleteSprintPreview, ManageSprintPreview } from "./SprintWritePreview";
+import { DeleteTaskAttachmentPreview } from "./TaskAttachmentPreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
 import { CreateTodoPreview, DeleteTodoPreview, UpdateTodoPreview } from "./TodoWritePreview";
 import { UpdateTaskPreview } from "./UpdateTaskPreview";
@@ -56,6 +63,8 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     // restore (which is also reversible).
     update_comment: UpdateCommentPreview,
     delete_comment: DeleteCommentPreview,
+    // A file on a task (AGENT_PARITY_TOOLS): the card names the file, its size and type.
+    delete_task_attachment: DeleteTaskAttachmentPreview,
     restore_task_body: RestoreTaskBodyPreview,
     // One card per to-do write, and one for the milestone tool (it branches
     // on its `action`) plus one for its delete.
@@ -95,7 +104,28 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     // Putting an earlier version of a note back (the current text is kept as a
     // version first, so it can be undone).
     restore_note_version: RestoreNoteVersionPreview,
+    // Calendar events (AGENT_PARITY_TOOLS, MIP-1059): behind `flagged` below, so the three cards a
+    // member sees today do not change until the server sends what the new ones read.
+    create_calendar_event: CreateCalendarEventPreview,
+    update_calendar_event: UpdateCalendarEventPreview,
+    delete_calendar_event: DeleteCalendarEventPreview,
 };
 
-export const getApprovalRenderer = (toolName: string): FC<ApprovalPreviewProps> | undefined =>
-    approvalRenderers[toolName];
+// Tools whose structured card exists only while the server's flag is on. They pause for approval with
+// the flag off too, and the card is then the key:value fallback it has always been: a renderer here
+// answers only for a card whose `arguments` carry the facts the flag adds.
+const flagged: Record<string, (args: Record<string, unknown>) => boolean> = {
+    create_calendar_event: hasCalendarCardFacts,
+    update_calendar_event: hasCalendarCardFacts,
+    delete_calendar_event: hasCalendarCardFacts,
+};
+
+export const getApprovalRenderer = (
+    toolName: string,
+    args?: Record<string, unknown>
+): FC<ApprovalPreviewProps> | undefined => {
+    const gate = flagged[toolName];
+    // No arguments to look at (a caller that only asks "is there a card for this tool?") is a yes.
+    if (gate && args && !gate(args)) return undefined;
+    return approvalRenderers[toolName];
+};

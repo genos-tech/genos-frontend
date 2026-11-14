@@ -85,7 +85,11 @@ const tokenizeInline = (
             // prose (m[1]). Resolve to a real deep-link; if unresolved, keep
             // the prose as plain text (no dead link) — matches the render-side
             // resolve-guard in `rewriteCitations`.
-            if (source) {
+            if (source && source.entity_type === "calendar_event") {
+                // A calendar event has no URL a saved note could link to (it opens in a dialog
+                // in the app): keep the prose, not a dead `#calendar_event:...` link.
+                out.push(...tokenizeFormatting(m[1]));
+            } else if (source) {
                 out.push({
                     kind: "link",
                     text: m[1],
@@ -94,6 +98,9 @@ const tokenizeInline = (
             } else {
                 out.push(...tokenizeFormatting(m[1]));
             }
+        } else if (source && source.entity_type === "calendar_event") {
+            // As above: the title as text, never a dead link.
+            out.push(...tokenizeFormatting((source.title || "").trim()));
         } else if (source) {
             const label = (source.title || "").trim() || entityId;
             out.push({ kind: "link", text: label, href: sourceToUrl(source) || `#${entityId}` });

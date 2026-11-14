@@ -30,6 +30,18 @@ export const spotlight = {
         // rather than leaving the question hanging.
         noAnswer: "(no answer)",
     },
+    // What the server could not use of what an ask pointed at (the `done` event's
+    // `dropped_references`, MIP-1058). Calm, and the same for missing, unreadable and
+    // deleted: the server says nothing about which. `messages` is for an ask that pointed at
+    // more than one message (the server also drops what is past its limit of 3).
+    dropped: {
+        message: "Genos could not use the message you pointed at, so it answered without it.",
+        messages:
+            "Genos could not use some of the messages you pointed at, so it answered without them.",
+        selection: "Genos could not use the text you selected, so it answered without it.",
+        selectedFrom:
+            "Genos could not use where the selected text came from, so it used the text alone.",
+    },
     empty: {
         initial: "Start typing to search across chats, tasks, and notes.",
         noMatches: "No matches yet — try different keywords.",
@@ -137,6 +149,7 @@ export const spotlight = {
         milestone: "Milestone",
         project: "Project",
         previousAnswer: "Previous answer",
+        calendarEvent: "Event",
         todo: "Todo",
         todoWithDate: "Todo · {date}",
         notePersonal: "My note",
@@ -165,5 +178,8 @@ export const spotlight = {
         notePlain: "{subtitle}{sep}",
         projectPlain: "{subtitle}{sep}",
         todo: "{subtitle}{sep}",
+        calendarEvent: "{subtitle}{sep}{when}",
+        calendarEventDeleted: "Deleted calendar event",
+        calendarEventUntitled: "(no title)",
     },
 } as const;

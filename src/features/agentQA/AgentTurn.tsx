@@ -60,6 +60,9 @@
 //     live turn) plus `undoSteps` (a restored or persisted turn, which has no
 //     events); each control's STATE lives in the undo store, so an undo re-renders
 //     that one control and never the turn. See `UndoControls.tsx`.
+//   - `droppedReferences`: what the server could not use of what the ask pointed at
+//     (MIP-1058), as a calm line under the answer. `selection` is only what Retry
+//     re-sends (the passage the turn was asked with).
 //   - `approvalFieldErrors` / `approvalEdits`: after the server refused an
 //     edit (422) the host's state hands the refusal back, and the card
 //     reopens in edit mode on what was typed. Pass them as they are in the
@@ -68,6 +71,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import { Box, IconButton, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
@@ -77,7 +81,7 @@ import { AppTooltip } from "../../components/ui/AppTooltip";
 import { Bubble, BubbleMeta, type BubbleLayout } from "../../components/ui/bubble";
 import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { fmt } from "../../i18n";
-import type { PendingApprovalPayload } from "../../services/agentApi";
+import type { DroppedReference, PendingApprovalPayload } from "../../services/agentApi";
 import { g } from "../../theme/tokens";
 import { entitySubtitle } from "../spotlight/SpotlightResultItem";
 import type { SpotlightResult } from "../spotlight/types";
@@ -85,6 +89,7 @@ import { agentMarkdownComponents } from "./agentMarkdown";
 import type { AgentTurnLabels } from "./agentTurnLabels";
 import { SourceChipRow } from "./AgentTurnSources";
 import { ApprovalCard } from "./ApprovalCard";
+import type { AskSelection } from "./askSelection";
 import { CitationLink } from "./CitationLink";
 import {
     agentQAUrlTransform,
@@ -92,6 +97,7 @@ import {
     citedChipSources,
     rewriteCitations,
 } from "./citationUtils";
+import { droppedReferenceNotices } from "./droppedReferences";
 import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
 import type { AgentMentionRef } from "./mentions/types";
@@ -165,6 +171,12 @@ export interface AgentTurnProps {
     elapsedMs?: number | null;
     // The structured mentions the turn was asked with; Retry re-sends them.
     mentions?: AgentMentionRef[];
+    // The passage of selected text the turn was asked with (MIP-1058); Retry re-sends it, and
+    // its source, verbatim.
+    selection?: AskSelection;
+    // What the server could not use of what the ask pointed at, as the `done` event's kinds.
+    // Rendered as a calm note under the answer; absent when nothing was dropped.
+    droppedReferences?: DroppedReference[];
     // AgentRun id keying the 👍/👎 feedback. Absent: no thumbs.
     runId?: string | null;
     // Lets a cited note read "Team note" rather than "My note".
@@ -179,7 +191,7 @@ export interface AgentTurnProps {
     onReject?: React.ComponentProps<typeof ApprovalCard>["onReject"];
     // Takes the question rather than being pre-bound, so the host's callback
     // can stay one stable identity across every turn.
-    onRetry?: (askedQuery: string, mentions?: AgentMentionRef[]) => void;
+    onRetry?: (askedQuery: string, mentions?: AgentMentionRef[], selection?: AskSelection) => void;
     onFeedback?: (runId: string, rating: number) => void;
     // Starts one undo (the host's stable callback, behind a ref). Absent: no Undo
     // controls, the turn renders as it did before undo existed.
@@ -243,6 +255,8 @@ const AgentTurnInner = ({
     labels,
     elapsedMs,
     mentions,
+    selection,
+    droppedReferences,
     runId,
     noteScopes,
     askDisabled,
@@ -265,8 +279,8 @@ const AgentTurnInner = ({
     );
 
     const handleRetry = useCallback(() => {
-        if (onRetry) onRetry(askedQuery, mentions);
-    }, [onRetry, askedQuery, mentions]);
+        if (onRetry) onRetry(askedQuery, mentions, selection);
+    }, [onRetry, askedQuery, mentions, selection]);
 
     // Look-up table for `rewriteCitations` and the anchor override below,
     // rebuilt only when the sources array changes, not on every streamed
@@ -323,6 +337,14 @@ const AgentTurnInner = ({
                 /* ignore — e.g. non-secure context */
             });
     }, [answer]);
+
+    // The sentences for what the server could not use (MIP-1058). The turn's own `mentions` decide
+    // "the message" vs "some of the messages". Only a finished turn has them (`done` carries the
+    // list), and none while a write waits for the person.
+    const droppedNotices = useMemo(
+        () => droppedReferenceNotices(droppedReferences, mentions, labels.dropped),
+        [droppedReferences, mentions, labels.dropped]
+    );
 
     // "Thinking…" while the stream is open and nothing has shown up yet.
     // Not while a write waits for the user: they are the thing being waited on.
@@ -534,6 +556,35 @@ const AgentTurnInner = ({
                         />
 
                         {answerStatus}
+
+                        {droppedNotices.length > 0 && (
+                            <Box
+                                role="status"
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "flex-start",
+                                    gap: 0.5,
+                                    mt: 0.5,
+                                    color: g.text.secondary,
+                                }}
+                            >
+                                {/* A decorative icon: MUI hides it from screen readers. */}
+                                <InfoOutlinedIcon
+                                    sx={{ fontSize: 14, mt: "2px", flexShrink: 0 }}
+                                />
+                                <Box sx={{ minWidth: 0 }}>
+                                    {droppedNotices.map((text) => (
+                                        <Typography
+                                            key={text}
+                                            level="body-xs"
+                                            sx={{ color: "inherit", overflowWrap: "anywhere" }}
+                                        >
+                                            {text}
+                                        </Typography>
+                                    ))}
+                                </Box>
+                            </Box>
+                        )}
 
                         {/* Total response time (server-measured, from the
                         `done` event). Only for finished, non-error turns —

@@ -21,6 +21,7 @@
 
 import type { Messages } from "../../i18n";
 import type { EntitySubtitleLabels } from "../spotlight/SpotlightResultItem";
+import type { DroppedLabels } from "./droppedReferences";
 import { getToolLabel } from "./toolLabels";
 import { buildUndoLabels, type UndoLabels } from "./undoCopy";
 
@@ -73,6 +74,9 @@ export interface AgentTurnLabels {
     // sentence per outcome and refusal. One wording for every host
     // (`agentApproval.undo`); `undoCopy.ts` builds it.
     undo: UndoLabels;
+    // What the server could not use of what the ask pointed at (MIP-1058): one sentence per
+    // kind it reports, Spotlight's wording for every host (`spotlight.dropped`).
+    dropped: DroppedLabels;
 }
 
 export type AgentTurnHost = "spotlight" | "threadAsk" | "noteAsk";
@@ -118,5 +122,6 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
             ? { ...sp.entitySubtitle, notePersonal: sp.entitySubtitle.noteFallback }
             : sp.entitySubtitle,
         undo: buildUndoLabels(t),
+        dropped: sp.dropped,
     };
 };

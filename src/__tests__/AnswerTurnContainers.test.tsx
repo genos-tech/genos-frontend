@@ -28,6 +28,7 @@ import { SpotlightContent } from "../features/spotlight/SpotlightContent";
 import type { SpotlightResult } from "../features/spotlight/types";
 import { ThreadAskModal } from "../features/threadAsk/ThreadAskModal";
 import type { UseThreadAskReturn } from "../features/threadAsk/useThreadAsk";
+import { en } from "../i18n/locales/en";
 import type { PendingApprovalPayload } from "../services/agentApi";
 
 // The mention picker drags in the team/task/note stores and isn't under test.
@@ -89,6 +90,11 @@ const MILESTONE = source({
 });
 
 const MENTIONS = [{ kind: "user" as const, userId: "u2", label: "Bob" }];
+const MESSAGE_REF = {
+    kind: "message" as const,
+    messageId: "5b0c3a52-6a31-4f1a-9a30-0e7f4a8f1c11",
+    label: "Alice 14:02",
+};
 
 // Turn 1: an inline citation, a bare token, and a retrieved-but-uncited source.
 const TURN_ONE: CompletedTurn = {
@@ -356,6 +362,28 @@ describe.each(SURFACES)("$name: a finished answer", (surface) => {
         // Common to every host: the question, then the mentions it carried.
         expect(h.retry.mock.calls[0][0]).toBe("What shipped last week?");
         expect(h.retry.mock.calls[0][1]).toEqual(MENTIONS);
+    });
+
+    it("re-sends the passage of selected text the turn was asked with, as the fourth argument", () => {
+        // MIP-1058: the same on every host. `null` says "this turn had none" (a retry never lends
+        // it a passage the member is attaching to something else).
+        const selection = { text: "the passage", from: MESSAGE_REF };
+        const h = surface.mount({
+            turns: [{ ...TURN_ONE, mentions: [MESSAGE_REF], selection }, TURN_TWO],
+        });
+        const [first, second] = screen.getAllByRole("button", { name: "Ask again" });
+        fireEvent.click(first);
+        expect(h.retry.mock.calls[0][1]).toEqual([MESSAGE_REF]);
+        expect(h.retry.mock.calls[0][3]).toEqual(selection);
+        fireEvent.click(second);
+        expect(h.retry.mock.calls[1][3]).toBeNull();
+    });
+
+    it("says what the server could not use, on every host (MIP-1058)", () => {
+        surface.mount({
+            turns: [{ ...TURN_ONE, mentions: [MESSAGE_REF], droppedReferences: ["message"] }],
+        });
+        expect(screen.getByRole("status").textContent).toBe(en.spotlight.dropped.message);
     });
 
     it("rates the answer through the run id", () => {

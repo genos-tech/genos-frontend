@@ -5,6 +5,7 @@
 // tested without rendering.
 
 import { fmt } from "../../i18n";
+import { formatEventWhen } from "../calendar/utils/eventWhen";
 import { badgeFor, entitySubtitle } from "../spotlight/SpotlightResultItem";
 import type { SpotlightResult } from "../spotlight/types";
 import type { AgentTurnLabels } from "./agentTurnLabels";
@@ -67,6 +68,31 @@ export function sourceChipLabel(
             ? fmt(ts.entitySubtitle.todoWithDate, { date: datePart })
             : ts.entitySubtitle.todo;
         return fmt(ts.chip.todo, { subtitle: todoSubtitle, sep });
+    }
+    if (s.entity_type === "calendar_event") {
+        // "Event: Standup · Dec 1, 10:00". A chip made by a delete the run never read an
+        // event for has no title and no time (the server sends both blank, and a later read fills
+        // them in: `mergeSources`), so it is worded here, not left as an id. An event whose title is
+        // blank but whose time is known is a real untitled event.
+        const operatedBlank = !s.title?.trim() && !s.event_start && s.operated === true;
+        if (operatedBlank) return ts.chip.calendarEventDeleted;
+        const label = title || ts.chip.calendarEventUntitled;
+        // The chip is read in the app's language (the page's `lang`), and the time in the viewer's zone.
+        const when = formatEventWhen(
+            {
+                start: s.event_start,
+                allDay: s.event_all_day,
+                withEnd: false,
+                // A chip has little room: "Dec 1, 10:00", not "Tue, Dec 1, 10:00".
+                weekday: false,
+            },
+            document.documentElement.lang || undefined
+        );
+        return fmt(ts.chip.calendarEvent, {
+            subtitle,
+            sep: `: ${label}`,
+            when: when ? ` · ${when}` : "",
+        });
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;

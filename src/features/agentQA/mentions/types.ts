@@ -13,6 +13,13 @@
 import type { AgentMentionPayload } from "../../../services/agentApi";
 
 export type AgentMentionRef =
+    // A chat message the member pointed "Ask Genos" at (MIP-1058, AGENT_PARITY_TOOLS). `messageId` is
+    // the v3 `Message.id` (a UUID: `messageIdWithChatId` of a main-channel message,
+    // `messageIdWithChatIdAndThreadId` of a thread reply), NEVER the per-channel sequence `messageId`.
+    // Made only by "Ask Genos about this message" (`askGenosRefForMessage`), never picked from the `#`
+    // menu. The server reads the message itself, with the asker's own chat access; `label` is display
+    // only (the draft token and nothing else).
+    | { kind: "message"; messageId: string; label: string }
     | { kind: "user"; userId: string; label: string }
     // A milestone is a task under the hood (same `task_id`, same wire
     // shape — see `toWireMentions`), so it stays `kind: "task"` and
@@ -110,6 +117,8 @@ export interface AgentMentionCandidate {
 
 export const mentionKey = (ref: AgentMentionRef): string => {
     switch (ref.kind) {
+        case "message":
+            return `message:${ref.messageId}`;
         case "user":
             return `user:${ref.userId}`;
         case "task":
@@ -135,6 +144,8 @@ export const mentionKey = (ref: AgentMentionRef): string => {
 export const toWireMentions = (refs: AgentMentionRef[]): AgentMentionPayload[] =>
     refs.map((ref) => {
         switch (ref.kind) {
+            case "message":
+                return { type: "message", message_id: ref.messageId, label: ref.label };
             case "user":
                 return { type: "user", user_id: ref.userId, label: ref.label };
             case "task":
