@@ -103,6 +103,8 @@ describe("Retry", () => {
         const onRetry = vi.fn();
         renderTurn({ mentions: [M1], onRetry });
         fireEvent.click(screen.getByRole("button", { name: en.spotlight.actions.retry }));
-        expect(onRetry).toHaveBeenCalledWith("What did she mean?", [M1], undefined);
+        // Called exactly as it was before there were selections: two arguments.
+        expect(onRetry).toHaveBeenCalledWith("What did she mean?", [M1]);
+        expect(onRetry.mock.calls[0]).toHaveLength(2);
     });
 });
