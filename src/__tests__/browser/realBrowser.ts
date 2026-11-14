@@ -202,8 +202,16 @@ export const launchChrome = async (chrome: string): Promise<Browser> => {
             return page;
         },
         async close() {
+            // Chrome's helper processes can still be writing to the profile when the parent is
+            // killed: wait for the exit, and never let a failed clean-up of a temp dir fail a test.
+            const exited = new Promise<void>((resolve) => proc.once("exit", () => resolve()));
             proc.kill("SIGKILL");
-            rmSync(dir, { recursive: true, force: true });
+            await Promise.race([exited, new Promise((r) => setTimeout(r, 5000))]);
+            try {
+                rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 });
+            } catch {
+                /* a temp dir left behind is harmless */
+            }
         },
     };
 };
