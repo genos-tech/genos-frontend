@@ -4752,6 +4752,16 @@ export const fr: DeepPartial<Messages> = {
             untitled: "(sans titre)",
             noAnswer: "(aucune réponse)",
         },
+        dropped: {
+            message:
+                "Genos n'a pas pu utiliser le message que vous avez indiqué ; il a répondu sans lui.",
+            messages:
+                "Genos n'a pas pu utiliser certains des messages que vous avez indiqués ; il a répondu sans eux.",
+            selection:
+                "Genos n'a pas pu utiliser le texte que vous avez sélectionné ; il a répondu sans lui.",
+            selectedFrom:
+                "Genos n'a pas pu utiliser la source du texte sélectionné ; il a utilisé le texte seul.",
+        },
         empty: {
             initial: "Commencez à saisir pour rechercher dans vos conversations, tâches et notes.",
             noMatches: "Aucun résultat — essayez d'autres mots-clés.",

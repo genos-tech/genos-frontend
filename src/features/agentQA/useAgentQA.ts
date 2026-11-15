@@ -34,6 +34,7 @@ import {
     askAgentStream,
     decideAgent,
     submitAgentFeedback,
+    type DroppedReference,
     type PendingApprovalPayload,
     type ToolResultUndoRef,
 } from "../../services/agentApi";
@@ -43,6 +44,7 @@ import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEv
 import { emitCalendarEventToolResult } from "./approvedCalendarWrites";
 import { emitProjectToolResult } from "./approvedProjectWrites";
 import { emitMilestoneChangeToolResult, emitTaskAttachmentToolResult } from "./approvedTaskWrites";
+import { toWireSelection, type AskSelection } from "./askSelection";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import { mergeSources } from "./mergeSources";
 import { emitNoteChanged } from "./noteWriteTools";
@@ -94,6 +96,9 @@ const snapshotTurn = (ask: AskState): CompletedTurn => {
         askError: ask.askError,
         runId: ask.runId ?? null,
         mentions: ask.askedMentions,
+        // Only a turn that had them carries the keys, so an ordinary turn is the object it was.
+        ...(ask.askedSelection ? { selection: ask.askedSelection } : {}),
+        ...(ask.droppedReferences ? { droppedReferences: ask.droppedReferences } : {}),
         elapsedMs: ask.elapsedMs ?? null,
         ...(undo.length > 0 ? { undo } : {}),
     };
@@ -230,7 +235,12 @@ export const useAgentQA = ({
                         liveRunRef.current.answer += text;
                     }
                 },
-                onDone: (sessionId?: string, runId?: string, elapsedMs?: number) => {
+                onDone: (
+                    sessionId?: string,
+                    runId?: string,
+                    elapsedMs?: number,
+                    droppedReferences?: DroppedReference[]
+                ) => {
                     setAsk((prev) =>
                         stillCurrent(prev)
                             ? {
@@ -241,6 +251,10 @@ export const useAgentQA = ({
                                   // Total response time for the "Answered
                                   // in Xs" line (absent on old backends).
                                   ...(typeof elapsedMs === "number" ? { elapsedMs } : {}),
+                                  // What the server could not use of what the ask pointed
+                                  // at (MIP-1058): kept on the turn for the notice under
+                                  // the answer. Absent unless something was dropped.
+                                  ...(droppedReferences?.length ? { droppedReferences } : {}),
                               }
                             : prev
                     );
@@ -456,7 +470,12 @@ export const useAgentQA = ({
     // (`AgentRunResult.meta`) so a surface can tag an ask with something the
     // terminal callback needs (Spotlight: where the question came from).
     const onAsk = useCallback(
-        (overrideQuery?: string, mentions?: AgentMentionRef[], meta?: unknown): boolean => {
+        (
+            overrideQuery?: string,
+            mentions?: AgentMentionRef[],
+            meta?: unknown,
+            selection?: AskSelection | null
+        ): boolean => {
             // `overrideQuery` wins when supplied (Retry on a past turn);
             // otherwise the live input is the source.
             const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
@@ -490,6 +509,10 @@ export const useAgentQA = ({
             // return false and every stream event would be silently dropped.
             const askedTurnId = ask.turnId + 1;
 
+            // The passage this ask points at (MIP-1058), as the two request fields: nothing when
+            // it is blank. `askedSelection` below keeps it on the turn only when it was sent.
+            const wireSelection = toWireSelection(selection);
+
             setAsk({
                 isStreaming: true,
                 askedQuery: trimmed,
@@ -504,6 +527,10 @@ export const useAgentQA = ({
                 turnId: askedTurnId,
                 runId: null,
                 askedMentions: mentions?.length ? mentions : undefined,
+                askedSelection:
+                    selection && wireSelection.selected_text
+                        ? { ...selection, text: wireSelection.selected_text }
+                        : undefined,
             });
 
             // The turn's chips start empty, whatever the live slot held.
@@ -545,6 +572,14 @@ export const useAgentQA = ({
                     : {}),
                 signal: controller.signal,
                 ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
+                ...(wireSelection.selected_text
+                    ? {
+                          selectedText: wireSelection.selected_text,
+                          ...(wireSelection.selected_from
+                              ? { selectedFrom: wireSelection.selected_from }
+                              : {}),
+                      }
+                    : {}),
                 ...extras,
                 ...buildStreamHandlers(askedTurnId),
             });

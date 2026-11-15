@@ -26,6 +26,7 @@ import {
 import { SpotlightResult } from "../spotlight/types";
 import { AgentTurn } from "./AgentTurn";
 import type { AgentTurnLabels } from "./agentTurnLabels";
+import type { AskSelection } from "./askSelection";
 import { buildSourcesById, sourceToUrl } from "./citationUtils";
 import type { AgentMentionRef } from "./mentions/types";
 import { renderSaveAnswerActions, renderSaveAnswerStatus } from "./saveAnswer/SaveAnswerActions";
@@ -64,8 +65,10 @@ export const AgentQAConversation = ({
     const onRetryRef = useRef(state.onAsk);
     onRetryRef.current = state.onAsk;
     const onRetry = useCallback(
-        (askedQuery: string, mentions?: AgentMentionRef[]) =>
-            onRetryRef.current?.(askedQuery, mentions),
+        (askedQuery: string, mentions?: AgentMentionRef[], selection?: AskSelection) =>
+            // The third argument is the ask's `meta` (not used here); the fourth is the passage the
+            // turn was asked with, re-sent verbatim (null: this turn had none).
+            onRetryRef.current?.(askedQuery, mentions, undefined, selection ?? null),
         []
     );
     const onFeedbackRef = useRef(state.submitFeedback);
@@ -167,11 +170,13 @@ export const AgentQAConversation = ({
                     isCurrent={false}
                     labels={turnLabels}
                     layout={layout}
+                    droppedReferences={turn.droppedReferences}
                     mentions={turn.mentions}
                     noteScopes={noteScopes}
                     renderAnswerStatus={renderSaveAnswerStatus}
                     renderExtraActions={renderSaveAnswerActions}
                     runId={turn.runId}
+                    selection={turn.selection}
                     sourcesById={sourcesById}
                     toolEvents={turn.toolEvents}
                     undoSteps={turn.undo}
@@ -199,6 +204,7 @@ export const AgentQAConversation = ({
                     renderAnswerStatus={renderSaveAnswerStatus}
                     renderExtraActions={renderSaveAnswerActions}
                     runId={ask.runId}
+                    selection={ask.askedSelection}
                     sourcesById={sourcesById}
                     toolEvents={ask.toolEvents}
                     isCurrent

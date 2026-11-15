@@ -76,6 +76,10 @@ const MAX_MENU_HEIGHT = 280;
 // `renderIdentity`), not an icon.
 const kindIcon = (ref: Exclude<AgentMentionRef, { kind: "user" }>) => {
     switch (ref.kind) {
+        case "message":
+            // Never a candidate (a message is only ever attached by "Ask Genos about this message"):
+            // no row is drawn for one. It reads as the chat it is in.
+            return MENTION_ICONS.chat;
         case "task":
             return ref.isMilestone ? MENTION_ICONS.milestone : MENTION_ICONS.task;
         case "note":
@@ -96,6 +100,8 @@ const kindIcon = (ref: Exclude<AgentMentionRef, { kind: "user" }>) => {
 // user row is a photo, not a colored disc (see `renderIdentity`).
 const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPalette => {
     switch (ref.kind) {
+        case "message":
+            return CHAT_PALETTE;
         case "group":
             return GROUP_PALETTE;
         case "task":
@@ -164,6 +170,8 @@ const kindSubtitle = (t: Messages, c: AgentMentionCandidate): string => {
     const e = t.common.editor;
     const { ref, subtitle } = c;
     switch (ref.kind) {
+        case "message":
+            return "";
         case "user":
             // The editor's `@` row shows the person's email — the one
             // reliable way to tell two same-named teammates apart. Falls
