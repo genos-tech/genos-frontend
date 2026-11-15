@@ -81,4 +81,24 @@ describe("Connect an AI app has every string in every locale", () => {
         expect(EN.revoke).toContain(en.settings.tabs.developer);
         expect(EN.revoke).toContain(en.settings.connectedApps.title);
     });
+
+    it("es and zh name the Developer tab with the word for developers (MIP-1557)", () => {
+        // "Revelador" (revealer) and "开发商" (business developer) were machine-translation slips.
+        expect(es.settings?.tabs?.developer).toBe("Desarrolladores");
+        expect(zh.settings?.tabs?.developer).toBe("开发者");
+        for (const [name, bad] of [
+            ["es", "Revelador"],
+            ["zh", "开发商"],
+        ] as const) {
+            expect({ name, found: JSON.stringify(OTHERS[name]).includes(bad) }).toEqual({
+                name,
+                found: false,
+            });
+        }
+    });
+
+    it("es and zh quote the tab by that one name everywhere (no stray singular or synonym)", () => {
+        expect(JSON.stringify(es)).not.toMatch(/Desarrollador(?!es)/);
+        expect(JSON.stringify(zh)).not.toContain("开发人员");
+    });
 });

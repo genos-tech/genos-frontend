@@ -16,8 +16,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { en } from "../i18n/locales/en";
 import { ja } from "../i18n/locales/ja";
-import { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "../lp/supportLabels";
+import { SUPPORT_EMAIL, SUPPORT_MCP_ADDRESS, SUPPORT_UI_LABELS } from "../lp/supportLabels";
 import SupportPage from "../lp/SupportPage";
+import { mcpServerUrl } from "../utils/mcpConnect";
 
 const renderPage = () =>
     render(
@@ -79,6 +80,33 @@ describe("SupportPage", () => {
         expect(labels.scopeWrite).toBe(en.settings.connectedApps.scopeWrite);
         expect(labels.canDelete).toBe(en.settings.connectedApps.canDelete);
         for (const label of Object.values(labels)) expect(text).toContain(label);
+    });
+
+    it("says how to connect an app: the OAuth address (no key, no query) and where the steps are", () => {
+        const { container } = renderPage();
+        const address = screen.getByTestId("support-mcp-address").textContent ?? "";
+        // Built by the shared function the Settings panel and /developers use.
+        expect(address).toBe(SUPPORT_MCP_ADDRESS);
+        expect(address).toMatch(/\/api\/public\/v1\/mcp$/);
+        expect(address).not.toMatch(/[?#]|\/$/);
+        expect(address).toBe(
+            mcpServerUrl(import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev")
+        );
+        const text = container.textContent ?? "";
+        expect(text).toContain("no API key is needed");
+        expect(text).toContain("Core plan or above");
+        const l = SUPPORT_UI_LABELS.en;
+        expect(text).toContain(`${l.settings} → ${l.developer} → ${l.connectedApps}`);
+    });
+
+    it("also says it in Japanese, with the same address", () => {
+        const { container } = renderPage();
+        fireEvent.click(screen.getByRole("button", { name: "日本語" }));
+        expect(screen.getByTestId("support-mcp-address").textContent).toBe(SUPPORT_MCP_ADDRESS);
+        const text = container.textContent ?? "";
+        expect(text).toContain("API キーは不要");
+        const l = SUPPORT_UI_LABELS.ja;
+        expect(text).toContain(`「${l.settings}」 → 「${l.developer}」 → 「${l.connectedApps}」`);
     });
 
     it("quotes the Japanese labels from the ja locale when switched to 日本語", () => {

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 import { LpShell } from "./kit/LpShell";
 import type { Lang } from "./lpLang";
-import { SUPPORT_EMAIL, SUPPORT_UI_LABELS } from "./supportLabels";
+import { SUPPORT_EMAIL, SUPPORT_MCP_ADDRESS, SUPPORT_UI_LABELS } from "./supportLabels";
 
 /**
  * `/support` — how to get help with Genos.
@@ -47,6 +47,11 @@ const COPY: Record<
         includeNote: string;
         appsHeading: string;
         appsIntro: string;
+        connectIntro: (
+            Label: (props: { children: React.ReactNode }) => React.ReactNode,
+            l: Record<string, string>
+        ) => React.ReactNode;
+        connectAddress: string;
         appsSteps: (
             l: Record<string, string>,
             Label: (props: { children: React.ReactNode }) => React.ReactNode
@@ -74,6 +79,16 @@ const COPY: Record<
         appsHeading: "Connected AI apps",
         appsIntro:
             "An AI app you have connected to Genos can use Genos as you. You can see which apps are connected, and disconnect any of them, yourself:",
+        connectIntro: (Label, l) => (
+            <>
+                To connect an app (Claude, for example), no API key is needed: paste the address
+                below into the app, sign in to Genos when it asks, then choose what the app may do.
+                It needs the Core plan or above. The steps for each app are under{" "}
+                <Label>{l.settings}</Label> → <Label>{l.developer}</Label> →{" "}
+                <Label>{l.connectedApps}</Label>.
+            </>
+        ),
+        connectAddress: "Address to paste into the app:",
         appsSteps: (l, Label) => [
             <>
                 Open <Label>{l.settings}</Label> in Genos and choose <Label>{l.developer}</Label>.
@@ -114,6 +129,16 @@ const COPY: Record<
         appsHeading: "接続済みの AI アプリ",
         appsIntro:
             "Genos に接続した AI アプリは、あなたとして Genos を使うことができます。どのアプリが接続されているかの確認と、接続の解除は、ご自身でできます。",
+        connectIntro: (Label, l) => (
+            <>
+                アプリ（Claude など）を接続するのに API
+                キーは不要です。下のアドレスをアプリに貼り付け、 求められたら Genos
+                にサインインし、アプリに許可する内容を選びます。Core
+                プラン以上で利用できます。アプリごとの手順は <Label>{l.settings}</Label> →{" "}
+                <Label>{l.developer}</Label> → <Label>{l.connectedApps}</Label> にあります。
+            </>
+        ),
+        connectAddress: "アプリに貼り付けるアドレス：",
         appsSteps: (l, Label) => [
             <>
                 Genos で <Label>{l.settings}</Label> を開き、<Label>{l.developer}</Label>{" "}
@@ -176,6 +201,13 @@ function SupportBody({ lang }: { lang: Lang }) {
 
                     <section>
                         <h2>{c.appsHeading}</h2>
+                        <p>{c.connectIntro(LABELS[lang], SUPPORT_UI_LABELS[lang])}</p>
+                        <p className="lp-small">
+                            {c.connectAddress}{" "}
+                            <code data-testid="support-mcp-address" translate="no">
+                                {SUPPORT_MCP_ADDRESS}
+                            </code>
+                        </p>
                         <p>{c.appsIntro}</p>
                         <ol>
                             {c.appsSteps(SUPPORT_UI_LABELS[lang], LABELS[lang]).map((step, i) => (
