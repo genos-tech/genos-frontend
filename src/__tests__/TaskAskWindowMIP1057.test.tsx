@@ -73,14 +73,14 @@ const lastAsk = (): AskArgs => {
 
 let onAskInGeneral: ReturnType<typeof vi.fn<(draft?: string) => void>>;
 let onSelectSource: ReturnType<typeof vi.fn>;
-const mount = () => {
+const mount = (teamId: string | null = "team-1") => {
     onAskInGeneral = vi.fn<(draft?: string) => void>();
     onSelectSource = vi.fn();
     return render(
         <CssVarsProvider>
             <TaskAskHost
                 projects={PROJECTS}
-                teamId="team-1"
+                teamId={teamId}
                 onAskInGeneral={onAskInGeneral}
                 onSelectSource={onSelectSource}
             />
@@ -120,6 +120,14 @@ describe("opening it from a menu", () => {
         expect(screen.getByRole("dialog")).toHaveAccessibleName(t.modal.titleMilestone);
         expect(screen.getByPlaceholderText(t.conversation.placeholderMilestone)).toBeTruthy();
         await waitFor(() => expect(screen.getByText(t.conversation.emptyMilestone)).toBeTruthy());
+    });
+
+    it("with no team to ask in, nothing opens and nothing is sent", async () => {
+        mount(null);
+        act(() => requestAskGenosAboutTask(REQUEST));
+        await new Promise((r) => setTimeout(r, 50));
+        expect(screen.queryByRole("dialog")).toBeNull();
+        expect(fetchTaskSession).not.toHaveBeenCalled();
     });
 
     it("restores THIS task's conversation in the team that owns it", async () => {

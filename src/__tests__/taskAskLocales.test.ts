@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { buildAgentTurnLabels } from "../features/agentQA";
 import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";
 import { es } from "../i18n/locales/es";
@@ -132,5 +133,20 @@ describe("the task / milestone Ask window's strings", () => {
         const leaf = (v: unknown): string[] =>
             typeof v === "string" ? [v] : Object.values((v ?? {}) as object).flatMap(leaf);
         for (const text of leaf(ar.taskAsk)) expect(text).toMatch(/[\u0600-\u06FF]/);
+    });
+});
+
+describe("how the task window words what an answer cites", () => {
+    it("a cited personal note reads 'Note', like the other Ask windows: it does not know which space the note is in", () => {
+        const task = buildAgentTurnLabels(en, "taskAsk").entitySubtitle;
+        expect(task.notePersonal).toBe(en.spotlight.entitySubtitle.noteFallback);
+        expect(buildAgentTurnLabels(en, "noteAsk").entitySubtitle.notePersonal).toBe(
+            task.notePersonal
+        );
+        // Spotlight, which does know, keeps "My note".
+        expect(buildAgentTurnLabels(en, "spotlight").entitySubtitle.notePersonal).toBe(
+            en.spotlight.entitySubtitle.notePersonal
+        );
+        expect(task.notePersonal).not.toBe(en.spotlight.entitySubtitle.notePersonal);
     });
 });
