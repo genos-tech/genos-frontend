@@ -40,6 +40,7 @@ import {
 import { cleanRejectReason } from "../../services/agentRejectReason";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
+import { emitCalendarEventToolResult } from "./approvedCalendarWrites";
 import { emitProjectToolResult } from "./approvedProjectWrites";
 import { emitMilestoneChangeToolResult, emitTaskAttachmentToolResult } from "./approvedTaskWrites";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
@@ -299,6 +300,7 @@ export const useAgentQA = ({
                     project,
                     task_attachment,
                     milestone_change,
+                    calendar_event,
                     undo,
                 }: {
                     step: number;
@@ -312,6 +314,7 @@ export const useAgentQA = ({
                     project?: import("../../services/agentApi").ToolResultProjectRef;
                     task_attachment?: import("../../services/agentApi").ToolResultTaskAttachmentRef;
                     milestone_change?: import("../../services/agentApi").ToolResultMilestoneChangeRef;
+                    calendar_event?: import("../../services/agentApi").ToolResultCalendarEventRef;
                     undo?: ToolResultUndoRef;
                 }) => {
                     setAsk((prev) => {
@@ -386,6 +389,9 @@ export const useAgentQA = ({
                     // A converted or moved milestone: the browser's copy of the row is the other
                     // kind of thing or in another project (MIP-1564).
                     emitMilestoneChangeToolResult(tool_name, milestone_change);
+                    // An approved calendar write: the open calendar grid re-reads that source
+                    // (MIP-1059). Nothing is pushed to the browser when a calendar changes.
+                    emitCalendarEventToolResult(tool_name, calendar_event);
                 },
                 onToolError: ({
                     step,

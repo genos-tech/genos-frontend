@@ -152,7 +152,11 @@ describe("migrated dialogs (batch 3)", () => {
 
         it("dialogs that were on Joy's default layer stay there", () => {
             expect(code(FRAMES.sprintConfig)).toMatch(joyLayer);
-            expect(code(FRAMES.calendarEvent)).toMatch(joyLayer);
+            // (the event dialog opens at an opener's layer when one passes it, else Joy's: the dialog an
+            // agent chip opens, MIP-1059, and its lists follow per picker, never a sibling rule)
+            expect(code(FRAMES.calendarEvent)).toMatch(
+                /zIndex=\{zIndex \?\? theme\.zIndex\.modal\}/
+            );
             expect(code(FRAMES.mentionGroup)).toMatch(joyLayer);
         });
 

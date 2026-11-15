@@ -24,6 +24,10 @@ interface RepeatPickerProps {
     /** Editing an existing series edits EVERY occurrence, so the control
      *  is disabled unless the user has opted into that scope. */
     disabled?: boolean;
+    /** The layer for the lists the selects open, for a dialog above Joy's modal layer. Joy pins a
+     *  list to the modal layer plus one, so under a raised dialog it would open invisibly. Omitted:
+     *  Joy's own layer. */
+    popupZIndex?: number;
 }
 
 const FREQUENCIES: RepeatFrequency[] = ["none", "daily", "weekly", "monthly", "yearly"];
@@ -41,6 +45,7 @@ export const RepeatPicker = ({
     onChange,
     startISO,
     disabled = false,
+    popupZIndex,
 }: RepeatPickerProps) => {
     const { t } = useTranslation();
     const repeats = value.frequency !== "none";
@@ -62,6 +67,7 @@ export const RepeatPicker = ({
                 <FormLabel>{t.calendar.repeat.label}</FormLabel>
                 <Select
                     disabled={disabled}
+                    slotProps={{ listbox: { sx: { zIndex: popupZIndex } } }}
                     value={value.frequency}
                     onChange={(_e, next) => {
                         if (!next) return;
@@ -137,6 +143,7 @@ export const RepeatPicker = ({
                         <FormLabel>{t.calendar.repeat.ends}</FormLabel>
                         <Select
                             disabled={disabled}
+                            slotProps={{ listbox: { sx: { zIndex: popupZIndex } } }}
                             value={value.end.kind}
                             onChange={(_e, next) => {
                                 if (!next) return;

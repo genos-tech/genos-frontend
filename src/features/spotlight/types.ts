@@ -24,6 +24,10 @@ export type EntityType =
     | "note_folder"
     | "project"
     | "todo"
+    // A Google Calendar event the agent read or wrote (MIP-1059, AGENT_PARITY_TOOLS). Never a search
+    // hit: it only appears as an agent source chip, and is addressed by the plain `account_id`,
+    // `calendar_id` and `event_id` fields below, never by parsing `entity_id`.
+    | "calendar_event"
     | "spotlight_answer";
 
 export interface SpotlightResult {
@@ -96,6 +100,19 @@ export interface SpotlightResult {
     // what the agent changed (see `citedChipSources`). Absent on read /
     // search sources and on older backends.
     operated?: boolean;
+
+    // `calendar_event` chips only (absent on every other type, and on older backends).
+    // The event is addressed by this triple: ids are unique per calendar, not globally, and the
+    // account decides which Google credential reads it. `calendar_id` is Google's id, `"primary"`
+    // when the call named none. `event_start` / `event_end` are Google's `date` (all-day,
+    // `YYYY-MM-DD`) or `dateTime` (ISO with an offset); they and `event_all_day` are null when the
+    // chip was made by a delete the run never read an event for, and `title` is then "".
+    account_id?: string | null;
+    calendar_id?: string | null;
+    event_id?: string | null;
+    event_start?: string | null;
+    event_end?: string | null;
+    event_all_day?: boolean | null;
 }
 
 export interface SearchResponse {
