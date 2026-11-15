@@ -311,6 +311,85 @@ describe("sw.js — lifecycle", () => {
 });
 
 /**
+ * The card's own artwork. The api sends `icon` / `badge` URLs, which for a
+ * change made through a connected app are the Claude / ChatGPT marks hosted
+ * under `/ai-apps/` (see `scripts/make-ai-app-push-icons.mjs`). The worker must
+ * hand them to `showNotification` as received; it used to force its own
+ * `badge`, which would have hidden the monochrome silhouette.
+ */
+describe("sw.js — push card icon and badge", () => {
+    const pushWith = async (payload: Record<string, unknown>) => {
+        const { listeners, self } = loadWorker(vi.fn());
+        let waited: Promise<unknown> | undefined;
+        listeners.get("push")!({
+            data: { json: () => payload },
+            waitUntil: (p: Promise<unknown>) => {
+                waited = p;
+            },
+        });
+        await waited;
+        return self.registration.showNotification;
+    };
+
+    it("passes the connected-app icon and badge through untouched", async () => {
+        const showNotification = await pushWith({
+            title: "Claude updated a task",
+            icon: `${ORIGIN}/ai-apps/claude-192.png`,
+            badge: `${ORIGIN}/ai-apps/claude-badge-96.png`,
+        });
+        expect(showNotification).toHaveBeenCalledWith(
+            "Claude updated a task",
+            expect.objectContaining({
+                icon: `${ORIGIN}/ai-apps/claude-192.png`,
+                badge: `${ORIGIN}/ai-apps/claude-badge-96.png`,
+            })
+        );
+    });
+
+    it("keeps the sender's avatar as the icon when the payload has no badge", async () => {
+        const showNotification = await pushWith({
+            title: "Hi",
+            icon: "https://media.test/avatars/a.png",
+        });
+        expect(showNotification).toHaveBeenCalledWith(
+            "Hi",
+            expect.objectContaining({
+                icon: "https://media.test/avatars/a.png",
+                badge: "/icons/icon-192.png",
+            })
+        );
+    });
+
+    it("falls back to the app icon for both when the payload has neither", async () => {
+        const showNotification = await pushWith({ title: "Hi" });
+        expect(showNotification).toHaveBeenCalledWith(
+            "Hi",
+            expect.objectContaining({
+                icon: "/icons/icon-192.png",
+                badge: "/icons/icon-192.png",
+            })
+        );
+    });
+
+    it("does not read badge_count (the app-icon number) as the status-bar badge", async () => {
+        const showNotification = await pushWith({ title: "Hi", badge_count: 3 });
+        expect(showNotification).toHaveBeenCalledWith(
+            "Hi",
+            expect.objectContaining({ badge: "/icons/icon-192.png" })
+        );
+    });
+
+    it("does not intercept the icon fetch: /ai-apps/*.png is not an app-shell asset", async () => {
+        const { listeners } = loadWorker(vi.fn());
+        for (const name of ["claude-192", "chatgpt-192", "claude-badge-96", "chatgpt-badge-96"]) {
+            expect(
+                dispatchFetch(listeners, { url: `${ORIGIN}/ai-apps/${name}.png` })
+            ).toBeUndefined();
+        }
+    });
+});
+
+/**
  * The app-icon badge (the counter chip on the installed app).
  *
  * Two writers share it, and the rule is "whoever is on screen owns it": the

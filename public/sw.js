@@ -335,13 +335,18 @@ self.addEventListener("push", (event) => {
     const title = data.title || "New notification";
     const options = {
         body: data.body || "",
-        // Card icon: the sender's avatar when the server supplies one,
+        // Card icon: what the server supplies (the sender's avatar, or the
+        // Claude / ChatGPT mark for a change made through a connected app),
         // else the app icon.
         // Opaque variants on purpose: the brand mark itself is transparent,
         // and notification surfaces composite it on their own background
         // (black on some Android themes), which would swallow a dark logo.
         icon: data.icon || "/icons/icon-192.png",
-        badge: "/icons/icon-192.png",
+        // Android status-bar glyph. The server sends a monochrome silhouette
+        // (`/ai-apps/*-badge-96.png`) for connected-app changes, since the OS
+        // uses only its alpha channel; without one, the app icon as before.
+        // (Not `badge_count`: that is the number on the installed app's icon.)
+        badge: data.badge || "/icons/icon-192.png",
         tag: data.tag || undefined,
         // Large hero image (Chrome desktop/Android), when supplied.
         image: data.image || undefined,
