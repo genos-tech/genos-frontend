@@ -72,15 +72,17 @@ const lastAsk = (): AskArgs => {
 };
 
 let onAskInGeneral: ReturnType<typeof vi.fn<(draft?: string) => void>>;
+let onSelectSource: ReturnType<typeof vi.fn>;
 const mount = () => {
     onAskInGeneral = vi.fn<(draft?: string) => void>();
+    onSelectSource = vi.fn();
     return render(
         <CssVarsProvider>
             <TaskAskHost
                 projects={PROJECTS}
                 teamId="team-1"
                 onAskInGeneral={onAskInGeneral}
-                onSelectSource={vi.fn()}
+                onSelectSource={onSelectSource}
             />
         </CssVarsProvider>
     );
@@ -180,6 +182,39 @@ describe("opening it from a menu", () => {
         await openFor();
         expect(screen.getByText("answer 2")).toBeTruthy();
         expect(fetchTaskSession).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe("a source cited in the conversation", () => {
+    // A task has a deep link, but with no link-preview modal around (this window is mounted above it
+    // in the tests, as an app with no preview open) the app navigates: the window must not stay
+    // open over the page it navigated to.
+    it("with no preview to open, closes the window and hands the source to the app to navigate to", async () => {
+        const source = {
+            entity_type: "task",
+            entity_id: "task:42",
+            title: "framer-motion spike",
+            task_id: "42",
+            project_id: "7",
+        };
+        vi.mocked(fetchTaskSession).mockResolvedValue({
+            kind: "ok",
+            agentSessionId: "sess-task",
+            turns: [
+                {
+                    ...turn(1),
+                    answer: "See [the link](task:42) and [task:42].",
+                    sources: [source],
+                },
+            ] as never,
+        });
+        mount();
+        await openFor();
+        fireEvent.click(await screen.findByRole("button", { name: /framer-motion spike/ }));
+        expect(onSelectSource).toHaveBeenCalledWith(
+            expect.objectContaining({ entity_id: "task:42" })
+        );
+        await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     });
 });
 

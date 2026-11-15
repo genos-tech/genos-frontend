@@ -194,7 +194,6 @@ export const TaskAskModal = ({ state, onSelectSource, onAskInGeneral }: TaskAskM
                 )
             }
             headerDivider
-            ownsListboxPopups
             onClose={state.close}
         >
             {/* Said once, to a screen reader, when a new conversation starts. */}
