@@ -88,6 +88,23 @@ describe("signup consent checkbox", () => {
         }
     });
 
+    it("stacks the links above Joy's full-row checkbox layer so they can be clicked (MIP-1581)", () => {
+        // Joy lays an invisible "action" span over the whole row at z-index 1.
+        // A link without its own z-index sits underneath it, and a real click
+        // lands on the checkbox input instead (jsdom has no hit testing, so
+        // compare the computed stacking, which is what the browser uses).
+        const { container } = renderForm();
+        const action = container.querySelector(".MuiCheckbox-action") as HTMLElement;
+        expect(getComputedStyle(action).position).toBe("absolute");
+        const layer = Number(getComputedStyle(action).zIndex);
+        expect(layer).toBeGreaterThan(0);
+        for (const name of [c.terms, c.privacy]) {
+            const style = getComputedStyle(screen.getByRole("link", { name: new RegExp(name) }));
+            expect(style.position).not.toBe("static");
+            expect(Number(style.zIndex)).toBeGreaterThan(layer);
+        }
+    });
+
     it("clicking a link in the label does not tick the box", () => {
         renderForm();
         fireEvent.click(screen.getByRole("link", { name: new RegExp(c.terms) }));
