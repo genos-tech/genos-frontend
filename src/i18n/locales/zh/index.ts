@@ -2720,6 +2720,30 @@ export const zh: DeepPartial<Messages> = {
             todo: "待办事项",
         },
     },
+    taskAsk: {
+        modal: {
+            titleTask: "就此任务询问 Genos",
+            titleMilestone: "就此里程碑询问 Genos",
+        },
+        loading: "正在打开对话…",
+        gone: {
+            titleTask: "此任务已无法打开",
+            titleMilestone: "此里程碑已无法打开",
+            body: "它可能已被删除，或者你已不再有权访问。你之前的提问仍保留在过往对话中。",
+            askInGeneral: "不指定对象，直接询问 Genos",
+        },
+        conversation: {
+            emptyTask:
+                "可以就此任务提任何问题。Genos 了解它的详情，你的提问会与它保存在一起，之后可以接着问。",
+            emptyMilestone:
+                "可以就此里程碑提任何问题。Genos 了解它的详情，你的提问会与它保存在一起，之后可以接着问。",
+            placeholderTask: "就此任务提问…",
+            placeholderMilestone: "就此里程碑提问…",
+            newConversation: "新对话",
+            newConversationHint: "开始一段关于它的新对话。当前对话会保留在过往对话中。",
+            newConversationStarted: "已开始新对话。",
+        },
+    },
     noteAsk: {
         headerButton: {
             label: "问",

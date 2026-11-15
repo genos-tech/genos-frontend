@@ -5180,6 +5180,31 @@ export const es: DeepPartial<Messages> = {
             forbidden: "No tienes acceso a este hilo.",
         },
     },
+    taskAsk: {
+        modal: {
+            titleTask: "Preguntar a Genos sobre esta tarea",
+            titleMilestone: "Preguntar a Genos sobre este hito",
+        },
+        loading: "Abriendo tu conversación…",
+        gone: {
+            titleTask: "Esta tarea ya no se puede abrir",
+            titleMilestone: "Este hito ya no se puede abrir",
+            body: "Puede que se haya eliminado o que ya no tengas acceso. Tus preguntas anteriores siguen en tus conversaciones pasadas.",
+            askInGeneral: "Preguntar a Genos en general",
+        },
+        conversation: {
+            emptyTask:
+                "Pregunta lo que quieras sobre esta tarea. Genos conoce sus detalles y tus preguntas se quedan junto a ella para retomarlas más tarde.",
+            emptyMilestone:
+                "Pregunta lo que quieras sobre este hito. Genos conoce sus detalles y tus preguntas se quedan junto a él para retomarlas más tarde.",
+            placeholderTask: "Pregunta sobre esta tarea…",
+            placeholderMilestone: "Pregunta sobre este hito…",
+            newConversation: "Nueva conversación",
+            newConversationHint:
+                "Empieza una conversación nueva sobre esto. La actual se queda en tus conversaciones pasadas.",
+            newConversationStarted: "Se inició una conversación nueva.",
+        },
+    },
     noteAsk: {
         headerButton: {
             label: "Preguntar",

@@ -2844,6 +2844,31 @@ export const fr: DeepPartial<Messages> = {
             todo: "À faire",
         },
     },
+    taskAsk: {
+        modal: {
+            titleTask: "Demander à Genos à propos de cette tâche",
+            titleMilestone: "Demander à Genos à propos de ce jalon",
+        },
+        loading: "Ouverture de votre conversation…",
+        gone: {
+            titleTask: "Cette tâche ne peut plus être ouverte",
+            titleMilestone: "Ce jalon ne peut plus être ouvert",
+            body: "Cet élément a peut-être été supprimé, ou vous n'y avez peut-être plus accès. Vos questions précédentes restent dans vos conversations passées.",
+            askInGeneral: "Poser une question générale à Genos",
+        },
+        conversation: {
+            emptyTask:
+                "Posez n'importe quelle question sur cette tâche. Genos en connaît les détails et vos questions restent associées à la tâche : vous pourrez les reprendre plus tard.",
+            emptyMilestone:
+                "Posez n'importe quelle question sur ce jalon. Genos en connaît les détails et vos questions restent associées au jalon : vous pourrez les reprendre plus tard.",
+            placeholderTask: "Posez une question sur cette tâche…",
+            placeholderMilestone: "Posez une question sur ce jalon…",
+            newConversation: "Nouvelle conversation",
+            newConversationHint:
+                "Commencez une nouvelle conversation à ce sujet. La conversation actuelle reste dans vos conversations passées.",
+            newConversationStarted: "Nouvelle conversation commencée.",
+        },
+    },
     noteAsk: {
         headerButton: {
             label: "Demandez",

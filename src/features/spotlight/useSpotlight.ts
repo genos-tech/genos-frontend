@@ -451,8 +451,10 @@ export const useSpotlight = ({
         }
     }, [teamId, resetConversation]);
 
-    // ---- "Ask Genos about this task / milestone" (a task menu item). ----
-    // The menu is far from here, so it raises `genos:ask-about`. Put the task in
+    // ---- "Ask Genos about this" (a chat message's menu item, a calendar event's button). ----
+    // (A task's and a milestone's own Ask is not this: since MIP-1057 it opens that object's own
+    // conversation in its own window, `features/taskAsk`, and never comes through here.)
+    // The menu is far from here, so it raises `genos:ask-about`. Put the thing in
     // the draft as `#PRJ-12 ` and bring the ask up: the overlay, or the page's
     // input when the Genos page is already on screen (the overlay would show the
     // conversation twice, see the Cmd-K handler above). The ref itself waits in

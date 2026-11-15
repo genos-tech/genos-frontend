@@ -31,6 +31,8 @@ import type { UseNoteAskReturn } from "../features/noteAsk/useNoteAsk";
 import { SpotlightContent } from "../features/spotlight/SpotlightContent";
 import { SpotlightOverlay } from "../features/spotlight/SpotlightOverlay";
 import type { SpotlightResult } from "../features/spotlight/types";
+import { TaskAskModal } from "../features/taskAsk/TaskAskModal";
+import type { UseTaskAskReturn } from "../features/taskAsk/useTaskAsk";
 import { ThreadAskModal } from "../features/threadAsk/ThreadAskModal";
 import type { UseThreadAskReturn } from "../features/threadAsk/useThreadAsk";
 import { getMessages } from "../i18n";
@@ -229,6 +231,26 @@ interface Host {
     // How one conversation (the state of ONE hook) is drawn on this host.
     draw: (qa: UseAgentQAReturn) => React.ReactNode;
 }
+const taskState = (qa: UseAgentQAReturn) =>
+    ({
+        isOpen: true,
+        open: vi.fn(),
+        close: vi.fn(),
+        target: {
+            taskId: 12,
+            teamId: "t1",
+            displayId: "PRJ-12",
+            title: "Fix login redirect",
+            isMilestone: false,
+        },
+        status: "ready",
+        loadError: null,
+        reload: vi.fn(),
+        canAsk: true,
+        startNewConversation: vi.fn(),
+        agentQA: qa,
+    }) as unknown as UseTaskAskReturn;
+
 const THREAD_MODAL: Host = {
     name: "ThreadAskModal",
     draw: (qa) => (
@@ -244,6 +266,10 @@ const NOTE_MODAL: Host = {
     name: "NoteAskModal",
     draw: (qa) => <NoteAskModal state={noteState(qa)} />,
 };
+const TASK_MODAL: Host = {
+    name: "TaskAskModal",
+    draw: (qa) => <TaskAskModal state={taskState(qa)} />,
+};
 const OVERLAY: Host = {
     name: "Spotlight overlay",
     draw: (qa) => <SpotlightOverlay isOpen onClose={vi.fn()} {...spotlightProps(qa)} />,
@@ -253,7 +279,7 @@ const PAGE: Host = {
     draw: (qa) => <SpotlightContent {...spotlightProps(qa, { variant: "page" })} />,
 };
 const CONVERSATION: Host = { name: "AgentQAConversation", draw: conversation };
-const HOSTS = [THREAD_MODAL, NOTE_MODAL, OVERLAY, PAGE, CONVERSATION];
+const HOSTS = [THREAD_MODAL, NOTE_MODAL, TASK_MODAL, OVERLAY, PAGE, CONVERSATION];
 
 // A component that owns ONE hook and draws it on each of `hosts`, side by side.
 let latest: UseAgentQAReturn;

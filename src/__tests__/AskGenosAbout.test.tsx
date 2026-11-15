@@ -1,10 +1,16 @@
 /**
- * "Ask Genos about this task / milestone" (a task menu item).
+ * The Cmd-K hand-off "Ask Genos about this" (`genos:ask-about`).
  *
- * The menu raises a window event; `useSpotlight` (App root) opens the ask with
- * the task as a `#` mention in the draft; the input that mounts adopts the
- * structured ref, so the ask carries it whether or not the task is in the
+ * A caller raises a window event; `useSpotlight` (App root) opens the ask with
+ * the thing as a `#` mention in the draft; the input that mounts adopts the
+ * structured ref, so the ask carries it whether or not it is in the
  * input's candidate pool. Nothing is sent until the person presses Ask.
+ *
+ * A task's and a milestone's menu item USED to use this hand-off. Since
+ * MIP-1057 it opens THAT object's own conversation (`features/taskAsk`)
+ * instead, so what is pinned for the menu below is that it raises the task's
+ * own request and leaves this hand-off, and with it the Cmd-K conversation,
+ * alone. This hand-off is still what a chat message and a calendar event use.
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -25,6 +31,11 @@ import {
 import { askGenosMenuItem } from "../features/spotlight/askGenosMenuItem";
 import { SpotlightOverlay } from "../features/spotlight/SpotlightOverlay";
 import { useSpotlight } from "../features/spotlight/useSpotlight";
+import {
+    askGenosTaskRequest,
+    onAskGenosAboutTask,
+    type TaskAskRequest,
+} from "../features/taskAsk/taskAskLink";
 import { TaskTitleBlock } from "../features/tasks/components/contents/base/TaskTitleBlock";
 import { en } from "../i18n/locales/en";
 
@@ -263,28 +274,91 @@ describe("the Spotlight input", () => {
     });
 });
 
+const REQUEST: TaskAskRequest = {
+    taskId: 42,
+    projectId: 7,
+    displayId: "MIP-42",
+    title: "Fix it",
+    isMilestone: false,
+};
+
 describe("the menu item", () => {
-    it("is hidden without a ref, and when the caller's gate is closed", () => {
+    it("is hidden without a request, and when the caller's gate is closed", () => {
         const label = "Ask Genos about this task";
-        expect(askGenosMenuItem({ askRef: null, label, visible: true }).visible).toBe(false);
-        expect(askGenosMenuItem({ askRef: REF, label, visible: false }).visible).toBe(false);
-        expect(askGenosMenuItem({ askRef: REF, label, visible: true }).visible).toBe(true);
+        expect(askGenosMenuItem({ ask: null, label, visible: true }).visible).toBe(false);
+        expect(askGenosMenuItem({ ask: REQUEST, label, visible: false }).visible).toBe(false);
+        expect(askGenosMenuItem({ ask: REQUEST, label, visible: true }).visible).toBe(true);
     });
 
     it("is an askGenos item that raises the request for its task", () => {
-        const item = askGenosMenuItem({ askRef: REF, label: "Ask", visible: true });
+        const item = askGenosMenuItem({ ask: REQUEST, label: "Ask", visible: true });
         expect(item.kind).toBe("askGenos");
         const heard = vi.fn();
-        const off = onAskGenosAbout(heard);
+        const off = onAskGenosAboutTask(heard);
         item.onClick();
         off();
-        expect(heard).toHaveBeenCalledWith(REF);
+        expect(heard).toHaveBeenCalledWith(REQUEST);
     });
 
-    it("does nothing when clicked without a ref", () => {
+    it("does not use the Cmd-K hand-off: nothing is queued, nothing opens, no draft", () => {
+        const spotlight = renderHook(() =>
+            useSpotlight({ accessToken: "tok", teamId: "team-1", isPageActive: false })
+        );
+        const heardAboutRef = vi.fn();
+        const off = onAskGenosAbout(heardAboutRef);
+        act(() => askGenosMenuItem({ ask: REQUEST, label: "Ask", visible: true }).onClick());
+        off();
+        expect(heardAboutRef).not.toHaveBeenCalled();
+        expect(takePendingAskRefs()).toEqual([]);
+        expect(spotlight.result.current.isOpen).toBe(false);
+        expect(spotlight.result.current.query).toBe("");
+    });
+
+    it("does nothing when clicked without a request", () => {
         const heard = vi.fn();
-        const off = onAskGenosAbout(heard);
-        askGenosMenuItem({ askRef: null, label: "Ask", visible: true }).onClick();
+        const off = onAskGenosAboutTask(heard);
+        askGenosMenuItem({ ask: null, label: "Ask", visible: true }).onClick();
+        off();
+        expect(heard).not.toHaveBeenCalled();
+    });
+});
+
+describe("askGenosTaskRequest", () => {
+    it("names the task by its own id, its display id and title, and its project", () => {
+        expect(
+            askGenosTaskRequest({ id: 42, projectId: 7, displayId: " MIP-42 ", title: " Fix it " })
+        ).toEqual(REQUEST);
+    });
+
+    it("marks a milestone, which is its backing task to the server", () => {
+        expect(
+            askGenosTaskRequest({ id: 7, displayId: "MIP-7", title: "M", isMilestone: true })
+        ).toEqual({
+            taskId: 7,
+            projectId: null,
+            displayId: "MIP-7",
+            title: "M",
+            isMilestone: true,
+        });
+    });
+
+    it("gives nothing for a task with no usable id or nothing to call it by", () => {
+        for (const id of [undefined, null, 0, -1, 1.5, NaN]) {
+            expect(
+                askGenosTaskRequest({ id, displayId: "MIP-1", title: "x" }),
+                String(id)
+            ).toBeNull();
+        }
+        expect(askGenosTaskRequest({ id: 5, displayId: " ", title: "" })).toBeNull();
+    });
+
+    it("only a request with a real id reaches a listener", () => {
+        const heard = vi.fn();
+        const off = onAskGenosAboutTask(heard);
+        window.dispatchEvent(
+            new CustomEvent("genos:ask-about-task", { detail: { ...REQUEST, taskId: 0 } })
+        );
+        window.dispatchEvent(new CustomEvent("genos:ask-about-task", { detail: undefined }));
         off();
         expect(heard).not.toHaveBeenCalled();
     });
@@ -341,13 +415,24 @@ describe("the task preview menu", () => {
         expect(labels.slice(0, 3)).toEqual([m.openNote, m.askGenos, m.copyTaskLink]);
 
         const heard = vi.fn();
-        const off = onAskGenosAbout(heard);
+        const heardAboutRef = vi.fn();
+        const off = onAskGenosAboutTask(heard);
+        const offRef = onAskGenosAbout(heardAboutRef);
         fireEvent.click(screen.getByRole("menuitem", { name: en.tasks.titleBlock.menu.askGenos }));
         off();
-        expect(heard).toHaveBeenCalledWith(REF);
+        offRef();
+        // THIS task's own conversation, in the project the task is in: not the Cmd-K hand-off.
+        expect(heard).toHaveBeenCalledWith({
+            taskId: 42,
+            projectId: 7,
+            displayId: "MIP-42",
+            title: "A task",
+            isMilestone: false,
+        });
+        expect(heardAboutRef).not.toHaveBeenCalled();
     });
 
-    it("is not offered inside the link-preview modal (its focus trap would hold the keyboard)", () => {
+    it("is not offered inside the link-preview modal (the window would open behind it)", () => {
         renderTaskMenu({ id: 42, displayId: "MIP-42", hostZIndex: 10020 });
         expect(openMenu()).not.toContain(en.tasks.titleBlock.menu.askGenos);
     });

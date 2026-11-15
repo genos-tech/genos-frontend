@@ -63,6 +63,7 @@ import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { SpotlightSettingsModal } from "./features/spotlight/SpotlightSettingsModal";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
+import { TaskAskHost } from "./features/taskAsk";
 import { LazyTaskDiagram } from "./features/tasks/diagram/components/LazyTaskDiagram";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
 import { loadTeamTaskList } from "./features/tasks/services/loadTaskSearchList";
@@ -1280,6 +1281,27 @@ const AppBody = () => {
         [handleSpotlightSelect, urlLinkModal]
     );
 
+    // The task / milestone Ask window (`TaskAskHost`, MIP-1057) is idle until a menu asks, and it is
+    // memoised so the App root's renders do not reach it: what it is handed has one identity for good.
+    // A citation with no preview to open navigates like a Spotlight result does; "Ask Genos in
+    // general" (a task that cannot be opened any more) opens the Cmd-K ask, with the question that
+    // was refused, if there was one, as its draft.
+    const handleSpotlightSelectRef = useRef(handleSpotlightSelect);
+    handleSpotlightSelectRef.current = handleSpotlightSelect;
+    const taskAskSelectSource = useCallback(
+        (r: SpotlightResult) => handleSpotlightSelectRef.current(r),
+        []
+    );
+    const spotlightSetQuery = spotlight.setQuery;
+    const spotlightOpen = spotlight.open;
+    const taskAskInGeneral = useCallback(
+        (draft?: string) => {
+            if (draft) spotlightSetQuery(draft);
+            spotlightOpen();
+        },
+        [spotlightSetQuery, spotlightOpen]
+    );
+
     // Which top-level service the user is actually viewing. Drives both the
     // keep-alive Home mounting below AND notification active-surface
     // suppression (next effect). Derived from the URL because the Homes are
@@ -1769,6 +1791,20 @@ const AppBody = () => {
                                                                                                     }
                                                                                                 />
                                                                                                 <CalendarEventLinkHost />
+                                                                                                <TaskAskHost
+                                                                                                    projects={
+                                                                                                        usePM.teamProjects
+                                                                                                    }
+                                                                                                    teamId={
+                                                                                                        useTEM.currentTeamId
+                                                                                                    }
+                                                                                                    onAskInGeneral={
+                                                                                                        taskAskInGeneral
+                                                                                                    }
+                                                                                                    onSelectSource={
+                                                                                                        taskAskSelectSource
+                                                                                                    }
+                                                                                                />
                                                                                                 <MentionGroupModal
                                                                                                     myself={
                                                                                                         myself

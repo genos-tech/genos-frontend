@@ -1,15 +1,19 @@
-// "Ask Genos about this": the hand-off from a task or milestone menu to the
-// app-level ask (the Cmd-K overlay, or the Genos page when it is on screen).
+// "Ask Genos about this": the hand-off from a menu or a button (a chat message,
+// a calendar event) to the app-level ask (the Cmd-K overlay, or the Genos page
+// when it is on screen). A task's and a milestone's own Ask used to come through
+// here too; since MIP-1057 it opens that object's own conversation instead
+// (`features/taskAsk`, `genos:ask-about-task`), and this hand-off, with the
+// Cmd-K conversation, is not touched by it.
 //
-// The menus sit deep in the task views; the ask lives at the App root
+// The menus sit deep in the views; the ask lives at the App root
 // (`useSpotlight`). They meet through a window event, the same shape as the
 // other cross-tree signals (`genos:task-touched`, ...), plus a small queue for
 // the structured ref: the overlay is not mounted while closed, so the ref has
 // to wait somewhere until the input that will send it exists.
 //
-// What the user gets is a draft that already holds `#PRJ-123 ` (the task as a
+// What the user gets is a draft that already holds `#PRJ-123 ` (the thing as a
 // mention) with the cursor after it, so they type the question and send. The
-// ask carries the task through the ordinary structured-mention path: the
+// ask carries it through the ordinary structured-mention path: the
 // server resolves it by id and checks the person's access, exactly as for a
 // task picked from the `#` menu. Nothing is sent until they press Ask.
 

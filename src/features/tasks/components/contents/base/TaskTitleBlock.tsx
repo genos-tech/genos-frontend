@@ -41,8 +41,8 @@ import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
-import { askGenosRefForTask } from "../../../../spotlight/askGenosAbout";
 import { askGenosMenuItem } from "../../../../spotlight/askGenosMenuItem";
+import { askGenosTaskRequest } from "../../../../taskAsk/taskAskLink";
 import { LazyTaskDiagram } from "../../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone";
@@ -147,10 +147,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     // regardless of what URL the modal was opened over.
     const isModalHosted = hostZIndex != null;
     const showHeaderActions = isModalHosted || !location.pathname.includes("/workspace/chat");
-    // This task as an @/# mention for "Ask Genos about this task" (null when it has no
-    // id or nothing to call it by).
-    const askRef = askGenosRefForTask({
+    // This task as the subject of "Ask Genos about this task" (null when it has no id or nothing
+    // to call it by). The conversation it opens is the task's own (MIP-1057); `project` tells the
+    // host which team the task belongs to (a project shared from another team is asked in its host).
+    const askRequest = askGenosTaskRequest({
         id: taskContent.id,
+        projectId: taskContent.project?.projectId,
         displayId: taskContent.displayId,
         title: taskContent.title,
     });
@@ -573,12 +575,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     },
                                 },
                                 // Page-hosted only, like the items below: the link-preview modal
-                                // traps focus, so the ask that opens above it could not take the
-                                // keyboard. A saved task only. Opens the Genos ask with this task as
-                                // a `#` mention in the draft; nothing is sent until the person
-                                // presses Ask.
+                                // sits above the window this opens (its layer, 10020, is higher),
+                                // so it would open behind it. A saved task only. Opens THIS task's
+                                // own conversation (restored if it has one); nothing is sent until
+                                // the person asks.
                                 askGenosMenuItem({
-                                    askRef,
+                                    ask: askRequest,
                                     label: t.tasks.titleBlock.menu.askGenos,
                                     visible: !isModalHosted && useTM.isCreatingTask.flag !== true,
                                 }),
