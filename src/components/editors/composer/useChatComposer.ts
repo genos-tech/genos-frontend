@@ -15,6 +15,7 @@ import { useUploadCounter } from "../../ui/feedback/useUploadCounter";
 import { useBlockNoteDictionary } from "../blockNoteI18n";
 import { GenosSchema } from "../genos/genosSchema";
 import { useGenosEditor } from "../genos/useGenosEditor";
+import { replaceBlocksSafely } from "../safeBlocks";
 import { hasSendableContent } from "../utils/messageBlocks";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- the editor's raw block array, as everywhere */
@@ -317,7 +318,11 @@ export const useChatComposer = <R = void>(options: UseChatComposerOptions<R>) =>
         // so there is no id-reuse rejection.
         if (result === false && !isSendable(editor.document)) {
             try {
-                editor.replaceBlocks(editor.document, JSON.parse(JSON.stringify(blocks)));
+                replaceBlocksSafely(
+                    editor,
+                    JSON.parse(JSON.stringify(blocks)),
+                    "putting the unsent message back"
+                );
             } catch {
                 /* stale block shape: nothing else we can do */
             }

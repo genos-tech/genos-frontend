@@ -22,6 +22,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { replaceBlocksSafely } from "../../../../components/editors/safeBlocks";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../context/AuthContext";
@@ -226,7 +227,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         const editor = editorRef.current;
         if (editor) {
             try {
-                editor.replaceBlocks(editor.document, blocks);
+                replaceBlocksSafely(editor, blocks, "applying the template");
             } catch {
                 // Editor not ready yet — the next render's seed will pick
                 // up the new body via `initialBody`.
@@ -785,7 +786,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 const editor = editorRef.current;
                 if (editor) {
                     try {
-                        editor.replaceBlocks(editor.document, draft.body);
+                        replaceBlocksSafely(editor, draft.body, "restoring the draft");
                     } catch {
                         // Editor not ready yet — the next render's seed
                         // will pick up the new body via `initialBody`.
