@@ -522,6 +522,25 @@ describe("a task that cannot be opened (deleted, access lost, never there)", () 
         expect(hook.result.current.agentQA.sessionId).toBeNull();
     });
 
+    it("an empty answer to the retry keeps the session the person already got from an ask", async () => {
+        vi.mocked(fetchTaskSession).mockResolvedValueOnce({ kind: "failed", message: "x" });
+        const hook = mount();
+        await openAndSettle(hook, TARGET, "failed");
+        act(() => {
+            hook.result.current.agentQA.onAsk("ask anyway");
+        });
+        // The run ends with nothing to show (so no turn), but the server named its session.
+        act(() => {
+            lastAsk().onDone("sess-from-ask", "run-1");
+        });
+        expect(hook.result.current.agentQA.sessionId).toBe("sess-from-ask");
+
+        vi.mocked(fetchTaskSession).mockResolvedValue(restored(null));
+        act(() => hook.result.current.reload());
+        await waitFor(() => expect(hook.result.current.status).toBe("ready"));
+        expect(hook.result.current.agentQA.sessionId).toBe("sess-from-ask");
+    });
+
     it("a retry with nothing asked yet does restore", async () => {
         vi.mocked(fetchTaskSession).mockResolvedValueOnce({ kind: "failed", message: "x" });
         const hook = mount();
