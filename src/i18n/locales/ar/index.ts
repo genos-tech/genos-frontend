@@ -2235,6 +2235,8 @@ export const ar: DeepPartial<Messages> = {
             unauthorizedNoToken: "غير مصرّح. لم يتم العثور على رمز المصادقة.",
             messageIdExists: "معرّف الرسالة موجود بالفعل.",
             unauthorizedPleaseLogin: "غير مصرّح. يُرجى تسجيل الدخول مرة أخرى.",
+            collaboratorNotOnProject:
+                "لا يمكن أن يكون {name} متعاونًا: ليس عضوًا في هذا المشروع ولن يتمكن من فتح المهمة. أضِفه إلى المشروع أولًا.",
             subTaskProjectMoveForbidden:
                 "تنتمي هذه المهمة إلى مشروع المهمة أو المعلم الذي توجد داخله. انقل تلك لتنتقل هذه المهمة معها.",
         },
@@ -2439,6 +2441,8 @@ export const ar: DeepPartial<Messages> = {
             addAssignees: "إضافة مُسنَد إليهم",
             tasksSuffix: " مهام",
             addCollaborators: "إضافة المتعاونين",
+            collaboratorsProjectOnly:
+                "لا يوجد أحد لإضافته. يجب أن يكون المتعاونون أعضاءً في هذا المشروع.",
         },
         milestones: {
             sectionInSprint: "المعالم في {name}",

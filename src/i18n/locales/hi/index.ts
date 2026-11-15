@@ -2261,6 +2261,8 @@ export const hi: DeepPartial<Messages> = {
             unauthorizedNoToken: "अनधिकृत। ऑथ टोकन नहीं मिला।",
             messageIdExists: "मेसेज ID पहले से मौजूद है।",
             unauthorizedPleaseLogin: "अनधिकृत। कृपया फिर से लॉग इन करें।",
+            collaboratorNotOnProject:
+                "{name} इस प्रोजेक्ट के सदस्य नहीं हैं, इसलिए वे टास्क नहीं खोल सकते और सहयोगी नहीं बन सकते। पहले उन्हें प्रोजेक्ट में जोड़ें।",
             subTaskProjectMoveForbidden:
                 "यह टास्क उस टास्क या माइलस्टोन के प्रोजेक्ट में रहता है जिसके अंदर यह है। इसे साथ ले जाने के लिए उसी को मूव करें।",
         },
@@ -2468,6 +2470,8 @@ export const hi: DeepPartial<Messages> = {
             sprintFallback: "स्प्रिंट",
             addAssignees: "असाइनी जोड़ें",
             addCollaborators: "सहयोगी जोड़ें",
+            collaboratorsProjectOnly:
+                "जोड़ने के लिए कोई नहीं है। सहयोगी इस प्रोजेक्ट के सदस्य होने चाहिए।",
             tasksSuffix: " टास्क",
         },
         milestones: {

@@ -1,6 +1,6 @@
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import KeyRoundedIcon from "@mui/icons-material/KeyRounded";
-import { Chip } from "@mui/joy";
+import { Box, Chip } from "@mui/joy";
 
 import type { ViaSource } from "../../../features/tasks/utils/viaSource";
 import { fmt, useTranslation } from "../../../i18n";
@@ -14,6 +14,13 @@ type ViaChipProps = {
     source: ViaSource;
     /** `sm` on a history row or comment header. */
     size?: "sm" | "md";
+    /**
+     * Icon only, for a row too narrow to spare the words (a to-do on a phone, MIP-1488).
+     * The words move to the icon's accessible name and the tooltip is unchanged, so
+     * nothing a screen reader hears is lost. The official app marks are icon-only
+     * already, so this changes the generic chip only.
+     */
+    compact?: boolean;
 };
 
 /**
@@ -35,7 +42,7 @@ type ViaChipProps = {
  * Any other app, an API key, or an older server that sends no family keeps the
  * generic chip above, unchanged.
  */
-export const ViaChip = ({ source, size = "sm" }: ViaChipProps) => {
+export const ViaChip = ({ source, size = "sm", compact = false }: ViaChipProps) => {
     const { t } = useTranslation();
     const v = t.tasks.activity.via;
     const isMcp = source.kind === "mcp";
@@ -59,11 +66,39 @@ export const ViaChip = ({ source, size = "sm" }: ViaChipProps) => {
         );
     }
 
+    if (compact) {
+        const Icon = isMcp ? HubRoundedIcon : KeyRoundedIcon;
+        return (
+            <AppTooltip size="sm" title={hint}>
+                <Box
+                    aria-label={label}
+                    component="span"
+                    data-via={source.kind}
+                    role="img"
+                    sx={{
+                        display: "inline-flex",
+                        flexShrink: 0,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        backgroundColor: g.info.subtle,
+                        color: g.info.text,
+                    }}
+                >
+                    <Icon sx={{ fontSize: iconSize, color: g.info.text }} />
+                </Box>
+            </AppTooltip>
+        );
+    }
+
     return (
         <AppTooltip size="sm" title={hint}>
             <Chip
                 data-via={source.kind}
                 size={size}
+                variant="soft"
                 startDecorator={
                     isMcp ? (
                         <HubRoundedIcon sx={{ fontSize: iconSize }} />
@@ -71,7 +106,6 @@ export const ViaChip = ({ source, size = "sm" }: ViaChipProps) => {
                         <KeyRoundedIcon sx={{ fontSize: iconSize }} />
                     )
                 }
-                variant="soft"
                 sx={{
                     flexShrink: 0,
                     fontSize: size === "sm" ? "0.65rem" : "0.7rem",

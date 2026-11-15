@@ -8,6 +8,7 @@ import { channelService } from "../../../services/channel/channelService";
 import { emitRequestError } from "../../../services/requestErrorNotifier";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { collaboratorRefusalText, refusedCollaboratorId } from "../utils/collaboratorRefusal";
 import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
@@ -27,10 +28,12 @@ import { uploadTaskAttachments } from "./uploadTaskAttachments";
 // What the person reads, in order of preference:
 //   1. the translated sub-task message, for that one `code` (kept from
 //      before: it explains the rule better than the raw sentence);
-//   2. the server's own `error` sentence, shown as-is (English, whatever the
+//   2. a collaborator who could not open the task (MIP-1567): the server's
+//      sentence again, but with the person's name instead of their id;
+//   3. the server's own `error` sentence, shown as-is (English, whatever the
 //      UI language: it names the exact field and id, which is what makes it
 //      useful);
-//   3. nothing extra, when the body has no single sentence (the serializer's
+//   4. nothing extra, when the body has no single sentence (the serializer's
 //      field -> [messages] map). The response interceptor has already raised
 //      the generic "couldn't complete" toast for every 400, so they are not
 //      left without a signal, and the caller still puts its state back.
@@ -39,7 +42,8 @@ import { uploadTaskAttachments } from "./uploadTaskAttachments";
 const putTask = async (
     api: NonNullable<ReturnType<typeof authApi>>,
     body: Record<string, unknown>,
-    setErrorMessage?: (value: string) => void
+    setErrorMessage?: (value: string) => void,
+    collaborators?: UserProps[]
 ) => {
     try {
         return await api.put("/task/", body);
@@ -52,11 +56,11 @@ const putTask = async (
         const reason =
             code === "subtask_project_move_forbidden"
                 ? getMessages().tasks.errors.subTaskProjectMoveForbidden
-                : serverText;
+                : (collaboratorRefusalText(serverText, collaborators) ?? serverText);
         if (reason) emitRequestError("serverMessage", reason);
         // A 400 with nothing to say keeps the callback's old fallback text.
         setErrorMessage?.(reason ?? getMessages().tasks.errors.messageIdExists);
-        throw new TaskSaveRefusedError(reason, code);
+        throw new TaskSaveRefusedError(reason, code, refusedCollaboratorId(serverText));
     }
 };
 
@@ -162,7 +166,7 @@ export const sendUpdatedSpecificTask = async (
                     ? { collaborators: updatedTask.collaborators.map((c) => c.userId) }
                     : {}),
             };
-            const res = await putTask(api, taskBody, setErrorMessage);
+            const res = await putTask(api, taskBody, setErrorMessage, updatedTask.collaborators);
 
             // The save's own updated time, in the form the caches use. The
             // working copy's `updatedAt` is from BEFORE the save, so it is

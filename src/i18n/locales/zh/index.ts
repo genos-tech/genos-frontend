@@ -4709,6 +4709,8 @@ export const zh: DeepPartial<Messages> = {
             unauthorizedNoToken: "未授权。未找到认证令牌。",
             messageIdExists: "消息 ID 已存在。",
             unauthorizedPleaseLogin: "未授权，请重新登录。",
+            collaboratorNotOnProject:
+                "{name} 不是此项目的成员，无法打开该任务，因此不能成为协作者。请先将其添加到项目。",
             subTaskProjectMoveForbidden:
                 "此任务归属于其所在的上级任务或里程碑的项目。请移动上级项，此任务会随之移动。",
         },
@@ -4915,6 +4917,7 @@ export const zh: DeepPartial<Messages> = {
             sprintFallback: "冲刺",
             addAssignees: "添加负责人",
             addCollaborators: "添加协作者",
+            collaboratorsProjectOnly: "没有可添加的人。协作者必须是此项目的成员。",
             tasksSuffix: " 个任务",
         },
         milestones: {

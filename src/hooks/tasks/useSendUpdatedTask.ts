@@ -145,7 +145,43 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 // A save fired while SWITCHING away is the outgoing task's;
                 // the incoming one is already on screen (see the note on
                 // `taskSwitched` below), so the reason is all there is to do.
-                if (!taskSwitched) {
+                //
+                // One refusal is narrower: a collaborator who cannot open the
+                // task (MIP-1567; the picker does not offer such people, so
+                // this is a race with a member being removed). Nothing else in
+                // the save was at fault, and putting the WHOLE copy back would
+                // throw away the other edits sent with it. So only that person
+                // comes off the collaborators and the rest is sent again. The
+                // list gets shorter each round, so it cannot go on forever; a
+                // refusal of anything else, or of someone not in the list,
+                // takes the full path below.
+                let collaboratorsPutBack = false;
+                const refusedId = error.refusedCollaboratorId?.toLowerCase();
+                if (!taskSwitched && refusedId) {
+                    const sent = baseTaskContent.collaborators ?? [];
+                    const isRefused = (c: { userId: string }) =>
+                        String(c.userId).toLowerCase() === refusedId;
+                    if (sent.some(isRefused)) {
+                        // Functional, so a collaborator added while the save
+                        // was in flight stays.
+                        setTmpCurrentTaskContent((prev) => ({
+                            ...prev,
+                            collaborators: (prev.collaborators ?? []).filter((c) => !isRefused(c)),
+                        }));
+                        setCurrentPreviewTask((prev) =>
+                            prev
+                                ? {
+                                      ...prev,
+                                      collaborators: (prev.collaborators ?? []).filter(
+                                          (c) => !isRefused(c)
+                                      ),
+                                  }
+                                : prev
+                        );
+                        collaboratorsPutBack = true;
+                    }
+                }
+                if (!taskSwitched && !collaboratorsPutBack) {
                     // Files that were never uploaded (the upload runs only
                     // after the PUT succeeds) cannot stay in the list: the
                     // pending-attachment effect would re-send them as soon as
@@ -205,8 +241,11 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                         onStoredTaskRestored?.(storedTask);
                     }
                 }
-                // Same resets as a finished save, minus "saved".
-                setTaskUpdated(false);
+                // Same resets as a finished save, minus "saved". The one
+                // exception is the collaborator put-back above: its remaining
+                // edits are still unsent, so the task stays dirty and goes
+                // out again.
+                setTaskUpdated(collaboratorsPutBack);
                 setTaskStatusUpdated(false);
                 setTaskBodyEdited(false);
                 setStartIntervalUpdatingTask(false);

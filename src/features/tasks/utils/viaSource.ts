@@ -113,3 +113,22 @@ export const viaSourceOfRow = (
  */
 export const viaSourceOfComment = (comment: Pick<TaskCommentProps, "via">): ViaSource | null =>
     viaSourceFromVia(comment.via, true);
+
+/**
+ * The chip for one note version (MIP-1488). The version's actor is its `editor`,
+ * and a key writes as its owner, so the name is read only when the viewer IS the
+ * editor (the second lock; the API already reduces `via` for everyone else). A
+ * version with no editor (an old row) has no owner, so it never unlocks a name.
+ */
+export const viaSourceOfNoteVersion = (
+    version: { via?: unknown; editor?: { userId?: string | number | null } | null },
+    myselfId: string | number | null | undefined
+): ViaSource | null => viaSourceFromVia(version.via, isOwnRow(version.editor?.userId, myselfId));
+
+/**
+ * The chip for one to-do item (MIP-1488). A to-do is private to its owner (the API
+ * sends nobody else the list), so every item the viewer reads is theirs and the
+ * name, when the server sent one, is theirs to see.
+ */
+export const viaSourceOfTodoItem = (item: { via?: unknown }): ViaSource | null =>
+    viaSourceFromVia(item.via, true);

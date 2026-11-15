@@ -11,6 +11,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
+import { ViaChip } from "../../../../components/ui/misc/ViaChip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
@@ -20,6 +21,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM, getLocalTomorrowDate } from "../../../../utils/dateUtils";
+import { viaSourceOfTodoItem } from "../../../tasks/utils/viaSource";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { formatCompletedAt } from "../../utils/todoCompletion";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
@@ -131,6 +133,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     } = props;
 
     const isChild = item.parentItemId !== null;
+    const via = viaSourceOfTodoItem(item);
     // Offered only where it would actually do something: a to-do already on
     // tomorrow has nowhere to go, and a subitem's day is its parent's (the
     // server refuses a lone child), so the action lives on the parent's row.
@@ -415,6 +418,14 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                               )
                             : t.chat.todoPane.untitled}
                     </Clickable>
+                )}
+                {/* Written last by a connected AI app or an API key (MIP-1488).
+                    Absent for anything the member typed. Fixed-size and after the
+                    title, so the title keeps the room and nothing shifts. */}
+                {via && (
+                    <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+                        <ViaChip compact={isMobile} size="sm" source={via} />
+                    </Box>
                 )}
                 {/* A reminder is a promise made about this row, and the only
                     thing that said so lived inside a ⋮ menu that is closed

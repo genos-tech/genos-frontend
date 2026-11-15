@@ -57,6 +57,17 @@ const recomputeGroupCompletion = (group: TodoGroupProps): TodoGroupProps => {
     };
 };
 
+/**
+ * Would this patch change what the to-do SAYS (title, notes, done-ness, tag)? The
+ * server stamps a to-do's `via` only on such a write and a person's own one clears
+ * it (MIP-1488); a reorder or an identical save leaves it.
+ */
+const changesContent = (item: TodoItemProps, patch: UpdateTodoItemPatch): boolean =>
+    (patch.title !== undefined && patch.title !== item.title) ||
+    (patch.isCompleted !== undefined && patch.isCompleted !== item.isCompleted) ||
+    (patch.categoryId !== undefined && patch.categoryId !== item.categoryId) ||
+    (patch.notes !== undefined && JSON.stringify(patch.notes) !== JSON.stringify(item.notes));
+
 /** Identity of a to-do in the Undo store (`useUndoableAction`). */
 const todoItemKey = (itemId: number) => `todo-item:${itemId}`;
 
@@ -339,6 +350,11 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                                         ? patch.categoryId
                                         : i.categoryId,
                                 sortOrder: patch.sortOrder ?? i.sortOrder,
+                                // Mirror the server's own rule (MIP-1488): a person's
+                                // edit of the content makes the to-do theirs again, so
+                                // an AI-app chip does not outlive their edit. A reorder
+                                // leaves it. The response replaces this either way.
+                                via: changesContent(i, patch) ? null : i.via,
                             };
                         }),
                     });
