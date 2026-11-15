@@ -89,6 +89,10 @@ const DependencyRow = ({
             direction="row"
             spacing={1}
             sx={{
+                // Below md: id, status and the unlink button, then the title on its own line,
+                // then the project. Beside them the title was squeezed to nothing on a phone.
+                flexWrap: { xs: "wrap", md: "nowrap" },
+                rowGap: 0.5,
                 p: 1,
                 pl: 1.25,
                 borderRadius: g.radius.md,
@@ -98,18 +102,41 @@ const DependencyRow = ({
                 transition: "background 0.15s ease, border-color 0.15s ease",
                 "&:hover": { background: g.hover, borderColor: g.border.default },
             }}
+            useFlexGap
         >
             <TaskIdText text={ref_.displayId ?? `#${ref_.otherTaskId}`} />
             <StatusChip isDark={isDark} meta={ref_.status} />
-            <Typography level="body-md" sx={{ flex: 1, minWidth: 0, fontWeight: 500 }} noWrap>
+            <Typography
+                level="body-md"
+                noWrap={false}
+                sx={{
+                    flex: { xs: "1 1 100%", md: 1 },
+                    order: { xs: 1, md: 0 },
+                    minWidth: 0,
+                    fontWeight: 500,
+                    overflowWrap: "anywhere",
+                    // One line with an ellipsis from md up, as before; two on a phone.
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: { xs: "normal", md: "nowrap" },
+                    display: { xs: "-webkit-box", md: "block" },
+                    WebkitLineClamp: { xs: 2, md: "unset" },
+                    WebkitBoxOrient: "vertical",
+                }}
+            >
                 {ref_.title}
             </Typography>
             {ref_.projectName && (
                 <AppTooltip title={ref_.projectName}>
                     <Chip
                         size="sm"
-                        sx={{ maxWidth: 160, borderRadius: "5px", color: g.text.primary }}
                         variant="outlined"
+                        sx={{
+                            maxWidth: 160,
+                            order: { xs: 2, md: 0 },
+                            borderRadius: "5px",
+                            color: g.text.primary,
+                        }}
                     >
                         {ref_.projectName}
                     </Chip>
@@ -119,8 +146,13 @@ const DependencyRow = ({
                 <IconButton
                     color="danger"
                     size="sm"
-                    sx={{ "--IconButton-size": "28px", opacity: 0.7, "&:hover": { opacity: 1 } }}
                     variant="plain"
+                    sx={{
+                        "--IconButton-size": "28px",
+                        ml: { xs: "auto", md: 0 },
+                        opacity: 0.7,
+                        "&:hover": { opacity: 1 },
+                    }}
                     onClick={onRemove}
                 >
                     <LinkOffRoundedIcon sx={{ fontSize: 18 }} />
