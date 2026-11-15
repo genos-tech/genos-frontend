@@ -31,6 +31,7 @@ import {
     askGenosSourceForMessage,
     requestAskGenosAboutSelection,
 } from "../../../spotlight/askGenosAbout";
+import { useAskGenosAvailable } from "../../../spotlight/useAskGenosAvailable";
 import { readMessageSelection } from "../../utils/messageSelection";
 
 // Above the page (the "…" menus sit at 9999 only when open), below every modal: an image preview
@@ -60,6 +61,9 @@ export const ChatSelectionAsk = ({
     containerRef: RefObject<HTMLElement | null>;
 }) => {
     const { t } = useTranslation();
+    // Not in a chat previewed inside a link modal (see `useAskGenosAvailable`): it would sit under
+    // the modal, and Spotlight could not take focus over it.
+    const available = useAskGenosAvailable();
     const [anchor, setAnchor] = useState<Anchor | null>(null);
     // The last click's count: a double or triple click selects a word or a paragraph on its way to
     // something else (a double-click adds the message to the To-Do list).
@@ -67,7 +71,7 @@ export const ChatSelectionAsk = ({
 
     const evaluate = useCallback(() => {
         const container = containerRef.current;
-        if (!container || prefersTouch() || multiClickRef.current) {
+        if (!available || !container || prefersTouch() || multiClickRef.current) {
             setAnchor(null);
             return;
         }
@@ -84,13 +88,13 @@ export const ChatSelectionAsk = ({
             bottom: rect.bottom,
             centre: rect.left + rect.width / 2,
         });
-    }, [containerRef]);
+    }, [containerRef, available]);
 
     // The list's own pointer and key events: a selection is finished on mouse-up (or on a shift-arrow
     // key-up). One tick later, because the browser settles the selection after the event.
     useEffect(() => {
         const container = containerRef.current;
-        if (!container) return;
+        if (!container || !available) return;
         let timer: number | null = null;
         const schedule = () => {
             if (timer !== null) window.clearTimeout(timer);
@@ -119,7 +123,7 @@ export const ChatSelectionAsk = ({
             container.removeEventListener("keyup", onKeyUp);
             if (timer !== null) window.clearTimeout(timer);
         };
-    }, [containerRef, evaluate]);
+    }, [containerRef, evaluate, available]);
 
     // While the button shows: hide it when the selection goes (a click elsewhere), when the list
     // scrolls or the window resizes (its place is stale), and on Escape.

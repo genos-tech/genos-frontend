@@ -97,9 +97,9 @@ describe("the wiring", () => {
 
     it("the note editor offers it with its note as the source, and not inside a link modal", () => {
         const editor = code("components/editors/genos/GenosNoteEditor.tsx");
-        expect(editor).toMatch(/modalHostZIndex\s*=\s*useNoteModalHostZIndex\(\)/);
+        expect(editor).toMatch(/askGenosAvailable\s*=\s*useAskGenosAvailable\(\)/);
         expect(editor).toMatch(
-            /askSource=\{\s*modalHostZIndex === undefined\s*\?\s*\{\s*kind: "note",\s*noteType: note\.noteType,\s*noteId: note\.noteId,[\s\S]*?\}\s*:\s*null\s*\}/
+            /askSource=\{\s*askGenosAvailable\s*\?\s*\{\s*kind: "note",\s*noteType: note\.noteType,\s*noteId: note\.noteId,[\s\S]*?\}\s*:\s*null\s*\}/
         );
     });
 

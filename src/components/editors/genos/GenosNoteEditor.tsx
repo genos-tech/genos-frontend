@@ -19,6 +19,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../../context/AuthContext";
 import { useMentionGroupsContext } from "../../../context/MentionGroupsContext";
 import { getMyNoteRoleId, isNoteEditable } from "../../../features/notes/common/utils/noteRoles";
+import { useAskGenosAvailable } from "../../../features/spotlight/useAskGenosAvailable";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../../hooks/common/useAnchorClickIntercept";
@@ -29,7 +30,6 @@ import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { NoteRoleMember } from "../../../types/notes";
 import { ImageZoomModal } from "../../messageBody/ImageZoomModal";
-import { useNoteModalHostZIndex } from "../../modals/noteModalHostZIndex";
 import { FileSizeRejectionSnackbar } from "../../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../ui/feedback/useFileSizeGuard";
@@ -154,9 +154,8 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
 
     const { mode } = useColorScheme();
     // "Ask Genos about the selected text" (MIP-1058) is offered on a page, not in a note previewed
-    // inside a link modal: Spotlight opens over the modal and the modal's focus trap would keep the
-    // question's input from taking focus (the same reason a task preview in one has no Ask item).
-    const modalHostZIndex = useNoteModalHostZIndex();
+    // inside a link modal (a task note in a task preview in one too): see `useAskGenosAvailable`.
+    const askGenosAvailable = useAskGenosAvailable();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
@@ -538,7 +537,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                             hasComments={!!threadStore}
                                             setShowGifPicker={setShowGifPicker}
                                             askSource={
-                                                modalHostZIndex === undefined
+                                                askGenosAvailable
                                                     ? {
                                                           kind: "note",
                                                           noteType: note.noteType,

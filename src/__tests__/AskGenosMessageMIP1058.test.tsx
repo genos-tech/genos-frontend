@@ -22,9 +22,11 @@ import { askMessageProps } from "../features/chat/utils/messageSelection";
 import {
     askGenosRefForMessage,
     askGenosSourceForMessage,
+    askGenosToken,
     isMessageUuid,
     onAskGenosAbout,
     onAskGenosAboutSelection,
+    requestAskGenosAbout,
     requestAskGenosAboutSelection,
     takePendingAskRefs,
 } from "../features/spotlight/askGenosAbout";
@@ -247,6 +249,18 @@ describe("the selection hand-off", () => {
         expect(result.current.attachedSelection).toEqual(SELECTION);
     });
 
+    it("is dropped when the member switches team", () => {
+        const { result, rerender } = renderHook(
+            ({ teamId }: { teamId: string }) =>
+                useSpotlight({ accessToken: "tok", teamId, isPageActive: false }),
+            { initialProps: { teamId: "team-1" } }
+        );
+        act(() => requestAskGenosAboutSelection(SELECTION));
+        expect(result.current.attachedSelection).toEqual(SELECTION);
+        rerender({ teamId: "team-2" });
+        expect(result.current.attachedSelection).toBeNull();
+    });
+
     it("can be dropped by the member", () => {
         const { result } = renderHook(() =>
             useSpotlight({ accessToken: "tok", teamId: "team-1", isPageActive: false })
@@ -289,6 +303,34 @@ const overlayProps = (over: Record<string, unknown> = {}) => ({
     closeHistory: vi.fn(),
     onOpenSettings: vi.fn(),
     ...over,
+});
+
+describe("a message mention through the Spotlight input", () => {
+    it("is queued, adopted by the input and sent with the ask under its sender-and-time token", () => {
+        const ref = askGenosRefForMessage({
+            id: "66666666-2222-4333-8444-555555555555",
+            senderName: "Tomoko Ito",
+            tsSent: "2026-11-15T14:02:00Z",
+            locale: "en",
+            fallbackLabel: FALLBACK,
+        })!;
+        requestAskGenosAbout(ref);
+        const onAsk = vi.fn();
+        const token = askGenosToken(ref);
+        render(
+            <CssVarsProvider>
+                <SpotlightOverlay {...overlayProps({ query: token, onAsk })} />
+            </CssVarsProvider>
+        );
+        expect(onAsk).not.toHaveBeenCalled();
+        const box = screen.getByRole("textbox");
+        expect(box).toHaveValue(token);
+        fireEvent.change(box, { target: { value: `${token}what did she mean?` } });
+        fireEvent.keyDown(box, { key: "Enter" });
+        expect(onAsk).toHaveBeenCalledTimes(1);
+        expect(onAsk).toHaveBeenCalledWith(`${token}what did she mean?`, [ref]);
+        expect(ref.label.startsWith("Tomoko Ito ")).toBe(true);
+    });
 });
 
 describe("the passage above the Spotlight input", () => {

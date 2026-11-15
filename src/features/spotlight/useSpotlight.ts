@@ -488,6 +488,11 @@ export const useSpotlight = ({
         []
     );
     const clearAttachedSelection = useCallback(() => setAttachedSelection(null), []);
+    // A passage selected in one team does not ride into another team's ask (its source is that
+    // team's, and the person has switched workspaces).
+    useEffect(() => {
+        setAttachedSelection(null);
+    }, [teamId]);
 
     // ---- Overlay close: clear transient results, preserve the draft
     // query, the conversation, AND any in-flight answer. ----

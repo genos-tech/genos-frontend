@@ -4,7 +4,8 @@
 //
 //   - It points Ask at the message by its v3 id (`messageIdWithChatId` of a main message,
 //     `messageIdWithChatIdAndThreadId` of a reply); a message without one (an optimistic row, an old
-//     cached row) gets no item rather than one that silently does nothing.
+//     cached row) gets no item rather than one that silently does nothing. Nor inside a link-preview
+//     modal (`useAskGenosAvailable`).
 //   - When text is selected inside THIS message at the moment the menu opens, the item says so ("about
 //     the selected text") and asks about that passage instead, with the message as its source. This is
 //     the keyboard and screen-reader way to the selection: the floating "Ask Genos" button next to a
@@ -26,6 +27,7 @@ import {
     requestAskGenosAbout,
     requestAskGenosAboutSelection,
 } from "../../spotlight/askGenosAbout";
+import { useAskGenosAvailable } from "../../spotlight/useAskGenosAvailable";
 import { readMessageSelection } from "../utils/messageSelection";
 
 export const useAskGenosMessageItem = ({
@@ -44,6 +46,8 @@ export const useAskGenosMessageItem = ({
     onMenuOpenChange: (open: boolean) => void;
 } => {
     const { t, locale } = useTranslation();
+    // Not offered inside a link-preview modal (see `useAskGenosAvailable`).
+    const available = useAskGenosAvailable();
     // What was selected inside this message when the menu opened ("" = nothing).
     const [selectedText, setSelectedText] = useState("");
 
@@ -81,7 +85,7 @@ export const useAskGenosMessageItem = ({
             });
             if (ref) requestAskGenosAbout(ref);
         },
-        visible: isMessageUuid(messageId),
+        visible: available && isMessageUuid(messageId),
     };
     return { item, onMenuOpenChange };
 };

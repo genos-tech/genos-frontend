@@ -8,6 +8,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { NoteModalHostZIndexProvider } from "../components/modals/noteModalHostZIndex";
 import { BubbleMoreMenu } from "../features/chat/components/bubbles/BubbleMoreMenu";
 import { BubbleThreadMoreMenu } from "../features/chat/components/bubbles/BubbleThreadMoreMenu";
 import { onAskGenosAbout } from "../features/spotlight/askGenosAbout";
@@ -39,7 +40,8 @@ const message = (over: Record<string, unknown> = {}) => ({
 const renderMenu = (
     kind: "main" | "thread",
     chatType: number,
-    msg: Record<string, unknown> = message()
+    msg: Record<string, unknown> = message(),
+    hostZIndex?: number
 ) => {
     const common = {
         accessToken: "tok",
@@ -57,27 +59,37 @@ const renderMenu = (
         unwrapCode: false,
         useCM: { flaggedMessages: [] } as never,
     };
+    const Host = ({ children }: { children: React.ReactNode }) =>
+        hostZIndex === undefined ? (
+            <>{children}</>
+        ) : (
+            <NoteModalHostZIndexProvider value={hostZIndex}>
+                {children}
+            </NoteModalHostZIndexProvider>
+        );
     render(
         <CssVarsProvider>
             <BubbleActionsPreferenceProvider>
-                {kind === "main" ? (
-                    <BubbleMoreMenu
-                        {...common}
-                        chat={{ chatId: "ch-1", chatType } as never}
-                        replyHandler={vi.fn()}
-                        setCurrentChat={vi.fn()}
-                        usePM={{} as never}
-                        useTM={{} as never}
-                    />
-                ) : (
-                    <BubbleThreadMoreMenu
-                        {...common}
-                        currentMessageIndex={0}
-                        setCurrentThreadChat={vi.fn()}
-                        setTargetMessageIndex={vi.fn()}
-                        thread={{ chatId: "ch-1", threadId: "th-1", chatType } as never}
-                    />
-                )}
+                <Host>
+                    {kind === "main" ? (
+                        <BubbleMoreMenu
+                            {...common}
+                            chat={{ chatId: "ch-1", chatType } as never}
+                            replyHandler={vi.fn()}
+                            setCurrentChat={vi.fn()}
+                            usePM={{} as never}
+                            useTM={{} as never}
+                        />
+                    ) : (
+                        <BubbleThreadMoreMenu
+                            {...common}
+                            currentMessageIndex={0}
+                            setCurrentThreadChat={vi.fn()}
+                            setTargetMessageIndex={vi.fn()}
+                            thread={{ chatId: "ch-1", threadId: "th-1", chatType } as never}
+                        />
+                    )}
+                </Host>
             </BubbleActionsPreferenceProvider>
         </CssVarsProvider>
     );
@@ -149,6 +161,20 @@ describe("a row with no v3 id", () => {
         off();
         expect(heard).not.toHaveBeenCalled();
         expect(screen.queryByText(ASK)).toBeNull();
+    });
+});
+
+describe("inside a link-preview modal", () => {
+    // The UrlLinkModal provides its layer around every body it renders; Spotlight opens above it but
+    // the modal's focus trap would keep the question's input from taking focus (#694).
+    it.each(["main", "thread"] as const)("the %s menu offers no Ask Genos item", (kind) => {
+        renderMenu(kind, 2, message(), 10020);
+        expect(openMenu().map((el) => el.textContent)).not.toContain(ASK);
+    });
+
+    it.each(["main", "thread"] as const)("the %s menu offers it on a page", (kind) => {
+        renderMenu(kind, 2);
+        expect(openMenu().map((el) => el.textContent)).toContain(ASK);
     });
 });
 

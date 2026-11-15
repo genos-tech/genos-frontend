@@ -10,6 +10,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { NoteModalHostZIndexProvider } from "../components/modals/noteModalHostZIndex";
 import { ChatSelectionAsk } from "../features/chat/components/shared/ChatSelectionAsk";
 import { askMessageProps, readMessageSelection } from "../features/chat/utils/messageSelection";
 import { onAskGenosAboutSelection } from "../features/spotlight/askGenosAbout";
@@ -283,6 +284,27 @@ describe("the button", () => {
         mouseUp(list.querySelector("#p1")!);
         await settle();
         expect(style().transform).not.toContain("-100%");
+    });
+});
+
+describe("inside a link-preview modal", () => {
+    it("is never offered: it would sit under the modal, and Spotlight could not take focus over it", async () => {
+        mountList();
+        const list = document.getElementById("list")!;
+        const holder = document.createElement("div");
+        document.body.appendChild(holder);
+        render(
+            <CssVarsProvider>
+                <NoteModalHostZIndexProvider value={10020}>
+                    <ChatSelectionAsk containerRef={{ current: list }} />
+                </NoteModalHostZIndexProvider>
+            </CssVarsProvider>,
+            { container: holder }
+        );
+        select("p1", "p1", 0, 6);
+        mouseUp(list.querySelector("#p1")!);
+        await settle();
+        expect(screen.queryByTestId("chat-selection-ask")).toBeNull();
     });
 });
 
