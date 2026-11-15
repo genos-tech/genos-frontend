@@ -4,7 +4,7 @@
 // What it must NOT do, and how:
 //   - Break selecting, copying or following links. It never calls `preventDefault` on anything but its
 //     own `mousedown` (which keeps the selection alive while the button is pressed), listens to nothing
-//     but the list's own `mousedown` / `mouseup` (not every `selectionchange` in the app), and sits outside
+//     but a press in the list and the release that ends it (not every `selectionchange` in the app), and sits outside
 //     the message DOM (a portal), so it is never part of a selection.
 //   - Fight a double-click (the app's "add to To-Do") or a triple click: a selection made by a click
 //     count above one is not offered.
@@ -90,8 +90,10 @@ export const ChatSelectionAsk = ({
         });
     }, [containerRef]);
 
-    // The list's own pointer events: a selection is finished on mouse-up. One tick later, because the
-    // browser settles the selection after the event.
+    // A selection is finished on mouse-up, and the release can happen OUTSIDE the list (a drag that
+    // runs past the edge, over the composer): so the press starts it in the list, and the release is
+    // heard once, on the document, for that press only. One tick later, because the browser settles
+    // the selection after the event.
     useEffect(() => {
         const container = containerRef.current;
         if (!container || !available) return;
@@ -103,18 +105,20 @@ export const ChatSelectionAsk = ({
                 evaluate();
             }, 0);
         };
-        // A new press starts a new selection (or a click): the old button goes at once, so it never
-        // trails a drag.
-        const onMouseDown = () => setAnchor(null);
         const onMouseUp = (e: MouseEvent) => {
             multiClickRef.current = e.detail > 1;
             schedule();
         };
+        // A new press starts a new selection (or a click): the old button goes at once, so it never
+        // trails a drag.
+        const onMouseDown = () => {
+            setAnchor(null);
+            document.addEventListener("mouseup", onMouseUp, { once: true });
+        };
         container.addEventListener("mousedown", onMouseDown);
-        container.addEventListener("mouseup", onMouseUp);
         return () => {
             container.removeEventListener("mousedown", onMouseDown);
-            container.removeEventListener("mouseup", onMouseUp);
+            document.removeEventListener("mouseup", onMouseUp);
             if (timer !== null) window.clearTimeout(timer);
         };
     }, [containerRef, evaluate, available]);

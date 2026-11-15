@@ -16,6 +16,7 @@ import { act, cleanup, fireEvent, render, renderHook, screen } from "@testing-li
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { makeAskSelection } from "../features/agentQA/askSelection";
+import { matchMentionTokens } from "../features/agentQA/mentions/useAgentMentionDraft";
 import { EMPTY_ASK_STATE } from "../features/agentQA/types";
 import { useAskGenosMessageItem } from "../features/chat/hooks/useAskGenosMessageItem";
 import { askMessageProps } from "../features/chat/utils/messageSelection";
@@ -158,6 +159,35 @@ describe("the draft label of a message", () => {
         // The same message again keeps its token.
         expect(labelOf({ id: "55555555-2222-4333-8444-555555555551", ...same })).toBe(a);
         expect(labelOf({ id: "55555555-2222-4333-8444-555555555552", ...same })).toBe(b);
+    });
+
+    it("a second token with a counter is found in the draft on its own, and never mistaken for the first", () => {
+        const same = { senderName: "Counter Zed", tsSent: null };
+        const first = askGenosRefForMessage({
+            id: "77777777-2222-4333-8444-555555555551",
+            locale: "en",
+            fallbackLabel: FALLBACK,
+            ...same,
+        })!;
+        const second = askGenosRefForMessage({
+            id: "77777777-2222-4333-8444-555555555552",
+            locale: "en",
+            fallbackLabel: FALLBACK,
+            ...same,
+        })!;
+        expect(second.label).toBe(`${first.label} (2)`);
+        const t1 = askGenosToken(first);
+        const t2 = askGenosToken(second);
+        const idsIn = (draft: string) =>
+            matchMentionTokens(draft, [first, second]).map((m) =>
+                (m.ref as { messageId: string }).messageId.slice(-1)
+            );
+        // Both in the draft: each is found, once.
+        expect(idsIn(`${t1}and ${t2}why?`)).toEqual(["1", "2"]);
+        // The first deleted: the counter token is NOT read as the first one.
+        expect(idsIn(`${t2}why?`)).toEqual(["2"]);
+        // The second deleted: only the first.
+        expect(idsIn(`${t1}why?`)).toEqual(["1"]);
     });
 
     it("is the source of a selection without taking a draft label", () => {

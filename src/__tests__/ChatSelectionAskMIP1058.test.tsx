@@ -74,7 +74,12 @@ const mountButton = () => {
 };
 
 const settle = () => act(async () => void (await new Promise((r) => setTimeout(r, 5))));
-const mouseUp = (el: Element, detail = 1) => fireEvent.mouseUp(el, { detail });
+// A selection is made by a press in the list and its release; the release is heard once on the
+// document, for that press.
+const mouseUp = (el: Element, detail = 1) => {
+    fireEvent.mouseDown(el, { detail });
+    fireEvent.mouseUp(el, { detail });
+};
 
 beforeEach(() => {
     window.matchMedia = ((q: string) => ({
@@ -205,6 +210,27 @@ describe("the button", () => {
         expect(screen.queryByTestId("chat-selection-ask")).toBeNull();
     });
 
+    it("is offered when the drag is released OUTSIDE the list (past the edge, over the composer)", async () => {
+        const list = mountButton();
+        fireEvent.mouseDown(list.querySelector("#p1")!);
+        select("p1", "p1", 0, 6);
+        fireEvent.mouseUp(document.getElementById("outside")!);
+        await settle();
+        expect(screen.getByTestId("chat-selection-ask")).toBeTruthy();
+    });
+
+    it("a double click does not stop the next drag from being offered", async () => {
+        const list = mountButton();
+        select("p1", "p1", 0, 4);
+        mouseUp(list.querySelector("#p1")!, 2);
+        await settle();
+        expect(screen.queryByTestId("chat-selection-ask")).toBeNull();
+        select("p1", "p1", 0, 6);
+        mouseUp(list.querySelector("#p1")!, 1);
+        await settle();
+        expect(screen.getByTestId("chat-selection-ask")).toBeTruthy();
+    });
+
     it("is not offered for a selection across messages, in a header, or in the composer", async () => {
         const list = mountButton();
         select("p1", "p2");
@@ -329,7 +355,7 @@ describe("it does not listen to the whole app", () => {
         expect(changes(remove)).toHaveLength(1);
     });
 
-    it("listens on the list, not on the window, for the pointer", () => {
+    it("listens on the list for a press and on the window for nothing", () => {
         const addWindow = vi.spyOn(window, "addEventListener");
         mountButton();
         expect(
@@ -337,17 +363,37 @@ describe("it does not listen to the whole app", () => {
         ).toHaveLength(0);
     });
 
-    it("removes its list listeners when it unmounts", () => {
+    it("hears the release on the document only after a press in the list, once", async () => {
+        const add = vi.spyOn(document, "addEventListener");
+        const remove = vi.spyOn(document, "removeEventListener");
+        const list = mountButton();
+        const ups = (spy: typeof add) => spy.mock.calls.filter(([t]) => t === "mouseup");
+        expect(ups(add)).toHaveLength(0);
+        fireEvent.mouseDown(list.querySelector("#p1")!);
+        expect(ups(add)).toHaveLength(1);
+        fireEvent.mouseUp(document.body);
+        await settle();
+        // `once`: the browser drops it on its own after the release.
+        expect((ups(add)[0][2] as AddEventListenerOptions).once).toBe(true);
+        // A press elsewhere (outside the list) adds nothing.
+        fireEvent.mouseDown(document.getElementById("outside")!);
+        expect(ups(add)).toHaveLength(1);
+        expect(ups(remove)).toHaveLength(0);
+    });
+
+    it("removes its list listener, and a release still pending, when it unmounts", () => {
         mountList();
         const list = document.getElementById("list")!;
-        const remove = vi.spyOn(list, "removeEventListener");
-        const ref = { current: list };
+        const removeList = vi.spyOn(list, "removeEventListener");
+        const removeDoc = vi.spyOn(document, "removeEventListener");
         const view = render(
             <CssVarsProvider>
-                <ChatSelectionAsk containerRef={ref} />
+                <ChatSelectionAsk containerRef={{ current: list }} />
             </CssVarsProvider>
         );
+        fireEvent.mouseDown(list.querySelector("#p1")!);
         view.unmount();
-        expect(remove.mock.calls.map(([t]) => t).sort()).toEqual(["mousedown", "mouseup"]);
+        expect(removeList.mock.calls.map(([t]) => t)).toEqual(["mousedown"]);
+        expect(removeDoc.mock.calls.some(([t]) => t === "mouseup")).toBe(true);
     });
 });
