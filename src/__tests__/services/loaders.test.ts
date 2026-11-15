@@ -629,6 +629,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
         expect(posthog.init).not.toHaveBeenCalled();
     });
 
@@ -638,6 +639,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
 
         expect(posthog.init).toHaveBeenCalledTimes(1);
         expect(posthog.init).toHaveBeenCalledWith(
@@ -660,6 +662,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
 
         expect(posthog.init).toHaveBeenCalledWith(
             "phc_key",
@@ -674,6 +677,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
 
         expect(posthog.init).toHaveBeenCalledWith(
             "phc_key",
@@ -688,6 +692,7 @@ describe("analytics", () => {
 
         analytics.init();
         analytics.init();
+        await analytics.whenReady();
         expect(posthog.init).toHaveBeenCalledTimes(1);
     });
 
@@ -703,6 +708,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
         analytics.capture("$pageview", { path: "/home" });
         expect(posthog.capture).toHaveBeenCalledWith("$pageview", { path: "/home" });
     });
@@ -714,6 +720,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init(); // userEnabled becomes false from storage
+        await analytics.whenReady();
         analytics.capture("$pageview");
         expect(posthog.capture).not.toHaveBeenCalled();
     });
@@ -730,6 +737,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
         analytics.identify("");
         expect(posthog.identify).not.toHaveBeenCalled();
     });
@@ -740,6 +748,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
         analytics.identify("user-1", { teamId: "t1", role: "admin" });
         expect(posthog.identify).toHaveBeenCalledWith("user-1", { teamId: "t1", role: "admin" });
     });
@@ -756,6 +765,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
         analytics.reset();
         expect(posthog.reset).toHaveBeenCalledTimes(1);
     });
@@ -766,6 +776,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
         analytics.setEnabled(true);
         expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(1);
         expect(posthog.opt_out_capturing).not.toHaveBeenCalled();
@@ -777,6 +788,7 @@ describe("analytics", () => {
         const { posthog, analytics } = await loadAnalytics();
 
         analytics.init();
+        await analytics.whenReady();
         analytics.setEnabled(false);
         expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
         expect(posthog.reset).toHaveBeenCalledTimes(1);
@@ -806,7 +818,78 @@ describe("analytics", () => {
 
         analytics.setEnabled(false);
         analytics.init();
+        await analytics.whenReady();
         analytics.capture("$pageview");
         expect(posthog.capture).toHaveBeenCalledTimes(1);
+    });
+
+    // posthog-js is a lazy chunk (MIP-1605): calls made while it loads are queued and
+    // replayed in order, so the early pageview/identify of a session are not dropped.
+    it("replays calls made before posthog-js has loaded, in order", async () => {
+        vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
+        vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
+        const { posthog, analytics } = await loadAnalytics();
+        const order: string[] = [];
+        vi.mocked(posthog.init).mockImplementation(() => {
+            order.push("init");
+            return posthog;
+        });
+        vi.mocked(posthog.capture).mockImplementation(() => void order.push("capture"));
+        vi.mocked(posthog.identify).mockImplementation(() => void order.push("identify"));
+
+        analytics.init();
+        analytics.capture("$pageview", { path: "/workspace" });
+        analytics.identify("user-1", { teamId: "t1" });
+        expect(order).toEqual([]); // nothing reaches posthog before the chunk is there
+
+        await analytics.whenReady();
+        expect(order).toEqual(["init", "capture", "identify"]);
+        expect(posthog.capture).toHaveBeenCalledWith(
+            "$pageview",
+            { path: "/workspace" },
+            { timestamp: expect.any(Date) }
+        );
+        expect(posthog.identify).toHaveBeenCalledWith("user-1", { teamId: "t1" });
+    });
+
+    it("an opt-out made while the chunk loads is replayed after init, and keeps it opted out", async () => {
+        vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
+        vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
+        const { posthog, analytics } = await loadAnalytics();
+
+        analytics.init();
+        analytics.setEnabled(false);
+        analytics.capture("$pageview"); // opted out: never queued
+        await analytics.whenReady();
+
+        expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
+        expect(posthog.reset).toHaveBeenCalledTimes(1);
+        expect(posthog.capture).not.toHaveBeenCalled();
+    });
+
+    it("stops queueing and never throws when the posthog-js chunk fails to load", async () => {
+        vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
+        vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
+        vi.resetModules();
+        vi.doMock("posthog-js", () => {
+            throw new Error("chunk blocked");
+        });
+        const { analytics } = await import("../../services/analytics");
+
+        analytics.init();
+        expect(() => analytics.capture("$pageview")).not.toThrow();
+        await expect(analytics.whenReady()).resolves.toBeUndefined();
+        expect(() => {
+            analytics.capture("$pageview");
+            analytics.identify("user-1");
+            analytics.reset();
+            analytics.setEnabled(false);
+            analytics.setEnabled(true);
+        }).not.toThrow();
+    });
+
+    it("whenReady resolves when nothing was initialised", async () => {
+        const { analytics } = await loadAnalytics();
+        await expect(analytics.whenReady()).resolves.toBeUndefined();
     });
 });
