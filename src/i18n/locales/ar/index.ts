@@ -4967,6 +4967,7 @@ export const ar: DeepPartial<Messages> = {
         calendarFields: {
             summary: "العنوان",
             when: "الوقت",
+            end: "ينتهي",
             location: "المكان",
             description: "الوصف",
             attendees: "الضيوف",

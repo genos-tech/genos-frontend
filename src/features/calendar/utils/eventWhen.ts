@@ -16,7 +16,8 @@
 // Pure TypeScript (no React, no i18n): the words around a time are the caller's.
 
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
-const NAIVE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?$/;
+// Seconds may carry a fraction (`10:00:00.000`): it is still a naive time, with no offset.
+const NAIVE = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?$/;
 
 /** `YYYY-MM-DD`: an all-day value (Google's `date`). */
 export const isDateOnly = (value: string): boolean => DATE_ONLY.test(value.trim());
@@ -74,7 +75,10 @@ export const instantOf = (
         if (shown === null) return null;
         guess = wall - (shown - guess);
     }
-    return guess;
+    // The fraction is kept to the millisecond ("5" is 500 ms, "123456" is 123 ms). It is added after the
+    // passes above, which read the zone's clock to the second.
+    const ms = m[7] ? Number(`${m[7]}00`.slice(0, 3)) : 0;
+    return guess + ms;
 };
 
 const addDays = (date: string, days: number): string => {
@@ -162,6 +166,27 @@ export const formatEventWhen = (input: EventWhenInput, locale?: string): string 
         // A zone or locale this runtime does not know.
         return null;
     }
+};
+
+/**
+ * Only the END of an event ("Tue, Dec 1, 11:00"), for a call that moves the end and says nothing of
+ * the start. An all-day end is Google's exclusive one, so it prints the last day it covers. Null when
+ * the value cannot be read (the caller prints the raw text).
+ */
+export const formatEventEnd = (
+    end: string | null | undefined,
+    zone?: string | null,
+    locale?: string
+): string | null => {
+    const value = end?.trim();
+    if (!value) return null;
+    if (isDateOnly(value)) {
+        return formatEventWhen(
+            { start: addDays(value, -1), allDay: true, withEnd: false },
+            locale
+        );
+    }
+    return formatEventWhen({ start: value, zone, withEnd: false }, locale);
 };
 
 const formatDays = (

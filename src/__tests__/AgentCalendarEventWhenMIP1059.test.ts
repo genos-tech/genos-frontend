@@ -49,6 +49,64 @@ describe("instantOf", () => {
     });
 });
 
+describe("a naive time with fractional seconds (MIP-1586)", () => {
+    it("is still a naive time: read in the zone named, not the browser's", () => {
+        // `2026-12-01T10:00:00.000` is what a JS `toISOString()` without the Z or a Python
+        // `isoformat(timespec="milliseconds")` on a naive datetime gives. It has no offset.
+        expect(instantOf("2026-12-01T10:00:00.000", "Asia/Tokyo")).toBe(
+            utc("2026-12-01T01:00:00Z")
+        );
+        expect(instantOf("2026-12-01T10:00:00.000", "America/Los_Angeles")).toBe(
+            utc("2026-12-01T18:00:00Z")
+        );
+        // The fraction is kept (to the millisecond), not dropped.
+        expect(instantOf("2026-12-01T10:00:00.5", "America/Los_Angeles")).toBe(
+            utc("2026-12-01T18:00:00.5Z")
+        );
+        expect(instantOf("2026-12-01 10:00:00.000", "Asia/Tokyo")).toBe(
+            utc("2026-12-01T01:00:00Z")
+        );
+    });
+
+    it("has no instant without a usable zone, like the same time without the fraction", () => {
+        expect(instantOf("2026-12-01T10:00:00.000")).toBeNull();
+        expect(instantOf("2026-12-01T10:00:00.000", "Not/AZone")).toBeNull();
+    });
+
+    it("still takes an offset or Z after the fraction as exact", () => {
+        expect(instantOf("2026-12-01T10:00:00.000+09:00", "America/New_York")).toBe(
+            utc("2026-12-01T01:00:00Z")
+        );
+        expect(instantOf("2026-12-01T01:00:00.000Z")).toBe(utc("2026-12-01T01:00:00Z"));
+    });
+
+    it("compares and prints like the same time without the fraction", () => {
+        expect(
+            sameWhen("2026-12-01T10:00:00.000", "2026-12-01T10:00:00+09:00", "Asia/Tokyo")
+        ).toBe(true);
+        expect(
+            sameWhen("2026-12-01T10:00:00.000", "2026-12-01T10:00:00-08:00", "America/Los_Angeles")
+        ).toBe(true);
+        for (const zone of ["Asia/Tokyo", "America/Los_Angeles"]) {
+            expect(
+                formatEventWhen(
+                    {
+                        start: "2026-12-01T10:00:00.000",
+                        end: "2026-12-01T10:30:00.000",
+                        zone,
+                    },
+                    "en-US"
+                )
+            ).toBe(
+                formatEventWhen(
+                    { start: "2026-12-01T10:00:00", end: "2026-12-01T10:30:00", zone },
+                    "en-US"
+                )
+            );
+        }
+    });
+});
+
 describe("sameWhen", () => {
     it("compares instants: the same moment in two spellings is the same time", () => {
         // 10:00 in Tokyo is 01:00Z: strings differ, the moment does not.

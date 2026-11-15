@@ -5286,6 +5286,7 @@ export const hi: DeepPartial<Messages> = {
         calendarFields: {
             summary: "शीर्षक",
             when: "समय",
+            end: "समाप्ति",
             location: "स्थान",
             description: "विवरण",
             attendees: "मेहमान",

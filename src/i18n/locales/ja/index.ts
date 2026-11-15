@@ -543,6 +543,7 @@ export const ja: DeepPartial<Messages> = {
         calendarFields: {
             summary: "タイトル",
             when: "日時",
+            end: "終了",
             location: "場所",
             description: "説明",
             attendees: "参加者",

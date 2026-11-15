@@ -521,6 +521,7 @@ export const fr: DeepPartial<Messages> = {
         calendarFields: {
             summary: "Titre",
             when: "Heure",
+            end: "Fin",
             location: "Lieu",
             description: "Description",
             attendees: "Invités",

@@ -11,7 +11,7 @@
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
-import axios from "axios";
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TeamEmojiPanel } from "../components/layout/TeamEmojiPanel";
@@ -423,6 +423,93 @@ describe("Calendar modal", () => {
 
             await waitFor(
                 () => expect(screen.queryByText(en.calendar.eventsLoadFailed)).toBeNull(),
+                SLOW
+            );
+            expect(hits("/calendar/events/aggregate/")).toBe(2);
+        }
+    );
+});
+
+describe("Calendar modal: paging onto a window that is already loaded (MIP-1586)", () => {
+    const google = {
+        id: "a1",
+        provider: "google",
+        email: "me@x.com",
+        scopes: ["https://www.googleapis.com/auth/calendar.events"],
+    };
+    const calendar = {
+        id: "primary",
+        account_id: "a1",
+        account_email: "me@x.com",
+        summary: "Me",
+        primary: true,
+        access_role: "owner",
+        selected: true,
+    };
+    const reauth = () =>
+        new AxiosError(
+            "Request failed with status code 400",
+            "ERR_BAD_REQUEST",
+            {} as InternalAxiosRequestConfig,
+            null,
+            {
+                data: { detail: "google_reauth_required" },
+                status: 400,
+                statusText: "",
+                headers: {},
+                config: {} as InternalAxiosRequestConfig,
+            }
+        );
+    const open = async () => {
+        ok("/integrations/me/", { primary_auth_provider: "email", connections: [google] });
+        ok("/calendar/list/", { calendars: [calendar], failed_accounts: [], accounts: [] });
+        // The window the modal opens on, which pages back to from the failed one below.
+        ok("/calendar/events/aggregate/", { items: [], failed_sources: [] });
+        render(wrap(<CalendarModal open onClose={vi.fn()} />));
+        await waitFor(() => expect(hits("/calendar/events/aggregate/")).toBe(1), SLOW);
+        await waitFor(() => expect(screen.getByLabelText(en.calendar.next)).toBeTruthy(), SLOW);
+    };
+
+    it(
+        "the failure of another window is not left on a window that loaded fine",
+        { timeout: 30000 },
+        async () => {
+            await open();
+            fail("/calendar/events/aggregate/");
+            fireEvent.click(screen.getByLabelText(en.calendar.next));
+            expect(await screen.findByText(en.calendar.eventsLoadFailed, {}, SLOW)).toBeTruthy();
+
+            // Back onto the window already held: it is a cache hit, no request goes out.
+            fireEvent.click(screen.getByLabelText(en.calendar.prev));
+
+            await waitFor(
+                () => expect(screen.queryByText(en.calendar.eventsLoadFailed)).toBeNull(),
+                SLOW
+            );
+            // ...and the message the failure left behind does not take its place.
+            expect(screen.queryByText(en.integrations.errors.calendarRequestFailed)).toBeNull();
+            expect(hits("/calendar/events/aggregate/")).toBe(2);
+        }
+    );
+
+    it(
+        "an error banner from another window is not left on a window that loaded fine",
+        { timeout: 30000 },
+        async () => {
+            await open();
+            answers.queue.push({ match: "/calendar/events/aggregate/", out: reauth() });
+            fireEvent.click(screen.getByLabelText(en.calendar.next));
+            expect(
+                await screen.findByText(en.integrations.errors.calendarReconnectRequired, {}, SLOW)
+            ).toBeTruthy();
+
+            fireEvent.click(screen.getByLabelText(en.calendar.prev));
+
+            await waitFor(
+                () =>
+                    expect(
+                        screen.queryByText(en.integrations.errors.calendarReconnectRequired)
+                    ).toBeNull(),
                 SLOW
             );
             expect(hits("/calendar/events/aggregate/")).toBe(2);

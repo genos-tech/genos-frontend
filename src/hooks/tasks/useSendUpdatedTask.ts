@@ -318,10 +318,17 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 // Same resets as a finished save, minus "saved". The exceptions
                 // are the two put-backs above (a collaborator, a refused
                 // move): their remaining edits are still unsent, so the task
-                // stays dirty and goes out again.
-                setTaskUpdated(collaboratorsPutBack || movePutBack);
-                setTaskStatusUpdated(false);
-                setTaskBodyEdited(false);
+                // stays dirty and goes out again. That covers the body and
+                // status flags too (MIP-1586): cleared here, a close or an
+                // autosave before the retry has landed would see nothing to
+                // save, and a retry that then fails would leave the edits
+                // looking saved. The retry's own end clears them.
+                const sendAgain = collaboratorsPutBack || movePutBack;
+                setTaskUpdated(sendAgain);
+                if (!sendAgain) {
+                    setTaskStatusUpdated(false);
+                    setTaskBodyEdited(false);
+                }
                 setStartIntervalUpdatingTask(false);
                 return;
             }

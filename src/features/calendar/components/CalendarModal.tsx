@@ -281,6 +281,10 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                 if (cached) {
                     setEvents(cached.items);
                     setFailedSourceKeys(cached.failed);
+                    // What an earlier window's read left behind (its message, its "could not load")
+                    // is not about this one, which loaded: only a window that loaded is ever cached.
+                    setError(null);
+                    setEventsFailed(false);
                     // A read for another window may still be out; it is no longer the one shown.
                     setLoading(false);
                     return;

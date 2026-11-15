@@ -52,6 +52,7 @@ export const agentApproval = {
     calendarFields: {
         summary: "Title",
         when: "Time",
+        end: "Ends",
         location: "Location",
         description: "Description",
         attendees: "Guests",

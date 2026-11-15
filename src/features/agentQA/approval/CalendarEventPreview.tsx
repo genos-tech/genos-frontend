@@ -36,7 +36,12 @@ import { Box, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
-import { formatEventWhen, isDateOnly, sameWhen } from "../../calendar/utils/eventWhen";
+import {
+    formatEventEnd,
+    formatEventWhen,
+    isDateOnly,
+    sameWhen,
+} from "../../calendar/utils/eventWhen";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { MetaChip } from "./previewHelpers";
 
@@ -218,6 +223,12 @@ const useWhen = (facts: Facts) => {
     };
 };
 
+/** Only an end, as the card prints it (see `formatEventEnd`); the text as it came when it cannot be read. */
+const useEnd = (facts: Facts) => {
+    const { locale } = useTranslation();
+    return (end: string): string => formatEventEnd(end, facts.zone, locale) ?? end;
+};
+
 /** "Times in Asia/Tokyo": said once, when a timed time is on the card. */
 const ZoneLine = ({ facts, timed }: { facts: Facts; timed: boolean }) => {
     const { t } = useTranslation();
@@ -341,6 +352,7 @@ export const UpdateCalendarEventPreview = ({ args }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
     const facts = factsOf(args);
     const when = useWhen(facts);
+    const endOf = useEnd(facts);
     const { current } = facts;
     const fields = t.agentApproval.calendarFields;
     const cleared = t.agentApproval.cleared;
@@ -388,15 +400,33 @@ export const UpdateCalendarEventPreview = ({ args }: ApprovalPreviewProps) => {
             (!start || sameWhen(start, current.start_iso, facts.zone)) &&
             (!end || sameWhen(end, current.end_iso, facts.zone));
         if (!unchanged) {
-            timed = !!start && !isDateOnly(start);
-            const after = when(start, end, allDay);
-            const before = current
-                ? when(current.start_iso, current.end_iso, current.all_day)
-                : null;
+            // The time the call names, for the zone line: the start, or the end of a call that sends
+            // only that.
+            const named = start ?? end;
+            timed = !!named && !isDateOnly(named);
+            // A call that moves only the end (MIP-1586) still changes the time: it is the event's own
+            // start with the new end, or, when the start is not known, the end alone.
+            const endOnly = !start && !!end;
+            let label: string = fields.when;
+            let after: string | null;
+            let before: string | null = null;
+            if (endOnly && current?.start_iso) {
+                after = when(current.start_iso, end, current.all_day);
+                before = when(current.start_iso, current.end_iso, current.all_day);
+            } else if (endOnly) {
+                label = fields.end;
+                after = endOf(end);
+                before = current?.end_iso ? endOf(current.end_iso) : null;
+            } else {
+                after = when(start, end, allDay);
+                before = current
+                    ? when(current.start_iso, current.end_iso, current.all_day)
+                    : null;
+            }
             if (after) {
                 timeRow = true;
                 rows.push(
-                    <Row key="when" label={fields.when}>
+                    <Row key="when" label={label}>
                         {diff(before ? <bdi>{before}</bdi> : undefined, <bdi>{after}</bdi>)}
                     </Row>
                 );
