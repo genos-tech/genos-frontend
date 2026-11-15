@@ -110,12 +110,15 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
         targetRef.current = target;
     }, [target]);
     const restoreAbortRef = useRef<AbortController | null>(null);
+    // The person chose "New conversation" in this window: a restore that lands after that (a Retry
+    // of a failed one) must not bring the old conversation back over the empty one they asked for.
+    const startedFreshRef = useRef(false);
 
     const canAsk = target !== null && (status === "ready" || status === "failed");
+    // Read by `onAsk` and `startNewConversation` at the moment of the click: written in render, like
+    // `liveRef` below, so it never lags a commit behind what the person sees.
     const canAskRef = useRef(canAsk);
-    useEffect(() => {
-        canAskRef.current = canAsk;
-    }, [canAsk]);
+    canAskRef.current = canAsk;
 
     // A run that finishes after the window was closed announces itself, like the thread and note Ask.
     const notifications = useNotificationsContext();
@@ -215,7 +218,8 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
                 if (
                     (restored.length > 0 || result.agentSessionId) &&
                     live.turns === 0 &&
-                    !live.busy
+                    !live.busy &&
+                    !startedFreshRef.current
                 ) {
                     agentQARef.current.reset({
                         sessionId: result.agentSessionId,
@@ -241,6 +245,7 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
                 // Another task: a conversation about task A makes no sense for task B. Full wipe, then
                 // the restore populates it from the server.
                 targetRef.current = next;
+                startedFreshRef.current = false;
                 setTarget(next);
                 agentQARef.current.reset({ sessionId: null, turns: [] });
                 agentQARef.current.setQuery("");
@@ -248,10 +253,12 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
                 return;
             }
             // The same task again: the window keeps what it holds. A restore that never landed
-            // (closed mid-load) or failed is tried again; a `ready` or `gone` one is left alone.
-            // The name and title may have changed since.
+            // (closed mid-load), one that failed and one that said "gone" are asked again (the person
+            // opening it again IS the retry: a task whose access came back, or a 404 that was a
+            // deploy window, must not stay gone until they switch tasks; one cheap read, nothing else
+            // re-fires on its own); a `ready` one is left alone. The name and title may have changed.
             setTarget(next);
-            if (status === "idle" || status === "failed") load(next);
+            if (status !== "ready" && status !== "loading") load(next);
         },
         [load, status]
     );
@@ -271,6 +278,10 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
     }, [load]);
 
     const startNewConversation = useCallback(() => {
+        // Nothing to start over from while the restore is out (it would land on top of the empty
+        // window and undo it) or once the task is gone.
+        if (!canAskRef.current) return;
+        startedFreshRef.current = true;
         agentQARef.current.clearConversation();
     }, []);
 
@@ -282,6 +293,7 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
         restoreAbortRef.current?.abort();
         restoreAbortRef.current = null;
         targetRef.current = null;
+        startedFreshRef.current = false;
         setTarget(null);
         setStatus("idle");
         setLoadError(null);

@@ -280,6 +280,19 @@ describe("the answers to an ask about a task", () => {
         expect(h.onError).toHaveBeenCalledWith("task_context must have an integer task_id.");
     });
 
+    it("a 404 that is not the platform's {error} (a backend with no such route, a proxy in a deploy window) is an ordinary failure, not 'gone'", async () => {
+        for (const res of [
+            new Response("<html>Not found</html>", { status: 404 }),
+            json(404, { detail: "Not found." }),
+        ]) {
+            const onTaskNotFound = vi.fn();
+            const { h } = await ask({ taskContext: { taskId: 7 }, onTaskNotFound }, res);
+            expect(onTaskNotFound).not.toHaveBeenCalled();
+            expect(h.onError).toHaveBeenCalledTimes(1);
+            expect(h.onError.mock.calls[0][0]).not.toMatch(/can't be opened any more/);
+        }
+    });
+
     it("a 5xx is an ordinary failure, not 'gone'", async () => {
         const onTaskNotFound = vi.fn();
         const { h } = await ask(

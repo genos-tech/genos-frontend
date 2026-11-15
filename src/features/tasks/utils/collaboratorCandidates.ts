@@ -29,6 +29,16 @@ export const allowedCollaboratorIds = (input: {
 };
 
 /**
+ * `selected` without the people the rule does not admit: the one filter the
+ * picker applies on a task being created and the one a project move applies
+ * to the working copy, so the two cannot drift apart.
+ */
+export const keepAllowedCollaborators = <T extends { userId: string }>(
+    selected: readonly T[],
+    allowed: ReadonlySet<string>
+): T[] => selected.filter((user) => allowed.has(String(user.userId)));
+
+/**
  * The picker's options: the team members who are allowed, plus everyone
  * already chosen.
  *

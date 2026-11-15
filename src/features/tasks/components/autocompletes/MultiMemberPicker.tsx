@@ -12,7 +12,11 @@ import { useProjectMemberIds } from "../../../../hooks/tasks/useProjectMemberIds
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { personLabel } from "../../../../utils/personLabel";
-import { allowedCollaboratorIds, collaboratorOptions } from "../../utils/collaboratorCandidates";
+import {
+    allowedCollaboratorIds,
+    collaboratorOptions,
+    keepAllowedCollaborators,
+} from "../../utils/collaboratorCandidates";
 
 type Props = {
     selected: UserProps[];
@@ -106,7 +110,7 @@ export const MultiMemberPicker = ({
     }, [dropDisallowed, hasSelected, projectId]);
     useEffect(() => {
         if (!dropDisallowed || memberIds === null) return;
-        const kept = selected.filter((user) => allowed.has(user.userId));
+        const kept = keepAllowedCollaborators(selected, allowed);
         if (kept.length !== selected.length) onChange(kept);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dropDisallowed, memberIds, allowed, selected]);

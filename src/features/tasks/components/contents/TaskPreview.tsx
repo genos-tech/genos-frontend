@@ -68,6 +68,7 @@ import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
 import { isStatusName, statusSolid, toneSolid } from "../../meta/taskTone";
+import { forgetCachedSubtree } from "../../services/forgetCachedSubtree";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -2131,6 +2132,16 @@ const MilestonePreviewInner = ({
                 // the backing task, every task in the milestone, all their
                 // sub-tasks, and each one's re-minted `<CODE>-<n>`. Re-pull
                 // both projects instead of trying to mirror that locally.
+                //
+                // The move also dropped the collaborators who cannot open
+                // their task in the destination (MIP-1587). The milestone's
+                // own list comes back pruned in `updated` (and re-seeds this
+                // preview); the cached copies of the tasks under it do not,
+                // so forget them while the source rows still say which
+                // tasks travelled.
+                if (updated.taskId != null) {
+                    await forgetCachedSubtree(updated.taskId, movedFromProjectId);
+                }
                 emitTasksBulkChanged(movedFromProjectId);
                 emitTasksBulkChanged(updated.projectId);
             }
