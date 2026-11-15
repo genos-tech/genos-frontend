@@ -2148,7 +2148,9 @@ const MilestonePreviewInner = ({
         if (updated) {
             syncMilestoneToAllTasks(updated);
             syncMilestoneCard(updated);
-            if (movedFromProjectId != null) {
+            // `patch.projectId` is gone when the move was refused and the rest
+            // of the patch was sent without it: nothing moved then.
+            if (movedFromProjectId != null && patch.projectId !== undefined) {
                 // The move rewrote far more rows than this preview tracks —
                 // the backing task, every task in the milestone, all their
                 // sub-tasks, and each one's re-minted `<CODE>-<n>`. Re-pull
