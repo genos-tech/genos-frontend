@@ -71,7 +71,7 @@ export const ChatSelectionAsk = ({
 
     const evaluate = useCallback(() => {
         const container = containerRef.current;
-        if (!available || !container || prefersTouch() || multiClickRef.current) {
+        if (!container || prefersTouch() || multiClickRef.current) {
             setAnchor(null);
             return;
         }
@@ -88,7 +88,7 @@ export const ChatSelectionAsk = ({
             bottom: rect.bottom,
             centre: rect.left + rect.width / 2,
         });
-    }, [containerRef, available]);
+    }, [containerRef]);
 
     // The list's own pointer and key events: a selection is finished on mouse-up (or on a shift-arrow
     // key-up). One tick later, because the browser settles the selection after the event.
