@@ -271,8 +271,27 @@ interface BaseStreamHandlers {
  *  of the resumed /decide/ leg repeats it with what the decision could not use again. `"task"` is
  *  new there: the task or milestone the conversation is about, no longer usable at the decision
  *  (the same word whether it is gone, deleted or no longer the member's). A message that was only
- *  the SOURCE of a selection and became unusable comes back as `"message"` on that leg. */
-export const DROPPED_REFERENCES = ["message", "selection", "selected_from", "task"] as const;
+ *  the SOURCE of a selection and became unusable comes back as `"message"` on that leg.
+ *
+ *  Behind the server's `AGENT_PARITY_FOLLOWUPS` flag (genos-api #909, MIP-1590) the decision also
+ *  reads every mentioned object again with the member's access NOW and names the KIND of each one
+ *  it can no longer use: `task` (again), `note`, `project`, `chat`, `group`, `user`, `todo` and
+ *  `calendar_event` (`mentions.rebuild_block`: the mention kinds, minus `message`, which has its own
+ *  block). The same word for missing, unreadable and deleted. So the eleven kinds below are the
+ *  whole list the server can send; a kind from a newer server is ignored (`asDroppedReferences`). */
+export const DROPPED_REFERENCES = [
+    "message",
+    "selection",
+    "selected_from",
+    "task",
+    "note",
+    "project",
+    "chat",
+    "group",
+    "user",
+    "todo",
+    "calendar_event",
+] as const;
 export type DroppedReference = (typeof DROPPED_REFERENCES)[number];
 
 /** The `dropped_references` of a `done` or a card event as a clean list: only kinds this client

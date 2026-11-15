@@ -14,15 +14,41 @@
 import type { DroppedReference } from "../../services/agentApi";
 import type { AgentMentionRef } from "./mentions/types";
 
-/** The five sentences, from the catalog (`spotlight.dropped`). `task` is for the task OR milestone
- *  a conversation is about: the server's kind does not say which, so neither does the sentence. */
+/** The sentences, from the catalog (`spotlight.dropped`): one per kind the server can report, and
+ *  `messages` for the case of several messages. `task` is for the task OR milestone a conversation
+ *  is about, and for a mentioned task: the server's kind does not say which, so neither does the
+ *  sentence. The other mention kinds say "a note", "a project", ...: an indefinite thing, true
+ *  whether one or several of that kind were lost (the server sends each kind once). */
 export interface DroppedLabels {
     message: string;
     messages: string;
     selection: string;
     selectedFrom: string;
     task: string;
+    note: string;
+    project: string;
+    chat: string;
+    group: string;
+    user: string;
+    todo: string;
+    calendarEvent: string;
 }
+
+/** The sentence of each kind but `message` (which picks between two by how many were pointed at).
+ *  A `Record` over the client's kinds, so a kind added to `DROPPED_REFERENCES` without a sentence
+ *  is a compile error, not a blank line on screen. */
+const LABEL_OF: Record<Exclude<DroppedReference, "message">, keyof DroppedLabels> = {
+    selection: "selection",
+    selected_from: "selectedFrom",
+    task: "task",
+    note: "note",
+    project: "project",
+    chat: "chat",
+    group: "group",
+    user: "user",
+    todo: "todo",
+    calendar_event: "calendarEvent",
+};
 
 /** What the turn holds once a later list (the resumed leg's `done`, a second card) arrives: the union
  *  of the two, each kind once, in the order it first came, which is the server's order (it says what
@@ -57,24 +83,16 @@ export const droppedReferenceNotices = (
     if (!dropped?.length) return [];
     const notices: string[] = [];
     for (const kind of dropped) {
-        switch (kind) {
-            case "message":
-                notices.push(
-                    countMessageMentions(mentions) > 1 ? labels.messages : labels.message
-                );
-                break;
-            case "selection":
-                notices.push(labels.selection);
-                break;
-            case "selected_from":
-                notices.push(labels.selectedFrom);
-                break;
-            case "task":
-                notices.push(labels.task);
-                break;
-            // A kind from a newer server says nothing: `asDroppedReferences` already drops it, and
-            // a list handed in some other way must not put `undefined` on screen either.
+        if (kind === "message") {
+            notices.push(countMessageMentions(mentions) > 1 ? labels.messages : labels.message);
+            continue;
         }
+        // A kind from a newer server (or a word that only names something on `Object.prototype`) has
+        // no key, and a catalog that lacks the sentence has no string: both say nothing, never an
+        // `undefined` entry.
+        const key = (LABEL_OF as Partial<Record<string, keyof DroppedLabels>>)[kind];
+        const sentence = typeof key === "string" ? labels[key] : undefined;
+        if (typeof sentence === "string" && sentence) notices.push(sentence);
     }
     return notices;
 };

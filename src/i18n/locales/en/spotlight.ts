@@ -35,7 +35,10 @@ export const spotlight = {
     // Calm, and the same for missing, unreadable and deleted: the server says nothing about
     // which, so neither do these. `messages` is for an ask that pointed at more than one message
     // (the server also drops what is past its limit of 3). `task` is the task OR milestone a
-    // conversation is about, which the server could no longer use at the decision.
+    // conversation is about, or a mentioned task, which the server could no longer use at the
+    // decision. `note` ... `calendarEvent` (MIP-1590) are the mentions the decision could not use
+    // again; each says "a note", "a project", ...: true whether one or several were lost, since the
+    // server names each kind once.
     dropped: {
         message: "Genos could not use the message you pointed at, so it answered without it.",
         messages:
@@ -44,6 +47,14 @@ export const spotlight = {
         selectedFrom:
             "Genos could not use where the selected text came from, so it used the text alone.",
         task: "Genos could not use the task or milestone you asked about, so it answered without it.",
+        note: "Genos could not use a note you asked about, so it answered without it.",
+        project: "Genos could not use a project you asked about, so it answered without it.",
+        chat: "Genos could not use a chat you asked about, so it answered without it.",
+        group: "Genos could not use a group you mentioned, so it answered without it.",
+        user: "Genos could not use a person you mentioned, so it answered without them.",
+        todo: "Genos could not use a to-do you asked about, so it answered without it.",
+        calendarEvent:
+            "Genos could not use a calendar event you asked about, so it answered without it.",
     },
     // The passage of text a member selected and pointed "Ask Genos" at (MIP-1058): the card above the input
     // and under the question. `truncated` says how much of a long selection is sent.
