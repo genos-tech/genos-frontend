@@ -465,6 +465,14 @@ export type TodoItemProps = {
     tsCreatedAt: string;
     tsUpdatedAt: string;
     tsCompletedAt: string | null;
+    /**
+     * How the LAST write to this to-do's content arrived, when it was a connected AI
+     * app or an API key (MIP-1488): `{ kind: "api_key" | "oauth", app?: "claude" |
+     * "chatgpt", key_name?, client_name? }`. `null` or absent (an older API, a to-do
+     * the member last touched themselves) means no chip. A to-do is private to its
+     * owner, so the name is theirs; read it only through `viaSourceOfTodoItem`.
+     */
+    via?: Record<string, unknown> | null;
 };
 
 // "Remind me about this to-do at 3pm" — the pending nudge on one item.
