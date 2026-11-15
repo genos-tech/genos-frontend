@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 
+import { replaceBlocksSafely } from "../../components/editors/safeBlocks";
 import { hasSendableContent } from "../../components/editors/utils/messageBlocks";
 import { readDraft, removeDraft, writeDraft } from "../../utils/editorDraftStorage";
 
@@ -53,7 +54,8 @@ export const useEditorDraft = (
         const draft = readDraft(cacheKey);
         try {
             if (Array.isArray(draft) && draft.length > 0) {
-                editor.replaceBlocks(editor.document, draft);
+                // A block the editor cannot build degrades to text; the rest of the draft stays.
+                replaceBlocksSafely(editor, draft, "restoring the draft");
             } else {
                 editor.replaceBlocks(editor.document, []);
             }

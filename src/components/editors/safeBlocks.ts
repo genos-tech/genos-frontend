@@ -140,3 +140,30 @@ export const logSanitizeReport = (where: string, report: SanitizeReport): void =
         report.firstError
     );
 };
+
+/** What `replaceBlocksSafely` needs of an editor: its schema (to check blocks against) and its body. */
+export interface ReplaceableEditor extends BlockSchemaHolder {
+    document: unknown;
+    replaceBlocks: (blocksToRemove: never, replacement: never) => unknown;
+}
+
+/**
+ * `editor.replaceBlocks(editor.document, body)` for a body that came from somewhere else (a
+ * saved draft, a stored message being edited, a template, a send that failed and is put back):
+ * a block the editor cannot build degrades to plain text instead of making the call throw and
+ * the whole body go with it (MIP-1604). Call it with the editor in hand; with nothing to
+ * replace it clears the editor. Can still throw if the editor itself is gone.
+ */
+export const replaceBlocksSafely = (
+    editor: ReplaceableEditor,
+    body: unknown[],
+    where: string
+): void => {
+    const report: SanitizeReport = { degraded: 0, skipped: 0 };
+    const safe =
+        Array.isArray(body) && body.length > 0
+            ? sanitizeBlocksForEditor(body, editor, report)
+            : [];
+    logSanitizeReport(where, report);
+    editor.replaceBlocks(editor.document as never, safe as never);
+};

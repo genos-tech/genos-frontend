@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 
@@ -7,6 +7,7 @@ import { getUserColor } from "../../../utils/collabUtils";
 import { resolveInsecureFileUrl } from "../../../utils/downloadUtils";
 import { useBlockNoteDictionary } from "../blockNoteI18n";
 import { genosTableOptions } from "../genosBlockSpecs";
+import { safeInitialContent } from "../safeInitialContent";
 import { codeFenceInputRule } from "../sub/codeBlockExtras";
 import { buildCommentSchema } from "../sub/CommentEditorWithMentions";
 import { linkHostCaption } from "../sub/linkHostCaption";
@@ -61,6 +62,10 @@ export const useGenosEditor = ({
     initialContent?: PartialBlock[];
 }) => {
     const cfg = GENOS_SURFACES[surface];
+    // `useCreateBlockNote` keeps the options of the FIRST render, so the body is checked once.
+    // A block the schema cannot build degrades to plain text here instead of making the
+    // editor's constructor throw and the component crash with it (MIP-1604).
+    const [openWith] = useState(() => safeInitialContent(initialContent));
     return useCreateBlockNote({
         ...(cfg.editingRules ? TAB_INDENT_OPTIONS : {}),
         ...(cfg.tables ? { tables: genosTableOptions } : {}),
@@ -79,7 +84,7 @@ export const useGenosEditor = ({
               }
             : {}),
         dictionary,
-        ...(initialContent ? { initialContent } : {}),
+        ...(openWith ? { initialContent: openWith } : {}),
     });
 };
 
