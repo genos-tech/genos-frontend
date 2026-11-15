@@ -10,6 +10,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { SpotlightResult } from "../features/spotlight/types";
 import { TaskAskHost } from "../features/taskAsk";
 import { requestAskGenosAboutTask, type TaskAskRequest } from "../features/taskAsk/taskAskLink";
 import { en } from "../i18n/locales/en";
@@ -72,10 +73,10 @@ const lastAsk = (): AskArgs => {
 };
 
 let onAskInGeneral: ReturnType<typeof vi.fn<(draft?: string) => void>>;
-let onSelectSource: ReturnType<typeof vi.fn>;
+let onSelectSource: ReturnType<typeof vi.fn<(source: SpotlightResult) => void>>;
 const mount = (teamId: string | null = "team-1") => {
     onAskInGeneral = vi.fn<(draft?: string) => void>();
-    onSelectSource = vi.fn();
+    onSelectSource = vi.fn<(source: SpotlightResult) => void>();
     return render(
         <CssVarsProvider>
             <TaskAskHost
