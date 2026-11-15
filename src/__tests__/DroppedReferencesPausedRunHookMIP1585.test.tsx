@@ -214,11 +214,39 @@ describe("a leg that pauses again", () => {
     });
 });
 
+describe("a second card that says something else", () => {
+    it("is added to what the first said, not put in its place", () => {
+        // The server repeats the whole list on a second card, so this is the union in its plainest
+        // form: the client holds whatever any event said, whichever came last.
+        const { result } = mount();
+        pause(result, ["selection"]);
+        act(() => {
+            result.current.onApprove();
+        });
+        act(() => {
+            lastDecide().onPendingApproval?.(card("ap-2"), ["task"]);
+        });
+        expect(result.current.ask.droppedReferences).toEqual(["selection", "task"]);
+    });
+
+    it("and a second card with no field leaves what the first said", () => {
+        const { result } = mount();
+        pause(result, ["message"]);
+        act(() => {
+            result.current.onApprove();
+        });
+        act(() => {
+            lastDecide().onPendingApproval?.(card("ap-2"));
+        });
+        expect(result.current.ask.droppedReferences).toEqual(["message"]);
+    });
+});
+
 describe("nothing dropped, or the server flag off", () => {
     it("a card with no field and a done with none: no droppedReferences anywhere", () => {
         const { result } = mount();
         pause(result);
-        expect(result.current.ask.droppedReferences).toBeUndefined();
+        expect(result.current.ask).not.toHaveProperty("droppedReferences");
         approveAndFinish(result);
         expect(result.current.turns).toHaveLength(1);
         expect(result.current.turns[0]).not.toHaveProperty("droppedReferences");

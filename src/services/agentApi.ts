@@ -275,9 +275,10 @@ interface BaseStreamHandlers {
 export const DROPPED_REFERENCES = ["message", "selection", "selected_from", "task"] as const;
 export type DroppedReference = (typeof DROPPED_REFERENCES)[number];
 
-/** The `dropped_references` of a `done` or a card event as a clean list: only kinds this client knows, each
- *  once, in the server's order. Anything else (not an array, a kind from a newer server) is ignored,
- *  so an unknown word can never reach a sentence. `undefined` when there is nothing to say. */
+/** The `dropped_references` of a `done` or a card event as a clean list: only kinds this client
+ *  knows, each once, in the server's order. Anything else (not an array, a kind from a newer
+ *  server) is ignored, so an unknown word can never reach a sentence. `undefined` when there is
+ *  nothing to say. */
 export const asDroppedReferences = (raw: unknown): DroppedReference[] | undefined => {
     if (!Array.isArray(raw)) return undefined;
     const out: DroppedReference[] = [];
