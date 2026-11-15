@@ -267,6 +267,15 @@ describe("opening the window restores the task's conversation", () => {
         expect(hook.result.current.agentQA.turns).toHaveLength(1);
     });
 
+    it("opening it again while the restore is still out does not send a second request", async () => {
+        vi.mocked(fetchTaskSession).mockImplementation(() => new Promise(() => {}));
+        const hook = mount();
+        act(() => hook.result.current.open(TARGET));
+        act(() => hook.result.current.open(TARGET));
+        act(() => hook.result.current.open(TARGET));
+        expect(fetchTaskSession).toHaveBeenCalledTimes(1);
+    });
+
     it("closing mid-load, then reopening the same task, asks again (a cut-short restore is no result)", async () => {
         let release: (r: TaskSessionResult) => void = () => {};
         vi.mocked(fetchTaskSession).mockImplementationOnce(
@@ -438,7 +447,7 @@ describe("a run that finishes after the window was closed", () => {
 // --- gone --------------------------------------------------------------------------------------
 
 describe("a task that cannot be opened (deleted, access lost, never there)", () => {
-    it("a 404 on restore: gone; nothing can be asked; nothing is retried", async () => {
+    it("a 404 on restore: gone; nothing can be asked; nothing re-fires on its own", async () => {
         vi.mocked(fetchTaskSession).mockResolvedValue({ kind: "gone" });
         const hook = mount();
         await openAndSettle(hook, TARGET, "gone");
@@ -451,12 +460,34 @@ describe("a task that cannot be opened (deleted, access lost, never there)", () 
         expect(sent).toBe(false);
         expect(askAgentStream).not.toHaveBeenCalled();
 
-        // Nothing re-fires on its own, and reopening the gone task does not ask again.
+        // No timer, effect or re-render asks again by itself.
         await new Promise((r) => setTimeout(r, 50));
-        act(() => hook.result.current.close());
-        act(() => hook.result.current.open(TARGET));
+        hook.rerender({ teamId: "team-1" });
         expect(fetchTaskSession).toHaveBeenCalledTimes(1);
         expect(hook.result.current.status).toBe("gone");
+    });
+
+    it("opening a gone task AGAIN asks once more (a deploy window or restored access must not stick), and it can be asked once it answers", async () => {
+        vi.mocked(fetchTaskSession).mockResolvedValueOnce({ kind: "gone" });
+        const hook = mount();
+        await openAndSettle(hook, TARGET, "gone");
+        act(() => hook.result.current.close());
+
+        // Still gone: one more read, no more.
+        vi.mocked(fetchTaskSession).mockResolvedValueOnce({ kind: "gone" });
+        act(() => hook.result.current.open(TARGET));
+        await waitFor(() => expect(hook.result.current.status).toBe("gone"));
+        expect(fetchTaskSession).toHaveBeenCalledTimes(2);
+        await new Promise((r) => setTimeout(r, 50));
+        expect(fetchTaskSession).toHaveBeenCalledTimes(2);
+
+        // Access is back.
+        act(() => hook.result.current.close());
+        vi.mocked(fetchTaskSession).mockResolvedValue(restored("sess-task"));
+        act(() => hook.result.current.open(TARGET));
+        await waitFor(() => expect(hook.result.current.status).toBe("ready"));
+        expect(hook.result.current.canAsk).toBe(true);
+        expect(hook.result.current.agentQA.turns).toHaveLength(2);
     });
 
     it("a 404 on an ask (deleted while the window was open): gone; the question ends as an error turn; no second ask", async () => {
@@ -553,6 +584,74 @@ describe("a task that cannot be opened (deleted, access lost, never there)", () 
 });
 
 // --- new conversation --------------------------------------------------------------------------
+
+describe("New conversation and a restore that is still out or comes late", () => {
+    it("is ignored while the restore is out: it would land on top of the empty window and undo it", async () => {
+        let release: (r: TaskSessionResult) => void = () => {};
+        vi.mocked(fetchTaskSession).mockImplementationOnce(
+            () =>
+                new Promise<TaskSessionResult>((resolve) => {
+                    release = resolve;
+                })
+        );
+        const hook = mount();
+        act(() => hook.result.current.open(TARGET));
+        act(() => hook.result.current.startNewConversation());
+        await act(async () => release(restored("sess-old")));
+        await waitFor(() => expect(hook.result.current.status).toBe("ready"));
+        // The conversation arrived, and the next ask continues it: nothing was started over.
+        expect(hook.result.current.agentQA.sessionId).toBe("sess-old");
+        act(() => {
+            hook.result.current.agentQA.onAsk("carry on");
+        });
+        expect(lastAsk().newConversation).toBeUndefined();
+        expect(lastAsk().sessionId).toBe("sess-old");
+    });
+
+    it("a Retry of a failed restore that lands after 'New conversation' does not bring the old conversation back", async () => {
+        vi.mocked(fetchTaskSession).mockResolvedValueOnce({ kind: "failed", message: "x" });
+        const hook = mount();
+        await openAndSettle(hook, TARGET, "failed");
+        act(() => {
+            hook.result.current.agentQA.onAsk("ask anyway");
+        });
+        act(() => {
+            lastAsk().onDelta("a");
+            lastAsk().onDone("sess-a", "run-1");
+        });
+        act(() => hook.result.current.startNewConversation());
+        expect(hook.result.current.agentQA.turns).toEqual([]);
+
+        vi.mocked(fetchTaskSession).mockResolvedValue(restored("sess-old"));
+        act(() => hook.result.current.reload());
+        await waitFor(() => expect(hook.result.current.status).toBe("ready"));
+        expect(hook.result.current.agentQA.turns).toEqual([]);
+        act(() => {
+            hook.result.current.agentQA.onAsk("a fresh start");
+        });
+        expect(lastAsk().newConversation).toBe(true);
+    });
+
+    it("starting over in one task does not stop the next task's conversation from restoring", async () => {
+        vi.mocked(fetchTaskSession).mockImplementation(async ({ taskId }) =>
+            taskId === 2039 ? restored("sess-a") : restored("sess-b", 1)
+        );
+        const hook = mount();
+        await openAndSettle(hook);
+        act(() => hook.result.current.startNewConversation());
+        act(() => hook.result.current.open(OTHER));
+        await waitFor(() => expect(hook.result.current.agentQA.sessionId).toBe("sess-b"));
+        expect(hook.result.current.agentQA.turns).toHaveLength(1);
+    });
+
+    it("is ignored once the task is gone", async () => {
+        vi.mocked(fetchTaskSession).mockResolvedValue({ kind: "gone" });
+        const hook = mount();
+        await openAndSettle(hook, TARGET, "gone");
+        act(() => hook.result.current.startNewConversation());
+        expect(hook.result.current.status).toBe("gone");
+    });
+});
 
 describe("New conversation", () => {
     it("empties the window and the next ask is new_conversation: true with no session id; the one after is plain", async () => {

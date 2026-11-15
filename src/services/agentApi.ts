@@ -1513,9 +1513,13 @@ async function runNdjsonStream(
     if (!resp.ok) {
         let message = fmt(getMessages().services.agent.serverReturned, { status: resp.status });
         let fieldErrors: Record<string, string> | null = null;
+        // The answer has the platform's own `{error: "..."}` body (not Django's page, not DRF's
+        // `{detail}`): only the API this client was built for answers like that.
+        let platformError = false;
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
+            platformError = typeof data?.error === "string";
             // /decide/ answers 422 `{error, field_errors}` when the person's
             // edits cannot be applied. Plain JSON, not an NDJSON stream, and
             // not a failed run: hand it to the caller, who restores the card.
@@ -1535,8 +1539,10 @@ async function runNdjsonStream(
         // The task this ask was about cannot be opened (deleted, access lost, never there: one
         // answer). Tell the host, then end the turn in a sentence of ours rather than the server's
         // English one. Any other status (a 400 for a malformed `task_context`, a 5xx) is an
-        // ordinary failure and keeps the server's own words.
-        if (resp.status === 404 && onTaskNotFound) {
+        // ordinary failure and keeps the server's own words, and so is a 404 that is not the
+        // platform's `{error}` (a backend with no such route yet, a proxy in a deploy window): that
+        // says nothing about the task, and "gone" is a claim about the task (as in `fetchTaskSession`).
+        if (resp.status === 404 && platformError && onTaskNotFound) {
             onTaskNotFound();
             handlers.onError(getMessages().services.agent.taskNotFound);
             return;
