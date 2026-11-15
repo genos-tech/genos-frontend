@@ -76,6 +76,19 @@ export default defineConfig({
                     ) {
                         return "vendor-markdown";
                     }
+                    // Shiki's grammars and themes are data, one module per language, loaded
+                    // by `import()` the first time a code block shows that language
+                    // (`@blocknote/code-block` registers them that way). They used to be pinned
+                    // into `vendor-editor` with the rest of Shiki, so every note, task body and
+                    // chat message opened with all ~360 grammars (3.4 MB raw) whether or not it
+                    // had a code block. Left unpinned, each one is its own chunk, fetched on
+                    // demand (MIP-1604). Shiki's core and engine stay in `vendor-editor`.
+                    if (
+                        id.includes("@shikijs/langs-precompiled") ||
+                        id.includes("@shikijs/themes")
+                    ) {
+                        return undefined;
+                    }
                     // BlockNote, Yjs, Hocuspocus, and Shiki all interlock —
                     // Shiki is used by BlockNote's code block, Hocuspocus is
                     // the collab provider for Yjs. Splitting them into

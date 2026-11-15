@@ -110,7 +110,9 @@ describe("link host caption in every editable editor", () => {
             /cfg\.editingRules[\s\S]*extensions:\s*\[[\s\S]*\blinkHostCaption\b/
         );
         // collaborative editors
-        expect(hooks).toMatch(/extensions:\s*\[codeFenceInputRule,\s*linkHostCaption\]/);
+        expect(hooks).toMatch(
+            /extensions:\s*\[codeFenceInputRule,\s*linkHostCaption,\s*syntaxHighlighter\]/
+        );
     });
 
     it("leaves exactly the read-only previews out", () => {

@@ -97,6 +97,31 @@ export const bundleGuard = (): Plugin => ({
             }
         }
 
+        // --- 1b. Shiki grammars and themes stay out of the lazy vendor chunks (MIP-1604) ---
+        // Code blocks are coloured by `import()`ing one grammar per language. A `manualChunks`
+        // rule that pins `@shikijs` into `vendor-editor` again would put all ~360 grammars
+        // (3.4 MB raw) into the chunk every note, task body and chat message loads, with no
+        // visible symptom. That is a hard failure for the same reason as 1.
+        const pinnedShiki = chunks
+            .filter(([, c]) => c.name && MUST_STAY_LAZY.includes(c.name))
+            .flatMap(([file, c]) =>
+                Object.keys(c.modules)
+                    .filter((id) => /[\\/]@shikijs[\\/](langs-precompiled|themes)[\\/]/.test(id))
+                    .slice(0, 1)
+                    .map((id) => `  - ${c.name} (${file}) holds ${id}`)
+            );
+        if (pinnedShiki.length) {
+            const message =
+                `Shiki grammars/themes are pinned into a vendor chunk:\n${pinnedShiki.join("\n")}\n\n` +
+                `They must be dynamic-import chunks of their own (see the @shikijs rule in ` +
+                `manualChunks, vite.config.ts), or every editor downloads every grammar.`;
+            if (skip()) {
+                this.warn(`[bundle-guard] SKIPPED — ${message}`);
+            } else {
+                this.error(`[bundle-guard] ${message}`);
+            }
+        }
+
         // --- 2. budget (advisory) ---
         let bytes = 0;
         const gz = (source: string | Uint8Array) =>
