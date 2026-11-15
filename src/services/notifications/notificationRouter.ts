@@ -333,6 +333,9 @@ export const buildActivityIntent = (
             id: `${aiAppCategory(activity.aiApp.verb, activity.aiApp.kind)}:${activity.activityId}`,
             source: { surfaceType: AI_APP_SURFACE },
             title: aiAppHeadline(activity.aiApp, strings),
+            // The official app's mark on the toast (MIP-1608); `appFamily` was already
+            // reduced to the two exact strings when the notice was parsed.
+            ...(activity.aiApp.appFamily ? { viaApp: activity.aiApp.appFamily } : {}),
         };
     }
 
@@ -477,6 +480,10 @@ export const buildActivityIntent = (
                 : activity.threadId || undefined,
         },
         title,
+        // A change made through the official Claude / ChatGPT app (MIP-1608): the toast
+        // shows that app's mark instead of the project / sender avatar. The adapter kept
+        // only the two exact family strings.
+        ...(activity.viaApp ? { viaApp: activity.viaApp } : {}),
     };
 };
 
