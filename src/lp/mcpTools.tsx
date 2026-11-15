@@ -370,8 +370,9 @@ export const MCP_TOOLS: McpTool[] = [
     {
         name: "manage_milestone",
         type: "write",
+        taskRef: true,
         meaning:
-            "Create or change a milestone (dates, status, assignees, folder, sprint), or manage a project's milestone folders. The action argument picks which.",
+            "Create or change a milestone (dates, status, assignees, folder, sprint), or manage a project's milestone folders. The action argument picks which. The convert action turns a root task into a milestone, or a milestone back into a task, on the same row; its folder and sprint are dropped. Setting a project on an update moves the milestone, and its tasks with it, to another project of the team: the tasks get new ids, and the sprint, folder and tags are cleared. Neither can be undone, so a milestone turned into a task and a move need a key that also has the destructive opt-in.",
     },
     {
         name: "delete_milestone",
