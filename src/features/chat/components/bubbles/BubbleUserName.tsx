@@ -2,6 +2,7 @@ import { Box, Stack } from "@mui/joy";
 
 import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
 import { BubbleAuthor, BubbleMeta } from "../../../../components/ui/bubble";
+import { ViaChip } from "../../../../components/ui/misc/ViaChip";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
@@ -9,6 +10,7 @@ import { TaskIdText } from "../../../tasks/components/card/parts";
 import { StatusLabel } from "../../../tasks/components/meta/StatusLabel";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { statuses } from "../../../tasks/utils/taskMeta";
+import type { ViaApp } from "../../../tasks/utils/viaSource";
 
 type BubbleUserNameTypes = {
     isSimpleBubble: boolean;
@@ -24,6 +26,14 @@ type BubbleUserNameTypes = {
     displayId?: string | null;
     taskStatus: string | null;
     isThread: boolean;
+    /**
+     * The official AI app that wrote this message through a connected app (MIP-1570),
+     * from `metadata.via` via the adapter. Its round mark sits after the time. Only
+     * the two known families get a mark: a connected app with no family, and an API
+     * key, show nothing here (the header has no room for the words, and a bare
+     * "via MCP" chip on every row would be noise).
+     */
+    viaApp?: ViaApp;
 };
 
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
@@ -39,6 +49,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
         displayId,
         taskStatus,
         isThread,
+        viaApp,
     } = props;
 
     const { t } = useTranslation();
@@ -101,6 +112,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                 dtSent
                             )}
                         </BubbleMeta>
+                        {viaApp && <ViaChip source={{ kind: "mcp", name: null, app: viaApp }} />}
                     </Stack>
                 )}
 
@@ -126,6 +138,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                         <BubbleMeta sx={{ pt: isSimpleBubble ? 0.5 : 0 }}>
                             {isEdited ? `${dtSent} ${t.chat.bubble.edited}` : dtSent}
                         </BubbleMeta>
+                        {viaApp && <ViaChip source={{ kind: "mcp", name: null, app: viaApp }} />}
                     </Stack>
                 )}
             </Stack>

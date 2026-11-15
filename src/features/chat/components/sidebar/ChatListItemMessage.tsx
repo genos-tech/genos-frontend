@@ -2,6 +2,7 @@ import React from "react";
 import { Box } from "@mui/joy";
 
 import { EmojiText } from "../../../../components/ui/emoji/EmojiText";
+import { ViaAppIcon } from "../../../../components/ui/misc/ViaAppIcon";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
@@ -43,6 +44,19 @@ export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }
                 color: hasUnread ? g.text.primary : "inherit",
             }}
         >
+            {/* The round mark of the AI app that wrote the latest message (MIP-1570):
+                purely visual and inline, so the row's button, hover and tap targets
+                are untouched. It leads the line so ellipsis never cuts it off. Only
+                a top-level app-made task card can be the latest message (a mirrored
+                task comment is a thread reply). */}
+            {chat.latestMessage?.viaApp && (
+                <Box
+                    component="span"
+                    sx={{ display: "inline-block", marginInlineEnd: "4px", verticalAlign: "-3px" }}
+                >
+                    <ViaAppIcon app={chat.latestMessage.viaApp} size={14} />
+                </Box>
+            )}
             {mediaKind ? (
                 t.chat.sidebar[MEDIA_LABEL_KEYS[mediaKind]]
             ) : (

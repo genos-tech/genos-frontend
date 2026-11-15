@@ -262,6 +262,11 @@ export type MessageProps = {
     reactions?: ReactionProps[];
     threadId?: number;
     isFlagged?: boolean;
+    // Which official AI app wrote this message through a connected app (MIP-1570):
+    // "claude" or "chatgpt", read from `metadata.via` by the v3 adapters. Absent for
+    // a person's own message, an API key, any other app and any value this build
+    // does not know. Never a name: the server sends kind + family only.
+    viaApp?: ViaApp;
 };
 
 export type ThreadMessageProps = {
@@ -289,6 +294,11 @@ export type ThreadMessageProps = {
     taskExist?: boolean;
     reactions?: ReactionProps[];
     isFlagged?: boolean;
+    // Which official AI app wrote this message through a connected app (MIP-1570):
+    // "claude" or "chatgpt", read from `metadata.via` by the v3 adapters. Absent for
+    // a person's own message, an API key, any other app and any value this build
+    // does not know. Never a name: the server sends kind + family only.
+    viaApp?: ViaApp;
 };
 
 export type NewMessageProps = {

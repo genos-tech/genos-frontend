@@ -53,6 +53,8 @@ export const sameChatRender = (a: AllChatProps, b: AllChatProps): boolean =>
     // timestamp are what actually drive them.
     a.latestMessage?.messageId === b.latestMessage?.messageId &&
     a.latestMessage?.tsSent === b.latestMessage?.tsSent &&
+    // The connected-app mark in the preview line (MIP-1570).
+    a.latestMessage?.viaApp === b.latestMessage?.viaApp &&
     a.dmPartnerUser?.userId === b.dmPartnerUser?.userId &&
     a.dmPartnerUser?.userName === b.dmPartnerUser?.userName &&
     a.dmPartnerUser?.avatarImgPath === b.dmPartnerUser?.avatarImgPath &&
