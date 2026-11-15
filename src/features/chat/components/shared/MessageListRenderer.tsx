@@ -599,7 +599,7 @@ export const MessageListRenderer = ({
                 via `thumbRef` — starts at opacity 0 until the hook measures. */}
             <div ref={thumbRef} className="chat-scroll-indicator" />
             {/* "Ask Genos" next to text selected inside one message (MIP-1058). Listens to this
-                list's own mouse-up / key-up only; see the component for what it never does. */}
+                list's own mouse-down / mouse-up only; see the component for what it never does. */}
             <ChatSelectionAsk containerRef={listWrapRef} />
             {/* An empty list whose history sync FAILED says so, with Retry (MIP-1299). */}
             {!hasRows && (
