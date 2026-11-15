@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../../services/api";
 import { MilestoneResponse } from "../types";
+import { MilestoneRefusalHooks, reportMilestoneRefusal } from "./milestoneRefusal";
 
 export type CreateMilestoneInput = {
     projectId: number;
@@ -40,7 +41,8 @@ export type CreateMilestoneInput = {
 
 export const createMilestone = async (
     input: CreateMilestoneInput,
-    accessToken: string | null
+    accessToken: string | null,
+    refusal?: MilestoneRefusalHooks
 ): Promise<MilestoneResponse | undefined> => {
     try {
         const api = authApi(accessToken);
@@ -76,6 +78,7 @@ export const createMilestone = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);
+            reportMilestoneRefusal(error, refusal);
         } else {
             console.error("Unexpected error:", error);
         }

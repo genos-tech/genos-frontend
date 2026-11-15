@@ -2083,7 +2083,46 @@ const MilestonePreviewInner = ({
         }
         // No actual changes worth a network round-trip.
         if (Object.keys(patch).length <= 1) return;
-        const updated = await useSM.updateExistingMilestone(patch, projectId);
+        // A collaborator who could not open the milestone (MIP-1567; the picker
+        // does not offer them, so this is a race with a member being removed)
+        // is refused with the whole PATCH. The reason is shown by the service.
+        // What is left to do here: take that person off the working copy, so
+        // the next save does not send them again and fail too, and send the
+        // rest of this patch now. One person is dropped per round, so it ends.
+        let updated = null;
+        const dropped = new Set<string>();
+        for (;;) {
+            let refusedId: string | null = null;
+            updated = await useSM.updateExistingMilestone(patch, projectId, undefined, undefined, {
+                refusal: {
+                    people: next.collaborators,
+                    onCollaboratorRefused: (id) => {
+                        refusedId = id.toLowerCase();
+                    },
+                },
+            });
+            if (updated || refusedId == null || dropped.has(refusedId)) break;
+            dropped.add(refusedId);
+            const stillThere = (c: { userId: string }) =>
+                !dropped.has(String(c.userId).toLowerCase());
+            setTaskContentLike((prev) => ({
+                ...prev,
+                collaborators: (prev.collaborators ?? []).filter(stillThere),
+            }));
+            if (patch.collaborators !== undefined) {
+                const kept = (next.collaborators ?? []).filter(stillThere).map((c) => c.userId);
+                // Back to what is stored: nothing to send for collaborators.
+                if (
+                    JSON.stringify([...kept].map(String).sort()) ===
+                    JSON.stringify(currentCollabIds)
+                ) {
+                    delete patch.collaborators;
+                } else {
+                    patch.collaborators = kept;
+                }
+            }
+            if (Object.keys(patch).length <= 1) break;
+        }
         if (updated) {
             syncMilestoneToAllTasks(updated);
             syncMilestoneCard(updated);
