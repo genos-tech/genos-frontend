@@ -229,6 +229,65 @@ describe("a save refused because a collaborator could not open the task", () => 
         expect(state.tmpCurrentTaskContent.collaborators).toEqual([]);
     });
 
+    // MIP-1586. The put-back leaves the task dirty so the rest of the save is sent again; the body and
+    // status flags are the same kind of "still unsent" and must not be cleared as if it had gone out.
+    // Only the retry's own success (or a full refusal) clears them.
+    const dirtyHook = () => {
+        const hook = renderHook(() => useHarness(edited()));
+        act(() => {
+            hook.result.current.state.setTaskBodyEdited(true);
+            hook.result.current.state.setTaskStatusUpdated(true);
+        });
+        return hook;
+    };
+
+    it("keeps the body and status flags set while the rest is still to be sent again", async () => {
+        let release: () => void = () => {};
+        adapter
+            .mockImplementationOnce(async (config: InternalAxiosRequestConfig) => {
+                throw refuse(config, refusal("u-bob"));
+            })
+            // The retry stays in flight: what the flags say NOW is what a close or an
+            // autosave in that window would act on.
+            .mockImplementationOnce(
+                (config: InternalAxiosRequestConfig) =>
+                    new Promise((resolve) => {
+                        release = () => resolve(ok(config));
+                    })
+            );
+        const hook = dirtyHook();
+
+        act(() => hook.result.current.state.setTaskUpdated(true));
+        await waitFor(() => expect(adapter).toHaveBeenCalledTimes(2));
+        await act(async () => {});
+
+        const { state } = hook.result.current;
+        expect(state.taskUpdated).toBe(true);
+        expect(state.taskBodyEdited).toBe(true);
+        expect(state.taskStatusUpdated).toBe(true);
+
+        // The retry landing is what finishes the save: now they fall.
+        adapter.mockImplementation(async (config: InternalAxiosRequestConfig) => ok(config));
+        await act(async () => release());
+        await waitFor(() => expect(hook.result.current.state.taskUpdated).toBe(false));
+        expect(hook.result.current.state.taskBodyEdited).toBe(false);
+        expect(hook.result.current.state.taskStatusUpdated).toBe(false);
+    });
+
+    it("a refusal that is put back whole (nothing is sent again) still clears them", async () => {
+        adapter.mockImplementation(async (config: InternalAxiosRequestConfig) => {
+            throw refuse(config, { error: "assignee 'u9' is not a member of project 1." });
+        });
+        const hook = dirtyHook();
+
+        await saveAndSettle(hook);
+        await act(() => new Promise<void>((resolve) => setTimeout(resolve, 100)));
+
+        expect(adapter).toHaveBeenCalledTimes(1);
+        expect(hook.result.current.state.taskBodyEdited).toBe(false);
+        expect(hook.result.current.state.taskStatusUpdated).toBe(false);
+    });
+
     it("falls back to the server's sentence when the person is not on the form", async () => {
         adapter.mockImplementation(async (config: InternalAxiosRequestConfig) => {
             throw refuse(config, refusal("u-nobody"));
