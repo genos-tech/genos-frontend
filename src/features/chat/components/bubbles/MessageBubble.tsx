@@ -538,6 +538,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             taskStatus={message.taskStatus}
             tsSent={message.tsSent}
             tsUpdated={message.tsUpdated}
+            viaApp={message.viaApp}
         />
     );
 

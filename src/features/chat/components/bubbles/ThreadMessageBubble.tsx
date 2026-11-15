@@ -338,6 +338,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
             taskStatus={null}
             tsSent={message.tsSent}
             tsUpdated={message.tsUpdated}
+            viaApp={message.viaApp}
         />
     );
 

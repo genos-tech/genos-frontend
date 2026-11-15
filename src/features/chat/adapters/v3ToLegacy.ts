@@ -37,6 +37,7 @@ import type {
 } from "../../../types/chat";
 import type { ReactionProps } from "../../../types/common";
 import type { ProjectProps } from "../../../types/tasks";
+import { viaSourceFromVia, type ViaApp } from "../../tasks/utils/viaSource";
 
 /** Map v3 `ChannelKind` to the legacy integer kind code. They happen
  *  to be the same integer values today (DM=1, GM=2, PM=3, MDM=4) —
@@ -47,6 +48,18 @@ const KIND_TO_CHAT_TYPE: Record<ChannelKind, number> = {
     [ChannelKind.PM]: 3,
     [ChannelKind.MDM]: 4,
 };
+
+/**
+ * `{ viaApp }` for a message a connected app wrote (MIP-1570), else nothing, so a
+ * person's message keeps exactly the shape it had. The API stamps `metadata.via`
+ * with kind + family only; `viaSourceFromVia` keeps just the two exact family
+ * strings, so a spoofed value ("Claude ", "claude-evil", an object, an API key's
+ * kind) never reaches a bubble. `ownRow` is false: no name is read here, ever.
+ */
+function viaAppField(m: Pick<Message, "metadata">): { viaApp?: ViaApp } {
+    const app = viaSourceFromVia(m.metadata?.via, false)?.app;
+    return app ? { viaApp: app } : {};
+}
 
 /**
  * Normalize a v3 Message body for the legacy renderer. A stored body ends with
@@ -238,6 +251,7 @@ function v3MessageToLegacyPreview(m: Message): MessageProps {
         taskExist: false,
         taskId: null,
         taskStatus: null,
+        ...viaAppField(m),
     };
 }
 
@@ -561,6 +575,7 @@ export function v3MessageToLegacy(args: {
         reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
         isFlagged: flaggedMessageIds?.has(m.id) ?? false,
         attachment: v3AttachmentToLegacy(m.attachments),
+        ...viaAppField(m),
     };
 }
 
@@ -750,6 +765,7 @@ export function v3ThreadMessageToLegacy(args: {
         taskExist: taskId != null,
         isFlagged: flaggedMessageIds?.has(m.id) ?? false,
         attachment: v3AttachmentToLegacy(m.attachments),
+        ...viaAppField(m),
     };
 }
 
