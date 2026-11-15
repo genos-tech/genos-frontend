@@ -301,6 +301,20 @@ describe("the card is refused, cancelled or late", () => {
         expect(result.current.ask.droppedReferences).toBeUndefined();
     });
 
+    it("a resumed leg that fails keeps the note on the turn it ends, beside the error", () => {
+        const { result } = mount();
+        pause(result, ["message"]);
+        act(() => {
+            result.current.onApprove();
+        });
+        act(() => {
+            lastDecide().onError("the connection dropped");
+        });
+        expect(result.current.turns).toHaveLength(1);
+        expect(result.current.turns[0].askError).toBe("the connection dropped");
+        expect(result.current.turns[0].droppedReferences).toEqual(["message"]);
+    });
+
     it("a card event that arrives after its turn was left does not reach the next turn", () => {
         const { result } = mount();
         act(() => {
