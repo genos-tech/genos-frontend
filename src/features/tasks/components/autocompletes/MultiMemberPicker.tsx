@@ -81,7 +81,14 @@ export const MultiMemberPicker = ({
     const { t } = useTranslation();
     const youSuffix = t.tasks.autocomplete.youSuffix;
 
-    const { ids: memberIds, loading, refresh } = useProjectMemberIds(projectId, accessToken);
+    const {
+        ids: memberIds,
+        loading,
+        refresh,
+    } = useProjectMemberIds(projectId, accessToken, {
+        userId: myself.userId,
+        teamId: myself.teamId,
+    });
 
     const holderKey = holderIds.filter(Boolean).join("|");
     const allowed = useMemo(
