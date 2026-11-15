@@ -2094,15 +2094,36 @@ const MilestonePreviewInner = ({
         const dropped = new Set<string>();
         for (;;) {
             let refusedId: string | null = null;
+            let moveRefused = false;
             updated = await useSM.updateExistingMilestone(patch, projectId, undefined, undefined, {
                 refusal: {
                     people: next.collaborators,
                     onCollaboratorRefused: (id) => {
                         refusedId = id.toLowerCase();
                     },
+                    onMoveRefused: () => {
+                        moveRefused = true;
+                    },
                 },
             });
-            if (updated || refusedId == null || dropped.has(refusedId)) break;
+            if (updated) break;
+            if (moveRefused && patch.projectId !== undefined) {
+                // The move was refused whole (an assignee in the moved set is
+                // not on the destination): the milestone is where it was. Put
+                // the picker back, and the tags it cleared on the way, and
+                // send the person's OTHER edits again without the move. The
+                // project is gone from the patch, so this cannot repeat.
+                delete patch.projectId;
+                delete patch.tags;
+                setTaskContentLike((prev) => ({
+                    ...prev,
+                    ...(milestoneProject ? { project: milestoneProject } : {}),
+                    tags: (milestone.tags as TagListProps[]) ?? [],
+                }));
+                if (Object.keys(patch).length <= 1) break;
+                continue;
+            }
+            if (refusedId == null || dropped.has(refusedId)) break;
             dropped.add(refusedId);
             const stillThere = (c: { userId: string }) =>
                 !dropped.has(String(c.userId).toLowerCase());

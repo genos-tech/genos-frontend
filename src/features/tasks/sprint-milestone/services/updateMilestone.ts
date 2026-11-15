@@ -2,6 +2,7 @@ import axios from "axios";
 import { Socket } from "socket.io-client";
 
 import { authApi } from "../../../../services/api";
+import { showMoveNotice } from "../../services/moveNotice";
 import { MilestoneResponse } from "../types";
 import { MilestoneRefusalHooks, reportMilestoneRefusal } from "./milestoneRefusal";
 
@@ -111,6 +112,10 @@ export const updateMilestone = async (
                     });
                 }
             }
+
+            // A move answers what it cost other people (task-note owners, the
+            // people who filed its tasks): tell the person (MIP-1597).
+            if (input.projectId !== undefined) showMoveNotice(res.data);
 
             return res.data;
         }

@@ -4941,6 +4941,12 @@ export const fr: DeepPartial<Messages> = {
             subTaskProjectMoveForbidden:
                 "Cette tâche appartient au projet de la tâche ou du jalon dans lequel elle se trouve. Déplacez celui-ci pour l'emmener avec lui.",
         },
+        moveNotice: {
+            notesNarrowed:
+                "{count, plural, one {# personne a perdu le rôle de propriétaire sur des notes de tâche, car elle n'est pas} other {# personnes ont perdu le rôle de propriétaire sur des notes de tâche, car elles ne sont pas}} dans le projet de destination. En revenant au projet d'origine, le rôle est rétabli.",
+            reportersOutsideDestination:
+                "{count, plural, one {# personne qui a créé ces tâches n'est pas} other {# personnes qui ont créé ces tâches ne sont pas}} dans le projet de destination ni dans son équipe.",
+        },
         autocomplete: {
             statusPlaceholder: "Statut",
             priorityPlaceholder: "Priorité",

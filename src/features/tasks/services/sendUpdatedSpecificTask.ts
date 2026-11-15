@@ -14,6 +14,7 @@ import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { collaboratorsAfterMove } from "./collaboratorsAfterMove";
 import { forgetCachedSubtree } from "./forgetCachedSubtree";
+import { showMoveNotice } from "./moveNotice";
 import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
 import { forgetInFlightTask } from "./taskLoadInFlight";
 import { TaskSaveRefusedError } from "./taskSaveRefusedError";
@@ -29,7 +30,10 @@ import { uploadTaskAttachments } from "./uploadTaskAttachments";
 //
 // What the person reads, in order of preference:
 //   1. the translated sub-task message, for that one `code` (kept from
-//      before: it explains the rule better than the raw sentence);
+//      before: it explains the rule better than the raw sentence). A move
+//      to a project where the task's assignee (or a sub-task's) could not
+//      work it (`assignee_not_on_destination`, MIP-1597) falls under 3: the
+//      server's sentence names the tasks by display id;
 //   2. a collaborator who could not open the task (MIP-1567): the server's
 //      sentence again, but with the person's name instead of their id;
 //   3. the server's own `error` sentence, shown as-is (English, whatever the
@@ -410,6 +414,9 @@ export const sendUpdatedSpecificTask = async (
                     await forgetCachedSubtree(updatedTask.id, movedFromProjectId);
                     emitTasksBulkChanged(movedFromProjectId);
                     emitTasksBulkChanged(updatedTask.project.projectId);
+                    // What the move cost other people (task-note owners, people
+                    // who filed the moved tasks), when the server says so.
+                    showMoveNotice(res.data);
                 }
 
                 return uploadAttachments;

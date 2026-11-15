@@ -2235,6 +2235,12 @@ export const ar: DeepPartial<Messages> = {
             subTaskProjectMoveForbidden:
                 "تنتمي هذه المهمة إلى مشروع المهمة أو المعلم الذي توجد داخله. انقل تلك لتنتقل هذه المهمة معها.",
         },
+        moveNotice: {
+            notesNarrowed:
+                "فقد {count} من الأشخاص دور المالك في ملاحظات المهام لأنهم ليسوا في المشروع الوجهة. تؤدي إعادة النقل إلى استعادة الدور.",
+            reportersOutsideDestination:
+                "{count} من الأشخاص الذين أنشأوا هذه المهام ليسوا في المشروع الوجهة أو في فريقه.",
+        },
         autocomplete: {
             statusPlaceholder: "الحالة",
             priorityPlaceholder: "الأولوية",
