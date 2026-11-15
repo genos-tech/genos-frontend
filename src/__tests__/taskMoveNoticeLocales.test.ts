@@ -44,7 +44,9 @@ describe("tasks.moveNotice", () => {
             for (const key of KEYS) {
                 for (const count of [1, 3]) {
                     const text = fmt(notice(catalog)![key], { count });
-                    expect(text).toContain(String(count));
+                    // Arabic spells the singular out (one {شخص واحد}); every other
+                    // form keeps the number.
+                    if (count > 1) expect(text).toContain(String(count));
                     expect(text).not.toMatch(/[{}#]|plural/);
                 }
             }

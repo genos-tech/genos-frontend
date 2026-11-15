@@ -21,6 +21,7 @@ import { moveNoticeText } from "../features/tasks/services/moveNotice";
 import { sendUpdatedSpecificTask } from "../features/tasks/services/sendUpdatedSpecificTask";
 import { TaskSaveRefusedError } from "../features/tasks/services/taskSaveRefusedError";
 import { updateMilestone } from "../features/tasks/sprint-milestone/services/updateMilestone";
+import { dropRefusedMove } from "../features/tasks/utils/moveRefusal";
 import { useSendUpdatedTask } from "../hooks/tasks/useSendUpdatedTask";
 import { useTaskEditState } from "../hooks/tasks/useTaskEditState";
 import { useTaskSaveTriggers } from "../hooks/tasks/useTaskSaveTriggers";
@@ -45,8 +46,9 @@ vi.mock("../features/tasks/services/addTask", () => ({
 vi.mock("../features/tasks/services/uploadTaskAttachments", () => ({
     uploadTaskAttachments: vi.fn().mockResolvedValue([]),
 }));
+const forgetCachedSubtree = vi.fn();
 vi.mock("../features/tasks/services/forgetCachedSubtree", () => ({
-    forgetCachedSubtree: vi.fn().mockResolvedValue(undefined),
+    forgetCachedSubtree: (...args: unknown[]) => forgetCachedSubtree(...args),
 }));
 vi.mock("../services/channel/channelService", () => ({
     channelService: { updateTaskCard: vi.fn().mockResolvedValue(undefined) },
@@ -137,7 +139,12 @@ beforeEach(() => {
     getCachedFullTask.mockReset();
     getCachedFullTask.mockResolvedValue(stored());
     loadSpecificTask.mockReset();
-    loadSpecificTask.mockResolvedValue([stored()]);
+    // The server filters getTask by project, so asking in the destination finds nothing.
+    loadSpecificTask.mockImplementation(async (_me: unknown, projectId: number) =>
+        projectId === 1 ? [stored()] : []
+    );
+    forgetCachedSubtree.mockReset();
+    forgetCachedSubtree.mockResolvedValue(undefined);
     __resetToasts();
     bus = [];
     unsubscribe = subscribeRequestErrors(((kind: string, text?: string) =>
@@ -222,13 +229,15 @@ describe("a task moved to another project", () => {
         ]);
     });
 
-    it("counts the whole subtree: the sub-tasks' notes arrive as one number", async () => {
-        // The server sums the moved task and every sub-task that went with it.
+    it("a move with sub-tasks: one notice for the whole subtree, and its cached copies forgotten", async () => {
+        // The server sums the moved task and every sub-task that went with it,
+        // so the person reads ONE notice, not one per sub-task.
         answerWith(200, moveAnswer({ notesNarrowed: 5, reportersOutsideDestination: 2 }));
         const list = toasts();
 
         await sendUpdatedSpecificTask(null, myself, moved(), false, "tok");
 
+        expect(forgetCachedSubtree).toHaveBeenCalledWith(42, 1);
         expect(list.result.current).toHaveLength(1);
         expect(textOf(list.result.current[0].message)).toBe(
             `${fmt(t().notesNarrowed, { count: 5 })} ${fmt(t().reportersOutsideDestination, { count: 2 })}`
@@ -277,6 +286,19 @@ describe("a task move the server refuses: assignee_not_on_destination", () => {
             serverMessage: REFUSAL.error,
         });
         expect(bus[bus.length - 1]).toEqual(["serverMessage", REFUSAL.error]);
+    });
+
+    it("shows a sentence that names a sub-task by its display id, as written", async () => {
+        const sentence =
+            "KDS-47 is assigned to u-zed, who is not on the destination project or its team. Nothing was changed.";
+        answerWith(400, { error: sentence, code: "assignee_not_on_destination" });
+
+        await expect(
+            sendUpdatedSpecificTask(null, myself, moved(), true, "tok")
+        ).rejects.toMatchObject({ serverMessage: sentence });
+
+        expect(bus[bus.length - 1]).toEqual(["serverMessage", sentence]);
+        expect(forgetCachedSubtree).not.toHaveBeenCalled();
     });
 
     it("shows no move notice and writes nothing to the caches", async () => {
@@ -334,6 +356,8 @@ describe("the preview after a refused move", () => {
         await waitFor(() => expect(hook.result.current.state.taskUpdated).toBe(false));
         await act(() => new Promise<void>((resolve) => setTimeout(resolve, 150)));
 
+        // The stored task was asked for in the project it is stored in.
+        expect(loadSpecificTask.mock.calls[0][1]).toBe(1);
         // First send carried the move and the status edit.
         expect(putBody(0).project).toBe(2);
         expect(putBody(0).status).toBe("WIP");
@@ -355,6 +379,28 @@ describe("the preview after a refused move", () => {
         expect(state.tmpCurrentTaskContent.milestoneId).toBe(9);
         expect(preview?.project?.projectId).toBe(1);
         expect(preview?.status.status).toBe("WIP");
+    });
+
+    it("does not 'put back' to a copy that is in the destination: no resend loop", async () => {
+        adapter.mockImplementation(async (config: InternalAxiosRequestConfig) => {
+            throw new AxiosError("failed", "ERR_BAD_REQUEST", config, null, {
+                data: REFUSAL,
+                status: 400,
+                statusText: "",
+                headers: {},
+                config,
+            });
+        });
+        // A stale copy that already shows the destination.
+        getCachedFullTask.mockResolvedValue(moved());
+        loadSpecificTask.mockResolvedValue([moved()]);
+        const hook = renderHook(() => useHarness(moved()));
+
+        act(() => hook.result.current.state.setTaskUpdated(true));
+        await waitFor(() => expect(hook.result.current.state.taskUpdated).toBe(false));
+        await act(() => new Promise<void>((resolve) => setTimeout(resolve, 250)));
+
+        expect(adapter).toHaveBeenCalledTimes(1);
     });
 
     it("falls back to the full put-back when the stored task cannot be read", async () => {
@@ -445,5 +491,19 @@ describe("a milestone moved to another project", () => {
 
         expect(onMoveRefused).not.toHaveBeenCalled();
         expect(bus.filter(([kind]) => kind === "serverMessage")).toEqual([]);
+    });
+});
+
+describe("a refused milestone move leaves the other edits to send", () => {
+    it("takes out the project and the tags the pick cleared, keeps the rest", () => {
+        const patch = { milestoneId: 5, projectId: 2, tags: [], status: "WIP", dueDate: null };
+        expect(dropRefusedMove(patch)).toBe(true);
+        expect(patch).toEqual({ milestoneId: 5, status: "WIP", dueDate: null });
+    });
+
+    it("says there is nothing left to send when the move was the whole patch", () => {
+        const patch = { milestoneId: 5, projectId: 2, tags: [] };
+        expect(dropRefusedMove(patch)).toBe(false);
+        expect(patch).toEqual({ milestoneId: 5 });
     });
 });

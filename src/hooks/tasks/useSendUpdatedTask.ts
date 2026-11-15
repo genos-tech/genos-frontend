@@ -231,7 +231,16 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                         baseTaskContent.project?.projectId,
                         accessToken
                     );
-                    if (storedTask && Number(shownTaskIdRef.current) === Number(storedTask.id)) {
+                    // Only a copy that is NOT in the destination: a reload that
+                    // handed the destination back (a stale cache row) would
+                    // "put back" the move and send it again, to be refused the
+                    // same way forever.
+                    if (
+                        storedTask &&
+                        storedTask.project?.projectId != null &&
+                        storedTask.project.projectId !== baseTaskContent.project?.projectId &&
+                        Number(shownTaskIdRef.current) === Number(storedTask.id)
+                    ) {
                         const projectBack = (prev: TaskProps): TaskProps => ({
                             ...prev,
                             project: storedTask.project,

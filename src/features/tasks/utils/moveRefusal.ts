@@ -6,3 +6,19 @@
  * body's `error` names the tasks by display id.
  */
 export const ASSIGNEE_NOT_ON_DESTINATION = "assignee_not_on_destination";
+
+/**
+ * Take a refused project MOVE out of a milestone patch, keeping the person's
+ * other edits. The move is the project plus the tags the project pick cleared
+ * on the way (a different project has different tags), so both go. Returns
+ * whether anything is left to send besides the milestone id.
+ */
+export const dropRefusedMove = (patch: {
+    milestoneId: number;
+    projectId?: number;
+    tags?: unknown;
+}): boolean => {
+    delete patch.projectId;
+    delete patch.tags;
+    return Object.keys(patch).length > 1;
+};
