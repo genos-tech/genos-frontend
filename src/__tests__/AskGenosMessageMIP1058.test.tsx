@@ -395,20 +395,20 @@ describe("the passage above the Spotlight input", () => {
 });
 
 describe("the message menu item", () => {
-    const use = (id: string | null | undefined) =>
+    const mountItem = (id: string | null | undefined) =>
         renderHook(() =>
             useAskGenosMessageItem({ messageId: id, senderName: "Alice", tsSent: null })
         );
 
     it("is only there for a message with a v3 id", () => {
-        expect(use(UUID).result.current.item.visible).toBe(true);
-        expect(use("42-12").result.current.item.visible).toBe(false);
-        expect(use("ch-1#m-1").result.current.item.visible).toBe(false);
-        expect(use(undefined).result.current.item.visible).toBe(false);
+        expect(mountItem(UUID).result.current.item.visible).toBe(true);
+        expect(mountItem("42-12").result.current.item.visible).toBe(false);
+        expect(mountItem("ch-1#m-1").result.current.item.visible).toBe(false);
+        expect(mountItem(undefined).result.current.item.visible).toBe(false);
     });
 
     it("is an askGenos item that asks about this message, by its uuid", () => {
-        const { result } = use(UUID);
+        const { result } = mountItem(UUID);
         expect(result.current.item.kind).toBe("askGenos");
         expect(result.current.item.label).toBe(en.chat.messageActions.askGenos);
         const heard = vi.fn();
@@ -422,7 +422,7 @@ describe("the message menu item", () => {
     });
 
     it("does nothing when clicked for a message with no v3 id", () => {
-        const { result } = use("42-12");
+        const { result } = mountItem("42-12");
         const heard = vi.fn();
         const off = onAskGenosAbout(heard);
         result.current.item.onClick();
@@ -439,7 +439,7 @@ describe("the message menu item", () => {
         window.getSelection()!.removeAllRanges();
         window.getSelection()!.addRange(range);
 
-        const { result } = use(UUID);
+        const { result } = mountItem(UUID);
         act(() => result.current.onMenuOpenChange(true));
         expect(result.current.item.label).toBe(en.chat.messageActions.askGenosSelection);
 
@@ -462,7 +462,7 @@ describe("the message menu item", () => {
         window.getSelection()!.removeAllRanges();
         window.getSelection()!.addRange(range);
 
-        const { result } = use(UUID);
+        const { result } = mountItem(UUID);
         act(() => result.current.onMenuOpenChange(true));
         expect(result.current.item.label).toBe(en.chat.messageActions.askGenos);
     });
@@ -475,7 +475,7 @@ describe("the message menu item", () => {
         range.selectNodeContents(document.getElementById("p")!);
         window.getSelection()!.removeAllRanges();
         window.getSelection()!.addRange(range);
-        const { result } = use(UUID);
+        const { result } = mountItem(UUID);
         act(() => result.current.onMenuOpenChange(true));
         expect(result.current.item.label).toBe(en.chat.messageActions.askGenosSelection);
         act(() => result.current.onMenuOpenChange(false));
