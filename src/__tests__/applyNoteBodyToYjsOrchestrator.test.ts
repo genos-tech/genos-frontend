@@ -85,14 +85,30 @@ describe("applyNoteBodyToYjs", () => {
         expect(received().map((b) => b.type)).toEqual(["paragraph"]);
     });
 
-    it("reports failed, writes nothing and says why when a type is unknown", async () => {
+    it("writes the rest of the body, and says so once, when a block's type is unknown (MIP-1601)", async () => {
+        // It used to report "failed" and write nothing: one block the schema cannot build
+        // rejected the whole body, so the note kept its old Yjs content.
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-        const status = await run([{ type: "paragraph", content: [{ type: "nope" }] }]);
-        expect(status).toBe("failed");
-        expect(fake.updates).toHaveLength(0);
+        const status = await run([
+            { type: "paragraph", content: [text("before")] },
+            { type: "nope", content: [text("from a newer schema")] },
+            { type: "paragraph", content: [{ type: "nope" }] },
+            { type: "paragraph", content: [text("after")] },
+        ]);
+        expect(status).toBe("applied");
+        const blocks = received();
+        expect(blocks.map((b) => b.type)).toEqual(["paragraph", "paragraph", "paragraph"]);
+        expect(JSON.stringify(blocks)).toContain("from a newer schema");
+        expect(JSON.stringify(blocks)).toContain("after");
         expect(warn).toHaveBeenCalledOnce();
-        expect(String(warn.mock.calls[0])).toContain("my-note:1");
+        expect(String(warn.mock.calls[0])).toContain("applyNoteBodyToYjs");
         expect(fake.destroyed).toBe(1);
+    });
+
+    it("writes an empty paragraph when nothing in the body could be kept", async () => {
+        const status = await run([{ type: "paragraph", content: [{ type: "nope" }] }]);
+        expect(status).toBe("applied");
+        expect(received().map((b) => b.type)).toEqual(["paragraph"]);
     });
 
     it("reports failed without connecting when there is no access token", async () => {

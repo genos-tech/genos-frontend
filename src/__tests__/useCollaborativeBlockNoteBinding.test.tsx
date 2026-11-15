@@ -230,6 +230,71 @@ describe("the editor the hook builds", () => {
         expect(xml).not.toContain("the stale REST copy");
     });
 
+    it("opens a shared document that already holds a code block with the language `ts` (MIP-1601)", () => {
+        // What the markdown import wrote before the fix: the fence name as the language. BlockNote's
+        // code block throws "Language ts is not supported." while it renders that block, so the
+        // editor never showed the body. The block now renders as the language it resolves to.
+        mountHook();
+        const provider = providers.at(-1) as FakeProvider;
+        const editor = realEditor();
+
+        const remote = new Y.Doc();
+        blocksToYXmlFragment(
+            createHeadlessNoteEditor(),
+            [
+                { id: "p0", type: "paragraph", content: "before" },
+                { id: "c0", type: "codeBlock", props: { language: "ts" }, content: "let a = 1;" },
+                { id: "c1", type: "codeBlock", props: { language: "klingon" }, content: "Qapla" },
+                { id: "p1", type: "paragraph", content: "after" },
+            ] as never,
+            remote.getXmlFragment(FRAGMENT)
+        );
+        expect(() =>
+            Y.applyUpdate(provider.document, Y.encodeStateAsUpdate(remote))
+        ).not.toThrow();
+
+        expect(editor.document.map((b) => b.type)).toEqual([
+            "paragraph",
+            "codeBlock",
+            "codeBlock",
+            "paragraph",
+        ]);
+        const shown = JSON.stringify(editor.document);
+        expect(shown).toContain("let a = 1;");
+        expect(shown).toContain("Qapla");
+        expect(shown).toContain("after");
+    });
+
+    it("seeds a stored body that has a bad block: the rest of the body is written, not dropped (MIP-1601)", async () => {
+        mountHook({
+            initialBody: [
+                { type: "heading", props: { level: 1 }, content: "Title" },
+                { type: "fancy", content: "from a newer schema" },
+                {
+                    type: "codeBlock",
+                    props: { language: "ts" },
+                    content: [{ type: "text", text: "const n: number = 1;", styles: {} }],
+                },
+                { type: "paragraph", content: "last" },
+            ],
+        });
+        const provider = providers.at(-1) as {
+            document: Y.Doc;
+            configuration: { onSynced: (e: { state: boolean }) => void };
+        };
+
+        act(() => provider.configuration.onSynced({ state: true }));
+        await new Promise((resolve) => setTimeout(resolve, 40));
+
+        const fragment = provider.document.getXmlFragment(FRAGMENT);
+        const text = plainText(fragment);
+        expect(text).toContain("Title");
+        expect(text).toContain("from a newer schema");
+        expect(text).toContain("const n: number = 1;");
+        expect(text).toContain("last");
+        expect(elementsNamed(fragment, "codeBlock")).toHaveLength(1);
+    });
+
     it("loads a document whose nested code block holds a styled character, and keeps the block", () => {
         // What an older BlockNote could save: a code block (inside a toggle list) with one coloured
         // character, pasted from an editor. BlockNote 0.52 made code blocks plain text, and

@@ -14,7 +14,7 @@
 // Read back through the module's own schema holder: reading needs the
 // same schema the writer used.
 import { yXmlFragmentToBlocks } from "@blocknote/core/yjs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Y from "yjs";
 
 import {
@@ -281,12 +281,17 @@ describe("applyBlocksToFragment: chips and alerts (MIP-949)", () => {
         expect(updates).toHaveLength(0);
     });
 
-    it("still throws, rather than half-writing, on a type no schema knows", () => {
+    it("degrades a type no schema knows instead of throwing, and writes the rest (MIP-1601)", () => {
         const frag = new Y.Doc().getXmlFragment("document-store");
-        expect(() =>
-            applyBlocksToFragment([{ type: "paragraph", content: [{ type: "nope" }] }], frag)
-        ).toThrow();
-        expect(frag.length).toBe(0);
+        vi.spyOn(console, "warn").mockImplementation(() => {});
+        applyBlocksToFragment(
+            [
+                { type: "paragraph", content: "kept" },
+                { type: "paragraph", content: [{ type: "nope" }] },
+            ],
+            frag
+        );
+        expect(frag.toString()).toContain("kept");
     });
 });
 

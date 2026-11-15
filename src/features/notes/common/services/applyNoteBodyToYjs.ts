@@ -45,6 +45,11 @@ import {
     createHeadlessNoteEditor,
     type HeadlessNoteEditor,
 } from "../../../../components/editors/headlessNoteSchema";
+import {
+    logSanitizeReport,
+    sanitizeBlocksForEditor,
+    type SanitizeReport,
+} from "../../../../components/editors/safeBlocks";
 
 const COLLAB_URL = import.meta.env.VITE_COLLAB_URL;
 
@@ -72,8 +77,16 @@ export const getSchemaHolder = (): HeadlessNoteEditor => {
  * single empty paragraph — the ProseMirror doc requires at least one
  * block (mirrors the editors' restore effect). */
 export const applyBlocksToFragment = (blocks: unknown[], fragment: Y.XmlFragment): void => {
-    const replacement =
-        Array.isArray(blocks) && blocks.length > 0 ? blocks : [{ type: "paragraph" }];
+    // One block the schema cannot build (an unknown type, a bad style, a code language the
+    // editor has no id for) used to reject the whole body here, so the note kept its old
+    // Yjs content. Such a block now degrades to plain text and the rest is written (MIP-1601).
+    const report: SanitizeReport = { degraded: 0, skipped: 0 };
+    const safe =
+        Array.isArray(blocks) && blocks.length > 0
+            ? sanitizeBlocksForEditor(blocks, getSchemaHolder(), report)
+            : [];
+    logSanitizeReport("applyNoteBodyToYjs", report);
+    const replacement = safe.length > 0 ? safe : [{ type: "paragraph" }];
     blocksToYXmlFragment(
         getSchemaHolder(),
         replacement as HeadlessNoteEditor["document"],

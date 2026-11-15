@@ -36,6 +36,7 @@ import { useUploadCounter } from "../../ui/feedback/useUploadCounter";
 import { GifPicker } from "../../ui/gif/GifPicker";
 import { headerTouchTargetsSx } from "../../ui/touchTargets";
 import { useBlockNoteDictionary } from "../blockNoteI18n";
+import { logSanitizeReport, sanitizeBlocksForEditor, type SanitizeReport } from "../safeBlocks";
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "../sub/bodySync";
 import { CommentsWithMentions } from "../sub/CommentEditorWithMentions";
 import { CommentHostContext } from "../sub/commentMentions";
@@ -288,7 +289,12 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         // visibly clears instead of silently keeping the previous content.
         const replacement = next && next.length > 0 ? next : [{ type: "paragraph" }];
         try {
-            (editor as any).replaceBlocks(editor.document, replacement);
+            // A block the schema cannot build degrades to plain text instead of rejecting
+            // the whole restored body (MIP-1601).
+            const report: SanitizeReport = { degraded: 0, skipped: 0 };
+            const safe = sanitizeBlocksForEditor(replacement, editor as never, report);
+            logSanitizeReport("restoring the note body", report);
+            (editor as any).replaceBlocks(editor.document, safe);
         } catch {
             // Best-effort: if the editor isn't ready yet, the next render
             // will pick up the seeded body via useCollaborativeBlockNote's

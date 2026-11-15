@@ -17,6 +17,8 @@
 
 import { BlockNoteEditor, type PartialBlock } from "@blocknote/core";
 
+import { normalizeCodeBlockLanguages } from "../../../../components/editors/codeBlockLanguage";
+
 // Headless schema holder, created lazily and reused (editor creation is
 // not free — it builds a ProseMirror schema).
 type ParsedBlocks = Awaited<ReturnType<BlockNoteEditor["tryParseMarkdownToBlocks"]>>;
@@ -203,9 +205,14 @@ const restoreMathBlocks = (blocks: unknown[]): unknown[] =>
 
 /** Parse raw markdown text into BlockNote blocks for a new note body. */
 export const markdownToNoteBlocks = async (markdown: string): Promise<PartialBlock[]> => {
-    const blocks = restoreMathBlocks(
-        unescapeLinkHrefs(await getHolder().tryParseMarkdownToBlocks(markdown))
-    ) as ParsedBlocks;
+    // The parser keeps a fence's name as the block's language (```ts → "ts"), and the editors
+    // throw on a language that is not one of their ids (MIP-1601): resolve it after the
+    // math / mermaid fences have been told apart, falling back to plain text.
+    const blocks = normalizeCodeBlockLanguages(
+        restoreMathBlocks(
+            unescapeLinkHrefs(await getHolder().tryParseMarkdownToBlocks(markdown))
+        ) as ParsedBlocks
+    );
     // A note body must have at least one block (the ProseMirror doc
     // invariant every editor in this codebase maintains).
     return blocks.length > 0 ? (blocks as PartialBlock[]) : [{ type: "paragraph" }];

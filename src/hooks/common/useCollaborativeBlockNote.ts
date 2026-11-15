@@ -7,6 +7,12 @@ import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 
 import { genosTableOptions } from "../../components/editors/genosBlockSpecs";
+import {
+    blockPlainText,
+    logSanitizeReport,
+    sanitizeBlocksForEditor,
+    type SanitizeReport,
+} from "../../components/editors/safeBlocks";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../../components/editors/sub/tabIndent";
 import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
 import { getMessages } from "../../i18n";
@@ -168,10 +174,28 @@ export function useCollaborativeBlockNote({
             seededRef.current = true;
             setTimeout(() => {
                 if (!editor) return;
+                // A block the schema cannot build (an unknown type, a code language the editor has
+                // no id for, ...) used to reject the whole body here and the catch swallowed it:
+                // the note opened with its title and no body (MIP-1601). Such blocks degrade to
+                // plain text instead, and a failure that is left is logged, never silent.
+                const report: SanitizeReport = { degraded: 0, skipped: 0 };
                 try {
-                    editor.replaceBlocks(editor.document, body as PartialBlock[]);
-                } catch {
-                    // Seeding failed; document starts empty
+                    const safe = sanitizeBlocksForEditor(body, editor, report);
+                    logSanitizeReport("seeding the note body", report);
+                    editor.replaceBlocks(editor.document, safe);
+                } catch (error) {
+                    console.error("[editor] could not seed the note body:", error);
+                    try {
+                        const text = body.map((b) => blockPlainText(b)).filter(Boolean);
+                        editor.replaceBlocks(
+                            editor.document,
+                            (text.length > 0
+                                ? text.map((content) => ({ type: "paragraph", content }))
+                                : [{ type: "paragraph" }]) as PartialBlock[]
+                        );
+                    } catch {
+                        // The editor is gone (unmounted); nothing is left to seed.
+                    }
                 }
             }, 0);
         },
