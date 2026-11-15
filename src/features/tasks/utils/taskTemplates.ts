@@ -1,5 +1,7 @@
 import { PartialBlock } from "@blocknote/core";
 
+import sharedTemplates from "./builtinTaskTemplates.json";
+
 // ---------------------------------------------------------------------------
 // Body templates
 // ---------------------------------------------------------------------------
@@ -71,124 +73,75 @@ export interface TaskTemplate {
     blocks: PartialBlock[];
 }
 
-export const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
+// The sections, headings and prompts of the four templates are NOT written here: they live in
+// `builtinTaskTemplates.json`, the one source (MIP-1606). It is a vendored copy of genos-api's
+// `origin/search_engine/agent/tools/builtin_task_templates.json`, which the agent reads to make a
+// task from a template by name; a test in each repo pins the same hash, so a copy that drifts
+// fails CI. Headings and prompts are English only (they always were); the picker's label and
+// description are translated through `labelKey` / `descriptionKey`, which stay here for typing.
+interface SharedItem {
+    kind: "placeholder" | "bullet";
+    text: string;
+}
+interface SharedTemplate {
+    id: string;
+    label: string;
+    sections: { heading: string; items: SharedItem[] }[];
+}
+
+const TEMPLATE_META: Record<
+    TaskTemplateId,
+    Pick<TaskTemplate, "description" | "labelKey" | "descriptionKey">
+> = {
     default: {
-        id: "default",
-        label: "Standard task",
-        labelKey: "defaultLabel",
         description: "Goal, context, and acceptance criteria.",
+        labelKey: "defaultLabel",
         descriptionKey: "defaultDescription",
-        blocks: [
-            ...section("🧾 Summary", placeholder("One or two lines on what this task delivers.")),
-            ...section(
-                "🪜 Motivation",
-                placeholder("Why does this matter? What problem are we solving?")
-            ),
-            ...section(
-                "✅ Acceptance criteria",
-                bullet("First condition that must be true when this is done."),
-                bullet("Second condition…"),
-                bullet("Third condition…")
-            ),
-            ...section("🎯 Notes & links", placeholder("Anything else worth pinning here.")),
-        ],
     },
     bug: {
-        id: "bug",
-        label: "Bug report",
-        labelKey: "bugLabel",
         description: "Repro steps, expected vs. actual behavior.",
+        labelKey: "bugLabel",
         descriptionKey: "bugDescription",
-        blocks: [
-            ...section("🐞 Summary", placeholder("One-line description of the bug.")),
-            ...section(
-                "🔁 Steps to reproduce",
-                bullet("Go to …"),
-                bullet("Click on …"),
-                bullet("Observe that …")
-            ),
-            ...section("🎯 Expected behavior", placeholder("What should happen?")),
-            ...section(
-                "💥 Actual behavior",
-                placeholder("What actually happens? Include error messages, screenshots.")
-            ),
-            ...section(
-                "🧪 Environment",
-                placeholder("Browser, OS, app version, user, team, anything that narrows it down.")
-            ),
-        ],
     },
     spike: {
-        id: "spike",
-        label: "Research / spike",
-        labelKey: "spikeLabel",
         description: "Question-led investigation with a timebox.",
+        labelKey: "spikeLabel",
         descriptionKey: "spikeDescription",
-        blocks: [
-            ...section("❓ Question", placeholder("What are we trying to learn or decide?")),
-            ...section("💡 Hypothesis", placeholder("What do we currently believe is true?")),
-            ...section(
-                "🧭 Approach",
-                bullet("Where to look first…"),
-                bullet("Experiments / prototypes to try…"),
-                bullet("People to talk to…")
-            ),
-            ...section("⏱ Timebox", placeholder("How long are we willing to spend on this?")),
-            ...section(
-                "📌 Findings",
-                placeholder("Fill in as you learn — link out to docs, PRs, threads.")
-            ),
-            ...section(
-                "🚧 Out of scope",
-                placeholder("Explicitly things we are NOT answering here.")
-            ),
-        ],
     },
     milestone: {
-        id: "milestone",
-        label: "Milestone",
-        labelKey: "milestoneLabel",
         description: "Goal, scope, success criteria, risks.",
+        labelKey: "milestoneLabel",
         descriptionKey: "milestoneDescription",
-        blocks: [
-            ...section(
-                "🎯 Goal",
-                placeholder("What outcome does this milestone deliver, and for whom?")
-            ),
-            ...section(
-                "✅ Success criteria",
-                bullet("Measurable signal #1 that we hit the goal."),
-                bullet("Measurable signal #2."),
-                bullet("Measurable signal #3.")
-            ),
-            ...section(
-                "📦 In scope",
-                bullet("Workstream / feature 1"),
-                bullet("Workstream / feature 2")
-            ),
-            ...section("🚫 Out of scope", bullet("Thing we are explicitly NOT doing.")),
-            ...section(
-                "⚠️ Risks & dependencies",
-                placeholder("What could derail this? Who/what are we waiting on?")
-            ),
-            // Dependencies say what blocks what, not where to begin (MIP-782).
-            ...section(
-                "🧭 Order of work",
-                placeholder("Which task do we take first, and what comes next?"),
-                bullet("Step 1: the first task."),
-                bullet("Step 2: what it unblocks. Note tasks that can run in parallel."),
-                bullet("Gates, when each parent task closes, and the critical path.")
-            ),
-        ],
     },
 };
 
-export const TASK_TEMPLATE_OPTIONS: TaskTemplate[] = [
-    TASK_TEMPLATES.default,
-    TASK_TEMPLATES.bug,
-    TASK_TEMPLATES.spike,
-    TASK_TEMPLATES.milestone,
-];
+const buildTemplate = (shared: SharedTemplate): TaskTemplate => {
+    const id = shared.id as TaskTemplateId;
+    const meta = TEMPLATE_META[id];
+    if (!meta) throw new Error(`builtinTaskTemplates.json: unknown template id "${shared.id}"`);
+    return {
+        id,
+        label: shared.label,
+        ...meta,
+        blocks: shared.sections.flatMap((s) =>
+            section(
+                s.heading,
+                ...s.items.map((item) =>
+                    item.kind === "bullet" ? bullet(item.text) : placeholder(item.text)
+                )
+            )
+        ),
+    };
+};
+
+// In the file's order, which is the picker's order.
+export const TASK_TEMPLATE_OPTIONS: TaskTemplate[] = (
+    sharedTemplates.templates as SharedTemplate[]
+).map(buildTemplate);
+
+export const TASK_TEMPLATES = Object.fromEntries(
+    TASK_TEMPLATE_OPTIONS.map((t) => [t.id, t])
+) as Record<TaskTemplateId, TaskTemplate>;
 
 // ---------------------------------------------------------------------------
 // Custom (project-scoped) templates

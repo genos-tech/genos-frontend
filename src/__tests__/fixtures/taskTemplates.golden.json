@@ -1,0 +1,1234 @@
+{
+    "options": [
+        {
+            "id": "default",
+            "label": "Standard task",
+            "description": "Goal, context, and acceptance criteria.",
+            "labelKey": "defaultLabel",
+            "descriptionKey": "defaultDescription",
+            "blocks": [
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🧾 Summary",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "One or two lines on what this task delivers.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🪜 Motivation",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Why does this matter? What problem are we solving?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "✅ Acceptance criteria",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "First condition that must be true when this is done.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Second condition…",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Third condition…",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🎯 Notes & links",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Anything else worth pinning here.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": "bug",
+            "label": "Bug report",
+            "description": "Repro steps, expected vs. actual behavior.",
+            "labelKey": "bugLabel",
+            "descriptionKey": "bugDescription",
+            "blocks": [
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🐞 Summary",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "One-line description of the bug.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🔁 Steps to reproduce",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Go to …",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Click on …",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Observe that …",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🎯 Expected behavior",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "What should happen?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "💥 Actual behavior",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "What actually happens? Include error messages, screenshots.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🧪 Environment",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Browser, OS, app version, user, team, anything that narrows it down.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": "spike",
+            "label": "Research / spike",
+            "description": "Question-led investigation with a timebox.",
+            "labelKey": "spikeLabel",
+            "descriptionKey": "spikeDescription",
+            "blocks": [
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "❓ Question",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "What are we trying to learn or decide?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "💡 Hypothesis",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "What do we currently believe is true?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🧭 Approach",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Where to look first…",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Experiments / prototypes to try…",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "People to talk to…",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "⏱ Timebox",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "How long are we willing to spend on this?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "📌 Findings",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Fill in as you learn — link out to docs, PRs, threads.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🚧 Out of scope",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Explicitly things we are NOT answering here.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ]
+        },
+        {
+            "id": "milestone",
+            "label": "Milestone",
+            "description": "Goal, scope, success criteria, risks.",
+            "labelKey": "milestoneLabel",
+            "descriptionKey": "milestoneDescription",
+            "blocks": [
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🎯 Goal",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "What outcome does this milestone deliver, and for whom?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "✅ Success criteria",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Measurable signal #1 that we hit the goal.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Measurable signal #2.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Measurable signal #3.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "📦 In scope",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Workstream / feature 1",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Workstream / feature 2",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🚫 Out of scope",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Thing we are explicitly NOT doing.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "⚠️ Risks & dependencies",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "What could derail this? Who/what are we waiting on?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                },
+                {
+                    "type": "heading",
+                    "props": {
+                        "level": 3,
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "🧭 Order of work",
+                            "type": "text",
+                            "styles": {}
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Which task do we take first, and what comes next?",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Step 1: the first task.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Step 2: what it unblocks. Note tasks that can run in parallel.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "bulletListItem",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [
+                        {
+                            "text": "Gates, when each parent task closes, and the critical path.",
+                            "type": "text",
+                            "styles": {
+                                "italic": true,
+                                "textColor": "gray"
+                            }
+                        }
+                    ],
+                    "children": []
+                },
+                {
+                    "type": "paragraph",
+                    "props": {
+                        "textColor": "default",
+                        "textAlignment": "left",
+                        "backgroundColor": "default"
+                    },
+                    "content": [],
+                    "children": []
+                }
+            ]
+        }
+    ]
+}
