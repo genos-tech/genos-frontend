@@ -4,6 +4,9 @@ import { Stack, Typography } from "@mui/joy";
 import { BaseAvatar } from "../../components/ui/avatars/BaseAvatar";
 import { Clickable } from "../../components/ui/Clickable";
 import { Toast } from "../../components/ui/feedback/Toast";
+import { ViaAppIcon } from "../../components/ui/misc/ViaAppIcon";
+import { parseViaApp } from "../../features/tasks/utils/viaSource";
+import { AVATAR } from "../../theme/tokens/scales";
 import { NotificationIntent } from "./types";
 
 interface NotificationToastHostProps {
@@ -15,6 +18,8 @@ interface NotificationToastHostProps {
     onOpenIntent?: (intent: NotificationIntent) => void;
 }
 
+// The avatar slot is `BaseAvatar` size `lg`; the app's mark takes the same circle.
+const MARK_SIZE = AVATAR.lg;
 const TOAST_AUTO_HIDE_MS = 5000;
 const QUEUE_LIMIT = 5;
 
@@ -58,7 +63,14 @@ export const NotificationToastHost = ({
                     spacing={1.25}
                     sx={{ width: "100%" }}
                 >
-                    {active.icon ? (
+                    {parseViaApp(active.viaApp) ? (
+                        // A change made through the official Claude / ChatGPT app
+                        // (MIP-1608): that app's round mark in the avatar's place, labelled
+                        // "via Claude" / "via ChatGPT" (the family only, never a name).
+                        // Gated on the two exact strings here too, since the mark renders
+                        // nothing for anything else and would leave the slot empty.
+                        <ViaAppIcon app={active.viaApp} size={MARK_SIZE} />
+                    ) : active.icon ? (
                         // `intent.icon` is already a fully-qualified URL
                         // produced by `buildAvatarSrc` in the router — do
                         // not prepend the media root again, or the URL
