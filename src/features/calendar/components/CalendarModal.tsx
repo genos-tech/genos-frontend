@@ -865,6 +865,12 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                         open={eventModalOpen}
                         onClose={() => setEventModalOpen(false)}
                         onError={setError}
+                        closeForAsk={() => {
+                            // "Ask Genos about this event": the event dialog and the calendar close, so the
+                            // ask (which opens above them) gets the focus (MIP-1059).
+                            setEventModalOpen(false);
+                            onClose();
+                        }}
                         onDeleted={() => {
                             refreshCurrent();
                         }}

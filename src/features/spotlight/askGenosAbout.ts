@@ -38,6 +38,42 @@ export const askGenosRefForTask = (task: {
     return { kind: "task", taskId: id, label, ...(task.isMilestone ? { isMilestone: true } : {}) };
 };
 
+export type AskGenosCalendarEventRef = Extract<AgentMentionRef, { kind: "calendar_event" }>;
+
+// The longest label an event puts in the draft: a title can be a sentence, and the draft is a line
+// the person is about to type a question after.
+const EVENT_LABEL_MAX = 60;
+
+/** The mention for a Google Calendar event (MIP-1059, AGENT_PARITY_TOOLS), or null when it cannot be
+ *  named: the event needs its account, its calendar (the primary one when none is known) and its id.
+ *  The label is the title on one line, `fallbackLabel` for an event with none. It is advisory on the
+ *  wire: the server never puts it into a prompt, and reads nothing from Google at ask time. */
+export const askGenosRefForCalendarEvent = (event: {
+    accountId?: string | null;
+    calendarId?: string | null;
+    eventId?: string | null;
+    summary?: string | null;
+    fallbackLabel: string;
+}): AskGenosCalendarEventRef | null => {
+    const accountId = event.accountId?.trim();
+    const eventId = event.eventId?.trim();
+    if (!accountId || !eventId) return null;
+    const title = (event.summary ?? "").replace(/\s+/g, " ").trim();
+    // By code point, so an emoji or a CJK character is never cut in half.
+    const chars = Array.from(title);
+    const label =
+        chars.length > EVENT_LABEL_MAX
+            ? `${chars.slice(0, EVENT_LABEL_MAX - 1).join("")}…`
+            : title;
+    return {
+        kind: "calendar_event",
+        accountId,
+        calendarId: event.calendarId?.trim() || "primary",
+        eventId,
+        label: label || event.fallbackLabel,
+    };
+};
+
 /** The text the draft gets for a ref. */
 export const askGenosToken = (ref: AgentMentionRef): string => `#${ref.label} `;
 

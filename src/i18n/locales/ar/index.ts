@@ -5419,6 +5419,8 @@ export const ar: DeepPartial<Messages> = {
         event: {
             editTitle: "تحرير الحدث",
             newTitle: "حدث جديد",
+            askGenos: "اسأل Genos عن هذا الحدث",
+            askGenosUntitled: "حدث بلا عنوان",
             titleLabel: "عنوان",
             allDay: "طوال اليوم",
             startLabel: "يبدأ",

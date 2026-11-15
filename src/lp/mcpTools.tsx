@@ -162,9 +162,20 @@ export const MCP_TOOLS: McpTool[] = [
     {
         name: "list_calendar_events",
         type: "read",
-        meaning: "Your Google Calendar events in a date range.",
+        meaning:
+            "Your Google Calendar events in a date range, from one connected Google account: the default one, or the one the account argument names.",
     },
-    { name: "list_calendars", type: "read", meaning: "Your Google Calendars." },
+    {
+        name: "list_calendars",
+        type: "read",
+        meaning:
+            "Your Google Calendars, with the connected Google account each one belongs to. An account that cannot be read does not hide the others.",
+    },
+    {
+        name: "get_calendar_event",
+        type: "read",
+        meaning: "One Google Calendar event by its id, on any connected Google account.",
+    },
     {
         name: "get_my_blockers",
         type: "read",
@@ -359,13 +370,23 @@ export const MCP_TOOLS: McpTool[] = [
         meaning:
             "Permanently delete a to-do with its sub-items and reminders. Needs a key that also has the destructive opt-in.",
     },
-    { name: "create_calendar_event", type: "write", meaning: "An event on your Google Calendar." },
-    { name: "update_calendar_event", type: "write", meaning: "Change a calendar event." },
+    {
+        name: "create_calendar_event",
+        type: "write",
+        meaning:
+            "An event on your Google Calendar. The account argument picks which connected Google account it goes on; the default one when it is left out.",
+    },
+    {
+        name: "update_calendar_event",
+        type: "write",
+        meaning:
+            "Change a calendar event, on any connected Google account (the account argument; the default one when it is left out).",
+    },
     {
         name: "delete_calendar_event",
         type: "write",
         meaning:
-            "Delete a calendar event. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
+            "Delete a calendar event. Nothing on this side can bring it back. An event that is not on the account you name reads as already gone, so check the account first. Needs a key that also has the destructive opt-in.",
     },
     {
         name: "manage_milestone",

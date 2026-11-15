@@ -1000,6 +1000,8 @@ export const zh: DeepPartial<Messages> = {
         event: {
             editTitle: "编辑日程",
             newTitle: "新建日程",
+            askGenos: "就此事件询问 Genos",
+            askGenosUntitled: "无标题事件",
             titleLabel: "标题",
             allDay: "全天",
             startLabel: "开始",

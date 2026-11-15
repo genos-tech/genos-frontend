@@ -5752,6 +5752,8 @@ export const es: DeepPartial<Messages> = {
         event: {
             editTitle: "Editar evento",
             newTitle: "Nuevo evento",
+            askGenos: "Preguntar a Genos sobre este evento",
+            askGenosUntitled: "Evento sin título",
             titleLabel: "Título",
             allDay: "Todo el día",
             startLabel: "Inicio",
