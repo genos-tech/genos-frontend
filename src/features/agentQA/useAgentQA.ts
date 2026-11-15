@@ -41,7 +41,7 @@ import { cleanRejectReason } from "../../services/agentRejectReason";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import { emitProjectToolResult } from "./approvedProjectWrites";
-import { emitTaskAttachmentToolResult } from "./approvedTaskWrites";
+import { emitMilestoneChangeToolResult, emitTaskAttachmentToolResult } from "./approvedTaskWrites";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import { mergeSources } from "./mergeSources";
 import { emitNoteChanged } from "./noteWriteTools";
@@ -298,6 +298,7 @@ export const useAgentQA = ({
                     duration_ms,
                     project,
                     task_attachment,
+                    milestone_change,
                     undo,
                 }: {
                     step: number;
@@ -310,6 +311,7 @@ export const useAgentQA = ({
                     duration_ms?: number;
                     project?: import("../../services/agentApi").ToolResultProjectRef;
                     task_attachment?: import("../../services/agentApi").ToolResultTaskAttachmentRef;
+                    milestone_change?: import("../../services/agentApi").ToolResultMilestoneChangeRef;
                     undo?: ToolResultUndoRef;
                 }) => {
                     setAsk((prev) => {
@@ -381,6 +383,9 @@ export const useAgentQA = ({
                     // A deleted task file leaves the browser's cached copy of the task listing
                     // it (MIP-1563).
                     emitTaskAttachmentToolResult(tool_name, task_attachment);
+                    // A converted or moved milestone: the browser's copy of the row is the other
+                    // kind of thing or in another project (MIP-1564).
+                    emitMilestoneChangeToolResult(tool_name, milestone_change);
                 },
                 onToolError: ({
                     step,

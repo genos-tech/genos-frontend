@@ -90,6 +90,21 @@ export interface ToolResultTaskAttachmentRef {
     deleted: true;
 }
 
+/** Ref the backend attaches to an approved `manage_milestone` result that converted a root task
+ * to a milestone (or a milestone to a task) or moved a milestone to another project (MIP-1564,
+ * AGENT_PARITY_TOOLS). The server has already done it; the client drops its own copy of the
+ * converted row and re-reads the projects it touched. `milestone_id` is the live milestone, or the
+ * one a conversion retired; `from_project_id` is set on a move. Absent on every other result (and
+ * on older backends). */
+export interface ToolResultMilestoneChangeRef {
+    kind: "convert" | "move";
+    direction?: "task_to_milestone" | "milestone_to_task";
+    task_id?: number;
+    milestone_id?: number;
+    project_id?: number;
+    from_project_id?: number;
+}
+
 /** What an approved write's result carries when what undo needs was really
  * stored (genos-api `agent/undo.py`, `event_info`). It, and not `undoable` on
  * the approval card, decides whether Undo is offered. `available_until` is an
@@ -120,6 +135,7 @@ export interface ToolCallResultPayload {
     duration_ms?: number;
     project?: ToolResultProjectRef;
     task_attachment?: ToolResultTaskAttachmentRef;
+    milestone_change?: ToolResultMilestoneChangeRef;
     undo?: ToolResultUndoRef;
 }
 
@@ -1417,6 +1433,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 duration_ms: evt.duration_ms,
                 project: evt.project,
                 task_attachment: evt.task_attachment,
+                milestone_change: evt.milestone_change,
                 undo: asUndoRef(evt.undo),
             });
             return false;
