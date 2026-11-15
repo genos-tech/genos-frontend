@@ -13,6 +13,7 @@ import {
     sanitizeBlocksForEditor,
     type SanitizeReport,
 } from "../../components/editors/safeBlocks";
+import { safeInitialContent } from "../../components/editors/safeInitialContent";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../../components/editors/sub/tabIndent";
 import { createYjsPersistence, destroyYjsPersistence } from "../../db/utils/yjsPersistence";
 import { getMessages } from "../../i18n";
@@ -442,7 +443,9 @@ export function useCollaborativeBlockNote({
                 resolveFileUrl: resolveInsecureFileUrl,
                 dictionary,
                 uploadFile,
-                initialContent: initialBody && initialBody.length > 0 ? initialBody : undefined,
+                // No collab server: the body goes in as `initialContent`, where one block the
+                // schema cannot build would otherwise throw out of the editor's constructor.
+                initialContent: safeInitialContent(initialBody, "opening the note body"),
             };
             if (extraExtensions.length > 0) {
                 opts.extensions = [...extraExtensions];

@@ -37,6 +37,7 @@ import { insertEmojiValue } from "./CustomEmoji";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
+import { replaceBlocksSafely } from "./safeBlocks";
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -174,7 +175,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
 
     useEffect(() => {
         const newInitialContent: any[] = withoutTrailingBlank(message.content);
-        editor.replaceBlocks(editor.document, newInitialContent);
+        replaceBlocksSafely(editor, newInitialContent, "editing the message");
     }, [message]);
 
     return (
