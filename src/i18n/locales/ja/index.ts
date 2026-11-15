@@ -3245,6 +3245,9 @@ export const ja: DeepPartial<Messages> = {
             serverReturned: "サーバーが {status} を返しました",
             streamInterrupted: "ストリームが中断されました：{message}",
             malformedNdjsonLine: "不正な NDJSON 行：{line}",
+            taskNotFound:
+                "このタスクまたはマイルストーンはもう開けないため、Genosは回答できませんでした。",
+            taskSessionLoadFailed: "このタスクについての以前の会話を読み込めませんでした。",
         },
         pwaInstall: {
             title: "Genosをインストール",
@@ -3431,6 +3434,7 @@ export const ja: DeepPartial<Messages> = {
                 surfaceSpotlight: "スポットライト",
                 surfaceThread: "このスレッドについて質問する",
                 surfaceNote: "このノートについて質問する",
+                surfaceTask: "このタスクについて質問する",
             },
             reminder: {
                 messageTitle: "{name}さんのメッセージのリマインダー",

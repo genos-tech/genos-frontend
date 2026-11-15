@@ -3279,6 +3279,10 @@ export const fr: DeepPartial<Messages> = {
             serverReturned: "Le serveur a renvoyé {status}",
             streamInterrupted: "Flux interrompu : {message}",
             malformedNdjsonLine: "Ligne NDJSON mal formée : {line}",
+            taskNotFound:
+                "Cette tâche ou ce jalon ne peut plus être ouvert, Genos n'a donc pas pu répondre.",
+            taskSessionLoadFailed:
+                "Impossible de charger votre conversation précédente à propos de cette tâche.",
         },
         pwaInstall: {
             title: "Installer Genos",
@@ -3471,6 +3475,7 @@ export const fr: DeepPartial<Messages> = {
                 surfaceSpotlight: "Spotlight",
                 surfaceThread: "Renseignez-vous sur ce fil",
                 surfaceNote: "Renseignez-vous sur cette note",
+                surfaceTask: "Renseignez-vous sur cette tâche",
             },
             reminder: {
                 messageTitle: "Rappel à propos du message de {name}",

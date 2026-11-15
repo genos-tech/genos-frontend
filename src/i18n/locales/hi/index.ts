@@ -4511,6 +4511,9 @@ export const hi: DeepPartial<Messages> = {
             serverReturned: "सर्वर ने {status} लौटाया",
             streamInterrupted: "स्ट्रीम बाधित: {message}",
             malformedNdjsonLine: "गलत NDJSON लाइन: {line}",
+            taskNotFound:
+                "यह टास्क या माइलस्टोन अब खोला नहीं जा सकता, इसलिए Genos जवाब नहीं दे सका।",
+            taskSessionLoadFailed: "इस टास्क के बारे में आपकी पिछली बातचीत लोड नहीं हो सकी।",
         },
         pwaInstall: {
             title: "Genos इंस्टॉल करें",
@@ -4698,6 +4701,7 @@ export const hi: DeepPartial<Messages> = {
                 surfaceSpotlight: "सुर्खियों",
                 surfaceThread: "इस धागे के बारे में पूछें",
                 surfaceNote: "इस नोट के बारे में पूछें",
+                surfaceTask: "इस टास्क के बारे में पूछें",
             },
             reminder: {
                 messageTitle: "{name} के मेसेज की याद",

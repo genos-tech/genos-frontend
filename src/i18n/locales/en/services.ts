@@ -8,6 +8,9 @@ export const services = {
         serverReturned: "Server returned {status}",
         streamInterrupted: "Stream interrupted: {message}",
         malformedNdjsonLine: "Malformed NDJSON line: {line}",
+        taskNotFound:
+            "This task or milestone can't be opened any more, so Genos couldn't answer about it.",
+        taskSessionLoadFailed: "Couldn't load your earlier conversation about this task.",
     },
     // Install-to-home-screen banner (InstallBanner.tsx). `iosBody` is the
     // no-prompt path: iOS has no install API, so the affordance is
@@ -235,6 +238,7 @@ export const services = {
             surfaceSpotlight: "Spotlight",
             surfaceThread: "Ask about this thread",
             surfaceNote: "Ask about this note",
+            surfaceTask: "Ask about this task",
         },
         // A reminder the user set, come due (`reminderNotice.ts`). Composed
         // here rather than taken from the inbox row's stored English
