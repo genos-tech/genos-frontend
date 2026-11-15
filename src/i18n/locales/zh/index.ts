@@ -3125,6 +3125,8 @@ export const zh: DeepPartial<Messages> = {
             serverReturned: "服务器返回 {status}",
             streamInterrupted: "数据流中断：{message}",
             malformedNdjsonLine: "NDJSON 数据格式错误：{line}",
+            taskNotFound: "此任务或里程碑已无法打开，因此 Genos 无法作答。",
+            taskSessionLoadFailed: "无法加载你之前关于此任务的对话。",
         },
         pwaInstall: {
             title: "安装 Genos",
@@ -3306,6 +3308,7 @@ export const zh: DeepPartial<Messages> = {
                 surfaceSpotlight: "Spotlight",
                 surfaceThread: "询问这个话题",
                 surfaceNote: "询问此笔记",
+                surfaceTask: "询问此任务",
             },
             reminder: {
                 messageTitle: "{name} 的消息提醒",

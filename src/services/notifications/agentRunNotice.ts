@@ -29,7 +29,7 @@ import type { NotificationManager } from "./notificationManager";
 import type { NotificationDispatch } from "./types";
 
 /** Which Ask surface produced the run. Only used to label the notice. */
-export type AgentRunSurface = "spotlight" | "thread" | "note";
+export type AgentRunSurface = "spotlight" | "thread" | "note" | "task";
 
 export interface AgentRunNotice {
     surface: AgentRunSurface;
@@ -102,6 +102,8 @@ const surfaceLabel = (surface: AgentRunSurface): string => {
             return t.surfaceThread;
         case "note":
             return t.surfaceNote;
+        case "task":
+            return t.surfaceTask;
         default:
             return t.surfaceSpotlight;
     }
