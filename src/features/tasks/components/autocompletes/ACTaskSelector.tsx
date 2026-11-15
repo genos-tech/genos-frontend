@@ -15,6 +15,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -51,6 +52,8 @@ const statusMeta = (label: string | null | undefined): TaskStatusProps => {
 const listboxSlotSx = (isDark: boolean) =>
     ({
         maxHeight: 320,
+        // Never wider than the screen, whatever the field above it measures.
+        maxWidth: "calc(100vw - 16px)",
         borderRadius: "12px",
         boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.5)" : "0 8px 32px rgba(0,0,0,0.12)",
         border: "1px solid",
@@ -61,6 +64,19 @@ const listboxSlotSx = (isDark: boolean) =>
             my: 0.25,
         },
     }) as const;
+
+// Below `md` (the app's `useIsMobile` line) the two fields STACK, each as wide as the dialog.
+// Side by side, the Project field's 200px floor left the Task field 48px at 390px and 26px at
+// 360px: its dropdown is as wide as its input, so the options had nowhere to draw (MIP-1580).
+// The project box's `flex` basis is a WIDTH in a row and a HEIGHT in a column, hence reset
+// below `md`.
+const PICKER_DIRECTION = { xs: "column", md: "row" } as const;
+const PROJECT_FIELD_SX = {
+    minWidth: { xs: 0, md: 200 },
+    maxWidth: { xs: "none", md: 260 },
+    flex: { xs: "none", md: "0 1 220px" },
+} as const;
+const TASK_FIELD_SX = { flex: { xs: "none", md: 1 }, minWidth: 0 } as const;
 
 type Props = {
     myself: UserProps;
@@ -117,6 +133,9 @@ export const ACTaskSelector = ({
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    // A phone's option is ~270px wide: the title wraps under the id and status instead of
+    // being cut to a few letters beside them.
+    const isMobile = useIsMobile();
     const { t } = useTranslation();
     const pickerT = t.tasks.dependencies.picker;
 
@@ -210,9 +229,9 @@ export const ACTaskSelector = ({
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
             }}
         >
-            <Stack alignItems="stretch" direction="row" spacing={1}>
+            <Stack alignItems="stretch" direction={PICKER_DIRECTION} spacing={1} useFlexGap>
                 {/* Project picker */}
-                <Box sx={{ minWidth: 200, maxWidth: 260, flex: "0 1 220px" }}>
+                <Box sx={PROJECT_FIELD_SX}>
                     <FieldCaption
                         icon={<FolderRoundedIcon sx={CAPTION_ICON_SX} />}
                         isDark={isDark}
@@ -269,7 +288,7 @@ export const ACTaskSelector = ({
                 </Box>
 
                 {/* Task picker */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={TASK_FIELD_SX}>
                     <FieldCaption
                         icon={<AssignmentRoundedIcon sx={CAPTION_ICON_SX} />}
                         isDark={isDark}
@@ -310,6 +329,7 @@ export const ACTaskSelector = ({
                                         status={statusMeta(opt.status)}
                                         task={opt}
                                         title={opt.title}
+                                        wrapTitle={isMobile}
                                     />
                                 </ListItemContent>
                             </AutocompleteOption>
