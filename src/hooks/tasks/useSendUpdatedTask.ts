@@ -120,6 +120,32 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     .map((a) => a.attachment_id)
             );
 
+            // A project move makes the server drop the collaborators who cannot
+            // open the task in the destination (MIP-1587). The working copy
+            // and the preview task still list them, and the next save would
+            // send them again and be refused, so take them off here. Only the
+            // ones this save SENT and the server no longer holds: a
+            // collaborator added while it was in flight stays. Not a refusal,
+            // so nothing is marked dirty (and nothing is sent). Skipped when
+            // the person has opened another task meanwhile: the cache row was
+            // already written right by the service.
+            const dropPrunedCollaborators = (kept: UserProps[]) => {
+                if (Number(shownTaskIdRef.current) !== Number(baseTaskContent.id)) return;
+                const id = (c: { userId: string }) => String(c.userId).toLowerCase();
+                const keptIds = new Set(kept.map(id));
+                const sentIds = new Set((baseTaskContent.collaborators ?? []).map(id));
+                const stay = (c: { userId: string }) => keptIds.has(id(c)) || !sentIds.has(id(c));
+                setTmpCurrentTaskContent((prev) => ({
+                    ...prev,
+                    collaborators: (prev.collaborators ?? []).filter(stay),
+                }));
+                setCurrentPreviewTask((prev) =>
+                    prev
+                        ? { ...prev, collaborators: (prev.collaborators ?? []).filter(stay) }
+                        : prev
+                );
+            };
+
             let uploadAttachments: Awaited<ReturnType<typeof sendUpdatedSpecificTask>>;
             try {
                 uploadAttachments = await sendUpdatedSpecificTask(
@@ -127,7 +153,9 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     myself,
                     baseTaskContent,
                     syncCard,
-                    accessToken
+                    accessToken,
+                    undefined,
+                    { onCollaboratorsPruned: dropPrunedCollaborators }
                 );
             } catch (error) {
                 if (!(error instanceof TaskSaveRefusedError)) throw error;
