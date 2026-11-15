@@ -12,6 +12,8 @@ import { collaboratorRefusalText, refusedCollaboratorId } from "../utils/collabo
 import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
+import { collaboratorsAfterMove } from "./collaboratorsAfterMove";
+import { forgetCachedSubtree } from "./forgetCachedSubtree";
 import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
 import { forgetInFlightTask } from "./taskLoadInFlight";
 import { TaskSaveRefusedError } from "./taskSaveRefusedError";
@@ -86,6 +88,12 @@ export const sendUpdatedSpecificTask = async (
         // true: a save from the open task sends whatever the working copy
         // holds (see `start_date` below).
         sendStartDate?: boolean;
+        // Called when this save MOVED the task to another project and the
+        // server dropped collaborators who cannot open it there (MIP-1587),
+        // with the ones that remain. The full-task cache row is already
+        // written without them; the caller's working copy is not, and the
+        // next save would send them again and be refused.
+        onCollaboratorsPruned?: (kept: UserProps[]) => void;
     }
 ) => {
     const errMsgs = getMessages().tasks.errors;
@@ -173,6 +181,31 @@ export const sendUpdatedSpecificTask = async (
             // only the fallback for an answer that carries no readable time.
             const savedAt = toServerTimestamp(res?.data?.task?.ts_updated_at);
 
+            // Set when this PUT MOVED the task between projects; the response
+            // is the only place the SOURCE project id survives.
+            const movedFromProjectId: number | null = res?.data?.movedFromProjectId ?? null;
+            // A move drops the collaborators who cannot open the task in the
+            // destination, so the working copy no longer matches the server.
+            // Settled BEFORE the cache write below so the row is stored right.
+            let keptCollaborators: UserProps[] | null = null;
+            if (
+                res &&
+                movedFromProjectId != null &&
+                (updatedTask.collaborators?.length ?? 0) > 0
+            ) {
+                keptCollaborators = await collaboratorsAfterMove({
+                    myself,
+                    accessToken,
+                    task: updatedTask,
+                    storedCollaboratorIds: res.data?.task?.collaborators,
+                });
+            }
+            const prunedCollaborators =
+                keptCollaborators !== null &&
+                keptCollaborators.length < (updatedTask.collaborators?.length ?? 0)
+                    ? keptCollaborators
+                    : null;
+
             if (res) {
                 // Mirror the freshly-PUT task into the full-task IDB
                 // cache so the next `loadSpecificTask` reflects the
@@ -200,11 +233,13 @@ export const sendUpdatedSpecificTask = async (
                     // `updatedTask.updatedAt` is from when the task was
                     // opened. Both caches below carry the same one.
                     ...(savedAt ? { updatedAt: savedAt } : {}),
+                    ...(prunedCollaborators ? { collaborators: prunedCollaborators } : {}),
                 };
                 await cacheFullTask(cacheableTask);
                 // A `getTask` still running from before this save holds the
                 // pre-save task: nobody arriving from now on may join it.
                 if (cacheableTask.id != null) forgetInFlightTask(cacheableTask.id);
+                if (prunedCollaborators) options?.onCollaboratorsPruned?.(prunedCollaborators);
             }
 
             if (res) {
@@ -368,8 +403,11 @@ export const sendUpdatedSpecificTask = async (
                 // long a sub-tree. Re-pull both rather than trying to mirror
                 // a server-side cascade into IndexedDB from here. The
                 // response is the only place the SOURCE project id survives.
-                const movedFromProjectId: number | null = res.data?.movedFromProjectId ?? null;
                 if (movedFromProjectId != null) {
+                    // The sub-tasks' cached copies still list the collaborators
+                    // the move dropped (MIP-1587); forget them first, while the
+                    // source project's rows still say which tasks travelled.
+                    await forgetCachedSubtree(updatedTask.id, movedFromProjectId);
                     emitTasksBulkChanged(movedFromProjectId);
                     emitTasksBulkChanged(updatedTask.project.projectId);
                 }
