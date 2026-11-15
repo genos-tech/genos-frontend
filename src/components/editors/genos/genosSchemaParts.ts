@@ -5,7 +5,52 @@ import {
     defaultInlineContentSpecs,
 } from "@blocknote/core";
 
+import { resolveCodeLanguage } from "../codeBlockLanguage";
 import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "../genosBlockSpecs";
+
+/**
+ * The highlighted code block, made safe against a language it has no id for (MIP-1601).
+ * BlockNote's own render throws "Language ts is not supported." for any `props.language`
+ * that is not one of its `supportedLanguages` ids, and a throw inside a ProseMirror node
+ * view leaves the whole editor, and so the whole body, unrendered. The stored block is
+ * not rewritten; what the editor draws (and what the picker shows) is the language the
+ * name resolves to: an alias gets its id (`ts` → `typescript`), anything else plain text.
+ * This covers a body that is already stored in a Yjs doc or the REST body.
+ */
+const createSafeCodeBlockSpec = (): ReturnType<typeof createCodeBlockSpec> => {
+    const spec = createCodeBlockSpec(codeBlockOptions);
+    const implementation = spec.implementation as {
+        render: (...a: any[]) => unknown;
+        parse?: (...a: any[]) => Record<string, unknown> | undefined;
+    };
+    const render = implementation.render;
+    const parse = implementation.parse;
+    return {
+        ...spec,
+        implementation: {
+            ...spec.implementation,
+            // A pasted `<pre><code class="language-ts">` carries its name as the language too.
+            ...(parse && {
+                parse(this: unknown, element: unknown) {
+                    const props = parse.call(this, element);
+                    return props && "language" in props
+                        ? { ...props, language: resolveCodeLanguage(props.language) }
+                        : props;
+                },
+            }),
+            render(this: unknown, block: any, editor: unknown) {
+                const language = resolveCodeLanguage(block.props?.language);
+                return render.call(
+                    this,
+                    language === block.props?.language
+                        ? block
+                        : { ...block, props: { ...block.props, language } },
+                    editor
+                );
+            },
+        },
+    } as ReturnType<typeof createCodeBlockSpec>;
+};
 
 /**
  * The part of the Genos editor schema that has no React and no per-surface state: the
@@ -30,7 +75,7 @@ export const genosBaseBlockSpecs = () => {
         ...genosExtraBlockSpecs,
         // BlockNote 0.49 moved the code-block options out of `useCreateBlockNote` and into the
         // schema: the syntax-highlighted `codeBlock` replaces the default plain-text one.
-        codeBlock: createCodeBlockSpec(codeBlockOptions),
+        codeBlock: createSafeCodeBlockSpec(),
     };
 };
 
