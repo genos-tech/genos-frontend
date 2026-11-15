@@ -12,6 +12,7 @@
  *      member reads each sentence once, on the turn that finishes, and none while nothing was dropped.
  */
 
+import type { ReactElement } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -177,13 +178,14 @@ const spotlightContent = (turns: CompletedTurn[], ask: AskState, onApprove = vi.
             onReject={vi.fn()}
             onSelect={vi.fn()}
             onToggleFilterService={vi.fn()}
+            onUndo={vi.fn()}
         />
     </CssVarsProvider>
 );
 
 interface Surface {
     name: string;
-    element: (ask: AskState) => JSX.Element;
+    element: (ask: AskState) => ReactElement;
 }
 
 const SURFACES: Surface[] = [
