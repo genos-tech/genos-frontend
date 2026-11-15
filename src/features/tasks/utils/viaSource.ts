@@ -65,7 +65,7 @@ export const isOwnRow = (
  * "Claude " or "claude-evil", a different case, a number, an object) is `null`, so
  * what a viewer sees is always one of our two marks or today's generic chip.
  */
-const parseApp = (value: unknown): ViaApp | null =>
+export const parseViaApp = (value: unknown): ViaApp | null =>
     value === "claude" || value === "chatgpt" ? value : null;
 
 const cleanName = (value: unknown): string | null => {
@@ -85,7 +85,7 @@ export const viaSourceFromVia = (via: unknown, ownRow: boolean): ViaSource | nul
         return {
             kind: "mcp",
             name: ownRow ? cleanName(v.client_name) : null,
-            app: parseApp(v.app),
+            app: parseViaApp(v.app),
         };
     }
     if (v.kind === "api_key") {
