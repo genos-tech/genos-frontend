@@ -1364,6 +1364,10 @@ export const zh: DeepPartial<Messages> = {
             replyInThread: "在话题中回复",
             flagForLater: "标记以便稍后查看",
             addToTodo: "添加到待办事项",
+            askGenos: "就此消息询问 Genos",
+            askGenosSelection: "就所选文字询问 Genos",
+            askGenosShort: "询问 Genos",
+            askGenosFallback: "消息",
             removeFlag: "移除标记",
             failed: {
                 flag: "无法添加标记，请重试。",
@@ -1837,6 +1841,7 @@ export const zh: DeepPartial<Messages> = {
             gifLoading: "加载中…",
             gifAttribution: "由 GIPHY 提供支持",
             emojiTypingHint: ":+输入",
+            askGenosSelection: "就所选文字询问 Genos",
             emojiGroup: "表情",
             teamEmojiGroup: "团队表情",
             loadingComments: "正在加载评论…",
@@ -4531,6 +4536,12 @@ export const zh: DeepPartial<Messages> = {
             messages: "Genos 无法使用你指定的部分消息，因此只根据可用的消息作答。",
             selection: "Genos 无法使用你选中的文字，因此未参考该文字作答。",
             selectedFrom: "Genos 无法使用所选文字的出处，因此只参考了文字本身。",
+        },
+        selection: {
+            label: "所选文字",
+            remove: "移除所选文字",
+            truncated: "只会发送前 {count} 个字符。",
+            placeholder: "就所选文字向 Genos 提问…",
         },
         empty: {
             initial: "开始输入即可在聊天、任务和笔记中搜索。",

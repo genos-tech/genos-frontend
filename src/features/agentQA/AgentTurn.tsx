@@ -61,8 +61,9 @@
 //     events); each control's STATE lives in the undo store, so an undo re-renders
 //     that one control and never the turn. See `UndoControls.tsx`.
 //   - `droppedReferences`: what the server could not use of what the ask pointed at
-//     (MIP-1058), as a calm line under the answer. `selection` is only what Retry
-//     re-sends (the passage the turn was asked with).
+//     (MIP-1058), as a calm line under the answer. `selection` is the passage of selected
+//     text the turn was asked with: shown as a quote under the question, and what Retry
+//     re-sends.
 //   - `approvalFieldErrors` / `approvalEdits`: after the server refused an
 //     edit (422) the host's state hands the refusal back, and the card
 //     reopens in edit mode on what was typed. Pass them as they are in the
@@ -101,6 +102,7 @@ import { droppedReferenceNotices } from "./droppedReferences";
 import { FeedbackThumbs } from "./FeedbackThumbs";
 import { markdownAnswerSx } from "./markdownAnswerSx";
 import type { AgentMentionRef } from "./mentions/types";
+import { SelectedTextQuote } from "./SelectedTextQuote";
 import { formatDurationMs, ToolProgressList } from "./ToolProgressList";
 import { turnFrameSx, turnLabelSx } from "./turnFrame";
 import type { ToolEvent } from "./types";
@@ -391,6 +393,21 @@ const AgentTurnInner = ({
     // the read-only archive turn in Spotlight's History).
     const frameSx = turnFrameSx(layout);
 
+    // The question, as typed. (A turn asked about a passage of selected text shows that passage
+    // as a quote under it, MIP-1058.)
+    const queryText = (
+        <Typography
+            level="body-md"
+            sx={{
+                fontWeight: 500,
+                whiteSpace: "pre-wrap",
+                color: g.text.primary,
+            }}
+        >
+            {askedQuery}
+        </Typography>
+    );
+
     return (
         <Bubble
             actionsPosition="bottom"
@@ -460,16 +477,26 @@ const AgentTurnInner = ({
                         <Typography level="body-sm" sx={turnLabelSx(g.text.tertiary)}>
                             {labels.turnLabelQ}
                         </Typography>
-                        <Typography
-                            level="body-md"
-                            sx={{
-                                fontWeight: 500,
-                                whiteSpace: "pre-wrap",
-                                color: g.text.primary,
-                            }}
-                        >
-                            {askedQuery}
-                        </Typography>
+                        {selection ? (
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    minWidth: 0,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 0.75,
+                                }}
+                            >
+                                {queryText}
+                                <SelectedTextQuote
+                                    label={labels.selectedText}
+                                    maxLines={4}
+                                    text={selection.text}
+                                />
+                            </Box>
+                        ) : (
+                            queryText
+                        )}
                     </Box>
                 )}
 

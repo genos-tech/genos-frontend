@@ -13,6 +13,7 @@
 // server resolves it by id and checks the person's access, exactly as for a
 // task picked from the `#` menu. Nothing is sent until they press Ask.
 
+import type { AskSelection } from "../agentQA/askSelection";
 import { mentionKey, type AgentMentionRef } from "../agentQA/mentions/types";
 
 export type AskGenosTaskRef = Extract<AgentMentionRef, { kind: "task" }>;
@@ -74,6 +75,95 @@ export const askGenosRefForCalendarEvent = (event: {
     };
 };
 
+export type AskGenosMessageRef = Extract<AgentMentionRef, { kind: "message" }>;
+
+// The v3 message id is a UUID. Anything else (an optimistic row not yet saved, an old cached row in
+// the legacy `${chatId}-${seq}` form, the per-channel sequence number) names no message the server
+// could read, so it gets no Ask item at all rather than one that silently does nothing.
+const MESSAGE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Whether `id` has the shape of a v3 `Message.id`. */
+export const isMessageUuid = (id: unknown): id is string =>
+    typeof id === "string" && MESSAGE_UUID.test(id);
+
+// The longest a person's name may be in a draft token.
+const MESSAGE_NAME_MAX = 30;
+
+// Labels handed out in this session, label -> message id, so two messages never share a token: the
+// draft finds a mention by its text, and a second message with the same label would otherwise be taken
+// for the first ("already in the draft"). Bounded; the oldest goes first.
+const issuedLabels = new Map<string, string>();
+const ISSUED_LABELS_MAX = 200;
+
+const uniqueMessageLabel = (label: string, id: string): string => {
+    let candidate = label;
+    for (let n = 2; issuedLabels.has(candidate) && issuedLabels.get(candidate) !== id; n += 1) {
+        candidate = `${label} (${n})`;
+    }
+    issuedLabels.delete(candidate);
+    issuedLabels.set(candidate, id);
+    if (issuedLabels.size > ISSUED_LABELS_MAX) {
+        const oldest = issuedLabels.keys().next().value;
+        if (oldest !== undefined) issuedLabels.delete(oldest);
+    }
+    return candidate;
+};
+
+/** The mention for a chat message (MIP-1058, AGENT_PARITY_TOOLS), or null when it cannot be named:
+ *  it needs its v3 id (`messageIdWithChatId` of a main-channel message,
+ *  `messageIdWithChatIdAndThreadId` of a thread reply; NEVER the sequence `messageId`).
+ *
+ *  The label is what the draft shows (`#Alice 14:02 `), so it is the sender and the time, and
+ *  deliberately NOT a piece of the message: the token is part of the question the member sends, and the
+ *  server fences a message's text as other people's words (data, never instructions). A snippet in
+ *  the token would put up to a line of someone else's text into the question, outside that fence.
+ *  The name has `#`, `@` and line breaks taken out (a `#` inside would reopen the mention picker) and
+ *  is cut by code point; two messages never share a label. */
+export const askGenosRefForMessage = (message: {
+    id: string | null | undefined;
+    senderName?: string | null;
+    tsSent?: string | null;
+    locale?: string;
+    /** The stand-in when there is no sender name (a translated word for "Message"). */
+    fallbackLabel: string;
+}): AskGenosMessageRef | null => {
+    const id = message.id?.trim();
+    if (!isMessageUuid(id)) return null;
+    const name = Array.from((message.senderName ?? "").replace(/[#@\s]+/g, " ").trim())
+        .slice(0, MESSAGE_NAME_MAX)
+        .join("")
+        .trim();
+    let time = "";
+    if (message.tsSent) {
+        const at = new Date(message.tsSent);
+        if (!Number.isNaN(at.getTime())) {
+            try {
+                time = new Intl.DateTimeFormat(message.locale, {
+                    hour: "numeric",
+                    minute: "2-digit",
+                }).format(at);
+            } catch {
+                time = "";
+            }
+        }
+    }
+    const base = [name || message.fallbackLabel, time].filter(Boolean).join(" ").trim();
+    return {
+        kind: "message",
+        messageId: id,
+        label: uniqueMessageLabel(base, id),
+    };
+};
+
+/** A message as the SOURCE of a selection (`selected_from`), or null without a v3 id. Not a draft
+ *  token, so it has no label (the server never reads one) and takes none of the draft labels. */
+export const askGenosSourceForMessage = (
+    id: string | null | undefined
+): AskGenosMessageRef | null => {
+    const trimmed = id?.trim();
+    return isMessageUuid(trimmed) ? { kind: "message", messageId: trimmed, label: "" } : null;
+};
+
 /** The text the draft gets for a ref. */
 export const askGenosToken = (ref: AgentMentionRef): string => `#${ref.label} `;
 
@@ -91,6 +181,32 @@ export const requestAskGenosAbout = (ref: AgentMentionRef): void => {
     window.dispatchEvent(
         new CustomEvent<{ ref: AgentMentionRef }>(EVENT_NAME, { detail: { ref } })
     );
+};
+
+const SELECTION_EVENT_NAME = "genos:ask-about-selection";
+
+/** Ask the app-level Genos about a passage of text the member selected (MIP-1058): it opens (or
+ *  focuses) with the passage attached to the question. Nothing is sent until they press Ask. Unlike a
+ *  ref this needs no queue: the passage is held by `useSpotlight`, which lives at the App root and is
+ *  always there to take it. */
+export const requestAskGenosAboutSelection = (selection: AskSelection): void => {
+    window.dispatchEvent(
+        new CustomEvent<{ selection: AskSelection }>(SELECTION_EVENT_NAME, {
+            detail: { selection },
+        })
+    );
+};
+
+/** The listener for `requestAskGenosAboutSelection` (`useSpotlight`). */
+export const onAskGenosAboutSelection = (
+    handler: (selection: AskSelection) => void
+): (() => void) => {
+    const listener = (e: Event) => {
+        const selection = (e as CustomEvent<{ selection?: AskSelection }>).detail?.selection;
+        if (selection?.text) handler(selection);
+    };
+    window.addEventListener(SELECTION_EVENT_NAME, listener);
+    return () => window.removeEventListener(SELECTION_EVENT_NAME, listener);
 };
 
 /** The listener (`useSpotlight`, which lives at the App root). */

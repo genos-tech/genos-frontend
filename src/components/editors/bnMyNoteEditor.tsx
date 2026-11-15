@@ -12,6 +12,7 @@ export const BnMyNoteEditor = ({ currentMyNote, ...rest }: BnMyNoteEditorProps) 
     <GenosNoteEditor
         {...rest}
         note={{
+            noteType: 1,
             noteId: currentMyNote.noteId,
             title: currentMyNote.title,
             documentPrefix: "my-note",

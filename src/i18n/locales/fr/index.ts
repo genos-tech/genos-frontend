@@ -1433,6 +1433,10 @@ export const fr: DeepPartial<Messages> = {
             replyInThread: "Répondre dans le fil",
             flagForLater: "Marquer pour plus tard",
             addToTodo: "Ajouter à « À faire »",
+            askGenos: "Demander à Genos à propos de ce message",
+            askGenosSelection: "Demander à Genos à propos du texte sélectionné",
+            askGenosShort: "Demander à Genos",
+            askGenosFallback: "Message",
             removeFlag: "Retirer la marque",
             failed: {
                 flag: "Impossible de marquer. Réessayez.",
@@ -1928,6 +1932,7 @@ export const fr: DeepPartial<Messages> = {
             gifLoading: "Chargement…",
             gifAttribution: "Propulsé par GIPHY",
             emojiTypingHint: ":+saisie",
+            askGenosSelection: "Demander à Genos à propos du texte sélectionné",
             emojiGroup: "Emoji",
             teamEmojiGroup: "Emoji d'équipe",
             loadingComments: "Chargement des commentaires…",
@@ -4763,6 +4768,12 @@ export const fr: DeepPartial<Messages> = {
                 "Genos n'a pas pu utiliser le texte que vous avez sélectionné ; il a répondu sans lui.",
             selectedFrom:
                 "Genos n'a pas pu utiliser la source du texte sélectionné ; il a utilisé le texte seul.",
+        },
+        selection: {
+            label: "Texte sélectionné",
+            remove: "Retirer le texte sélectionné",
+            truncated: "Seuls les {count} premiers caractères seront envoyés.",
+            placeholder: "Interrogez Genos sur le texte sélectionné…",
         },
         empty: {
             initial: "Commencez à saisir pour rechercher dans vos conversations, tâches et notes.",

@@ -153,6 +153,7 @@ export const es: DeepPartial<Messages> = {
             emoji: "Emoji",
             attachFile: "Adjuntar imagen o archivo",
             emojiTypingHint: ":+escritura",
+            askGenosSelection: "Preguntar a Genos sobre el texto seleccionado",
             emojiGroup: "Emoji",
             loadingComments: "Cargando comentarios…",
             couldNotLoadComments: "No se pudieron cargar los comentarios.",
@@ -1979,6 +1980,10 @@ export const es: DeepPartial<Messages> = {
             replyInThread: "Responder en el hilo",
             flagForLater: "Destacar para después",
             addToTodo: "Añadir a Por hacer",
+            askGenos: "Preguntar a Genos sobre este mensaje",
+            askGenosSelection: "Preguntar a Genos sobre el texto seleccionado",
+            askGenosShort: "Preguntar a Genos",
+            askGenosFallback: "Mensaje",
             removeFlag: "Quitar destacado",
             failed: {
                 flag: "No se pudo destacar. Inténtalo de nuevo.",
@@ -3989,6 +3994,12 @@ export const es: DeepPartial<Messages> = {
             selection: "Genos no pudo usar el texto que seleccionaste, así que respondió sin él.",
             selectedFrom:
                 "Genos no pudo usar el origen del texto seleccionado, así que usó solo el texto.",
+        },
+        selection: {
+            label: "Texto seleccionado",
+            remove: "Quitar el texto seleccionado",
+            truncated: "Solo se enviarán los primeros {count} caracteres.",
+            placeholder: "Pregunta a Genos sobre el texto seleccionado…",
         },
         empty: {
             initial: "Empieza a escribir para buscar en chats, tareas y notas.",

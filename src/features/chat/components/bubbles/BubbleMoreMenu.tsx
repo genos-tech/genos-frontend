@@ -28,6 +28,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
+import { useAskGenosMessageItem } from "../../hooks/useAskGenosMessageItem";
 import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { reportFlagFailure } from "../../utils/reportFlagFailure";
@@ -118,6 +119,13 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatId);
     const { pinned } = useBubbleActionsPreference();
+    // "Ask Genos about this message" (MIP-1058), by the v3 id; about the selected text when some is
+    // selected in this message as the menu opens.
+    const askGenos = useAskGenosMessageItem({
+        messageId: message.messageIdWithChatId,
+        senderName: message.sender.userName,
+        tsSent: message.tsSent,
+    });
 
     // This menu — and the dialogs below it — live inside the bubble's
     // hover toolbar, which the parent unmounts as soon as the cursor
@@ -220,6 +228,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     // Keys sorted alphabetically (case-insensitive) per `sort-keys`. Display
     // order comes from `kind` (via `splitPinned`), not from this array.
     const items: MoreMenuItem[] = [
+        askGenos.item,
         {
             icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
             id: "openTask",
@@ -346,7 +355,10 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 <MoreMenu
                     items={menuItems}
                     placement={isSent ? "bottom-end" : "bottom-start"}
-                    onOpenChange={setMenuOpen}
+                    onOpenChange={(open) => {
+                        setMenuOpen(open);
+                        askGenos.onMenuOpenChange(open);
+                    }}
                 />
             )}
 

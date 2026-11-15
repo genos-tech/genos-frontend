@@ -32,6 +32,7 @@ import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { isRealTaskId } from "../../../tasks/utils/taskPreviewPaneVisibility";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
+import { askMessageProps } from "../../utils/messageSelection";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
@@ -565,6 +566,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             }
         >
             <Clickable
+                {...askMessageProps(message.messageIdWithChatId)}
                 className={previewWrapClassName || undefined}
                 sx={isCompact ? undefined : { cursor: message.taskId ? "pointer" : "default" }}
                 onActivate={

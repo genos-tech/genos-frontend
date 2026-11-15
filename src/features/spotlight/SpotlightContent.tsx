@@ -74,6 +74,8 @@ import {
     renderSaveAnswerActions,
     renderSaveAnswerStatus,
     rewriteCitations,
+    SELECTED_TEXT_MAX,
+    SelectedTextQuote,
     turnFrameSx,
     turnLabelSx,
     useAgentMentionDraft,
@@ -217,6 +219,12 @@ export interface SpotlightContentProps {
     // focuses the page input instead of opening the overlay. Called
     // with the focus fn on mount and null on unmount.
     registerInputFocus?: (fn: (() => void) | null) => void;
+    // A passage of text the member selected elsewhere in the app and pointed "Ask Genos" at
+    // (MIP-1058), held by `useSpotlight` until it goes with the next question: shown as a quote above
+    // the input, with `onClearAttachedSelection` to drop it. Optional so a host that does not wire it
+    // simply never shows one.
+    attachedSelection?: AskSelection | null;
+    onClearAttachedSelection?: () => void;
 }
 
 // Distance from the bottom (px) under which we consider the user
@@ -301,8 +309,10 @@ export const SpotlightContent = ({
     mentionMembers,
     variant = "overlay",
     registerInputFocus,
+    attachedSelection = null,
+    onClearAttachedSelection,
 }: SpotlightContentProps) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     // What an answer turn says, built once per locale: a new object per render
     // would defeat the memoised turns.
     const turnLabels = useMemo(() => buildAgentTurnLabels(t, "spotlight"), [t]);
@@ -640,6 +650,33 @@ export const SpotlightContent = ({
                     to start a new ask. They close history (the "Back
                     to search" button on the panel) to bring the input
                     back. */}
+            {/* The passage the member selected elsewhere (MIP-1058): a quote right above the input,
+                    in the input's own slot of the column (`order`), with a way to drop it. It goes with
+                    the next question they send. */}
+            {!historyOpen && attachedSelection && (
+                <Box
+                    sx={{
+                        order: inAgentMode ? 2 : 0,
+                        px: { xs: 1, sm: 2 },
+                        pt: 1,
+                        minWidth: 0,
+                    }}
+                >
+                    <SelectedTextQuote
+                        label={t.spotlight.selection.label}
+                        removeLabel={t.spotlight.selection.remove}
+                        text={attachedSelection.text}
+                        note={
+                            attachedSelection.truncated
+                                ? fmt(t.spotlight.selection.truncated, {
+                                      count: SELECTED_TEXT_MAX.toLocaleString(locale),
+                                  })
+                                : undefined
+                        }
+                        onRemove={onClearAttachedSelection}
+                    />
+                </Box>
+            )}
             {!historyOpen && (
                 <Box
                     ref={inputRowRef}
@@ -737,9 +774,11 @@ export const SpotlightContent = ({
                                 ? t.spotlight.placeholder.askBusy
                                 : !aiAnswersEnabled
                                   ? t.spotlight.placeholder.aiOff
-                                  : hasConversation
-                                    ? t.spotlight.placeholder.followUp
-                                    : t.spotlight.placeholder.default
+                                  : attachedSelection
+                                    ? t.spotlight.selection.placeholder
+                                    : hasConversation
+                                      ? t.spotlight.placeholder.followUp
+                                      : t.spotlight.placeholder.default
                         }
                         sx={{
                             flex: 1,

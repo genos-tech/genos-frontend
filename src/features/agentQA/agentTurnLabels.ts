@@ -77,6 +77,8 @@ export interface AgentTurnLabels {
     // What the server could not use of what the ask pointed at (MIP-1058): one sentence per
     // kind it reports, Spotlight's wording for every host (`spotlight.dropped`).
     dropped: DroppedLabels;
+    // "Selected text": the quote of a passage the turn was asked about (MIP-1058).
+    selectedText: string;
 }
 
 export type AgentTurnHost = "spotlight" | "threadAsk" | "noteAsk";
@@ -123,5 +125,6 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
             : sp.entitySubtitle,
         undo: buildUndoLabels(t),
         dropped: sp.dropped,
+        selectedText: sp.selection.label,
     };
 };

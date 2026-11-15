@@ -347,6 +347,7 @@ export const GenosHome = ({
                     <SpotlightContent
                         aiAnswersEnabled={spotlight.aiAnswersEnabled}
                         ask={spotlight.ask}
+                        attachedSelection={spotlight.attachedSelection}
                         backToHistoryList={spotlight.backToHistoryList}
                         closeHistory={spotlight.closeHistory}
                         error={spotlight.error}
@@ -375,6 +376,7 @@ export const GenosHome = ({
                         onAsk={spotlight.onAsk}
                         onCancel={spotlight.onCancel}
                         onChangeFilterProjects={spotlight.onChangeFilterProjects}
+                        onClearAttachedSelection={spotlight.clearAttachedSelection}
                         onFeedback={spotlight.submitFeedback}
                         onNewConversation={spotlight.onNewConversation}
                         onOpenSettings={onOpenSettings}

@@ -12,6 +12,7 @@ export const BnTaskNoteEditor = ({ currentTaskNote, ...rest }: BnTaskNoteEditorP
     <GenosNoteEditor
         {...rest}
         note={{
+            noteType: 2,
             noteId: currentTaskNote.noteId,
             title: currentTaskNote.title,
             documentPrefix: "task-note",

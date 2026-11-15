@@ -281,6 +281,7 @@ export const hi: DeepPartial<Messages> = {
             gifLoading: "लोड हो रहा है...",
             gifAttribution: "GIPHY द्वारा संचालित",
             emojiTypingHint: ":+टाइपिंग",
+            askGenosSelection: "चुने गए टेक्स्ट के बारे में Genos से पूछें",
             emojiGroup: "इमोजी",
             teamEmojiGroup: "टीम इमोजी",
             loadingComments: "टिप्पणी लोड हो रहे हैं…",
@@ -1986,6 +1987,10 @@ export const hi: DeepPartial<Messages> = {
             replyInThread: "थ्रेड में जवाब दें",
             flagForLater: "बाद के लिए फ्लैग करें",
             addToTodo: "टू-डू में जोड़ें",
+            askGenos: "इस संदेश के बारे में Genos से पूछें",
+            askGenosSelection: "चुने गए टेक्स्ट के बारे में Genos से पूछें",
+            askGenosShort: "Genos से पूछें",
+            askGenosFallback: "संदेश",
             removeFlag: "फ्लैग हटाएँ",
             failed: {
                 flag: "फ्लैग नहीं लग सका। कृपया फिर से कोशिश करें।",
@@ -4194,6 +4199,12 @@ export const hi: DeepPartial<Messages> = {
                 "Genos आपके चुने गए टेक्स्ट का उपयोग नहीं कर सका, इसलिए उसने उसके बिना उत्तर दिया।",
             selectedFrom:
                 "Genos चुने गए टेक्स्ट के स्रोत का उपयोग नहीं कर सका, इसलिए उसने केवल टेक्स्ट का उपयोग किया।",
+        },
+        selection: {
+            label: "चुना गया टेक्स्ट",
+            remove: "चुना गया टेक्स्ट हटाएँ",
+            truncated: "केवल पहले {count} वर्ण भेजे जाएँगे।",
+            placeholder: "चुने गए टेक्स्ट के बारे में Genos से पूछें…",
         },
         empty: {
             initial: "चैट, टास्क और नोट में खोजने के लिए टाइप करना शुरू करें।",

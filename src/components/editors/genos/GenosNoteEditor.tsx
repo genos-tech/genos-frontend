@@ -29,6 +29,7 @@ import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { NoteRoleMember } from "../../../types/notes";
 import { ImageZoomModal } from "../../messageBody/ImageZoomModal";
+import { useNoteModalHostZIndex } from "../../modals/noteModalHostZIndex";
 import { FileSizeRejectionSnackbar } from "../../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../ui/feedback/useFileSizeGuard";
@@ -57,6 +58,9 @@ const django_url = import.meta.env.VITE_DJANGO_URL;
  * ~780 lines apart from exactly these values.
  */
 export type GenosNoteConfig = {
+    /** The note family, as the agent's `note` mention names it: 1 personal (My, Team and Shared
+     *  notes), 2 task note, 3 chat note. */
+    noteType: 1 | 2 | 3;
     noteId: number;
     title: string;
     /** Yjs document name prefix: the room is `${documentPrefix}:${noteId}`. */
@@ -149,6 +153,10 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     const mentionableUsers = useTEM.teamMembers;
 
     const { mode } = useColorScheme();
+    // "Ask Genos about the selected text" (MIP-1058) is offered on a page, not in a note previewed
+    // inside a link modal: Spotlight opens over the modal and the modal's focus trap would keep the
+    // question's input from taking focus (the same reason a task preview in one has no Ask item).
+    const modalHostZIndex = useNoteModalHostZIndex();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
@@ -529,6 +537,16 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                             isEditable={isEditable}
                                             hasComments={!!threadStore}
                                             setShowGifPicker={setShowGifPicker}
+                                            askSource={
+                                                modalHostZIndex === undefined
+                                                    ? {
+                                                          kind: "note",
+                                                          noteType: note.noteType,
+                                                          noteId: note.noteId,
+                                                          label: note.title,
+                                                      }
+                                                    : null
+                                            }
                                         />
                                     )}
                                 />
