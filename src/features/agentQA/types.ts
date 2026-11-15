@@ -95,10 +95,11 @@ export interface AskState {
     // The passage of selected text sent WITH this ask (MIP-1058), held for the same reason as
     // `askedMentions`: the completed turn carries it so Retry re-sends it verbatim.
     askedSelection?: AskSelection;
-    // What the server said it could not use of what this ask pointed at (the `done` event's
-    // `dropped_references`, kinds only). Absent when nothing was dropped, with the server flag off,
-    // and on a turn that paused for approval (no `done` carries it there). Drives the calm notice
-    // under the answer.
+    // What the server said it could not use of what this ask pointed at (`dropped_references`,
+    // kinds only). From the `done` event; for a run that pauses for approval (no `done` until the
+    // person decides) from the approval card's event too, and from the `done` of the resumed leg,
+    // which may add to it (MIP-1585): the union of what each said, each kind once. Absent when
+    // nothing was dropped and with the server flag off. Drives the calm notice under the answer.
     droppedReferences?: DroppedReference[];
 }
 

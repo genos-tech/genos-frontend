@@ -343,8 +343,9 @@ const AgentTurnInner = ({
     }, [answer]);
 
     // The sentences for what the server could not use (MIP-1058). The turn's own `mentions` decide
-    // "the message" vs "some of the messages". Only a finished turn has them (`done` carries the
-    // list), and none while a write waits for the person.
+    // "the message" vs "some of the messages". A finished turn has them (`done` carries the list),
+    // and so does a turn paused on a write (the card's event carries it, MIP-1585): the member sees
+    // it before deciding. One list per turn, so one note, whichever event said it.
     const droppedNotices = useMemo(
         () => droppedReferenceNotices(droppedReferences, mentions, labels.dropped),
         [droppedReferences, mentions, labels.dropped]

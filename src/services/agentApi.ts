@@ -17,7 +17,7 @@
 //   {"type": "tool_call_error",  "step", "tool_name", "error", "duration_ms"?}
 //   {"type": "tool_call_pending_approval",
 //        "step", "tool_name", "arguments", "editable"?, "undoable"?, "undo_reason"?,
-//        "approval_token", "run_id"}
+//        "approval_token", "run_id", "dropped_references"?}
 //   {"type": "sources", "sources": [...]}
 //   {"type": "answer_delta", "text": "..."}
 //   {"type": "done", "session_id": "...", "elapsed_ms"?, "dropped_references"?}   ← session_id added in Phase 8
@@ -222,7 +222,12 @@ export type AgentEvent =
     | ({ type: "tool_call_start" } & ToolCallStartPayload)
     | ({ type: "tool_call_result" } & ToolCallResultPayload)
     | ({ type: "tool_call_error" } & ToolCallErrorPayload)
-    | ({ type: "tool_call_pending_approval" } & PendingApprovalPayload);
+    | ({
+          type: "tool_call_pending_approval";
+          // What the ask could not use (MIP-1585): on the card's own event, since a run that pauses
+          // sends no `done` until the person decides. Not part of the card (`PendingApprovalPayload`).
+          dropped_references?: unknown;
+      } & PendingApprovalPayload);
 
 interface BaseStreamHandlers {
     onSources: (sources: SpotlightResult[]) => void;
@@ -230,9 +235,11 @@ interface BaseStreamHandlers {
     // `elapsedMs` = the stream's total wall time, server-measured
     // (undefined on older backends). On a /decide/ resume it covers the
     // resumed segment only — the human approval wait isn't counted.
-    // `droppedReferences` (MIP-1058) = what the ask pointed at and the server could not use,
-    // as kinds; see `DroppedReference`. Absent when nothing was dropped, with the flag off, and
-    // on any stream that is not an /ask/ (the server sets it on the ask's own `done`).
+    // `droppedReferences` (MIP-1058, MIP-1585) = what the ask pointed at and the server could not
+    // use, as kinds; see `DroppedReference`. Absent when nothing was dropped and with the server
+    // flag off. The `done` of an /ask/ carries it, and so does the `done` of a resumed /decide/ leg
+    // (what the ask dropped, and what the decision could not use again): a caller that kept the
+    // card's list merges the two with `mergeDroppedReferences`.
     onDone: (
         sessionId?: string,
         runId?: string,
@@ -243,20 +250,32 @@ interface BaseStreamHandlers {
     onToolStart?: (payload: ToolCallStartPayload) => void;
     onToolResult?: (payload: ToolCallResultPayload) => void;
     onToolError?: (payload: ToolCallErrorPayload) => void;
-    onPendingApproval?: (payload: PendingApprovalPayload) => void;
+    // `droppedReferences` (MIP-1585) = the same kinds as on `onDone`, said on the card's own event
+    // because a run that pauses sends no `done` until the person decides. A second argument, and only
+    // when there is something in it, so a card without the field calls this exactly as before.
+    onPendingApproval?: (
+        payload: PendingApprovalPayload,
+        droppedReferences?: DroppedReference[]
+    ) => void;
 }
 
 /** What the server could not use of what an ask pointed at (genos-api `agent_views`, MIP-1058): the
- *  terminal `done` event's `dropped_references`. Kinds only, never counts, and the same word whether
- *  the thing was missing, deleted, unreadable, out of the member's history window or malformed, so
- *  nothing is learned about which. `"message"` also comes back when MORE than 3 messages were sent
- *  and all of them resolved (the first 3 are read, the rest dropped). The run itself still happened,
- *  as a plain question. Absent when nothing was dropped; a run that pauses for a write approval sends
- *  no `done`, so it carries none. */
-export const DROPPED_REFERENCES = ["message", "selection", "selected_from"] as const;
+ *  `dropped_references` of the terminal `done` event. Kinds only, never counts, and the same word
+ *  whether the thing was missing, deleted, unreadable, out of the member's history window or
+ *  malformed, so nothing is learned about which. `"message"` also comes back when MORE than 3
+ *  messages were sent and all of them resolved (the first 3 are read, the rest dropped). The run
+ *  itself still happened, as a plain question. Absent when nothing was dropped.
+ *
+ *  A run that pauses for a write approval sends no `done` until the person decides, so (MIP-1585)
+ *  the same field also rides the approval card's `tool_call_pending_approval` event, and the `done`
+ *  of the resumed /decide/ leg repeats it with what the decision could not use again. `"task"` is
+ *  new there: the task or milestone the conversation is about, no longer usable at the decision
+ *  (the same word whether it is gone, deleted or no longer the member's). A message that was only
+ *  the SOURCE of a selection and became unusable comes back as `"message"` on that leg. */
+export const DROPPED_REFERENCES = ["message", "selection", "selected_from", "task"] as const;
 export type DroppedReference = (typeof DROPPED_REFERENCES)[number];
 
-/** The `dropped_references` of a `done` event as a clean list: only kinds this client knows, each
+/** The `dropped_references` of a `done` or a card event as a clean list: only kinds this client knows, each
  *  once, in the server's order. Anything else (not an array, a kind from a newer server) is ignored,
  *  so an unknown word can never reach a sentence. `undefined` when there is nothing to say. */
 export const asDroppedReferences = (raw: unknown): DroppedReference[] | undefined => {
@@ -1677,8 +1696,8 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 duration_ms: evt.duration_ms,
             });
             return false;
-        case "tool_call_pending_approval":
-            h.onPendingApproval?.({
+        case "tool_call_pending_approval": {
+            const card: PendingApprovalPayload = {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 arguments: evt.arguments,
@@ -1690,8 +1709,14 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                     : {}),
                 approval_token: evt.approval_token,
                 run_id: evt.run_id,
-            });
+            };
+            // What the ask could not use rides the card's event too (MIP-1585): a second argument
+            // only when there is something in it, so a card without the field is called as before.
+            const dropped = asDroppedReferences(evt.dropped_references);
+            if (dropped) h.onPendingApproval?.(card, dropped);
+            else h.onPendingApproval?.(card);
             return true; // terminal: stream pauses here until /decide/
+        }
     }
     return false;
 }

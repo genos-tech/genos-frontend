@@ -4532,6 +4532,7 @@ export const zh: DeepPartial<Messages> = {
             messages: "Genos 无法使用你指定的部分消息，因此只根据可用的消息作答。",
             selection: "Genos 无法使用你选中的文字，因此未参考该文字作答。",
             selectedFrom: "Genos 无法使用所选文字的出处，因此只参考了文字本身。",
+            task: "Genos 无法使用你所询问的任务或里程碑，因此未参考它作答。",
         },
         empty: {
             initial: "开始输入即可在聊天、任务和笔记中搜索。",

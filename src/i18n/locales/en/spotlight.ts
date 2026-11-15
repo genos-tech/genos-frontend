@@ -30,10 +30,12 @@ export const spotlight = {
         // rather than leaving the question hanging.
         noAnswer: "(no answer)",
     },
-    // What the server could not use of what an ask pointed at (the `done` event's
-    // `dropped_references`, MIP-1058). Calm, and the same for missing, unreadable and
-    // deleted: the server says nothing about which. `messages` is for an ask that pointed at
-    // more than one message (the server also drops what is past its limit of 3).
+    // What the server could not use of what an ask pointed at (the `dropped_references` of the
+    // `done` event, and of the approval card's event on a run that pauses, MIP-1058, MIP-1585).
+    // Calm, and the same for missing, unreadable and deleted: the server says nothing about
+    // which, so neither do these. `messages` is for an ask that pointed at more than one message
+    // (the server also drops what is past its limit of 3). `task` is the task OR milestone a
+    // conversation is about, which the server could no longer use at the decision.
     dropped: {
         message: "Genos could not use the message you pointed at, so it answered without it.",
         messages:
@@ -41,6 +43,7 @@ export const spotlight = {
         selection: "Genos could not use the text you selected, so it answered without it.",
         selectedFrom:
             "Genos could not use where the selected text came from, so it used the text alone.",
+        task: "Genos could not use the task or milestone you asked about, so it answered without it.",
     },
     empty: {
         initial: "Start typing to search across chats, tasks, and notes.",

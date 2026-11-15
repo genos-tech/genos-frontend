@@ -194,6 +194,7 @@ export const AgentQAConversation = ({
                     approvalFieldErrors={ask.approvalFieldErrors}
                     askedQuery={ask.askedQuery}
                     askError={ask.askError}
+                    droppedReferences={ask.droppedReferences}
                     elapsedMs={ask.elapsedMs}
                     isStreaming={ask.isStreaming}
                     labels={turnLabels}
