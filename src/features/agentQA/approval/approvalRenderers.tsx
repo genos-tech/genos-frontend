@@ -34,6 +34,7 @@ import { ManageProjectMembersPreview, ManageProjectPreview } from "./ProjectWrit
 import { RestoreTaskBodyPreview } from "./RestoreBodyPreview";
 import { RestoreNoteVersionPreview } from "./RestoreNoteVersionPreview";
 import { DeleteSprintPreview, ManageSprintPreview } from "./SprintWritePreview";
+import { DeleteTaskAttachmentPreview } from "./TaskAttachmentPreview";
 import { TaskPlanPreview } from "./TaskPlanPreview";
 import { CreateTodoPreview, DeleteTodoPreview, UpdateTodoPreview } from "./TodoWritePreview";
 import { UpdateTaskPreview } from "./UpdateTaskPreview";
@@ -56,6 +57,8 @@ const approvalRenderers: Record<string, FC<ApprovalPreviewProps>> = {
     // restore (which is also reversible).
     update_comment: UpdateCommentPreview,
     delete_comment: DeleteCommentPreview,
+    // A file on a task (AGENT_PARITY_TOOLS): the card names the file, its size and type.
+    delete_task_attachment: DeleteTaskAttachmentPreview,
     restore_task_body: RestoreTaskBodyPreview,
     // One card per to-do write, and one for the milestone tool (it branches
     // on its `action`) plus one for its delete.
