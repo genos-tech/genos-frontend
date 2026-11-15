@@ -122,6 +122,29 @@ export const bundleGuard = (): Plugin => ({
             }
         }
 
+        // --- 1c. posthog-js stays off the critical path (MIP-1605) ---
+        // ~120 kB gzip that nothing needs to render. `services/analytics.ts` is the one
+        // place allowed to load it, with a dynamic `import()` that is not awaited. A
+        // static `import posthog from "posthog-js"` anywhere on the entry's path puts it
+        // back with no visible symptom. Hard failure, like 1 and 1b.
+        const posthogOnPath = [entry[0], ...reachable].flatMap((file) =>
+            Object.keys(byFile.get(file)?.modules ?? {})
+                .filter((id) => /[\\/]node_modules[\\/](posthog-js|@posthog)[\\/]/.test(id))
+                .slice(0, 1)
+                .map((id) => `  - ${file} holds ${id}`)
+        );
+        if (posthogOnPath.length) {
+            const message =
+                `posthog-js is statically reachable from the entry:\n${posthogOnPath.join("\n")}\n\n` +
+                `Import posthog-js only via services/analytics.ts, which loads it with a ` +
+                `dynamic import() that main.tsx does not await.`;
+            if (skip()) {
+                this.warn(`[bundle-guard] SKIPPED — ${message}`);
+            } else {
+                this.error(`[bundle-guard] ${message}`);
+            }
+        }
+
         // --- 2. budget (advisory) ---
         let bytes = 0;
         const gz = (source: string | Uint8Array) =>

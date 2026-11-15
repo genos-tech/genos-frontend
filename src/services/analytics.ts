@@ -1,5 +1,3 @@
-import posthog from "posthog-js";
-
 /**
  * Thin wrapper around posthog-js. Call sites should import only from this
  * file — posthog-js itself is intentionally not imported anywhere else.
@@ -22,8 +20,25 @@ type IdentityTraits = {
     role?: string;
 };
 
+type PostHogClient = (typeof import("posthog-js"))["default"];
+
 let initialized = false;
 let userEnabled = true;
+
+// posthog-js is ~350 kB of minified source and nothing needs it to render, so it is
+// fetched by a dynamic `import()` that starts at boot but is NOT awaited: it stays off
+// the entry's critical path (MIP-1605). A call that arrives before the chunk has
+// loaded is queued and replayed in order once it has, so no early pageview, identify,
+// reset or opt-out is lost.
+let client: PostHogClient | null = null;
+let loading: Promise<void> | null = null;
+let failed = false;
+let queue: Array<(posthog: PostHogClient) => void> = [];
+
+const whenLoaded = (call: (posthog: PostHogClient) => void): void => {
+    if (client) call(client);
+    else if (!failed) queue.push(call);
+};
 
 const readUserEnabledFromStorage = (): boolean => {
     if (typeof window === "undefined") return true;
@@ -65,12 +80,19 @@ export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EV
 export const analytics = {
     capture(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
         if (!initialized || !userEnabled) return;
-        posthog.capture(event, properties);
+        if (client) {
+            client.capture(event, properties);
+            return;
+        }
+        if (failed) return;
+        // Replayed after the chunk loads: pin the moment it actually happened.
+        const timestamp = new Date();
+        queue.push((posthog) => posthog.capture(event, properties, { timestamp }));
     },
 
     identify(distinctId: string, traits?: IdentityTraits): void {
         if (!initialized || !userEnabled || !distinctId) return;
-        posthog.identify(distinctId, traits);
+        whenLoaded((posthog) => posthog.identify(distinctId, traits));
     },
 
     init(): void {
@@ -81,21 +103,40 @@ export const analytics = {
 
         userEnabled = readUserEnabledFromStorage();
 
-        posthog.init(key, {
-            api_host: host,
-            autocapture: false,
-            capture_pageview: false,
-            disable_session_recording: true,
-            opt_out_capturing_by_default: !userEnabled,
-            persistence: "localStorage+cookie",
-        });
-
+        const optedOutByDefault = !userEnabled;
         initialized = true;
+
+        loading = import("posthog-js")
+            .then(({ default: posthog }) => {
+                posthog.init(key, {
+                    api_host: host,
+                    autocapture: false,
+                    capture_pageview: false,
+                    disable_session_recording: true,
+                    opt_out_capturing_by_default: optedOutByDefault,
+                    persistence: "localStorage+cookie",
+                });
+                client = posthog;
+                const replay = queue;
+                queue = [];
+                for (const call of replay) call(posthog);
+            })
+            .catch(() => {
+                // Chunk blocked or offline: behave like a blocked network request,
+                // and stop queueing for the rest of the session.
+                failed = true;
+                queue = [];
+            });
+    },
+
+    /** Resolves once posthog-js has loaded and every queued call has been replayed. */
+    whenReady(): Promise<void> {
+        return loading ?? Promise.resolve();
     },
 
     reset(): void {
         if (!initialized) return;
-        posthog.reset();
+        whenLoaded((posthog) => posthog.reset());
     },
 
     /** Whether the user has left analytics on. Other telemetry honours the same opt-out. */
@@ -106,11 +147,13 @@ export const analytics = {
     setEnabled(enabled: boolean): void {
         userEnabled = enabled;
         if (!initialized) return;
-        if (enabled) {
-            posthog.opt_in_capturing();
-        } else {
-            posthog.opt_out_capturing();
-            posthog.reset();
-        }
+        whenLoaded((posthog) => {
+            if (enabled) {
+                posthog.opt_in_capturing();
+            } else {
+                posthog.opt_out_capturing();
+                posthog.reset();
+            }
+        });
     },
 };
