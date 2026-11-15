@@ -1,3 +1,4 @@
+import type { ViaApp } from "../../features/tasks/utils/viaSource";
 import type { NotificationCategory } from "./categories";
 
 // The set of fine-grained category keys lives in `categories.ts` (the
@@ -138,6 +139,11 @@ export interface NotificationIntent {
     body: string;
     /** Sender avatar URL when known; used as the native notification icon. */
     icon?: string;
+    /** The official AI app ("claude" | "chatgpt") the change was made through (MIP-1608).
+     *  The in-app toast draws that app's round mark in place of the avatar. Only ever one
+     *  of the two exact family strings (the adapters whitelist it); absent for a person's
+     *  own change, any other app and older rows. Never a name. */
+    viaApp?: ViaApp;
     /** Where this came from. Used for active-surface comparison and mute. */
     source?: ActiveSurface;
     /** User id of who triggered the event (used to skip self-notifications). */
