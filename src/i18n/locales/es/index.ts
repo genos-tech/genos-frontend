@@ -3993,6 +3993,7 @@ export const es: DeepPartial<Messages> = {
             selection: "Genos no pudo usar el texto que seleccionaste, así que respondió sin él.",
             selectedFrom:
                 "Genos no pudo usar el origen del texto seleccionado, así que usó solo el texto.",
+            task: "Genos no pudo usar la tarea o el hito sobre el que preguntaste, así que respondió sin ese contexto.",
         },
         empty: {
             initial: "Empieza a escribir para buscar en chats, tareas y notas.",

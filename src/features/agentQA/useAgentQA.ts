@@ -45,6 +45,7 @@ import { emitCalendarEventToolResult } from "./approvedCalendarWrites";
 import { emitProjectToolResult } from "./approvedProjectWrites";
 import { emitMilestoneChangeToolResult, emitTaskAttachmentToolResult } from "./approvedTaskWrites";
 import { toWireSelection, type AskSelection } from "./askSelection";
+import { mergeDroppedReferences } from "./droppedReferences";
 import { toWireMentions, type AgentMentionRef } from "./mentions/types";
 import { mergeSources } from "./mergeSources";
 import { emitNoteChanged } from "./noteWriteTools";
@@ -244,23 +245,29 @@ export const useAgentQA = ({
                     elapsedMs?: number,
                     droppedReferences?: DroppedReference[]
                 ) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? {
-                                  ...prev,
-                                  isStreaming: false,
-                                  ...(sessionId !== undefined ? { sessionId } : {}),
-                                  ...(runId ? { runId } : {}),
-                                  // Total response time for the "Answered
-                                  // in Xs" line (absent on old backends).
-                                  ...(typeof elapsedMs === "number" ? { elapsedMs } : {}),
-                                  // What the server could not use of what the ask pointed
-                                  // at (MIP-1058): kept on the turn for the notice under
-                                  // the answer. Absent unless something was dropped.
-                                  ...(droppedReferences?.length ? { droppedReferences } : {}),
-                              }
-                            : prev
-                    );
+                    setAsk((prev) => {
+                        if (!stillCurrent(prev)) return prev;
+                        // What the server could not use of what the ask pointed at
+                        // (MIP-1058): kept on the turn for the notice under the answer.
+                        // A run that paused already said it on its card, and the resumed
+                        // leg's `done` repeats it and may add to it (MIP-1585), so the
+                        // two are merged, never replaced. Absent unless something was
+                        // dropped.
+                        const dropped = mergeDroppedReferences(
+                            prev.droppedReferences,
+                            droppedReferences
+                        );
+                        return {
+                            ...prev,
+                            isStreaming: false,
+                            ...(sessionId !== undefined ? { sessionId } : {}),
+                            ...(runId ? { runId } : {}),
+                            // Total response time for the "Answered
+                            // in Xs" line (absent on old backends).
+                            ...(typeof elapsedMs === "number" ? { elapsedMs } : {}),
+                            ...(dropped ? { droppedReferences: dropped } : {}),
+                        };
+                    });
                     promoteCurrentTurn(askedTurnId);
                     finishRun(askedTurnId, {
                         runId: runId ?? null,
@@ -435,27 +442,38 @@ export const useAgentQA = ({
                         };
                     });
                 },
-                onPendingApproval: (payload: PendingApprovalPayload) => {
+                onPendingApproval: (
+                    payload: PendingApprovalPayload,
+                    droppedReferences?: DroppedReference[]
+                ) => {
                     // No promotion here — the turn isn't done yet.
                     // The user must approve or reject, and the
                     // resumed stream's `onDone` is what promotes.
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? {
-                                  ...prev,
-                                  // Stream is "paused" not "ended". The UI
-                                  // shows an Approve/Reject card; spinner
-                                  // text changes from "streaming…" to a
-                                  // waiting-for-user state.
-                                  isStreaming: false,
-                                  pendingApproval: payload,
-                                  // A new pause starts clean: errors and a
-                                  // draft belong to the card they came from.
-                                  approvalFieldErrors: null,
-                                  approvalEdits: null,
-                              }
-                            : prev
-                    );
+                    setAsk((prev) => {
+                        if (!stillCurrent(prev)) return prev;
+                        // What the ask could not use (MIP-1585): a run that pauses sends no
+                        // `done` until the person decides, so the card's event carries it and
+                        // the turn shows it while the card waits. A second card of the same
+                        // run says it again, so it is merged with what is already held.
+                        const dropped = mergeDroppedReferences(
+                            prev.droppedReferences,
+                            droppedReferences
+                        );
+                        return {
+                            ...prev,
+                            // Stream is "paused" not "ended". The UI
+                            // shows an Approve/Reject card; spinner
+                            // text changes from "streaming…" to a
+                            // waiting-for-user state.
+                            isStreaming: false,
+                            pendingApproval: payload,
+                            // A new pause starts clean: errors and a
+                            // draft belong to the card they came from.
+                            approvalFieldErrors: null,
+                            approvalEdits: null,
+                            ...(dropped ? { droppedReferences: dropped } : {}),
+                        };
+                    });
                 },
             };
         },

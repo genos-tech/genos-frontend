@@ -4766,6 +4766,7 @@ export const fr: DeepPartial<Messages> = {
                 "Genos n'a pas pu utiliser le texte que vous avez sélectionné ; il a répondu sans lui.",
             selectedFrom:
                 "Genos n'a pas pu utiliser la source du texte sélectionné ; il a utilisé le texte seul.",
+            task: "Genos n'a pas pu utiliser la tâche ou le jalon concerné par votre question ; il a répondu sans ce contexte.",
         },
         empty: {
             initial: "Commencez à saisir pour rechercher dans vos conversations, tâches et notes.",

@@ -1773,6 +1773,7 @@ const ConversationPanel = memo(
                                 askDisabled={askDisabled}
                                 askedQuery={ask.askedQuery}
                                 askError={ask.askError}
+                                droppedReferences={ask.droppedReferences}
                                 elapsedMs={ask.elapsedMs}
                                 isStreaming={ask.isStreaming}
                                 labels={turnLabels}

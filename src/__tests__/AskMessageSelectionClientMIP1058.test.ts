@@ -242,6 +242,7 @@ const LABELS: DroppedLabels = {
     messages: "SOME-MESSAGES",
     selection: "SELECTION",
     selectedFrom: "SELECTED-FROM",
+    task: "TASK",
 };
 const M1: AgentMentionRef = { kind: "message", messageId: UUID, label: "a" };
 const M2: AgentMentionRef = { kind: "message", messageId: OTHER, label: "b" };
