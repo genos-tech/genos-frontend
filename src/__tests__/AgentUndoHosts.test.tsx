@@ -23,6 +23,8 @@ import { NoteAskModal } from "../features/noteAsk/NoteAskModal";
 import type { UseNoteAskReturn } from "../features/noteAsk/useNoteAsk";
 import { SpotlightContent } from "../features/spotlight/SpotlightContent";
 import { SpotlightOverlay } from "../features/spotlight/SpotlightOverlay";
+import { TaskAskModal } from "../features/taskAsk/TaskAskModal";
+import type { UseTaskAskReturn } from "../features/taskAsk/useTaskAsk";
 import { ThreadAskModal } from "../features/threadAsk/ThreadAskModal";
 import type { UseThreadAskReturn } from "../features/threadAsk/useThreadAsk";
 import { getMessages } from "../i18n";
@@ -260,8 +262,38 @@ const noteAsk: Surface = {
         return h;
     },
 };
+const taskAsk: Surface = {
+    name: "TaskAskModal",
+    mount: (turns) => {
+        const h = newHandlers();
+        const state = {
+            isOpen: true,
+            open: vi.fn(),
+            close: vi.fn(),
+            target: {
+                taskId: 12,
+                teamId: "t1",
+                displayId: "PRJ-12",
+                title: "Fix login redirect",
+                isMilestone: false,
+            },
+            status: "ready",
+            loadError: null,
+            reload: vi.fn(),
+            canAsk: true,
+            startNewConversation: vi.fn(),
+            agentQA: agentQAState(turns, h),
+        } as unknown as UseTaskAskReturn;
+        render(
+            <CssVarsProvider>
+                <TaskAskModal state={state} />
+            </CssVarsProvider>
+        );
+        return h;
+    },
+};
 
-const SURFACES = [spotlightOverlay, spotlightPage, threadAsk, noteAsk];
+const SURFACES = [spotlightOverlay, spotlightPage, threadAsk, noteAsk, taskAsk];
 
 // -------- a scripted server --------
 const requests: string[] = [];

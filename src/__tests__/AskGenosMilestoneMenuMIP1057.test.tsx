@@ -204,7 +204,13 @@ const host: {
     refreshes: number;
 } = { openMilestone: () => undefined, deps: {}, loads: [], refreshes: 0 };
 
-const Host = ({ milestones }: { milestones: ReturnType<typeof makeMilestone>[] }) => {
+const Host = ({
+    milestones,
+    hostZIndex,
+}: {
+    milestones: ReturnType<typeof makeMilestone>[];
+    hostZIndex?: number;
+}) => {
     const [previewMilestoneId, setPreviewMilestoneId] = useState<number>(
         milestones[0].milestoneId
     );
@@ -255,6 +261,7 @@ const Host = ({ milestones }: { milestones: ReturnType<typeof makeMilestone>[] }
     const usePM = stubBag({ currentProject: PROJECT, teamProjects: [PROJECT] });
     return (
         <TaskPreview
+            hostZIndex={hostZIndex}
             myself={ME as never}
             setMyself={vi.fn()}
             socket={null}
@@ -269,10 +276,10 @@ const Host = ({ milestones }: { milestones: ReturnType<typeof makeMilestone>[] }
     );
 };
 
-const mount = (milestones: ReturnType<typeof makeMilestone>[]) =>
+const mount = (milestones: ReturnType<typeof makeMilestone>[], hostZIndex?: number) =>
     render(
         <CssVarsProvider>
-            <Host milestones={milestones} />
+            <Host hostZIndex={hostZIndex} milestones={milestones} />
         </CssVarsProvider>
     );
 
@@ -286,8 +293,8 @@ afterEach(() => {
 });
 
 describe("the milestone menu's Ask Genos (MIP-1057)", () => {
-    const openMenu = async (milestone = makeMilestone(3, 555)) => {
-        mount([milestone]);
+    const openMenu = async (milestone = makeMilestone(3, 555), hostZIndex?: number) => {
+        mount([milestone], hostZIndex);
         await settle();
         fireEvent.click(screen.getAllByLabelText("More options")[0]);
         return screen.getAllByRole("menuitem");
@@ -313,5 +320,10 @@ describe("the milestone menu's Ask Genos (MIP-1057)", () => {
         });
         // Not the Cmd-K hand-off.
         expect(heardAboutRef).not.toHaveBeenCalled();
+    });
+
+    it("is not offered inside the link-preview modal (the window would open behind it)", async () => {
+        const items = await openMenu(makeMilestone(3, 555), 10020);
+        expect(items.map((el) => el.textContent)).not.toContain(en.tasks.preview.menu.askGenos);
     });
 });

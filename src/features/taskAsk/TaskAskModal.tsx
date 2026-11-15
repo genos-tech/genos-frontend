@@ -196,8 +196,9 @@ export const TaskAskModal = ({ state, onSelectSource, onAskInGeneral }: TaskAskM
             headerDivider
             onClose={state.close}
         >
-            {/* Said once, to a screen reader, when a new conversation starts. */}
-            <Box aria-live="polite" role="status" sx={visuallyHidden}>
+            {/* Said once, to a screen reader, when a new conversation starts. (Live regions, not
+                role="status": the answer turn's own notices are the `status`es of this dialog.) */}
+            <Box aria-atomic="true" aria-live="polite" sx={visuallyHidden}>
                 {announcement}
             </Box>
 
@@ -226,7 +227,7 @@ export const TaskAskModal = ({ state, onSelectSource, onAskInGeneral }: TaskAskM
             )}
 
             {/* A live region that is always there, so the sentence is announced when it appears. */}
-            <Box role="status">
+            <Box aria-live="polite">
                 {gone && (
                     <EmptyState
                         body={t.taskAsk.gone.body}

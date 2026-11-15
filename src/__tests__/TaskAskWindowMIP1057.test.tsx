@@ -166,6 +166,8 @@ describe("opening it from a menu", () => {
         mount();
         await openFor();
         expect(screen.getByText(t.loading)).toBeTruthy();
+        // The "ask anything" hint is for a conversation that is empty, not one that is still coming.
+        expect(screen.queryByText(t.conversation.emptyTask)).toBeNull();
         fireEvent.change(input(), { target: { value: "too early" } });
         fireEvent.keyDown(input(), { key: "Enter" });
         expect(askAgentStream).not.toHaveBeenCalled();
@@ -279,7 +281,7 @@ describe("a task that cannot be opened any more", () => {
         mount();
         await openFor();
         const notice = await screen.findByText(t.gone.titleTask);
-        expect(notice.closest('[role="status"]')).not.toBeNull();
+        expect(notice.closest('[aria-live="polite"]')).not.toBeNull();
     });
 
     it("'Ask Genos in general' closes the window and hands over to the general ask", async () => {
