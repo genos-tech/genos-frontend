@@ -114,6 +114,11 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
     // of a failed one) must not bring the old conversation back over the empty one they asked for.
     const startedFreshRef = useRef(false);
 
+    // The status as of NOW, not as of the last render: `open` is called twice before React renders
+    // when a window event arrives twice, and the second call must see the restore the first started.
+    const statusRef = useRef(status);
+    statusRef.current = status;
+
     const canAsk = target !== null && (status === "ready" || status === "failed");
     // Read by `onAsk` and `startNewConversation` at the moment of the click: written in render, like
     // `liveRef` below, so it never lags a commit behind what the person sees.
@@ -191,6 +196,7 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
             restoreAbortRef.current?.abort();
             const controller = new AbortController();
             restoreAbortRef.current = controller;
+            statusRef.current = "loading";
             setStatus("loading");
             setLoadError(null);
             void (async () => {
@@ -258,9 +264,9 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
             // deploy window, must not stay gone until they switch tasks; one cheap read, nothing else
             // re-fires on its own); a `ready` one is left alone. The name and title may have changed.
             setTarget(next);
-            if (status !== "ready" && status !== "loading") load(next);
+            if (statusRef.current !== "ready" && statusRef.current !== "loading") load(next);
         },
-        [load, status]
+        [load]
     );
 
     const close = useCallback(() => {

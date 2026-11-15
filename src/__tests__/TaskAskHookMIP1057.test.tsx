@@ -270,9 +270,12 @@ describe("opening the window restores the task's conversation", () => {
     it("opening it again while the restore is still out does not send a second request", async () => {
         vi.mocked(fetchTaskSession).mockImplementation(() => new Promise(() => {}));
         const hook = mount();
-        act(() => hook.result.current.open(TARGET));
-        act(() => hook.result.current.open(TARGET));
-        act(() => hook.result.current.open(TARGET));
+        // Three events before React renders once (a double click, two events back to back).
+        act(() => {
+            hook.result.current.open(TARGET);
+            hook.result.current.open(TARGET);
+            hook.result.current.open(TARGET);
+        });
         expect(fetchTaskSession).toHaveBeenCalledTimes(1);
     });
 
