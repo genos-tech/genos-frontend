@@ -7,6 +7,7 @@
  */
 
 import type { AiAppNotice, AiAppNoticeItem } from "../../../types/chat";
+import type { ViaApp } from "../../tasks/utils/viaSource";
 
 /** The switch a notice answers to, by what happened to what. Mirrors `ACTIONS` in genos-api's
  *  `services/ai_app_switches.py`; the registry (`categories.ts`) has an entry for each. */
@@ -59,6 +60,14 @@ const fill = (template: string, values: Record<string, string | number>): string
 
 const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v : undefined);
 
+/**
+ * `meta.appFamily` (MIP-1571): only the two exact strings count. A spoof such as
+ * "Claude " or "claude-evil", a different case, a number or an object is no family, so
+ * the row keeps its robot icon.
+ */
+const parseFamily = (value: unknown): ViaApp | undefined =>
+    value === "claude" || value === "chatgpt" ? value : undefined;
+
 /** Read the producer's `meta` defensively: a malformed row must still render. */
 export function parseAiAppNotice(meta: Record<string, unknown>): AiAppNotice {
     const items: AiAppNoticeItem[] = Array.isArray(meta.items)
@@ -75,8 +84,10 @@ export function parseAiAppNotice(meta: Record<string, unknown>): AiAppNotice {
               }))
         : [];
     const count = typeof meta.count === "number" && meta.count > 0 ? meta.count : 1;
+    const appFamily = parseFamily(meta.appFamily);
     return {
         app: str(meta.app) ?? "AI",
+        ...(appFamily ? { appFamily } : {}),
         verb: str(meta.verb) ?? "",
         kind: str(meta.kind) ?? "",
         count,
