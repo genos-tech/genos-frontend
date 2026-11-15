@@ -486,7 +486,7 @@ export const es: DeepPartial<Messages> = {
             shortcuts: "Atajos",
             account: "Cuenta",
             integrations: "Integraciones",
-            developer: "Revelador",
+            developer: "Desarrolladores",
         },
         account: {
             exportHeading: "Exporta tus datos",
@@ -1374,7 +1374,7 @@ export const es: DeepPartial<Messages> = {
                 chatgptTitle: "ChatGPT",
                 chatgptBody: "Próximamente: Genos se está incorporando al directorio de ChatGPT.",
                 plan: "Conectar requiere el plan Core o superior. En Free, la página de aprobación indica que no está incluido en tu plan.",
-                revoke: "Para desconectar una app, revócala en Ajustes → Revelador → Apps conectadas.",
+                revoke: "Para desconectar una app, revócala en Ajustes → Desarrolladores → Apps conectadas.",
                 trap: "Pega la dirección completa, con la ruta del final. Sin ella, Claude dice que inició sesión y luego informa de que Genos rechazó su solicitud.",
                 menuNote:
                     "Los nombres de menú de otras apps cambian: busca conectores o servidores MCP personalizados.",
@@ -5979,7 +5979,7 @@ export const es: DeepPartial<Messages> = {
                         "REST API para proyectos y tareas, con una especificación OpenAPI publicada",
                         "Webhooks que se publican a medida que cambia el trabajo, sin encuestas",
                         "Una transmisión en tiempo real para cualquier cosa en vivo: paneles, bots",
-                        "Claves API con alcance de lectura o escritura, creadas en Configuración → Desarrollador",
+                        "Claves API con alcance de lectura o escritura, creadas en Configuración → Desarrolladores",
                     ],
                 },
                 mcp: {

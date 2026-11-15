@@ -2209,7 +2209,7 @@ export const zh: DeepPartial<Messages> = {
                         "用于项目和任务的 REST API，具有已发布的 OpenAPI 规范",
                         "Webhooks 当工作发生变化时向你发布信息 — 无轮询",
                         "任何直播的实时流：仪表板、机器人",
-                        "具有读取或写入范围的 API 密钥，在“设置”→“开发人员”中创建",
+                        "具有读取或写入范围的 API 密钥，在“设置”→“开发者”中创建",
                     ],
                 },
                 mcp: {
@@ -3396,7 +3396,7 @@ export const zh: DeepPartial<Messages> = {
             shortcuts: "快捷键",
             integrations: "集成",
             account: "账户",
-            developer: "开发商",
+            developer: "开发者",
         },
         mentionGroups: {
             heading: "提及群组",
@@ -3498,7 +3498,7 @@ export const zh: DeepPartial<Messages> = {
                 chatgptTitle: "ChatGPT",
                 chatgptBody: "即将推出：Genos 正在上架 ChatGPT 的目录。",
                 plan: "连接需要 Core 及以上套餐。在 Free 套餐下，批准页面会提示当前套餐不支持。",
-                revoke: "要断开某个应用，请在“设置 → 开发商 → 已连接的应用”中撤销。",
+                revoke: "要断开某个应用，请在“设置 → 开发者 → 已连接的应用”中撤销。",
                 trap: "请粘贴完整的地址，包括末尾的路径。缺少路径时，Claude 会显示已登录成功，随后报告 Genos 拒绝了它的请求。",
                 menuNote: "其他应用的菜单名称会变化：请找“连接器”或自定义 MCP 服务器。",
             },
