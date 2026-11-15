@@ -58,8 +58,8 @@ import {
     TaskProps,
 } from "../../../../types/tasks";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
-import { askGenosRefForTask } from "../../../spotlight/askGenosAbout";
 import { askGenosMenuItem } from "../../../spotlight/askGenosMenuItem";
+import { askGenosTaskRequest } from "../../../taskAsk/taskAskLink";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../diagram/diagramZIndex";
 import { TaskOpenLandingContext } from "../../hooks/TaskOpenLandingContext";
@@ -2461,19 +2461,21 @@ const MilestonePreviewInner = ({
                             </AppTooltip>
                         )}
                         {(() => {
-                            // The milestone as a `#` mention for "Ask Genos about this
-                            // milestone": a milestone is its backing task to the server.
-                            const askRef = askGenosRefForTask({
+                            // The milestone as the subject of "Ask Genos about this
+                            // milestone" (MIP-1057): a milestone is its backing task to the
+                            // server, so the id is `taskId`, NEVER `milestoneId`.
+                            const askRequest = askGenosTaskRequest({
                                 id: milestone.taskId,
+                                projectId: milestone.projectId,
                                 displayId: milestone.displayId,
                                 title: milestone.title,
                                 isMilestone: true,
                             });
                             const items: MoreMenuItem[] = [
-                                // Page-hosted only: the link-preview modal traps focus, so the
-                                // ask that opens above it could not take the keyboard.
+                                // Page-hosted only: the link-preview modal sits above the window
+                                // this opens, so it would open behind it.
                                 askGenosMenuItem({
-                                    askRef,
+                                    ask: askRequest,
                                     label: t.tasks.preview.menu.askGenos,
                                     visible: hostZIndex == null,
                                 }),

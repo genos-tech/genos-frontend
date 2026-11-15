@@ -18,6 +18,7 @@ import { services } from "./services";
 import { settings } from "./settings";
 import { sidebar } from "./sidebar";
 import { spotlight } from "./spotlight";
+import { taskAsk } from "./taskAsk";
 import { tasks } from "./tasks";
 import { threadAsk } from "./threadAsk";
 
@@ -36,6 +37,7 @@ export const en = {
     genos,
     threadAsk,
     noteAsk,
+    taskAsk,
     services,
     admin,
     agentApproval,

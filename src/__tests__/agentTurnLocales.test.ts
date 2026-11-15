@@ -83,7 +83,7 @@ describe("the keys added for the single answer turn", () => {
 });
 
 const LOCALES: Locale[] = ["en", "ja", "es", "fr", "zh", "ar", "hi"];
-const HOSTS: AgentTurnHost[] = ["spotlight", "threadAsk", "noteAsk"];
+const HOSTS: AgentTurnHost[] = ["spotlight", "threadAsk", "noteAsk", "taskAsk"];
 
 beforeAll(async () => {
     for (const l of LOCALES) await loadLocale(l);

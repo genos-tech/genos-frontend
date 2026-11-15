@@ -2821,6 +2821,30 @@ export const ja: DeepPartial<Messages> = {
             todo: "To-Do",
         },
     },
+    taskAsk: {
+        modal: {
+            titleTask: "このタスクについてGenosに質問",
+            titleMilestone: "このマイルストーンについてGenosに質問",
+        },
+        loading: "会話を開いています…",
+        gone: {
+            titleTask: "このタスクはもう開けません",
+            titleMilestone: "このマイルストーンはもう開けません",
+            body: "削除されたか、アクセス権がなくなった可能性があります。これまでの質問は過去の会話に残っています。",
+            askInGeneral: "対象を指定せずにGenosに質問する",
+        },
+        conversation: {
+            emptyTask:
+                "このタスクについて何でも質問できます。Genosはタスクの内容を把握しており、質問はタスクと一緒に残るので、あとで続きから再開できます。",
+            emptyMilestone:
+                "このマイルストーンについて何でも質問できます。Genosはマイルストーンの内容を把握しており、質問はマイルストーンと一緒に残るので、あとで続きから再開できます。",
+            placeholderTask: "このタスクについて質問…",
+            placeholderMilestone: "このマイルストーンについて質問…",
+            newConversation: "新しい会話",
+            newConversationHint: "新しい会話を始めます。今の会話は過去の会話に残ります。",
+            newConversationStarted: "新しい会話を始めました。",
+        },
+    },
     noteAsk: {
         headerButton: {
             label: "聞く",

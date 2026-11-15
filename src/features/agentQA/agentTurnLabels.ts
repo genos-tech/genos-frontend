@@ -12,6 +12,8 @@
 //   - "spotlight"   Spotlight overlay + Genos page: `t.spotlight.*`
 //   - "threadAsk"   the thread Ask modal: its own wording where it has any,
 //   - "noteAsk"     the note Ask modal:   Spotlight's for everything else
+//   - "taskAsk"     the task / milestone Ask window (MIP-1057): Spotlight's wording throughout
+//                   (it has no turn strings of its own), the modals' plain "Note" for a cited note
 //
 // "Where it has any": the Ask modals keep the strings they already translated
 // (Q/A letters, Approve/Reject, Copy/Copied, Ask again, streaming, thinking,
@@ -81,7 +83,7 @@ export interface AgentTurnLabels {
     selectedText: string;
 }
 
-export type AgentTurnHost = "spotlight" | "threadAsk" | "noteAsk";
+export type AgentTurnHost = "spotlight" | "threadAsk" | "noteAsk" | "taskAsk";
 
 /** Build the turn's labels for a host. Memoise the result on `t` (a new
  *  object every render would defeat the turn's `memo`). */
@@ -120,9 +122,10 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
         // gets it from the note manager at the App root). The Ask modals do
         // not pass it yet, and "My note" would be WRONG for a team note, so
         // until they do they say just "Note".
-        entitySubtitle: own
-            ? { ...sp.entitySubtitle, notePersonal: sp.entitySubtitle.noteFallback }
-            : sp.entitySubtitle,
+        entitySubtitle:
+            host !== "spotlight"
+                ? { ...sp.entitySubtitle, notePersonal: sp.entitySubtitle.noteFallback }
+                : sp.entitySubtitle,
         undo: buildUndoLabels(t),
         dropped: sp.dropped,
         selectedText: sp.selection.label,

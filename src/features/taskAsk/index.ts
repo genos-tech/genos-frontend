@@ -10,3 +10,11 @@ export {
     type UseTaskAskArgs,
     type UseTaskAskReturn,
 } from "./useTaskAsk";
+export { TaskAskHost } from "./TaskAskHost";
+export { TaskAskModal } from "./TaskAskModal";
+export {
+    askGenosTaskRequest,
+    onAskGenosAboutTask,
+    requestAskGenosAboutTask,
+    type TaskAskRequest,
+} from "./taskAskLink";

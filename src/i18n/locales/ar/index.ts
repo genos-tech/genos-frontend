@@ -5913,6 +5913,31 @@ export const ar: DeepPartial<Messages> = {
             },
         },
     },
+    taskAsk: {
+        modal: {
+            titleTask: "اسأل Genos عن هذه المهمة",
+            titleMilestone: "اسأل Genos عن هذا المعلم",
+        },
+        loading: "جارٍ فتح محادثتك…",
+        gone: {
+            titleTask: "لم يعد بالإمكان فتح هذه المهمة",
+            titleMilestone: "لم يعد بالإمكان فتح هذا المعلم",
+            body: "ربما تم حذف هذا العنصر أو لم يعد لديك حق الوصول إليه. تبقى أسئلتك السابقة في محادثاتك السابقة.",
+            askInGeneral: "اسأل Genos سؤالاً عاماً",
+        },
+        conversation: {
+            emptyTask:
+                "اسأل أي شيء عن هذه المهمة. يعرف Genos تفاصيلها وتبقى أسئلتك معها لتتمكن من استئنافها لاحقاً.",
+            emptyMilestone:
+                "اسأل أي شيء عن هذا المعلم. يعرف Genos تفاصيله وتبقى أسئلتك معه لتتمكن من استئنافها لاحقاً.",
+            placeholderTask: "اسأل عن هذه المهمة…",
+            placeholderMilestone: "اسأل عن هذا المعلم…",
+            newConversation: "محادثة جديدة",
+            newConversationHint:
+                "ابدأ محادثة جديدة حول هذا العنصر. تبقى المحادثة الحالية ضمن محادثاتك السابقة.",
+            newConversationStarted: "بدأت محادثة جديدة.",
+        },
+    },
     noteAsk: {
         headerButton: {
             label: "اسأل",
