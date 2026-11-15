@@ -168,6 +168,27 @@ export const formatEventWhen = (input: EventWhenInput, locale?: string): string 
     }
 };
 
+/**
+ * Only the END of an event ("Tue, Dec 1, 11:00"), for a call that moves the end and says nothing of
+ * the start. An all-day end is Google's exclusive one, so it prints the last day it covers. Null when
+ * the value cannot be read (the caller prints the raw text).
+ */
+export const formatEventEnd = (
+    end: string | null | undefined,
+    zone?: string | null,
+    locale?: string
+): string | null => {
+    const value = end?.trim();
+    if (!value) return null;
+    if (isDateOnly(value)) {
+        return formatEventWhen(
+            { start: addDays(value, -1), allDay: true, withEnd: false },
+            locale
+        );
+    }
+    return formatEventWhen({ start: value, zone, withEnd: false }, locale);
+};
+
 const formatDays = (
     start: string,
     end: string | null,

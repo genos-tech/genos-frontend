@@ -252,6 +252,73 @@ describe("update_calendar_event", () => {
         expect(t).toContain("already has these values");
     });
 
+    it("shows a changed end when only the end was sent (MIP-1586)", () => {
+        // The call moves just the end, 10:30 -> 11:00. It is a change: the card must show it as a
+        // time row (before and after, in one zone) and must not say that nothing would change.
+        const { container } = mount("update_calendar_event", {
+            ...base,
+            end_iso: "2026-12-01T11:00:00",
+        });
+        const t = text(container);
+        expect(t).toMatch(/Time(?!s in)/);
+        expect(t).toMatch(
+            /10:00\s?AM\s?–\s?10:30\s?AM\s?→\s?Tue, Dec 1, 10:00\s?AM\s?–\s?11:00\s?AM/
+        );
+        expect(t).toContain("Times in Asia/Tokyo");
+        expect(t).not.toContain("already has these values");
+    });
+
+    it("says an end-only change to another day, in the card's zone", () => {
+        const { container } = mount("update_calendar_event", {
+            ...base,
+            end_iso: "2026-12-02T09:00:00",
+        });
+        const t = text(container);
+        expect(t).toMatch(/Dec 1, 10:00\s?AM\s?–\s?Wed, Dec 2, 9:00\s?AM/);
+        expect(t).not.toContain("already has these values");
+    });
+
+    it("shows an end-only change as the end when the event could not be read", () => {
+        // No `current`: the start is not known, so the row says it is the END that moves.
+        const { container } = mount("update_calendar_event", {
+            ...ONE,
+            event_id: "evt1",
+            end_iso: "2026-12-01T11:00:00",
+        });
+        const t = text(container);
+        expect(t).toContain("Ends");
+        expect(t).toMatch(/Dec 1, 11:00\s?AM/);
+        expect(t).toContain("Times in Asia/Tokyo");
+        expect(t).not.toContain("already has these values");
+    });
+
+    it("reads an all-day end as the last day it covers (Google's end is exclusive)", () => {
+        // Dec 1-2 held, the call moves the end to the 4th (exclusive): the event now covers Dec 1-3.
+        const allDay = {
+            ...CURRENT,
+            start_iso: "2026-12-01",
+            end_iso: "2026-12-03",
+            all_day: true,
+        };
+        const known = mount("update_calendar_event", {
+            ...ONE,
+            event_id: "evt1",
+            current: allDay,
+            end_iso: "2026-12-04",
+        });
+        expect(text(known.container)).toMatch(/Dec 1 – Wed, Dec 2 → Tue, Dec 1 – Thu, Dec 3/);
+        cleanup();
+        const unknown = mount("update_calendar_event", {
+            ...ONE,
+            event_id: "evt1",
+            end_iso: "2026-12-04",
+        });
+        const t = text(unknown.container);
+        expect(t).toContain("Ends");
+        expect(t).toContain("Thu, Dec 3");
+        expect(t).not.toContain("Times in");
+    });
+
     it("has no empty account in a not-found sentence for an account that is not the member's", () => {
         const { container } = mount("update_calendar_event", {
             ...TWO,

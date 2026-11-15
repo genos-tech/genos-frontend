@@ -492,6 +492,7 @@ export const zh: DeepPartial<Messages> = {
         calendarFields: {
             summary: "标题",
             when: "时间",
+            end: "结束",
             location: "地点",
             description: "说明",
             attendees: "参与者",
