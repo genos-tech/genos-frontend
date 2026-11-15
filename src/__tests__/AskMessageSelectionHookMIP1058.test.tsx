@@ -154,7 +154,58 @@ describe("the finished turn and Retry", () => {
     });
 });
 
+describe("what the turn keeps of the selection", () => {
+    it("is what was sent: a person as the source is not kept, the cut text is", () => {
+        const { result } = mount();
+        const person: AgentMentionRef = { kind: "user", userId: "u1", label: "Alice" };
+        act(() => {
+            result.current.onAsk("what?", undefined, undefined, {
+                text: "  the passage  ",
+                from: person,
+                truncated: true,
+            });
+        });
+        expect(lastAsk().selectedText).toBe("the passage");
+        expect(lastAsk()).not.toHaveProperty("selectedFrom");
+        expect(result.current.ask.askedSelection).toEqual({
+            text: "the passage",
+            truncated: true,
+        });
+    });
+
+    it("keeps the source that was sent", () => {
+        const { result } = mount();
+        act(() => {
+            result.current.onAsk("what?", undefined, undefined, SELECTION);
+        });
+        expect(result.current.ask.askedSelection).toEqual(SELECTION);
+    });
+});
+
 describe("done.dropped_references", () => {
+    it("keeps a turn that ended with no answer, so the note can say what could not be used", () => {
+        const { result } = mount();
+        act(() => {
+            result.current.onAsk("what?", [MESSAGE]);
+        });
+        act(() => {
+            lastAsk().onDone("sess-1", "run-1", 1, ["message"]);
+        });
+        expect(result.current.turns).toHaveLength(1);
+        expect(result.current.turns[0].droppedReferences).toEqual(["message"]);
+    });
+
+    it("still drops a turn that ended with nothing and nothing dropped", () => {
+        const { result } = mount();
+        act(() => {
+            result.current.onAsk("what?");
+        });
+        act(() => {
+            lastAsk().onDone("sess-1", "run-1", 1);
+        });
+        expect(result.current.turns).toHaveLength(0);
+    });
+
     it("lands on the finished turn", () => {
         const { result } = mount();
         act(() => {
