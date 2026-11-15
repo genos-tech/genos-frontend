@@ -1,6 +1,7 @@
 /**
- * The dropped-references notice (MIP-1058, `task` added by MIP-1585): `spotlight.dropped.*` in all
- * seven locales.
+ * The dropped-references notice (MIP-1058, `task` added by MIP-1585, the mention kinds of `/decide/`
+ * by MIP-1590): `spotlight.dropped.*` in all seven locales. The per-kind wording is pinned in
+ * `DroppedReferencesKindsClientMIP1590.test.tsx`.
  * `DeepPartial<Messages>` lets a locale ship without a key and show English; these read the raw
  * catalogs so the merge cannot hide a gap. The sentences have no placeholders, and each one names
  * Genos, so a translator cannot turn it into a statement about the member.
@@ -17,7 +18,20 @@ import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 
 const OTHERS = { ja, es, fr, zh, ar, hi } as const;
-const KEYS = ["message", "messages", "selection", "selectedFrom", "task"] as const;
+const KEYS = [
+    "message",
+    "messages",
+    "selection",
+    "selectedFrom",
+    "task",
+    "note",
+    "project",
+    "chat",
+    "group",
+    "user",
+    "todo",
+    "calendarEvent",
+] as const;
 
 // The glossary's words (locales/GLOSSARY.md) for the two things a `"task"` kind can be: the
 // sentence names both, because the server's kind covers the task OR milestone a conversation is
@@ -32,7 +46,7 @@ const TASK_AND_MILESTONE = {
 } as const;
 
 describe("the dropped-references strings", () => {
-    it("English has all five, each naming Genos", () => {
+    it("English has all twelve, each naming Genos", () => {
         for (const key of KEYS) {
             expect(en.spotlight.dropped[key].trim(), key).toBeTruthy();
             expect(en.spotlight.dropped[key], key).toContain("Genos");
@@ -44,7 +58,7 @@ describe("the dropped-references strings", () => {
     });
 
     it.each(Object.keys(OTHERS) as Array<keyof typeof OTHERS>)(
-        "%s has all five, translated, each still naming Genos",
+        "%s has all twelve, translated, each still naming Genos",
         (name) => {
             const dropped = (OTHERS[name].spotlight?.dropped ?? {}) as Record<
                 string,

@@ -355,7 +355,12 @@ describe("the whole path, with the real stream parser and the real hook", () => 
             ],
             [
                 { type: "answer_delta", text: "Added." },
-                { type: "done", session_id: "s1", run_id: "run-1", dropped_references: ["note"] },
+                {
+                    type: "done",
+                    session_id: "s1",
+                    run_id: "run-1",
+                    dropped_references: ["sprint"],
+                },
             ]
         );
         await ask();

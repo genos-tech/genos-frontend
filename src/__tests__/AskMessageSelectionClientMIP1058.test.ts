@@ -243,6 +243,13 @@ const LABELS: DroppedLabels = {
     selection: "SELECTION",
     selectedFrom: "SELECTED-FROM",
     task: "TASK",
+    note: "NOTE",
+    project: "PROJECT",
+    chat: "CHAT",
+    group: "GROUP",
+    user: "USER",
+    todo: "TODO",
+    calendarEvent: "CALENDAR-EVENT",
 };
 const M1: AgentMentionRef = { kind: "message", messageId: UUID, label: "a" };
 const M2: AgentMentionRef = { kind: "message", messageId: OTHER, label: "b" };

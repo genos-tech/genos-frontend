@@ -187,9 +187,21 @@ describe("the resumed leg's done", () => {
 });
 
 describe("the kinds this client knows", () => {
-    it("are the server's four", () => {
+    it("are the server's eleven (the four of the ask and card, and the seven mention kinds of /decide/)", () => {
         expect([...DROPPED_REFERENCES].sort()).toEqual(
-            ["message", "selected_from", "selection", "task"].sort()
+            [
+                "message",
+                "selected_from",
+                "selection",
+                "task",
+                "note",
+                "project",
+                "chat",
+                "group",
+                "user",
+                "todo",
+                "calendar_event",
+            ].sort()
         );
     });
 
@@ -250,6 +262,13 @@ const LABELS: DroppedLabels = {
     selection: "SELECTION",
     selectedFrom: "SELECTED-FROM",
     task: "TASK",
+    note: "NOTE",
+    project: "PROJECT",
+    chat: "CHAT",
+    group: "GROUP",
+    user: "USER",
+    todo: "TODO",
+    calendarEvent: "CALENDAR-EVENT",
 };
 
 describe("the sentence for a lost task", () => {

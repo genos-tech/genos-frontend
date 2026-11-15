@@ -4005,6 +4005,15 @@ export const es: DeepPartial<Messages> = {
             selectedFrom:
                 "Genos no pudo usar el origen del texto seleccionado, así que usó solo el texto.",
             task: "Genos no pudo usar la tarea o el hito sobre el que preguntaste, así que respondió sin ese contexto.",
+            note: "Genos no pudo usar una nota sobre la que preguntaste, así que respondió sin ella.",
+            project:
+                "Genos no pudo usar un proyecto sobre el que preguntaste, así que respondió sin él.",
+            chat: "Genos no pudo usar un chat sobre el que preguntaste, así que respondió sin él.",
+            group: "Genos no pudo usar un grupo que mencionaste, así que respondió sin él.",
+            user: "Genos no pudo usar una mención de una persona, así que respondió sin ella.",
+            todo: "Genos no pudo usar un pendiente sobre el que preguntaste, así que respondió sin él.",
+            calendarEvent:
+                "Genos no pudo usar un evento de calendario sobre el que preguntaste, así que respondió sin él.",
         },
         selection: {
             label: "Texto seleccionado",

@@ -4565,6 +4565,13 @@ export const zh: DeepPartial<Messages> = {
             selection: "Genos 无法使用你选中的文字，因此未参考该文字作答。",
             selectedFrom: "Genos 无法使用所选文字的出处，因此只参考了文字本身。",
             task: "Genos 无法使用你所询问的任务或里程碑，因此未参考它作答。",
+            note: "Genos 无法使用你所询问的笔记，因此未参考它作答。",
+            project: "Genos 无法使用你所询问的项目，因此未参考它作答。",
+            chat: "Genos 无法使用你所询问的聊天，因此未参考它作答。",
+            group: "Genos 无法使用你提到的群组，因此未参考它作答。",
+            user: "Genos 无法使用你提到的用户，因此未参考该用户作答。",
+            todo: "Genos 无法使用你所询问的待办事项，因此未参考它作答。",
+            calendarEvent: "Genos 无法使用你所询问的日历事件，因此未参考它作答。",
         },
         selection: {
             label: "所选文字",
