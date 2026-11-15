@@ -8,6 +8,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { SkeletonLines } from "../../../../components/ui/feedback/Skeleton";
+import { ViaChip } from "../../../../components/ui/misc/ViaChip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -17,6 +18,7 @@ import { fmt, Messages, useTranslation } from "../../../../i18n";
 import { focusRing, g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { NoteVersionDetail } from "../../../../types/notes";
+import { viaSourceOfNoteVersion } from "../../../tasks/utils/viaSource";
 import { loadNoteVersion } from "../services/loadNoteVersion";
 
 interface ModalNoteHistoryProps {
@@ -255,6 +257,9 @@ export const ModalNoteHistory = ({
                             {versions.map((v) => {
                                 const isSelected = v.versionNo === selectedVersionNo;
                                 const isHead = v.versionNo === headVersionNo;
+                                // Written through a connected AI app or an API key
+                                // (MIP-1488). Null for a typed edit and for an older API.
+                                const via = viaSourceOfNoteVersion(v, myself.userId);
                                 return (
                                     <Box
                                         key={v.versionNo}
@@ -341,12 +346,20 @@ export const ModalNoteHistory = ({
                                                     </Chip>
                                                 )}
                                             </Stack>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{ color: g.text.secondary }}
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                spacing={0.75}
+                                                sx={{ minWidth: 0 }}
                                             >
-                                                {relTime(v.tsUpdatedAt, t)}
-                                            </Typography>
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{ color: g.text.secondary }}
+                                                >
+                                                    {relTime(v.tsUpdatedAt, t)}
+                                                </Typography>
+                                                {via && <ViaChip size="sm" source={via} />}
+                                            </Stack>
                                             {v.restoredFromVersionNo != null && (
                                                 <Typography
                                                     level="body-xs"

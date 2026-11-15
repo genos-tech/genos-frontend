@@ -261,6 +261,14 @@ export type NoteVersionMeta = {
     restoredFromVersionNo: number | null;
     tsCreatedAt: string;
     tsUpdatedAt: string;
+    /**
+     * How this version was written when it was NOT typed in Genos (MIP-1488): `{ kind:
+     * "api_key" | "oauth", app?: "claude" | "chatgpt" }`, plus the key's or app's name
+     * for the editor only. `null` or absent (an older API, an old row, a version made in
+     * the web app or by the in-app AI, a row the client just made) means no chip. Read
+     * it only through `viaSourceOfNoteVersion`.
+     */
+    via?: Record<string, unknown> | null;
 };
 
 export type NoteVersionDetail = NoteVersionMeta & {

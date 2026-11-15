@@ -62,6 +62,8 @@ export const tasks = {
         unauthorizedNoToken: "Unauthorized. Auth toke is not found.",
         messageIdExists: "Message Id already exists.",
         unauthorizedPleaseLogin: "Unauthorized. Please log in again.",
+        collaboratorNotOnProject:
+            "{name} can't be a collaborator: they are not a member of this project, so they could not open the task. Add them to the project first.",
         subTaskProjectMoveForbidden:
             "This task lives in the project of the task or milestone it sits under. Move that one to bring this task with it.",
     },
@@ -324,6 +326,7 @@ export const tasks = {
         sprintFallback: "Sprint",
         addAssignees: "Add assignees",
         addCollaborators: "Add collaborators",
+        collaboratorsProjectOnly: "No one to add. Collaborators must be members of this project.",
         tasksSuffix: " tasks",
     },
 

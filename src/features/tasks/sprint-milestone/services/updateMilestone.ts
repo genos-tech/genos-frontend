@@ -3,6 +3,7 @@ import { Socket } from "socket.io-client";
 
 import { authApi } from "../../../../services/api";
 import { MilestoneResponse } from "../types";
+import { MilestoneRefusalHooks, reportMilestoneRefusal } from "./milestoneRefusal";
 
 export type UpdateMilestoneInput = {
     milestoneId: number;
@@ -55,7 +56,8 @@ export type MilestoneMentionContext = {
 export const updateMilestone = async (
     input: UpdateMilestoneInput,
     accessToken: string | null,
-    mentionCtx?: MilestoneMentionContext
+    mentionCtx?: MilestoneMentionContext,
+    refusal?: MilestoneRefusalHooks
 ): Promise<MilestoneResponse | undefined> => {
     try {
         const api = authApi(accessToken);
@@ -116,6 +118,7 @@ export const updateMilestone = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);
+            reportMilestoneRefusal(error, refusal);
         } else {
             console.error("Unexpected error:", error);
         }

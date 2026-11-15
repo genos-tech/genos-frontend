@@ -1,5 +1,6 @@
 import { PartialBlock } from "@blocknote/core";
 
+import type { ViaApp } from "../features/tasks/utils/viaSource";
 import { UserProps } from "./admin";
 import { ReactionProps } from "./common";
 import { ProjectProps } from "./tasks";
@@ -193,6 +194,12 @@ export type ActivityMessageProps = {
     // member (surface 10, MIP-1432). Facts, not sentences: the row and the
     // toast are worded here, in the member's language.
     aiApp?: AiAppNotice;
+    // The official AI app a notification card's change was made through
+    // (MIP-1573): "claude" or "chatgpt", read from `meta.via.app` at adapt
+    // time and only when it is one of those two exact strings. Absent for a
+    // person's own change, any other app, and every row stored before the
+    // API sent it; the card then shows nothing extra. Never a name.
+    viaApp?: ViaApp;
 };
 
 export type AiAppNoticeItem = {
@@ -207,6 +214,10 @@ export type AiAppNoticeItem = {
 
 export type AiAppNotice = {
     app: string;
+    // Which official AI app this notice is about (MIP-1571): "claude" or
+    // "chatgpt", from `meta.appFamily`; its mark replaces the robot icon.
+    // Absent for any other app, an API key and notices filed before it.
+    appFamily?: ViaApp;
     verb: "created" | "status" | "commented" | "deleted" | string;
     kind: string;
     count: number;
@@ -454,6 +465,14 @@ export type TodoItemProps = {
     tsCreatedAt: string;
     tsUpdatedAt: string;
     tsCompletedAt: string | null;
+    /**
+     * How the LAST write to this to-do's content arrived, when it was a connected AI
+     * app or an API key (MIP-1488): `{ kind: "api_key" | "oauth", app?: "claude" |
+     * "chatgpt", key_name?, client_name? }`. `null` or absent (an older API, a to-do
+     * the member last touched themselves) means no chip. A to-do is private to its
+     * owner, so the name is theirs; read it only through `viaSourceOfTodoItem`.
+     */
+    via?: Record<string, unknown> | null;
 };
 
 // "Remind me about this to-do at 3pm" — the pending nudge on one item.

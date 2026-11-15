@@ -17,6 +17,7 @@
 import { channelService } from "../../../services/channel/channelService";
 import type { UserProps } from "../../../types/admin";
 import type { ActivityMessageProps } from "../../../types/chat";
+import { viaSourceFromVia, type ViaApp } from "../../tasks/utils/viaSource";
 import { AI_APP_SURFACE, parseAiAppNotice } from "../utils/aiAppNotice";
 import { derivePreviewMediaKind } from "../utils/common";
 
@@ -103,6 +104,18 @@ function resolveChatName(a: V3ActivityWire): string {
     if (ch && ch.title) return ch.title;
     if (a.channelKind === 1 && a.actor?.userName) return a.actor.userName;
     return "?";
+}
+
+/**
+ * The official AI app behind a notification card (MIP-1573), from `meta.via` as the API
+ * reduced it for this viewer (`{ kind: "oauth", app?: "claude" | "chatgpt" }`, or absent).
+ * Only an exact family string on a connected-app `via` counts; any other `via`, an unknown
+ * `app`, a number or an object is `undefined` and the card shows what it always did. The
+ * viewer is never treated as the owner, so no name can be read from here.
+ */
+function viaAppOf(meta: Record<string, unknown> | null | undefined): { viaApp?: ViaApp } {
+    const source = viaSourceFromVia(meta?.via, false);
+    return source?.kind === "mcp" && source.app ? { viaApp: source.app } : {};
 }
 
 function aiAppActivity(
@@ -233,6 +246,7 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
             // it to route un-mentioned comment activities to the `comments`
             // category, and the feed chip reads it to label the row.
             isComment: !!meta.isComment,
+            ...viaAppOf(meta),
         } as ActivityMessageProps;
     }
 
@@ -314,5 +328,6 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
         // `taskCommentId` in metadata — the router uses this to treat them
         // as real-user task comments, not bot lifecycle bubbles.
         isTaskComment: !!(msg.metadata && (msg.metadata as Record<string, unknown>).taskCommentId),
+        ...viaAppOf(a.meta),
     } as ActivityMessageProps;
 }

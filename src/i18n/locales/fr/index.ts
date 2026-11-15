@@ -4930,6 +4930,8 @@ export const fr: DeepPartial<Messages> = {
             unauthorizedNoToken: "Non autorisé. Le jeton d'authentification est introuvable.",
             messageIdExists: "L'ID du message existe déjà.",
             unauthorizedPleaseLogin: "Non autorisé. Veuillez vous reconnecter.",
+            collaboratorNotOnProject:
+                "{name} n'est pas membre de ce projet et ne pourrait donc pas ouvrir la tâche : impossible de l'ajouter comme collaborateur. Ajoutez d'abord cette personne au projet.",
             subTaskProjectMoveForbidden:
                 "Cette tâche appartient au projet de la tâche ou du jalon dans lequel elle se trouve. Déplacez celui-ci pour l'emmener avec lui.",
         },
@@ -5140,6 +5142,8 @@ export const fr: DeepPartial<Messages> = {
             sprintFallback: "Sprint",
             addAssignees: "Ajouter des assignés",
             addCollaborators: "Ajouter des collaborateurs",
+            collaboratorsProjectOnly:
+                "Personne à ajouter. Les collaborateurs doivent être membres de ce projet.",
             tasksSuffix: " tâches",
         },
         milestones: {

@@ -34,6 +34,7 @@ import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { MilestoneFolderPicker } from "../../../sprint-milestone/components/MilestoneFolderPicker";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
 import { applyMilestonePick } from "../../../utils/applyMilestonePick";
+import { collaboratorHolderIds } from "../../../utils/collaboratorCandidates";
 import { deliveryPrUrls } from "../../../utils/deliveryPrUrls";
 import { ownsItsProject } from "../../../utils/taskKind";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
@@ -542,6 +543,24 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setTaskContent({ ...taskContent, collaborators: next });
         setTaskUpdated?.(true);
     };
+    // Who the server counts as able to open the task besides the project's
+    // people (MIP-1567): its assignee and reporter, as held in this form. A
+    // milestone's collaborators are judged on project membership alone.
+    // The project's owner is known without a request once its field rules are
+    // loaded for THIS project; until then the roster has to carry them.
+    // The working copy's project (the picker can change it), or the open one
+    // while the copy has none yet, so the roster is still read.
+    const collaboratorProjectId =
+        taskContent.project?.projectId ?? usePM.currentProject?.projectId;
+    const collaboratorOwnerId =
+        useTM.taskFieldRules?.projectId === collaboratorProjectId
+            ? useTM.taskFieldRules?.ownerUserId
+            : null;
+    const holderIds = collaboratorHolderIds({
+        isMilestone,
+        assigneeId: taskContent.assignee?.userId ?? assignee?.userId,
+        reporterId: taskContent.reporter?.userId,
+    });
 
     return (
         <Box
@@ -702,8 +721,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     <FieldLabel isDark={isDark}>{t.tasks.fields.collaborators}</FieldLabel>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <MultiMemberPicker
+                            accessToken={accessToken}
+                            dropDisallowed={!isPreviewMode}
+                            holderIds={holderIds}
                             myself={myself}
+                            ownerUserId={collaboratorOwnerId}
                             placeholder={t.tasks.picker.addCollaborators}
+                            projectId={collaboratorProjectId}
                             selected={taskContent.collaborators ?? []}
                             setMyself={setMyself}
                             socket={socket}

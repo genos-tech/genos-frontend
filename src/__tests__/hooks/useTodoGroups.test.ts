@@ -857,3 +857,58 @@ describe("useTodoGroups — delete with Undo (MIP-1300)", () => {
         expect(patched).toEqual([1, 3]);
     });
 });
+
+// MIP-1488: a to-do last written by an AI app carries `via`; the server clears it when the
+// member edits the content themselves, so the row must not keep the chip while that PATCH
+// is in flight, and must get it back if the PATCH never landed.
+describe("useTodoGroups — a person's edit clears the via chip (MIP-1488)", () => {
+    const VIA = { kind: "oauth", app: "claude" };
+    const viaOf = (result: { current: { groups: TodoGroupProps[] } }, id: number) =>
+        result.current.groups[0].items.find((i) => i.itemId === id)?.via;
+
+    const boot = async () => {
+        const group = seedGroup();
+        group.items = group.items.map((i) => ({ ...i, via: VIA }));
+        loadTodoGroupsMock.mockResolvedValue([group]);
+        const hook = renderHook(() => useTodoGroups(myself, "token"));
+        await flush();
+        return hook;
+    };
+
+    it("clears it while a title edit is pending, and restores it when the PATCH fails", async () => {
+        const { result } = await boot();
+        let release: (v: undefined) => void = () => {};
+        updateTodoItemMock.mockReturnValue(new Promise((r) => (release = r)));
+        let pending: Promise<unknown> = Promise.resolve();
+        act(() => {
+            pending = result.current.patchItem(4, { title: "mine now" });
+        });
+        expect(viaOf(result, 4)).toBeNull();
+        // The failed PATCH puts the row back as it was, chip included.
+        await act(async () => {
+            release(undefined);
+            await pending;
+        });
+        expect(viaOf(result, 4)).toEqual(VIA);
+        expect(viaOf(result, 2)).toEqual(VIA);
+    });
+
+    it("keeps it on a reorder and on a save that changes nothing", async () => {
+        const { result } = await boot();
+        updateTodoItemMock.mockReturnValue(new Promise(() => {}));
+        act(() => {
+            void result.current.patchItem(4, { sortOrder: 9 });
+            void result.current.patchItem(4, { title: "Item 4", isCompleted: false });
+        });
+        expect(viaOf(result, 4)).toEqual(VIA);
+    });
+
+    it("takes the server's answer over its guess", async () => {
+        const { result } = await boot();
+        updateTodoItemMock.mockResolvedValue({ ...mkItem(4, null), title: "x", via: VIA });
+        await act(async () => {
+            await result.current.patchItem(4, { title: "x" });
+        });
+        expect(viaOf(result, 4)).toEqual(VIA);
+    });
+});

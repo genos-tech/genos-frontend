@@ -36,6 +36,7 @@ import {
     upsertSprintConfig,
 } from "../../features/tasks/sprint-milestone/services";
 import type { ConvertedTaskRef } from "../../features/tasks/sprint-milestone/services/convertTaskMilestone";
+import type { MilestoneRefusalHooks } from "../../features/tasks/sprint-milestone/services/milestoneRefusal";
 import type { MilestoneMentionContext } from "../../features/tasks/sprint-milestone/services/updateMilestone";
 import {
     Milestone,
@@ -206,13 +207,16 @@ export interface SprintMilestoneManagementState {
     updateExistingSprint: (input: UpdateSprintInput) => Promise<Sprint | null>;
     removeSprint: (sprintId: number, projectId: number) => Promise<boolean>;
 
-    createNewMilestone: (input: CreateMilestoneInput) => Promise<Milestone | null>;
+    createNewMilestone: (
+        input: CreateMilestoneInput,
+        refusal?: MilestoneRefusalHooks
+    ) => Promise<Milestone | null>;
     updateExistingMilestone: (
         input: UpdateMilestoneInput,
         projectId: number,
         socket?: Socket | null,
         mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">,
-        opts?: { deferStateSync?: boolean }
+        opts?: { deferStateSync?: boolean; refusal?: MilestoneRefusalHooks }
     ) => Promise<Milestone | null>;
     /** The App-root state writes `updateExistingMilestone` performs by
      *  default (milestone-list upsert + currentMilestone mirror). A
@@ -490,8 +494,11 @@ export const useSprintMilestoneManagement = (
     );
 
     const createNewMilestone = useCallback(
-        async (input: CreateMilestoneInput): Promise<Milestone | null> => {
-            const res = await createMilestone(input, accessToken);
+        async (
+            input: CreateMilestoneInput,
+            refusal?: MilestoneRefusalHooks
+        ): Promise<Milestone | null> => {
+            const res = await createMilestone(input, accessToken, refusal);
             if (res?.milestone) {
                 setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
             }
@@ -517,7 +524,7 @@ export const useSprintMilestoneManagement = (
             _projectId: number,
             socket?: Socket | null,
             mentionMeta?: Omit<MilestoneMentionContext, "socket" | "tsUpdatedAt">,
-            opts?: { deferStateSync?: boolean }
+            opts?: { deferStateSync?: boolean; refusal?: MilestoneRefusalHooks }
         ): Promise<Milestone | null> => {
             let mentionCtx: MilestoneMentionContext | undefined;
             if (socket && mentionMeta) {
@@ -525,7 +532,7 @@ export const useSprintMilestoneManagement = (
                 // placeholder so the socket event can stamp itself.
                 mentionCtx = { socket, tsUpdatedAt: new Date().toISOString(), ...mentionMeta };
             }
-            const res = await updateMilestone(input, accessToken, mentionCtx);
+            const res = await updateMilestone(input, accessToken, mentionCtx, opts?.refusal);
             if (res?.milestone) {
                 // IDB cache writes are render-free — immediate on both paths.
                 syncMilestoneBackingTaskCaches(res.milestone);

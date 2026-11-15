@@ -2267,6 +2267,8 @@ export const es: DeepPartial<Messages> = {
             unauthorizedNoToken: "No autorizado. No se encontró el token de autenticación.",
             messageIdExists: "El ID del mensaje ya existe.",
             unauthorizedPleaseLogin: "No autorizado. Inicia sesión de nuevo.",
+            collaboratorNotOnProject:
+                "{name} no es miembro de este proyecto, así que no podría abrir la tarea y no puede ser colaborador. Agrega primero a esa persona al proyecto.",
             subTaskProjectMoveForbidden:
                 "Esta tarea pertenece al proyecto de la tarea o el hito en el que está. Mueve ese elemento y la tarea se moverá con él.",
         },
@@ -2474,6 +2476,8 @@ export const es: DeepPartial<Messages> = {
             addAssignees: "Añadir asignados",
             tasksSuffix: " tareas",
             addCollaborators: "Agregar colaboradores",
+            collaboratorsProjectOnly:
+                "No hay nadie a quien agregar. Los colaboradores deben ser miembros de este proyecto.",
         },
         milestones: {
             sectionInSprint: "Hitos en {name}",

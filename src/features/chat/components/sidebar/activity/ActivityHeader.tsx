@@ -3,6 +3,7 @@ import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { ViaChip } from "../../../../../components/ui/misc/ViaChip";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
@@ -128,6 +129,13 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
 
             {/* Right-aligned timestamp and unread indicator */}
             <Stack alignItems="center" direction="row" spacing={1} sx={{ flexShrink: 0, ml: 1 }}>
+                {/* Made through the official Claude / ChatGPT app (MIP-1573): its
+                    round mark sits by the time. Only when the API named the family;
+                    any other connected app, an API key and older rows show nothing
+                    extra, as before. */}
+                {activity.viaApp && (
+                    <ViaChip source={{ kind: "mcp", name: null, app: activity.viaApp }} />
+                )}
                 <Typography
                     level="body-xs"
                     sx={{
