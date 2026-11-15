@@ -4,7 +4,7 @@
 // What it must NOT do, and how:
 //   - Break selecting, copying or following links. It never calls `preventDefault` on anything but its
 //     own `mousedown` (which keeps the selection alive while the button is pressed), listens to nothing
-//     but the list's own `mouseup` / `keyup` (not every `selectionchange` in the app), and sits outside
+//     but the list's own `mousedown` / `mouseup` (not every `selectionchange` in the app), and sits outside
 //     the message DOM (a portal), so it is never part of a selection.
 //   - Fight a double-click (the app's "add to To-Do") or a triple click: a selection made by a click
 //     count above one is not offered.
@@ -90,8 +90,8 @@ export const ChatSelectionAsk = ({
         });
     }, [containerRef]);
 
-    // The list's own pointer and key events: a selection is finished on mouse-up (or on a shift-arrow
-    // key-up). One tick later, because the browser settles the selection after the event.
+    // The list's own pointer events: a selection is finished on mouse-up. One tick later, because the
+    // browser settles the selection after the event.
     useEffect(() => {
         const container = containerRef.current;
         if (!container || !available) return;
@@ -110,17 +110,11 @@ export const ChatSelectionAsk = ({
             multiClickRef.current = e.detail > 1;
             schedule();
         };
-        const onKeyUp = (e: KeyboardEvent) => {
-            multiClickRef.current = false;
-            if (e.key === "Shift" || e.key.startsWith("Arrow")) schedule();
-        };
         container.addEventListener("mousedown", onMouseDown);
         container.addEventListener("mouseup", onMouseUp);
-        container.addEventListener("keyup", onKeyUp);
         return () => {
             container.removeEventListener("mousedown", onMouseDown);
             container.removeEventListener("mouseup", onMouseUp);
-            container.removeEventListener("keyup", onKeyUp);
             if (timer !== null) window.clearTimeout(timer);
         };
     }, [containerRef, evaluate, available]);

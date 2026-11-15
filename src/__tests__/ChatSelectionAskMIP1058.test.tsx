@@ -348,10 +348,6 @@ describe("it does not listen to the whole app", () => {
             </CssVarsProvider>
         );
         view.unmount();
-        expect(remove.mock.calls.map(([t]) => t).sort()).toEqual([
-            "keyup",
-            "mousedown",
-            "mouseup",
-        ]);
+        expect(remove.mock.calls.map(([t]) => t).sort()).toEqual(["mousedown", "mouseup"]);
     });
 });

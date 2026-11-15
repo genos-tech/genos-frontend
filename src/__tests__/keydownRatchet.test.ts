@@ -48,6 +48,10 @@ const ALLOWED: Record<string, { count: number; why: string }> = {
         count: 1,
         why: "Escape closes Spotlight (not a shortcut anyone looks up; Cmd/Ctrl+K is the registry's)",
     },
+    "features/chat/components/shared/ChatSelectionAsk.tsx": {
+        count: 1,
+        why: 'Escape dismisses the "Ask Genos" button next to selected text (MIP-1058); not a shortcut anyone looks up, and the listener exists only while the button is showing',
+    },
     "lp/kit/LpShell.tsx": { count: 1, why: "Escape on the marketing site, a separate surface" },
 };
 
