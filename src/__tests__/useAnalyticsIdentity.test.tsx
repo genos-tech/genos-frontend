@@ -35,12 +35,13 @@ const makeMyself = (over: Partial<UserProps> = {}): UserProps =>
     }) as UserProps;
 
 describe("useAnalyticsIdentity", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
         vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
         vi.stubEnv("VITE_POSTHOG_HOST", "https://eu.i.posthog.com");
         window.localStorage.clear();
         posthogMock.identify.mockClear();
         analytics.init();
+        await analytics.whenReady();
     });
 
     it("identifies with the user id, team id and role", () => {
