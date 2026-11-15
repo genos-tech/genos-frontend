@@ -2272,6 +2272,12 @@ export const es: DeepPartial<Messages> = {
             subTaskProjectMoveForbidden:
                 "Esta tarea pertenece al proyecto de la tarea o el hito en el que está. Mueve ese elemento y la tarea se moverá con él.",
         },
+        moveNotice: {
+            notesNarrowed:
+                "{count, plural, one {# persona perdió el rol de propietario en las notas de tareas porque no está} other {# personas perdieron el rol de propietario en las notas de tareas porque no están}} en el proyecto de destino. Al volver a moverlo, el rol se restaura.",
+            reportersOutsideDestination:
+                "{count, plural, one {# persona que creó estas tareas no está} other {# personas que crearon estas tareas no están}} en el proyecto de destino ni en su equipo.",
+        },
         autocomplete: {
             statusPlaceholder: "Estado",
             priorityPlaceholder: "Prioridad",

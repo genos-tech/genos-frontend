@@ -88,6 +88,7 @@ import {
     countMilestoneTaskStatuses,
     milestoneTaskStatuses,
 } from "../../utils/milestoneTaskProgress";
+import { dropRefusedMove } from "../../utils/moveRefusal";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
@@ -2094,15 +2095,35 @@ const MilestonePreviewInner = ({
         const dropped = new Set<string>();
         for (;;) {
             let refusedId: string | null = null;
+            let moveRefused = false;
             updated = await useSM.updateExistingMilestone(patch, projectId, undefined, undefined, {
                 refusal: {
                     people: next.collaborators,
                     onCollaboratorRefused: (id) => {
                         refusedId = id.toLowerCase();
                     },
+                    onMoveRefused: () => {
+                        moveRefused = true;
+                    },
                 },
             });
-            if (updated || refusedId == null || dropped.has(refusedId)) break;
+            if (updated) break;
+            if (moveRefused && patch.projectId !== undefined) {
+                // The move was refused whole (an assignee in the moved set is
+                // not on the destination): the milestone is where it was. Put
+                // the picker back, and the tags it cleared on the way, and
+                // send the person's OTHER edits again without the move. The
+                // project is gone from the patch, so this cannot repeat.
+                const othersLeft = dropRefusedMove(patch);
+                setTaskContentLike((prev) => ({
+                    ...prev,
+                    ...(milestoneProject ? { project: milestoneProject } : {}),
+                    tags: (milestone.tags as TagListProps[]) ?? [],
+                }));
+                if (!othersLeft) break;
+                continue;
+            }
+            if (refusedId == null || dropped.has(refusedId)) break;
             dropped.add(refusedId);
             const stillThere = (c: { userId: string }) =>
                 !dropped.has(String(c.userId).toLowerCase());
@@ -2127,7 +2148,9 @@ const MilestonePreviewInner = ({
         if (updated) {
             syncMilestoneToAllTasks(updated);
             syncMilestoneCard(updated);
-            if (movedFromProjectId != null) {
+            // `patch.projectId` is gone when the move was refused and the rest
+            // of the patch was sent without it: nothing moved then.
+            if (movedFromProjectId != null && patch.projectId !== undefined) {
                 // The move rewrote far more rows than this preview tracks —
                 // the backing task, every task in the milestone, all their
                 // sub-tasks, and each one's re-minted `<CODE>-<n>`. Re-pull

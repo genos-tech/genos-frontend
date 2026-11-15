@@ -6,6 +6,7 @@ import { reloadStoredTask } from "../../features/tasks/services/reloadStoredTask
 import { sendUpdatedSpecificTask } from "../../features/tasks/services/sendUpdatedSpecificTask";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { TaskSaveRefusedError } from "../../features/tasks/services/taskSaveRefusedError";
+import { ASSIGNEE_NOT_ON_DESTINATION } from "../../features/tasks/utils/moveRefusal";
 import { UserProps } from "../../types/admin";
 import { TaskEditStateManagement } from "../../types/taskEditState";
 import { AttachmentFileProps, TaskProps } from "../../types/tasks";
@@ -209,7 +210,52 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                         collaboratorsPutBack = true;
                     }
                 }
-                if (!taskSwitched && !collaboratorsPutBack) {
+                // Another narrow one: a project MOVE refused because an assignee
+                // in the moved set is not on the destination (MIP-1597). The
+                // server changed nothing and the rest of the save was fine, so
+                // only what the project pick set comes back to what is stored
+                // (the project, the tags and the milestone / sprint / parent the
+                // pick cleared); every other edit stays and is sent again. The
+                // move is gone from that save, so it cannot be refused the same
+                // way twice. Without a stored copy to put back (the reload
+                // failed, or another task is open now) it takes the full path.
+                let movePutBack = false;
+                if (
+                    !taskSwitched &&
+                    !collaboratorsPutBack &&
+                    error.code === ASSIGNEE_NOT_ON_DESTINATION
+                ) {
+                    const storedTask = await reloadStoredTask(
+                        myself,
+                        Number(baseTaskContent.id),
+                        baseTaskContent.project?.projectId,
+                        accessToken
+                    );
+                    // Only a copy that is NOT in the destination: a reload that
+                    // handed the destination back (a stale cache row) would
+                    // "put back" the move and send it again, to be refused the
+                    // same way forever.
+                    if (
+                        storedTask &&
+                        storedTask.project?.projectId != null &&
+                        storedTask.project.projectId !== baseTaskContent.project?.projectId &&
+                        Number(shownTaskIdRef.current) === Number(storedTask.id)
+                    ) {
+                        const projectBack = (prev: TaskProps): TaskProps => ({
+                            ...prev,
+                            project: storedTask.project,
+                            tags: storedTask.tags,
+                            milestoneId: storedTask.milestoneId,
+                            sprintId: storedTask.sprintId,
+                            parentTaskId: storedTask.parentTaskId,
+                            rootTaskId: storedTask.rootTaskId,
+                        });
+                        setTmpCurrentTaskContent((prev) => projectBack(prev));
+                        setCurrentPreviewTask((prev) => (prev ? projectBack(prev) : prev));
+                        movePutBack = true;
+                    }
+                }
+                if (!taskSwitched && !collaboratorsPutBack && !movePutBack) {
                     // Files that were never uploaded (the upload runs only
                     // after the PUT succeeds) cannot stay in the list: the
                     // pending-attachment effect would re-send them as soon as
@@ -269,11 +315,11 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                         onStoredTaskRestored?.(storedTask);
                     }
                 }
-                // Same resets as a finished save, minus "saved". The one
-                // exception is the collaborator put-back above: its remaining
-                // edits are still unsent, so the task stays dirty and goes
-                // out again.
-                setTaskUpdated(collaboratorsPutBack);
+                // Same resets as a finished save, minus "saved". The exceptions
+                // are the two put-backs above (a collaborator, a refused
+                // move): their remaining edits are still unsent, so the task
+                // stays dirty and goes out again.
+                setTaskUpdated(collaboratorsPutBack || movePutBack);
                 setTaskStatusUpdated(false);
                 setTaskBodyEdited(false);
                 setStartIntervalUpdatingTask(false);

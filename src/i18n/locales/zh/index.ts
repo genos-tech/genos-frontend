@@ -4705,6 +4705,11 @@ export const zh: DeepPartial<Messages> = {
             subTaskProjectMoveForbidden:
                 "此任务归属于其所在的上级任务或里程碑的项目。请移动上级项，此任务会随之移动。",
         },
+        moveNotice: {
+            notesNarrowed:
+                "{count} 人因不在目标项目中，失去了任务笔记的所有者角色。移回原项目即可恢复。",
+            reportersOutsideDestination: "创建这些任务的 {count} 人不在目标项目或其团队中。",
+        },
         autocomplete: {
             statusPlaceholder: "状态",
             priorityPlaceholder: "优先级",

@@ -6,6 +6,7 @@ import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
 import { ChannelKind } from "../../../types/channel";
 import { TaskProps } from "../../../types/tasks";
+import { ASSIGNEE_NOT_ON_DESTINATION } from "../utils/moveRefusal";
 import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
@@ -163,6 +164,17 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                 // Server-side one-task-per-thread guard: this thread got a
                 // task since the menu was rendered (another member, another
                 // session). Tell the user why instead of the generic line.
+                // A project switch in the create form is a move of the scaffold
+                // row: if its assignee is not on the destination the server
+                // changed nothing and names why. The form stays open, so the
+                // person can pick another project or assignee.
+                if (
+                    taskCreateData?.code === ASSIGNEE_NOT_ON_DESTINATION &&
+                    typeof taskCreateData?.error === "string" &&
+                    taskCreateData.error
+                ) {
+                    return fail(taskCreateData.error);
+                }
                 return fail(
                     taskCreateData?.code === "thread_already_has_task"
                         ? errMsgs.threadAlreadyHasTask

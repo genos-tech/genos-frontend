@@ -2261,6 +2261,12 @@ export const hi: DeepPartial<Messages> = {
             subTaskProjectMoveForbidden:
                 "यह टास्क उस टास्क या माइलस्टोन के प्रोजेक्ट में रहता है जिसके अंदर यह है। इसे साथ ले जाने के लिए उसी को मूव करें।",
         },
+        moveNotice: {
+            notesNarrowed:
+                "{count, plural, one {# व्यक्ति ने} other {# लोगों ने}} टास्क नोट पर अपनी मालिक की भूमिका खो दी, क्योंकि वे गंतव्य प्रोजेक्ट में नहीं हैं। वापस मूव करने पर भूमिका लौट आती है।",
+            reportersOutsideDestination:
+                "इन टास्क को बनाने वाले {count, plural, one {# व्यक्ति} other {# लोग}} गंतव्य प्रोजेक्ट या उसकी टीम में नहीं हैं।",
+        },
         autocomplete: {
             statusPlaceholder: "स्थिति",
             priorityPlaceholder: "प्राथमिकता",

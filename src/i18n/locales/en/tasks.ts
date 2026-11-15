@@ -67,6 +67,12 @@ export const tasks = {
         subTaskProjectMoveForbidden:
             "This task lives in the project of the task or milestone it sits under. Move that one to bring this task with it.",
     },
+    moveNotice: {
+        notesNarrowed:
+            "{count, plural, one {# person lost their} other {# people lost their}} Owner role on task notes because they are not on the destination project. Moving back restores the role.",
+        reportersOutsideDestination:
+            "{count, plural, one {# person who filed these tasks is} other {# people who filed these tasks are}} not on the destination project or its team.",
+    },
 
     // Common autocomplete placeholders.
     autocomplete: {

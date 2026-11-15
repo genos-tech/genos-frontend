@@ -4877,6 +4877,12 @@ export const ja: DeepPartial<Messages> = {
             subTaskProjectMoveForbidden:
                 "このタスクは、その上位にあるタスクまたはマイルストーンのプロジェクトに属します。一緒に移動するには、そちらを移動してください。",
         },
+        moveNotice: {
+            notesNarrowed:
+                "{count}人が、移動先のプロジェクトに所属していないため、タスクのノートのオーナー権限を失いました。元に戻すと復元されます。",
+            reportersOutsideDestination:
+                "これらのタスクを作成した{count}人は、移動先のプロジェクトにもそのチームにも所属していません。",
+        },
         autocomplete: {
             statusPlaceholder: "ステータス",
             priorityPlaceholder: "優先度",
