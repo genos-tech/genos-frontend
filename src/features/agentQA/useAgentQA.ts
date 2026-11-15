@@ -184,7 +184,10 @@ export const useAgentQA = ({
                 Boolean(prev.answer) ||
                 prev.toolEvents.length > 0 ||
                 prev.answerSources.length > 0 ||
-                Boolean(prev.askError);
+                Boolean(prev.askError) ||
+                // A run that ended with nothing to show still has to say it could not use what the
+                // member pointed at (MIP-1058): the note is the turn's content then.
+                Boolean(prev.droppedReferences?.length);
             if (hasContent) {
                 const snapshot = snapshotTurn(prev);
                 setTurns((prevTurns) => appendTurn(prevTurns, snapshot));
@@ -527,9 +530,17 @@ export const useAgentQA = ({
                 turnId: askedTurnId,
                 runId: null,
                 askedMentions: mentions?.length ? mentions : undefined,
+                // What was SENT (the cut text, a source only of a kind that can be one), so the turn
+                // never holds more than the server was given; `truncated` is display-only.
                 askedSelection:
                     selection && wireSelection.selected_text
-                        ? { ...selection, text: wireSelection.selected_text }
+                        ? {
+                              text: wireSelection.selected_text,
+                              ...(wireSelection.selected_from && selection.from
+                                  ? { from: selection.from }
+                                  : {}),
+                              ...(selection.truncated ? { truncated: true } : {}),
+                          }
                         : undefined,
             });
 
