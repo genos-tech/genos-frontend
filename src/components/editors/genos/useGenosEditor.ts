@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { syntaxHighlighter } from "@blocknote/code-block";
 import { PartialBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 
@@ -73,16 +74,19 @@ export const useGenosEditor = ({
         resolveFileUrl: resolveInsecureFileUrl,
         ...(uploadFile ? { uploadFile } : {}),
         // `codeFenceInputRule`: a ``` fence (+ Space or Enter) always makes a code block with
-        // a language that exists (see codeBlockExtras.tsx).
-        ...(cfg.editingRules
-            ? {
-                  extensions: [
+        // a language that exists (see codeBlockExtras.tsx). `syntaxHighlighter` colours code
+        // blocks on EVERY surface, the read-only preview included; BlockNote loads Shiki and
+        // the language's grammar only when the first code block is parsed (MIP-1604).
+        extensions: [
+            ...(cfg.editingRules
+                ? [
                       codeFenceInputRule,
                       linkHostCaption,
                       ...(cfg.tabStaysInEditor ? [tabStaysInEditor] : []),
-                  ],
-              }
-            : {}),
+                  ]
+                : []),
+            syntaxHighlighter,
+        ],
         dictionary,
         ...(openWith ? { initialContent: openWith } : {}),
     });
@@ -135,7 +139,7 @@ export const useGenosCollabEditor = ({
         initialBody: body,
         enableComments: true,
         teamMemberProfiles: ctx.teamMemberProfiles,
-        extensions: [codeFenceInputRule, linkHostCaption],
+        extensions: [codeFenceInputRule, linkHostCaption, syntaxHighlighter],
     });
     return { ...collab, schema };
 };

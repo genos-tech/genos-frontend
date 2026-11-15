@@ -25,10 +25,27 @@ const createSafeCodeBlockSpec = (): ReturnType<typeof createCodeBlockSpec> => {
     };
     const render = implementation.render;
     const parse = implementation.parse;
+    const meta = (spec.implementation as { meta?: { highlight?: (b: any) => unknown } }).meta;
+    const highlight = meta?.highlight;
     return {
         ...spec,
         implementation: {
             ...spec.implementation,
+            // The colouring reads the language off the stored block as well, so a block that
+            // still says `ts` is coloured as typescript and `go` (no grammar) is left plain.
+            ...(highlight && {
+                meta: {
+                    ...meta,
+                    highlight: (block: { props?: Record<string, unknown> }) =>
+                        highlight({
+                            ...block,
+                            props: {
+                                ...block.props,
+                                language: resolveCodeLanguage(block.props?.language),
+                            },
+                        }),
+                },
+            }),
             // A pasted `<pre><code class="language-ts">` carries its name as the language too.
             ...(parse && {
                 parse(this: unknown, element: unknown) {
