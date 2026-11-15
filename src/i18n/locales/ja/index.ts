@@ -1423,6 +1423,10 @@ export const ja: DeepPartial<Messages> = {
             replyInThread: "スレッドで返信",
             flagForLater: "後で確認用にフラグを付ける",
             addToTodo: "To-Do に追加",
+            askGenos: "このメッセージについてGenosに質問",
+            askGenosSelection: "選択したテキストについてGenosに質問",
+            askGenosShort: "Genosに質問",
+            askGenosFallback: "メッセージ",
             removeFlag: "フラグを外す",
             failed: {
                 flag: "フラグを付けられませんでした。もう一度お試しください。",
@@ -1909,6 +1913,7 @@ export const ja: DeepPartial<Messages> = {
             gifLoading: "読み込み中…",
             gifAttribution: "GIPHYの提供",
             emojiTypingHint: ":+入力",
+            askGenosSelection: "選択したテキストについてGenosに質問",
             emojiGroup: "絵文字",
             teamEmojiGroup: "チーム絵文字",
             loadingComments: "コメントを読み込み中…",
@@ -4706,6 +4711,12 @@ export const ja: DeepPartial<Messages> = {
             selectedFrom:
                 "Genos は選択されたテキストの出典を使えなかったため、テキストだけで回答しました。",
             task: "Genos は質問の対象のタスクまたはマイルストーンを使えなかったため、それなしで回答しました。",
+        },
+        selection: {
+            label: "選択したテキスト",
+            remove: "選択したテキストを外す",
+            truncated: "先頭の {count} 文字だけが送られます。",
+            placeholder: "選択したテキストについてGenosに質問…",
         },
         empty: {
             initial: "入力を開始すると、チャット・タスク・ノートを横断検索します。",

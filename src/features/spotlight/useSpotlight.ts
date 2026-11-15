@@ -76,7 +76,12 @@ import {
 import { useAgentQA } from "../agentQA/useAgentQA";
 import { lookupTaskByDisplayId } from "../tasks/services/lookupTaskByDisplayId";
 import { displayIdOnlyQuery } from "../tasks/utils/taskDisplayId";
-import { askGenosToken, onAskGenosAbout, withAskGenosToken } from "./askGenosAbout";
+import {
+    askGenosToken,
+    onAskGenosAbout,
+    onAskGenosAboutSelection,
+    withAskGenosToken,
+} from "./askGenosAbout";
 import { idHitPassesFilter, spotlightResultForTask, withIdHit } from "./displayIdHit";
 import {
     effectiveFilterServices,
@@ -195,6 +200,10 @@ export interface UseSpotlightReturn {
         origin?: SpotlightAskOrigin,
         selection?: AskSelection | null
     ) => void;
+    // The passage of selected text waiting to go with the next question (MIP-1058), and the
+    // way to drop it. Null when there is none.
+    attachedSelection: AskSelection | null;
+    clearAttachedSelection: () => void;
     onApprove: (editedArgs?: Record<string, unknown>) => void;
     onReject: (reason?: string) => void;
     // Undo one approved write: the shared machine's `undoStep`. The step's state
@@ -252,6 +261,10 @@ export const useSpotlight = ({
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
+    // A passage of text the member selected somewhere in the app and pointed "Ask Genos" at
+    // (MIP-1058). Like the draft it is the member's own and survives closing the overlay; it goes
+    // with the next question they send and is then spent. They can drop it first.
+    const [attachedSelection, setAttachedSelection] = useState<AskSelection | null>(null);
     const [results, setResults] = useState<SpotlightResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -457,6 +470,29 @@ export const useSpotlight = ({
             }),
         []
     );
+
+    // ---- "Ask Genos about this selected text" (MIP-1058). ----
+    // The passage is attached to the next question (shown above the input, removable); the
+    // overlay opens, or the Genos page's input takes the focus, exactly as for a task. No text goes
+    // into the draft: a passage has no token.
+    useEffect(
+        () =>
+            onAskGenosAboutSelection((selection) => {
+                setAttachedSelection(selection);
+                if (isPageActiveRef.current) {
+                    pageInputFocusRef.current?.();
+                } else {
+                    setIsOpen(true);
+                }
+            }),
+        []
+    );
+    const clearAttachedSelection = useCallback(() => setAttachedSelection(null), []);
+    // A passage selected in one team does not ride into another team's ask (its source is that
+    // team's, and the person has switched workspaces).
+    useEffect(() => {
+        setAttachedSelection(null);
+    }, [teamId]);
 
     // ---- Overlay close: clear transient results, preserve the draft
     // query, the conversation, AND any in-flight answer. ----
@@ -743,19 +779,26 @@ export const useSpotlight = ({
             if (!aiAnswers) return;
             // The draft is this hook's, not the shared machine's, so the
             // text is always passed in explicitly.
+            // Only the question the member is typing takes the passage attached to the draft
+            // (`origin` "typed", no explicit one). A retry says what its turn had (`null` for none)
+            // and a starter chip is a canned question: neither takes it nor spends it.
+            const takesAttached = selection === undefined && origin === "typed";
             const started = qaOnAsk(
                 overrideQuery !== undefined ? overrideQuery : query,
                 mentions,
                 { origin },
-                selection
+                takesAttached ? attachedSelection : (selection ?? null)
             );
             // Clear the input immediately after submitting. The question is
             // already captured in `ask.askedQuery` and visible in the
             // conversation history, so the input is ready for the next one.
-            // An ask that did not start (empty, busy, no team) keeps the draft.
-            if (started) setQuery("");
+            // An ask that did not start (empty, busy, no team) keeps the draft, and its passage.
+            if (started) {
+                setQuery("");
+                if (takesAttached) setAttachedSelection(null);
+            }
         },
-        [aiAnswers, query, qaOnAsk]
+        [aiAnswers, query, qaOnAsk, attachedSelection]
     );
 
     // Approve / reject / cancel / feedback are the shared machine's.
@@ -990,6 +1033,8 @@ export const useSpotlight = ({
         filterProjectIds,
         onChangeFilterProjects,
         onAsk,
+        attachedSelection,
+        clearAttachedSelection,
         onApprove,
         onReject,
         undoStep,

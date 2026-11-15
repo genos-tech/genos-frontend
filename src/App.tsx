@@ -1528,6 +1528,9 @@ const AppBody = () => {
                                                                     spotlight.aiAnswersEnabled
                                                                 }
                                                                 ask={spotlight.ask}
+                                                                attachedSelection={
+                                                                    spotlight.attachedSelection
+                                                                }
                                                                 backToHistoryList={
                                                                     spotlight.backToHistoryList
                                                                 }
@@ -1577,6 +1580,9 @@ const AppBody = () => {
                                                                 onCancel={spotlight.onCancel}
                                                                 onChangeFilterProjects={
                                                                     spotlight.onChangeFilterProjects
+                                                                }
+                                                                onClearAttachedSelection={
+                                                                    spotlight.clearAttachedSelection
                                                                 }
                                                                 onClose={spotlight.close}
                                                                 onFeedback={

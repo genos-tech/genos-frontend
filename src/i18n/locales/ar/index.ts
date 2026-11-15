@@ -153,6 +153,7 @@ export const ar: DeepPartial<Messages> = {
             emoji: "رمز تعبيري",
             attachFile: "إرفاق صورة أو ملف",
             emojiTypingHint: ":+typing",
+            askGenosSelection: "اسأل Genos عن النص المحدد",
             emojiGroup: "رمز تعبيري",
             loadingComments: "جارٍ تحميل التعليقات...",
             couldNotLoadComments: "تعذّر تحميل التعليقات.",
@@ -1945,6 +1946,10 @@ export const ar: DeepPartial<Messages> = {
             replyInThread: "الرد في الموضوع",
             flagForLater: "تعليم لوقت لاحق",
             addToTodo: "إضافة إلى قائمة المهام",
+            askGenos: "اسأل Genos عن هذه الرسالة",
+            askGenosSelection: "اسأل Genos عن النص المحدد",
+            askGenosShort: "اسأل Genos",
+            askGenosFallback: "رسالة",
             removeFlag: "إزالة العلامة",
             failed: {
                 flag: "تعذّر وضع العلامة. يُرجى المحاولة مرة أخرى.",
@@ -3936,6 +3941,12 @@ export const ar: DeepPartial<Messages> = {
             selection: "لم يتمكن Genos من استخدام النص الذي حددته، فأجاب من دونه.",
             selectedFrom: "لم يتمكن Genos من استخدام مصدر النص المحدد، فاعتمد على النص وحده.",
             task: "لم يتمكن Genos من استخدام المهمة أو المعلم الذي سألت عنه، فأجاب من دونه.",
+        },
+        selection: {
+            label: "النص المحدد",
+            remove: "إزالة النص المحدد",
+            truncated: "سيتم إرسال أول {count} حرف فقط.",
+            placeholder: "اسأل Genos عن النص المحدد…",
         },
         empty: {
             initial: "ابدأ الكتابة للبحث في المحادثات والمهام والملاحظات.",

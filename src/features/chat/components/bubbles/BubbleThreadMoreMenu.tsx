@@ -22,6 +22,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { useAskGenosMessageItem } from "../../hooks/useAskGenosMessageItem";
 import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { reportFlagFailure } from "../../utils/reportFlagFailure";
@@ -101,6 +102,13 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatIdAndThreadId);
     const { pinned } = useBubbleActionsPreference();
+    // "Ask Genos about this reply" (MIP-1058), by the reply's own v3 id; about the selected text when
+    // some is selected in it as the menu opens.
+    const askGenos = useAskGenosMessageItem({
+        messageId: message.messageIdWithChatIdAndThreadId,
+        senderName: message.sender.userName,
+        tsSent: message.tsSent,
+    });
 
     useEffect(() => {
         setIsFlagged(message.isFlagged || false);
@@ -190,6 +198,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
 
     // Display order comes from `kind` (via `splitPinned`), not from this array.
     const menuItems: MenuItemConfig[] = [
+        askGenos.item,
         {
             id: "copyLink",
             kind: "copyLink",
@@ -318,7 +327,10 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 <MoreMenu
                     items={dropdownItems}
                     placement={isSent ? "bottom-end" : "bottom-start"}
-                    onOpenChange={setIsOpen}
+                    onOpenChange={(open) => {
+                        setIsOpen(open);
+                        askGenos.onMenuOpenChange(open);
+                    }}
                 />
             )}
 

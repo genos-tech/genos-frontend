@@ -23,6 +23,7 @@ import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
 import { ChatHistoryLoadFailed } from "./ChatHistoryLoadFailed";
+import { ChatSelectionAsk } from "./ChatSelectionAsk";
 import { MessageListSkeleton } from "./MessageListSkeleton";
 
 interface MessageListRendererProps {
@@ -174,6 +175,9 @@ export const MessageListRenderer = ({
     const isDark = mode === "dark";
     const { style: bubbleStyle } = useBubbleStylePreference();
     const isCompact = bubbleStyle === "compact";
+
+    // The list's own element: the scope of the "Ask Genos" button next to selected text.
+    const listWrapRef = useRef<HTMLDivElement | null>(null);
 
     // Scroll-time hover suppression (bubbles sliding under a stationary
     // cursor must not fire hover handlers — toolbar mounts, emotion style
@@ -563,7 +567,7 @@ export const MessageListRenderer = ({
     }
 
     return (
-        <Box sx={wrapperSx}>
+        <Box ref={listWrapRef} sx={wrapperSx}>
             <Virtuoso
                 key={`${bubbleStyle}:${chatIdentityKey}:${hasRows}`}
                 ref={virtuosoRef}
@@ -594,6 +598,9 @@ export const MessageListRenderer = ({
                 none` so it never intercepts touch/taps. Driven imperatively
                 via `thumbRef` — starts at opacity 0 until the hook measures. */}
             <div ref={thumbRef} className="chat-scroll-indicator" />
+            {/* "Ask Genos" next to text selected inside one message (MIP-1058). Listens to this
+                list's own mouse-down / mouse-up only; see the component for what it never does. */}
+            <ChatSelectionAsk containerRef={listWrapRef} />
             {/* An empty list whose history sync FAILED says so, with Retry (MIP-1299). */}
             {!hasRows && (
                 <ChatHistoryLoadFailed channelId={String(chat.chatId)} isThread={isThread} />

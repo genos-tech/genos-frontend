@@ -308,6 +308,7 @@ export const common = {
         gifLoading: "Loading…",
         gifAttribution: "Powered by GIPHY",
         emojiTypingHint: ":+typing",
+        askGenosSelection: "Ask Genos about the selected text",
         emojiGroup: "Emoji",
         teamEmojiGroup: "Team Emoji",
         loadingComments: "Loading comments...",

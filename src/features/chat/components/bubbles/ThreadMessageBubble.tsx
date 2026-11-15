@@ -22,6 +22,7 @@ import { MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types
 import { ReactionProps } from "../../../../types/common";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { askMessageProps } from "../../utils/messageSelection";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
@@ -353,7 +354,10 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const body =
         attachment ??
         (message.content.length > 0 ? (
-            <Box className={previewWrapClassName || undefined}>
+            <Box
+                {...askMessageProps(message.messageIdWithChatIdAndThreadId)}
+                className={previewWrapClassName || undefined}
+            >
                 <MessageBody
                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                     content={message.content}
