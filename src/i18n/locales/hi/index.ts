@@ -281,6 +281,7 @@ export const hi: DeepPartial<Messages> = {
             gifLoading: "लोड हो रहा है...",
             gifAttribution: "GIPHY द्वारा संचालित",
             emojiTypingHint: ":+टाइपिंग",
+            askGenosSelection: "चुने गए टेक्स्ट के बारे में Genos से पूछें",
             emojiGroup: "इमोजी",
             teamEmojiGroup: "टीम इमोजी",
             loadingComments: "टिप्पणी लोड हो रहे हैं…",
@@ -1986,6 +1987,10 @@ export const hi: DeepPartial<Messages> = {
             replyInThread: "थ्रेड में जवाब दें",
             flagForLater: "बाद के लिए फ्लैग करें",
             addToTodo: "टू-डू में जोड़ें",
+            askGenos: "इस संदेश के बारे में Genos से पूछें",
+            askGenosSelection: "चुने गए टेक्स्ट के बारे में Genos से पूछें",
+            askGenosShort: "Genos से पूछें",
+            askGenosFallback: "संदेश",
             removeFlag: "फ्लैग हटाएँ",
             failed: {
                 flag: "फ्लैग नहीं लग सका। कृपया फिर से कोशिश करें।",
@@ -4206,6 +4211,12 @@ export const hi: DeepPartial<Messages> = {
                 "Genos चुने गए टेक्स्ट के स्रोत का उपयोग नहीं कर सका, इसलिए उसने केवल टेक्स्ट का उपयोग किया।",
             task: "Genos उस टास्क या माइलस्टोन का उपयोग नहीं कर सका जिसके बारे में आपने पूछा था, इसलिए उसने उसके बिना उत्तर दिया।",
         },
+        selection: {
+            label: "चुना गया टेक्स्ट",
+            remove: "चुना गया टेक्स्ट हटाएँ",
+            truncated: "केवल पहले {count} वर्ण भेजे जाएँगे।",
+            placeholder: "चुने गए टेक्स्ट के बारे में Genos से पूछें…",
+        },
         empty: {
             initial: "चैट, टास्क और नोट में खोजने के लिए टाइप करना शुरू करें।",
             noMatches: "अभी कोई मेल नहीं — अलग कीवर्ड आज़माएँ।",
@@ -4434,6 +4445,31 @@ export const hi: DeepPartial<Messages> = {
         errors: {
             loadFailed: "थ्रेड सारांश लोड नहीं किया जा सका.",
             forbidden: "आपके पास इस थ्रेड तक पहुंच नहीं है.",
+        },
+    },
+    taskAsk: {
+        modal: {
+            titleTask: "इस टास्क के बारे में Genos से पूछें",
+            titleMilestone: "इस माइलस्टोन के बारे में Genos से पूछें",
+        },
+        loading: "आपकी बातचीत खुल रही है…",
+        gone: {
+            titleTask: "यह टास्क अब खोला नहीं जा सकता",
+            titleMilestone: "यह माइलस्टोन अब खोला नहीं जा सकता",
+            body: "हो सकता है इसे हटा दिया गया हो, या अब आपके पास इसकी पहुंच न हो। आपके पिछले सवाल आपकी पिछली बातचीत में सुरक्षित हैं।",
+            askInGeneral: "Genos से सामान्य रूप से पूछें",
+        },
+        conversation: {
+            emptyTask:
+                "इस टास्क के बारे में कुछ भी पूछें। Genos को इसका विवरण पता है और आपके सवाल इसके साथ ही रहते हैं, ताकि आप बाद में वहीं से आगे बढ़ सकें।",
+            emptyMilestone:
+                "इस माइलस्टोन के बारे में कुछ भी पूछें। Genos को इसका विवरण पता है और आपके सवाल इसके साथ ही रहते हैं, ताकि आप बाद में वहीं से आगे बढ़ सकें।",
+            placeholderTask: "इस टास्क के बारे में पूछें…",
+            placeholderMilestone: "इस माइलस्टोन के बारे में पूछें…",
+            newConversation: "नई बातचीत",
+            newConversationHint:
+                "इसके बारे में एक नई बातचीत शुरू करें। मौजूदा बातचीत आपकी पिछली बातचीत में बनी रहेगी।",
+            newConversationStarted: "नई बातचीत शुरू हुई।",
         },
     },
     noteAsk: {
@@ -5724,6 +5760,8 @@ export const hi: DeepPartial<Messages> = {
         event: {
             editTitle: "इवेंट संपादित करें",
             newTitle: "नया ईवेंट",
+            askGenos: "इस इवेंट के बारे में Genos से पूछें",
+            askGenosUntitled: "बिना शीर्षक का इवेंट",
             titleLabel: "शीर्षक",
             allDay: "पूरे दिन",
             startLabel: "शुरुआत",

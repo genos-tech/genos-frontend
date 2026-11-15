@@ -25,7 +25,8 @@ export const MCP_TOOLS: McpTool[] = [
             <>
                 One task in full. Read <Code>content_markdown</Code> for the description — it keeps
                 headings, checklists and code fences. Also its start date, sprint, collaborators,
-                links and custom fields (by name).
+                links and custom fields (by name), and the files attached to it (name, type, size,
+                who added it and when: never the file or a link to it).
             </>
         ),
     },
@@ -161,9 +162,20 @@ export const MCP_TOOLS: McpTool[] = [
     {
         name: "list_calendar_events",
         type: "read",
-        meaning: "Your Google Calendar events in a date range.",
+        meaning:
+            "Your Google Calendar events in a date range, from one connected Google account: the default one, or the one the account argument names.",
     },
-    { name: "list_calendars", type: "read", meaning: "Your Google Calendars." },
+    {
+        name: "list_calendars",
+        type: "read",
+        meaning:
+            "Your Google Calendars, with the connected Google account each one belongs to. An account that cannot be read does not hide the others.",
+    },
+    {
+        name: "get_calendar_event",
+        type: "read",
+        meaning: "One Google Calendar event by its id, on any connected Google account.",
+    },
     {
         name: "get_my_blockers",
         type: "read",
@@ -252,7 +264,7 @@ export const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Status, title, description, priority, effort, due date, start date, milestone, parent task, project, collaborators or custom fields. A new description replaces the whole body.",
+            "Status, title, description, priority, effort, due date, start date, milestone, parent task, project, collaborators, custom fields, links or reporter. A new description replaces the whole body.",
     },
     { name: "add_comment", type: "write", taskRef: true, meaning: "A comment on a task." },
     {
@@ -260,7 +272,7 @@ export const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Replace the text of one of your own comments on a task. The new text is the whole comment.",
+            "Replace the text of one of your own comments on a task. The new text is the whole comment. Can also react to any comment on a task you can open, or flag it to read later, mark the flag done or remove it.",
     },
     {
         name: "delete_comment",
@@ -268,6 +280,13 @@ export const MCP_TOOLS: McpTool[] = [
         taskRef: true,
         meaning:
             "Delete one of your own comments on a task. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "delete_task_attachment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Delete one file attached to a task, by the id get_task lists. The file leaves the task and storage and nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
     },
     {
         name: "restore_task_body",
@@ -301,7 +320,9 @@ export const MCP_TOOLS: McpTool[] = [
         meaning: (
             <>
                 Needs a project id from <Code>list_projects</Code>. Can be filed under a parent
-                task, and can set a start date, collaborators and custom fields.
+                task, and can set a start date, collaborators, custom fields, links, a reporter and
+                a starting status. With no description it starts from a body template, as a task
+                made in the app does; <Code>template</Code> picks one by name.
             </>
         ),
     },
@@ -321,7 +342,8 @@ export const MCP_TOOLS: McpTool[] = [
         name: "create_task_plan",
         type: "write",
         taskRef: true,
-        meaning: "A milestone with its tasks and dependencies, in one call.",
+        meaning:
+            "A milestone with its tasks and dependencies, in one call. Each task can start in a status and from a body template.",
     },
     {
         name: "create_note",
@@ -333,7 +355,8 @@ export const MCP_TOOLS: McpTool[] = [
     {
         name: "create_todo_item",
         type: "write",
-        meaning: "A personal to-do, optionally with a reminder.",
+        meaning:
+            "A personal to-do, optionally with a reminder. Can link back to the task or comment it comes from.",
     },
     {
         name: "update_todo_item",
@@ -347,19 +370,30 @@ export const MCP_TOOLS: McpTool[] = [
         meaning:
             "Permanently delete a to-do with its sub-items and reminders. Needs a key that also has the destructive opt-in.",
     },
-    { name: "create_calendar_event", type: "write", meaning: "An event on your Google Calendar." },
-    { name: "update_calendar_event", type: "write", meaning: "Change a calendar event." },
+    {
+        name: "create_calendar_event",
+        type: "write",
+        meaning:
+            "An event on your Google Calendar. The account argument picks which connected Google account it goes on; the default one when it is left out.",
+    },
+    {
+        name: "update_calendar_event",
+        type: "write",
+        meaning:
+            "Change a calendar event, on any connected Google account (the account argument; the default one when it is left out).",
+    },
     {
         name: "delete_calendar_event",
         type: "write",
         meaning:
-            "Delete a calendar event. Nothing on this side can bring it back. Needs a key that also has the destructive opt-in.",
+            "Delete a calendar event. Nothing on this side can bring it back. An event that is not on the account you name reads as already gone, so check the account first. Needs a key that also has the destructive opt-in.",
     },
     {
         name: "manage_milestone",
         type: "write",
+        taskRef: true,
         meaning:
-            "Create or change a milestone (dates, status, assignees, folder, sprint), or manage a project's milestone folders. The action argument picks which.",
+            "Create or change a milestone (dates, status, assignees, folder, sprint), or manage a project's milestone folders. The action argument picks which. The convert action turns a root task into a milestone, or a milestone back into a task, on the same row; its folder and sprint are dropped. Setting a project on an update moves the milestone, and its tasks with it, to another project of the team: the tasks get new ids, and the sprint, folder and tags are cleared. Neither can be undone, so a milestone turned into a task and a move need a key that also has the destructive opt-in.",
     },
     {
         name: "delete_milestone",

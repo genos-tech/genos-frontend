@@ -1000,6 +1000,8 @@ export const zh: DeepPartial<Messages> = {
         event: {
             editTitle: "编辑日程",
             newTitle: "新建日程",
+            askGenos: "就此事件询问 Genos",
+            askGenosUntitled: "无标题事件",
             titleLabel: "标题",
             allDay: "全天",
             startLabel: "开始",
@@ -1362,6 +1364,10 @@ export const zh: DeepPartial<Messages> = {
             replyInThread: "在话题中回复",
             flagForLater: "标记以便稍后查看",
             addToTodo: "添加到待办事项",
+            askGenos: "就此消息询问 Genos",
+            askGenosSelection: "就所选文字询问 Genos",
+            askGenosShort: "询问 Genos",
+            askGenosFallback: "消息",
             removeFlag: "移除标记",
             failed: {
                 flag: "无法添加标记，请重试。",
@@ -1835,6 +1841,7 @@ export const zh: DeepPartial<Messages> = {
             gifLoading: "加载中…",
             gifAttribution: "由 GIPHY 提供支持",
             emojiTypingHint: ":+输入",
+            askGenosSelection: "就所选文字询问 Genos",
             emojiGroup: "表情",
             teamEmojiGroup: "团队表情",
             loadingComments: "正在加载评论…",
@@ -2711,6 +2718,30 @@ export const zh: DeepPartial<Messages> = {
             notes: "笔记",
             search: "Genos",
             todo: "待办事项",
+        },
+    },
+    taskAsk: {
+        modal: {
+            titleTask: "就此任务询问 Genos",
+            titleMilestone: "就此里程碑询问 Genos",
+        },
+        loading: "正在打开对话…",
+        gone: {
+            titleTask: "此任务已无法打开",
+            titleMilestone: "此里程碑已无法打开",
+            body: "它可能已被删除，或者你已不再有权访问。你之前的提问仍保留在过往对话中。",
+            askInGeneral: "不指定对象，直接询问 Genos",
+        },
+        conversation: {
+            emptyTask:
+                "可以就此任务提任何问题。Genos 了解它的详情，你的提问会与它保存在一起，之后可以接着问。",
+            emptyMilestone:
+                "可以就此里程碑提任何问题。Genos 了解它的详情，你的提问会与它保存在一起，之后可以接着问。",
+            placeholderTask: "就此任务提问…",
+            placeholderMilestone: "就此里程碑提问…",
+            newConversation: "新对话",
+            newConversationHint: "开始一段关于它的新对话。当前对话会保留在过往对话中。",
+            newConversationStarted: "已开始新对话。",
         },
     },
     noteAsk: {
@@ -4533,6 +4564,12 @@ export const zh: DeepPartial<Messages> = {
             selection: "Genos 无法使用你选中的文字，因此未参考该文字作答。",
             selectedFrom: "Genos 无法使用所选文字的出处，因此只参考了文字本身。",
             task: "Genos 无法使用你所询问的任务或里程碑，因此未参考它作答。",
+        },
+        selection: {
+            label: "所选文字",
+            remove: "移除所选文字",
+            truncated: "只会发送前 {count} 个字符。",
+            placeholder: "就所选文字向 Genos 提问…",
         },
         empty: {
             initial: "开始输入即可在聊天、任务和笔记中搜索。",

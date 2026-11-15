@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import { buildAgentTurnLabels } from "../features/agentQA";
 import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";
 import { es } from "../i18n/locales/es";
@@ -57,5 +58,95 @@ describe("the completion notice's label for a task conversation", () => {
             expect(s.surfaceTask, name).not.toBe(s.surfaceNote);
             expect(s.surfaceTask, name).not.toBe(s.surfaceThread);
         }
+    });
+});
+
+// --- the window's own strings (`taskAsk.*`) ----------------------------------------------------
+
+type Window = typeof en.taskAsk;
+const win = (c: typeof en | (typeof OTHERS)[Name]) => (c.taskAsk ?? {}) as Window;
+
+/** Pairs that say the same thing about a task and about a milestone: a locale must tell them apart. */
+const PAIRS: Array<[string, (w: Window) => string, (w: Window) => string]> = [
+    ["title", (w) => w.modal.titleTask, (w) => w.modal.titleMilestone],
+    ["gone title", (w) => w.gone.titleTask, (w) => w.gone.titleMilestone],
+    ["empty hint", (w) => w.conversation.emptyTask, (w) => w.conversation.emptyMilestone],
+    [
+        "placeholder",
+        (w) => w.conversation.placeholderTask,
+        (w) => w.conversation.placeholderMilestone,
+    ],
+];
+
+describe("the task / milestone Ask window's strings", () => {
+    it("English names Genos in the title and says the old conversation is kept, not deleted", () => {
+        expect(en.taskAsk.modal.titleTask).toContain("Genos");
+        expect(en.taskAsk.modal.titleMilestone).toContain("Genos");
+        expect(en.taskAsk.conversation.newConversationHint).toMatch(/stays/);
+        expect(en.taskAsk.conversation.newConversationHint).not.toMatch(/delet|erase|lose/i);
+    });
+
+    it("English says a gone task calmly: may have been deleted OR access lost, no blame, history kept", () => {
+        const { body } = en.taskAsk.gone;
+        expect(body).toMatch(/deleted/);
+        expect(body).toMatch(/access/);
+        expect(body).toMatch(/stay in your past conversations/);
+        expect(body).not.toMatch(/denied|forbidden|error|failed/i);
+    });
+
+    it.each(names)("%s has every string, none left as English", (name) => {
+        const w = win(OTHERS[name]);
+        const leaves = (node: unknown, prefix = ""): Array<[string, string]> =>
+            Object.entries((node ?? {}) as Record<string, unknown>).flatMap(([k, v]) =>
+                typeof v === "string"
+                    ? [[`${prefix}${k}`, v] as [string, string]]
+                    : leaves(v, `${prefix}${k}.`)
+            );
+        const mine = Object.fromEntries(leaves(w));
+        const english = Object.fromEntries(leaves(en.taskAsk));
+        expect(Object.keys(mine).sort(), name).toEqual(Object.keys(english).sort());
+        for (const [key, value] of Object.entries(mine)) {
+            expect(value.trim(), `${name}.${key}`).toBeTruthy();
+            expect(value, `${name}.${key}`).not.toBe(english[key]);
+        }
+    });
+
+    it.each(names)("%s tells a task from a milestone", (name) => {
+        const w = win(OTHERS[name]);
+        for (const [what, task, milestone] of PAIRS) {
+            expect(task(w), `${name} ${what}`).not.toBe(milestone(w));
+        }
+    });
+
+    it.each(names)(
+        "%s names Genos in both titles and in the sentence that says what it knows",
+        (name) => {
+            const w = win(OTHERS[name]);
+            expect(w.modal.titleTask, name).toContain("Genos");
+            expect(w.modal.titleMilestone, name).toContain("Genos");
+            expect(w.conversation.emptyTask, name).toContain("Genos");
+            expect(w.conversation.emptyMilestone, name).toContain("Genos");
+        }
+    );
+
+    it("the Arabic strings are Arabic, not English under an Arabic key", () => {
+        const leaf = (v: unknown): string[] =>
+            typeof v === "string" ? [v] : Object.values((v ?? {}) as object).flatMap(leaf);
+        for (const text of leaf(ar.taskAsk)) expect(text).toMatch(/[\u0600-\u06FF]/);
+    });
+});
+
+describe("how the task window words what an answer cites", () => {
+    it("a cited personal note reads 'Note', like the other Ask windows: it does not know which space the note is in", () => {
+        const task = buildAgentTurnLabels(en, "taskAsk").entitySubtitle;
+        expect(task.notePersonal).toBe(en.spotlight.entitySubtitle.noteFallback);
+        expect(buildAgentTurnLabels(en, "noteAsk").entitySubtitle.notePersonal).toBe(
+            task.notePersonal
+        );
+        // Spotlight, which does know, keeps "My note".
+        expect(buildAgentTurnLabels(en, "spotlight").entitySubtitle.notePersonal).toBe(
+            en.spotlight.entitySubtitle.notePersonal
+        );
+        expect(task.notePersonal).not.toBe(en.spotlight.entitySubtitle.notePersonal);
     });
 });

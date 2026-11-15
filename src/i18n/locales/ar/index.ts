@@ -153,6 +153,7 @@ export const ar: DeepPartial<Messages> = {
             emoji: "رمز تعبيري",
             attachFile: "إرفاق صورة أو ملف",
             emojiTypingHint: ":+typing",
+            askGenosSelection: "اسأل Genos عن النص المحدد",
             emojiGroup: "رمز تعبيري",
             loadingComments: "جارٍ تحميل التعليقات...",
             couldNotLoadComments: "تعذّر تحميل التعليقات.",
@@ -1945,6 +1946,10 @@ export const ar: DeepPartial<Messages> = {
             replyInThread: "الرد في الموضوع",
             flagForLater: "تعليم لوقت لاحق",
             addToTodo: "إضافة إلى قائمة المهام",
+            askGenos: "اسأل Genos عن هذه الرسالة",
+            askGenosSelection: "اسأل Genos عن النص المحدد",
+            askGenosShort: "اسأل Genos",
+            askGenosFallback: "رسالة",
             removeFlag: "إزالة العلامة",
             failed: {
                 flag: "تعذّر وضع العلامة. يُرجى المحاولة مرة أخرى.",
@@ -3937,6 +3942,12 @@ export const ar: DeepPartial<Messages> = {
             selectedFrom: "لم يتمكن Genos من استخدام مصدر النص المحدد، فاعتمد على النص وحده.",
             task: "لم يتمكن Genos من استخدام المهمة أو المعلم الذي سألت عنه، فأجاب من دونه.",
         },
+        selection: {
+            label: "النص المحدد",
+            remove: "إزالة النص المحدد",
+            truncated: "سيتم إرسال أول {count} حرف فقط.",
+            placeholder: "اسأل Genos عن النص المحدد…",
+        },
         empty: {
             initial: "ابدأ الكتابة للبحث في المحادثات والمهام والملاحظات.",
             noMatches: "لا توجد نتائج مطابقة بعد — جرّب كلمات مفتاحية مختلفة.",
@@ -5419,6 +5430,8 @@ export const ar: DeepPartial<Messages> = {
         event: {
             editTitle: "تحرير الحدث",
             newTitle: "حدث جديد",
+            askGenos: "اسأل Genos عن هذا الحدث",
+            askGenosUntitled: "حدث بلا عنوان",
             titleLabel: "عنوان",
             allDay: "طوال اليوم",
             startLabel: "يبدأ",
@@ -5905,6 +5918,31 @@ export const ar: DeepPartial<Messages> = {
                     none: "لا توجد فحوصات CI",
                 },
             },
+        },
+    },
+    taskAsk: {
+        modal: {
+            titleTask: "اسأل Genos عن هذه المهمة",
+            titleMilestone: "اسأل Genos عن هذا المعلم",
+        },
+        loading: "جارٍ فتح محادثتك…",
+        gone: {
+            titleTask: "لم يعد بالإمكان فتح هذه المهمة",
+            titleMilestone: "لم يعد بالإمكان فتح هذا المعلم",
+            body: "ربما تم حذف هذا العنصر أو لم يعد لديك حق الوصول إليه. تبقى أسئلتك السابقة في محادثاتك السابقة.",
+            askInGeneral: "اسأل Genos سؤالاً عاماً",
+        },
+        conversation: {
+            emptyTask:
+                "اسأل أي شيء عن هذه المهمة. يعرف Genos تفاصيلها وتبقى أسئلتك معها لتتمكن من استئنافها لاحقاً.",
+            emptyMilestone:
+                "اسأل أي شيء عن هذا المعلم. يعرف Genos تفاصيله وتبقى أسئلتك معه لتتمكن من استئنافها لاحقاً.",
+            placeholderTask: "اسأل عن هذه المهمة…",
+            placeholderMilestone: "اسأل عن هذا المعلم…",
+            newConversation: "محادثة جديدة",
+            newConversationHint:
+                "ابدأ محادثة جديدة حول هذا العنصر. تبقى المحادثة الحالية ضمن محادثاتك السابقة.",
+            newConversationStarted: "بدأت محادثة جديدة.",
         },
     },
     noteAsk: {

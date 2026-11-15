@@ -26,6 +26,8 @@ import { NoteAskModal } from "../features/noteAsk/NoteAskModal";
 import type { UseNoteAskReturn } from "../features/noteAsk/useNoteAsk";
 import { SpotlightContent } from "../features/spotlight/SpotlightContent";
 import type { SpotlightResult } from "../features/spotlight/types";
+import { TaskAskModal } from "../features/taskAsk/TaskAskModal";
+import type { UseTaskAskReturn } from "../features/taskAsk/useTaskAsk";
 import { ThreadAskModal } from "../features/threadAsk/ThreadAskModal";
 import type { UseThreadAskReturn } from "../features/threadAsk/useThreadAsk";
 import { en } from "../i18n/locales/en";
@@ -299,8 +301,38 @@ const noteAsk: Surface = {
         return h;
     },
 };
+const taskAsk: Surface = {
+    name: "TaskAskModal",
+    mount: ({ turns, ask }) => {
+        const h = newHandlers();
+        const state = {
+            isOpen: true,
+            open: vi.fn(),
+            close: vi.fn(),
+            target: {
+                taskId: 12,
+                teamId: "t1",
+                displayId: "PRJ-12",
+                title: "Fix login redirect",
+                isMilestone: false,
+            },
+            status: "ready",
+            loadError: null,
+            reload: vi.fn(),
+            canAsk: true,
+            startNewConversation: vi.fn(),
+            agentQA: agentQAState(turns, ask, h),
+        } as unknown as UseTaskAskReturn;
+        render(
+            <CssVarsProvider>
+                <TaskAskModal state={state} onSelectSource={h.openSource} />
+            </CssVarsProvider>
+        );
+        return h;
+    },
+};
 
-const SURFACES = [spotlight, threadAsk, noteAsk];
+const SURFACES = [spotlight, threadAsk, noteAsk, taskAsk];
 
 beforeEach(() => {
     localStorage.clear();

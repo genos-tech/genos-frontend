@@ -153,6 +153,7 @@ export const es: DeepPartial<Messages> = {
             emoji: "Emoji",
             attachFile: "Adjuntar imagen o archivo",
             emojiTypingHint: ":+escritura",
+            askGenosSelection: "Preguntar a Genos sobre el texto seleccionado",
             emojiGroup: "Emoji",
             loadingComments: "Cargando comentarios…",
             couldNotLoadComments: "No se pudieron cargar los comentarios.",
@@ -1979,6 +1980,10 @@ export const es: DeepPartial<Messages> = {
             replyInThread: "Responder en el hilo",
             flagForLater: "Destacar para después",
             addToTodo: "Añadir a Por hacer",
+            askGenos: "Preguntar a Genos sobre este mensaje",
+            askGenosSelection: "Preguntar a Genos sobre el texto seleccionado",
+            askGenosShort: "Preguntar a Genos",
+            askGenosFallback: "Mensaje",
             removeFlag: "Quitar destacado",
             failed: {
                 flag: "No se pudo destacar. Inténtalo de nuevo.",
@@ -4001,6 +4006,12 @@ export const es: DeepPartial<Messages> = {
                 "Genos no pudo usar el origen del texto seleccionado, así que usó solo el texto.",
             task: "Genos no pudo usar la tarea o el hito sobre el que preguntaste, así que respondió sin ese contexto.",
         },
+        selection: {
+            label: "Texto seleccionado",
+            remove: "Quitar el texto seleccionado",
+            truncated: "Solo se enviarán los primeros {count} caracteres.",
+            placeholder: "Pregunta a Genos sobre el texto seleccionado…",
+        },
         empty: {
             initial: "Empieza a escribir para buscar en chats, tareas y notas.",
             noMatches: "Aún no hay coincidencias — prueba con otras palabras clave.",
@@ -5169,6 +5180,31 @@ export const es: DeepPartial<Messages> = {
             forbidden: "No tienes acceso a este hilo.",
         },
     },
+    taskAsk: {
+        modal: {
+            titleTask: "Preguntar a Genos sobre esta tarea",
+            titleMilestone: "Preguntar a Genos sobre este hito",
+        },
+        loading: "Abriendo tu conversación…",
+        gone: {
+            titleTask: "Esta tarea ya no se puede abrir",
+            titleMilestone: "Este hito ya no se puede abrir",
+            body: "Puede que se haya eliminado o que ya no tengas acceso. Tus preguntas anteriores siguen en tus conversaciones pasadas.",
+            askInGeneral: "Preguntar a Genos en general",
+        },
+        conversation: {
+            emptyTask:
+                "Pregunta lo que quieras sobre esta tarea. Genos conoce sus detalles y tus preguntas se quedan junto a ella para retomarlas más tarde.",
+            emptyMilestone:
+                "Pregunta lo que quieras sobre este hito. Genos conoce sus detalles y tus preguntas se quedan junto a él para retomarlas más tarde.",
+            placeholderTask: "Pregunta sobre esta tarea…",
+            placeholderMilestone: "Pregunta sobre este hito…",
+            newConversation: "Nueva conversación",
+            newConversationHint:
+                "Empieza una conversación nueva sobre esto. La actual se queda en tus conversaciones pasadas.",
+            newConversationStarted: "Se inició una conversación nueva.",
+        },
+    },
     noteAsk: {
         headerButton: {
             label: "Preguntar",
@@ -5752,6 +5788,8 @@ export const es: DeepPartial<Messages> = {
         event: {
             editTitle: "Editar evento",
             newTitle: "Nuevo evento",
+            askGenos: "Preguntar a Genos sobre este evento",
+            askGenosUntitled: "Evento sin título",
             titleLabel: "Título",
             allDay: "Todo el día",
             startLabel: "Inicio",

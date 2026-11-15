@@ -17,7 +17,9 @@ import {
 } from "@blocknote/react";
 import { RiAlertFill } from "react-icons/ri";
 
+import type { AgentMentionRef } from "../../../features/agentQA/mentions/types";
 import { useTranslation } from "../../../i18n";
+import { AskGenosToolbarButton } from "../AskGenosToolbarButton";
 import { AttachFileToolbarButton } from "../AttachFileToolbarButton";
 import { CustomEmojiToolbar } from "../customEmojiToolbar";
 import { GifToolbarButton } from "../GifToolbarButton";
@@ -40,18 +42,23 @@ type EditorForItems = Parameters<typeof getBlockTypeSelectItemsWithCodeBlock>[0]
  *   `media` false:      no GIF button (a to-do's notes, MIP-1334: nowhere to upload to). The
  *                       file buttons stay: they only show on a file block, which the notes
  *                       never get from this toolbar or the `/` menu.
+ *   `askSource`:        offers "Ask Genos about the selected text" (MIP-1058), saying what the
+ *                       document is (a note), for the server to read around the passage. Absent:
+ *                       no button (a task body, a template, a to-do's notes, a modal-hosted note).
  */
 export const GenosDocumentToolbar = ({
     editor,
     isEditable = true,
     hasComments = false,
     media = true,
+    askSource,
     setShowGifPicker,
 }: {
     editor: EditorForItems;
     isEditable?: boolean;
     hasComments?: boolean;
     media?: boolean;
+    askSource?: AgentMentionRef | null;
     setShowGifPicker: (value: boolean) => void;
 }) => {
     const { t } = useTranslation();
@@ -93,6 +100,7 @@ export const GenosDocumentToolbar = ({
                 </>
             )}
             {hasComments && <AddCommentButton key={"addCommentButton"} />}
+            {askSource && <AskGenosToolbarButton key={"askGenosButton"} source={askSource} />}
             {isEditable && (
                 <>
                     <FileDeleteButton key={"fileDeleteButton"} />

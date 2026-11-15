@@ -384,6 +384,12 @@ export const chat = {
         replyInThread: "Reply in thread",
         flagForLater: "Flag for later",
         addToTodo: "Add to To-Do",
+        // "Ask Genos" on a chat message, and on text selected inside one (MIP-1058). `askGenosFallback` stands in for a
+        // sender's name in the draft token when a message has none.
+        askGenos: "Ask Genos about this message",
+        askGenosSelection: "Ask Genos about the selected text",
+        askGenosShort: "Ask Genos",
+        askGenosFallback: "Message",
         removeFlag: "Remove flag",
         // A flag change the server refused (MIP-1441). No noun: it is also said of task comments.
         failed: {

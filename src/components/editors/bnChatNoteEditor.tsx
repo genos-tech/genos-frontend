@@ -12,6 +12,7 @@ export const BnChatNoteEditor = ({ currentChatNote, ...rest }: BnChatNoteEditorP
     <GenosNoteEditor
         {...rest}
         note={{
+            noteType: 3,
             noteId: currentChatNote.noteId,
             title: currentChatNote.title,
             documentPrefix: "chat-note",

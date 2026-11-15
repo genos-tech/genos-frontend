@@ -45,6 +45,14 @@ export const spotlight = {
             "Genos could not use where the selected text came from, so it used the text alone.",
         task: "Genos could not use the task or milestone you asked about, so it answered without it.",
     },
+    // The passage of text a member selected and pointed "Ask Genos" at (MIP-1058): the card above the input
+    // and under the question. `truncated` says how much of a long selection is sent.
+    selection: {
+        label: "Selected text",
+        remove: "Remove the selected text",
+        truncated: "Only the first {count} characters will be sent.",
+        placeholder: "Ask Genos about the selected text…",
+    },
     empty: {
         initial: "Start typing to search across chats, tasks, and notes.",
         noMatches: "No matches yet — try different keywords.",

@@ -444,6 +444,7 @@ const paletteForRef = (ref: AgentMentionRef, myselfUserId: string | undefined): 
         case "project":
             return PROJECT_PALETTE;
         case "todo":
+        case "calendar_event":
             return TODO_PALETTE;
     }
 };

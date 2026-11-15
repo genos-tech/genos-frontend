@@ -42,6 +42,7 @@ export {
     emitAgentSessionsDeleted,
     useAgentSessionsDeleted,
 } from "./sessionEvents";
+export { SelectedTextQuote, type SelectedTextQuoteProps } from "./SelectedTextQuote";
 export { sessionTurnToCompleted } from "./sessionTurns";
 export { type UndoRequest, type UndoStepRef } from "./undoSteps";
 export { sourceChipLabel } from "./sourceChipLabel";

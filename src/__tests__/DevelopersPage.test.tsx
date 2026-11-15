@@ -189,6 +189,7 @@ describe("DevelopersPage", () => {
             "list_today_todos",
             "list_calendar_events",
             "list_calendars",
+            "get_calendar_event",
             "get_my_blockers",
             "list_my_inbox",
             "get_my_throughput",
@@ -213,6 +214,7 @@ describe("DevelopersPage", () => {
             "add_comment",
             "update_comment",
             "delete_comment",
+            "delete_task_attachment",
             "restore_task_body",
             "add_task_delivery",
             "remove_task_delivery",
@@ -292,15 +294,63 @@ describe("DevelopersPage", () => {
         expect(rowOf("restore_note_version")).toContain("can itself be undone");
     });
 
-    it("says the destructive opt-in on exactly the eleven tools that need it", () => {
+    it("says manage_milestone can convert and move, that neither can be undone, and which two need the opt-in", () => {
+        renderPage();
+        const row = [...document.querySelectorAll("tr")].find(
+            (tr) => tr.querySelector("td")?.textContent === "manage_milestone"
+        );
+        const text = row?.textContent ?? "";
+        expect(text).toContain("The convert action turns a root task into a milestone");
+        expect(text).toContain("back into a task, on the same row");
+        expect(text).toContain("its folder and sprint are dropped");
+        expect(text).toContain("moves the milestone, and its tasks with it, to another project");
+        expect(text).toContain("the sprint, folder and tags are cleared");
+        expect(text).toContain("Neither can be undone");
+        // They drop what nothing can put back (the folder, the sprint, the old ids), so a milestone
+        // turned into a task and a move need the opt-in like a delete; a task turned into a milestone
+        // drops nothing and the row says only these two need it.
+        expect(text).toContain(
+            "a milestone turned into a task and a move need a key that also has the destructive opt-in"
+        );
+    });
+
+    it("says the calendar tools take a connected Google account, and that a delete on the wrong one reads as already gone", () => {
+        renderPage();
+        const rowOf = (name: string) =>
+            [...document.querySelectorAll("tr")].find(
+                (tr) => tr.querySelector("td")?.textContent === name
+            )?.textContent ?? "";
+        // The new read, in the page's words.
+        expect(rowOf("get_calendar_event")).toContain(
+            "One Google Calendar event by its id, on any connected Google account."
+        );
+        // The five that gained an `account`.
+        for (const name of ["list_calendar_events", "create_calendar_event"]) {
+            expect(rowOf(name)).toContain("account argument");
+        }
+        expect(rowOf("update_calendar_event")).toContain("the account argument");
+        expect(rowOf("list_calendars")).toContain(
+            "the connected Google account each one belongs to"
+        );
+        expect(rowOf("list_calendars")).toContain("does not hide the others");
+        expect(rowOf("delete_calendar_event")).toContain(
+            "An event that is not on the account you name reads as already gone, so check the account first."
+        );
+        // It was already one of the tools that need the opt-in, and still says so once.
+        expect(rowOf("delete_calendar_event")).toContain("destructive opt-in");
+    });
+
+    it("says the destructive opt-in on exactly the tools that need it", () => {
         renderPage();
         const rows = [...document.querySelectorAll("tr")].filter((tr) =>
             tr.textContent?.includes("destructive opt-in")
         );
         expect(rows.map((tr) => tr.querySelector("td")?.textContent)).toEqual([
             "delete_comment",
+            "delete_task_attachment",
             "delete_todo_item",
             "delete_calendar_event",
+            "manage_milestone",
             "delete_milestone",
             "delete_sprint",
             "manage_project_members",

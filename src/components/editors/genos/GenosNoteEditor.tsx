@@ -19,6 +19,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../../context/AuthContext";
 import { useMentionGroupsContext } from "../../../context/MentionGroupsContext";
 import { getMyNoteRoleId, isNoteEditable } from "../../../features/notes/common/utils/noteRoles";
+import { useAskGenosAvailable } from "../../../features/spotlight/useAskGenosAvailable";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../../hooks/common/useAnchorClickIntercept";
@@ -58,6 +59,9 @@ const django_url = import.meta.env.VITE_DJANGO_URL;
  * ~780 lines apart from exactly these values.
  */
 export type GenosNoteConfig = {
+    /** The note family, as the agent's `note` mention names it: 1 personal (My, Team and Shared
+     *  notes), 2 task note, 3 chat note. */
+    noteType: 1 | 2 | 3;
     noteId: number;
     title: string;
     /** Yjs document name prefix: the room is `${documentPrefix}:${noteId}`. */
@@ -150,6 +154,9 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     const mentionableUsers = useTEM.teamMembers;
 
     const { mode } = useColorScheme();
+    // "Ask Genos about the selected text" (MIP-1058) is offered on a page, not in a note previewed
+    // inside a link modal (a task note in a task preview in one too): see `useAskGenosAvailable`.
+    const askGenosAvailable = useAskGenosAvailable();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
@@ -535,6 +542,16 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                             isEditable={isEditable}
                                             hasComments={!!threadStore}
                                             setShowGifPicker={setShowGifPicker}
+                                            askSource={
+                                                askGenosAvailable
+                                                    ? {
+                                                          kind: "note",
+                                                          noteType: note.noteType,
+                                                          noteId: note.noteId,
+                                                          label: note.title,
+                                                      }
+                                                    : null
+                                            }
                                         />
                                     )}
                                 />

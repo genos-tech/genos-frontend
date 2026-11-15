@@ -1048,6 +1048,8 @@ export const ja: DeepPartial<Messages> = {
         event: {
             editTitle: "イベントの編集",
             newTitle: "新しいイベント",
+            askGenos: "このイベントについてGenosに質問",
+            askGenosUntitled: "無題の予定",
             titleLabel: "タイトル",
             allDay: "終日",
             startLabel: "開始日",
@@ -1421,6 +1423,10 @@ export const ja: DeepPartial<Messages> = {
             replyInThread: "スレッドで返信",
             flagForLater: "後で確認用にフラグを付ける",
             addToTodo: "To-Do に追加",
+            askGenos: "このメッセージについてGenosに質問",
+            askGenosSelection: "選択したテキストについてGenosに質問",
+            askGenosShort: "Genosに質問",
+            askGenosFallback: "メッセージ",
             removeFlag: "フラグを外す",
             failed: {
                 flag: "フラグを付けられませんでした。もう一度お試しください。",
@@ -1907,6 +1913,7 @@ export const ja: DeepPartial<Messages> = {
             gifLoading: "読み込み中…",
             gifAttribution: "GIPHYの提供",
             emojiTypingHint: ":+入力",
+            askGenosSelection: "選択したテキストについてGenosに質問",
             emojiGroup: "絵文字",
             teamEmojiGroup: "チーム絵文字",
             loadingComments: "コメントを読み込み中…",
@@ -2812,6 +2819,30 @@ export const ja: DeepPartial<Messages> = {
             notes: "ノート",
             search: "Genos",
             todo: "To-Do",
+        },
+    },
+    taskAsk: {
+        modal: {
+            titleTask: "このタスクについてGenosに質問",
+            titleMilestone: "このマイルストーンについてGenosに質問",
+        },
+        loading: "会話を開いています…",
+        gone: {
+            titleTask: "このタスクはもう開けません",
+            titleMilestone: "このマイルストーンはもう開けません",
+            body: "削除されたか、アクセス権がなくなった可能性があります。これまでの質問は過去の会話に残っています。",
+            askInGeneral: "対象を指定せずにGenosに質問する",
+        },
+        conversation: {
+            emptyTask:
+                "このタスクについて何でも質問できます。Genosはタスクの内容を把握しており、質問はタスクと一緒に残るので、あとで続きから再開できます。",
+            emptyMilestone:
+                "このマイルストーンについて何でも質問できます。Genosはマイルストーンの内容を把握しており、質問はマイルストーンと一緒に残るので、あとで続きから再開できます。",
+            placeholderTask: "このタスクについて質問…",
+            placeholderMilestone: "このマイルストーンについて質問…",
+            newConversation: "新しい会話",
+            newConversationHint: "新しい会話を始めます。今の会話は過去の会話に残ります。",
+            newConversationStarted: "新しい会話を始めました。",
         },
     },
     noteAsk: {
@@ -4704,6 +4735,12 @@ export const ja: DeepPartial<Messages> = {
             selectedFrom:
                 "Genos は選択されたテキストの出典を使えなかったため、テキストだけで回答しました。",
             task: "Genos は質問の対象のタスクまたはマイルストーンを使えなかったため、それなしで回答しました。",
+        },
+        selection: {
+            label: "選択したテキスト",
+            remove: "選択したテキストを外す",
+            truncated: "先頭の {count} 文字だけが送られます。",
+            placeholder: "選択したテキストについてGenosに質問…",
         },
         empty: {
             initial: "入力を開始すると、チャット・タスク・ノートを横断検索します。",

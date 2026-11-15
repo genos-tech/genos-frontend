@@ -1056,6 +1056,8 @@ export const fr: DeepPartial<Messages> = {
         event: {
             editTitle: "Modifier l'événement",
             newTitle: "Nouvel événement",
+            askGenos: "Demander à Genos à propos de cet événement",
+            askGenosUntitled: "Événement sans titre",
             titleLabel: "Titre",
             allDay: "Toute la journée",
             startLabel: "Démarrer",
@@ -1431,6 +1433,10 @@ export const fr: DeepPartial<Messages> = {
             replyInThread: "Répondre dans le fil",
             flagForLater: "Marquer pour plus tard",
             addToTodo: "Ajouter à « À faire »",
+            askGenos: "Demander à Genos à propos de ce message",
+            askGenosSelection: "Demander à Genos à propos du texte sélectionné",
+            askGenosShort: "Demander à Genos",
+            askGenosFallback: "Message",
             removeFlag: "Retirer la marque",
             failed: {
                 flag: "Impossible de marquer. Réessayez.",
@@ -1926,6 +1932,7 @@ export const fr: DeepPartial<Messages> = {
             gifLoading: "Chargement…",
             gifAttribution: "Propulsé par GIPHY",
             emojiTypingHint: ":+saisie",
+            askGenosSelection: "Demander à Genos à propos du texte sélectionné",
             emojiGroup: "Emoji",
             teamEmojiGroup: "Emoji d'équipe",
             loadingComments: "Chargement des commentaires…",
@@ -2835,6 +2842,31 @@ export const fr: DeepPartial<Messages> = {
             notes: "Notes",
             search: "Genos",
             todo: "À faire",
+        },
+    },
+    taskAsk: {
+        modal: {
+            titleTask: "Demander à Genos à propos de cette tâche",
+            titleMilestone: "Demander à Genos à propos de ce jalon",
+        },
+        loading: "Ouverture de votre conversation…",
+        gone: {
+            titleTask: "Cette tâche ne peut plus être ouverte",
+            titleMilestone: "Ce jalon ne peut plus être ouvert",
+            body: "Cet élément a peut-être été supprimé, ou vous n'y avez peut-être plus accès. Vos questions précédentes restent dans vos conversations passées.",
+            askInGeneral: "Poser une question générale à Genos",
+        },
+        conversation: {
+            emptyTask:
+                "Posez n'importe quelle question sur cette tâche. Genos en connaît les détails et vos questions restent associées à la tâche : vous pourrez les reprendre plus tard.",
+            emptyMilestone:
+                "Posez n'importe quelle question sur ce jalon. Genos en connaît les détails et vos questions restent associées au jalon : vous pourrez les reprendre plus tard.",
+            placeholderTask: "Posez une question sur cette tâche…",
+            placeholderMilestone: "Posez une question sur ce jalon…",
+            newConversation: "Nouvelle conversation",
+            newConversationHint:
+                "Commencez une nouvelle conversation à ce sujet. La conversation actuelle reste dans vos conversations passées.",
+            newConversationStarted: "Nouvelle conversation commencée.",
         },
     },
     noteAsk: {
@@ -4767,6 +4799,12 @@ export const fr: DeepPartial<Messages> = {
             selectedFrom:
                 "Genos n'a pas pu utiliser la source du texte sélectionné ; il a utilisé le texte seul.",
             task: "Genos n'a pas pu utiliser la tâche ou le jalon concerné par votre question ; il a répondu sans ce contexte.",
+        },
+        selection: {
+            label: "Texte sélectionné",
+            remove: "Retirer le texte sélectionné",
+            truncated: "Seuls les {count} premiers caractères seront envoyés.",
+            placeholder: "Interrogez Genos sur le texte sélectionné…",
         },
         empty: {
             initial: "Commencez à saisir pour rechercher dans vos conversations, tâches et notes.",
