@@ -288,6 +288,23 @@ export interface NoteContext {
     noteId: number;
 }
 
+// Scope for "Ask Genos about this task or milestone" (MIP-1057, genos-api #874, behind the server's
+// `AGENT_PARITY_TOOLS` flag, which the client cannot see). `taskId` is the numeric `TaskMaster.task_id`
+// (`task.id` in the app): for a MILESTONE it is the id of its backing task row (the `taskId` the
+// milestone payload carries), never the `milestone_id` and never the display id ("MIP-12"). The
+// server reads whether the row is a milestone, so the client cannot declare it. The ask's `team_id`
+// must be the team that OWNS the task (for a task of a project shared from another team: the host
+// team), because the server does not re-align a nested id. With the flag off `task_context` is
+// ignored like any unknown field (never a 4xx).
+export interface TaskContext {
+    taskId: number;
+}
+
+/** Whether `id` is something the server accepts as a task id (a positive integer). Anything else is
+ *  a 400 there, so the client never builds the request. */
+export const isTaskId = (id: unknown): id is number =>
+    typeof id === "number" && Number.isSafeInteger(id) && id > 0;
+
 // One structured @/# mention attached to an ask — the wire shape of the
 // backend's `mentions` array (see genos-api `agent/mentions.py`). Int
 // codes mirror ThreadContext/NoteContext; `label` is advisory only (the
@@ -343,6 +360,19 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // Mutually exclusive with `threadContext`; the backend rejects
     // requests with both set.
     noteContext?: NoteContext;
+    // The task or milestone this conversation is about (MIP-1057): `task_context: {task_id}` on the
+    // wire. The server binds the session to the task, reuses the person's newest one for it when no
+    // `sessionId` is sent, and never touches the general (Cmd-K) session. Mutually exclusive with
+    // `threadContext` and `noteContext` (a 400), so a caller sets ONE of the three. Left off the wire
+    // unless `taskId` is a positive integer. The caller also keeps sending the task as a `#` mention:
+    // with the flag off that mention is what makes the ask about the task.
+    taskContext?: TaskContext;
+    // Called when the server answers 404 to an ask that carried `taskContext`: the task is deleted, or
+    // the person lost access to it (one answer for both, and for a task that never existed). The
+    // stream's `onError` follows with a calm sentence of ours (never the server's English), so a host
+    // that only wants the sentence can ignore this. A 404 is final: the caller must not send the same
+    // `taskContext` again.
+    onTaskNotFound?: () => void;
     // When true, the backend ignores any existing session for this user
     // (both `sessionId` and any per-thread/per-note session) and creates
     // a fresh AgentSession. Used by the "Clear conversation" button so
@@ -720,6 +750,96 @@ export async function fetchThreadSummary(args: {
     return (await resp.json()) as ThreadSummaryResponse;
 }
 
+// ---------------------------------------------------------------------------
+// The conversation about one task or milestone (MIP-1057, genos-api #874).
+//
+//   GET /agent/task-session/?team_id=<id>&task_id=<id>
+//
+// Restores the person's newest conversation about the task when its Ask is opened again: no model
+// call, no quota, nothing written, so it is safe on every open. `turns` has the shape of
+// `GET /agent/sessions/<id>/`'s `turns`. Only the caller's own sessions are ever returned.
+//
+//   200 {agent_session_id: <uuid>|null, turns: [...]}   null / [] when they never asked about it, and
+//                                                       for EVERY task while the server flag
+//                                                       `AGENT_PARITY_TOOLS` is off (empty 200)
+//   404 {error: "Task not found."}                      ONE answer for no such task, deleted, another
+//                                                       team's, not readable by the caller and a team
+//                                                       the caller is not in
+//   400 {error}                                         `team_id` missing, `task_id` not a positive
+//                                                       integer (the client never builds one)
+//
+// Never throws. A 404 is `gone`, which is a claim about the task, so it is made only for an answer
+// that has the platform's `{error}` body: a backend that does not have the route yet answers with
+// Django's HTML page or DRF's `{detail}`, and that is a failure to load, not "you cannot open this".
+// ---------------------------------------------------------------------------
+
+export type TaskSessionResult =
+    | { kind: "ok"; agentSessionId: string | null; turns: AgentSessionTurn[] }
+    | { kind: "gone" }
+    | { kind: "failed"; message: string };
+
+export async function fetchTaskSession(args: {
+    accessToken: string | null;
+    teamId: string | null | undefined;
+    taskId: number;
+    signal?: AbortSignal;
+}): Promise<TaskSessionResult> {
+    if (!args.accessToken) {
+        return { kind: "failed", message: getMessages().services.agent.notSignedIn };
+    }
+    if (!args.teamId || !isTaskId(args.taskId)) {
+        return { kind: "failed", message: getMessages().services.agent.taskSessionLoadFailed };
+    }
+    let resp: Response;
+    try {
+        resp = await fetch(
+            `${API_BASE}/agent/task-session/?team_id=${encodeURIComponent(args.teamId)}` +
+                `&task_id=${encodeURIComponent(String(args.taskId))}`,
+            {
+                signal: args.signal,
+                headers: { Authorization: `Bearer ${args.accessToken}` },
+            }
+        );
+    } catch (err) {
+        return {
+            kind: "failed",
+            message:
+                (err as Error)?.name === "AbortError"
+                    ? ""
+                    : fmt(getMessages().services.agent.networkError, {
+                          message: (err as Error)?.message ?? "",
+                      }),
+        };
+    }
+    let body: unknown = null;
+    try {
+        body = await resp.json();
+    } catch {
+        // Not JSON: handled below by status.
+    }
+    const record =
+        body && typeof body === "object" && !Array.isArray(body)
+            ? (body as Record<string, unknown>)
+            : null;
+    if (resp.status === 404 && typeof record?.error === "string") return { kind: "gone" };
+    if (!resp.ok) {
+        const message =
+            typeof record?.error === "string" && record.error
+                ? record.error
+                : fmt(getMessages().services.agent.serverReturned, { status: resp.status });
+        return { kind: "failed", message };
+    }
+    if (!record) {
+        return { kind: "failed", message: getMessages().services.agent.taskSessionLoadFailed };
+    }
+    const id = record.agent_session_id;
+    return {
+        kind: "ok",
+        agentSessionId: typeof id === "string" && id ? id : null,
+        turns: Array.isArray(record.turns) ? (record.turns as AgentSessionTurn[]) : [],
+    };
+}
+
 // `search` filters server-side across every question in a session, not
 // just the `first_query` the row is labelled with — and across the whole
 // retention window rather than the capped recent slice, which is the
@@ -998,6 +1118,7 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     // A blank selection is no selection, and its source goes with it (the server ignores a
     // `selected_from` without text).
     const selectedText = clipSelectionText(args.selectedText ?? "").text;
+    const taskSent = isTaskId(args.taskContext?.taskId);
     await runNdjsonStream(
         `${API_BASE}/agent/ask/`,
         {
@@ -1028,6 +1149,11 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
                       },
                   }
                 : {}),
+            // Only for a real task id: the server answers anything else with a 400 before it spends
+            // anything, and a body built from nothing is no better than no scope at all.
+            ...(taskSent && args.taskContext
+                ? { task_context: { task_id: args.taskContext.taskId } }
+                : {}),
             ...(args.newConversation ? { new_conversation: true } : {}),
             ...(args.resume ? { resume: true } : {}),
             // The active UI locale so the agent answers in the user's
@@ -1040,7 +1166,10 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
         },
         args.accessToken,
         args.signal,
-        args
+        args,
+        undefined,
+        // The 404 of an ask about a task (MIP-1057): gone for good, so say so once, in our own words.
+        taskSent ? () => args.onTaskNotFound?.() : undefined
     );
 }
 
@@ -1356,7 +1485,9 @@ async function runNdjsonStream(
     accessToken: string,
     signal: AbortSignal | undefined,
     handlers: BaseStreamHandlers,
-    onEditsRejected?: (rejection: EditsRejected) => void
+    onEditsRejected?: (rejection: EditsRejected) => void,
+    // Set only by an ask that carried a `task_context`: its 404 means the task cannot be opened.
+    onTaskNotFound?: () => void
 ): Promise<void> {
     let resp: Response;
     try {
@@ -1382,9 +1513,13 @@ async function runNdjsonStream(
     if (!resp.ok) {
         let message = fmt(getMessages().services.agent.serverReturned, { status: resp.status });
         let fieldErrors: Record<string, string> | null = null;
+        // The answer has the platform's own `{error: "..."}` body (not Django's page, not DRF's
+        // `{detail}`): only the API this client was built for answers like that.
+        let platformError = false;
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
+            platformError = typeof data?.error === "string";
             // /decide/ answers 422 `{error, field_errors}` when the person's
             // edits cannot be applied. Plain JSON, not an NDJSON stream, and
             // not a failed run: hand it to the caller, who restores the card.
@@ -1399,6 +1534,17 @@ async function runNdjsonStream(
         }
         if (fieldErrors && onEditsRejected) {
             onEditsRejected({ message, fieldErrors });
+            return;
+        }
+        // The task this ask was about cannot be opened (deleted, access lost, never there: one
+        // answer). Tell the host, then end the turn in a sentence of ours rather than the server's
+        // English one. Any other status (a 400 for a malformed `task_context`, a 5xx) is an
+        // ordinary failure and keeps the server's own words, and so is a 404 that is not the
+        // platform's `{error}` (a backend with no such route yet, a proxy in a deploy window): that
+        // says nothing about the task, and "gone" is a claim about the task (as in `fetchTaskSession`).
+        if (resp.status === 404 && platformError && onTaskNotFound) {
+            onTaskNotFound();
+            handlers.onError(getMessages().services.agent.taskNotFound);
             return;
         }
         handlers.onError(message);

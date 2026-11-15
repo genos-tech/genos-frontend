@@ -4115,6 +4115,9 @@ export const es: DeepPartial<Messages> = {
             serverReturned: "El servidor devolvió {status}",
             streamInterrupted: "Transmisión interrumpida: {message}",
             malformedNdjsonLine: "Línea NDJSON malformada: {line}",
+            taskNotFound:
+                "Esta tarea o hito ya no se puede abrir, así que Genos no pudo responder.",
+            taskSessionLoadFailed: "No se pudo cargar tu conversación anterior sobre esta tarea.",
         },
         pwaInstall: {
             title: "Instalar Genos",
@@ -4335,6 +4338,7 @@ export const es: DeepPartial<Messages> = {
                 surfaceSpotlight: "Spotlight",
                 surfaceThread: "Pregunta sobre este hilo",
                 surfaceNote: "Pregunta por esta nota",
+                surfaceTask: "Pregunta por esta tarea",
             },
             reminder: {
                 messageTitle: "Recordatorio sobre el mensaje de {name}",
