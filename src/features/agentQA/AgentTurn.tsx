@@ -604,9 +604,10 @@ const AgentTurnInner = ({
                                     sx={{ fontSize: 14, mt: "2px", flexShrink: 0 }}
                                 />
                                 <Box sx={{ minWidth: 0 }}>
-                                    {droppedNotices.map((text) => (
+                                    {droppedNotices.map((text, i) => (
                                         <Typography
-                                            key={text}
+                                            // By position too: two kinds may share a sentence in a catalog.
+                                            key={`${i}:${text}`}
                                             level="body-xs"
                                             sx={{ color: "inherit", overflowWrap: "anywhere" }}
                                         >

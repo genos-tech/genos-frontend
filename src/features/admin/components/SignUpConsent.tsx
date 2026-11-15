@@ -52,6 +52,13 @@ export const SignUpConsent = forwardRef<HTMLInputElement, SignUpConsentProps>(
                 rel="noopener noreferrer"
                 target="_blank"
                 sx={{
+                    // Joy's Checkbox lays an invisible "action" layer over the
+                    // whole row (position: absolute, z-index: 1) and does not
+                    // lift a plain label above it. Without its own z-index the
+                    // link sits underneath, so a click lands on the checkbox
+                    // input and the link can't be opened (MIP-1581).
+                    position: "relative",
+                    zIndex: 2,
                     color: linkColor,
                     fontWeight: 500,
                     textDecoration: "underline",

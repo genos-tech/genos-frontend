@@ -36,15 +36,32 @@ type TaskIdentityRowProps = {
      *  string resolve it against `taskMeta.statuses` first. */
     status: TaskStatusProps;
     isMilestone?: boolean | null;
+    /** In a narrow option (a phone): the title takes its own line below the flag, id and
+     *  status, up to two lines, instead of being squeezed beside them. */
+    wrapTitle?: boolean;
 };
 
-export const TaskIdentityRow = ({ task, title, status, isMilestone }: TaskIdentityRowProps) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+export const TaskIdentityRow = ({
+    task,
+    title,
+    status,
+    isMilestone,
+    wrapTitle = false,
+}: TaskIdentityRowProps) => (
+    <Box
+        sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            minWidth: 0,
+            ...(wrapTitle ? { flexWrap: "wrap", rowGap: 0.25 } : {}),
+        }}
+    >
         {isMilestone === true && <MilestoneFlag size={16} />}
         <TaskIdText task={task} />
         <StatusLabel status={status.status} />
-        <Box sx={{ minWidth: 0, flex: 1, display: "flex" }}>
-            <TaskTitle>{title}</TaskTitle>
+        <Box sx={{ minWidth: 0, flex: wrapTitle ? "1 1 100%" : 1, display: "flex" }}>
+            <TaskTitle lines={wrapTitle ? 2 : 1}>{title}</TaskTitle>
         </Box>
     </Box>
 );
