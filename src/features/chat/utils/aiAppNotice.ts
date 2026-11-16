@@ -68,6 +68,13 @@ const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v 
 const parseFamily = (value: unknown): ViaApp | undefined =>
     value === "claude" || value === "chatgpt" ? value : undefined;
 
+/** `url` when it is an in-app path we may navigate to, else null. The API hands over a path
+ *  ("/workspace/..."), never a full URL; anything else (empty, "https://...", a protocol-relative
+ *  "//host") is not followed. Shared by the Activity row and the toast (MIP-1657), so the two
+ *  open the same place. */
+export const inAppPath = (url: string | null | undefined): string | null =>
+    typeof url === "string" && url.startsWith("/") && !url.startsWith("//") ? url : null;
+
 /** Read the producer's `meta` defensively: a malformed row must still render. */
 export function parseAiAppNotice(meta: Record<string, unknown>): AiAppNotice {
     const items: AiAppNoticeItem[] = Array.isArray(meta.items)

@@ -150,6 +150,11 @@ export interface NotificationIntent {
     senderId?: string;
     /** Optional click handler. Currently fires `onOpenIntent` in the React layer. */
     onOpen?: () => void;
+    /** The in-app path a click opens, when the event names one exactly (MIP-1657: a change the
+     *  member's AI app made carries its task's or note's own page). Checked before the `source`
+     *  rules, which can only rebuild chat, task and note destinations from ids. Only ever an
+     *  in-app path ("/workspace/..."); a full or protocol-relative URL is never put here. */
+    url?: string;
 }
 
 export type NotificationDispatch =
