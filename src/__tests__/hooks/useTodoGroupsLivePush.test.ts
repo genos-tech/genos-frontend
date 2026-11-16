@@ -178,13 +178,18 @@ describe("a pushed to-do change reaches the open page", () => {
             } as never,
         ]);
         loadReminders.mockResolvedValue([
-            { reminderId: 9, itemId: 1, remindAt: "2099-01-01T00:00:00Z" } as never,
+            {
+                id: "r9",
+                itemId: 1,
+                remindAt: "2099-01-01T00:00:00Z",
+                tsCreated: "2026-01-01T00:00:00Z",
+            },
         ]);
         await push({ teamId: "t1" });
         await tick(PUSH_REFRESH_DELAY_MS);
 
         expect(result.current.categories.map((c) => c.name)).toEqual(["Ops"]);
-        expect(result.current.reminderByItemId.get(1)?.reminderId).toBe(9);
+        expect(result.current.reminderByItemId.get(1)?.id).toBe("r9");
     });
 
     it("a reconnect (no team in the event) re-reads too", async () => {
