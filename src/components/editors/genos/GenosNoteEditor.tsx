@@ -46,6 +46,7 @@ import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "../sub/CommentsSidebar"
 import { CommentsSidebarToggle } from "../sub/CommentsSidebarToggle";
 import { CustomDragHandleMenu } from "../sub/CustomDragHandleMenu";
 import { NoteLinkContext, useNoteLinkApi } from "../sub/NoteLinkContext";
+import { ReadOnlyBlockLinkButton } from "../sub/ReadOnlyBlockLinkButton";
 import { useCommentMentionEmitter } from "../sub/useCommentMentionEmitter";
 import { useNoteDeepLink, type DeepLinkEditor } from "../sub/useNoteDeepLink";
 import { WrapToggleButtons } from "../sub/WrapToggleButtons";
@@ -607,6 +608,9 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                         {threadStore && <CommentsSidebar open={showComments} />}
                     </div>
                 </BlockNoteView>
+
+                {/* A viewer has no drag-handle menu to copy a block's link from (MIP-1650). */}
+                {!isEditable && <ReadOnlyBlockLinkButton boxRef={editorBoxRef} />}
 
                 <ImageZoomModal
                     filenameStem={note.imageFilenameStem}
