@@ -25,6 +25,7 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
+import { handleV3TodoChanged } from "../../features/chat/services/handleV3Todo";
 import { setMediaAccessToken } from "../../utils/mediaAuth";
 import { channelService } from "./channelService";
 import { registerSocketRouter, V3_NAMESPACE } from "./socketRouter";
@@ -177,6 +178,9 @@ export function useChannelServiceBootstrap(
                     // A flag set or removed on another device during the gap is a per-user
                     // broadcast the server does not buffer.
                     void channelService.fetchActiveFlags();
+                    // Same for a to-do written meanwhile over MCP or from another device: the
+                    // `todo.changed` push is not buffered either (MIP-1626).
+                    handleV3TodoChanged({});
                 });
         };
         next.on("connect", onConnect);
