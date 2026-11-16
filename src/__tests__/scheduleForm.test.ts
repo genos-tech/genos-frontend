@@ -246,6 +246,34 @@ describe("a required parameter comes from the catalog (MIP-1473)", () => {
     });
 });
 
+describe("a required project the member cannot pick (MIP-1631)", () => {
+    const REQUIRED: ScheduleJob = {
+        job: "project_updates",
+        title: "Project updates",
+        description: "One project",
+        params: { project_id: { type: "integer", minimum: 1, required: true } },
+    };
+    const OPTIONAL: ScheduleJob = {
+        ...REQUIRED,
+        params: { project_id: { type: "integer", minimum: 1 } },
+    };
+    const pickable = new Set(["11", "12"]);
+    const f = (project_id: string) => form({ job: "project_updates", params: { project_id } });
+
+    it("is refused as unavailable, a pickable one and an unchecked form are not", () => {
+        expect(validateForm(f("999"), REQUIRED, false, pickable).params.project_id).toBe(
+            "unavailable"
+        );
+        expect(validateForm(f("11"), REQUIRED, false, pickable).params).toEqual({});
+        expect(validateForm(f("999"), REQUIRED).params).toEqual({});
+    });
+
+    it("leaves an empty one to 'required' and an optional one alone", () => {
+        expect(validateForm(f(""), REQUIRED, false, pickable).params.project_id).toBe("required");
+        expect(validateForm(f("999"), OPTIONAL, false, pickable).params).toEqual({});
+    });
+});
+
 describe("validation", () => {
     it("accepts a good form", () => {
         expect(hasProblems(validateForm(form(), WHAT_TO_DO))).toBe(false);

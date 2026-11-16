@@ -851,6 +851,8 @@ export const es: DeepPartial<Messages> = {
             paramProject: "Proyecto",
             paramProjectHint:
                 "Limita el informe a un proyecto. Déjalo en Todos los proyectos para incluir todo lo que puedes ver.",
+            paramProjectRequiredHint: "El proyecto que sigue este informe. Obligatorio.",
+            projectPlaceholder: "Elige un proyecto",
             paramDay: "Día",
             paramDayHint: "Qué día resumir. Déjalo vacío para hoy.",
             paramDays: "Mirar atrás (días)",
@@ -872,6 +874,11 @@ export const es: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "No se pudieron cargar los hitos. Cierra este formulario e inténtalo de nuevo.",
             errorMilestone: "Elige un hito.",
+            errorProject: "Elige un proyecto.",
+            errorProjectUnavailable: "Este proyecto ya no está disponible para ti. Elige otro.",
+            projectNone: "No hay proyectos para elegir.",
+            rowProject: "Proyecto: {name}",
+            rowMilestone: "Hito: {name}",
             paramAiSentences: "Frases de IA",
             paramAiSentencesHint:
                 "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA. Desactívala para un informe sin IA.",

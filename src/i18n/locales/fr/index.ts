@@ -4206,6 +4206,8 @@ export const fr: DeepPartial<Messages> = {
             paramProject: "Projet",
             paramProjectHint:
                 "Limite le rapport à un projet. Laissez sur Tous les projets pour inclure tout ce que vous pouvez voir.",
+            paramProjectRequiredHint: "Le projet que suit ce rapport. Obligatoire.",
+            projectPlaceholder: "Choisir un projet",
             paramDay: "Jour",
             paramDayHint: "Quel jour résumer. Laissez vide pour aujourd’hui.",
             paramDays: "Remonter dans le temps (jours)",
@@ -4227,6 +4229,12 @@ export const fr: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "Impossible de charger les jalons. Fermez ce formulaire et réessayez.",
             errorMilestone: "Choisissez un jalon.",
+            errorProject: "Choisissez un projet.",
+            errorProjectUnavailable:
+                "Ce projet n’est plus disponible pour vous. Choisissez-en un autre.",
+            projectNone: "Aucun projet à choisir.",
+            rowProject: "Projet : {name}",
+            rowMilestone: "Jalon : {name}",
             paramAiSentences: "Phrases de l'IA",
             paramAiSentencesHint:
                 "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA. Désactivez-la pour un rapport simple.",

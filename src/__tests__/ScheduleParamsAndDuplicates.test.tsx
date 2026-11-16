@@ -94,6 +94,15 @@ const JOBS = [
         },
     },
     {
+        job: "project_updates",
+        title: "Project updates",
+        description: "One project.",
+        params: {
+            project_id: { type: "integer", minimum: 1, required: true },
+            hours: { type: "integer", minimum: 1, maximum: 720 },
+        },
+    },
+    {
         job: "future_job",
         title: "A future job",
         description: "Added on the server later.",
@@ -275,6 +284,219 @@ describe("project picker", () => {
         const user = userEvent.setup();
         await user.click(await screen.findByRole("button", { name: "Edit" }));
         expect(screen.getByRole("combobox", { name: "Project" })).toHaveValue("Apollo");
+    });
+});
+
+describe("required project picker (project_updates, MIP-1629)", () => {
+    const openProjectUpdates = async () => {
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await openNew(user);
+        await pickJob(user, "Project updates");
+        return user;
+    };
+
+    it("has no All projects row and asks the member to choose one", async () => {
+        const user = await openProjectUpdates();
+        const picker = screen.getByRole("combobox", { name: /^Project/ });
+        // nothing is chosen, so the field is empty and says what to do
+        expect(picker).toHaveValue("");
+        expect(picker).toHaveAttribute("placeholder", "Choose a project");
+        await user.click(picker);
+        const names = (await screen.findAllByRole("option")).map((o) => o.textContent);
+        expect(names).toEqual(["Apollo", "Borealis"]);
+        expect(screen.queryByText("All projects")).toBeNull();
+    });
+
+    it("explains that the project is required, not that All projects is allowed", async () => {
+        await openProjectUpdates();
+        const params = screen.getByTestId("schedule-params");
+        expect(
+            within(params).getByText("The project this report follows. Required.")
+        ).toBeTruthy();
+        expect(within(params).queryByText(/Leave it on All projects/)).toBeNull();
+    });
+
+    it("stores the chosen project and will not send without one, and says so", async () => {
+        createSchedule.mockResolvedValue({ ok: true, schedule: SCHEDULE });
+        const user = await openProjectUpdates();
+        await user.click(screen.getByRole("button", { name: "Create schedule" }));
+        expect(await screen.findByText("Choose a project.")).toBeTruthy();
+        expect(createSchedule).not.toHaveBeenCalled();
+        await user.click(screen.getByRole("combobox", { name: /^Project/ }));
+        await user.click(await screen.findByRole("option", { name: "Borealis" }));
+        await user.click(screen.getByRole("button", { name: "Create schedule" }));
+        await waitFor(() => expect(createSchedule).toHaveBeenCalledTimes(1));
+        expect(createSchedule.mock.calls[0][2].params).toEqual({ project_id: 12 });
+    });
+
+    it("shows a stored project by its name, or as (unavailable), in the edit form", async () => {
+        const stored = (project_id: number) =>
+            LIST([
+                {
+                    ...SCHEDULE,
+                    job: "project_updates",
+                    jobTitle: "Project updates",
+                    params: { project_id },
+                },
+            ]);
+        listSchedules.mockResolvedValue(stored(11));
+        const first = render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await user.click(await screen.findByRole("button", { name: "Edit" }));
+        expect(screen.getByRole("combobox", { name: /^Project/ })).toHaveValue("Apollo");
+        first.unmount();
+
+        listSchedules.mockResolvedValue(stored(999));
+        render(<SchedulesSection teamId="t1" />);
+        await user.click(await screen.findByRole("button", { name: "Edit" }));
+        expect(screen.getByRole("combobox", { name: /^Project/ })).toHaveValue("(unavailable)");
+    });
+
+    it("leaves the optional project of the other report as it was", async () => {
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await openNew(user);
+        await pickJob(user, "What to do today");
+        const picker = screen.getByRole("combobox", { name: /^Project/ });
+        expect(picker).toHaveValue("All projects");
+        expect(picker).not.toHaveAttribute("placeholder", "Choose a project");
+        expect(
+            within(screen.getByTestId("schedule-params")).getByText(
+                "Limit the report to one project. Leave it on All projects to include everything you can see."
+            )
+        ).toBeTruthy();
+        await user.click(picker);
+        const names = (await screen.findAllByRole("option")).map((o) => o.textContent);
+        expect(names[0]).toBe("All projects");
+    });
+});
+
+describe("a schedule's row names its project or milestone (MIP-1631)", () => {
+    const PU = {
+        ...SCHEDULE,
+        job: "project_updates",
+        jobTitle: "Project updates",
+    };
+    const MU = { ...SCHEDULE, job: "milestone_updates", jobTitle: "Milestone updates" };
+
+    it("shows the project by name, or (unavailable), and nothing for a report without one", async () => {
+        listSchedules.mockResolvedValue(
+            LIST([
+                { ...PU, id: "a", name: "Apollo weekly", params: { project_id: 11 } },
+                { ...PU, id: "b", name: "Gone weekly", params: { project_id: 999 } },
+                { ...SCHEDULE, id: "c", name: "Plain", job: "what_you_did", params: {} },
+            ])
+        );
+        render(<SchedulesSection teamId="t1" />);
+        const rows = await screen.findAllByTestId("schedule-row");
+        expect(within(rows[0]).getByText("Project: Apollo")).toBeTruthy();
+        expect(within(rows[1]).getByText("Project: (unavailable)")).toBeTruthy();
+        expect(within(rows[2]).queryByTestId("schedule-row-target")).toBeNull();
+        // no schedule has a milestone, so no milestone list was asked for
+        expect(loadProjectMilestones).not.toHaveBeenCalled();
+    });
+
+    it("shows the milestone by project and name, also a finished one, or (unavailable)", async () => {
+        listSchedules.mockResolvedValue(
+            LIST([
+                { ...MU, id: "a", name: "Launch watch", params: { milestone_id: 501 } },
+                { ...MU, id: "b", name: "Old watch", params: { milestone_id: 502 } },
+                { ...MU, id: "c", name: "Lost watch", params: { milestone_id: 9999 } },
+            ])
+        );
+        render(<SchedulesSection teamId="t1" />);
+        const rows = await screen.findAllByTestId("schedule-row");
+        expect(await within(rows[0]).findByText("Milestone: Apollo / Launch")).toBeTruthy();
+        expect(within(rows[1]).getByText("Milestone: Apollo / Old thing")).toBeTruthy();
+        expect(within(rows[2]).getByText("Milestone: (unavailable)")).toBeTruthy();
+    });
+});
+
+describe("a project list that has not arrived says nothing false (MIP-1631)", () => {
+    it("leaves the project off the row and saves a required project, while the list is empty", async () => {
+        const stored = {
+            ...SCHEDULE,
+            job: "project_updates",
+            jobTitle: "Project updates",
+            params: { project_id: 11 },
+        };
+        updateSchedule.mockResolvedValue({ ok: true, schedule: stored });
+        listSchedules.mockResolvedValue(LIST([stored]));
+        render(<SchedulesSection teamId="t1" />, mention({ projects: [] }));
+        const row = await screen.findByTestId("schedule-row");
+        expect(within(row).queryByTestId("schedule-row-target")).toBeNull();
+        const user = userEvent.setup();
+        await user.click(within(row).getByRole("button", { name: "Edit" }));
+        const name = screen.getByLabelText("Name");
+        await user.clear(name);
+        await user.type(name, "Renamed");
+        await user.click(screen.getByRole("button", { name: "Save changes" }));
+        await waitFor(() => expect(updateSchedule).toHaveBeenCalledTimes(1));
+    });
+});
+
+describe("a project the member cannot pick (MIP-1631)", () => {
+    const STORED = {
+        ...SCHEDULE,
+        job: "project_updates",
+        jobTitle: "Project updates",
+        params: { project_id: 999 },
+    };
+
+    it("refuses to save a required project that is (unavailable), and says why", async () => {
+        updateSchedule.mockResolvedValue({ ok: true, schedule: STORED });
+        listSchedules.mockResolvedValue(LIST([STORED]));
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await user.click(await screen.findByRole("button", { name: "Edit" }));
+        const name = screen.getByLabelText("Name");
+        await user.clear(name);
+        await user.type(name, "Renamed");
+        await user.click(screen.getByRole("button", { name: "Save changes" }));
+        expect(
+            await screen.findByText("This project is no longer available to you. Choose another.")
+        ).toBeTruthy();
+        expect(updateSchedule).not.toHaveBeenCalled();
+        // choosing a project the member can see clears it and saves
+        await user.click(screen.getByRole("combobox", { name: /^Project/ }));
+        await user.click(await screen.findByRole("option", { name: "Borealis" }));
+        await user.click(screen.getByRole("button", { name: "Save changes" }));
+        await waitFor(() => expect(updateSchedule).toHaveBeenCalledTimes(1));
+        expect(updateSchedule.mock.calls[0][3].params).toEqual({ project_id: 12 });
+    });
+
+    it("still saves an optional project that is (unavailable), as before", async () => {
+        const optional = { ...SCHEDULE, params: { project_id: 999 } };
+        updateSchedule.mockResolvedValue({ ok: true, schedule: optional });
+        listSchedules.mockResolvedValue(LIST([optional]));
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await user.click(await screen.findByRole("button", { name: "Edit" }));
+        const name = screen.getByLabelText("Name");
+        await user.clear(name);
+        await user.type(name, "Renamed");
+        await user.click(screen.getByRole("button", { name: "Save changes" }));
+        await waitFor(() => expect(updateSchedule).toHaveBeenCalledTimes(1));
+    });
+
+    it("says no project matches, not that there are none, when the typed text matches nothing", async () => {
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await openNew(user);
+        await pickJob(user, "Project updates");
+        await user.type(screen.getByRole("combobox", { name: /^Project/ }), "zzz");
+        expect(await screen.findByText("No results")).toBeTruthy();
+        expect(screen.queryByText("There are no projects to choose from.")).toBeNull();
+    });
+
+    it("says there are no projects to choose from when the member is in none", async () => {
+        render(<SchedulesSection teamId="t1" />, mention({ projects: [] }));
+        const user = userEvent.setup();
+        await openNew(user);
+        await pickJob(user, "Project updates");
+        await user.click(screen.getByRole("combobox", { name: /^Project/ }));
+        expect(await screen.findByText("There are no projects to choose from.")).toBeTruthy();
     });
 });
 
