@@ -4032,6 +4032,10 @@ export const zh: DeepPartial<Messages> = {
             milestoneLoadFailed: "无法加载里程碑。请关闭此表单后重试。",
             errorMilestone: "请选择一个里程碑。",
             errorProject: "请选择一个项目。",
+            errorProjectUnavailable: "你已无法使用此项目。请选择其他项目。",
+            projectNone: "没有可选择的项目。",
+            rowProject: "项目：{name}",
+            rowMilestone: "里程碑：{name}",
             paramAiSentences: "AI 一句话说明",
             paramAiSentencesHint:
                 "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI。关闭后为普通报告。",

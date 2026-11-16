@@ -4177,6 +4177,11 @@ export const ja: DeepPartial<Messages> = {
                 "マイルストーンを読み込めませんでした。このフォームを閉じて、もう一度お試しください。",
             errorMilestone: "マイルストーンを選択してください。",
             errorProject: "プロジェクトを選択してください。",
+            errorProjectUnavailable:
+                "このプロジェクトはもう利用できません。別のプロジェクトを選択してください。",
+            projectNone: "選択できるプロジェクトがありません。",
+            rowProject: "プロジェクト: {name}",
+            rowMilestone: "マイルストーン: {name}",
             paramAiSentences: "AI による一文",
             paramAiSentencesHint:
                 "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用します。通常のレポートにするにはオフにしてください。",

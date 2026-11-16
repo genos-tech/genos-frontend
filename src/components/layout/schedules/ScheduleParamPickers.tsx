@@ -103,6 +103,7 @@ export const ProjectParamSelect = ({
         <Autocomplete<ProjectProps, false, boolean, false>
             getOptionLabel={(option) => projectOptionLabel(option)}
             isOptionEqualToValue={(option, value) => isSameProject(option, value)}
+            noOptionsText={projects.length === 0 ? s.projectNone : t.common.empty.noResults}
             options={options}
             placeholder={required ? s.projectPlaceholder : undefined}
             renderOption={renderProjectOption(avatars)}

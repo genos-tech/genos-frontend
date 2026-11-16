@@ -29,6 +29,7 @@ import {
     buildCreate,
     buildPatch,
     emptyForm,
+    FieldProblem,
     formFromSchedule,
     FormProblems,
     FREQUENCIES,
@@ -57,7 +58,11 @@ import type {
     ScheduleResult,
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
-import { MilestoneParamSelect, ProjectParamSelect } from "./ScheduleParamPickers";
+import {
+    MilestoneParamSelect,
+    ProjectParamSelect,
+    useJoinedProjects,
+} from "./ScheduleParamPickers";
 
 type Props = {
     /** The schedule being edited; null to create one. */
@@ -124,9 +129,19 @@ export const ScheduleFormPanel = ({
     // Editing a schedule whose job was removed: renaming or re-timing it is
     // still fine as long as the job field is left alone.
     const keepsUnknownJob = !!schedule && !job && form.job === schedule.job;
+    // What the picker lists: a required project outside it cannot be saved. An empty list is
+    // "not loaded yet, or in no project": the form cannot tell, so it refuses nothing then.
+    const joinedProjects = useJoinedProjects();
+    const pickableProjects = useMemo(
+        () =>
+            joinedProjects.length > 0
+                ? new Set(joinedProjects.map((p) => String(p.projectId)))
+                : undefined,
+        [joinedProjects]
+    );
     const problems: FormProblems = useMemo(
-        () => validateForm(form, job, keepsUnknownJob),
-        [form, job, keepsUnknownJob]
+        () => validateForm(form, job, keepsUnknownJob, pickableProjects),
+        [form, job, keepsUnknownJob, pickableProjects]
     );
     const show = touched && hasProblems(problems);
     // The form as it opened, to tell "the member changed something" from "the form is
@@ -332,6 +347,27 @@ export const ScheduleFormPanel = ({
                                             max: spec.maximum ?? "",
                                         })
                                       : null);
+                            const problemText = (p: FieldProblem): string => {
+                                if (p === "unavailable") return s.errorProjectUnavailable;
+                                if (p === "required") {
+                                    return known?.picker === "milestone"
+                                        ? s.errorMilestone
+                                        : known?.picker === "project"
+                                          ? s.errorProject
+                                          : s.errorRequired;
+                                }
+                                if (
+                                    p === "range" &&
+                                    spec.minimum !== undefined &&
+                                    spec.maximum !== undefined
+                                ) {
+                                    return fmt(s.errorParamRange, {
+                                        min: spec.minimum,
+                                        max: spec.maximum,
+                                    });
+                                }
+                                return s.errorParam;
+                            };
                             const setParam = (v: string) =>
                                 set("params", { ...form.params, [key]: v });
                             if (kind === "boolean") {
@@ -427,22 +463,7 @@ export const ScheduleFormPanel = ({
                                         </FormHelperText>
                                     )}
                                     {problem && (
-                                        <FormHelperText>
-                                            {problem === "required"
-                                                ? known?.picker === "milestone"
-                                                    ? s.errorMilestone
-                                                    : known?.picker === "project"
-                                                      ? s.errorProject
-                                                      : s.errorRequired
-                                                : problem === "range" &&
-                                                    spec.minimum !== undefined &&
-                                                    spec.maximum !== undefined
-                                                  ? fmt(s.errorParamRange, {
-                                                        min: spec.minimum,
-                                                        max: spec.maximum,
-                                                    })
-                                                  : s.errorParam}
-                                        </FormHelperText>
+                                        <FormHelperText>{problemText(problem)}</FormHelperText>
                                     )}
                                 </FormControl>
                             );
