@@ -857,6 +857,10 @@ export const ar: DeepPartial<Messages> = {
             milestoneLoadFailed: "تعذّر تحميل المعالم. أغلق هذا النموذج وحاول مرة أخرى.",
             errorMilestone: "اختر معلمًا.",
             errorProject: "اختر مشروعًا.",
+            errorProjectUnavailable: "لم يعد هذا المشروع متاحًا لك. اختر مشروعًا آخر.",
+            projectNone: "لا توجد مشاريع لتختار منها.",
+            rowProject: "المشروع: {name}",
+            rowMilestone: "المعلم: {name}",
             paramAiSentences: "جمل الذكاء الاصطناعي",
             paramAiSentencesHint:
                 "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي. أوقفه للحصول على تقرير عادي.",

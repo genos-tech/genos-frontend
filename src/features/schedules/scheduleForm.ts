@@ -18,7 +18,7 @@ import type {
     ScheduleJob,
 } from "../../services/schedules";
 import { asEffortLevel, showsEffort } from "./scheduleEffort";
-import { isRequiredParam } from "./scheduleParams";
+import { isRequiredParam, knownParam } from "./scheduleParams";
 
 export const FREQUENCIES: ScheduleFrequency[] = ["daily", "weekdays", "weekly", "monthly", "once"];
 
@@ -137,7 +137,7 @@ export const paramsFromForm = (
     return out;
 };
 
-export type FieldProblem = "required" | "format" | "range" | "tooLong";
+export type FieldProblem = "required" | "format" | "range" | "tooLong" | "unavailable";
 
 export interface FormProblems {
     name?: FieldProblem;
@@ -158,7 +158,10 @@ export const hasProblems = (p: FormProblems): boolean =>
 export const validateForm = (
     form: ScheduleForm,
     job: ScheduleJob | undefined,
-    keepsUnknownJob = false
+    keepsUnknownJob = false,
+    /** The ids (as text) of the projects the member can pick. When given, a REQUIRED project
+     *  that is not among them is refused: the report would have nothing to read (MIP-1631). */
+    pickableProjects?: ReadonlySet<string>
 ): FormProblems => {
     const problems: FormProblems = { params: {} };
     const name = form.name.trim();
@@ -171,6 +174,15 @@ export const validateForm = (
         if (raw === "") {
             // A parameter the report cannot run without (the milestone one).
             if (isRequiredParam(spec)) problems.params[key] = "required";
+            continue;
+        }
+        if (
+            pickableProjects &&
+            isRequiredParam(spec) &&
+            knownParam(key)?.picker === "project" &&
+            !pickableProjects.has(raw)
+        ) {
+            problems.params[key] = "unavailable";
             continue;
         }
         const v = wireValue(spec, raw);

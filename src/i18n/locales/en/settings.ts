@@ -233,6 +233,10 @@ export const settings = {
         milestoneLoadFailed: "Couldn't load the milestones. Close this form and try again.",
         errorMilestone: "Choose a milestone.",
         errorProject: "Choose a project.",
+        errorProjectUnavailable: "This project is no longer available to you. Choose another.",
+        projectNone: "There are no projects to choose from.",
+        rowProject: "Project: {name}",
+        rowMilestone: "Milestone: {name}",
         paramAiSentences: "AI sentences",
         paramAiSentencesHint:
             "Adds one short sentence under a task when its comments explain where it stands. This uses AI. Turn it off for a plain report.",

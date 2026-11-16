@@ -13,6 +13,7 @@ import {
     STATUS_KEYS,
     statusColor,
 } from "../../../features/schedules/scheduleFormat";
+import { rowTargets } from "../../../features/schedules/scheduleRowParams";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     createSchedule,
@@ -29,6 +30,7 @@ import {
 import { g } from "../../../theme/tokens";
 import { EmptyState } from "../../ui/feedback/EmptyState";
 import { ScheduleFormPanel } from "./ScheduleFormPanel";
+import { useJoinedProjects, useProjectMilestones } from "./ScheduleParamPickers";
 import { SchedulesUpgradePrompt } from "./SchedulesUpgradePrompt";
 
 type Props = {
@@ -276,6 +278,46 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
     };
 
     const schedules = data?.schedules ?? [];
+    // The row names the project or milestone a schedule reports on. Projects come from the list
+    // the app already holds; a milestone's name needs each project's milestone list, which is
+    // asked for only when some schedule has a milestone (the form's picker asks for the same).
+    const projectsInTeam = useJoinedProjects();
+    const needsMilestones = schedules.some(
+        (sch) =>
+            rowTargets(
+                data?.jobs.find((j) => j.job === sch.job),
+                sch.params
+            ).milestoneId
+    );
+    const milestoneNames = useProjectMilestones(needsMilestones ? projectsInTeam : []);
+    const paramLine = (sch: Schedule): string | null => {
+        const { projectId, milestoneId } = rowTargets(
+            data?.jobs.find((j) => j.job === sch.job),
+            sch.params
+        );
+        // Until the app's project list has arrived (or when the member is in no project) a
+        // missing name is not "unavailable": it is unknown, so the row says nothing.
+        if (projectId) {
+            if (projectsInTeam.length === 0) return null;
+            const project = projectsInTeam.find((p) => String(p.projectId) === projectId);
+            return fmt(s.rowProject, { name: project?.projectName ?? s.unavailable });
+        }
+        if (milestoneId) {
+            for (const group of milestoneNames.groups) {
+                const m = group.milestones.find((x) => String(x.milestoneId) === milestoneId);
+                if (m) {
+                    return fmt(s.rowMilestone, {
+                        name: `${group.project.projectName} / ${m.title}`,
+                    });
+                }
+            }
+            if (milestoneNames.loading) return fmt(s.rowMilestone, { name: "…" });
+            // A list that failed to load may hold it: not "unavailable" either.
+            if (projectsInTeam.length === 0 || milestoneNames.failed) return null;
+            return fmt(s.rowMilestone, { name: s.unavailable });
+        }
+        return null;
+    };
     // Core and up. A server that predates the gate sends no `planAllowed`: that is "allowed".
     const planBlockedNow = !!data && (data.planAllowed === false || planBlocked);
     const suggestions = data?.suggestions ?? [];
@@ -463,6 +505,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                     sch
                 );
                 const rowBusy = busy === sch.id;
+                const target = paramLine(sch);
                 return (
                     <Sheet
                         key={sch.id}
@@ -497,6 +540,15 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                             <Typography level="body-sm" sx={{ overflowWrap: "anywhere" }}>
                                 {sch.when}
                             </Typography>
+                            {target && (
+                                <Typography
+                                    data-testid="schedule-row-target"
+                                    level="body-sm"
+                                    sx={{ overflowWrap: "anywhere" }}
+                                >
+                                    {target}
+                                </Typography>
+                            )}
                             {effort && (
                                 <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                                     {fmt(s.rowEffort, { level: effortWords[effort] })}
