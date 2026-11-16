@@ -777,6 +777,15 @@ input[type="checkbox"] {
     }
 }
 
+/* The block a drag-handle menu is open for (MIP-1654): tinted for as long as the menu is open, so
+   it is clear which block "Copy link to block", Delete and Colors act on. Steady, not animated: it
+   is a state, not an event (the link highlight above is the event). */
+.bn-block.bn-menu-target {
+    border-radius: 6px;
+    background-color: var(--g-accent-subtle);
+    box-shadow: 0 0 0 4px var(--g-accent-subtle);
+}
+
 /* BlockNote utility styles */
 .bn-file-name-with-icon {
     color: var(--g-accent-text) !important;

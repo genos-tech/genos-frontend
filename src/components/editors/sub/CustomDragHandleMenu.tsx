@@ -2,6 +2,7 @@ import { BlockColorsItem, DragHandleMenu, RemoveBlockItem } from "@blocknote/rea
 
 import { useTranslation } from "../../../i18n";
 import { CopyBlockLinkItem } from "./CopyBlockLinkItem";
+import { MenuTargetHighlight } from "./MenuTargetHighlight";
 import { ResetBlockTypeItem } from "./ResetBlockTypeItem";
 
 /**
@@ -16,6 +17,8 @@ export const CustomDragHandleMenu = () => {
     const { t } = useTranslation();
     return (
         <DragHandleMenu>
+            {/* Tints the block these actions are for while the menu is open (MIP-1654). */}
+            <MenuTargetHighlight />
             {/* Only inside a note that has a page of its own (MIP-146); nothing elsewhere. */}
             <CopyBlockLinkItem>{t.common.editor.noteLink.copyBlockLink}</CopyBlockLinkItem>
             <RemoveBlockItem>{t.common.editor.delete}</RemoveBlockItem>
