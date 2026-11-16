@@ -4286,6 +4286,7 @@ export const ar: DeepPartial<Messages> = {
                 projectNamed: "المشروع • {name}",
                 project: "محادثة المشروع",
                 groupDm: "رسالة مباشرة جماعية",
+                note: "ملاحظة",
                 unknown: "محادثة",
             },
             settingsChatType: {

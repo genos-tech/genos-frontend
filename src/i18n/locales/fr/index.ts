@@ -3533,6 +3533,7 @@ export const fr: DeepPartial<Messages> = {
                 projectNamed: "Projet • {name}",
                 project: "Conversation de projet",
                 groupDm: "DM de groupe",
+                note: "Note",
                 unknown: "Conversation",
             },
             settingsChatType: {

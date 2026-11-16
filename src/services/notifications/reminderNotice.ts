@@ -33,6 +33,7 @@
 // manager's `PUSH_COVERED_CATEGORIES`) would mean silence whenever one of
 // those gates bit. Reminders are deliberately absent from that set.
 
+import { inAppPath } from "../../features/chat/utils/aiAppNotice";
 import { fmt, getMessages } from "../../i18n";
 import type { InboxItemProps } from "../../types/common";
 import type { NotificationManager } from "./notificationManager";
@@ -151,6 +152,12 @@ export const notifyReminderDue = (
         // any intent whose sender is the current user, and reminding yourself
         // about your OWN message is a perfectly ordinary thing to have asked
         // for — stamping the sender would silence exactly those.
-        onOpen: href ? () => openAppUrl(href) : undefined,
+        // An in-app path opens in place, like every other notification (MIP-1659); a full page
+        // load (`openAppUrl`) was the old way and stays only for an href that is not one.
+        ...(inAppPath(href)
+            ? { url: inAppPath(href)! }
+            : href
+              ? { onOpen: () => openAppUrl(href) }
+              : {}),
     });
 };

@@ -169,6 +169,9 @@ export type ActivityMessageProps = {
     // bot-thread suppression and to route them to the task-comment
     // categories rather than mention_thread.
     isTaskComment?: boolean;
+    // The task comment's own id, from the mirror's `metadata.taskCommentId`: what a click on the
+    // notification opens (`/task/<id>/comment/<commentId>`, MIP-1659). Absent when not a comment.
+    taskCommentId?: number;
     // True when a SURFACE activity (task body / note, chatType 5/6/7/8) was
     // produced by a BlockNote INLINE COMMENT rather than the body itself —
     // set from `meta.isComment` by the surface adapter. Distinct from

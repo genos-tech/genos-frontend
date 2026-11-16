@@ -176,8 +176,11 @@ describe("call sites (source)", () => {
     });
 
     it("notification, Spotlight and history jumps are NOT part of this change", () => {
-        // They keep calling navigate directly (a later step, per the plan).
-        expect(app).toContain('navigate("/workspace/inbox")');
+        // They keep calling navigate directly (a later step, per the plan). A notification's
+        // destination is decided by `intentDestination` (MIP-1659) and carried out with a plain
+        // navigate, never through switchService.
+        expect(app).toContain("navigate(to.path)");
+        expect(app).not.toContain("switchService(navigate, to.path)");
         expect(app).toContain("navigate(spotlightNotePath(r, noteScopes))");
     });
 

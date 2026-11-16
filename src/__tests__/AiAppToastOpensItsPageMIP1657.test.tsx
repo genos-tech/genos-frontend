@@ -19,7 +19,9 @@ import { describe, expect, it } from "vitest";
 
 import { v3ActivityToLegacy } from "../features/chat/adapters/v3ActivityToLegacy";
 import { inAppPath } from "../features/chat/utils/aiAppNotice";
+import { intentDestination } from "../services/notifications/intentDestination";
 import { buildActivityIntent } from "../services/notifications/notificationRouter";
+import type { NotificationIntent } from "../services/notifications/types";
 
 const myself = {
     userId: "me",
@@ -58,6 +60,8 @@ const notice = (meta: Record<string, unknown>) =>
         isRead: false,
         tsCreated: "2026-11-16T10:00:00Z",
     }) as never;
+
+const BASE: NotificationIntent = { id: "x", category: "chats", title: "t", body: "" };
 
 const intentFor = (meta: Record<string, unknown>) =>
     buildActivityIntent(v3ActivityToLegacy(notice(meta), myself), myself, useTEM, useCM);
@@ -116,18 +120,29 @@ describe("the wiring", () => {
     const app = read("../App.tsx");
     const open = app.slice(app.indexOf("const openIntent = useCallback("));
 
+    // The order now lives in `intentDestination` (MIP-1659), tested there in full; these keep
+    // MIP-1657's two promises.
     it("a click opens the intent's own path, before any source rule and the chat fallback", () => {
-        const pathAt = open.indexOf("const path = inAppPath(intent.url);");
-        expect(pathAt).toBeGreaterThan(-1);
-        expect(open).toContain("if (path) { navigate(path); return; }");
-        expect(pathAt).toBeLessThan(open.indexOf("const src = intent.source;"));
-        expect(pathAt).toBeLessThan(open.indexOf('navigate("/workspace/chat")'));
+        const url = "/workspace/tasks/project/1/task/7";
+        expect(intentDestination({ ...BASE, url, source: { surfaceType: 10 } })).toEqual({
+            kind: "path",
+            path: url,
+        });
+        expect(intentDestination({ ...BASE, url, source: { chatType: 1, chatId: "c1" } })).toEqual(
+            { kind: "path", path: url }
+        );
     });
 
     it("a reopen callback still wins (agent-run notices)", () => {
-        expect(open.indexOf("intent.onOpen();")).toBeLessThan(
-            open.indexOf("const path = inAppPath(intent.url);")
-        );
+        const open = () => {};
+        expect(intentDestination({ ...BASE, url: "/workspace/x", onOpen: open })).toEqual({
+            kind: "callback",
+            open,
+        });
+    });
+
+    it("App.tsx carries out the destination the function decides", () => {
+        expect(open).toContain("const to = intentDestination(intent);");
     });
 
     it("the Activity row and the toast use the same rule", () => {

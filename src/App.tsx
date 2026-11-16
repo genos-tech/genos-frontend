@@ -57,7 +57,6 @@ import { CalendarEventLinkHost } from "./features/calendar/components/CalendarEv
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
 import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
 import { AddToTodoHost } from "./features/chat/components/todo/AddToTodoHost";
-import { inAppPath } from "./features/chat/utils/aiAppNotice";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { personalNoteScopes } from "./features/notes/common/utils/noteTypeAlias";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
@@ -117,6 +116,7 @@ import {
 import { channelService } from "./services/channel/channelService";
 import { useChannelServiceBootstrap } from "./services/channel/useChannelServiceBootstrap";
 import { markTeamHydrated } from "./services/hydrationState";
+import { intentDestination } from "./services/notifications/intentDestination";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
@@ -870,90 +870,46 @@ const AppBody = () => {
     // every store, navigator, and helper in scope at the same time.
     const openIntent = useCallback(
         (intent: NotificationIntent) => {
-            // Intents that ship their own reopen callback handle their own
-            // click. Agent-run-completion notices (Spotlight / thread / note
-            // Ask) set `onOpen` to reopen the exact surface the backgrounded
-            // run belongs to — e.g. Spotlight's `() => setIsOpen(true)`, which
-            // restores the finished answer from localStorage. These carry NO
-            // chat/task/note source, so without this branch they fall through
-            // to the `!src` inbox fallback below and wrongly dump the user in
-            // the inbox instead of reopening Spotlight.
-            if (intent.onOpen) {
-                intent.onOpen();
-                return;
-            }
-
-            // The event names its own page (an AI app's change: the created task or the edited
-            // note, MIP-1657). Open it exactly, before rebuilding a destination from ids: a notice
-            // carries no chat and no task source, so it used to fall through to the chat page.
-            const path = inAppPath(intent.url);
-            if (path) {
-                navigate(path);
-                return;
-            }
-
-            const src = intent.source;
-
-            // Inbox: no source -> just switch services.
-            if (intent.category === "inbox" || !src) {
-                navigate("/workspace/inbox");
-                return;
-            }
-
-            // Note mentions (surface 6/7/8): open the NOTE, not the task or
-            // chat it lives in. MUST branch before the task/chat branches —
-            // a task-note mention carries taskId+projectId (which would
-            // otherwise open the task) and a chat-note carries chat routing
-            // (which would otherwise hit the chat branch). Open via
-            // `loadNote(noteType, noteId)` — the same path the Unread sidebar
-            // uses — so it works for EVERY note type by id alone, with no
-            // dependence on URL params or the backend shipping parent-chat
-            // routing. `navigate("/workspace/notes")` just ensures the notes
-            // surface is mounted; `loadNote` then opens the specific note and
-            // `useNoteRouting` syncs the deep URL.
-            if (src.surfaceType === 6 || src.surfaceType === 7 || src.surfaceType === 8) {
-                const noteId = src.noteId;
-                navigate("/workspace/notes");
-                if (noteId !== undefined) {
-                    const noteType = src.surfaceType - 5; // 6→1 (my), 7→2 (task), 8→3 (chat)
-                    useNM.setCurrentNoteType(noteType);
-                    void useNM.loadNote(noteType, noteId, -1);
+            // Where it opens is decided in one pure function, `intentDestination` (MIP-1659), so
+            // every notification kind can be tested against it; this only carries it out.
+            const to = intentDestination(intent);
+            switch (to.kind) {
+                case "callback":
+                    // Agent-run notices reopen the surface the run belongs to (Spotlight's
+                    // `() => setIsOpen(true)` restores the finished answer).
+                    to.open();
+                    return;
+                case "path":
+                    navigate(to.path);
+                    return;
+                case "note":
+                    // Open the NOTE by id, the path the Unread sidebar uses, so it works for every
+                    // note type; `navigate` mounts the notes surface and `useNoteRouting` syncs the
+                    // deep URL.
+                    navigate("/workspace/notes");
+                    if (to.noteId !== undefined) {
+                        useNM.setCurrentNoteType(to.noteType);
+                        void useNM.loadNote(to.noteType, to.noteId, -1);
+                    }
+                    return;
+                case "chat": {
+                    // `chatId` is the v3 channel UUID; `Number(uuid)` made `/workspace/chat/dm/NaN`.
+                    // The cast keeps moveToSpecificChat's legacy `chatId: number` param type.
+                    const threadId = to.threadId;
+                    useCM.moveToSpecificChat(
+                        to.chatType,
+                        to.chatId as unknown as number,
+                        threadId as number,
+                        false,
+                        threadId !== 0,
+                        useTM.setCurrentPreviewTaskId,
+                        usePM.setCurrentProject
+                    );
+                    return;
                 }
-                return;
+                default:
+                    navigate(to.path);
             }
-
-            // Task / milestone: navigate to the task deep URL when we have
-            // both ids; otherwise fall through to the chat branch.
-            if (src.taskId !== undefined && src.projectId !== undefined) {
-                navigate(`/workspace/tasks/project/${src.projectId}/task/${src.taskId}`);
-                return;
-            }
-
-            // Chat / thread: orchestrate via the existing helper which loads
-            // the chat and pushes the right deep URL.
-            if (src.chatType !== undefined && src.chatId !== undefined) {
-                // `src.chatId` is the v3 channel UUID (string). Pass it
-                // through unchanged — `Number(uuid)` -> NaN here produced
-                // `/workspace/chat/dm/NaN` (same class as the Spotlight
-                // branch below; this notification-click branch was missed
-                // in that fix). The `as unknown as number` keeps
-                // moveToSpecificChat's legacy `chatId: number` param type.
-                const numericChatId = src.chatId as unknown as number;
-                const threadId = src.threadId ?? 0;
-                useCM.moveToSpecificChat(
-                    src.chatType,
-                    numericChatId,
-                    threadId,
-                    false,
-                    threadId !== 0,
-                    useTM.setCurrentPreviewTaskId,
-                    usePM.setCurrentProject
-                );
-                return;
-            }
-
-            // Defensive fallback: surface the chat service.
-            navigate("/workspace/chat");
         },
         [useCM, useTM, usePM, useNM, navigate]
     );

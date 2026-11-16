@@ -3491,6 +3491,7 @@ export const ja: DeepPartial<Messages> = {
                 projectNamed: "プロジェクト • {name}",
                 project: "プロジェクトチャット",
                 groupDm: "グループDM",
+                note: "ノート",
                 unknown: "チャット",
             },
             settingsChatType: {
