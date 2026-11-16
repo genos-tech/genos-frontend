@@ -3774,6 +3774,14 @@ export const ar: DeepPartial<Messages> = {
             added: "{count, plural, one {# عنصر جديد} other {# عناصر جديدة}}",
             failed: "تعذّرت مزامنة صندوق الوارد. حاول مرة أخرى.",
         },
+        // "Mark all as read" on the Activities tab, and the unread dot on a card (MIP-1627).
+        markAll: {
+            label: "تعليم الكل كمقروء",
+            done: "{count, plural, one {تم تعليم # عنصر كمقروء} other {تم تعليم # عناصر كمقروءة}}",
+            failed: "تعذّر التعليم كمقروء. حاول مرة أخرى.",
+            toggleFailed: "تعذّر تغيير حالة القراءة. حاول مرة أخرى.",
+            unread: "غير مقروء",
+        },
         tabs: {
             ariaLabel: "أقسام صندوق الوارد",
             requests: "الطلبات",

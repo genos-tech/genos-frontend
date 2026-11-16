@@ -11,6 +11,19 @@ import { syncWithCheckpoint } from "../utils/syncWithCheckpoint";
 const BATCH_SIZE = 1000;
 const inboxRepo = new InboxRepository();
 
+/** Flip `isRead` on the stored rows named, and nothing else on them. Reads each row before
+ *  writing, so it never writes back a stale copy of anything else. A row already in that state
+ *  is left alone. */
+const setStoredRead = async (itemIds: number[], isRead: boolean): Promise<void> => {
+    const wanted = new Set(itemIds);
+    const result = await inboxRepo.getAll();
+    const rows = result.success && result.data ? result.data : [];
+    const changed = rows
+        .filter((row) => wanted.has(row.itemId) && Boolean(row.isRead) !== isRead)
+        .map((row) => ({ ...row, isRead }));
+    if (changed.length > 0) await inboxRepo.batchInsert(changed);
+};
+
 export const inboxHandlers: HandlerMap<InboxRequests> = {
     addInboxItem: async ({ inboxItem }) => {
         await inboxRepo.put(inboxItem);
@@ -74,15 +87,9 @@ export const inboxHandlers: HandlerMap<InboxRequests> = {
         if (changed.length > 0) await inboxRepo.batchInsert(changed);
     },
 
-    markInboxItemsRead: async ({ itemIds }) => {
-        const wanted = new Set(itemIds);
-        const result = await inboxRepo.getAll();
-        const rows = result.success && result.data ? result.data : [];
-        const changed = rows
-            .filter((row) => wanted.has(row.itemId) && !row.isRead)
-            .map((row) => ({ ...row, isRead: true }));
-        if (changed.length > 0) await inboxRepo.batchInsert(changed);
-    },
+    markInboxItemsRead: ({ itemIds }) => setStoredRead(itemIds, true),
+
+    markInboxItemsUnread: ({ itemIds }) => setStoredRead(itemIds, false),
 
     popInboxItems: async () => {
         const result = await inboxRepo.getAll();

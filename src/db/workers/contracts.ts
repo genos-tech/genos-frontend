@@ -68,6 +68,9 @@ export type InboxRequests = {
      *  `isRead` on the stored rows and nothing else. Reads each row before writing, so it never
      *  writes back a stale copy of anything else on it. */
     markInboxItemsRead: { req: { itemIds: number[] }; res: void };
+    /** The reverse, after the member marks a card unread (MIP-1627): the same single-column
+     *  patch, so it too never writes back a stale copy of anything else on the row. */
+    markInboxItemsUnread: { req: { itemIds: number[] }; res: void };
 };
 
 // ---- activity channel -----------------------------------------------------

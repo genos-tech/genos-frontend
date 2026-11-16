@@ -20,6 +20,7 @@ import type { Socket } from "socket.io-client";
 
 import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
+import { requestInboxResync } from "../../features/inbox/inboxResyncEvent";
 import type {
     Channel,
     ChannelKind,
@@ -161,6 +162,15 @@ export function registerSocketRouter(socket: Socket): () => void {
     // `loadActivityHistory` call reconciles).
     on<Record<string, unknown>>("activity.created", (a) => {
         void handleV3Activity(a);
+    });
+
+    // The member's Inbox changed on the server with no browser to relay it (a digest, reminder
+    // or report filed by a cron, an approved agent write) or on another device (a read flag).
+    // The event carries no row: run the checkpointed delta sync the Sync button runs, which
+    // coalesces with any sync already in flight. Fire-and-forget; the next refocus or reload
+    // reconciles if this one is missed (MIP-1627).
+    on<{ teamId?: string | null }>("inbox.changed", () => {
+        void requestInboxResync("server");
     });
 
     // A per-channel resync replay failed server-side during connect

@@ -2455,6 +2455,14 @@ export const fr: DeepPartial<Messages> = {
             added: "{count, plural, one {# nouvel élément} other {# nouveaux éléments}}",
             failed: "Impossible de synchroniser la boîte de réception. Réessayez.",
         },
+        // "Mark all as read" on the Activities tab, and the unread dot on a card (MIP-1627).
+        markAll: {
+            label: "Tout marquer comme lu",
+            done: "{count, plural, one {# élément marqué comme lu} other {# éléments marqués comme lus}}",
+            failed: "Impossible de marquer comme lu. Réessayez.",
+            toggleFailed: "Impossible de changer l'état de lecture. Réessayez.",
+            unread: "Non lu",
+        },
         tabs: {
             ariaLabel: "Sections de la boîte de réception",
             requests: "Demandes",

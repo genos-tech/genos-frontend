@@ -3813,6 +3813,14 @@ export const hi: DeepPartial<Messages> = {
             added: "{count, plural, one {# नया आइटम} other {# नए आइटम}}",
             failed: "इनबॉक्स सिंक नहीं हो सका। फिर कोशिश करें।",
         },
+        // "Mark all as read" on the Activities tab, and the unread dot on a card (MIP-1627).
+        markAll: {
+            label: "सभी को पढ़ा हुआ चिह्नित करें",
+            done: "{count, plural, one {# आइटम पढ़ा हुआ चिह्नित किया गया} other {# आइटम पढ़ा हुआ चिह्नित किए गए}}",
+            failed: "पढ़ा हुआ चिह्नित नहीं हो सका। फिर कोशिश करें।",
+            toggleFailed: "पढ़ने की स्थिति नहीं बदल सकी। फिर कोशिश करें।",
+            unread: "अपठित",
+        },
         tabs: {
             ariaLabel: "इनबॉक्स के खंड",
             requests: "अनुरोध",

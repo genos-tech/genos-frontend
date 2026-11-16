@@ -44,6 +44,7 @@ import { AiUsageFooter } from "./AiUsageFooter";
 import { DigestHeadline } from "./DigestHeadline";
 import { GenosReportBody } from "./GenosReportBody";
 import { InboxCrossTeamChips } from "./InboxCrossTeamChips";
+import { ReadToggleButton, UnreadDot } from "./InboxReadControls";
 import { InboxTargetChip } from "./InboxTargetChip";
 
 // Lazy: keeps react-markdown (and its remark deps) out of the inbox's
@@ -230,15 +231,20 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     // answer (a claim after ownership moved, a share the host withdrew)
     // has to say so, not no-op.
     const [respondError, setRespondError] = useState<string | null>(null);
-    // A report counts as read once it has been on screen for a moment (MIP-1292); other types
-    // get no ref.
+    // An activity (notice, digest, reminder, report) counts as read once it has been on screen
+    // for a moment (MIP-1292, MIP-1627); a request gets no ref. `onItemChanged` re-reads the list
+    // so the dot and the counts follow.
     const watchRef = useMarkReadOnView({
         itemId: inboxItem.itemId,
         itemType: inboxItem.itemType,
         isRead: inboxItem.isRead,
         userId: myself.userId,
         teamId: myself.teamId,
+        onRead: onItemChanged,
     });
+    // The unread dot and the read/unread toggle belong to the Activities half: a request is
+    // read by answering it.
+    const isActivityCard = isActivityItemType(inboxItem.itemType);
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
     // Anything that isn't an activity is something somebody is waiting on
@@ -459,7 +465,18 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     {t.inbox.requestTypes[typeLabelKey ?? config.labelKey]}
                 </Chip>
             )}
-            <BubbleMeta>{extractYYYYMMDDHHMM(inboxItem.tsSent)}</BubbleMeta>
+            <Stack alignItems="center" direction="row" spacing={0.75}>
+                {isActivityCard && !inboxItem.isRead && <UnreadDot />}
+                <BubbleMeta>{extractYYYYMMDDHHMM(inboxItem.tsSent)}</BubbleMeta>
+                {isActivityCard && (
+                    <ReadToggleButton
+                        inboxItem={inboxItem}
+                        teamId={myself.teamId}
+                        userId={myself.userId}
+                        onChanged={onItemChanged}
+                    />
+                )}
+            </Stack>
         </Stack>
     );
 

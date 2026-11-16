@@ -23,6 +23,14 @@ export const inbox = {
         added: "{count, plural, one {# new item} other {# new items}}",
         failed: "Couldn't sync the inbox. Try again.",
     },
+    // "Mark all as read" on the Activities tab, and the unread dot on a card (MIP-1627).
+    markAll: {
+        label: "Mark all as read",
+        done: "{count, plural, one {# activity marked as read} other {# activities marked as read}}",
+        failed: "Couldn't mark the activities as read. Try again.",
+        toggleFailed: "Couldn't change the read status. Try again.",
+        unread: "Unread",
+    },
     tabs: {
         ariaLabel: "Inbox sections",
         requests: "Requests",
