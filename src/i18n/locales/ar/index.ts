@@ -835,6 +835,8 @@ export const ar: DeepPartial<Messages> = {
             paramProject: "المشروع",
             paramProjectHint:
                 "قصر التقرير على مشروع واحد. اتركه على «كل المشاريع» لتشمل كل ما يمكنك رؤيته.",
+            paramProjectRequiredHint: "المشروع الذي يتابعه هذا التقرير. مطلوب.",
+            projectPlaceholder: "اختر مشروعًا",
             paramDay: "اليوم",
             paramDayHint: "أي يوم تريد تلخيصه. اتركه فارغًا لليوم.",
             paramDays: "الرجوع إلى الوراء (أيام)",
@@ -854,6 +856,7 @@ export const ar: DeepPartial<Messages> = {
             milestoneNone: "لا توجد معالم للاختيار منها.",
             milestoneLoadFailed: "تعذّر تحميل المعالم. أغلق هذا النموذج وحاول مرة أخرى.",
             errorMilestone: "اختر معلمًا.",
+            errorProject: "اختر مشروعًا.",
             paramAiSentences: "جمل الذكاء الاصطناعي",
             paramAiSentencesHint:
                 "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي. أوقفه للحصول على تقرير عادي.",

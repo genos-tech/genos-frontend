@@ -1122,6 +1122,8 @@ export const hi: DeepPartial<Messages> = {
             paramProject: "प्रोजेक्ट",
             paramProjectHint:
                 "रिपोर्ट को एक प्रोजेक्ट तक सीमित करें। सभी प्रोजेक्ट पर छोड़ने से वह सब शामिल होगा जो आप देख सकते हैं।",
+            paramProjectRequiredHint: "यह रिपोर्ट जिस प्रोजेक्ट को फ़ॉलो करती है। ज़रूरी।",
+            projectPlaceholder: "प्रोजेक्ट चुनें",
             paramDay: "दिन",
             paramDayHint: "किस दिन का सार चाहिए। खाली छोड़ने पर आज।",
             paramDays: "कितना पीछे देखें (दिन)",
@@ -1143,6 +1145,7 @@ export const hi: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "माइलस्टोन लोड नहीं हो सके। यह फ़ॉर्म बंद करके दोबारा कोशिश करें।",
             errorMilestone: "एक माइलस्टोन चुनें।",
+            errorProject: "एक प्रोजेक्ट चुनें।",
             paramAiSentences: "AI के वाक्य",
             paramAiSentencesHint:
                 "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है। सामान्य रिपोर्ट के लिए इसे बंद करें।",

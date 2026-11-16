@@ -4153,6 +4153,8 @@ export const ja: DeepPartial<Messages> = {
             paramProject: "プロジェクト",
             paramProjectHint:
                 "レポートを 1 つのプロジェクトに絞ります。「すべてのプロジェクト」のままにすると、見られるものすべてが対象になります。",
+            paramProjectRequiredHint: "このレポートが追うプロジェクト。必須です。",
+            projectPlaceholder: "プロジェクトを選択",
             paramDay: "日",
             paramDayHint: "どの日を振り返るか。空欄の場合は今日です。",
             paramDays: "遡る期間（日）",
@@ -4174,6 +4176,7 @@ export const ja: DeepPartial<Messages> = {
             milestoneLoadFailed:
                 "マイルストーンを読み込めませんでした。このフォームを閉じて、もう一度お試しください。",
             errorMilestone: "マイルストーンを選択してください。",
+            errorProject: "プロジェクトを選択してください。",
             paramAiSentences: "AI による一文",
             paramAiSentencesHint:
                 "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用します。通常のレポートにするにはオフにしてください。",

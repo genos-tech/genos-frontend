@@ -44,6 +44,7 @@ import {
     enumLabelKey,
     isRequiredParam,
     knownParam,
+    paramHintKey,
 } from "../../../features/schedules/scheduleParams";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { fmt, useTranslation } from "../../../i18n";
@@ -324,7 +325,7 @@ export const ScheduleFormPanel = ({
                             const hint =
                                 (known?.preferOwnHint ? null : spec.description) ||
                                 (known
-                                    ? fmt(s[known.hint], { range })
+                                    ? fmt(s[paramHintKey(known, required)], { range })
                                     : kind === "integer" && range
                                       ? fmt(s.paramRange, {
                                             min: spec.minimum ?? "",
@@ -373,6 +374,7 @@ export const ScheduleFormPanel = ({
                                     <FormLabel>{label}</FormLabel>
                                     {known?.picker === "project" ? (
                                         <ProjectParamSelect
+                                            required={required}
                                             value={form.params[key] ?? ""}
                                             onChange={setParam}
                                         />
@@ -429,7 +431,9 @@ export const ScheduleFormPanel = ({
                                             {problem === "required"
                                                 ? known?.picker === "milestone"
                                                     ? s.errorMilestone
-                                                    : s.errorRequired
+                                                    : known?.picker === "project"
+                                                      ? s.errorProject
+                                                      : s.errorRequired
                                                 : problem === "range" &&
                                                     spec.minimum !== undefined &&
                                                     spec.maximum !== undefined
