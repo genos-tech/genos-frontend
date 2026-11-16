@@ -36,18 +36,20 @@ describe("useInboxItems bucketing", () => {
     });
 });
 
-describe("Requests badge", () => {
-    it("counts unread requests only — not activities, not the digest", async () => {
+describe("Inbox unread counts (MIP-1627)", () => {
+    it("splits unread by tab and adds both for the sidebar, bottom bar and app icon", async () => {
         vi.doMock("../features/inbox/services/popInboxItems", () => ({
-            popInboxItems: async () => [item(0), item(1), item(3, true), item(6)],
+            popInboxItems: async () => [item(0), item(1), item(3, true), item(6), item(9, true)],
         }));
         const { useInboxManagement: mockedHook } = await import(
             "../hooks/inbox/useInboxManagement"
         );
         const { result } = renderHook(() => mockedHook());
-        // unread: 0 (activity, excluded), 1 (counts), 3 read, 6 (digest,
-        // excluded) => 1.
-        await waitFor(() => expect(result.current.unReadInboxItemCount).toBe(1));
+        // unread: 0 (activity), 1 (request), 3 read, 6 (digest, activity), 9 read
+        // => 1 request + 2 activities = 3 in all.
+        await waitFor(() => expect(result.current.unReadInboxItemCount).toBe(3));
+        expect(result.current.unReadRequestCount).toBe(1);
+        expect(result.current.unReadActivityCount).toBe(2);
         vi.doUnmock("../features/inbox/services/popInboxItems");
     });
 });

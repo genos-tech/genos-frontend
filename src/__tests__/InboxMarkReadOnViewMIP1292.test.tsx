@@ -12,6 +12,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { InboxBubble } from "../features/inbox/components/InboxBubble";
+import { holdUnread, readKey, resetReadHold } from "../features/inbox/readHold";
 import { DWELL_MS, resetReportReadScheduler } from "../features/inbox/reportReadScheduler";
 import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
 import type { InboxItemProps } from "../types/common";
@@ -112,6 +113,7 @@ beforeEach(() => {
 });
 afterEach(() => {
     resetReportReadScheduler();
+    resetReadHold();
     globalThis.IntersectionObserver = realIO;
     vi.useRealTimers();
 });
@@ -155,7 +157,7 @@ const renderCards = (...items: InboxItemProps[]) =>
         </>
     );
 
-describe("a Genos report is marked read once it has been on screen", () => {
+describe("an activity is marked read once it has been on screen", () => {
     it("sends nothing on render, nothing before the dwell, then one PUT with exactly the pinned body", async () => {
         renderCards(item());
         const [card] = cards();
@@ -292,14 +294,81 @@ describe("a Genos report is marked read once it has been on screen", () => {
         expect(put).not.toHaveBeenCalled();
     });
 
-    it("leaves every other item type alone (activity, requests, digest, reminder)", async () => {
-        for (const itemType of [0, 1, 6, 9]) {
+    it("leaves every request type alone: somebody is waiting on it, and looking is not answering", async () => {
+        for (const itemType of [1, 2, 3, 4, 5, 7, 8]) {
             const { unmount } = renderCards(item({ itemId: 100 + itemType, itemType }));
             expect(MockIO.live()).toHaveLength(0);
             unmount();
         }
         await tick(10_000);
         expect(put).not.toHaveBeenCalled();
+    });
+
+    // MIP-1627: the rule covers the whole Activities half, not only a report. The digest too,
+    // on purpose: a digest opened in the app should not come round again by email.
+    it.each([
+        [0, "notice"],
+        [6, "Genos digest"],
+        [9, "reminder"],
+        [10, "Genos report"],
+    ])("marks an activity of type %i (%s) read after the dwell", async (itemType) => {
+        renderCards(item({ itemId: 200 + itemType, itemType }));
+        see(cards()[0]);
+        await tick(DWELL_MS);
+        expect(put).toHaveBeenCalledTimes(1);
+        expect(put.mock.calls[0][1]).toEqual({
+            team_id: "t1",
+            item_id: 200 + itemType,
+            is_read: true,
+        });
+    });
+
+    it("leaves a card alone that the member marked unread by hand, even after a reload", async () => {
+        holdUnread(readKey("u1", "t1", 10));
+        renderCards(item());
+        expect(MockIO.live()).toHaveLength(0); // not even observed
+        await tick(10_000);
+        expect(put).not.toHaveBeenCalled();
+    });
+
+    it("holds one card without holding its neighbours", async () => {
+        holdUnread(readKey("u1", "t1", 10));
+        renderCards(item({ itemId: 10 }), item({ itemId: 11 }));
+        for (const card of cards()) see(card);
+        await tick(DWELL_MS);
+        expect(put).toHaveBeenCalledTimes(1);
+        expect(put.mock.calls[0][1].item_id).toBe(11);
+    });
+
+    it("re-reads the list once the server has taken it, and not when it refused", async () => {
+        const onRead = vi.fn();
+        render(
+            <CssVarsProvider>
+                <MemoryRouter>
+                    <UrlLinkModalProvider value={{ openModalByHref: vi.fn() }}>
+                        <InboxBubble
+                            inboxItem={item()}
+                            myself={{ userId: "u1", teamId: "t1" } as never}
+                            setMyself={vi.fn()}
+                            socket={null}
+                            useCM={{ allChats: [] } as never}
+                            useTEM={{ teamMemberProfiles: {} } as never}
+                            useUISM={{} as never}
+                            onItemChanged={onRead}
+                        />
+                    </UrlLinkModalProvider>
+                </MemoryRouter>
+            </CssVarsProvider>
+        );
+        put.mockRejectedValueOnce({ response: { status: 500 } });
+        const [card] = cards();
+        see(card);
+        await tick(DWELL_MS);
+        expect(onRead).not.toHaveBeenCalled();
+        leave(card);
+        see(card);
+        await tick(DWELL_MS);
+        expect(onRead).toHaveBeenCalledTimes(1);
     });
 
     it("keeps one observer and one timer for a long list, and only a card on screen is due", async () => {

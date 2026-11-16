@@ -3839,6 +3839,14 @@ export const es: DeepPartial<Messages> = {
             added: "{count, plural, one {# elemento nuevo} other {# elementos nuevos}}",
             failed: "No se pudo sincronizar la bandeja. Inténtalo de nuevo.",
         },
+        // "Mark all as read" on the Activities tab, and the unread dot on a card (MIP-1627).
+        markAll: {
+            label: "Marcar todo como leído",
+            done: "{count, plural, one {# elemento marcado como leído} other {# elementos marcados como leídos}}",
+            failed: "No se pudo marcar como leído. Inténtalo de nuevo.",
+            toggleFailed: "No se pudo cambiar el estado de lectura. Inténtalo de nuevo.",
+            unread: "No leído",
+        },
         tabs: {
             ariaLabel: "Secciones de la bandeja",
             requests: "Solicitudes",

@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
+import { requestInboxResync } from "../../features/inbox/inboxResyncEvent";
 import { channelService } from "../../services/channel/channelService";
 import { handleMembershipRemoved } from "../../services/channel/membershipRemoved";
 import { registerSocketRouter, V3_NAMESPACE } from "../../services/channel/socketRouter";
@@ -30,6 +31,11 @@ vi.mock("../../features/chat/services/handleV3Activity", () => ({
 // readActivityIds list.
 vi.mock("../../features/chat/services/handleV3ActivitiesRead", () => ({
     handleV3ActivitiesRead: vi.fn(),
+}));
+
+// `inbox.changed` asks the inbox for a delta sync (MIP-1627); mocked so the test sees the ask.
+vi.mock("../../features/inbox/inboxResyncEvent", () => ({
+    requestInboxResync: vi.fn(() => Promise.resolve({ ok: true, added: 0 })),
 }));
 
 // The removal notice reloads the page for a lost team, so it is mocked here and tested on its own.
@@ -140,12 +146,26 @@ describe("registerSocketRouter", () => {
             "flag.completed",
             "flag.uncompleted",
             "activity.created",
+            "inbox.changed",
             "todo.changed",
             "resync.error",
         ];
         expect([...env.handlers.keys()].sort()).toEqual([...expected].sort());
         expect(env.socket.on).toHaveBeenCalledTimes(expected.length);
-        expect(expected).toHaveLength(22);
+        expect(expected).toHaveLength(23);
+    });
+
+    // ---- inbox.changed (MIP-1627) -----------------------------------------
+
+    it("inbox.changed asks for one 'server' inbox resync and forwards nothing from the payload", () => {
+        env.fire("inbox.changed", { teamId: "t-1" });
+        expect(requestInboxResync).toHaveBeenCalledTimes(1);
+        expect(requestInboxResync).toHaveBeenCalledWith("server");
+    });
+
+    it("inbox.changed with no payload at all still resyncs", () => {
+        env.fire("inbox.changed");
+        expect(requestInboxResync).toHaveBeenCalledWith("server");
     });
 
     // ---- message.* --------------------------------------------------------
@@ -431,8 +451,8 @@ describe("registerSocketRouter", () => {
         // second registration's teardown only removes its own handlers.
         const env2 = makeFakeSocket();
         const teardown2 = registerSocketRouter(env2.socket);
-        expect(env2.socket.on).toHaveBeenCalledTimes(22);
+        expect(env2.socket.on).toHaveBeenCalledTimes(23);
         teardown2();
-        expect(env2.socket.off).toHaveBeenCalledTimes(22);
+        expect(env2.socket.off).toHaveBeenCalledTimes(23);
     });
 });

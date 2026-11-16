@@ -87,12 +87,19 @@ export const InboxHome = (props: InboxHomeProps) => {
                 {/* Background decorations */}
 
                 {/* Header */}
-                <InboxHeader />
+                <InboxHeader
+                    activityItems={activityInboxItems}
+                    myself={props.myself}
+                    onItemsChanged={useIM.funcSetInboxItems}
+                />
 
                 {/* Tab Navigation */}
                 <InboxTabHeader
+                    activityCount={
+                        useIM.unReadActivityCount > 0 ? useIM.unReadActivityCount : undefined
+                    }
                     requestCount={
-                        useIM.unReadInboxItemCount > 0 ? useIM.unReadInboxItemCount : undefined
+                        useIM.unReadRequestCount > 0 ? useIM.unReadRequestCount : undefined
                     }
                 />
 

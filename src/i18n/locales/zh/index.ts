@@ -2351,6 +2351,14 @@ export const zh: DeepPartial<Messages> = {
             added: "{count, plural, one {#条新内容} other {#条新内容}}",
             failed: "无法同步收件箱,请重试。",
         },
+        // "Mark all as read" on the Activities tab, and the unread dot on a card (MIP-1627).
+        markAll: {
+            label: "全部标为已读",
+            done: "{count, plural, one {已将 # 条标为已读} other {已将 # 条标为已读}}",
+            failed: "无法标为已读,请重试。",
+            toggleFailed: "无法更改已读状态,请重试。",
+            unread: "未读",
+        },
         tabs: {
             ariaLabel: "收件箱分区",
             requests: "申请",

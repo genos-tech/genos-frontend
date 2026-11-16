@@ -2437,6 +2437,14 @@ export const ja: DeepPartial<Messages> = {
             added: "{count, plural, one {新着#件} other {新着#件}}",
             failed: "受信箱を同期できませんでした。もう一度お試しください。",
         },
+        // "Mark all as read" on the Activities tab, and the unread dot on a card (MIP-1627).
+        markAll: {
+            label: "すべて既読にする",
+            done: "{count, plural, one {#件を既読にしました} other {#件を既読にしました}}",
+            failed: "既読にできませんでした。もう一度お試しください。",
+            toggleFailed: "既読・未読を変更できませんでした。もう一度お試しください。",
+            unread: "未読",
+        },
         tabs: {
             ariaLabel: "受信箱のセクション",
             requests: "リクエスト",

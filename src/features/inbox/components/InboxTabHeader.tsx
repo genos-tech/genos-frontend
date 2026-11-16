@@ -11,6 +11,8 @@ type InboxTab = "requests" | "activities";
 
 type InboxTabHeaderProps = {
     requestCount?: number;
+    /** Unread activities (MIP-1627). Shown plain: a notice is not a decision waiting on you. */
+    activityCount?: number;
 };
 
 const PATHS: Record<InboxTab, string> = {
@@ -18,7 +20,7 @@ const PATHS: Record<InboxTab, string> = {
     requests: "/workspace/inbox/requests",
 };
 
-export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
+export const InboxTabHeader = ({ requestCount, activityCount }: InboxTabHeaderProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
@@ -37,6 +39,7 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                 id: "activities",
                 label: t.inbox.tabs.activities,
                 icon: <NotificationsActiveRoundedIcon />,
+                count: activityCount,
             },
             {
                 id: "requests",
@@ -46,7 +49,7 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                 attention: true,
             },
         ],
-        [t, requestCount]
+        [t, requestCount, activityCount]
     );
 
     return (

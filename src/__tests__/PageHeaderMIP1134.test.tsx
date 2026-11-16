@@ -154,7 +154,13 @@ describe("PageHeader", () => {
 
 describe("Inbox", () => {
     it("has the shared header with its title and subtitle", () => {
-        wrap(<InboxHeader />);
+        wrap(
+            <InboxHeader
+                activityItems={[]}
+                myself={{ userId: "u1", teamId: "t1" } as never}
+                onItemsChanged={vi.fn()}
+            />
+        );
         expect(document.querySelector("[data-page-header]")).not.toBeNull();
         expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Inbox");
         expect(screen.getByText("Stay on top of notifications")).toBeInTheDocument();

@@ -1,7 +1,14 @@
 /**
  * "Something landed in my inbox that no socket event announced — go look."
  *
- * The inbox has exactly one live path: a `wsType: "inbox"` socket event with
+ * Since MIP-1627 there is a second live path, the server's own: genos-api tells genos-sockets
+ * (`/internal/broadcast/inbox`) whenever an Inbox row is saved or marked read in bulk, and
+ * sockets sends `inbox.changed` to the member's `/v3` user room, where `socketRouter` turns it
+ * into `requestInboxResync("server")`. It carries no row, only the fact. The text below is the
+ * picture before that, and the reason the callers it lists still exist: they cover a server that
+ * predates it, a socket that was down, and a device whose push never arrived.
+ *
+ * The inbox's original live path: a `wsType: "inbox"` socket event with
  * `alreadyExist === false` (`websocket-handlers.ts`). That event is a CLIENT
  * RELAY — Django returns the inbox payload to the acting client, which emits
  * it — so it exists only for items one user's request created for another.
@@ -11,10 +18,10 @@
  * time something reads `GET /inbox/`. That is why a fired reminder appeared
  * only after a page reload.
  *
- * Closing it properly would mean giving the cron a way to reach the sockets
- * server, which today has no HTTP ingress and no auth scheme to build one on,
- * and no Redis message queue to publish through. So this is the client-side
- * answer instead: whoever has reason to believe the inbox just changed says
+ * Closing it properly meant giving the cron a way to reach the sockets
+ * server, which then had no HTTP ingress and no auth scheme to build one on,
+ * and no Redis message queue to publish through (it has the first two now: see
+ * the top of this comment). So this was the client-side answer instead: whoever has reason to believe the inbox just changed says
  * so, and `useInboxResync` runs the same delta sync + repaint the wake
  * refresh already uses.
  *
@@ -51,6 +58,9 @@ export const INBOX_RESYNC_EVENT = "inbox:resync";
 /** Why the resync was asked for. Only `"push"` changes the behaviour (see
  *  `deliveredTag`); otherwise it is here to be logged and asserted on.
  *
+ *  `"server"` is genos-sockets' `inbox.changed` (MIP-1627): genos-api filed or changed a row and
+ *  said so, with no content, so this device reads the delta itself.
+ *
  *  `"schedule-run"` is a "Run now" that succeeded (`runScheduleAndAnnounce`):
  *  the report was filed by the API with no acting browser, so nothing else
  *  announces it. `"manual"` is the Inbox page's Sync button. `"focus"` is the
@@ -61,7 +71,8 @@ export type InboxResyncReason =
     | "agent-write"
     | "schedule-run"
     | "manual"
-    | "focus";
+    | "focus"
+    | "server";
 
 /** What a resync cycle found. `ok: false` covers both a failed sync and "no one
  *  was listening" (signed out, tests); `added` counts rows the device did not
