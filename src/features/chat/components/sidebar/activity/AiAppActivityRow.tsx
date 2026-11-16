@@ -12,7 +12,7 @@ import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../../utils/dateUtils";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
-import { aiAppSentence } from "../../../utils/aiAppNotice";
+import { aiAppSentence, inAppPath } from "../../../utils/aiAppNotice";
 
 interface AiAppActivityRowProps {
     activity: ActivityMessageProps;
@@ -53,13 +53,12 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
 
     const strings = t.chat.activity.aiApp;
     const more = notice.count > 1 ? notice.items.length : 0;
-    const url = notice.url;
     // Only an in-app path: the API hands us a path, never a full URL.
-    const canOpen = url.startsWith("/") && !url.startsWith("//");
+    const url = inAppPath(notice.url);
 
     const onClick = () => {
         setSelectedActivityId(activity.activityId);
-        if (canOpen) navigate(url);
+        if (url) navigate(url);
         if (activity.isRead === false) updateActivityReadStatus();
     };
 

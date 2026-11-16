@@ -2,6 +2,7 @@ import {
     AI_APP_SURFACE,
     aiAppCategory,
     aiAppHeadline,
+    inAppPath,
 } from "../../features/chat/utils/aiAppNotice";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -332,6 +333,9 @@ export const buildActivityIntent = (
             ) as NotificationCategory,
             id: `${aiAppCategory(activity.aiApp.verb, activity.aiApp.kind)}:${activity.activityId}`,
             source: { surfaceType: AI_APP_SURFACE },
+            // Where the change is (the created task, the edited note), as the Activity row opens
+            // it. Without it a click had nothing to go on and fell through to the chat page.
+            ...(inAppPath(activity.aiApp.url) ? { url: inAppPath(activity.aiApp.url)! } : {}),
             title: aiAppHeadline(activity.aiApp, strings),
             // The official app's mark on the toast (MIP-1608); `appFamily` was already
             // reduced to the two exact strings when the notice was parsed.

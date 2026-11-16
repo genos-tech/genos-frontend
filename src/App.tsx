@@ -57,6 +57,7 @@ import { CalendarEventLinkHost } from "./features/calendar/components/CalendarEv
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
 import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
 import { AddToTodoHost } from "./features/chat/components/todo/AddToTodoHost";
+import { inAppPath } from "./features/chat/utils/aiAppNotice";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { personalNoteScopes } from "./features/notes/common/utils/noteTypeAlias";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
@@ -879,6 +880,15 @@ const AppBody = () => {
             // the inbox instead of reopening Spotlight.
             if (intent.onOpen) {
                 intent.onOpen();
+                return;
+            }
+
+            // The event names its own page (an AI app's change: the created task or the edited
+            // note, MIP-1657). Open it exactly, before rebuilding a destination from ids: a notice
+            // carries no chat and no task source, so it used to fall through to the chat page.
+            const path = inAppPath(intent.url);
+            if (path) {
+                navigate(path);
                 return;
             }
 
