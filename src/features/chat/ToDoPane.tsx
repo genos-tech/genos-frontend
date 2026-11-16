@@ -333,6 +333,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         <TodoHostLayerProvider value={hostedInModal ? hostZIndex : undefined}>
             <TodoMentionsProvider>
                 <Box
+                    // Marks where a to-do is being typed, so a live refresh waits for the person
+                    // to finish rather than replace what they are editing (`todoPushSync`).
+                    data-todo-pane
                     sx={{
                         // The pane takes what is left in its column after the chat
                         // header (and the retention banner when it shows), as it

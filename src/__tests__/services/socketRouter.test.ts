@@ -118,7 +118,7 @@ describe("registerSocketRouter", () => {
         expect(V3_NAMESPACE).toBe("/v3");
     });
 
-    it("registers exactly one handler per server event (21 events)", () => {
+    it("registers exactly one handler per server event (22 events)", () => {
         const expected = [
             "message.created",
             "message.updated",
@@ -140,11 +140,12 @@ describe("registerSocketRouter", () => {
             "flag.completed",
             "flag.uncompleted",
             "activity.created",
+            "todo.changed",
             "resync.error",
         ];
         expect([...env.handlers.keys()].sort()).toEqual([...expected].sort());
         expect(env.socket.on).toHaveBeenCalledTimes(expected.length);
-        expect(expected).toHaveLength(21);
+        expect(expected).toHaveLength(22);
     });
 
     // ---- message.* --------------------------------------------------------
@@ -374,6 +375,21 @@ describe("registerSocketRouter", () => {
         expect(handleV3Activity).toHaveBeenCalledWith(activity);
     });
 
+    // ---- todo.changed (MIP-1626) -------------------------------------------
+
+    it("todo.changed reaches the To-do page as a window event carrying only the team", () => {
+        const seen: unknown[] = [];
+        const listener = (e: Event) => seen.push((e as CustomEvent).detail);
+        window.addEventListener("v3:todo:changed", listener);
+
+        env.fire("todo.changed", { teamId: "t-1" });
+        env.fire("todo.changed", { teamId: null });
+        env.fire("todo.changed", undefined);
+
+        window.removeEventListener("v3:todo:changed", listener);
+        expect(seen).toEqual([{ teamId: "t-1" }, {}, {}]);
+    });
+
     // ---- resync.error (conditional branch) --------------------------------
 
     it("resync.error with a channel_id falls back to syncChannel(channel_id)", () => {
@@ -410,13 +426,13 @@ describe("registerSocketRouter", () => {
         }
     });
 
-    it("a second registerSocketRouter call is independent: its teardown removes only its own 21 handlers", () => {
+    it("a second registerSocketRouter call is independent: its teardown removes only its own 22 handlers", () => {
         // Sanity: registering twice produces independent handler sets; the
         // second registration's teardown only removes its own handlers.
         const env2 = makeFakeSocket();
         const teardown2 = registerSocketRouter(env2.socket);
-        expect(env2.socket.on).toHaveBeenCalledTimes(21);
+        expect(env2.socket.on).toHaveBeenCalledTimes(22);
         teardown2();
-        expect(env2.socket.off).toHaveBeenCalledTimes(21);
+        expect(env2.socket.off).toHaveBeenCalledTimes(22);
     });
 });
