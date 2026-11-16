@@ -1821,6 +1821,15 @@ export const zh: DeepPartial<Messages> = {
             sendAriaLabel: "发送消息",
             removeBlock: "移除块",
             resetType: "重置类型",
+            // A link to ONE block or comment of a note (MIP-146).
+            noteLink: {
+                copyBlockLink: "复制块链接",
+                copyCommentLink: "复制评论链接",
+                copied: "链接已复制",
+                copyFailed: "无法复制链接。",
+                blockNotFound: "该块已不在此笔记中。",
+                commentNotFound: "该评论已不在此笔记中。",
+            },
             placeholderEmpty: "开始输入…",
             placeholderDefault: "输入内容…",
             placeholderHeading: "自定义标题占位符",

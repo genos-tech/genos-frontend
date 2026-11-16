@@ -1911,6 +1911,15 @@ export const fr: DeepPartial<Messages> = {
             sendAriaLabel: "Envoyer le message",
             removeBlock: "Supprimer le bloc",
             resetType: "Réinitialiser le type",
+            // A link to ONE block or comment of a note (MIP-146).
+            noteLink: {
+                copyBlockLink: "Copier le lien vers le bloc",
+                copyCommentLink: "Copier le lien vers le commentaire",
+                copied: "Lien copié",
+                copyFailed: "Impossible de copier le lien.",
+                blockNotFound: "Ce bloc n'est plus dans cette note.",
+                commentNotFound: "Ce commentaire n'est plus dans cette note.",
+            },
             placeholderEmpty: "Commencez à taper...",
             placeholderDefault: "Tapez quelque chose...",
             placeholderHeading: "Espace réservé pour le titre personnalisé",

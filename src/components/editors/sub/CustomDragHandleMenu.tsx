@@ -1,6 +1,7 @@
 import { BlockColorsItem, DragHandleMenu, RemoveBlockItem } from "@blocknote/react";
 
 import { useTranslation } from "../../../i18n";
+import { CopyBlockLinkItem } from "./CopyBlockLinkItem";
 import { ResetBlockTypeItem } from "./ResetBlockTypeItem";
 
 /**
@@ -15,6 +16,8 @@ export const CustomDragHandleMenu = () => {
     const { t } = useTranslation();
     return (
         <DragHandleMenu>
+            {/* Only inside a note that has a page of its own (MIP-146); nothing elsewhere. */}
+            <CopyBlockLinkItem>{t.common.editor.noteLink.copyBlockLink}</CopyBlockLinkItem>
             <RemoveBlockItem>{t.common.editor.delete}</RemoveBlockItem>
             <BlockColorsItem>{t.common.editor.colors}</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}

@@ -2,8 +2,9 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../../App.css";
 
-import { startTransition, useEffect, useRef, useState, type ReactNode } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { PartialBlock } from "@blocknote/core";
+import { CommentsExtension } from "@blocknote/core/comments";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     BlockNoteViewEditor,
@@ -44,7 +45,9 @@ import { CommentHostContext } from "../sub/commentMentions";
 import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "../sub/CommentsSidebar";
 import { CommentsSidebarToggle } from "../sub/CommentsSidebarToggle";
 import { CustomDragHandleMenu } from "../sub/CustomDragHandleMenu";
+import { NoteLinkContext, useNoteLinkApi } from "../sub/NoteLinkContext";
 import { useCommentMentionEmitter } from "../sub/useCommentMentionEmitter";
+import { useNoteDeepLink, type DeepLinkEditor } from "../sub/useNoteDeepLink";
 import { WrapToggleButtons } from "../sub/WrapToggleButtons";
 import { GenosSuggestionMenus } from "./GenosSuggestionMenus";
 import { GenosDocumentToolbar } from "./GenosToolbars";
@@ -245,6 +248,29 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         getHost: () => ({ ...note.commentHost, noteId: note.noteId, title: note.title }),
     });
 
+    // A link to ONE block or comment of this note (MIP-146): the menus that copy it read the
+    // context, and a link that was opened at a block or a comment is acted on here.
+    const noteLink = useNoteLinkApi(note);
+    const deepLinkEditor = useMemo<DeepLinkEditor | null>(
+        () =>
+            editor
+                ? {
+                      getBlock: (id) => editor.getBlock(id),
+                      get domElement() {
+                          return editor.domElement;
+                      },
+                      selectThread: (id) =>
+                          editor.getExtension(CommentsExtension)?.selectThread(id, true),
+                  }
+                : null,
+        [editor]
+    );
+    const getThreads = useMemo(
+        () => (threadStore ? () => threadStore.getThreads() : null),
+        [threadStore]
+    );
+    useNoteDeepLink({ editor: deepLinkEditor, getThreads, note });
+
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
     const insertGif = (gif: { url: string; title: string }) => {
         // Standard image block: every read surface already renders and
@@ -340,7 +366,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     };
 
     return (
-        <>
+        <NoteLinkContext.Provider value={noteLink}>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 {/* Anchored bottom-right because the Comments toggle already
@@ -588,6 +614,6 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                     onClose={() => setOpened(false)}
                 />
             </Box>
-        </>
+        </NoteLinkContext.Provider>
     );
 };

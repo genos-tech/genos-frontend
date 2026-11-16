@@ -1892,6 +1892,15 @@ export const ja: DeepPartial<Messages> = {
             sendAriaLabel: "メッセージを送信",
             removeBlock: "ブロックを削除",
             resetType: "種類をリセット",
+            // A link to ONE block or comment of a note (MIP-146).
+            noteLink: {
+                copyBlockLink: "ブロックへのリンクをコピー",
+                copyCommentLink: "コメントへのリンクをコピー",
+                copied: "リンクをコピーしました",
+                copyFailed: "リンクをコピーできませんでした。",
+                blockNotFound: "そのブロックはこのノートにありません。",
+                commentNotFound: "そのコメントはこのノートにありません。",
+            },
             placeholderEmpty: "入力を開始します...",
             placeholderDefault: "何かを入力してください...",
             placeholderHeading: "カスタム見出しプレースホルダー",
