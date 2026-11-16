@@ -10,6 +10,8 @@
 // that does not parse, or names a chat the member does not have (left it, another team), has no
 // mark, and the line keeps its generic emoji.
 
+import { MDM_MAX_VISIBLE } from "../../../components/ui/avatars/mdmStack";
+import type { MDMMemberProps } from "../../../types/chat";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { CHAT_TYPE_REVERSE_MAP } from "../../chat/utils/chatPaths";
 import type { GenosReportV2 } from "./genosReportV2";
@@ -53,7 +55,20 @@ export type ReportChatMark =
      *  uploaded this session is refetched here as in the chat list. */
     | { kind: "gm"; src: string | undefined; chatType: number; chatId: string }
     | { kind: "pm"; src: string | undefined }
-    | { kind: "mdm" };
+    /** A multi-person DM: the members the chat list's stack draws (its first few, in the list's
+     *  order), so the report shows the same faces. None known yet draws the people glyph. */
+    | { kind: "mdm"; members: ReportMdmMember[] };
+
+export type ReportMdmMember = Pick<MDMMemberProps, "userId" | "userName" | "avatarImgPath">;
+
+const sameMdmMembers = (a: readonly ReportMdmMember[], b: readonly ReportMdmMember[]): boolean =>
+    a.length === b.length &&
+    a.every(
+        (m, i) =>
+            m.userId === b[i].userId &&
+            m.userName === b[i].userName &&
+            m.avatarImgPath === b[i].avatarImgPath
+    );
 
 export const sameChatMark = (a: ReportChatMark, b: ReportChatMark): boolean => {
     if (a.kind !== b.kind) return false;
@@ -72,7 +87,7 @@ export const sameChatMark = (a: ReportChatMark, b: ReportChatMark): boolean => {
         case "pm":
             return b.kind === "pm" && a.src === b.src;
         default:
-            return true;
+            return b.kind === "mdm" && sameMdmMembers(a.members, b.members);
     }
 };
 
@@ -82,6 +97,7 @@ type ChatLike = {
     chatName?: string;
     profileImagePath?: string;
     dmPartnerUser?: { userId?: string; userName?: string } | null;
+    mdmMembers?: readonly ReportMdmMember[] | null;
 };
 
 /** The keys of the chats a report's chat lines name (none when it has no chat line). */
@@ -118,7 +134,15 @@ const markOf = (kind: ReportChatKind, chat: ChatLike, chatType: number): ReportC
         case "pm":
             return { kind: "pm", src: buildAvatarSrc(chat.profileImagePath) };
         default:
-            return { kind: "mdm" };
+            return {
+                kind: "mdm",
+                // Only what the stack draws, copied to primitives so a mark compares by value.
+                members: (chat.mdmMembers ?? []).slice(0, MDM_MAX_VISIBLE).map((m) => ({
+                    userId: m.userId,
+                    userName: m.userName,
+                    avatarImgPath: m.avatarImgPath,
+                })),
+            };
     }
 };
 

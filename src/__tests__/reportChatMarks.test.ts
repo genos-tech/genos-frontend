@@ -167,9 +167,30 @@ describe("reportChatMarkMap: one mark per chat type", () => {
         expect(marks.get(chatMarkKey("pm", UUID2))).toEqual({ kind: "pm", src: undefined });
     });
 
-    it("MDM: the group mark", () => {
+    it("MDM: the members the chat list's stack draws (none known: an empty stack)", () => {
         const marks = reportChatMarkMap(keysFor(["mdm", UUID]), [chat({ chatType: 4 })]);
-        expect(marks.get(chatMarkKey("mdm", UUID))).toEqual({ kind: "mdm" });
+        expect(marks.get(chatMarkKey("mdm", UUID))).toEqual({ kind: "mdm", members: [] });
+    });
+
+    it("MDM: the first three members, as primitives (the rest are never drawn)", () => {
+        const person = (n: number) => ({
+            userId: `u${n}`,
+            userName: `P${n}`,
+            avatarImgPath: n === 1 ? "p/1.png" : undefined,
+            userEmail: `p${n}@x.test`,
+            teamId: "t1",
+        });
+        const marks = reportChatMarkMap(keysFor(["mdm", UUID]), [
+            chat({ chatType: 4, mdmMembers: [1, 2, 3, 4, 5].map(person) } as never),
+        ]);
+        expect(marks.get(chatMarkKey("mdm", UUID))).toEqual({
+            kind: "mdm",
+            members: [
+                { userId: "u1", userName: "P1", avatarImgPath: "p/1.png" },
+                { userId: "u2", userName: "P2", avatarImgPath: undefined },
+                { userId: "u3", userName: "P3", avatarImgPath: undefined },
+            ],
+        });
     });
 });
 
@@ -278,6 +299,45 @@ describe("sameChatMarks", () => {
         const ini = m([["k", { kind: "initial", name: "N" }]]);
         expect(sameChatMarks(ini, m([["k", { kind: "initial", name: "N" }]]))).toBe(true);
         expect(sameChatMarks(ini, m([["k", { kind: "initial", name: "O" }]]))).toBe(false);
-        expect(sameChatMarks(m([["k", { kind: "mdm" }]]), m([["k", { kind: "mdm" }]]))).toBe(true);
+        const stack = (...names: string[]): ReportChatMark => ({
+            kind: "mdm",
+            members: names.map((n) => ({
+                userId: `id-${n}`,
+                userName: n,
+                avatarImgPath: undefined,
+            })),
+        });
+        expect(sameChatMarks(m([["k", stack()]]), m([["k", stack()]]))).toBe(true);
+        expect(sameChatMarks(m([["k", stack("A", "B")]]), m([["k", stack("A", "B")]]))).toBe(true);
+        // A member joining, leaving or renamed, or a new picture, is a different mark.
+        expect(sameChatMarks(m([["k", stack("A", "B")]]), m([["k", stack("A")]]))).toBe(false);
+        expect(sameChatMarks(m([["k", stack("A", "B")]]), m([["k", stack("B", "A")]]))).toBe(
+            false
+        );
+        expect(
+            sameChatMarks(
+                m([
+                    [
+                        "k",
+                        {
+                            kind: "mdm",
+                            members: [{ userId: "u", userName: "A", avatarImgPath: "x" }],
+                        },
+                    ],
+                ]),
+                m([
+                    [
+                        "k",
+                        {
+                            kind: "mdm",
+                            members: [{ userId: "u", userName: "A", avatarImgPath: "y" }],
+                        },
+                    ],
+                ])
+            )
+        ).toBe(false);
+        expect(sameChatMarks(m([["k", stack()]]), m([["k", { kind: "pm", src: "x" }]]))).toBe(
+            false
+        );
     });
 });

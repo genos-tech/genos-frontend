@@ -7,12 +7,13 @@
 // text; an avatar is drawn from what the chat list already holds, and nothing is requested here.
 
 import { memo, type ReactNode } from "react";
-import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import { Box } from "@mui/joy";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { GroupChatAvatar, ProjectChatAvatar } from "../../../components/ui/avatars/ChatKindAvatar";
+import { MDMAvatar } from "../../../components/ui/avatars/MDMAvatar";
+import { mdmStackWidth } from "../../../components/ui/avatars/mdmStack";
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { TYPE_SCALE } from "../../../theme/tokens";
 import { AVATAR } from "../../../theme/tokens/scales";
@@ -20,10 +21,24 @@ import { withAvatarVersion } from "../../../utils/avatarSrc";
 import { useGMProfileImageVersion } from "../../../utils/gmProfileImageVersion";
 import type { ReportChatMark } from "../utils/reportChatMarks";
 
-/** Width of the icon slot: the `xs` avatar, as wide as the emoji slot it replaces. */
-const CHAT_ICON_SLOT = AVATAR.xs;
+/** Width of the icon slot of a line: the `xs` avatar, as wide as the emoji slot it replaces. */
+export const CHAT_ICON_SLOT = AVATAR.xs;
 
-const ChatIconSlot = ({ children }: { children: ReactNode }) => (
+/** The slot width a run of chat lines shares, so their text starts at one edge. A multi-person
+ *  DM's stack of faces is wider than one avatar (three `xs` faces are 42px), and a line whose
+ *  icon is wider would start its text later than the lines around it; so every line of the run
+ *  takes the width of its widest stack. Without a stack it is the one-avatar width, as before.
+ *  `marks` holds the mark of each chat line (none for a line with the emoji). */
+export const reportChatSlotWidth = (marks: Iterable<ReportChatMark | undefined>): number => {
+    let width: number = CHAT_ICON_SLOT;
+    for (const mark of marks) {
+        if (mark?.kind === "mdm")
+            width = Math.max(width, mdmStackWidth(mark.members.length, CHAT_ICON_SLOT));
+    }
+    return width;
+};
+
+const ChatIconSlot = ({ children, width }: { children: ReactNode; width: number }) => (
     <Box
         aria-hidden="true"
         component="div"
@@ -31,9 +46,11 @@ const ChatIconSlot = ({ children }: { children: ReactNode }) => (
         sx={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            // At the start of the slot: a lone avatar in a slot widened for a stack beside it
+            // stays at the row's start edge (the same place in LTR and RTL).
+            justifyContent: "flex-start",
             flexShrink: 0,
-            width: CHAT_ICON_SLOT,
+            width,
             // One line of the text beside it, so the avatar is centred on the first line.
             height: TYPE_SCALE["body-sm"].line,
         }}
@@ -54,12 +71,29 @@ const GroupMark = ({ mark }: { mark: Extract<ReportChatMark, { kind: "gm" }> }) 
 /** The avatar for a mark, in its slot. A DM outside the avatar context (an isolated render; the
  *  app always has one) cannot be drawn, so the slot holds `fallback`, the generic emoji. */
 export const ReportChatIcon = memo(
-    ({ mark, fallback }: { mark: ReportChatMark; fallback: string }) => {
+    ({
+        mark,
+        fallback,
+        slotWidth = CHAT_ICON_SLOT,
+    }: {
+        mark: ReportChatMark;
+        fallback: string;
+        /** The width the run of chat lines shares (`reportChatSlotWidth`). */
+        slotWidth?: number;
+    }) => {
         const avatarContext = useOptionalAvatarContext();
         if (mark.kind === "dm" && !avatarContext) {
             return (
-                <ChatIconSlot>
-                    <Box component="span" sx={{ fontSize: 14, lineHeight: 1 }}>
+                <ChatIconSlot width={slotWidth}>
+                    <Box
+                        component="span"
+                        sx={{
+                            width: CHAT_ICON_SLOT,
+                            textAlign: "center",
+                            fontSize: 14,
+                            lineHeight: 1,
+                        }}
+                    >
                         {fallback}
                     </Box>
                 </ChatIconSlot>
@@ -91,13 +125,12 @@ export const ReportChatIcon = memo(
                 avatar = <ProjectChatAvatar size="xs" src={mark.src} />;
                 break;
             default:
-                avatar = (
-                    <BaseAvatar size="xs">
-                        <PeopleRoundedIcon />
-                    </BaseAvatar>
-                );
+                // The chat list's own stack of member faces (`MDMAvatar`, one logic for both),
+                // at the `xs` step. No `teamMemberProfiles`: no presence dot or paused-moon on a
+                // mark, as for a DM above. A chat whose members are not known draws its people glyph.
+                avatar = <MDMAvatar avatarSize={CHAT_ICON_SLOT} members={mark.members} />;
         }
-        return <ChatIconSlot>{avatar}</ChatIconSlot>;
+        return <ChatIconSlot width={slotWidth}>{avatar}</ChatIconSlot>;
     }
 );
 ReportChatIcon.displayName = "ReportChatIcon";

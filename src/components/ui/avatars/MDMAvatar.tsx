@@ -10,6 +10,7 @@ import { initialOf } from "../../../utils/initials";
 import { PRESENCE_COLOR } from "../misc/presenceColor";
 import { PulseDot } from "../misc/PulseDot";
 import { BaseAvatar } from "./BaseAvatar";
+import { MDM_MAX_VISIBLE, MDM_STEP, mdmStackWidth } from "./mdmStack";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -40,7 +41,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
     const { t } = useTranslation();
 
     const miniSize = avatarSize ?? (size === "sm" ? 28 : 32);
-    const maxVisible = 3;
+    const maxVisible = MDM_MAX_VISIBLE;
 
     if (!members || members.length === 0) {
         return (
@@ -63,8 +64,8 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
     }
 
     const visibleMembers = members.slice(0, maxVisible);
-    const step = miniSize * 0.55;
-    const totalWidth = miniSize + (visibleMembers.length - 1) * step;
+    const step = miniSize * MDM_STEP;
+    const totalWidth = mdmStackWidth(visibleMembers.length, miniSize);
 
     return (
         <Box

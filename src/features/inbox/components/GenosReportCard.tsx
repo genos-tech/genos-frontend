@@ -37,7 +37,7 @@ import type {
     ReportSectionV2,
 } from "../utils/genosReportV2";
 import { chatMarkKey, parseReportChatLink, type ReportChatMark } from "../utils/reportChatMarks";
-import { ReportChatIcon } from "./ReportChatIcon";
+import { CHAT_ICON_SLOT, ReportChatIcon, reportChatSlotWidth } from "./ReportChatIcon";
 import { ANSWER_SLOT_WIDTH, ReportRowAnswers } from "./ReportRowAnswers";
 
 /** Sections open on first draw; the rest are folded so the card stays short. */
@@ -392,10 +392,14 @@ const LineRow = ({
     item,
     onOpen,
     chatMarks,
+    iconSlotWidth,
 }: {
     item: ReportItemV2;
     onOpen: Open;
     chatMarks: ReadonlyMap<string, ReportChatMark>;
+    /** The icon slot every line of the section shares, so a stack of faces on one line does not
+     *  move the text of that line alone (`reportChatSlotWidth`). */
+    iconSlotWidth: number;
 }) => {
     // The closing "and N more ..." line is a quiet note, not an item.
     if (item.kind === "more") {
@@ -416,7 +420,9 @@ const LineRow = ({
     // A chat line wears the chat's own avatar when the chat is in the member's list; otherwise
     // (and for every other kind) the emoji, as before.
     const mark = chatMarkOf(item, chatMarks);
-    const icon = mark ? <ReportChatIcon fallback={emoji} mark={mark} /> : null;
+    const icon = mark ? (
+        <ReportChatIcon fallback={emoji} mark={mark} slotWidth={iconSlotWidth} />
+    ) : null;
     return (
         <RowShell
             link={item.link}
@@ -439,7 +445,15 @@ const LineRow = ({
                 <Box
                     aria-hidden="true"
                     component="span"
-                    sx={{ width: 20, textAlign: "center", flexShrink: 0, fontSize: 14 }}
+                    sx={{
+                        width: CHAT_ICON_SLOT,
+                        textAlign: "center",
+                        flexShrink: 0,
+                        fontSize: 14,
+                        // A slot widened for a stack of faces on a line beside this one: the
+                        // emoji keeps its own width and the text starts at the shared edge.
+                        marginInlineEnd: `${iconSlotWidth - CHAT_ICON_SLOT}px`,
+                    }}
                 >
                     {emoji}
                 </Box>
@@ -512,6 +526,12 @@ const Section = ({
             ? lines.slice(0, LINES_BEFORE_MORE)
             : [...lines, ...section.items.filter((i) => i.kind === "more")];
     const groups = groupByProject(visible);
+    // One icon slot for the section's chat lines, sized from ALL of them (not just the visible
+    // ones), so "Show more" never moves the text that is already there.
+    const iconSlotWidth = useMemo(
+        () => reportChatSlotWidth(section.items.map((i) => chatMarkOf(i, chatMarks))),
+        [section.items, chatMarks]
+    );
     // Only a section that has buttons somewhere keeps room for them on its other rows.
     const reserveAnswers = answerer !== undefined && lines.some((i) => i.canAnswer);
     const hot = tone === "danger" || tone === "warning";
@@ -641,6 +661,7 @@ const Section = ({
                                         ) : (
                                             <LineRow
                                                 chatMarks={chatMarks}
+                                                iconSlotWidth={iconSlotWidth}
                                                 item={item}
                                                 onOpen={onOpen}
                                             />
