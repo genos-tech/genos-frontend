@@ -59,6 +59,13 @@ describe("Schedules has every string in every locale", () => {
         expect({ locale: name, broken }).toEqual({ locale: name, broken: [] });
     });
 
+    it.each(NAMES)("%s words the required project hint without offering All projects", (name) => {
+        const own = OTHERS[name].settings?.schedules as Record<string, string>;
+        expect(own.paramProjectRequiredHint).not.toBe(own.paramProjectHint);
+        expect(own.paramProjectRequiredHint).not.toContain(own.allProjects);
+        expect(own.projectPlaceholder).not.toBe(own.allProjects);
+    });
+
     it.each(NAMES)("%s has no empty string", (name) => {
         const own = OTHERS[name].settings?.schedules as Record<string, string>;
         expect(Object.entries(own).filter(([, v]) => v.trim() === "")).toEqual([]);

@@ -59,10 +59,16 @@ type Props = {
 const ALL_PROJECTS_ID = 0;
 const UNAVAILABLE_ID = -1;
 
-/** The optional project parameter: "All projects" or one project, by name. The same
- *  dropdown, rows and avatars as the project filter under the Genos search box
- *  (`ProjectPickerParts`), here as a single choice. */
-export const ProjectParamSelect = ({ value, onChange }: Props) => {
+/** The project parameter, by name. Optional (`what_to_do_today`): "All projects" or one project.
+ *  `required` (`project_updates`): no "All projects" row, because it is not a valid answer, and a
+ *  placeholder until one is chosen, as in the milestone picker below. The same dropdown, rows and
+ *  avatars as the project filter under the Genos search box (`ProjectPickerParts`), here as a
+ *  single choice. */
+export const ProjectParamSelect = ({
+    value,
+    onChange,
+    required = false,
+}: Props & { required?: boolean }) => {
     const { t } = useTranslation();
     const s = t.settings.schedules;
     const projects = useJoinedProjects();
@@ -80,17 +86,25 @@ export const ProjectParamSelect = ({ value, onChange }: Props) => {
         value !== "" && !known
             ? { projectId: UNAVAILABLE_ID, projectName: s.unavailable, projectTags: [] }
             : null;
-    const options = [all, ...(unavailable ? [unavailable] : []), ...projects];
-    const selected =
+    const options = [
+        ...(required ? [] : [all]),
+        ...(unavailable ? [unavailable] : []),
+        ...projects,
+    ];
+    // Nothing chosen: "All projects" when that is an answer, the placeholder when it is not.
+    const selected: ProjectProps | null =
         value === ""
-            ? all
-            : (unavailable ?? projects.find((p) => String(p.projectId) === value) ?? all);
+            ? required
+                ? null
+                : all
+            : (unavailable ?? projects.find((p) => String(p.projectId) === value) ?? null);
 
     return (
-        <Autocomplete<ProjectProps, false, true, false>
+        <Autocomplete<ProjectProps, false, boolean, false>
             getOptionLabel={(option) => projectOptionLabel(option)}
             isOptionEqualToValue={(option, value) => isSameProject(option, value)}
             options={options}
+            placeholder={required ? s.projectPlaceholder : undefined}
             renderOption={renderProjectOption(avatars)}
             slotProps={projectListboxSlotProps(popupZIndex)}
             sx={{ minWidth: 0 }}
@@ -98,15 +112,21 @@ export const ProjectParamSelect = ({ value, onChange }: Props) => {
             startDecorator={
                 // The closed field is a text input, so only the name fits in it: the
                 // avatar rides beside it, as in the task pickers.
-                selected.projectId > ALL_PROJECTS_ID ? (
+                selected && selected.projectId > ALL_PROJECTS_ID ? (
                     <ProjectIdentityDecorator
                         avatarSrc={avatars.get(selected.projectId)}
                         project={selected}
                     />
                 ) : undefined
             }
-            disableClearable
+            // "All projects" is how the optional picker says "none", so it cannot be cleared;
+            // the required one can be emptied again, like the milestone picker.
+            disableClearable={!required}
             onChange={(_, option) => {
+                if (!option) {
+                    onChange("");
+                    return;
+                }
                 if (option.projectId === UNAVAILABLE_ID) return;
                 onChange(option.projectId === ALL_PROJECTS_ID ? "" : String(option.projectId));
             }}
