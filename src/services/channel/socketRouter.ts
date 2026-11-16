@@ -20,6 +20,7 @@ import type { Socket } from "socket.io-client";
 
 import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
+import { handleV3TodoChanged } from "../../features/chat/services/handleV3Todo";
 import type {
     Channel,
     ChannelKind,
@@ -162,6 +163,11 @@ export function registerSocketRouter(socket: Socket): () => void {
     on<Record<string, unknown>>("activity.created", (a) => {
         void handleV3Activity(a);
     });
+
+    // The member's to-dos changed with no handler of this app's to announce it (MIP-1626: MCP,
+    // the in-app agent, another client). Facts only, `{teamId}`; the To-do page re-reads its
+    // own list. Sent to the owner's `user:{id}` room, so only they hear it.
+    on<{ teamId?: string | null }>("todo.changed", (e) => handleV3TodoChanged(e));
 
     // A per-channel resync replay failed server-side during connect
     // (connect_handlers emits this). Without handling it the channel

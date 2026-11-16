@@ -32,6 +32,12 @@ import {
     updateTodoSchedule,
     UpdateTodoSchedulePatch,
 } from "../features/chat/components/todo/services/todoSchedules";
+import {
+    isTypingInTodoPane,
+    mergeFreshGroups,
+    PUSH_REFRESH_DELAY_MS,
+} from "../features/chat/components/todo/todoPushSync";
+import { TodoChangedDetail, V3_TODO_CHANGED_EVENT } from "../features/chat/services/handleV3Todo";
 import { reminderSweepDelayMs } from "../features/chat/utils/reminderSweep";
 import { occursOn } from "../features/chat/utils/todoSchedule";
 import { requestInboxResync } from "../features/inbox/inboxResyncEvent";
@@ -44,6 +50,7 @@ import {
     TodoScheduleProps,
 } from "../types/chat";
 import { getLocalCurrentDate } from "../utils/dateUtils";
+import { keepIfEqual } from "../utils/keepIfEqual";
 import { runUndoable, useUndoHidden } from "./common/useUndoableAction";
 
 const todoService = new TodoService();
@@ -790,6 +797,73 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
         window.addEventListener(TODO_CHANGED_EVENT, handler);
         return () => window.removeEventListener(TODO_CHANGED_EVENT, handler);
     }, [refresh]);
+
+    // The server says this person's to-dos changed (`todo.changed`, MIP-1626): a to-do written over
+    // MCP, by the in-app agent or from another device. Re-read the list, the tags and the reminders
+    // (a new to-do can bring a tag and a reminder with it), without replacing what is being typed
+    // (`todoPushSync`). Latest answer wins: an older, slower read never lands over a newer one.
+    const pushSeqRef = useRef(0);
+    /** Re-reads and applies. Returns false when the answer was NOT applied because the page changed
+     *  under it (an edit made while the read was in flight, which the read cannot know about):
+     *  the caller reads again rather than put an older snapshot over a newer edit. */
+    const reloadAfterPush = useCallback(async (): Promise<boolean> => {
+        if (!myself.userId || !myself.teamId) return true;
+        const seq = ++pushSeqRef.current;
+        const shown = groupsRef.current;
+        // One loader failing must not discard the others, nor reject out of a fire-and-forget call.
+        const [fresh, cats, reminders] = await Promise.all([
+            loadTodoGroups(myself, accessToken).catch(() => undefined),
+            loadTodoCategories(accessToken, myself).catch(() => undefined),
+            loadTodoReminders(accessToken).catch(() => undefined),
+        ]);
+        if (seq !== pushSeqRef.current) return true;
+        if (groupsRef.current !== shown) return false;
+        if (fresh) setGroups((prev) => mergeFreshGroups(prev, fresh));
+        if (cats) setCategories((prev) => keepIfEqual(prev, cats));
+        if (reminders) {
+            setReminderByItemId((prev) => {
+                const next = new Map(reminders.map((r) => [r.itemId, r]));
+                const same =
+                    next.size === prev.size &&
+                    [...next].every(([id, r]) => keepIfEqual(prev.get(id), r) === prev.get(id));
+                return same ? prev : next;
+            });
+        }
+        return true;
+    }, [accessToken, myself]);
+    const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const reloadAfterPushRef = useRef(reloadAfterPush);
+    reloadAfterPushRef.current = reloadAfterPush;
+    const teamIdRef = useRef(myself.teamId);
+    teamIdRef.current = myself.teamId;
+    useEffect(() => {
+        const arm = () => {
+            if (pushTimerRef.current !== null) clearTimeout(pushTimerRef.current);
+            pushTimerRef.current = setTimeout(() => {
+                pushTimerRef.current = null;
+                // Still typing: wait for them to finish rather than replace the text.
+                if (isTypingInTodoPane()) {
+                    arm();
+                    return;
+                }
+                void reloadAfterPushRef.current().then((applied) => {
+                    if (!applied) arm();
+                });
+            }, PUSH_REFRESH_DELAY_MS);
+        };
+        const handler = (e: Event) => {
+            const teamId = (e as CustomEvent<TodoChangedDetail | undefined>).detail?.teamId;
+            // Another team's to-dos are not on this page.
+            if (teamId && teamIdRef.current && teamId !== teamIdRef.current) return;
+            arm();
+        };
+        window.addEventListener(V3_TODO_CHANGED_EVENT, handler);
+        return () => {
+            window.removeEventListener(V3_TODO_CHANGED_EVENT, handler);
+            if (pushTimerRef.current !== null) clearTimeout(pushTimerRef.current);
+            pushTimerRef.current = null;
+        };
+    }, []);
 
     return {
         groups,
