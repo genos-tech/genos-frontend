@@ -717,7 +717,16 @@ export const useNoteManagement = (
         }
     };
 
+    // Before a member has picked a team (a reload or a deep link on a notes URL, signed in but not
+    // yet on a team) there is nothing to list: the note endpoints answer `team_id=` with a 400, and
+    // the sidebar then showed that as "Couldn't load your notes" (MIP-1651). So the getters below ask
+    // for nothing and report nothing, and `useServiceInitialization` loads again when a team appears.
+    // They answer `false`, "not loaded", so a change refresh never records a "nothing new" token for
+    // a read that did not happen.
+    const noTeamYet = !myself.teamId;
+
     const getChatNoteMeta = async () => {
+        if (noTeamYet) return false;
         const loadedNotes: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
         // The loader resolves undefined when the request fails (or there is no
         // token), so a failed refresh keeps the list it has instead of throwing.
@@ -837,6 +846,7 @@ export const useNoteManagement = (
     };
 
     const getTaskNoteMeta = async () => {
+        if (noTeamYet) return false;
         const loadedNotes: TaskNoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
         // Returns whether the list was loaded, as `getChatNoteMeta` does.
@@ -1007,6 +1017,7 @@ export const useNoteManagement = (
         teamNoteMeta.some((n) => n.parentNoteId === noteId);
 
     const getMyNoteMeta = async () => {
+        if (noTeamYet) return false;
         const loadedNotes: MyNoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request, [] is a real answer.
         // Returns whether the list was loaded, as `getChatNoteMeta` does.
@@ -1284,6 +1295,7 @@ export const useNoteManagement = (
     // ------------------------------------------------------------------
 
     const getMyNoteFolders = async () => {
+        if (noTeamYet) return;
         const loaded = await loadMyNoteFolders(myself, accessToken);
         setMyNoteFolders(loaded);
     };
@@ -1624,6 +1636,7 @@ export const useNoteManagement = (
 
     // Favorite notes functions
     const getFavoriteNotesMeta = async () => {
+        if (noTeamYet) return;
         const loadedFavorites = await loadFavoriteNotesMeta(myself, accessToken);
         reportNoteList("favorites", !!loadedFavorites);
         if (loadedFavorites) {
@@ -1861,6 +1874,7 @@ export const useNoteManagement = (
     // array identity, which invalidates the `useMemo` trees built on it
     // and re-renders the whole sidebar on a timer for no reason.
     const getTeamNoteFolders = async () => {
+        if (noTeamYet) return false;
         const loaded = await loadTeamNoteFolders(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
         // real answer ("no team folders") and empties it.
@@ -1873,6 +1887,7 @@ export const useNoteManagement = (
     getTeamNoteFoldersRef.current = getTeamNoteFolders;
 
     const getTeamNoteMeta = async () => {
+        if (noTeamYet) return false;
         const loaded = await loadTeamNotesMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request keeps the list, [] is a
         // real answer ("no team notes") and empties it.
@@ -1985,6 +2000,7 @@ export const useNoteManagement = (
 
     // Shared-with-me personal notes
     const getSharedNoteMeta = async () => {
+        if (noTeamYet) return false;
         const loaded = await loadSharedNotesMeta(myself, accessToken);
         // See getChatNoteMeta: undefined on a failed request keeps the list.
         // Returns whether the list was loaded, as `getChatNoteMeta` does.
@@ -1995,12 +2011,32 @@ export const useNoteManagement = (
 
     // Recent notes functions
     const getRecentNotesMeta = async () => {
+        if (noTeamYet) return;
         const loadedRecents = await loadRecentNotesMeta(myself, accessToken);
         reportNoteList("recents", !!loadedRecents);
         if (loadedRecents) {
             setRecentNotes(loadedRecents);
         }
     };
+
+    // The boot load of the four lists above ran before a team existed and asked for nothing
+    // (`noTeamYet`); load them when the member picks one (MIP-1651). The sidebar's own lists
+    // (favorites, recents, shared, team notes) key on the team themselves. Only the arrival of a
+    // team counts: a switch between teams is already reloaded by the loading flag.
+    const hadTeamRef = useRef(Boolean(myself.teamId));
+    useEffect(() => {
+        const hasTeam = Boolean(myself.teamId);
+        const arrived = hasTeam && !hadTeamRef.current;
+        hadTeamRef.current = hasTeam;
+        if (!arrived) return;
+        void getMyNoteMeta();
+        void getMyNoteFolders();
+        void getTaskNoteMeta();
+        void getChatNoteMeta();
+        // The functions are re-made every render and read the `myself` of that render, which is the
+        // one that has the team; the effect is keyed on the team alone on purpose.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myself.teamId]);
 
     // Record that the current user just opened a note. Optimistically
     // promote any locally-known matching meta row to the top of its

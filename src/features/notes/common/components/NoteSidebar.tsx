@@ -526,22 +526,24 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         </Box>
     );
 
+    // The four loads below are keyed on the team: with none (a reload or a deep link before a team
+    // is chosen) the getters ask for nothing, and they ask again when one is picked (MIP-1651).
     // Load favorite notes on mount
     useEffect(() => {
         useNM.getFavoriteNotesMeta();
-    }, []);
+    }, [myself.teamId]);
 
     // Load recent notes on mount (parity with favorites — both seed
     // their sidebar sections from the server when this component first
     // appears).
     useEffect(() => {
         useNM.getRecentNotesMeta();
-    }, []);
+    }, [myself.teamId]);
 
     // Load personal notes shared with me — drives the noteType=4 bucket.
     useEffect(() => {
         useNM.getSharedNoteMeta();
-    }, []);
+    }, [myself.teamId]);
 
     // Team Notes (noteType=8 bucket): the folder list and the notes
     // inside it are separate calls, because the folders ARE the ACL and
@@ -549,7 +551,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     useEffect(() => {
         void useNM.getTeamNoteFolders();
         void useNM.getTeamNoteMeta();
-    }, []);
+    }, [myself.teamId]);
 
     // Use custom hooks for each note type
     const myNoteState = useNoteTreeState({
