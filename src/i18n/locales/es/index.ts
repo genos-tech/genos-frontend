@@ -150,6 +150,15 @@ export const es: DeepPartial<Messages> = {
             sendAriaLabel: "Enviar mensaje",
             removeBlock: "Quitar bloque",
             resetType: "Restablecer tipo",
+            // A link to ONE block or comment of a note (MIP-146).
+            noteLink: {
+                copyBlockLink: "Copiar enlace al bloque",
+                copyCommentLink: "Copiar enlace al comentario",
+                copied: "Enlace copiado",
+                copyFailed: "No se pudo copiar el enlace.",
+                blockNotFound: "Ese bloque ya no está en esta nota.",
+                commentNotFound: "Ese comentario ya no está en esta nota.",
+            },
             emoji: "Emoji",
             attachFile: "Adjuntar imagen o archivo",
             emojiTypingHint: ":+escritura",

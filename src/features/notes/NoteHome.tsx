@@ -19,6 +19,7 @@ import { UserProps } from "../../types/admin";
 import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
 import { NoteSidebar } from "./common/components/NoteSidebar";
 import { NoteUnreadProvider } from "./common/context/NoteUnreadContext";
+import { useCaptureNoteTarget } from "./common/hooks/useCaptureNoteTarget";
 import { useNoteMentionUnread } from "./common/hooks/useNoteMentionUnread";
 import { useNoteRouting } from "./common/hooks/useNoteRouting";
 import { MobileNoteHome } from "./MobileNoteHome";
@@ -57,6 +58,8 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     // URL-based routing for notes
     useNoteRouting({ useNM, isActiveRoute });
+    // A link to one block or comment of a note (MIP-146).
+    useCaptureNoteTarget(isActiveRoute);
 
     const { accessToken } = useAuth();
     // Unread @mention state for notes (per-note dots + the "Unread"

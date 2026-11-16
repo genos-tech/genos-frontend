@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { NavigateFunction } from "react-router-dom";
 
+import { captureNoteTargetFromHref } from "../../features/notes/common/utils/noteTarget";
 import { ModalTarget, parseInternalUrl } from "../../utils/parseInternalUrl";
 
 // Modal targets that are wired up today. Anything not in this set falls
@@ -119,6 +120,9 @@ export const useUrlLinkModalState = ({
                           ? { run: () => navigate(fullPageHref) }
                           : null
                 );
+                // A note link that names a block or a comment (MIP-146): the editor in the
+                // preview acts on it once the note is up.
+                captureNoteTargetFromHref(href);
                 setTarget(classified);
                 return "opened";
             }

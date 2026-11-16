@@ -287,6 +287,15 @@ export const common = {
         sendAriaLabel: "Send message",
         removeBlock: "Remove block",
         resetType: "Reset Type",
+        // A link to ONE block or comment of a note (MIP-146).
+        noteLink: {
+            copyBlockLink: "Copy link to block",
+            copyCommentLink: "Copy link to comment",
+            copied: "Link copied",
+            copyFailed: "Couldn't copy the link.",
+            blockNotFound: "That block is no longer in this note.",
+            commentNotFound: "That comment is no longer in this note.",
+        },
         placeholderEmpty: "Start typing...",
         placeholderDefault: "Type something...",
         placeholderHeading: "Custom heading placeholder",

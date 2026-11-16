@@ -8,7 +8,8 @@ import {
     useThreads,
 } from "@blocknote/react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import { Box, Chip, Sheet, Typography } from "@mui/joy";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
+import { Box, Chip, IconButton, Sheet, Typography } from "@mui/joy";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
@@ -16,6 +17,7 @@ import { BaseAvatar } from "../../ui/avatars/BaseAvatar";
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../ui/bubble";
 import { EmptyState } from "../../ui/feedback/EmptyState";
 import { commentFirstLine } from "./commentMentions";
+import { useNoteLink } from "./NoteLinkContext";
 import { useCommentAuthor } from "./useCommentAuthor";
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -134,97 +136,141 @@ const ThreadRow = memo(
         const replyCount = Math.max(0, thread.comments.length - 1);
         const authorName = author?.username || copy.unknownAuthor;
         const lastActivityAt = lastComment?.createdAt ?? thread.createdAt;
+        // "Copy link to comment" (MIP-146). Offered only in a note that has a page to link to.
+        const noteLink = useNoteLink();
+        const link = noteLink?.commentLink(thread.id) ?? null;
 
         return (
-            <Bubble
-                align="stacked"
-                aria-pressed={selected}
-                avatar={<BaseAvatar name={authorName} src={author?.avatarUrl || undefined} />}
-                bodyOffset={0.5}
-                component="button"
-                layout="compact"
-                selected={selected}
-                sx={rowSx}
-                footer={
-                    replyCount > 0 || thread.resolved ? (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            {thread.resolved && (
-                                <Chip
-                                    color="success"
-                                    size="sm"
-                                    variant="soft"
-                                    startDecorator={
-                                        <CheckCircleRoundedIcon sx={{ fontSize: 14 }} />
-                                    }
-                                >
-                                    {copy.resolved}
-                                </Chip>
-                            )}
-                            {replyCount > 0 && (
-                                <BubbleMeta>{fmt(copy.replies, { count: replyCount })}</BubbleMeta>
-                            )}
-                        </Box>
-                    ) : undefined
-                }
-                header={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
-                        <BubbleAuthor sx={{ flex: 1, minWidth: 0, ...noWrap }}>
-                            {authorName}
-                        </BubbleAuthor>
-                        <BubbleMeta sx={{ flexShrink: 0 }}>
-                            {formatRelative(lastActivityAt)}
-                        </BubbleMeta>
-                    </Box>
-                }
-                grouped
-                interactive
-                onClick={() => onSelect(thread.id)}
-                onMouseEnter={() => onHover(thread.id)}
-                // The floating comment card wires floating-ui `useDismiss` with
-                // its defaults — `outsidePress` on `pointerdown`, bubble phase,
-                // listening on `document`. A pointerdown on this row bubbles up
-                // to that listener, which counts as an outside-press and tears
-                // the card down (`selectThread(undefined)`) — the very card we're
-                // about to pin. Stop the pointerdown here so it never reaches
-                // that document listener: the card the click pins stays up (no
-                // dismiss-then-reopen flicker). The `onClick` still fires. The
-                // reconciliation effect stays correct even without this, but this
-                // removes the visible flicker at the source.
-                onPointerDown={(event) => event.stopPropagation()}
+            <Box
+                sx={{
+                    position: "relative",
+                    // Shown on hover or keyboard focus, always on a touch screen (no hover there).
+                    "& .copy-comment-link": { opacity: 0 },
+                    "&:hover .copy-comment-link, &:focus-within .copy-comment-link": {
+                        opacity: 1,
+                    },
+                    "@media (hover: none)": { "& .copy-comment-link": { opacity: 1 } },
+                }}
             >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, minWidth: 0 }}>
-                    {referenceText && (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                maxWidth: "100%",
-                                color: g.text.secondary,
-                                borderInlineStart: "2px solid",
-                                borderColor: g.border.default,
-                                ps: 1,
-                                fontStyle: "italic",
-                            }}
-                            noWrap
-                        >
-                            {referenceText}
-                        </Typography>
-                    )}
+                <Bubble
+                    align="stacked"
+                    aria-pressed={selected}
+                    avatar={<BaseAvatar name={authorName} src={author?.avatarUrl || undefined} />}
+                    bodyOffset={0.5}
+                    component="button"
+                    layout="compact"
+                    selected={selected}
+                    sx={rowSx}
+                    footer={
+                        replyCount > 0 || thread.resolved ? (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                {thread.resolved && (
+                                    <Chip
+                                        color="success"
+                                        size="sm"
+                                        variant="soft"
+                                        startDecorator={
+                                            <CheckCircleRoundedIcon sx={{ fontSize: 14 }} />
+                                        }
+                                    >
+                                        {copy.resolved}
+                                    </Chip>
+                                )}
+                                {replyCount > 0 && (
+                                    <BubbleMeta>
+                                        {fmt(copy.replies, { count: replyCount })}
+                                    </BubbleMeta>
+                                )}
+                            </Box>
+                        ) : undefined
+                    }
+                    header={
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                            <BubbleAuthor sx={{ flex: 1, minWidth: 0, ...noWrap }}>
+                                {authorName}
+                            </BubbleAuthor>
+                            <BubbleMeta sx={{ flexShrink: 0 }}>
+                                {formatRelative(lastActivityAt)}
+                            </BubbleMeta>
+                        </Box>
+                    }
+                    grouped
+                    interactive
+                    onClick={() => onSelect(thread.id)}
+                    onMouseEnter={() => onHover(thread.id)}
+                    // The floating comment card wires floating-ui `useDismiss` with
+                    // its defaults — `outsidePress` on `pointerdown`, bubble phase,
+                    // listening on `document`. A pointerdown on this row bubbles up
+                    // to that listener, which counts as an outside-press and tears
+                    // the card down (`selectThread(undefined)`) — the very card we're
+                    // about to pin. Stop the pointerdown here so it never reaches
+                    // that document listener: the card the click pins stays up (no
+                    // dismiss-then-reopen flicker). The `onClick` still fires. The
+                    // reconciliation effect stays correct even without this, but this
+                    // removes the visible flicker at the source.
+                    onPointerDown={(event) => event.stopPropagation()}
+                >
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, minWidth: 0 }}>
+                        {referenceText && (
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    maxWidth: "100%",
+                                    color: g.text.secondary,
+                                    borderInlineStart: "2px solid",
+                                    borderColor: g.border.default,
+                                    ps: 1,
+                                    fontStyle: "italic",
+                                }}
+                                noWrap
+                            >
+                                {referenceText}
+                            </Typography>
+                        )}
 
-                    <Typography
-                        level="body-sm"
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                width: "100%",
+                                color: preview ? g.text.primary : g.text.tertiary,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                            }}
+                        >
+                            {preview || copy.emptyComment}
+                        </Typography>
+                    </Box>
+                </Bubble>
+                {noteLink && link && (
+                    // A SIBLING of the row, not inside it: the row is a <button>, and a button cannot
+                    // hold another. The pointerdown stop is the row's (see above): a press here must
+                    // not reach the floating card's outside-press dismiss.
+                    <IconButton
+                        aria-label={t.common.editor.noteLink.copyCommentLink}
+                        className="copy-comment-link"
+                        data-testid="copy-comment-link"
+                        size="sm"
+                        title={t.common.editor.noteLink.copyCommentLink}
+                        variant="plain"
                         sx={{
-                            width: "100%",
-                            color: preview ? g.text.primary : g.text.tertiary,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
+                            position: "absolute",
+                            insetInlineEnd: 4,
+                            bottom: 4,
+                            "--IconButton-size": "24px",
+                            transition: "opacity 0.15s",
+                        }}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            void noteLink.copy(link);
                         }}
                     >
-                        {preview || copy.emptyComment}
-                    </Typography>
-                </Box>
-            </Bubble>
+                        <LinkRoundedIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                )}
+            </Box>
         );
     }
 );

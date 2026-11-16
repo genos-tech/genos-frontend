@@ -751,6 +751,32 @@ input[type="checkbox"] {
     min-width: 0;
 }
 
+/* A block a link points at (MIP-146): tinted, then fading to nothing over the highlight's
+   duration (`HIGHLIGHT_MS` in `useNoteDeepLink`). Under reduced motion it holds still for the
+   whole time instead of fading, and the class is removed when the time is up. */
+.bn-block.bn-deeplink-target {
+    border-radius: 6px;
+    animation: bn-deeplink-fade 4s ease-out forwards;
+}
+@keyframes bn-deeplink-fade {
+    0%,
+    60% {
+        background-color: var(--g-accent-subtle);
+        box-shadow: 0 0 0 4px var(--g-accent-subtle);
+    }
+    100% {
+        background-color: transparent;
+        box-shadow: 0 0 0 4px transparent;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .bn-block.bn-deeplink-target {
+        animation: none;
+        background-color: var(--g-accent-subtle);
+        box-shadow: 0 0 0 4px var(--g-accent-subtle);
+    }
+}
+
 /* BlockNote utility styles */
 .bn-file-name-with-icon {
     color: var(--g-accent-text) !important;

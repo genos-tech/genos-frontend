@@ -150,6 +150,15 @@ export const ar: DeepPartial<Messages> = {
             sendAriaLabel: "إرسال الرسالة",
             removeBlock: "إزالة الكتلة",
             resetType: "إعادة تعيين النوع",
+            // A link to ONE block or comment of a note (MIP-146).
+            noteLink: {
+                copyBlockLink: "نسخ رابط الكتلة",
+                copyCommentLink: "نسخ رابط التعليق",
+                copied: "تم نسخ الرابط",
+                copyFailed: "تعذّر نسخ الرابط.",
+                blockNotFound: "لم تعد هذه الكتلة موجودة في هذه الملاحظة.",
+                commentNotFound: "لم يعد هذا التعليق موجودًا في هذه الملاحظة.",
+            },
             emoji: "رمز تعبيري",
             attachFile: "إرفاق صورة أو ملف",
             emojiTypingHint: ":+typing",

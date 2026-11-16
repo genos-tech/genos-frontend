@@ -260,6 +260,15 @@ export const hi: DeepPartial<Messages> = {
             sendAriaLabel: "मेसेज भेजें",
             removeBlock: "ब्लॉक हटाएँ",
             resetType: "टाइप रीसेट करें",
+            // A link to ONE block or comment of a note (MIP-146).
+            noteLink: {
+                copyBlockLink: "ब्लॉक का लिंक कॉपी करें",
+                copyCommentLink: "टिप्पणी का लिंक कॉपी करें",
+                copied: "लिंक कॉपी हो गया",
+                copyFailed: "लिंक कॉपी नहीं हो सका।",
+                blockNotFound: "यह ब्लॉक अब इस नोट में नहीं है।",
+                commentNotFound: "यह टिप्पणी अब इस नोट में नहीं है।",
+            },
             placeholderEmpty: "टाइप करना प्रारंभ करें...",
             placeholderDefault: "कुछ लिखें...",
             placeholderHeading: "कस्टम शीर्षक प्लेसहोल्डर",
