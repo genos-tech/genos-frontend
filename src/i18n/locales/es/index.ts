@@ -875,6 +875,10 @@ export const es: DeepPartial<Messages> = {
                 "No se pudieron cargar los hitos. Cierra este formulario e inténtalo de nuevo.",
             errorMilestone: "Elige un hito.",
             errorProject: "Elige un proyecto.",
+            errorProjectUnavailable: "Este proyecto ya no está disponible para ti. Elige otro.",
+            projectNone: "No hay proyectos para elegir.",
+            rowProject: "Proyecto: {name}",
+            rowMilestone: "Hito: {name}",
             paramAiSentences: "Frases de IA",
             paramAiSentencesHint:
                 "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA. Desactívala para un informe sin IA.",

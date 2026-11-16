@@ -4230,6 +4230,11 @@ export const fr: DeepPartial<Messages> = {
                 "Impossible de charger les jalons. Fermez ce formulaire et réessayez.",
             errorMilestone: "Choisissez un jalon.",
             errorProject: "Choisissez un projet.",
+            errorProjectUnavailable:
+                "Ce projet n’est plus disponible pour vous. Choisissez-en un autre.",
+            projectNone: "Aucun projet à choisir.",
+            rowProject: "Projet : {name}",
+            rowMilestone: "Jalon : {name}",
             paramAiSentences: "Phrases de l'IA",
             paramAiSentencesHint:
                 "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA. Désactivez-la pour un rapport simple.",

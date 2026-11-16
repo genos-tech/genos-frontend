@@ -10,7 +10,7 @@ import { initialOf } from "../../../utils/initials";
 import { PRESENCE_COLOR } from "../misc/presenceColor";
 import { PulseDot } from "../misc/PulseDot";
 import { BaseAvatar } from "./BaseAvatar";
-import { MDM_MAX_VISIBLE, MDM_STEP, mdmStackWidth } from "./mdmStack";
+import { MDM_MAX_VISIBLE, MDM_STEP, mdmInitialOffset, mdmStackWidth } from "./mdmStack";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -65,6 +65,8 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
 
     const visibleMembers = members.slice(0, maxVisible);
     const step = miniSize * MDM_STEP;
+    // The presence dot and the paused moon are the chat list's: they show when it passes profiles.
+    const showPresence = !!teamMemberProfiles;
     const totalWidth = mdmStackWidth(visibleMembers.length, miniSize);
 
     return (
@@ -86,6 +88,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                 const isPaused = profile?.isNotificationsPaused === true;
                 const dotSize = Math.max(6, miniSize * 0.28);
                 const pauseIconSize = Math.max(9, Math.round(miniSize * 0.4));
+                const initialOffset = mdmInitialOffset(index, miniSize, showPresence);
                 const pauseTitle = fmt(t.services.notifications.pause.avatarTooltip, {
                     name: member.userName || "",
                 });
@@ -100,6 +103,11 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                             zIndex: maxVisible - index,
                             width: miniSize,
                             height: miniSize,
+                            // Opaque under the face's soft tint: a face is stacked over the next
+                            // one, and a see-through no-picture face let that neighbour (and its
+                            // picture) show through the letter.
+                            borderRadius: "50%",
+                            bgcolor: g.surface.default,
                         }}
                     >
                         <BaseAvatar
@@ -115,9 +123,21 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                             }}
                             tone={MEMBER_TONES[index % MEMBER_TONES.length]}
                         >
-                            {initialOf(member.userName)}
+                            <Box
+                                component="span"
+                                sx={{
+                                    // A face is drawn over the next one's start side, so the initial
+                                    // sits on the part that stays visible. Logical, so the mirrored
+                                    // stack (Arabic) moves it to the other side.
+                                    position: "relative",
+                                    insetInlineStart: `${initialOffset.inline}px`,
+                                    insetBlockStart: `${initialOffset.block}px`,
+                                }}
+                            >
+                                {initialOf(member.userName)}
+                            </Box>
                         </BaseAvatar>
-                        {teamMemberProfiles && (
+                        {showPresence && (
                             <Box
                                 sx={{
                                     position: "absolute",
@@ -140,7 +160,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                                 />
                             </Box>
                         )}
-                        {teamMemberProfiles && isPaused && (
+                        {showPresence && isPaused && (
                             // Paused-notifications moon at the top-right (the
                             // presence dot owns bottom-right). No tooltip
                             // wrapper: these mini-avatars overlap, so a hover
