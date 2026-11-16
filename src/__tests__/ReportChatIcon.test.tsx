@@ -61,7 +61,22 @@ const chats = [
         project: { projectId: 3 },
         profileImagePath: "https://m.example/pm.png",
     },
-    { chatType: 4, chatId: MDM, chatName: "Ada, Bob", dmPartnerUser: { userId: "" } },
+    {
+        chatType: 4,
+        chatId: MDM,
+        chatName: "Ada, Bob, Cy",
+        dmPartnerUser: { userId: "" },
+        mdmMembers: [
+            { userId: "u-ada", userName: "Ada Lovelace", avatarImgPath: "ada.png" },
+            { userId: "u-bob", userName: "Bob Barker" },
+            { userId: "u-cy", userName: "Cy Young" },
+            { userId: "u-dee", userName: "Dee Dee" },
+        ],
+    },
+];
+
+const withMembers = (members: Array<{ userId: string; userName: string }>) => [
+    { ...chats[4], mdmMembers: members },
 ];
 
 const line = (kind: string, id: string, text: string, extra: Record<string, unknown> = {}) => ({
@@ -186,10 +201,144 @@ describe("a chat line's icon", () => {
         expect(slot.querySelector('svg[data-testid="AssignmentIcon"]')).not.toBeNull();
     });
 
-    it("multi-person DM: the people mark", () => {
-        const { container } = renderBody([line("mdm", MDM, "Ada, Bob: 2 messages")]);
+    it("multi-person DM: the chat list's stack of member faces (MDMAvatar), three at most", () => {
+        const { container } = renderBody([line("mdm", MDM, "Ada, Bob, Cy: 2 messages")]);
+        const slot = slotOf(rowOf(container, "Ada, Bob"))!;
+        // Ada has a picture; Bob and Cy show their initial; the fourth member is not drawn.
+        expect(slot.querySelectorAll("img").length).toBe(1);
+        expect(slot.querySelector("img")?.getAttribute("src")).toContain("ada.png");
+        expect(slot.textContent).toBe("BC");
+        expect(slot.querySelector('svg[data-testid="PeopleRoundedIcon"]')).toBeNull();
+    });
+
+    it("multi-person DM whose members are not known yet: the people glyph", () => {
+        const { container } = renderBody([line("mdm", MDM, "Ada, Bob, Cy: 2 messages")], {
+            allChats: withMembers([]),
+        });
         const slot = slotOf(rowOf(container, "Ada, Bob"))!;
         expect(slot.querySelector('svg[data-testid="PeopleRoundedIcon"]')).not.toBeNull();
+    });
+
+    it("multi-person DM: no presence dot, no pause moon (a mark, not a control)", () => {
+        const { container } = renderBody([line("mdm", MDM, "Ada, Bob, Cy: 2 messages")]);
+        const slot = slotOf(rowOf(container, "Ada, Bob"))!;
+        expect(slot.querySelector('[aria-label*="aused"]')).toBeNull();
+        // Only the faces (3 absolutely placed members) live in the stack.
+        expect(slot.firstElementChild?.children.length).toBe(3);
+    });
+});
+
+describe("the text edge: every chat line of a section starts its text at one edge", () => {
+    const widthOf = (row: HTMLElement) => getComputedStyle(slotOf(row)!).width;
+    const margin = (row: HTMLElement) =>
+        getComputedStyle(row.querySelector<HTMLElement>("span[aria-hidden]")!).marginInlineEnd;
+
+    it("without a stack every slot is one avatar wide (20px), as before", () => {
+        const { container } = renderBody([
+            line("dm", DM, "Ada Lovelace: 2 messages"),
+            line("gm", GM, "Design crew: 4 messages"),
+        ]);
+        expect(widthOf(rowOf(container, "Ada Lovelace"))).toBe("20px");
+        expect(widthOf(rowOf(container, "Design crew"))).toBe("20px");
+    });
+
+    it("a stack of three faces widens the slot of EVERY chat line (42px), the stack's own width", () => {
+        const { container } = renderBody([
+            line("dm", DM, "Ada Lovelace: 2 messages"),
+            line("mdm", MDM, "Ada, Bob, Cy: 2 messages"),
+            line("gm", GM, "Design crew: 4 messages"),
+            line("pm", PM, "Genos: 3 messages"),
+        ]);
+        for (const text of ["Ada Lovelace", "Ada, Bob", "Design crew", "Genos"]) {
+            expect(widthOf(rowOf(container, text))).toBe("42px");
+        }
+        // The stack is exactly as wide as the slot: three 20px faces, 11px apart.
+        const stack = slotOf(rowOf(container, "Ada, Bob"))!.firstElementChild as HTMLElement;
+        expect(getComputedStyle(stack).width).toBe("42px");
+    });
+
+    it("several stacks do not add up: the slot is the widest stack, not their sum", () => {
+        const MDM2 = "77777777-7777-4777-8777-777777777777";
+        const { container } = renderBody(
+            [
+                line("mdm", MDM, "Ada, Bob, Cy: 2 messages"),
+                line("mdm", MDM2, "Eve, Fay: 5 messages"),
+                line("mdm", MDM, "Ada, Bob, Cy: 3 messages"),
+            ],
+            {
+                allChats: [
+                    ...chats,
+                    {
+                        chatType: 4,
+                        chatId: MDM2,
+                        chatName: "Eve, Fay",
+                        dmPartnerUser: { userId: "" },
+                        mdmMembers: [
+                            { userId: "u-eve", userName: "Eve Eden" },
+                            { userId: "u-fay", userName: "Fay Wray" },
+                        ],
+                    },
+                ],
+            }
+        );
+        expect(widthOf(rowOf(container, "Eve, Fay"))).toBe("42px");
+    });
+
+    it("a stack of two faces needs 31px, and the slot follows it", () => {
+        const { container } = renderBody(
+            [
+                line("dm", DM, "Ada Lovelace: 2 messages"),
+                line("mdm", MDM, "Ada, Bob, Cy: 2 messages"),
+            ],
+            {
+                allChats: [
+                    chats[0],
+                    ...withMembers([
+                        { userId: "u-ada", userName: "Ada Lovelace" },
+                        { userId: "u-bob", userName: "Bob Barker" },
+                    ]),
+                ],
+            }
+        );
+        expect(widthOf(rowOf(container, "Ada Lovelace"))).toBe("31px");
+        expect(widthOf(rowOf(container, "Ada, Bob"))).toBe("31px");
+    });
+
+    it("a line that keeps the emoji keeps the text edge too (the emoji's own 20px, then the rest)", () => {
+        const { container } = renderBody([
+            line("mdm", MDM, "Ada, Bob, Cy: 2 messages"),
+            line("gm", GONE, "Old room: 2 messages"),
+        ]);
+        const row = rowOf(container, "Old room");
+        expect(slotOf(row)).toBeNull();
+        expect(row.textContent).toContain("💬");
+        expect(getComputedStyle(row.querySelector("span[aria-hidden]")!).width).toBe("20px");
+        expect(margin(row)).toBe("22px");
+    });
+
+    it("a section with no stack leaves an emoji line exactly as it was (no extra margin)", () => {
+        const { container } = renderBody([
+            line("gm", GM, "Design crew: 4 messages"),
+            line("gm", GONE, "Old room: 2 messages"),
+        ]);
+        expect(margin(rowOf(container, "Old room"))).toBe("0px");
+    });
+
+    it("a stack on a line hidden behind 'Show more' still sets the edge of the lines shown", () => {
+        const many = Array.from({ length: 8 }, (_, i) => line("gm", GM, `Room ${i}: 1 message`));
+        const { container } = renderBody([...many, line("mdm", MDM, "Ada, Bob, Cy: 2 messages")]);
+        expect(container.textContent).not.toContain("Ada, Bob, Cy");
+        expect(widthOf(rowOf(container, "Room 0"))).toBe("42px");
+    });
+
+    it("the slot's content starts at the inline start (so RTL puts it on the right)", () => {
+        const { container } = renderBody([
+            line("dm", DM, "Ada Lovelace: 2 messages"),
+            line("mdm", MDM, "Ada, Bob, Cy: 2 messages"),
+        ]);
+        expect(getComputedStyle(slotOf(rowOf(container, "Ada Lovelace"))!).justifyContent).toBe(
+            "flex-start"
+        );
     });
 });
 
@@ -249,7 +398,7 @@ describe("accessibility: the avatar is decorative", () => {
             line("dm", DM, "Ada Lovelace: 2 messages"),
             line("gm", GM, "Design crew: 4 messages"),
             line("pm", PM, "Genos: 3 messages"),
-            line("mdm", MDM, "Ada, Bob: 2 messages"),
+            line("mdm", MDM, "Ada, Bob, Cy: 2 messages"),
         ]);
         const slots = container.querySelectorAll<HTMLElement>("[data-report-chat-icon]");
         expect(slots.length).toBe(4);
