@@ -230,6 +230,41 @@ describe("a pushed to-do change reaches the open page", () => {
         expect(ids(result)).toEqual([1, 2, 3]);
     });
 
+    it("an edit made while the re-read is in flight is not overwritten by the older answer", async () => {
+        const { result } = await boot();
+        let release: (g: TodoGroupProps[]) => void = () => {};
+        loadGroups.mockImplementationOnce(() => new Promise((r) => (release = r)));
+        await push({ teamId: "t1" });
+        await tick(PUSH_REFRESH_DELAY_MS);
+
+        // The person ticks item 1 off while the read is out; the read answers with the old state.
+        act(() => {
+            result.current.setGroups((prev) =>
+                prev.map((g) => ({
+                    ...g,
+                    items: g.items.map((i) => (i.itemId === 1 ? { ...i, isCompleted: true } : i)),
+                }))
+            );
+        });
+        await act(async () => release([group([mkItem(1), mkItem(2)])]));
+        expect(result.current.groups[0].items[0].isCompleted).toBe(true);
+
+        // It re-reads once more, and the server (which has the tick by now) is what lands.
+        loadGroups.mockResolvedValue([group([mkItem(1, { isCompleted: true }), mkItem(2)])]);
+        await tick(PUSH_REFRESH_DELAY_MS * 2);
+        expect(result.current.groups[0].items[0].isCompleted).toBe(true);
+        expect(loadGroups.mock.calls.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it("a loader that fails does not lose the others or raise", async () => {
+        const { result } = await boot();
+        loadReminders.mockRejectedValue(new Error("boom"));
+        loadGroups.mockResolvedValue([group([mkItem(1), mkItem(2), mkItem(3)])]);
+        await push({ teamId: "t1" });
+        await tick(PUSH_REFRESH_DELAY_MS);
+        expect(ids(result)).toEqual([1, 2, 3]);
+    });
+
     it("stops listening when the page unmounts", async () => {
         const { unmount } = await boot();
         loadGroups.mockClear();

@@ -803,15 +803,21 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
     // (a new to-do can bring a tag and a reminder with it), without replacing what is being typed
     // (`todoPushSync`). Latest answer wins: an older, slower read never lands over a newer one.
     const pushSeqRef = useRef(0);
-    const reloadAfterPush = useCallback(async () => {
-        if (!myself.userId || !myself.teamId) return;
+    /** Re-reads and applies. Returns false when the answer was NOT applied because the page changed
+     *  under it (an edit made while the read was in flight, which the read cannot know about):
+     *  the caller reads again rather than put an older snapshot over a newer edit. */
+    const reloadAfterPush = useCallback(async (): Promise<boolean> => {
+        if (!myself.userId || !myself.teamId) return true;
         const seq = ++pushSeqRef.current;
+        const shown = groupsRef.current;
+        // One loader failing must not discard the others, nor reject out of a fire-and-forget call.
         const [fresh, cats, reminders] = await Promise.all([
-            loadTodoGroups(myself, accessToken),
-            loadTodoCategories(accessToken, myself),
-            loadTodoReminders(accessToken),
+            loadTodoGroups(myself, accessToken).catch(() => undefined),
+            loadTodoCategories(accessToken, myself).catch(() => undefined),
+            loadTodoReminders(accessToken).catch(() => undefined),
         ]);
-        if (seq !== pushSeqRef.current) return;
+        if (seq !== pushSeqRef.current) return true;
+        if (groupsRef.current !== shown) return false;
         if (fresh) setGroups((prev) => mergeFreshGroups(prev, fresh));
         if (cats) setCategories((prev) => keepIfEqual(prev, cats));
         if (reminders) {
@@ -823,6 +829,7 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                 return same ? prev : next;
             });
         }
+        return true;
     }, [accessToken, myself]);
     const pushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const reloadAfterPushRef = useRef(reloadAfterPush);
@@ -839,7 +846,9 @@ export const useTodoGroups = (myself: UserProps, accessToken: string | null) => 
                     arm();
                     return;
                 }
-                void reloadAfterPushRef.current();
+                void reloadAfterPushRef.current().then((applied) => {
+                    if (!applied) arm();
+                });
             }, PUSH_REFRESH_DELAY_MS);
         };
         const handler = (e: Event) => {

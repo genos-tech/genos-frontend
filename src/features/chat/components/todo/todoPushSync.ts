@@ -44,15 +44,17 @@ export function mergeFreshGroups(
     const merged = fresh.map((group) => {
         const before = prevGroups.get(group.groupId);
         if (!before) return group;
-        const prevItems = new Map((before.items ?? []).map((i) => [i.itemId, i]));
+        const beforeItems = before.items ?? [];
+        const prevItems = new Map(beforeItems.map((i) => [i.itemId, i]));
         const items = (group.items ?? []).map((item) => {
             const old = prevItems.get(item.itemId);
             return old ? keepIfEqual(old, item) : item;
         });
         const sameItems =
-            items.length === (before.items ?? []).length &&
-            items.every((item, index) => item === before.items[index]);
-        const next = sameItems ? { ...group, items: before.items } : { ...group, items };
+            items.length === beforeItems.length &&
+            items.every((item, index) => item === beforeItems[index]);
+        const next =
+            sameItems && before.items ? { ...group, items: before.items } : { ...group, items };
         return keepIfEqual(before, next);
     });
     const unchanged = merged.length === prev.length && merged.every((g, i) => g === prev[i]);
