@@ -159,6 +159,15 @@ function aiAppActivity(
     } as ActivityMessageProps;
 }
 
+/** The task comment's id from a mirror message's metadata, when it is a positive integer. */
+const taskCommentIdOf = (metadata: unknown): { taskCommentId?: number } => {
+    const id =
+        metadata && typeof metadata === "object"
+            ? (metadata as Record<string, unknown>).taskCommentId
+            : undefined;
+    return typeof id === "number" && Number.isInteger(id) && id > 0 ? { taskCommentId: id } : {};
+};
+
 export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): ActivityMessageProps {
     // Channel-less "surface" mention (task body / note). There's no
     // backing Message/Channel, so render + route from `meta`. `chatType`
@@ -328,6 +337,7 @@ export function v3ActivityToLegacy(a: V3ActivityWire, myself: UserProps): Activi
         // `taskCommentId` in metadata — the router uses this to treat them
         // as real-user task comments, not bot lifecycle bubbles.
         isTaskComment: !!(msg.metadata && (msg.metadata as Record<string, unknown>).taskCommentId),
+        ...taskCommentIdOf(msg.metadata),
         ...viaAppOf(a.meta),
     } as ActivityMessageProps;
 }

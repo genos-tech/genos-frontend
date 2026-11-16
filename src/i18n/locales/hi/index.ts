@@ -4782,6 +4782,7 @@ export const hi: DeepPartial<Messages> = {
                 projectNamed: "प्रोजेक्ट • {name}",
                 project: "प्रोजेक्ट चैट",
                 groupDm: "ग्रुप DM",
+                note: "नोट",
                 unknown: "चैट",
             },
             settingsChatType: {

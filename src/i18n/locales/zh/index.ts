@@ -3372,6 +3372,7 @@ export const zh: DeepPartial<Messages> = {
                 projectNamed: "项目 • {name}",
                 project: "项目聊天",
                 groupDm: "多人私信",
+                note: "笔记",
                 unknown: "聊天",
             },
             settingsChatType: {

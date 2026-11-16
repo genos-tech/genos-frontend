@@ -4,6 +4,7 @@ import {
     aiAppHeadline,
     inAppPath,
 } from "../../features/chat/utils/aiAppNotice";
+import { isActivityItemType } from "../../features/inbox/utils/inboxItemTypes";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { fmt, getMessages } from "../../i18n";
@@ -12,6 +13,7 @@ import { ActivityMessageProps, NewMessageProps, NewThreadMessageProps } from "..
 import { InboxItemProps } from "../../types/common";
 import { buildAvatarSrc } from "../../utils/avatarSrc";
 import { CATEGORY_BY_KEY, NotificationCategory } from "./categories";
+import { taskPath } from "./intentDestination";
 import { NotificationIntent } from "./types";
 
 /**
@@ -161,6 +163,12 @@ const extractInboxText = (body: unknown): string => {
 const labelForChatType = (chatType: number, chatName?: string): string => {
     const labels = getMessages().services.notifications.routerChatType;
     switch (chatType) {
+        // Note surfaces (personal, task, chat note): a mention there read "mentioned you in Chat"
+        // (MIP-1659), from the default below.
+        case 6:
+        case 7:
+        case 8:
+            return labels.note;
         case 1:
             return labels.direct;
         case 2:
@@ -449,6 +457,20 @@ export const buildActivityIntent = (
 
     const isNoteSurface =
         activity.chatType === 6 || activity.chatType === 7 || activity.chatType === 8;
+    // A task comment (or a mention in one) is a PM thread reply under the hood, so the source names
+    // the project chat and its thread, and a click opened the CHAT (MIP-1659). Open the task at the
+    // comment instead. The activity has the task but not its project; the project chat it lives in
+    // does, and a member of the project has that chat loaded. Without it the chat stays the target.
+    const commentTaskUrl = (() => {
+        if (!isTaskComment || !activity.taskId) return undefined;
+        const projectId =
+            activity.projectId ||
+            useCM.allChats.find((c) => c.chatType === 3 && c.chatId === String(activity.chatId))
+                ?.project?.projectId;
+        return projectId
+            ? taskPath(projectId, activity.taskId, activity.taskCommentId)
+            : undefined;
+    })();
     // Chat-note (surface 8) mentions carry their PARENT chat's routing
     // (chatType/chatId/threadId) so the click handler can deep-link to the
     // note. Use it for chatType/chatId/threadId (keeping noteId + surfaceType
@@ -484,6 +506,7 @@ export const buildActivityIntent = (
                 : activity.threadId || undefined,
         },
         title,
+        ...(commentTaskUrl ? { url: commentTaskUrl } : {}),
         // A change made through the official Claude / ChatGPT app (MIP-1608): the toast
         // shows that app's mark instead of the project / sender avatar. The adapter kept
         // only the two exact family strings.
@@ -535,6 +558,9 @@ const buildInboxIntent = (
         icon: buildAvatarSrc(useTEM.currentTeam?.teamImgPath),
         id: `inbox:${item.itemId}`,
         title,
+        // The item itself, on the tab it lives on: a request opened on Activities, where it is not
+        // listed (MIP-1659).
+        url: `/workspace/inbox/${isActivityItemType(item.itemType) ? "activities" : "requests"}/${item.itemId}`,
         // `source` is left undefined — inbox items don't have a per-chat
         // mute target and bypass per-chat mute on purpose.
     };

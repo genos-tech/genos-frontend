@@ -266,6 +266,7 @@ export const services = {
             projectNamed: "Project • {name}",
             project: "Project chat",
             groupDm: "Group DM",
+            note: "Note",
             unknown: "Chat",
         },
         settingsChatType: {
