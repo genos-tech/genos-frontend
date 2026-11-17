@@ -52,6 +52,16 @@ function GroupedNoteSectionComponent({
     menuItems,
 }: GroupedNoteSectionProps) {
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+    // The rows of a folder nobody has opened are not mounted (MIP-1676). They used to be, behind a
+    // collapsed (0fr) grid row, so every row of every closed folder was rendered, and re-rendered
+    // on each commit of the app above it: with 720 task notes that was 22,000 DOM nodes and about
+    // half a second per commit. Once opened a folder keeps its rows (the close animation, and
+    // anything inside them, such as a nested folder's own state, stay as they were).
+    //
+    // Set while rendering (not in an effect) so the rows mount in the same pass that opens the
+    // folder: an effect would paint the folder open and empty first.
+    const [hasBeenOpened, setHasBeenOpened] = useState(defaultExpanded);
+    if (isExpanded && !hasBeenOpened) setHasBeenOpened(true);
     // Keeps the "⋯" trigger visible while its portal menu is open, or the
     // hover-reveal hides it as the pointer moves onto the menu.
     const [menuOpen, setMenuOpen] = useState(false);
@@ -162,7 +172,7 @@ function GroupedNoteSectionComponent({
                         },
                     }}
                 >
-                    <List sx={navNestedListSx}>{children}</List>
+                    <List sx={navNestedListSx}>{hasBeenOpened ? children : null}</List>
                 </Box>
             </ListItem>
         </Box>
