@@ -512,11 +512,15 @@ describe("a real milestone", () => {
     });
 
     it("is about 9 columns wide, where one row of tasks was 27 cards (8,300 px)", () => {
-        expect(widthOf(result)).toBeLessThanOrEqual(10 * (NODE_WIDTH + COL_GAP));
-        expect(widestRow(result)).toBeLessThanOrEqual(6);
+        // The two outside tasks stand in a band at the side (MIP-1683): the tree is what is measured.
+        const tree = new Map([...result].filter(([id]) => !GHOSTS.has(id)));
+        expect(widthOf(tree)).toBeLessThanOrEqual(10 * (NODE_WIDTH + COL_GAP));
+        // Sub-trees of different phases now sit side by side in one row (8 cards across 9 columns),
+        // where outside tasks used to hold the columns apart: never wider than the tree itself.
+        expect(widestRow(tree)).toBeLessThanOrEqual(9);
     });
 
-    it("draws the two outside tasks beside the task that blocks them (MIP-598)", () => {
+    it("draws the two outside tasks right of the task that blocks them, at its height (MIP-598, MIP-1683)", () => {
         const blocker = result.get(1255)!;
         for (const ghost of GHOSTS) {
             const at = result.get(ghost)!;

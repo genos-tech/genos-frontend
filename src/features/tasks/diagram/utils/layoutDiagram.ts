@@ -17,11 +17,17 @@ import type { Edge, Node } from "@xyflow/react";
  *  3. Each subtree is a block. Blocks whose columns don't overlap share a row
  *     (so phases form a staircase, not a tower); the rest stack in lanes.
  *  4. Tasks with no dependency anywhere inside them have no column of their own:
- *     they wrap into rows of about FREE_ROW_COLUMNS cards, so thirty unrelated
- *     tasks make a block, not a 9,000 px line.
- *  5. An outside task (a "ghost") is drawn in the group of the card it connects to.
- *  6. The result is deterministic: ties break by task id, and a dependency loop
- *     (should one exist) drops one edge instead of hanging.
+ *     they wrap into rows of about FREE_ROW_COLUMNS cards (fewer or more to fit the
+ *     width of the canvas, `freeRowColumns`), so thirty unrelated tasks make a block,
+ *     not a 9,000 px line.
+ *  5. An outside task (a "ghost") has no place in the tree, so it is not drawn among the
+ *     milestone's own cards. Those that BLOCK a card stand in a band on the far left, those
+ *     only blocked by one in a band on the far right, each beside the card it connects to
+ *     (MIP-1683; they used to sit among the children, in the rows of the group).
+ *  6. Among cards that could take the same place, active work comes first: the caller passes
+ *     a rank (WIP, Blocked, Open, Pending, closed; then priority), and ties break by task id.
+ *  7. The result is deterministic, and a dependency loop (should one exist) drops one edge
+ *     instead of hanging.
  *
  * Pure and self-contained: no state, no DOM, no layout library. Card and edge
  * drawing are unchanged; only positions come from here.
@@ -38,6 +44,11 @@ export const LANE_GAP = 50;
 /** Unrelated tasks wrap after about this many cards per row. */
 export const FREE_ROW_COLUMNS = 5;
 export const MARGIN = 24;
+/** The label above a band of outside tasks, and the room between it and the first card. */
+export const BAND_LABEL_HEIGHT = 26;
+const BAND_LABEL_GAP = 12;
+/** Vertical gap between two outside tasks in a band. */
+const BAND_GAP = 30;
 
 const COL_STEP = NODE_WIDTH + COL_GAP;
 
@@ -50,8 +61,15 @@ export type DiagramLayoutInput = {
     parentOf: ReadonlyMap<number, number>;
     /** blocker -> blocked. Edges to an unknown id are ignored. */
     dependencies: ReadonlyArray<{ blocker: number; blocked: number }>;
-    /** Outside tasks: drawn next to the card they connect to. */
+    /** Outside tasks: drawn in a band at the side, beside the card they connect to. */
     ghostIds: ReadonlySet<number>;
+    /**
+     * Rank of each card among its siblings (lower first; a card with none counts as 0), so that
+     * active work comes first. Ties break by id. The root is always first.
+     */
+    order?: ReadonlyMap<number, number>;
+    /** How many columns a row of unrelated tasks wraps at. Default `FREE_ROW_COLUMNS`. */
+    freeRowColumns?: number;
 };
 
 export type Position = { x: number; y: number };
@@ -59,12 +77,20 @@ export type Position = { x: number; y: number };
 /** Where every card goes, and which cards were laid out in each card's group (MIP-1682). */
 export type DiagramLayout = {
     positions: Map<number, Position>;
-    /**
-     * card -> the cards drawn in the group under it: its children AND the outside tasks (ghosts)
-     * that were placed there, which have no parent-child line but share its rows. A line to a
-     * child has to clear all of them, so the router needs the group, not just the tree.
-     */
+    /** card -> the cards drawn in the group under it (its children). */
     groups: Map<number, number[]>;
+    /** The bands of outside tasks: where each is, and where its label goes. */
+    bands: DiagramBand[];
+};
+
+export type DiagramBand = {
+    /** `blockers`: outside tasks that block a card here (left). `blocked`: outside tasks a card
+     *  here blocks (right). */
+    side: "blockers" | "blocked";
+    /** The band's column, and the top of its label. */
+    x: number;
+    labelY: number;
+    ids: number[];
 };
 
 /**
@@ -144,11 +170,8 @@ const merge = (blocks: Block[], height: number): Block => ({
 });
 
 /** Wrap blocks with no columns of their own into rows, left to right. */
-const shelfPack = (blocks: Block[], baseX: number): Block => {
-    const limit = Math.max(
-        FREE_ROW_COLUMNS * COL_STEP - COL_GAP,
-        ...blocks.map((b) => b.maxX - b.minX)
-    );
+const shelfPack = (blocks: Block[], baseX: number, rowColumns: number): Block => {
+    const limit = Math.max(rowColumns * COL_STEP - COL_GAP, ...blocks.map((b) => b.maxX - b.minX));
     const placed: Block[] = [];
     let x = baseX;
     let rowTop = 0;
@@ -168,8 +191,17 @@ const shelfPack = (blocks: Block[], baseX: number): Block => {
 };
 
 export const layoutDiagramWithGroups = (input: DiagramLayoutInput): DiagramLayout => {
-    const ids = [...new Set(input.nodeIds)].sort((a, b) => a - b);
+    const allIds = [...new Set(input.nodeIds)].sort((a, b) => a - b);
+    // The tree is laid out without the outside tasks: they stand in bands beside it, so a
+    // dependency on one must not push a real card a column to the right.
+    const ids = allIds.filter((id) => !input.ghostIds.has(id));
     const known = new Set(ids);
+    const rowColumns = Math.max(1, Math.floor(input.freeRowColumns ?? FREE_ROW_COLUMNS));
+    // Siblings that could take the same place: active work first, then the lower id.
+    const rootId = input.rootId;
+    const precedes = (a: number, b: number) =>
+        (a === rootId ? -Infinity : (input.order?.get(a) ?? 0)) -
+            (b === rootId ? -Infinity : (input.order?.get(b) ?? 0)) || a - b;
     const column = dependencyColumns(ids, input.dependencies);
     const hasDependency = new Set<number>();
     for (const { blocker, blocked } of input.dependencies) {
@@ -184,22 +216,11 @@ export const layoutDiagramWithGroups = (input: DiagramLayoutInput): DiagramLayou
     for (const [child, p] of input.parentOf) {
         if (known.has(child) && known.has(p) && child !== p) parent.set(child, p);
     }
-    const attachedTo = (id: number): number | null => {
-        if (parent.has(id)) return parent.get(id) ?? null;
-        if (!input.ghostIds.has(id)) return null;
-        // A ghost goes in the group of the lowest-id real card it connects to.
-        const neighbours = input.dependencies
-            .flatMap((d) => (d.blocker === id ? [d.blocked] : d.blocked === id ? [d.blocker] : []))
-            .filter((n) => known.has(n) && !input.ghostIds.has(n))
-            .sort((a, b) => a - b);
-        if (neighbours.length === 0) return null;
-        return parent.get(neighbours[0]) ?? neighbours[0];
-    };
     const children = new Map<number, number[]>();
     const topLevel: number[] = [];
     for (const id of ids) {
-        const at = attachedTo(id);
-        if (at == null || at === id) topLevel.push(id);
+        const at = parent.get(id);
+        if (at === undefined || at === id) topLevel.push(id);
         else children.set(at, [...(children.get(at) ?? []), id]);
     }
 
@@ -207,24 +228,24 @@ export const layoutDiagramWithGroups = (input: DiagramLayoutInput): DiagramLayou
     const columnX = (id: number) => (column.get(id) ?? 0) * COL_STEP;
 
     const layoutGroup = (memberIds: number[]): Block | null => {
-        const blocks: Array<{ block: Block; key: number }> = [];
+        const blocks: Array<{ block: Block; id: number }> = [];
         for (const id of memberIds) {
             const block = layoutNode(id);
-            // The root sorts before everything else, whatever its id.
-            if (block) blocks.push({ block, key: id === input.rootId ? -Infinity : id });
+            if (block) blocks.push({ block, id });
         }
         if (blocks.length === 0) return null;
         const connected = blocks
             .filter((b) => b.block.connected)
-            .sort((a, b) => a.block.minX - b.block.minX || a.key - b.key);
-        const free = blocks.filter((b) => !b.block.connected).sort((a, b) => a.key - b.key);
+            .sort((a, b) => a.block.minX - b.block.minX || precedes(a.id, b.id));
+        const free = blocks.filter((b) => !b.block.connected).sort((a, b) => precedes(a.id, b.id));
         const candidates = connected.map((b) => b.block);
         if (free.length > 0) {
             const base = connected.length > 0 ? connected[0].block.minX : 0;
             candidates.push(
                 shelfPack(
                     free.map((b) => b.block),
-                    base
+                    base,
+                    rowColumns
                 )
             );
         }
@@ -299,7 +320,65 @@ export const layoutDiagramWithGroups = (input: DiagramLayoutInput): DiagramLayou
     };
     place(roots, 0);
     place(extra, roots ? roots.height + LANE_GAP : 0);
-    return { positions: result, groups: children };
+
+    const bands = placeBands(input, allIds, result);
+    return { positions: result, groups: children, bands };
+};
+
+/**
+ * Puts the outside tasks in a band at each side of the tree (MIP-1683): those that block a card on
+ * the left, the rest on the right, each at the height of the card it connects to, pushed down so
+ * two never overlap. The tree is shifted right to make room for the left band. Writes the
+ * positions into `positions`.
+ */
+const placeBands = (
+    input: DiagramLayoutInput,
+    allIds: readonly number[],
+    positions: Map<number, Position>
+): DiagramBand[] => {
+    const ghosts = allIds.filter((id) => input.ghostIds.has(id));
+    if (ghosts.length === 0) return [];
+    const inTree = (id: number) => positions.has(id) && !input.ghostIds.has(id);
+
+    type Ghost = { id: number; side: "blockers" | "blocked"; anchorY: number };
+    const classified: Ghost[] = ghosts.map((id) => {
+        const blocks = input.dependencies.filter((d) => d.blocker === id && inTree(d.blocked));
+        const blockedBy = input.dependencies.filter((d) => d.blocked === id && inTree(d.blocker));
+        const side = blocks.length > 0 ? "blockers" : "blocked";
+        const touching =
+            side === "blockers" ? blocks.map((d) => d.blocked) : blockedBy.map((d) => d.blocker);
+        const anchorY =
+            touching.length > 0 ? Math.min(...touching.map((t) => positions.get(t)!.y)) : Infinity;
+        return { id, side, anchorY };
+    });
+
+    const left = classified.filter((g) => g.side === "blockers");
+    // Make room on the left for the band: the whole tree moves one column right.
+    if (left.length > 0) {
+        for (const [id, at] of positions) positions.set(id, { x: at.x + COL_STEP, y: at.y });
+    }
+    const treeCards = [...positions.values()];
+    const treeRight =
+        treeCards.length > 0 ? Math.max(...treeCards.map((p) => p.x + NODE_WIDTH)) : MARGIN;
+
+    const bands: DiagramBand[] = [];
+    for (const side of ["blockers", "blocked"] as const) {
+        const members = classified
+            .filter((g) => g.side === side)
+            .sort((a, b) => a.anchorY - b.anchorY || a.id - b.id);
+        if (members.length === 0) continue;
+        const x = side === "blockers" ? MARGIN : treeRight + COL_GAP;
+        let y = MARGIN + BAND_LABEL_HEIGHT + BAND_LABEL_GAP;
+        for (const g of members) {
+            // Beside its card; if the one above is in the way, just below that one. One with
+            // nothing real to connect to (anchor at infinity) goes below all the rest.
+            y = Math.max(y, Number.isFinite(g.anchorY) ? g.anchorY : y);
+            positions.set(g.id, { x, y });
+            y += NODE_HEIGHT + BAND_GAP;
+        }
+        bands.push({ side, x, labelY: MARGIN, ids: members.map((g) => g.id) });
+    }
+    return bands;
 };
 
 export const computeDiagramLayout = (input: DiagramLayoutInput): Map<number, Position> =>
@@ -311,7 +390,11 @@ export const computeDiagramLayout = (input: DiagramLayoutInput): Map<number, Pos
  * `width` and `height` set, so React Flow needn't measure before first paint).
  */
 /** What `computeDiagramLayout` needs, read off React Flow's nodes and edges. */
-export const diagramInputOf = (nodes: Node[], edges: Edge[]): DiagramLayoutInput => {
+export const diagramInputOf = (
+    nodes: Node[],
+    edges: Edge[],
+    options: Pick<DiagramLayoutInput, "order" | "freeRowColumns"> = {}
+): DiagramLayoutInput => {
     const parentOf = new Map<number, number>();
     const dependencies: Array<{ blocker: number; blocked: number }> = [];
     for (const edge of edges) {
@@ -328,7 +411,14 @@ export const diagramInputOf = (nodes: Node[], edges: Edge[]): DiagramLayoutInput
         if (data.isExternal) ghostIds.add(Number(node.id));
         if (data.isRoot && !data.isExternal) rootId = Number(node.id);
     }
-    return { nodeIds: nodes.map((n) => Number(n.id)), rootId, parentOf, dependencies, ghostIds };
+    return {
+        nodeIds: nodes.map((n) => Number(n.id)),
+        rootId,
+        parentOf,
+        dependencies,
+        ghostIds,
+        ...options,
+    };
 };
 
 /** The nodes with their position, width and height set. */

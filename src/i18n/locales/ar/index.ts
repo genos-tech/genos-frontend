@@ -3303,6 +3303,12 @@ export const ar: DeepPartial<Messages> = {
                 blocks: "كتل",
                 externalTask: "مهمة خارجية",
             },
+            // The captions over the two bands of outside tasks (MIP-1683): the ones on the left block
+            // a card of the graph, the ones on the right are blocked by one.
+            bands: {
+                blockers: "محظور بواسطة مهام خارجية",
+                blocked: "يحظر مهام خارجية",
+            },
             tooltips: {
                 tasksRemaining: "متبقٍ {remaining} من أصل {total} مهمة",
                 healthSummary: "مغلق {actualPct}% · المتوقع {expectedPct}%",

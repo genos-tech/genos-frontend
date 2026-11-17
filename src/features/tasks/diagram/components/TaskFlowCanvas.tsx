@@ -83,9 +83,11 @@ import {
 } from "../types";
 import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
 import { FIT_PADDING, planInitialViewport } from "../utils/initialViewport";
-import { layoutDiagramGraph } from "../utils/layoutDiagramGraph";
+import { BAND_LABEL_NODE_TYPE, layoutDiagramGraph } from "../utils/layoutDiagramGraph";
+import { activeWorkRank, rowColumnsFor } from "../utils/layoutOptions";
 import { applyLineage } from "../utils/lineage";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
+import { BandLabelNode } from "./BandLabelNode";
 import { DependencyEdge } from "./DependencyEdge";
 import { DiagramLegend } from "./DiagramLegend";
 import { MilestoneNodeCard } from "./MilestoneNodeCard";
@@ -299,6 +301,7 @@ const buildSprintLookup = (
 const nodeTypes = {
     task: TaskNodeCard,
     milestone: MilestoneNodeCard,
+    [BAND_LABEL_NODE_TYPE]: BandLabelNode,
 };
 
 const edgeTypes = {
@@ -647,6 +650,9 @@ const CanvasInner = ({
     // effect below once the nodes are measured. Deferring like this is
     // what prevents the NaN-viewport bug — see that effect.
     const pendingFitRef = useRef(false);
+    // How early each card comes among its siblings (active work first), fixed the first time the
+    // card is laid out in this session: a status edit while the graph is open must not move cards.
+    const orderRankRef = useRef<Map<number, number>>(new Map());
     // The first placement of the view is instant: nothing to animate from but the unplaced
     // canvas. Later ones (the hide-closed toggle) glide.
     const viewPlacedRef = useRef(false);
@@ -1115,7 +1121,20 @@ const CanvasInner = ({
             );
             // Cards placed, and the parent-child lines to the later rows of a group routed
             // through the gaps between rows (MIP-1682).
-            const laid = layoutDiagramGraph(rawNodes, rawEdges);
+            const rank = orderRankRef.current;
+            for (const node of rawNodes) {
+                const id = Number(node.id);
+                const task = (node.data as TaskNodeData).task;
+                if (!rank.has(id) && task) {
+                    rank.set(id, activeWorkRank(task.status, task.priority));
+                }
+            }
+            const laid = layoutDiagramGraph(rawNodes, rawEdges, {
+                order: rank,
+                freeRowColumns: rowColumnsFor(
+                    flowStore.getState().width || window.innerWidth * 0.9
+                ),
+            });
             setNodes(laid.nodes);
             setEdges(laid.edges);
             // Don't fit here directly: on the first assemble (modal open)
@@ -1135,6 +1154,7 @@ const CanvasInner = ({
             hideClosed,
             highlightAssigneeId,
             t.tasks.diagram.untitled,
+            flowStore,
         ]
     );
 
@@ -1551,6 +1571,8 @@ const CanvasInner = ({
                             : `rgba(${rawTheme.light.surfaceCRgb}, 0.65)`
                     }
                     nodeColor={(n) => {
+                        // A caption over a band of outside tasks is no card.
+                        if (n.type === BAND_LABEL_NODE_TYPE) return "transparent";
                         const d = n.data as unknown as TaskNodeData;
                         if (d?.isExternal) return "#94a3b8";
                         if (d?.isMilestone) return "#f97316";

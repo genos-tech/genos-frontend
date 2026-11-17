@@ -1260,6 +1260,12 @@ export const tasks = {
             blocks: "Blocks",
             externalTask: "External task",
         },
+        // The captions over the two bands of outside tasks (MIP-1683): the ones on the left block
+        // a card of the graph, the ones on the right are blocked by one.
+        bands: {
+            blockers: "Blocked by outside tasks",
+            blocked: "Blocking outside tasks",
+        },
         tooltips: {
             // BurndownSparkline header chip.
             tasksRemaining: "{remaining} of {total} tasks remaining",
