@@ -137,6 +137,15 @@ export type NoteFolderInviteGroup = {
     id: string;
 };
 
+// One task above a task note's own task (MIP-1667): enough to draw its folder. `isMilestone` marks a
+// milestone's backing task, which is the root of the tasks in that milestone.
+export type TaskNoteAncestor = {
+    taskId: number;
+    title: string | null;
+    displayId: string | null;
+    isMilestone: boolean;
+};
+
 export type TaskNoteMetaProps = {
     noteType: number;
     noteId: number;
@@ -160,6 +169,10 @@ export type TaskNoteMetaProps = {
     // folder.
     parentTaskDisplayId?: string | null;
     parentTaskIsMilestone?: boolean | null;
+    // EVERY task above the note's own, ROOT FIRST (a milestone's backing task, then its tasks down to
+    // the parent). The sidebar nests a sub-task's folder inside its parent's with it, at any depth.
+    // Absent from an API that predates it: the sidebar then has only the parent fields above.
+    ancestors?: TaskNoteAncestor[];
     isMilestone?: boolean;
     milestoneId?: number | null;
     milestoneTitle?: string | null;

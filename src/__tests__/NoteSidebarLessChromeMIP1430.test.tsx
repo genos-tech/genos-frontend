@@ -5,8 +5,9 @@
  *     dashed "New ..." rows, and the My Notes row is the "move to the top level" drop target;
  *   - an empty list is one line with the way out in it;
  *   - the star has a name, is on Recents rows, and a folder's menu offers "Add to favorites";
- *   - task notes are project › task › note and chat notes chat › note (`flattenNoteGroups`);
- *   - a task row leads with its display-id chip and says its milestone on hover.
+ *   - chat notes are chat › note (`flattenNoteGroups`); task notes were project › task › note here and
+ *     are the task tree since MIP-1667;
+ *   - a task row leads with its display-id chip and says what it was part of on hover.
  *
  * jsdom cannot measure layout or hover; the look was checked in a browser (see the PR).
  */
@@ -27,7 +28,7 @@ import { NoteListState } from "../features/notes/common/components/NoteListState
 import { NoteTypeSection } from "../features/notes/common/components/NoteTypeSection";
 import { RecentNoteItem } from "../features/notes/common/components/RecentNoteItem";
 import { NoteUnreadProvider } from "../features/notes/common/context/NoteUnreadContext";
-import { chatRows, projectRows } from "../features/notes/common/utils/flattenNoteGroups";
+import { chatRows } from "../features/notes/common/utils/flattenNoteGroups";
 import { folderFavoriteMenuItem } from "../features/notes/common/utils/folderFavoriteMenuItem";
 import type { NoteManagementState } from "../hooks/notes/useNoteManagement";
 import { en } from "../i18n/locales/en";
@@ -332,46 +333,8 @@ describe("a task or chat row", () => {
     });
 });
 
-describe("which rows a project shows (project › task › note)", () => {
-    type T = { id: string };
-    type M = { milestoneId: number; directNotes: unknown[]; tasks: T[] };
-    const task = (id: string): T => ({ id });
-    const ms = (milestoneId: number, directNotes: number, tasks: T[]): M => ({
-        milestoneId,
-        directNotes: Array.from({ length: directNotes }),
-        tasks,
-    });
-
-    it("has no folder level for a milestone: its tasks sit beside the loose ones", () => {
-        const rows = projectRows<M, T>({
-            milestones: [ms(1, 0, [task("a"), task("b")])],
-            looseTasks: [task("c")],
-        });
-        expect(rows.map((r) => (r.kind === "task" ? r.task.id : "M"))).toEqual(["a", "b", "c"]);
-    });
-
-    it("tells each task which milestone it is in, and the loose ones none", () => {
-        const m = ms(1, 0, [task("a")]);
-        const rows = projectRows<M, T>({ milestones: [m], looseTasks: [task("c")] });
-        expect(rows[0]).toMatchObject({ kind: "task", milestone: m });
-        expect(rows[1]).not.toHaveProperty("milestone");
-    });
-
-    it("draws a milestone's own row only when it has notes of its own, before its tasks", () => {
-        const withNotes = ms(1, 2, [task("a")]);
-        const rows = projectRows<M, T>({
-            milestones: [withNotes, ms(2, 0, [task("b")])],
-            looseTasks: [],
-        });
-        expect(
-            rows.map((r) => (r.kind === "task" ? r.task.id : `M${r.milestone.milestoneId}`))
-        ).toEqual(["M1", "a", "b"]);
-    });
-
-    it("is empty for a project with nothing", () => {
-        expect(projectRows<M, T>({ milestones: [], looseTasks: [] })).toEqual([]);
-    });
-});
+// The project rows of Task Notes (project › task › note, a milestone as a tooltip) were replaced by the
+// real task tree in MIP-1667: see `TaskNoteFoldersMIP1667.test.ts`.
 
 describe("which rows Chat Notes shows (chat › note)", () => {
     it("lists the chats of every kind in one list, each with its kind's name, in order", () => {
