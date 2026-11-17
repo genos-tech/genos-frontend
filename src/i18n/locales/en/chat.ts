@@ -317,6 +317,7 @@ export const chat = {
             createdMilestoneWithTasks: "created milestone {name} with {taskCount} tasks",
             createdNote: "created note {name}",
             editedNote: "edited note {name}",
+            commentedNote: "commented on note {name}",
             createdTodo: "added to-do {name}",
             statusTask: "set {name} to {status}",
             statusTasks: "set {count} tasks to {status}",
