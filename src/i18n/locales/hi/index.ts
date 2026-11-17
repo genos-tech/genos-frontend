@@ -1690,10 +1690,14 @@ export const hi: DeepPartial<Messages> = {
             general: "सामान्य",
             newTagPlaceholder: "नया टैग",
             addTag: "टैग जोड़ें",
+            changeTag: "टैग बदलें",
             tags: {
                 manageTitle: "टैग प्रबंधित करें",
                 manageTooltip: "टैग प्रबंधित करें",
-                privateHint: "आपके टैग सिर्फ़ आपको दिखते हैं। नाम बदलने के लिए नाम पर क्लिक करें।",
+                privateHint:
+                    "आपके टैग सिर्फ़ आपको दिखते हैं। पेंसिल या नाम पर क्लिक करके नाम बदलें, और पैलेट से रंग बदलें।",
+                renameTag: "टैग का नाम बदलें",
+                manageMenu: "टैग प्रबंधित करें…",
                 emptyList: "अभी कोई टैग नहीं है। नीचे एक जोड़ें।",
                 createButton: "जोड़ें",
                 deleteConfirm: "हटाएँ",

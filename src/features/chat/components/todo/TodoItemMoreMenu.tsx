@@ -1,5 +1,3 @@
-import { useState } from "react";
-import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
@@ -10,7 +8,7 @@ import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Dropdown, IconButton, Input, MenuButton, useColorScheme } from "@mui/joy";
+import { Box, Dropdown, IconButton, MenuButton } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import {
@@ -20,11 +18,9 @@ import {
     MenuSurface,
 } from "../../../../components/ui/MoreMenu";
 import { useTranslation } from "../../../../i18n";
-import { g } from "../../../../theme/tokens";
 import { TodoCategoryProps } from "../../../../types/chat";
-import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
 import { useTodoDialogLayer } from "./TodoHostLayer";
-import { todoTagColor } from "./todoTagColor";
+import { TodoTagMenuRows } from "./TodoTagMenuRows";
 
 interface TodoItemMoreMenuProps {
     // Child rows get a Delete-only menu: subitems have no own deep link
@@ -34,6 +30,9 @@ interface TodoItemMoreMenuProps {
     currentCategoryId: number | null;
     onSelectCategory: (categoryId: number | null) => void;
     onCreateCategory: (name: string) => Promise<TodoCategoryProps | undefined>;
+    // Opens the manage-tags dialog (MIP-1652). Absent where the host has none, which leaves the
+    // row out.
+    onManageTags?: () => void;
     onCopyLink: () => void;
     linkCopied: boolean;
     // Opens the "remind me about this to-do" picker. Offered on child rows
@@ -66,16 +65,6 @@ interface TodoItemMoreMenuProps {
     onMoveToTomorrow?: () => void;
 }
 
-// The menu's rows are 44px on a touch screen (MenuSurface); the new-tag field and its add
-// button are the two controls that are not rows, so they get the same floor.
-const TOUCH_FLOOR = g.row.comfortable;
-const TAG_FIELD_TOUCH_SX = {
-    "@media (pointer: coarse)": { "--Input-minHeight": TOUCH_FLOOR, minHeight: TOUCH_FLOOR },
-} as const;
-const TAG_ADD_TOUCH_SX = {
-    "@media (pointer: coarse)": { minHeight: TOUCH_FLOOR, minWidth: TOUCH_FLOOR },
-} as const;
-
 // Consolidates the row's secondary actions (copy link, tag picker,
 // delete) behind one ⋮ trigger — five inline icon buttons per row was
 // too noisy. The tag picker (formerly the standalone CategoryPickerMenu
@@ -88,6 +77,7 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
         currentCategoryId,
         onSelectCategory,
         onCreateCategory,
+        onManageTags,
         onCopyLink,
         linkCopied,
         onRemindMe,
@@ -99,25 +89,9 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
         onAddSubitem,
         onMoveToTomorrow,
     } = props;
-    const isDark = useColorScheme().mode === "dark";
     const { t } = useTranslation();
     // Inside the to-do modal the menu opens above it (MIP-1047).
     const layer = useTodoDialogLayer();
-    const [newName, setNewName] = useState("");
-    const [creating, setCreating] = useState(false);
-
-    const handleCreate = async () => {
-        const trimmed = newName.trim();
-        if (!trimmed || creating) return;
-        setCreating(true);
-        const created = await onCreateCategory(trimmed);
-        if (created) {
-            onSelectCategory(created.categoryId);
-        }
-        setNewName("");
-        setCreating(false);
-    };
-
     return (
         <Dropdown>
             <AppTooltip title={t.chat.todoPane.moreOptions}>
@@ -205,50 +179,13 @@ export const TodoItemMoreMenu = (props: TodoItemMoreMenuProps) => {
                                 {t.chat.todoPane.tag}
                             </Box>
                         </MenuGroupLabel>
-                        <MenuRow
-                            selected={currentCategoryId === null}
-                            onClick={() => onSelectCategory(null)}
-                        >
-                            {t.chat.todoPane.general}
-                        </MenuRow>
-                        {categories.map((c) => (
-                            <MenuRow
-                                key={c.categoryId}
-                                selected={c.categoryId === currentCategoryId}
-                                onClick={() => onSelectCategory(c.categoryId)}
-                            >
-                                <ProjectTagChip
-                                    isDark={isDark}
-                                    label={c.name}
-                                    tagColor={todoTagColor(c)}
-                                />
-                            </MenuRow>
-                        ))}
-                        <Box sx={{ display: "flex", gap: 0.5, p: 0.5 }}>
-                            <Input
-                                placeholder={t.chat.todoPane.newTagPlaceholder}
-                                size="sm"
-                                sx={{ flex: 1, ...TAG_FIELD_TOUCH_SX }}
-                                value={newName}
-                                onChange={(e) => setNewName(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        handleCreate();
-                                    }
-                                }}
-                            />
-                            <IconButton
-                                aria-label={t.chat.todoPane.addTag}
-                                disabled={!newName.trim() || creating}
-                                size="sm"
-                                sx={{ borderRadius: g.radius.sm, ...TAG_ADD_TOUCH_SX }}
-                                variant="soft"
-                                onClick={handleCreate}
-                            >
-                                <AddIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                        </Box>
+                        <TodoTagMenuRows
+                            categories={categories}
+                            currentCategoryId={currentCategoryId}
+                            onCreateCategory={onCreateCategory}
+                            onManageTags={onManageTags}
+                            onSelectCategory={onSelectCategory}
+                        />
                         <MenuDivider />
                     </>
                 )}

@@ -1062,10 +1062,14 @@ export const zh: DeepPartial<Messages> = {
             general: "常规",
             newTagPlaceholder: "新标签",
             addTag: "添加标签",
+            changeTag: "更改标签",
             tags: {
                 manageTitle: "管理标签",
                 manageTooltip: "管理标签",
-                privateHint: "你的标签仅你自己可见。点击名称即可重命名。",
+                privateHint:
+                    "你的标签仅你自己可见。点击铅笔或名称即可重命名，点击调色板可更改颜色。",
+                renameTag: "重命名标签",
+                manageMenu: "管理标签…",
                 emptyList: "还没有标签。请在下方添加。",
                 createButton: "添加",
                 deleteConfirm: "删除",

@@ -46,11 +46,15 @@ export const chat = {
         general: "General",
         newTagPlaceholder: "New tag",
         addTag: "Add tag",
+        changeTag: "Change tag",
         // Manage-tags modal (MIP-759). Tags are personal to each user.
         tags: {
             manageTitle: "Manage tags",
             manageTooltip: "Manage tags",
-            privateHint: "Your tags are private to you. Click a name to rename it.",
+            privateHint:
+                "Your tags are private to you. Rename one with the pencil or by clicking its name, and change its colour with the palette.",
+            renameTag: "Rename tag",
+            manageMenu: "Manage tags…",
             emptyList: "No tags yet. Add one below.",
             createButton: "Add",
             deleteConfirm: "Delete",
