@@ -134,12 +134,16 @@ describe("the shell and the stylesheet agree on where the title starts", () => {
         expect(css).toMatch(
             /\.bn-note-body-box-light,\s*\.bn-note-body-box-dark\s*\{\s*--note-body-top:\s*64px;\s*--note-body-start:\s*50px;/
         );
+        // MIP-1668: the top is what is left of `--note-body-top` below the header (the title row is
+        // not part of the scroller any more), so the first block still starts at `--note-body-top`.
         expect(css).toMatch(
-            /padding:\s*var\(--note-body-top\) 50px 20px var\(--note-body-start\);/
+            /padding:\s*max\(0px, calc\(var\(--note-body-top\) - var\(--note-header-h\)\)\) 50px 20px\s*var\(--note-body-start\);/
         );
         // Phone: smaller values, and the existing rule reads them instead of its own literals.
         expect(css).toMatch(/--note-body-top:\s*56px;\s*--note-body-start:\s*44px;/);
-        expect(css).toMatch(/padding-block:\s*var\(--note-body-top\) 20px;/);
+        expect(css).toMatch(
+            /padding-block:\s*max\(0px, calc\(var\(--note-body-top\) - var\(--note-header-h\)\)\) 20px;/
+        );
         expect(css).toMatch(/padding-inline:\s*var\(--note-body-start\) 22px;/);
         expect(css).not.toMatch(
             /\.bn-note-body-box-(light|dark) \.bn-editor[^}]*padding[^}]*\b55px\b/
