@@ -192,7 +192,7 @@ export const NOTIFICATION_CATEGORIES = [
         // What the member's own AI apps did over MCP (MIP-1432, MIP-1452): the API files
         // a notice for the key's owner, because an MCP write runs AS them and so raises
         // none of the notifications another member's write would. Their own group (the
-        // `enable_ai_apps` column), whose master hard-gates a switch per ACTION (12; the table is genos-api's
+        // `enable_ai_apps` column), whose master hard-gates a switch per ACTION (13; the table is genos-api's
         // `services/ai_app_switches.py`, mirrored by `aiAppCategory`).
         // Off stops the notice being made at all (feed row, toast and push): the API reads
         // the same keys (`mcp_notice._enabled`, `webpush_gating`). This lead entry only
@@ -267,6 +267,14 @@ export const NOTIFICATION_CATEGORIES = [
         labelKey: "aiAppNoteEdited",
         descriptionKey: "aiAppNoteEdited",
         defaultEnabled: false,
+    },
+    {
+        // A comment thread started or answered on a note (MIP-1669), as "Task commented" is for a task.
+        key: "ai_app_note_commented",
+        group: "ai_apps",
+        labelKey: "aiAppNoteCommented",
+        descriptionKey: "aiAppNoteCommented",
+        defaultEnabled: true,
     },
     {
         key: "ai_app_note_deleted",

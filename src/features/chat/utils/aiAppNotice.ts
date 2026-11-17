@@ -15,6 +15,7 @@ const ACTION_CATEGORY: Record<string, string> = {
     "created:task": "ai_app_task_created",
     "status:task": "ai_app_task_status",
     "commented:comment": "ai_app_task_commented",
+    "commented:note": "ai_app_note_commented",
     "deleted:comment": "ai_app_comment_deleted",
     "created:milestone": "ai_app_milestone_created",
     "status:milestone": "ai_app_milestone_status",
@@ -47,6 +48,7 @@ export interface AiAppStrings {
     statusTasksMixed: string;
     statusMilestone: string;
     commented: string;
+    commentedNote: string;
     deletedComment: string;
     deletedNote: string;
     deletedMilestone: string;
@@ -151,6 +153,8 @@ export function aiAppSentence(notice: AiAppNotice, s: AiAppStrings): string {
             }
             break;
         case "commented":
+            // A comment thread on a NOTE (MIP-1669); a `comment` kind is a comment on a task.
+            if (notice.kind === "note") return fill(s.commentedNote, { name });
             return fill(s.commented, { name: notice.items[0]?.displayId || name });
         case "deleted":
             switch (notice.kind) {

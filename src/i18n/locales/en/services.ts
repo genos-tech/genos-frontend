@@ -127,6 +127,7 @@ export const services = {
             aiAppMilestoneDeleted: "Milestone deleted",
             aiAppNoteCreated: "Note created",
             aiAppNoteEdited: "Note edited",
+            aiAppNoteCommented: "Note commented",
             aiAppNoteDeleted: "Note deleted",
             aiAppTodoCreated: "To-do added",
             aiAppTodoDeleted: "To-do deleted",

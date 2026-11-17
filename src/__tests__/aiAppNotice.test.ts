@@ -132,6 +132,10 @@ describe("aiAppNotice wording", () => {
         expect(
             headline(meta({ verb: "edited", kind: "note", items: [item({ displayId: null })] }))
         ).toBe("Claude Code edited note Fix login");
+        // A comment thread on a NOTE (MIP-1669) names the note; a `comment` kind is on a task.
+        expect(
+            headline(meta({ verb: "commented", kind: "note", items: [item({ displayId: null })] }))
+        ).toBe("Claude Code commented on note Fix login");
         expect(headline(meta({ verb: "deleted", kind: "comment" }))).toBe(
             "Claude Code deleted a comment on QR-7"
         );
@@ -256,6 +260,7 @@ describe("notification", () => {
             "ai_app_milestone_deleted",
             "ai_app_note_created",
             "ai_app_note_edited",
+            "ai_app_note_commented",
             "ai_app_note_deleted",
             "ai_app_todo_created",
             "ai_app_todo_deleted",
@@ -263,8 +268,8 @@ describe("notification", () => {
         expect(entries.filter((e) => !e.defaultEnabled).map((e) => e.key)).toEqual([
             "ai_app_note_edited",
         ]);
-        // The lead only titles the group; the twelve below it are the switches.
-        expect(entries.filter((e) => !("hideSubToggle" in e && e.hideSubToggle))).toHaveLength(12);
+        // The lead only titles the group; the thirteen below it are the switches.
+        expect(entries.filter((e) => !("hideSubToggle" in e && e.hideSubToggle))).toHaveLength(13);
         // And the old single and per-kind keys are gone.
         const keys = new Set<string>(NOTIFICATION_CATEGORIES.map((c) => c.key));
         for (const gone of ["ai_app", "ai_app_tasks", "ai_app_notes", "ai_app_todos"]) {
@@ -283,6 +288,7 @@ describe("notification", () => {
             ["deleted", "milestone", "ai_app_milestone_deleted"],
             ["created", "note", "ai_app_note_created"],
             ["edited", "note", "ai_app_note_edited"],
+            ["commented", "note", "ai_app_note_commented"],
             ["deleted", "note", "ai_app_note_deleted"],
             ["created", "todo", "ai_app_todo_created"],
             ["deleted", "todo", "ai_app_todo_deleted"],
