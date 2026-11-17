@@ -27,6 +27,7 @@ export const notes = {
     },
     editor: {
         loadFailed: "Couldn't open this note",
+        loadingNote: "Loading note…",
         deleteTooltip: "Delete",
         colorsTooltip: "Colors",
         resetTypeTooltip: "Reset Type",
