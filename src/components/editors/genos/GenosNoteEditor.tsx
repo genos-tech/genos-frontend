@@ -398,6 +398,9 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                     sx={{
                         position: "absolute",
                         // Centred on the Comments toggle (top 8, 32px): the row is 40px tall.
+                        // The body's scroller starts below the row, `--note-header-h` down
+                        // (App.css, MIP-1668): that must stay at least top + minHeight, here and
+                        // in the touch override below. NoteTitleBandMIP1668.test holds the two.
                         top: 4,
                         minHeight: 40,
                         // Starts where the body text starts, so the title lines up with it.
