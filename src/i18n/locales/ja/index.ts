@@ -6020,6 +6020,12 @@ export const ja: DeepPartial<Messages> = {
                 blocks: "ブロック",
                 externalTask: "外部タスク",
             },
+            // The captions over the two bands of outside tasks (MIP-1683): the ones on the left block
+            // a card of the graph, the ones on the right are blocked by one.
+            bands: {
+                blockers: "外部タスクからのブロック",
+                blocked: "外部タスクをブロック",
+            },
             tooltips: {
                 tasksRemaining: "残りのタスクは {remaining}/{total} 個です",
                 healthSummary: "Close済み {actualPct}% · 予想 {expectedPct}%",

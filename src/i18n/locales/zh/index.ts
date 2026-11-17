@@ -5806,6 +5806,12 @@ export const zh: DeepPartial<Messages> = {
                 blocks: "积木",
                 externalTask: "外部任务",
             },
+            // The captions over the two bands of outside tasks (MIP-1683): the ones on the left block
+            // a card of the graph, the ones on the right are blocked by one.
+            bands: {
+                blockers: "被外部任务阻塞",
+                blocked: "阻塞外部任务",
+            },
             tooltips: {
                 tasksRemaining: "剩余任务 {remaining}（共 {total}）",
                 healthSummary: "已成交 {actualPct}% · 预期 {expectedPct}%",

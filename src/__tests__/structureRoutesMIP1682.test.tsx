@@ -247,8 +247,9 @@ describe.each([
                 0
         );
         expect(behind.length).toBeGreaterThan(0);
-        // …and they are exactly the children that got a route.
-        expect(new Set(behind.map(([child]) => child))).toEqual(new Set(routes.keys()));
+        // …and every one of them got a route (a route can be given to a line that happened to be
+        // clear too: it is never worse).
+        for (const [child] of behind) expect(routes.has(child)).toBe(true);
     });
 
     it("no segment of any route enters a card", () => {
@@ -396,46 +397,38 @@ describe("it leaves alone what it cannot draw better", () => {
     });
 });
 
-describe("an outside task that shares the group's rows", () => {
-    // An outside task (a ghost) has no parent-child line but is drawn in the group of the card it is
-    // connected to, in the same rows as the children: sometimes in a row ABOVE the first child. A
-    // route that took the first child's row for the first row went straight through it.
-    const kids: Array<[number, number]> = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((c) => [c, 1]);
+describe("a card in the group that has no line of its own", () => {
+    // The router is given the layout's groups: the members of a group are not all children. If one
+    // that is not (an outside task, were it ever drawn in the group) sits in a row above the first
+    // child, a child's line must not take that row for the gap under the parent.
+    const at = (x: number, y: number): Position => ({ x, y });
+    const positions = new Map([
+        [1, at(300, 24)],
+        [100, at(24, 254)],
+        [2, at(24, 484)],
+        [3, at(334, 484)],
+    ]);
+    const parentOf = new Map([
+        [2, 1],
+        [3, 1],
+    ]);
+    const groups = new Map([[1, [100, 2, 3]]]);
 
-    it("no route enters it, whether it blocks the parent, is blocked by it, or is tied to a child", () => {
-        let aboveTheChildren = 0;
-        let routed = 0;
-        const ties: Array<[number, number]> = [
-            [100, 1],
-            [1, 100],
-            [100, 2],
-            [100, 8],
-            [12, 100],
-        ];
-        for (const tie of ties) {
-            const shape: Shape = { root: 1, parents: kids, ghosts: [100], deps: [tie] };
-            const { positions, parentOf, groups } = layout(shape);
-            const firstChildRow = Math.min(...kids.map(([c]) => positions.get(c)!.y));
-            if (positions.get(100)!.y < firstChildRow) aboveTheChildren++;
-            for (const route of computeStructureRoutes(positions, parentOf, groups).values()) {
-                routed++;
-                expect(cardsCrossedBy(lineOf(route), positions)).toBe(0);
-            }
+    it("routes the children below it, whose normal path would cross it", () => {
+        const routes = computeStructureRoutes(positions, parentOf, groups);
+        expect([...routes.keys()].sort()).toEqual([2, 3]);
+        // The normal path of 2: down from 1, across at the middle of the 24..484 span, down: through 100.
+        expect(
+            cardsCrossedBy(normalPath(positions.get(1)!, positions.get(2)!), positions)
+        ).toBeGreaterThan(0);
+        for (const route of routes.values()) {
+            expect(cardsCrossedBy(lineOf(route), positions)).toBe(0);
         }
-        expect(routed).toBeGreaterThan(0);
-        // Not a vacuous case: the layout puts it above every child when it blocks the parent.
-        expect(aboveTheChildren).toBeGreaterThan(0);
     });
 
-    it("a child in the first row of CHILDREN still needs a route when an outside task's row is above it", () => {
-        const shape: Shape = { root: 1, parents: kids, ghosts: [100], deps: [[100, 1]] };
-        const { positions, parentOf, groups } = layout(shape);
+    it("the first row it is in is the group's first row", () => {
         const routes = computeStructureRoutes(positions, parentOf, groups);
-        const ghostY = positions.get(100)!.y;
-        const firstChildRow = Math.min(...kids.map(([c]) => positions.get(c)!.y));
-        expect(ghostY).toBeLessThan(firstChildRow);
-        // The normal path of those children would cross the outside task's row; all of them are routed.
-        for (const [c] of kids) expect(routes.has(c)).toBe(true);
+        for (const route of routes.values()) expect(route.firstRowY).toBe(254);
     });
 });
 
@@ -736,7 +729,7 @@ describe("the graph adapter the canvas calls", () => {
             join(here, "../features/tasks/diagram/components/TaskFlowCanvas.tsx"),
             "utf8"
         );
-        expect(src).toContain("const laid = layoutDiagramGraph(rawNodes, rawEdges);");
+        expect(src).toContain("const laid = layoutDiagramGraph(rawNodes, rawEdges, {");
         expect(src).toContain("setNodes(laid.nodes);");
         expect(src).toContain("setEdges(laid.edges);");
     });

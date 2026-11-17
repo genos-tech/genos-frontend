@@ -3356,6 +3356,12 @@ export const es: DeepPartial<Messages> = {
                 blocks: "Bloques",
                 externalTask: "tarea externa",
             },
+            // The captions over the two bands of outside tasks (MIP-1683): the ones on the left block
+            // a card of the graph, the ones on the right are blocked by one.
+            bands: {
+                blockers: "Bloqueado por tareas externas",
+                blocked: "Bloquea tareas externas",
+            },
             tooltips: {
                 tasksRemaining: "{remaining} de tareas restantes de {total}",
                 healthSummary: "Cerrado {actualPct}% · Esperado {expectedPct}%",
