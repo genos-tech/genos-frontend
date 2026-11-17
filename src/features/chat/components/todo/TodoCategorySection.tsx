@@ -38,6 +38,7 @@ interface TodoCategorySectionProps {
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
+    onManageTags?: () => void;
     // Reminder state and mutators, straight through to the rows.
     reminderByItemId?: ReadonlyMap<number, TodoReminderProps>;
     onSetReminder?: (itemId: number, at: Date) => Promise<unknown>;
@@ -65,6 +66,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
+        onManageTags,
         reminderByItemId,
         onSetReminder,
         onCancelReminder,
@@ -206,6 +208,7 @@ export const TodoCategorySection = (props: TodoCategorySectionProps) => {
                             onCancelReminder={onCancelReminder}
                             onCategoryCreate={onCategoryCreate}
                             onDelete={onDeleteItem}
+                            onManageTags={onManageTags}
                             onMoveToTomorrow={onMoveToTomorrow}
                             onSetReminder={onSetReminder}
                             onCategoryChange={(itemId, newCategoryId) =>

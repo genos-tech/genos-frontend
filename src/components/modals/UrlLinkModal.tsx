@@ -112,6 +112,11 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     // The other views (chat, notes, to-do) keep the card.
     const isMobile = useIsMobile();
     const fullScreen = isMobile && (target?.kind === "task" || target?.kind === "milestone");
+    // The ✕ (and the full-page button) sit in the dialog's top corner; a full-screen dialog starts
+    // under the status bar, so they start below it (MIP-1665).
+    const chromeTop = fullScreen
+        ? `calc(${MODAL_CHROME_EDGE}px + var(--app-top-inset))`
+        : MODAL_CHROME_EDGE;
 
     const renderBody = () => {
         if (!target) return null;
@@ -239,12 +244,18 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                               // when it is up (iOS doesn't resize the layout viewport).
                               paddingBottom:
                                   "max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset, 0px))",
+                              // The dialog covers the whole screen, status bar included: its
+                              // content and the ✕ below start under it (MIP-1665).
+                              paddingTop: "var(--app-top-inset)",
                           }
                         : {
                               border: `1px solid ${g.border.default}`,
                               borderRadius: g.radius.lg,
                               boxShadow: g.shadow.lg,
-                              height: "min(900px, 88vh)",
+                              // Centred, so what the status bar takes off the top comes off the
+                              // bottom too (MIP-1665): 88vh alone left the card 52px from the top
+                              // on a phone whose status bar is 62px.
+                              height: "min(900px, 88vh, calc(100dvh - 24px - 2 * var(--app-top-inset)))",
                               width: "min(1200px, 92vw)",
                           }),
                 }}
@@ -268,7 +279,7 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                                 // views keep clear for chrome.
                                 position: "absolute",
                                 right: `calc(${MODAL_CHROME_EDGE}px + var(--modal-chrome-size) + ${MODAL_CHROME_GAP}px)`,
-                                top: MODAL_CHROME_EDGE,
+                                top: chromeTop,
                             }}
                             onClick={onOpenFullPage}
                         >
@@ -285,7 +296,7 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                         sx={{
                             ...floatingChromeSx,
                             right: MODAL_CHROME_EDGE,
-                            top: MODAL_CHROME_EDGE,
+                            top: chromeTop,
                         }}
                     />
                 </AppTooltip>

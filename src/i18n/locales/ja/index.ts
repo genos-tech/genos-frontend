@@ -1111,10 +1111,14 @@ export const ja: DeepPartial<Messages> = {
             general: "一般",
             newTagPlaceholder: "新しいタグ",
             addTag: "タグを追加",
+            changeTag: "タグを変更",
             tags: {
                 manageTitle: "タグを管理",
                 manageTooltip: "タグを管理",
-                privateHint: "タグはあなただけに表示されます。名前をクリックすると変更できます。",
+                privateHint:
+                    "タグはあなただけに表示されます。鉛筆または名前をクリックして名前を変更し、パレットで色を変更できます。",
+                renameTag: "タグ名を変更",
+                manageMenu: "タグを管理…",
                 emptyList: "タグはまだありません。下から追加してください。",
                 createButton: "追加",
                 deleteConfirm: "削除",

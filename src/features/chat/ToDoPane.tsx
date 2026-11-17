@@ -164,6 +164,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     // Scheduled-todos modal (recurring rules that auto-populate today).
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
     const [tagsModalOpen, setTagsModalOpen] = useState(false);
+    // Handed down to the tag chip on every row (MIP-1652). Stable, so rows do not re-render for it.
+    const openTagsModal = useCallback(() => setTagsModalOpen(true), []);
 
     // "Completed Today" is a LOCAL third mode rather than a third value on
     // `useCM.showOnlyInCompleteTodos`. That flag is shared state which
@@ -335,7 +337,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                 <Box
                     // Marks where a to-do is being typed, so a live refresh waits for the person
                     // to finish rather than replace what they are editing (`todoPushSync`).
-                    data-todo-pane
                     sx={{
                         // The pane takes what is left in its column after the chat
                         // header (and the retention banner when it shows), as it
@@ -352,6 +353,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             ? "linear-gradient(180deg, rgba(30,30,35,0.4) 0%, transparent 100%)"
                             : "linear-gradient(180deg, rgba(245,247,250,0.8) 0%, transparent 100%)",
                     }}
+                    data-todo-pane
                 >
                     {/* Header */}
                     <Box
@@ -381,7 +383,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             // "Todos") where the row is narrow, so there the actions drop
                             // under it only when they do not fit. On a desktop page
                             // nothing changes.
-                            data-todo-header-row
                             sx={
                                 isMobile
                                     ? { flexWrap: "wrap", rowGap: 1 }
@@ -389,6 +390,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                       ? modalChromeEndPadding()
                                       : undefined
                             }
+                            data-todo-header-row
                         >
                             <Stack
                                 alignItems="center"
@@ -555,12 +557,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                         }
                                     >
                                         <IconButton
+                                            size="sm"
                                             aria-label={
                                                 startIconDay === "today"
                                                     ? t.chat.todoPane.startToday
                                                     : t.chat.todoPane.startTomorrow
                                             }
-                                            size="sm"
                                             sx={{
                                                 borderRadius: "10px",
                                                 px: 0,
@@ -671,10 +673,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 // In the page the list ends above the tab bar, under
                                 // the floating "Open Genos" button; in a modal it is
                                 // the modal that sits above the button (MIP-1404).
+                                totalCount={displayGroups.length}
                                 components={
                                     hostedInModal ? NO_COMPONENTS : FAB_CLEARANCE_COMPONENTS
                                 }
-                                totalCount={displayGroups.length}
                                 initialTopMostItemIndex={
                                     focusGroupIndex >= 0 ? focusGroupIndex : 0
                                 }
@@ -699,6 +701,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                             onCancelReminder={cancelItemReminder}
                                             onCategoryCreate={addCategory}
                                             onDeleteItem={handleDeleteItem}
+                                            onManageTags={openTagsModal}
                                             onMoveToTomorrow={handleMoveToTomorrow}
                                             onPatchItem={patchItem}
                                             onSetReminder={setItemReminder}

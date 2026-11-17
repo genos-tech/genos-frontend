@@ -63,6 +63,7 @@ interface TodoGroupCardProps {
     onPatchItem: (itemId: number, patch: UpdateTodoItemPatch) => void;
     onDeleteItem: (itemId: number) => void;
     onCategoryCreate: (name: string) => Promise<TodoCategoryProps | undefined>;
+    onManageTags?: () => void;
     // Reminders are owned by `useTodoGroups` (the same owner as completion,
     // which cancels them) and passed down whole; absent on any surface that
     // doesn't wire them, which hides the row's "Remind me…" item.
@@ -89,6 +90,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         onPatchItem,
         onDeleteItem,
         onCategoryCreate,
+        onManageTags,
         reminderByItemId,
         onSetReminder,
         onCancelReminder,
@@ -271,6 +273,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
                         onCancelReminder={onCancelReminder}
                         onCategoryCreate={onCategoryCreate}
                         onDeleteItem={onDeleteItem}
+                        onManageTags={onManageTags}
                         onMoveToTomorrow={onMoveToTomorrow}
                         onPatchItem={onPatchItem}
                         onSetReminder={onSetReminder}

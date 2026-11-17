@@ -1119,11 +1119,14 @@ export const fr: DeepPartial<Messages> = {
             general: "Général",
             newTagPlaceholder: "Nouvelle balise",
             addTag: "Ajouter une balise",
+            changeTag: "Changer de balise",
             tags: {
                 manageTitle: "Gérer les balises",
                 manageTooltip: "Gérer les balises",
                 privateHint:
-                    "Vos balises ne sont visibles que par vous. Cliquez sur un nom pour le renommer.",
+                    "Vos balises ne sont visibles que par vous. Renommez-en une avec le crayon ou en cliquant sur son nom, et changez sa couleur avec la palette.",
+                renameTag: "Renommer la balise",
+                manageMenu: "Gérer les balises…",
                 emptyList: "Aucune balise pour l'instant. Ajoutez-en une ci-dessous.",
                 createButton: "Ajouter",
                 deleteConfirm: "Supprimer",

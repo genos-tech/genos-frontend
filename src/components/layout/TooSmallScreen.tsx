@@ -12,7 +12,8 @@ export const TooSmallScreen = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "100dvh",
+                // Below the status bar, which the body pads away (`--app-top-inset`, MIP-1665).
+                height: "calc(100dvh - var(--app-top-inset))",
                 width: "100vw",
                 textAlign: "center",
                 px: 4,

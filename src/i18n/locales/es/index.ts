@@ -1709,10 +1709,14 @@ export const es: DeepPartial<Messages> = {
             general: "General",
             newTagPlaceholder: "Nueva etiqueta",
             addTag: "Añadir etiqueta",
+            changeTag: "Cambiar etiqueta",
             tags: {
                 manageTitle: "Gestionar etiquetas",
                 manageTooltip: "Gestionar etiquetas",
-                privateHint: "Tus etiquetas son privadas. Haz clic en un nombre para cambiarlo.",
+                privateHint:
+                    "Tus etiquetas son privadas. Cambia el nombre con el lápiz o haciendo clic en él, y el color con la paleta.",
+                renameTag: "Cambiar el nombre de la etiqueta",
+                manageMenu: "Gestionar etiquetas…",
                 emptyList: "Aún no hay etiquetas. Añade una abajo.",
                 createButton: "Añadir",
                 deleteConfirm: "Eliminar",

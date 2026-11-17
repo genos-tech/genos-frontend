@@ -40,6 +40,11 @@ type MobileOverlayProps = {
  *    shell has to leave the keyboard's height free itself), and
  *    `safe-area-inset-bottom` keeps content off the home indicator.
  *
+ * 4. **The top starts below the status bar.** The shell is `position: fixed`, so
+ *    it is outside the body's padding; without `--app-top-inset` its Close button
+ *    sat under the clock and could not be pressed on an installed iPhone app
+ *    (MIP-1665).
+ *
  * `MobileChatHome` and `MobileNoteHome` still carry their own older copies
  * of this shell for their create-task / chat-note overlays; only their TASK
  * PREVIEW overlays use this one.
@@ -61,6 +66,7 @@ export const MobileOverlay = ({ children, onClose }: MobileOverlayProps) => {
                 flexDirection: "column",
                 // See (3) in the doc comment: home indicator, or the keyboard when it
                 // is up, and NOT the tab bar this shell paints over.
+                paddingTop: "var(--app-top-inset)",
                 paddingBottom: "max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset, 0px))",
             }}
         >

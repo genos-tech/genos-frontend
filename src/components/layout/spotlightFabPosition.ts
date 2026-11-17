@@ -71,6 +71,12 @@ type Bounds = {
      * underneath either.
      */
     bottomInset: number;
+    /**
+     * Space reserved at the top — the phone's status bar when the app is an installed
+     * home-screen app (`--app-top-inset`, MIP-1665). The button must not park under it
+     * either: it cannot be seen there, and the system takes the touch. 0 when omitted.
+     */
+    topInset?: number;
     size?: number;
     gap?: number;
 };
@@ -82,12 +88,16 @@ type Bounds = {
  * where the arithmetic would otherwise go negative and pin the button
  * off the top edge.
  */
-const maxTop = ({ viewportHeight, bottomInset, size = FAB_SIZE, gap = FAB_EDGE_GAP }: Bounds) =>
-    Math.max(gap, viewportHeight - bottomInset - size - gap);
+const minTop = ({ topInset = 0, gap = FAB_EDGE_GAP }: Bounds) => topInset + gap;
+
+const maxTop = (bounds: Bounds) => {
+    const { viewportHeight, bottomInset, size = FAB_SIZE, gap = FAB_EDGE_GAP } = bounds;
+    return Math.max(minTop(bounds), viewportHeight - bottomInset - size - gap);
+};
 
 /** Clamp a `top` into the visible band. */
 export const clampFabTop = (top: number, bounds: Bounds): number =>
-    Math.min(Math.max(top, bounds.gap ?? FAB_EDGE_GAP), maxTop(bounds));
+    Math.min(Math.max(top, minTop(bounds)), maxTop(bounds));
 
 /**
  * Where a released drag parks.

@@ -21,6 +21,7 @@ import {
     Controls,
     Edge,
     EdgeChange,
+    getNodesBounds,
     MarkerType,
     MiniMap,
     Node,
@@ -31,6 +32,7 @@ import {
     useConnection,
     useNodesInitialized,
     useReactFlow,
+    useStoreApi,
 } from "@xyflow/react";
 
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
@@ -80,6 +82,7 @@ import {
     TaskNodeData,
 } from "../types";
 import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
+import { FIT_PADDING, planInitialViewport } from "../utils/initialViewport";
 import { layoutDiagramGraph } from "../utils/layoutDiagramGraph";
 import { applyLineage } from "../utils/lineage";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
@@ -608,7 +611,8 @@ const CanvasInner = ({
     // exception to going through `purplePalette`.
     const { raw: rawTheme } = useColorTheme();
     const rawAccent = isDark ? rawTheme.dark.accent : rawTheme.light.accent;
-    const { fitView, deleteElements, getEdges } = useReactFlow();
+    const { fitView, setViewport, getNodes, deleteElements, getEdges } = useReactFlow();
+    const flowStore = useStoreApi();
     // True once React Flow has measured every node (real dimensions). We
     // gate viewport fitting on this — see `pendingFitRef` and the fit
     // effect below for why fitting before measurement corrupts the view.
@@ -643,6 +647,9 @@ const CanvasInner = ({
     // effect below once the nodes are measured. Deferring like this is
     // what prevents the NaN-viewport bug — see that effect.
     const pendingFitRef = useRef(false);
+    // The first placement of the view is instant: nothing to animate from but the unplaced
+    // canvas. Later ones (the hide-closed toggle) glide.
+    const viewPlacedRef = useRef(false);
 
     // Task ids created during THIS diagram session (via a card's
     // add-subtask button). Their nodes get the "newly created" accent so
@@ -1145,9 +1152,33 @@ const CanvasInner = ({
     useEffect(() => {
         if (pendingFitRef.current && nodesInitialized) {
             pendingFitRef.current = false;
-            fitView({ padding: 0.15, duration: 300 });
+            // MIP-1681: fit the whole graph only if it stays readable; a big graph opens at a
+            // readable zoom on the card the person came from (see `planInitialViewport`).
+            const current = getNodes();
+            const { width, height, minZoom, maxZoom } = flowStore.getState();
+            const lit = (pick: "isCurrentPreview" | "isRoot") =>
+                current.find((n) => (n.data as Record<string, unknown>)?.[pick] === true);
+            const focusNode = lit("isCurrentPreview") ?? lit("isRoot");
+            const plan =
+                current.length > 0
+                    ? planInitialViewport({
+                          bounds: getNodesBounds(current),
+                          pane: { width, height },
+                          focus: focusNode ? getNodesBounds([focusNode]) : null,
+                          focusAt: lit("isCurrentPreview") ? "center" : "top",
+                          minZoom,
+                          maxZoom,
+                      })
+                    : null;
+            const duration = viewPlacedRef.current ? 300 : 0;
+            viewPlacedRef.current = true;
+            if (plan && plan.kind === "focus") {
+                void setViewport({ x: plan.x, y: plan.y, zoom: plan.zoom }, { duration });
+            } else {
+                fitView({ padding: FIT_PADDING, duration });
+            }
         }
-    }, [nodesInitialized, nodes, fitView]);
+    }, [nodesInitialized, nodes, fitView, setViewport, getNodes, flowStore]);
 
     // Re-run layout when the hide-closed toggle flips so closed nodes
     // (and their edges) disappear / reappear in place without waiting
@@ -1493,18 +1524,12 @@ const CanvasInner = ({
                 deleteKeyCode={null}
                 edges={drawn.edges}
                 edgeTypes={edgeTypes}
-                // Padding matches the deferred fit effect so React Flow's
-                // own init-fit and that effect frame the graph identically
-                // whichever lands last. Both are gated on node measurement,
-                // so neither produces the NaN viewport that effect guards.
-                fitViewOptions={{ padding: 0.15 }}
                 maxZoom={2}
                 minZoom={0.25}
                 nodes={drawn.nodes}
                 nodeTypes={nodeTypes}
                 onBeforeDelete={onBeforeDelete}
                 proOptions={{ hideAttribution: true }}
-                fitView
                 onConnect={onConnectFresh}
                 onEdgesChange={onEdgesChange}
                 onNodeMouseEnter={onNodeMouseEnter}
