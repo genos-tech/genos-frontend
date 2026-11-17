@@ -3436,6 +3436,7 @@ export const ar: DeepPartial<Messages> = {
         },
         editor: {
             loadFailed: "تعذّر فتح هذه الملاحظة",
+            loadingNote: "جارٍ تحميل الملاحظة…",
             deleteTooltip: "حذف",
             colorsTooltip: "الألوان",
             resetTypeTooltip: "إعادة تعيين النوع",

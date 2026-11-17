@@ -249,12 +249,14 @@ describe("Note editor panels (useNoteData + NoteLoadState)", () => {
         expect(result.current.error).toBeNull();
     });
 
-    it("NoteLoadState: blank while loading, Retry on error, hidden with an inactive tab", () => {
+    it("NoteLoadState: a loader while loading, Retry on error, hidden with an inactive tab", () => {
         const onRetry = vi.fn();
-        const { container, rerender } = render(
+        const { rerender } = render(
             wrap(<NoteLoadState error={false} isActive isLoading onRetry={onRetry} />)
         );
-        expect(container.textContent).toBe("");
+        // MIP-1675: it is no longer blank (the loader is held invisible for a moment by its CSS,
+        // see NoteLoadStateMIP1675.test).
+        expect(screen.getByRole("status", { name: en.notes.editor.loadingNote })).toBeTruthy();
         rerender(wrap(<NoteLoadState isLoading={false} error isActive onRetry={onRetry} />));
         expect(screen.getByText(en.notes.editor.loadFailed)).toBeTruthy();
         fireEvent.click(retry());

@@ -382,6 +382,10 @@ export interface NoteManagementState {
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
     // The last open that failed with no tab to show (MIP-1307), its Retry, and its reset.
     noteOpenFailure: NoteOpenFailure | null;
+    // The note a click is waiting on: it was not in IndexedDB, so it is being fetched, and no tab
+    // is open for it yet (MIP-1675). Null the rest of the time, and for an open that resolves from
+    // IndexedDB, which is too fast to say anything about.
+    openingNote: { noteType: number; noteId: number } | null;
     retryNoteOpen: () => void;
     clearNoteOpenFailure: () => void;
 
@@ -426,9 +430,14 @@ export const useNoteManagement = (
     // latest ask, so a slow request for a note the user has since left cannot put an
     // error up for it.
     const openSeqRef = useRef(0);
+    const [openingNote, setOpeningNote] = useState<{ noteType: number; noteId: number } | null>(
+        null
+    );
     const clearNoteOpenFailure = useCallback(() => {
         openSeqRef.current += 1;
         setNoteOpenFailure(null);
+        // The request still in flight is no longer the one being waited on.
+        setOpeningNote(null);
     }, []);
 
     // Chat notes
@@ -2257,6 +2266,14 @@ export const useNoteManagement = (
         // tab open, ends on the pane's access-request panel (MIP-1330).
         const requestedType = noteType;
         const openSeq = ++openSeqRef.current;
+        // A new open supersedes whatever the last one was waiting on.
+        setOpeningNote(null);
+        // The click is about to wait on the network (an IndexedDB hit opens at once, below, and
+        // never says so): the pane says a note is opening instead of "No Note Selected".
+        const beginFetch = () => {
+            if (openSeq === openSeqRef.current)
+                setOpeningNote({ noteType: requestedType, noteId });
+        };
         // `loadSpecificNote`: undefined = request failed, { error: "not_found" } = 404,
         // { error: "forbidden" } = 403.
         const reportOpenFailed = (fetched: { error?: string } | undefined) => {
@@ -2332,6 +2349,7 @@ export const useNoteManagement = (
                     tabsApi.openTab(noteToTab(myNote, myself.teamId, bucket));
                     return;
                 }
+                beginFetch();
                 const fetched: MyNoteProps = await loadSpecificNote(
                     myself,
                     1,
@@ -2355,6 +2373,7 @@ export const useNoteManagement = (
                     tabsApi.openTab(noteToTab(taskNote, myself.teamId));
                     return;
                 }
+                beginFetch();
                 const fetched: TaskNoteProps = await loadSpecificNote(
                     myself,
                     2,
@@ -2374,6 +2393,7 @@ export const useNoteManagement = (
                 tabsApi.openTab(noteToTab(chatNote, myself.teamId));
                 return;
             }
+            beginFetch();
             const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
             if (fetched && !fetched.error && fetched.noteType === 3) {
                 tabsApi.openTab(noteToTab(cacheFetchedNote(fetched), myself.teamId));
@@ -2383,6 +2403,9 @@ export const useNoteManagement = (
         } catch (error) {
             console.error("Error loading note:", error);
             setNoteOpenFailure((f) => (f ? { ...f, retrying: false } : f));
+        } finally {
+            // Only the latest open ends the wait: an older one finishing must not clear the newer's.
+            if (openSeq === openSeqRef.current) setOpeningNote(null);
         }
     };
 
@@ -2773,6 +2796,7 @@ export const useNoteManagement = (
         // Note loading function
         loadNote,
         noteOpenFailure,
+        openingNote,
         retryNoteOpen,
         clearNoteOpenFailure,
 

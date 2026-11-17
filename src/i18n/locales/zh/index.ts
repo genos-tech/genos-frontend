@@ -2849,6 +2849,7 @@ export const zh: DeepPartial<Messages> = {
         },
         editor: {
             loadFailed: "无法打开此笔记",
+            loadingNote: "正在加载笔记…",
             deleteTooltip: "删除",
             colorsTooltip: "颜色",
             resetTypeTooltip: "重置类型",

@@ -2977,6 +2977,7 @@ export const fr: DeepPartial<Messages> = {
         },
         editor: {
             loadFailed: "Impossible d'ouvrir cette note",
+            loadingNote: "Chargement de la note…",
             deleteTooltip: "Supprimer",
             colorsTooltip: "Couleurs",
             resetTypeTooltip: "Réinitialiser le type",

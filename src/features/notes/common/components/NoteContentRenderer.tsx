@@ -23,6 +23,7 @@ import { MyNoteMain } from "../../my-notes/components/MyNoteMain";
 import { TaskNoteEditorPanel } from "../../task-notes/components/TaskNoteEditorPanel";
 import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
 import { NoteOpenFailure } from "./NoteOpenFailure";
+import { NoteOpeningState } from "./NoteOpeningState";
 
 type NoteContentRendererProps = {
     myself: UserProps;
@@ -216,6 +217,8 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         if (useNM.noteOpenFailure) {
             return <NoteOpenFailure useNM={useNM} onMobileBack={onMobileBack} socket={socket} />;
         }
+        // A note is being fetched and has no tab yet: "No Note Selected" would be untrue (MIP-1675).
+        if (useNM.openingNote) return <NoteOpeningState />;
         return (
             <EmptyState
                 data-empty="notes"
@@ -414,9 +417,11 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                         minHeight: 0,
                         display: "flex",
                         flexDirection: "column",
+                        position: "relative",
                     }}
                 >
                     {renderEditorPool()}
+                    {useNM.openingNote && <NoteOpeningState overlay />}
                 </Box>
                 {taskPreview}
             </Stack>
@@ -426,7 +431,11 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     return (
         <Stack direction="column" sx={{ width: "100%" }}>
             {renderActiveMain()}
-            {renderEditorPool()}
+            {/* The editor area only: the overlay of a note being fetched stays off the header and tabs. */}
+            <Box sx={{ position: "relative", width: "100%" }}>
+                {renderEditorPool()}
+                {useNM.openingNote && <NoteOpeningState overlay />}
+            </Box>
             {taskPreview}
         </Stack>
     );

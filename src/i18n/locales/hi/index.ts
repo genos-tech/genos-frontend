@@ -3481,6 +3481,7 @@ export const hi: DeepPartial<Messages> = {
         },
         editor: {
             loadFailed: "यह नोट नहीं खुल सका",
+            loadingNote: "नोट लोड हो रहा है…",
             deleteTooltip: "हटाएँ",
             colorsTooltip: "रंग",
             resetTypeTooltip: "टाइप रीसेट करें",

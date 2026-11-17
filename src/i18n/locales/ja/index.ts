@@ -2950,6 +2950,7 @@ export const ja: DeepPartial<Messages> = {
         },
         editor: {
             loadFailed: "このノートを開けませんでした",
+            loadingNote: "ノートを読み込み中…",
             deleteTooltip: "削除",
             colorsTooltip: "カラー",
             resetTypeTooltip: "種類をリセット",
