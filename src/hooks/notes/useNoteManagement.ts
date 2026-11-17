@@ -1780,12 +1780,14 @@ export const useNoteManagement = (
 
     // Note role management (sharing) functions
     const loadNoteMembers = async (noteType: number, noteId: number) => {
+        // Equal content keeps the array that is there: replacing an empty list with another empty
+        // list was a commit of the whole app each time a note opened (MIP-1677).
         if (!accessToken) {
-            setCurrentNoteMembers([]);
+            setCurrentNoteMembers((prev) => (prev.length > 0 ? [] : prev));
             return;
         }
         const members = await loadNoteRoles(myself, noteType, noteId, accessToken);
-        setCurrentNoteMembers(members);
+        setCurrentNoteMembers((prev) => keepIfEqual(prev, members));
     };
 
     const grantNoteRole = async (
@@ -1810,7 +1812,7 @@ export const useNoteManagement = (
     // Note version history
     const loadNoteVersionsFor = async (noteType: number, noteId: number) => {
         if (!accessToken) {
-            setCurrentNoteVersions([]);
+            setCurrentNoteVersions((prev) => (prev.length > 0 ? [] : prev));
             return;
         }
         const versions = await loadNoteVersions(myself, noteType, noteId, accessToken);
@@ -1818,10 +1820,10 @@ export const useNoteManagement = (
         setCurrentNoteVersionsFailed(versions === null);
         if (versions) {
             versionsOfRef.current = key;
-            setCurrentNoteVersions(versions);
+            setCurrentNoteVersions((prev) => keepIfEqual(prev, versions));
         } else if (versionsOfRef.current !== key) {
             // Nothing of this note's to keep; a failure for the same note keeps its list.
-            setCurrentNoteVersions([]);
+            setCurrentNoteVersions((prev) => (prev.length > 0 ? [] : prev));
         }
     };
 
