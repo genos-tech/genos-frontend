@@ -3,13 +3,18 @@ import { useLocation } from "react-router-dom";
 
 import { UserProps } from "../../../../types/admin";
 import { TaskProps } from "../../../../types/tasks";
+import { keepIfEqual } from "../../../../utils/keepIfEqual";
 import { loadSpecificTask } from "../../../tasks/services/loadSpecificTask";
 
 interface UseTaskPreviewProps {
     currentTaskNote: { projectId: number; taskId: number } | null;
     myself: UserProps;
     accessToken: string;
-    setCurrentPreviewTask: (task: TaskProps) => void;
+    // A state setter: it takes an updater too, so a reload that returns an equal task can keep the
+    // current one (MIP-1677).
+    setCurrentPreviewTask: (
+        task: TaskProps | undefined | ((prev: TaskProps | undefined) => TaskProps | undefined)
+    ) => void;
 }
 
 export const useTaskPreview = ({
@@ -22,6 +27,10 @@ export const useTaskPreview = ({
     // Reactive router path — used as an effect dependency below so the
     // preview load re-runs once the route settles (see the effect note).
     const { pathname } = useLocation();
+    // Only WHETHER the route is a notes route matters, not which one. Depending on the whole path
+    // re-ran the load on every note switch (the path changes, "are we in notes" does not): a second
+    // load, answered from the cache, and a second commit of the whole app (MIP-1677).
+    const onNotesRoute = pathname.includes("/workspace/notes/");
 
     const setPreviewTask = async (
         projectId: number,
@@ -41,8 +50,11 @@ export const useTaskPreview = ({
             );
             if (!shouldApply()) return;
             if (loadedTask.length === 1) {
-                setCurrentPreviewTask(loadedTask[0]);
-                setCurrentTask(loadedTask[0]);
+                // A reload of the task that is already shown answers with a new object and the same
+                // content (a note switch, a route change): keep what is there, so nothing under it
+                // re-renders for it (MIP-1677). Every write here used to be a commit of the whole app.
+                setCurrentPreviewTask((prev) => keepIfEqual(prev, loadedTask[0]));
+                setCurrentTask((prev) => keepIfEqual(prev, loadedTask[0]));
             }
         } catch (error) {
             if (shouldApply()) console.error("Failed to load task:", error);
@@ -65,7 +77,7 @@ export const useTaskPreview = ({
         // pill stayed hidden until a *different* note was clicked. Listing
         // `pathname` re-runs the load once the route catches up;
         // `accessToken` does the same if the JWT resolves late.
-        if (!currentTaskNote || !pathname.includes("/workspace/notes/")) {
+        if (!currentTaskNote || !onNotesRoute) {
             return;
         }
         let cancelled = false;
@@ -73,7 +85,7 @@ export const useTaskPreview = ({
         return () => {
             cancelled = true;
         };
-    }, [currentTaskNote, pathname, accessToken]);
+    }, [currentTaskNote, onNotesRoute, accessToken]);
 
     return {
         currentTask,
