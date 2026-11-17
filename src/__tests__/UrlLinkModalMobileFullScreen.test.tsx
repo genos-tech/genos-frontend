@@ -97,7 +97,7 @@ describe("UrlLinkModal on mobile", () => {
         // No card chrome, no fixed size: Joy's fullscreen layout pins all four
         // edges, so nothing here may re-impose a height or width.
         const css = declaredCss(dialog);
-        expect(css).not.toContain("min(900px, 88vh)");
+        expect(css).not.toContain("min(900px, 88vh");
         expect(css).not.toContain("min(1200px, 92vw)");
         expect(css).not.toContain("border-radius:var(--g-radius-lg)");
         // Joy modals paint over the tab bar and the keyboard, so the content
@@ -105,6 +105,8 @@ describe("UrlLinkModal on mobile", () => {
         expect(css).toContain(
             "padding-bottom:max(env(safe-area-inset-bottom, 0px), var(--keyboard-inset, 0px))"
         );
+        // It covers the status bar too, so the content (and the ✕) start below it (MIP-1665).
+        expect(css).toContain("padding-top:var(--app-top-inset)");
     });
 
     it.each([
@@ -116,7 +118,9 @@ describe("UrlLinkModal on mobile", () => {
 
         expect(dialog.classList.contains("MuiModalDialog-layoutCenter")).toBe(true);
         const css = declaredCss(dialog);
-        expect(css).toContain("height:min(900px, 88vh)");
+        expect(css).toContain(
+            "height:min(900px, 88vh, calc(100dvh - 24px - 2 * var(--app-top-inset)))"
+        );
         expect(css).toContain("width:min(1200px, 92vw)");
         expect(css).toContain("border-radius:var(--g-radius-lg)");
         expect(css).not.toContain("padding-bottom:max(");
@@ -132,7 +136,9 @@ describe("UrlLinkModal on mobile", () => {
 
         expect(dialog.classList.contains("MuiModalDialog-layoutCenter")).toBe(true);
         const css = declaredCss(dialog);
-        expect(css).toContain("height:min(900px, 88vh)");
+        expect(css).toContain(
+            "height:min(900px, 88vh, calc(100dvh - 24px - 2 * var(--app-top-inset)))"
+        );
         expect(css).toContain("border-radius:var(--g-radius-lg)");
     });
 });
