@@ -13,13 +13,21 @@ vi.mock("../hooks/common/useIsMobile", () => ({
 // jsdom ships neither pointer capture nor a layout engine. Capture is a
 // no-op here; the rect stub gives the grab-offset maths something real to
 // subtract (a 38px button parked at the bottom-right of a 390x844 phone).
+// The height of the status bar the app is drawn under (`--app-top-inset`, MIP-1665). The button
+// measures it with a probe box, which is the one element here whose height is that variable.
+let statusBarHeight = 0;
+
 beforeEach(() => {
     isMobileViewport = true;
+    statusBarHeight = 0;
     Element.prototype.setPointerCapture = vi.fn();
     Element.prototype.releasePointerCapture = vi.fn();
-    Element.prototype.getBoundingClientRect = vi.fn(
-        () => ({ bottom: 774, height: 38, left: 336, right: 374, top: 736, width: 38 }) as DOMRect
-    );
+    Element.prototype.getBoundingClientRect = vi.fn(function (this: Element) {
+        if ((this as HTMLElement).style?.height.includes("--app-top-inset")) {
+            return { bottom: statusBarHeight, height: statusBarHeight, top: 0 } as DOMRect;
+        }
+        return { bottom: 774, height: 38, left: 336, right: 374, top: 736, width: 38 } as DOMRect;
+    });
     window.innerWidth = 390;
     window.innerHeight = 844;
 });
@@ -139,6 +147,28 @@ describe("MobileSpotlightFab", () => {
         renderFab();
         expect(anchorOf(fab())).toMatchObject({ left: "16px" });
         expect(anchorOf(fab())).toMatchObject({ top: "240px" });
+    });
+
+    // MIP-1665: an installed iPhone app is drawn under its status bar; the button cannot be seen
+    // or touched there.
+    it("is not dropped under the status bar", () => {
+        statusBarHeight = 62;
+        renderFab();
+        // Pointer at y=20, grab offset 19: the button's top would be 1.
+        drag({ x: 355, y: 755 }, { x: 40, y: 20 });
+        const stored = JSON.parse(localStorage.getItem("mobile:spotlightFabPosition") ?? "null");
+        expect(stored.top).toBe(62 + 16);
+        expect(anchorOf(fab())).toMatchObject({ top: "78px" });
+    });
+
+    it("is pulled out from under the status bar when a parked position is restored", () => {
+        statusBarHeight = 62;
+        localStorage.setItem(
+            "mobile:spotlightFabPosition",
+            JSON.stringify({ side: "left", top: 10 })
+        );
+        renderFab();
+        expect(anchorOf(fab())).toMatchObject({ top: "78px" });
     });
 
     it("pulls a restored position back on-screen when the viewport is shorter", () => {

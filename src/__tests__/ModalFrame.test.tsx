@@ -207,7 +207,9 @@ describe("ModalFrame", () => {
         it("keeps the fixed widths and the 24px phone inset", () => {
             mount({ size: "md" });
             expect(seq("width")).toEqual(["calc(100vw - 24px)", "480px"]);
-            expect(seq("max-height")).toEqual(["calc(100dvh - 32px)"]);
+            // Centred, so the room is the same above and below: 16px each, and the status bar of an
+            // installed phone app (`--app-top-inset`, MIP-1665) twice.
+            expect(seq("max-height")).toEqual(["calc(100dvh - 32px - 2 * var(--app-top-inset))"]);
         });
 
         it("xl is the Settings ladder: 550, 700, 920", () => {
@@ -229,7 +231,10 @@ describe("ModalFrame", () => {
             mount({ size: "profile", fullScreenOnMobile: true });
             expect(seq("width")).toEqual(["100vw", "1000px"]);
             expect(seq("height")).toEqual(["100dvh", "auto"]);
-            expect(seq("max-height")).toEqual(["100dvh", "calc(100dvh - 32px)"]);
+            expect(seq("max-height")).toEqual([
+                "100dvh",
+                "calc(100dvh - 32px - 2 * var(--app-top-inset))",
+            ]);
             expect(seq("border-radius").slice(-2)).toEqual(["0px", "var(--g-radius-lg)"]);
         });
 
@@ -243,8 +248,8 @@ describe("ModalFrame", () => {
         it("clearBottomBar leaves room for the mobile tab bar, nothing else does", () => {
             mount({ clearBottomBar: true });
             expect(seq("max-height")).toEqual([
-                "calc(100dvh - var(--mobile-bottom-inset, 60px) - 24px)",
-                "calc(100dvh - 32px)",
+                "calc(100dvh - max(var(--mobile-bottom-inset, 60px) + 24px, 2 * var(--app-top-inset) + 24px))",
+                "calc(100dvh - 32px - 2 * var(--app-top-inset))",
             ]);
         });
 

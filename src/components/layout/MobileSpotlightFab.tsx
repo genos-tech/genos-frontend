@@ -41,6 +41,18 @@ const readBottomInset = (): number => {
     return Number.isFinite(parsed) ? parsed : 60;
 };
 
+/** The status bar's height in px (`--app-top-inset`, MIP-1665). A custom property holding `env()` is
+ *  not resolved when read back, so this lays out a box of that height and measures it. */
+const readTopInset = (): number => {
+    const probe = document.createElement("div");
+    probe.style.cssText =
+        "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:var(--app-top-inset, 0px)";
+    document.body.appendChild(probe);
+    const height = probe.getBoundingClientRect().height;
+    probe.remove();
+    return Number.isFinite(height) ? height : 0;
+};
+
 // Floating action button for the global Spotlight overlay, reachable from
 // every mobile workspace screen. Desktop reaches the same surface via
 // Cmd/Ctrl-K and the sidebar's search entry, so this is mobile-only.
@@ -96,6 +108,7 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
                           ...prev,
                           top: clampFabTop(prev.top, {
                               bottomInset: readBottomInset(),
+                              topInset: readTopInset(),
                               viewportHeight: window.innerHeight,
                           }),
                       }
@@ -214,6 +227,7 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
             { x: e.clientX - grab.dx, y: e.clientY - grab.dy },
             {
                 bottomInset: readBottomInset(),
+                topInset: readTopInset(),
                 viewportHeight: window.innerHeight,
                 viewportWidth: window.innerWidth,
             }

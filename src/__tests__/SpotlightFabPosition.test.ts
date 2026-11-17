@@ -63,6 +63,28 @@ describe("clampFabTop", () => {
     });
 });
 
+describe("a status bar at the top (MIP-1665)", () => {
+    // An installed iPhone app: the page is drawn under a 62px status bar.
+    const withBar = { ...phone, topInset: 62 };
+
+    it("keeps the button below it, with the usual gap", () => {
+        expect(clampFabTop(0, withBar)).toBe(62 + FAB_EDGE_GAP);
+        expect(resolveFabDrop({ x: 300, y: -50 }, withBar).top).toBe(62 + FAB_EDGE_GAP);
+    });
+
+    it("leaves a position under the bar's edge alone, and reads no inset as none", () => {
+        expect(clampFabTop(400, withBar)).toBe(400);
+        expect(clampFabTop(0, phone)).toBe(FAB_EDGE_GAP);
+        expect(clampFabTop(0, { ...phone, topInset: 0 })).toBe(FAB_EDGE_GAP);
+    });
+
+    it("still falls back to the top limit, bar included, when nothing fits", () => {
+        expect(clampFabTop(200, { ...withBar, viewportHeight: 300, bottomInset: 336 })).toBe(
+            62 + FAB_EDGE_GAP
+        );
+    });
+});
+
 describe("isFabTap", () => {
     it("treats a still press as a tap", () => {
         expect(isFabTap(0, 0)).toBe(true);

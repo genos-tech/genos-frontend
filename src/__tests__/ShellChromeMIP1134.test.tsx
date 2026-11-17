@@ -81,14 +81,13 @@ describe("the notification banner is in the layout", () => {
         expect(css).not.toContain("z-index");
         expect(css).not.toContain("gradient");
         expect(css).not.toContain("box-shadow");
-        // The bar's height plus the status-bar inset (a notched iPhone PWA, MIP-1220). jsdom's CSS
-        // parser mangles `env()`, so this is read from the source, not from the computed style.
+        // Its own height. The status-bar inset of a notched iPhone PWA (MIP-1220) is no longer
+        // added here: the body pads it for the whole shell (`--app-top-inset`, MIP-1665), so a
+        // banner that added it too would be a second strip. See StatusBarInsetMIP1665.test.tsx.
         const src = code("services/notifications/PermissionBanner.tsx");
-        expect(src).toContain(
-            "calc(${PERMISSION_BANNER_HEIGHT}px + env(safe-area-inset-top, 0px))"
-        );
+        expect(PERMISSION_BANNER_HEIGHT_CSS).toBe(`${PERMISSION_BANNER_HEIGHT}px`);
         expect(src).toMatch(/height: PERMISSION_BANNER_HEIGHT_CSS/);
-        expect(src).toMatch(/paddingTop: "env\(safe-area-inset-top, 0px\)"/);
+        expect(src).not.toContain("safe-area-inset-top");
     });
 
     it("reserves its own height while it shows and gives it back when dismissed", () => {
@@ -132,7 +131,10 @@ describe("the notification banner is in the layout", () => {
 
     it("the shell height is the viewport less the banner, and the full-height surfaces use it", () => {
         const css = read("index.css");
-        expect(css).toMatch(/--app-vh:\s*calc\(100dvh - var\(--app-banner-h, 0px\)\)/);
+        // The viewport, less the status-bar strip the body pads (MIP-1665), less the banner.
+        expect(css).toMatch(
+            /--app-vh:\s*calc\(100dvh - var\(--app-top-inset\) - var\(--app-banner-h, 0px\)\)/
+        );
         // Every full-height surface of the shell uses it: a bare `100dvh` / `100vh` in a surface
         // that sits next to the banner makes the document taller than the viewport while the
         // banner shows. Fixed overlays (modals, Spotlight, the lightbox) are the viewport's
@@ -140,6 +142,8 @@ describe("the notification banner is in the layout", () => {
         // this test until it is either converted or added with a reason.
         const OVERLAYS = new Set([
             "components/ui/modal/ModalFrame.tsx",
+            // A fixed dialog: its centred card is sized against the viewport and the status bar (MIP-1665).
+            "components/modals/UrlLinkModal.tsx",
             "components/ui/menu/menuStyles.ts",
             "features/tasks/components/modals/ModalManageTags.tsx",
             "features/notes/common/components/ModalNoteHistory.tsx",

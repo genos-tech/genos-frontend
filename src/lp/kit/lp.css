@@ -12,7 +12,8 @@
  */
 
 .lp-root {
-    min-height: 100vh;
+    /* The body pads the status bar of an installed phone app away (--app-top-inset, MIP-1665). */
+    min-height: calc(100vh - var(--app-top-inset, 0px));
     background: var(--lp-bg);
     color: var(--lp-text);
     font-family:
