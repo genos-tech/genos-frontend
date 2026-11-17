@@ -43,7 +43,8 @@ const AuthShellInner = () => {
                 sx={{
                     display: "flex",
                     flexDirection: "column",
-                    minHeight: "100dvh",
+                    // The body pads the status bar away (`--app-top-inset`, MIP-1665): fill what is left.
+                    minHeight: "calc(100dvh - var(--app-top-inset))",
                     px: 2,
                     width: "100%",
                 }}

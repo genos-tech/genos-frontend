@@ -88,7 +88,8 @@ export const InitialLoad = (props: InitialLoadProps) => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                height: "100vh",
+                // Below the status bar, which the body pads away (`--app-top-inset`, MIP-1665).
+                height: "calc(100vh - var(--app-top-inset))",
                 width: "100vw",
                 background: `
                     radial-gradient(ellipse at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),

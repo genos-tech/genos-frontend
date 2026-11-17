@@ -186,7 +186,10 @@ export const ModalFrame = ({
     const escapeBelongsToPopup = useRef(false);
 
     const inset = "calc(100vw - 24px)";
-    const inner = "calc(100dvh - 32px)";
+    // The card is centred, so it keeps the same room above and below: at least 16px, and on an
+    // installed iPhone app also the status bar (`--app-top-inset`, MIP-1665), twice, because
+    // what is taken off the top is taken off the bottom as well.
+    const inner = "calc(100dvh - 32px - 2 * var(--app-top-inset))";
     const width = WIDTH[size];
     const sizing = fullScreenOnMobile
         ? {
@@ -203,7 +206,7 @@ export const ModalFrame = ({
               maxWidth: inset,
               maxHeight: clearBottomBar
                   ? {
-                        xs: "calc(100dvh - var(--mobile-bottom-inset, 60px) - 24px)",
+                        xs: "calc(100dvh - max(var(--mobile-bottom-inset, 60px) + 24px, 2 * var(--app-top-inset) + 24px))",
                         sm: inner,
                     }
                   : inner,
@@ -287,7 +290,11 @@ export const ModalFrame = ({
                         alignItems: "flex-start",
                         gap: 1.5,
                         px: 2.5,
-                        pt: 2.5,
+                        // A card that IS the screen reaches under the status bar: its header starts
+                        // below it (MIP-1665).
+                        pt: fullScreenOnMobile
+                            ? { xs: "calc(20px + var(--app-top-inset))", md: 2.5 }
+                            : 2.5,
                         pb: headerDivider ? 1.5 : 1,
                         flexShrink: 0,
                         ...(headerDivider && { borderBottom: `1px solid ${g.border.subtle}` }),

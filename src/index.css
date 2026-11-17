@@ -147,13 +147,22 @@
            push the composer a tab bar's height above the keyboard. */
         --mobile-bottom-inset: max(var(--BottomTabBar-height), var(--keyboard-inset));
 
+        /* The strip the phone's own status bar (clock, battery, Dynamic Island) covers. The app is
+           an installed home-screen app with `viewport-fit=cover`, so the page is drawn edge to edge
+           and this strip is part of it: a header at `top: 0` sat under the status bar and could not
+           be seen or tapped, on every page (MIP-1665). The body pads it away (below) and `--app-vh`
+           takes it off the shell's height, so every full-height surface still fits the screen. A
+           fixed surface that starts at the top edge reads this itself: it is outside the body's
+           padding. 0 in a browser tab, on a desktop and on a phone without a notch. */
+        --app-top-inset: env(safe-area-inset-top, 0px);
+
         /* The height the app shell may fill: the viewport, less the in-flow
            notification banner while it shows (PermissionBanner sets
            --app-banner-h, and removes it when dismissed). Every full-height
            surface of the shell uses this instead of a bare `100dvh`, so a
            banner above the shell pushes the page down by its own height
            instead of making the document scroll. */
-        --app-vh: calc(100dvh - var(--app-banner-h, 0px));
+        --app-vh: calc(100dvh - var(--app-top-inset) - var(--app-banner-h, 0px));
 
         /* Responsive breakpoints */
         --breakpoint-mobile: 480px;
@@ -208,6 +217,8 @@
            `vh` first as the fallback for browsers without `dvh`. */
         min-height: 100vh;
         min-height: 100dvh;
+        /* Below the status bar, not under it (MIP-1665, see `--app-top-inset`). */
+        padding-top: var(--app-top-inset);
     }
 
     html,

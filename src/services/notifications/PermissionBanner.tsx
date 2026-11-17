@@ -28,10 +28,9 @@ const markDismissed = () => {
 /** Height of the bar in px. Fixed, so the shell can reserve exactly this much
  *  (`--app-banner-h`, read by `--app-vh` in index.css) without measuring. */
 export const PERMISSION_BANNER_HEIGHT = 44;
-/** The same height plus the status-bar inset: in a standalone PWA on a notched iPhone
- *  (`viewport-fit=cover`) the bar would otherwise sit under the status bar. `env()` is 0
- *  everywhere else. */
-export const PERMISSION_BANNER_HEIGHT_CSS = `calc(${PERMISSION_BANNER_HEIGHT}px + env(safe-area-inset-top, 0px))`;
+/** The bar's height as CSS. The status-bar inset of a notched iPhone is not in it: the body pads
+ *  that away for the whole shell (`--app-top-inset`, MIP-1665), so the bar already starts below it. */
+export const PERMISSION_BANNER_HEIGHT_CSS = `${PERMISSION_BANNER_HEIGHT}px`;
 const BANNER_HEIGHT_VAR = "--app-banner-h";
 
 /**
@@ -97,7 +96,6 @@ export const PermissionBanner = ({
             sx={{
                 boxSizing: "border-box",
                 height: PERMISSION_BANNER_HEIGHT_CSS,
-                paddingTop: "env(safe-area-inset-top, 0px)",
                 display: "flex",
                 alignItems: "center",
                 gap: 1.5,

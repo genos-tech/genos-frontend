@@ -84,6 +84,8 @@ const MobileOverlay = ({
                     : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                 display: "flex",
                 flexDirection: "column",
+                // Fixed, so outside the body's padding: start below the status bar (MIP-1665).
+                paddingTop: "var(--app-top-inset)",
                 paddingBottom: "var(--BottomTabBar-height, 60px)",
             }}
         >
@@ -93,7 +95,7 @@ const MobileOverlay = ({
                 variant="plain"
                 sx={{
                     position: "absolute",
-                    top: 8,
+                    top: "calc(8px + var(--app-top-inset))",
                     right: 8,
                     zIndex: 1,
                     borderRadius: "10px",
