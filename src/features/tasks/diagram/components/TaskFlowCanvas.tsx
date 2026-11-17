@@ -83,7 +83,7 @@ import {
 } from "../types";
 import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
 import { FIT_PADDING, planInitialViewport } from "../utils/initialViewport";
-import { layoutDiagramNodes } from "../utils/layoutDiagram";
+import { layoutDiagramGraph } from "../utils/layoutDiagramGraph";
 import { applyLineage } from "../utils/lineage";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
 import { DependencyEdge } from "./DependencyEdge";
@@ -1113,9 +1113,11 @@ const CanvasInner = ({
                 newTaskIdsRef.current,
                 t.tasks.diagram.untitled
             );
-            const positioned = layoutDiagramNodes(rawNodes, rawEdges);
-            setNodes(positioned);
-            setEdges(rawEdges);
+            // Cards placed, and the parent-child lines to the later rows of a group routed
+            // through the gaps between rows (MIP-1682).
+            const laid = layoutDiagramGraph(rawNodes, rawEdges);
+            setNodes(laid.nodes);
+            setEdges(laid.edges);
             // Don't fit here directly: on the first assemble (modal open)
             // the nodes we just set haven't been measured yet and the pane
             // can still be 0×0, so fitView() would derive the viewport from

@@ -56,6 +56,17 @@ export type DiagramLayoutInput = {
 
 export type Position = { x: number; y: number };
 
+/** Where every card goes, and which cards were laid out in each card's group (MIP-1682). */
+export type DiagramLayout = {
+    positions: Map<number, Position>;
+    /**
+     * card -> the cards drawn in the group under it: its children AND the outside tasks (ghosts)
+     * that were placed there, which have no parent-child line but share its rows. A line to a
+     * child has to clear all of them, so the router needs the group, not just the tree.
+     */
+    groups: Map<number, number[]>;
+};
+
 /**
  * Column of every card: the length of the longest chain of blockers before it.
  * A loop has no first card, so the DFS drops the edge that closes it (the lowest
@@ -156,7 +167,7 @@ const shelfPack = (blocks: Block[], baseX: number): Block => {
     return { ...merge(placed, rowTop + rowHeight), connected: false };
 };
 
-export const computeDiagramLayout = (input: DiagramLayoutInput): Map<number, Position> => {
+export const layoutDiagramWithGroups = (input: DiagramLayoutInput): DiagramLayout => {
     const ids = [...new Set(input.nodeIds)].sort((a, b) => a - b);
     const known = new Set(ids);
     const column = dependencyColumns(ids, input.dependencies);
@@ -288,17 +299,19 @@ export const computeDiagramLayout = (input: DiagramLayoutInput): Map<number, Pos
     };
     place(roots, 0);
     place(extra, roots ? roots.height + LANE_GAP : 0);
-    return result;
+    return { positions: result, groups: children };
 };
+
+export const computeDiagramLayout = (input: DiagramLayoutInput): Map<number, Position> =>
+    layoutDiagramWithGroups(input).positions;
 
 /**
  * React Flow adapter: positions for the nodes `buildNodesAndEdges` produced. Same
  * contract as the dagre hook it replaces (returns the nodes with `position`,
  * `width` and `height` set, so React Flow needn't measure before first paint).
  */
-export const layoutDiagramNodes = (nodes: Node[], edges: Edge[]): Node[] => {
-    if (nodes.length === 0) return nodes;
-
+/** What `computeDiagramLayout` needs, read off React Flow's nodes and edges. */
+export const diagramInputOf = (nodes: Node[], edges: Edge[]): DiagramLayoutInput => {
     const parentOf = new Map<number, number>();
     const dependencies: Array<{ blocker: number; blocked: number }> = [];
     for (const edge of edges) {
@@ -315,17 +328,20 @@ export const layoutDiagramNodes = (nodes: Node[], edges: Edge[]): Node[] => {
         if (data.isExternal) ghostIds.add(Number(node.id));
         if (data.isRoot && !data.isExternal) rootId = Number(node.id);
     }
+    return { nodeIds: nodes.map((n) => Number(n.id)), rootId, parentOf, dependencies, ghostIds };
+};
 
-    const positions = computeDiagramLayout({
-        nodeIds: nodes.map((n) => Number(n.id)),
-        rootId,
-        parentOf,
-        dependencies,
-        ghostIds,
-    });
-
-    return nodes.map((node) => {
+/** The nodes with their position, width and height set. */
+export const placeDiagramNodes = (
+    nodes: Node[],
+    positions: ReadonlyMap<number, Position>
+): Node[] =>
+    nodes.map((node) => {
         const at = positions.get(Number(node.id)) ?? { x: MARGIN, y: MARGIN };
         return { ...node, position: at, width: NODE_WIDTH, height: NODE_HEIGHT } as Node;
     });
+
+export const layoutDiagramNodes = (nodes: Node[], edges: Edge[]): Node[] => {
+    if (nodes.length === 0) return nodes;
+    return placeDiagramNodes(nodes, computeDiagramLayout(diagramInputOf(nodes, edges)));
 };
