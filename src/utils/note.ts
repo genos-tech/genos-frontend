@@ -141,6 +141,32 @@ export function buildTaskNoteContextCrumbs(
             kind: "project",
         },
     ];
+    // A note from an API that sends `ancestors` (MIP-1667): the crumbs ARE the sidebar's folders,
+    // project › every task above (the milestone's backing task first, drawn as the milestone) › the
+    // task, at any depth. The milestone's OWN note keeps the rule below (it stops at the milestone).
+    if (Array.isArray(root.ancestors) && root.isMilestone !== true) {
+        // A task that says it is in a milestone the chain does not reach keeps its milestone crumb.
+        if (root.milestoneId != null && !root.ancestors.some((a) => a.isMilestone)) {
+            crumbs.push({
+                key: `mile-${root.milestoneId}`,
+                label: root.milestoneTitle || `#${root.milestoneId}`,
+                kind: "milestone",
+            });
+        }
+        for (const ancestor of root.ancestors) {
+            crumbs.push({
+                key: `${ancestor.isMilestone ? "mile" : "ptask"}-${ancestor.taskId}`,
+                label: ancestor.title || ancestor.displayId || `#${ancestor.taskId}`,
+                kind: ancestor.isMilestone ? "milestone" : "task",
+            });
+        }
+        crumbs.push({
+            key: `task-${root.taskId}`,
+            label: root.taskTitle || root.displayId || `#${root.taskId}`,
+            kind: "task",
+        });
+        return crumbs;
+    }
     // The milestone the task sits under, if any (the sidebar's optional
     // middle level) — this was the missing crumb.
     if (root.milestoneId != null) {

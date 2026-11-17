@@ -220,6 +220,79 @@ describe("buildTaskNoteContextCrumbs", () => {
         ).toEqual(["project:Q2 Roadmap", "milestone:M", "task:Synthesize interviews"]);
     });
 
+    describe("with `ancestors` (MIP-1667)", () => {
+        const a = (taskId: number, title: string, isMilestone = false) => ({
+            taskId,
+            title,
+            displayId: `QR-${taskId}`,
+            isMilestone,
+        });
+
+        it("lists every task above, from the milestone down, at any depth", () => {
+            expect(
+                labels(
+                    buildTaskNoteContextCrumbs(
+                        meta({
+                            milestoneId: 5,
+                            milestoneTitle: "M",
+                            ancestors: [a(1, "M", true), a(2, "Grandparent"), a(3, "Parent")],
+                        })
+                    )
+                )
+            ).toEqual([
+                "project:Q2 Roadmap",
+                "milestone:M",
+                "task:Grandparent",
+                "task:Parent",
+                "task:Synthesize interviews",
+            ]);
+        });
+
+        it("has the milestone once, from the chain, not from milestoneId too", () => {
+            const crumbs = buildTaskNoteContextCrumbs(
+                meta({ milestoneId: 5, milestoneTitle: "M", ancestors: [a(1, "M", true)] })
+            );
+            expect(crumbs.filter((c) => c.kind === "milestone")).toHaveLength(1);
+        });
+
+        it("keeps the milestone crumb when the chain does not reach the milestone", () => {
+            expect(
+                labels(
+                    buildTaskNoteContextCrumbs(
+                        meta({ milestoneId: 5, milestoneTitle: "M", ancestors: [a(2, "Parent")] })
+                    )
+                )
+            ).toEqual([
+                "project:Q2 Roadmap",
+                "milestone:M",
+                "task:Parent",
+                "task:Synthesize interviews",
+            ]);
+        });
+
+        it("is the project and the task for a task with nothing above it", () => {
+            expect(labels(buildTaskNoteContextCrumbs(meta({ ancestors: [] })))).toEqual([
+                "project:Q2 Roadmap",
+                "task:Synthesize interviews",
+            ]);
+        });
+
+        it("still stops at the milestone for the milestone's own note", () => {
+            expect(
+                labels(
+                    buildTaskNoteContextCrumbs(
+                        meta({
+                            isMilestone: true,
+                            milestoneId: 5,
+                            milestoneTitle: "M",
+                            ancestors: [],
+                        })
+                    )
+                )
+            ).toEqual(["project:Q2 Roadmap", "milestone:M"]);
+        });
+    });
+
     it("falls back to #ids and returns [] for a missing root", () => {
         expect(buildTaskNoteContextCrumbs(null)).toEqual([]);
         expect(

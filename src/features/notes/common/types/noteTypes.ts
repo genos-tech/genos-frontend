@@ -1,3 +1,5 @@
+import type { TaskNoteAncestor } from "../../../../types/notes";
+
 export interface BaseNoteTreeNode {
     noteId: number;
     title: string;
@@ -21,6 +23,7 @@ export interface TaskNoteMetaTreeNode extends BaseNoteTreeNode {
     parentTaskId?: number | null;
     parentTaskTitle?: string | null;
     parentTaskIsMilestone?: boolean | null;
+    ancestors?: TaskNoteAncestor[];
     isMilestone?: boolean;
     milestoneId?: number | null;
     milestoneTitle?: string | null;

@@ -831,6 +831,9 @@ export const useNoteManagement = (
                         parentTaskTitle: newNoteAny.parentTaskTitle,
                         parentTaskDisplayId: newNoteAny.parentTaskDisplayId,
                         parentTaskIsMilestone: newNoteAny.parentTaskIsMilestone,
+                        // Every task above the note's own, root first (MIP-1667): the sidebar nests
+                        // the new note's folder inside its parent's with it.
+                        ancestors: newNoteAny.ancestors,
                         isMilestone: newNoteAny.isMilestone,
                         milestoneId: newNoteAny.milestoneId,
                         milestoneTitle: newNoteAny.milestoneTitle,
@@ -1513,6 +1516,8 @@ export const useNoteManagement = (
                           parentTaskTitle: moved.parentTaskTitle,
                           parentTaskDisplayId: moved.parentTaskDisplayId,
                           parentTaskIsMilestone: moved.parentTaskIsMilestone,
+                          // The old task's chain would put the moved note under the old parent.
+                          ancestors: moved.ancestors,
                           isMilestone: moved.isMilestone,
                           milestoneId: moved.milestoneId,
                           milestoneTitle: moved.milestoneTitle,
