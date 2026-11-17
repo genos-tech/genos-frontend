@@ -1,9 +1,11 @@
 import { useState } from "react";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import { Alert, Box, Button, IconButton, Input, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
@@ -74,6 +76,9 @@ export const ModalManageTodoTags = ({
 
     // Two-click delete: first click arms the row, second confirms.
     const [armedDeleteId, setArmedDeleteId] = useState<number | null>(null);
+    // The row whose name is being edited. The pencil starts it; a click on the name still does
+    // (MIP-1652: with only the click, nothing on a row said it could be renamed).
+    const [renamingId, setRenamingId] = useState<number | null>(null);
     const [newName, setNewName] = useState("");
     const [newColor, setNewColor] = useState<TagColorOption>(DEFAULT_NEW_COLOR);
     const [error, setError] = useState<string | null>(null);
@@ -81,6 +86,7 @@ export const ModalManageTodoTags = ({
 
     const reset = () => {
         setArmedDeleteId(null);
+        setRenamingId(null);
         setError(null);
     };
 
@@ -173,6 +179,7 @@ export const ModalManageTodoTags = ({
                             />
                             <InlineTitleEdit
                                 ariaLabel={t.chat.todoPane.tags.manageTitle}
+                                editing={renamingId === category.categoryId}
                                 maxLength={MAX_NAME_LENGTH}
                                 sx={{ flex: 1, minWidth: 0 }}
                                 value={category.name}
@@ -184,7 +191,20 @@ export const ModalManageTodoTags = ({
                                     />
                                 )}
                                 onCommit={(next) => void commitRename(category, next)}
+                                onEditingChange={(editing) =>
+                                    setRenamingId(editing ? category.categoryId : null)
+                                }
                             />
+                            <AppTooltip title={t.chat.todoPane.tags.renameTag}>
+                                <IconButton
+                                    aria-label={`${t.chat.todoPane.tags.renameTag}: ${category.name}`}
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => setRenamingId(category.categoryId)}
+                                >
+                                    <EditRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            </AppTooltip>
                             {isArmed ? (
                                 <Button
                                     color="danger"

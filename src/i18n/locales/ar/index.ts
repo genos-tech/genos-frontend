@@ -1679,10 +1679,14 @@ export const ar: DeepPartial<Messages> = {
             general: "عام",
             newTagPlaceholder: "علامة جديدة",
             addTag: "إضافة علامة",
+            changeTag: "تغيير العلامة",
             tags: {
                 manageTitle: "إدارة العلامات",
                 manageTooltip: "إدارة العلامات",
-                privateHint: "علاماتك خاصة بك. انقر على اسم لتغييره.",
+                privateHint:
+                    "علاماتك خاصة بك. أعد تسمية العلامة بالقلم أو بالنقر على اسمها، وغيّر لونها من لوحة الألوان.",
+                renameTag: "إعادة تسمية العلامة",
+                manageMenu: "إدارة العلامات…",
                 emptyList: "لا توجد علامات بعد. أضف علامة أدناه.",
                 createButton: "إضافة",
                 deleteConfirm: "حذف",
