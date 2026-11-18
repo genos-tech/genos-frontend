@@ -4531,9 +4531,9 @@ export const ar: DeepPartial<Messages> = {
             teamIdPlaceholder: "أدخل معرّف الفريق للبحث",
             teamNameLabel: "اسم الفريق",
             teamNamePlaceholder: "أدخل اسم فريقك",
-            starterOptIn: "ابدأ بمشروع تجريبي",
+            starterOptIn: "تضمين بيانات تجريبية توضيحية",
             starterOptInHint:
-                "مشروع صغير للبدء مع ملاحظة ومهام حتى لا يكون التطبيق فارغًا — يمكن حذفه في أي وقت.",
+                "مشاريع ودردشات وملاحظات ومهام تجريبية توضح كيفية تنظيم الفريق — أزلها عندما لا تحتاج إليها.",
             searchAnother: "البحث عن فريق آخر",
             requestToJoin: "طلب الانضمام",
             searchTeam: "البحث عن فريق",

@@ -185,9 +185,9 @@ export const admin = {
         teamIdPlaceholder: "Enter team ID to search",
         teamNameLabel: "Team Name",
         teamNamePlaceholder: "Enter your team name",
-        starterOptIn: "Start with a sample project",
+        starterOptIn: "Include sample instruction data",
         starterOptInHint:
-            "A small getting-started project, note, and todos so the app isn't empty — delete it anytime.",
+            "Example projects, chats, notes and to-dos that show how to organise a team. Remove them when you no longer need them.",
         searchAnother: "Search Another",
         requestToJoin: "Request to Join",
         searchTeam: "Search Team",
