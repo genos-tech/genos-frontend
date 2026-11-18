@@ -151,6 +151,7 @@ export const fr: DeepPartial<Messages> = {
                     "Équipe introuvable. Veuillez vérifier l'ID de l'équipe et réessayer.",
                 teamNotFoundShort: "Équipe introuvable.",
                 duplicateTeamName: "Veuillez essayer avec un autre nom d'équipe.",
+                invalidDepartments: "Vérifiez les noms des départements.",
             },
             oauth: {
                 failureReasons: {
@@ -203,6 +204,12 @@ export const fr: DeepPartial<Messages> = {
             starterOptIn: "Inclure des données d'exemple avec instructions",
             starterOptInHint:
                 "Des projets, discussions, notes et tâches d'exemple qui montrent comment organiser une équipe — à retirer quand vous n'en avez plus besoin.",
+            departmentsLabel: "Départements (facultatif)",
+            departmentsPlaceholder: "Paiements, Facturation, Croissance",
+            departmentsHint:
+                "Un par ligne ou séparés par des virgules. Chacun reçoit une étiquette de projet, un @groupe, un dossier d'équipe et une discussion ouverte. Vous pourrez en ajouter plus tard.",
+            departmentsTooMany: "Au plus {max} départements à la fois.",
+            departmentsTooLong: "Le nom d'un département peut compter au plus {max} caractères.",
             searchAnother: "Rechercher une autre",
             requestToJoin: "Demander à rejoindre",
             searchTeam: "Rechercher l'équipe",

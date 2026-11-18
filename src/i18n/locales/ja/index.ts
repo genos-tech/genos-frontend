@@ -146,6 +146,7 @@ export const ja: DeepPartial<Messages> = {
                 teamNotFound: "チームが見つかりません。チームIDを確認してもう一度お試しください。",
                 teamNotFoundShort: "チームが見つかりません。",
                 duplicateTeamName: "別のチーム名でお試しください。",
+                invalidDepartments: "部署名を確認してください。",
             },
             oauth: {
                 failureReasons: {
@@ -199,6 +200,12 @@ export const ja: DeepPartial<Messages> = {
             starterOptIn: "サンプルデータ（使い方の例）を含める",
             starterOptInHint:
                 "チームの整え方を示すサンプルのプロジェクト・チャット・ノート・To-Doを用意します。不要になったら取り除けます。",
+            departmentsLabel: "部署（任意）",
+            departmentsPlaceholder: "決済、請求、グロース",
+            departmentsHint:
+                "1行に1つ、またはカンマで区切ります。それぞれにプロジェクトのタグ、@グループ、チームフォルダ、オープンなチャットが作られます。あとから追加もできます。",
+            departmentsTooMany: "一度に作れる部署は最大{max}個です。",
+            departmentsTooLong: "部署名は{max}文字までです。",
             searchAnother: "別のチームを検索",
             requestToJoin: "参加をリクエスト",
             searchTeam: "チームを検索",

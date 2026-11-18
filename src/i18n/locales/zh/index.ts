@@ -140,6 +140,7 @@ export const zh: DeepPartial<Messages> = {
                 teamNotFound: "未找到团队，请检查团队 ID 后重试。",
                 teamNotFoundShort: "未找到团队。",
                 duplicateTeamName: "请尝试使用其他团队名称。",
+                invalidDepartments: "请检查部门名称。",
             },
             oauth: {
                 failureReasons: {
@@ -184,6 +185,12 @@ export const zh: DeepPartial<Messages> = {
             starterOptIn: "包含示例数据（使用说明）",
             starterOptInHint:
                 "创建示例项目、聊天、笔记和待办，展示如何组织团队 — 不需要时可随时移除。",
+            departmentsLabel: "部门（可选）",
+            departmentsPlaceholder: "支付, 账单, 增长",
+            departmentsHint:
+                "每行一个，或用逗号分隔。每个部门会得到一个项目标签、一个 @群组、一个团队文件夹和一个公开聊天。之后还可以添加。",
+            departmentsTooMany: "一次最多 {max} 个部门。",
+            departmentsTooLong: "部门名称最多 {max} 个字符。",
             searchAnother: "搜索其他团队",
             requestToJoin: "申请加入",
             searchTeam: "搜索团队",

@@ -138,6 +138,7 @@ export const admin = {
             teamNotFound: "Team not found. Please check the Team ID and try again.",
             teamNotFoundShort: "Team not found.",
             duplicateTeamName: "Please try with different team name.",
+            invalidDepartments: "Please check the department names.",
         },
         oauth: {
             failureReasons: {
@@ -188,6 +189,12 @@ export const admin = {
         starterOptIn: "Include sample instruction data",
         starterOptInHint:
             "Example projects, chats, notes and to-dos that show how to organise a team. Remove them when you no longer need them.",
+        departmentsLabel: "Departments (optional)",
+        departmentsPlaceholder: "Payments, Billing, Growth",
+        departmentsHint:
+            "One per line or separated by commas. Each gets a project tag, an @group, a team folder and an open chat. You can add more later.",
+        departmentsTooMany: "At most {max} departments at a time.",
+        departmentsTooLong: "A department name can be at most {max} characters.",
         searchAnother: "Search Another",
         requestToJoin: "Request to Join",
         searchTeam: "Search Team",

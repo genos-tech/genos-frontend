@@ -4456,6 +4456,7 @@ export const ar: DeepPartial<Messages> = {
                     "لم يتم العثور على الفريق. يُرجى التحقق من معرّف الفريق والمحاولة مرة أخرى.",
                 teamNotFoundShort: "لم يتم العثور على الفريق.",
                 duplicateTeamName: "يُرجى المحاولة باسم فريق مختلف.",
+                invalidDepartments: "يرجى التحقق من أسماء الأقسام.",
             },
             passwordReset: {
                 title: "قم بتعيين كلمة مرور جديدة",
@@ -4534,6 +4535,12 @@ export const ar: DeepPartial<Messages> = {
             starterOptIn: "تضمين بيانات تجريبية توضيحية",
             starterOptInHint:
                 "مشاريع ودردشات وملاحظات ومهام تجريبية توضح كيفية تنظيم الفريق — أزلها عندما لا تحتاج إليها.",
+            departmentsLabel: "الأقسام (اختياري)",
+            departmentsPlaceholder: "المدفوعات، الفواتير، النمو",
+            departmentsHint:
+                "واحد في كل سطر أو مفصولة بفواصل. يحصل كل قسم على وسم مشروع ومجموعة @ ومجلد فريق ودردشة مفتوحة. يمكنك إضافة المزيد لاحقًا.",
+            departmentsTooMany: "الحد الأقصى {max} قسمًا في كل مرة.",
+            departmentsTooLong: "يمكن أن يصل اسم القسم إلى {max} حرفًا على الأكثر.",
             searchAnother: "البحث عن فريق آخر",
             requestToJoin: "طلب الانضمام",
             searchTeam: "البحث عن فريق",

@@ -4526,6 +4526,7 @@ export const es: DeepPartial<Messages> = {
                     "Equipo no encontrado. Comprueba el ID del equipo e inténtalo de nuevo.",
                 teamNotFoundShort: "Equipo no encontrado.",
                 duplicateTeamName: "Prueba con un nombre de equipo diferente.",
+                invalidDepartments: "Revisa los nombres de los departamentos.",
             },
             passwordReset: {
                 title: "Establecer una nueva contraseña",
@@ -4612,6 +4613,13 @@ export const es: DeepPartial<Messages> = {
             starterOptIn: "Incluir datos de ejemplo con instrucciones",
             starterOptInHint:
                 "Proyectos, chats, notas y tareas de ejemplo que muestran cómo organizar un equipo — quítalos cuando ya no los necesites.",
+            departmentsLabel: "Departamentos (opcional)",
+            departmentsPlaceholder: "Pagos, Facturación, Crecimiento",
+            departmentsHint:
+                "Uno por línea o separados por comas. Cada uno recibe una etiqueta de proyecto, un @grupo, una carpeta de equipo y un chat abierto. Puedes añadir más después.",
+            departmentsTooMany: "Como máximo {max} departamentos a la vez.",
+            departmentsTooLong:
+                "El nombre de un departamento puede tener como máximo {max} caracteres.",
             searchAnother: "Buscar otro",
             requestToJoin: "Solicitar unirse",
             searchTeam: "Buscar equipo",
