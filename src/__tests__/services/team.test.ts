@@ -116,6 +116,37 @@ describe("createTeam", () => {
         expect(setError).toHaveBeenCalledWith("Unauthorized. Authentication token was not found.");
     });
 
+    it("sends the departments, and only when some are named", async () => {
+        const mockPost = vi.fn().mockResolvedValue({ data: {} });
+        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
+
+        await createTeam("token123", "Acme", "user1", undefined, true, ["Payments", "Billing"]);
+        expect(mockPost.mock.calls[0][1]).toMatchObject({
+            with_starter: true,
+            departments: ["Payments", "Billing"],
+        });
+
+        await createTeam("token123", "Acme", "user1", undefined, false, []);
+        expect(mockPost.mock.calls[1][1]).not.toHaveProperty("departments");
+        await createTeam("token123", "Acme", "user1");
+        expect(mockPost.mock.calls[2][1]).not.toHaveProperty("departments");
+    });
+
+    it("says the departments were wrong, not that the name is taken, when the server refuses the list", async () => {
+        const mockPost = vi.fn().mockRejectedValue({
+            isAxiosError: true,
+            response: { status: 400, data: { error: "x", code: "invalid_departments" } },
+        });
+        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
+        const axios = await import("axios");
+        vi.spyOn(axios.default, "isAxiosError").mockReturnValue(true);
+
+        const setError = vi.fn();
+        await createTeam("token123", "Acme", "user1", setError, true, ["###"]);
+
+        expect(setError).toHaveBeenCalledWith("Please check the department names.");
+    });
+
     it("should call setErrorMessage on 400 error", async () => {
         const mockPost = vi.fn().mockRejectedValue({
             isAxiosError: true,

@@ -4964,6 +4964,7 @@ export const hi: DeepPartial<Messages> = {
                 teamNotFound: "टीम नहीं मिली। कृपया टीम ID जाँचें और फिर से कोशिश करें।",
                 teamNotFoundShort: "टीम नहीं मिली।",
                 duplicateTeamName: "कृपया किसी दूसरे टीम के नाम से कोशिश करें।",
+                invalidDepartments: "कृपया विभाग के नाम जाँचें।",
             },
             oauth: {
                 failureReasons: {
@@ -5016,6 +5017,12 @@ export const hi: DeepPartial<Messages> = {
             starterOptIn: "नमूना निर्देश-डेटा शामिल करें",
             starterOptInHint:
                 "टीम को व्यवस्थित करने का तरीका दिखाने वाले नमूना प्रोजेक्ट, चैट, नोट और टूडू — ज़रूरत न रहने पर हटा दें।",
+            departmentsLabel: "विभाग (वैकल्पिक)",
+            departmentsPlaceholder: "भुगतान, बिलिंग, ग्रोथ",
+            departmentsHint:
+                "हर पंक्ति में एक, या अल्पविराम से अलग करें। हर विभाग को एक प्रोजेक्ट टैग, एक @समूह, एक टीम फ़ोल्डर और एक खुली चैट मिलती है। बाद में और जोड़ सकते हैं।",
+            departmentsTooMany: "एक बार में अधिकतम {max} विभाग।",
+            departmentsTooLong: "विभाग के नाम में अधिकतम {max} अक्षर हो सकते हैं।",
             searchAnother: "दूसरी खोजें",
             requestToJoin: "जॉइन करने का अनुरोध",
             searchTeam: "टीम खोजें",
