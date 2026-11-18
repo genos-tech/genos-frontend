@@ -77,6 +77,7 @@ describe("BottomTabBar", () => {
                         useCM={{ unReadChatAndActivityCounts: 0 } as never}
                         useIM={{ unReadInboxItemCount: 0 } as never}
                         onOpenMore={onOpenMore}
+                        onOpenTodo={vi.fn()}
                     />
                 </BrowserRouter>
             </CssVarsProvider>

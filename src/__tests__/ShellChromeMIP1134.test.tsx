@@ -184,6 +184,7 @@ describe("the mobile tab bar", () => {
                         useCM={{ unReadChatAndActivityCounts: 3 } as never}
                         useIM={{ unReadInboxItemCount: 0 } as never}
                         onOpenMore={() => {}}
+                        onOpenTodo={() => {}}
                     />
                 </BrowserRouter>
             </CssVarsProvider>
@@ -193,10 +194,10 @@ describe("the mobile tab bar", () => {
 
     it("every tab is a real button, and only the current one is aria-current=page", () => {
         mount("/workspace/tasks");
-        expect(screen.getAllByRole("button")).toHaveLength(5);
+        expect(screen.getAllByRole("button")).toHaveLength(6);
         expect(tab("Tasks")).toHaveAttribute("aria-current", "page");
         expect(tab("Tasks")).toHaveAttribute("data-selected", "true");
-        for (const other of ["Inbox", "Chats", "Notes", "More"]) {
+        for (const other of ["Inbox", "Chats", "Notes", "To-Do", "More"]) {
             expect(tab(other), other).not.toHaveAttribute("aria-current");
         }
     });

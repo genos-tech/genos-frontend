@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
@@ -19,7 +18,6 @@ import { loadMyTeams, membershipTeams } from "../../features/admin/services/load
 import { switchTeam } from "../../features/admin/services/switchTeam";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
-import { useSidebarVisibility } from "../../hooks/common/useSidebarVisibility";
 import { useSignOut } from "../../hooks/common/useSignOut";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -40,9 +38,8 @@ type MobileAccountSheetProps = {
     useCM: ChatManagementState;
     useTEM: TeamManagementState;
     useUISM: UIStateManagementState;
-    // The rail's To-Do and History buttons, which the phone has no other
-    // way to reach (MIP-1277). Each closes this sheet first.
-    onOpenTodo: () => void;
+    // The rail's History button, which the phone has no other way to reach (MIP-1277); it
+    // closes this sheet first. (To-Do is a tab of the bottom bar: MIP-1687.)
     onOpenHistory: () => void;
 };
 
@@ -99,8 +96,7 @@ const RowButton = ({
  */
 export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
     const { open, onClose, myself, setMyself, socket, useCM, useTEM, useUISM } = props;
-    const { onOpenTodo, onOpenHistory } = props;
-    const sidebarVisibility = useSidebarVisibility();
+    const { onOpenHistory } = props;
     const { accessToken } = useAuth();
     const { mode, setMode } = useColorScheme();
     const { t } = useTranslation();
@@ -201,20 +197,9 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                     <Divider sx={{ my: 1 }} />
 
                     <Stack spacing={0.5}>
-                        {/* The rail's two action buttons, in the rail's order.
-                            To-Do follows the Settings → Sidebar toggle like
-                            the rail does; History has none. They open over
-                            the current page, so this sheet closes first. */}
-                        {sidebarVisibility.isVisible("todo") && (
-                            <RowButton
-                                icon={<ChecklistRoundedIcon />}
-                                label={t.sidebar.actions.todo}
-                                onClick={() => {
-                                    onClose();
-                                    onOpenTodo();
-                                }}
-                            />
-                        )}
+                        {/* History, as the rail's second action button. To-Do, its first, is a tab of the
+                            bottom bar on a phone (MIP-1687), so it is not repeated here. It opens
+                            over the current page, so this sheet closes first. */}
                         <RowButton
                             icon={<HistoryRoundedIcon />}
                             label={t.sidebar.actions.history}

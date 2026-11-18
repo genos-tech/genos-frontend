@@ -1,5 +1,6 @@
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -24,6 +25,8 @@ type BottomTabBarProps = {
     useIM: InboxManagementState;
     useCM: ChatManagementState;
     onOpenMore: () => void;
+    /** Opens the To-Do list over the page (the same call as the rail's To-Do button). */
+    onOpenTodo: () => void;
 };
 
 // Mirrors NAV_ITEMS in `sidebar.tsx`. Kept inline rather than imported
@@ -55,7 +58,16 @@ const TAB_ITEMS = [
         labelKey: "notes" as const,
         path: "/workspace/notes",
     },
-    // "More" opens a sheet rather than navigating: To-Do, History, settings,
+    // To-Do opens its list over the page rather than navigating (the rail's button does the same),
+    // so it has no route and is never route-active. It follows the Settings → Sidebar toggle like
+    // the four above (MIP-1687: it was only in the More sheet, so a phone had no way to pin it).
+    {
+        id: 5,
+        icon: ChecklistRoundedIcon,
+        labelKey: "todo" as const,
+        path: "",
+    },
+    // "More" opens a sheet rather than navigating: History, settings,
     // theme, team switch and sign-out live in the desktop sidebar, which is
     // `null` on mobile (MIP-1277). `path` is empty so nothing here is ever
     // route-active.
@@ -68,7 +80,7 @@ const TAB_ITEMS = [
 ];
 
 export const BottomTabBar = (props: BottomTabBarProps) => {
-    const { useIM, useCM, onOpenMore } = props;
+    const { useIM, useCM, onOpenMore, onOpenTodo } = props;
     const isMobile = useIsMobile();
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -85,6 +97,10 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
     const visibleTabs = TAB_ITEMS.filter(
         (item) => !hideable.has(item.labelKey) || isVisible(item.labelKey as SidebarItemKey)
     );
+
+    // To-Do's name is the rail's action label; the others are nav entries.
+    const labelOf = (key: (typeof TAB_ITEMS)[number]["labelKey"]) =>
+        key === "todo" ? t.sidebar.actions.todo : t.sidebar.nav[key];
 
     const getBadgeCount = (id: number): number => {
         if (id === 0) return useIM.unReadInboxItemCount;
@@ -129,7 +145,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 const tabName =
                     badgeCount > 0
                         ? fmt(t.sidebar.unreadTab, {
-                              label: t.sidebar.nav[item.labelKey],
+                              label: labelOf(item.labelKey),
                               count: badgeCount,
                           })
                         : undefined;
@@ -138,6 +154,10 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                 // with it, selected = accent text and medium weight); a full-width tint on a
                 // 78px tab would be heavy, so the selected tab changes colour only.
                 const openTab = () => {
+                    if (item.labelKey === "todo") {
+                        onOpenTodo();
+                        return;
+                    }
                     if (item.path === "") {
                         onOpenMore();
                         return;
@@ -206,7 +226,7 @@ export const BottomTabBar = (props: BottomTabBarProps) => {
                             <Icon sx={{ fontSize: 22 }} />
                         </Badge>
                         <Box component="span" sx={{ ...type("caption"), fontWeight: "inherit" }}>
-                            {t.sidebar.nav[item.labelKey]}
+                            {labelOf(item.labelKey)}
                         </Box>
                     </Box>
                 );

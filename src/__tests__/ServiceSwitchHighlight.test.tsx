@@ -108,6 +108,7 @@ const mountBar = (start: string) => {
                     useCM={{ unReadChatAndActivityCounts: 0 } as never}
                     useIM={{ unReadInboxItemCount: 0 } as never}
                     onOpenMore={() => {}}
+                    onOpenTodo={() => {}}
                 />
             </BrowserRouter>
         </CssVarsProvider>

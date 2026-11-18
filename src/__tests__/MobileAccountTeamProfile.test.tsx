@@ -81,7 +81,6 @@ const renderSheet = () =>
                 useUISM={{} as never}
                 onClose={vi.fn()}
                 onOpenHistory={vi.fn()}
-                onOpenTodo={vi.fn()}
             />
         </CssVarsProvider>
     );

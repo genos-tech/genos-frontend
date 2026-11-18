@@ -2340,6 +2340,9 @@ const AppBody = () => {
                                                                                                                 true
                                                                                                             )
                                                                                                         }
+                                                                                                        onOpenTodo={
+                                                                                                            toggleTodoModal
+                                                                                                        }
                                                                                                     />
                                                                                                     <MobileAccountSheet
                                                                                                         myself={
@@ -2350,9 +2353,6 @@ const AppBody = () => {
                                                                                                         }
                                                                                                         onOpenHistory={
                                                                                                             openHistory
-                                                                                                        }
-                                                                                                        onOpenTodo={
-                                                                                                            toggleTodoModal
                                                                                                         }
                                                                                                         setMyself={
                                                                                                             setMyself
