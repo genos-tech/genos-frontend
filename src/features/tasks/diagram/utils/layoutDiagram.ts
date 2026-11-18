@@ -34,7 +34,15 @@ import type { Edge, Node } from "@xyflow/react";
  */
 
 export const NODE_WIDTH = 260;
-export const NODE_HEIGHT = 140;
+/**
+ * The height a card is drawn at, measured in a browser (MIP-1684): a task card is 148 px whatever
+ * its title or tags (the title is clamped to two lines), an outside task 144, a milestone card
+ * 198. The slot used to be 140 for all of them, so a card overflowed its slot, the gap under a
+ * milestone was 32 px instead of 90, and every line started below where the layout thought the
+ * card ended.
+ */
+export const NODE_HEIGHT = 148;
+export const MILESTONE_NODE_HEIGHT = 198;
 /** Horizontal gap between cards. */
 export const COL_GAP = 50;
 /** Vertical gap between a parent card and the group of its children. */
@@ -70,6 +78,8 @@ export type DiagramLayoutInput = {
     order?: ReadonlyMap<number, number>;
     /** How many columns a row of unrelated tasks wraps at. Default `FREE_ROW_COLUMNS`. */
     freeRowColumns?: number;
+    /** The height of the cards that are not `NODE_HEIGHT` (a milestone's). */
+    heights?: ReadonlyMap<number, number>;
 };
 
 export type Position = { x: number; y: number };
@@ -197,6 +207,7 @@ export const layoutDiagramWithGroups = (input: DiagramLayoutInput): DiagramLayou
     const ids = allIds.filter((id) => !input.ghostIds.has(id));
     const known = new Set(ids);
     const rowColumns = Math.max(1, Math.floor(input.freeRowColumns ?? FREE_ROW_COLUMNS));
+    const heightOf = (id: number) => input.heights?.get(id) ?? NODE_HEIGHT;
     // Siblings that could take the same place: active work first, then the lower id.
     const rootId = input.rootId;
     const precedes = (a: number, b: number) =>
@@ -288,20 +299,20 @@ export const layoutDiagramWithGroups = (input: DiagramLayoutInput): DiagramLayou
                 tops: [[x, x + NODE_WIDTH]],
                 minX: x,
                 maxX: x + NODE_WIDTH,
-                height: NODE_HEIGHT,
+                height: heightOf(id),
                 connected: own,
             };
         }
         const lo = Math.min(...group.tops.map((t) => t[0]));
         const hi = Math.max(...group.tops.map((t) => t[1]));
         const x = (lo + hi) / 2 - NODE_WIDTH / 2;
-        const below = shift(group, 0, NODE_HEIGHT + RANK_GAP);
+        const below = shift(group, 0, heightOf(id) + RANK_GAP);
         return {
             items: [{ id, x, y: 0 }, ...below.items],
             tops: [[x, x + NODE_WIDTH]],
             minX: Math.min(x, below.minX),
             maxX: Math.max(x + NODE_WIDTH, below.maxX),
-            height: NODE_HEIGHT + RANK_GAP + group.height,
+            height: heightOf(id) + RANK_GAP + group.height,
             connected: group.connected || own,
         };
     };
@@ -395,6 +406,7 @@ export const diagramInputOf = (
     edges: Edge[],
     options: Pick<DiagramLayoutInput, "order" | "freeRowColumns"> = {}
 ): DiagramLayoutInput => {
+    const heights = new Map<number, number>();
     const parentOf = new Map<number, number>();
     const dependencies: Array<{ blocker: number; blocked: number }> = [];
     for (const edge of edges) {
@@ -410,6 +422,8 @@ export const diagramInputOf = (
         const data = node.data as { isExternal?: boolean; isRoot?: boolean };
         if (data.isExternal) ghostIds.add(Number(node.id));
         if (data.isRoot && !data.isExternal) rootId = Number(node.id);
+        const height = nodeHeightOf(node);
+        if (height !== NODE_HEIGHT) heights.set(Number(node.id), height);
     }
     return {
         nodeIds: nodes.map((n) => Number(n.id)),
@@ -417,9 +431,16 @@ export const diagramInputOf = (
         parentOf,
         dependencies,
         ghostIds,
+        heights,
         ...options,
     };
 };
+
+/** The height a node is drawn at: a milestone card is taller than a task card. */
+export const nodeHeightOf = (node: Node): number =>
+    (node.data as { isMilestone?: boolean } | undefined)?.isMilestone
+        ? MILESTONE_NODE_HEIGHT
+        : NODE_HEIGHT;
 
 /** The nodes with their position, width and height set. */
 export const placeDiagramNodes = (
@@ -428,7 +449,7 @@ export const placeDiagramNodes = (
 ): Node[] =>
     nodes.map((node) => {
         const at = positions.get(Number(node.id)) ?? { x: MARGIN, y: MARGIN };
-        return { ...node, position: at, width: NODE_WIDTH, height: NODE_HEIGHT } as Node;
+        return { ...node, position: at, width: NODE_WIDTH, height: nodeHeightOf(node) } as Node;
     });
 
 export const layoutDiagramNodes = (nodes: Node[], edges: Edge[]): Node[] => {
