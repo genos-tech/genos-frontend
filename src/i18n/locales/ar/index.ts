@@ -1679,7 +1679,6 @@ export const ar: DeepPartial<Messages> = {
             general: "عام",
             newTagPlaceholder: "علامة جديدة",
             addTag: "إضافة علامة",
-            changeTag: "تغيير العلامة",
             tags: {
                 manageTitle: "إدارة العلامات",
                 manageTooltip: "إدارة العلامات",

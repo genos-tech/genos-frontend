@@ -1062,7 +1062,6 @@ export const zh: DeepPartial<Messages> = {
             general: "常规",
             newTagPlaceholder: "新标签",
             addTag: "添加标签",
-            changeTag: "更改标签",
             tags: {
                 manageTitle: "管理标签",
                 manageTooltip: "管理标签",

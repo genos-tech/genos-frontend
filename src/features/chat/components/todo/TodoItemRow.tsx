@@ -30,7 +30,6 @@ import { resolveTitleMentions, useTodoMentionPool } from "./titleMentions";
 import { renderTitleWithLinks } from "./titleRender";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
-import { TodoTagChip } from "./TodoTagChip";
 import { useTodoTitleField } from "./useTodoTitleField";
 
 interface TodoItemRowProps {
@@ -326,17 +325,6 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
         ? "rgba(var(--gp-brandalt-400-rgb), 0.6)"
         : "rgba(var(--gp-brand-700-rgb), 0.45)";
 
-    // The tag chip of a top-level row (MIP-1652): beside the title off a phone, under it on one.
-    const tagChip = !isChild ? (
-        <TodoTagChip
-            categories={categories}
-            currentCategoryId={item.categoryId}
-            onCreateCategory={onCategoryCreate}
-            onManageTags={onManageTags}
-            onSelectCategory={(categoryId) => onCategoryChange(item.itemId, categoryId)}
-        />
-    ) : null;
-
     return (
         <Box
             ref={rootRef}
@@ -434,12 +422,6 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                             : t.chat.todoPane.untitled}
                     </Clickable>
                 )}
-                {/* The row's tag, and the way to change it (MIP-1652). Top-level rows only: a
-                    subitem has no tag of its own, it follows its parent's. Fixed-size and after
-                    the title, so the title keeps the room. On a phone the chip takes a line of its
-                    own under the row instead (below): beside the title it left the title about
-                    75px to wrap in. */}
-                {!isMobile && tagChip}
                 {/* Written last by a connected AI app or an API key (MIP-1488).
                     Absent for anything the member typed. Fixed-size and after the
                     title, so the title keeps the room and nothing shifts. */}
@@ -600,10 +582,6 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                     />
                 )}
             </Stack>
-            {/* Under the title column (past the checkbox), so the title keeps the whole row. */}
-            {isMobile && tagChip && (
-                <Box sx={{ display: "flex", pl: "30px", pt: 0.25 }}>{tagChip}</Box>
-            )}
             {notesExpanded && (
                 <Box
                     sx={{
