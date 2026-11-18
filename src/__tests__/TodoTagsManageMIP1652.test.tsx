@@ -1,26 +1,23 @@
 /**
- * MIP-1652: a to-do's tag can be changed from a chip on its row, and the Manage tags dialog shows
- * that a tag can be renamed.
+ * MIP-1652 (and MIP-1686, which took the chip back out): the Manage tags dialog shows that a tag
+ * can be renamed, and the to-do row's ⋮ menu can open that dialog.
  *
- *  - Each top-level row carries its tag as a chip ("General" when it has none). A click opens the
- *    same picker the ⋮ menu has (General, each tag, a new-tag field, Manage tags…). A subitem has
- *    no tag of its own and no chip.
- *  - On a phone the chip is on a line of its own under the title, not beside it (beside it the
- *    title was left about 75px).
- *  - Each tag in the Manage tags dialog has a pencil that starts its rename (a click on the name
- *    always did, and nothing said so).
+ *  - Each tag in the dialog has a pencil that starts its rename (a click on the name always did,
+ *    and nothing said so).
+ *  - A to-do row has NO tag chip of its own (MIP-1652 added one beside the "Expand notes" button;
+ *    it made the row look odd and was removed): the tag is set from the ⋮ menu, which also has
+ *    "Manage tags…".
  */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ModalManageTodoTags } from "../features/chat/components/todo/ModalManageTodoTags";
 import { TodoCategorySection } from "../features/chat/components/todo/TodoCategorySection";
 import { TodoItemRow } from "../features/chat/components/todo/TodoItemRow";
-import { TodoTagChip } from "../features/chat/components/todo/TodoTagChip";
 import { ChatManagementState } from "../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../hooks/common/useUIStateManagement";
@@ -54,79 +51,6 @@ beforeEach(() => {
     isMobileViewport = false;
 });
 afterEach(cleanup);
-
-const mountChip = (over: Partial<React.ComponentProps<typeof TodoTagChip>> = {}) => {
-    const props = {
-        categories: CATEGORIES,
-        currentCategoryId: null as number | null,
-        onSelectCategory: vi.fn(),
-        onCreateCategory: vi.fn().mockResolvedValue(cat(9, "Fresh")),
-        onManageTags: vi.fn(),
-        ...over,
-    };
-    render(
-        <CssVarsProvider>
-            <TodoTagChip {...props} />
-        </CssVarsProvider>
-    );
-    return props;
-};
-
-const open = (name: RegExp | string) => fireEvent.click(screen.getByRole("button", { name }));
-
-describe("the tag chip", () => {
-    it("says General for a to-do with no tag, and the tag's name when it has one", () => {
-        mountChip();
-        expect(screen.getByRole("button", { name: `${tp.changeTag}: General` })).toBeTruthy();
-        cleanup();
-        mountChip({ currentCategoryId: 2 });
-        expect(screen.getByRole("button", { name: `${tp.changeTag}: Work` })).toBeTruthy();
-    });
-
-    it("falls back to General when the tag is not in the list (deleted, or not loaded yet)", () => {
-        mountChip({ currentCategoryId: 404 });
-        expect(screen.getByRole("button", { name: `${tp.changeTag}: General` })).toBeTruthy();
-    });
-
-    it("opens a picker with General, every tag and Manage tags…, and marks the current one", () => {
-        mountChip({ currentCategoryId: 1 });
-        open(/Change tag/);
-        const items = screen.getAllByRole("menuitem").map((i) => i.textContent?.trim());
-        expect(items).toEqual(["General", "Home", "Work", tp.tags.manageMenu]);
-    });
-
-    it("picking a tag, and picking General, report the choice", () => {
-        const props = mountChip({ currentCategoryId: 1 });
-        open(/Change tag/);
-        fireEvent.click(screen.getByRole("menuitem", { name: "Work" }));
-        expect(props.onSelectCategory).toHaveBeenLastCalledWith(2);
-        open(/Change tag/);
-        fireEvent.click(screen.getByRole("menuitem", { name: "General" }));
-        expect(props.onSelectCategory).toHaveBeenLastCalledWith(null);
-    });
-
-    it("Manage tags… calls the opener, and is not offered without one", () => {
-        const props = mountChip();
-        open(/Change tag/);
-        fireEvent.click(screen.getByRole("menuitem", { name: tp.tags.manageMenu }));
-        expect(props.onManageTags).toHaveBeenCalledTimes(1);
-        cleanup();
-        mountChip({ onManageTags: undefined });
-        open(/Change tag/);
-        expect(screen.queryByRole("menuitem", { name: tp.tags.manageMenu })).toBeNull();
-    });
-
-    it("a new tag made in the picker is chosen at once", async () => {
-        const props = mountChip();
-        open(/Change tag/);
-        fireEvent.change(screen.getByPlaceholderText(tp.newTagPlaceholder), {
-            target: { value: "Fresh" },
-        });
-        fireEvent.click(screen.getByRole("button", { name: tp.addTag }));
-        await waitFor(() => expect(props.onSelectCategory).toHaveBeenCalledWith(9));
-        expect(props.onCreateCategory).toHaveBeenCalledWith("Fresh");
-    });
-});
 
 const item = (over: Partial<TodoItemProps> = {}): TodoItemProps => ({
     itemId: 88,
@@ -174,47 +98,38 @@ const mountRow = (
     return props;
 };
 
+const open = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
+
 describe("a to-do row", () => {
-    it("carries a tag chip, and choosing a tag changes THIS to-do's category", () => {
+    it("has no tag chip of its own, on a desktop or on a phone", () => {
+        for (const mobile of [false, true]) {
+            isMobileViewport = mobile;
+            mountRow(item({ categoryId: 1 }));
+            // Its only menu button is the ⋮; nothing is labelled with the tag.
+            expect(screen.queryByRole("button", { name: /tag/i })).toBeNull();
+            expect(screen.queryByText("Home")).toBeNull();
+            cleanup();
+        }
+    });
+
+    it("sets the tag of THIS to-do from the ⋮ menu", () => {
         const props = mountRow(item({ categoryId: 1 }));
-        open(`${tp.changeTag}: Home`);
+        open(tp.moreOptions);
         fireEvent.click(screen.getByRole("menuitem", { name: "Work" }));
         expect(props.onCategoryChange).toHaveBeenCalledWith(88, 2);
     });
 
-    it("hands Manage tags… on, both from the chip and from the ⋮ menu", () => {
+    it("hands Manage tags… on from the ⋮ menu", () => {
         const props = mountRow(item());
-        open(/Change tag/);
-        fireEvent.click(screen.getByRole("menuitem", { name: tp.tags.manageMenu }));
-        expect(props.onManageTags).toHaveBeenCalledTimes(1);
         open(tp.moreOptions);
         fireEvent.click(screen.getByRole("menuitem", { name: tp.tags.manageMenu }));
-        expect(props.onManageTags).toHaveBeenCalledTimes(2);
+        expect(props.onManageTags).toHaveBeenCalledTimes(1);
     });
 
-    it("a subitem has no tag chip: it follows its parent's tag", () => {
+    it("a subitem's ⋮ menu has no tag section: it follows its parent's tag", () => {
         mountRow(item({ itemId: 89, parentItemId: 88 }));
-        expect(screen.queryByRole("button", { name: /Change tag/ })).toBeNull();
-    });
-
-    it("beside the title on a desktop, under it on a phone", () => {
-        isMobileViewport = false;
-        mountRow(item());
-        const desktopChip = screen.getByRole("button", { name: /Change tag/ });
-        const desktopRow = desktopChip.closest("[class*=JoyStack-root]") as HTMLElement;
-        // The title is in the same row as the chip (one Stack).
-        expect(within(desktopRow).getByText("ship the fix")).toBeTruthy();
-        cleanup();
-
-        isMobileViewport = true;
-        mountRow(item());
-        const phoneChip = screen.getByRole("button", { name: /Change tag/ });
-        const phoneRow = phoneChip.closest("[class*=JoyStack-root]");
-        // Its nearest Stack is NOT the title's: the chip has a line of its own.
-        expect(
-            phoneRow === null ||
-                within(phoneRow as HTMLElement).queryByText("ship the fix") === null
-        ).toBe(true);
+        open(tp.moreOptions);
+        expect(screen.queryByRole("menuitem", { name: tp.tags.manageMenu })).toBeNull();
     });
 });
 
@@ -294,13 +209,13 @@ describe("Manage tags… is wired from the pane down to the row", () => {
                 />
             </CssVarsProvider>
         );
-        open(/Change tag/);
+        open(tp.moreOptions);
         fireEvent.click(screen.getByRole("menuitem", { name: tp.tags.manageMenu }));
         expect(onManageTags).toHaveBeenCalledTimes(1);
     });
 
     // The day card and the pane are too heavy to mount here (a virtualised list, sockets), so
-    // the two hand-overs are pinned in the source; the browser check opened the dialog from a chip.
+    // the two hand-overs are pinned in the source; the browser check opened the dialog from the ⋮ menu.
     it("the day card passes it on, and the pane opens its dialog with it", () => {
         const here = dirname(fileURLToPath(import.meta.url));
         const src = (rel: string) => readFileSync(join(here, "..", rel), "utf8");

@@ -46,7 +46,6 @@ export const chat = {
         general: "General",
         newTagPlaceholder: "New tag",
         addTag: "Add tag",
-        changeTag: "Change tag",
         // Manage-tags modal (MIP-759). Tags are personal to each user.
         tags: {
             manageTitle: "Manage tags",
