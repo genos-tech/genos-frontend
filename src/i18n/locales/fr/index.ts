@@ -200,9 +200,9 @@ export const fr: DeepPartial<Messages> = {
             teamIdPlaceholder: "Saisir l'ID de l'équipe à rechercher",
             teamNameLabel: "Nom de l'équipe",
             teamNamePlaceholder: "Saisir le nom de votre équipe",
-            starterOptIn: "Commencer avec un projet d'exemple",
+            starterOptIn: "Inclure des données d'exemple avec instructions",
             starterOptInHint:
-                "Un petit projet de démarrage, une note et des tâches pour que l'app ne soit pas vide — supprimable à tout moment.",
+                "Des projets, discussions, notes et tâches d'exemple qui montrent comment organiser une équipe — à retirer quand vous n'en avez plus besoin.",
             searchAnother: "Rechercher une autre",
             requestToJoin: "Demander à rejoindre",
             searchTeam: "Rechercher l'équipe",
