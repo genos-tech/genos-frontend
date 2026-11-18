@@ -16,15 +16,23 @@ vi.mock("../hooks/common/useIsMobile", () => ({
 // The height of the status bar the app is drawn under (`--app-top-inset`, MIP-1665). The button
 // measures it with a probe box, which is the one element here whose height is that variable.
 let statusBarHeight = 0;
+// The height of the bottom inset the button measures (`--mobile-bottom-inset`): the tab bar's 60 px.
+let bottomInsetHeight = 60;
 
 beforeEach(() => {
     isMobileViewport = true;
     statusBarHeight = 0;
+    bottomInsetHeight = 60;
     Element.prototype.setPointerCapture = vi.fn();
     Element.prototype.releasePointerCapture = vi.fn();
     Element.prototype.getBoundingClientRect = vi.fn(function (this: Element) {
         if ((this as HTMLElement).style?.height.includes("--app-top-inset")) {
             return { bottom: statusBarHeight, height: statusBarHeight, top: 0 } as DOMRect;
+        }
+        // The bottom inset probe (`--mobile-bottom-inset`, MIP-1680): the tab bar's 60 px unless a
+        // test sets another (a home indicator, the keyboard).
+        if ((this as HTMLElement).style?.height.includes("--mobile-bottom-inset")) {
+            return { bottom: bottomInsetHeight, height: bottomInsetHeight, top: 0 } as DOMRect;
         }
         return { bottom: 774, height: 38, left: 336, right: 374, top: 736, width: 38 } as DOMRect;
     });
@@ -169,6 +177,49 @@ describe("MobileSpotlightFab", () => {
         );
         renderFab();
         expect(anchorOf(fab())).toMatchObject({ top: "78px" });
+    });
+
+    // MIP-1680: `--mobile-bottom-inset` is read as a LENGTH (a box of that height is measured), not
+    // as text: its text (`max(calc(60px + 34px), 0px)`) is not a number, so the bottom limit used to
+    // be the 60 px fallback whatever the phone had under the button.
+    it("is not dropped onto the home indicator: the tab bar's 60 px plus the 34 px strip", () => {
+        bottomInsetHeight = 94;
+        renderFab();
+        drag({ x: 355, y: 755 }, { x: 355, y: 830 });
+        const stored = JSON.parse(localStorage.getItem("mobile:spotlightFabPosition") ?? "null");
+        // 844 - 94 - 44 (the button) - 16 (the gap) = 690; with the 60 px fallback it was 724.
+        expect(stored.top).toBe(690);
+        expect(anchorOf(fab())).toMatchObject({ top: "690px" });
+    });
+
+    it("keeps clear of the keyboard when it is up", () => {
+        bottomInsetHeight = 336;
+        localStorage.setItem(
+            "mobile:spotlightFabPosition",
+            JSON.stringify({ side: "right", top: 700 })
+        );
+        renderFab();
+        // 844 - 336 - 44 - 16 = 448
+        expect(anchorOf(fab())).toMatchObject({ top: "448px" });
+    });
+
+    it("uses the 60 px of the tab bar when nothing says otherwise", () => {
+        renderFab();
+        drag({ x: 355, y: 755 }, { x: 355, y: 830 });
+        const stored = JSON.parse(localStorage.getItem("mobile:spotlightFabPosition") ?? "null");
+        expect(stored.top).toBe(724);
+    });
+
+    it("measures the variable itself, with 60 px for when it is unset", () => {
+        const probes: string[] = [];
+        const original = Element.prototype.getBoundingClientRect;
+        Element.prototype.getBoundingClientRect = vi.fn(function (this: Element) {
+            probes.push((this as HTMLElement).style?.height ?? "");
+            return original.call(this);
+        });
+        renderFab();
+        drag({ x: 355, y: 755 }, { x: 355, y: 830 });
+        expect(probes).toContain("var(--mobile-bottom-inset, 60px)");
     });
 
     it("pulls a restored position back on-screen when the viewport is shorter", () => {
