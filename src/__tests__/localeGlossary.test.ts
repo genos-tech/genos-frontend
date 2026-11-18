@@ -258,3 +258,74 @@ describe("GLOSSARY.md matches the catalogs", () => {
         it(`names ${term}`, () => expect(doc).toContain(term));
     }
 });
+
+/**
+ * MIP-1685: the task graph's block had words from the wrong sense: "Blocks" (the dependency line's
+ * legend) was a noun, building blocks, in five locales; "Legend" was a story (`传奇`, `दंतकथा`,
+ * `أسطورة`); collapse / expand were "collapse" as in a building falling (`坍塌`, `गिर जाना`).
+ */
+describe("the task graph (tasks.diagram.*)", () => {
+    const diagram = (locale: keyof typeof L) =>
+        Object.entries(L[locale]).filter(([k]) => k.startsWith("tasks.diagram."));
+    const retired = (locale: keyof typeof L, re: RegExp) =>
+        diagram(locale)
+            .filter(([, v]) => re.test(v))
+            .map(([k]) => k);
+
+    it("the dependency line's legend is the verb 'blocks', not building blocks", () => {
+        expect(L.zh["tasks.diagram.legend.blocks"]).toBe("阻塞");
+        expect(L.es["tasks.diagram.legend.blocks"]).toBe("Bloquea");
+        expect(L.fr["tasks.diagram.legend.blocks"]).toBe("Bloque");
+        expect(L.hi["tasks.diagram.legend.blocks"]).toBe("अवरुद्ध करता है");
+        expect(L.ar["tasks.diagram.legend.blocks"]).toBe("يحظر");
+        expect(retired("zh", /积木|块/)).toEqual([]);
+        expect(retired("es", /\bBloques\b/)).toEqual([]);
+        expect(retired("fr", /\bBlocs?\b/)).toEqual([]);
+        expect(retired("hi", /ब्लाक/)).toEqual([]);
+        expect(retired("ar", /كتل/)).toEqual([]);
+    });
+
+    it("the legend is a map key, not a story", () => {
+        expect(L.zh["tasks.diagram.legend.title"]).toBe("图例");
+        expect(L.hi["tasks.diagram.legend.title"]).toBe("संकेत सूची");
+        expect(L.ar["tasks.diagram.legend.title"]).toBe("وسيلة الإيضاح");
+        expect(retired("zh", /传奇/)).toEqual([]);
+        expect(retired("hi", /दंतकथा/)).toEqual([]);
+        expect(retired("ar", /أسطورة/)).toEqual([]);
+    });
+
+    it("collapse and expand are about a panel, not a building falling", () => {
+        expect(L.zh["tasks.diagram.tooltips.collapse"]).toBe("折叠");
+        expect(L.zh["tasks.diagram.tooltips.expand"]).toBe("展开");
+        expect(L.hi["tasks.diagram.tooltips.collapse"]).toBe("संक्षिप्त करें");
+        expect(L.hi["tasks.diagram.tooltips.expand"]).toBe("विस्तृत करें");
+        expect(retired("zh", /坍塌|扩张/)).toEqual([]);
+        expect(retired("hi", /गिर जाना/)).toEqual([]);
+    });
+
+    it("'x blocks y' is a sentence with a verb, in every locale", () => {
+        expect(L.zh["tasks.diagram.tooltips.dependencyBlocks"]).toBe("{source} 阻塞 {target}");
+        expect(L.es["tasks.diagram.tooltips.dependencyBlocks"]).toBe(
+            "{source} bloquea a {target}"
+        );
+        expect(L.ar["tasks.diagram.tooltips.dependencyBlocks"]).toBe("{source} يحظر {target}");
+        expect(L.fr["tasks.diagram.tooltips.dependencyBlocks"]).toBe("{source} bloque {target}");
+    });
+
+    it("the failures say what failed (Hindi 'update failed' was 'increasing weight failed')", () => {
+        expect(L.hi["tasks.diagram.errors.update"]).toBe("अपडेट विफल रहा।");
+        expect(L.zh["tasks.diagram.tooltips.healthSummary"]).not.toContain("成交");
+        expect(L.zh["tasks.diagram.tooltips.healthSummary"]).toContain("已关闭");
+    });
+
+    it("every locale keeps the {count} / {source} placeholders the English has", () => {
+        for (const [k, v] of Object.entries(EN).filter(([p]) => p.startsWith("tasks.diagram."))) {
+            const tokens = [...v.matchAll(/\{[a-zA-Z]+\}/g)].map((m) => m[0]).sort();
+            for (const loc of Object.keys(L) as Array<keyof typeof L>) {
+                if (!(k in L[loc])) continue;
+                const got = [...L[loc][k].matchAll(/\{[a-zA-Z]+\}/g)].map((m) => m[0]).sort();
+                expect(got, `${loc} ${k}`).toEqual(tokens);
+            }
+        }
+    });
+});

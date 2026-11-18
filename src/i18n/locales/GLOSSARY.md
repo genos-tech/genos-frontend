@@ -65,6 +65,11 @@ webhook ids, tool ids (`create_task`), shortcuts.
   note folder, to-do, tag, custom field). `مسح` stays for "Clear" (a search box, a filter).
 - **Quiet hours and the schedule are different things.** "Pause notifications on a schedule"
   uses the word for a time window (`horario`, `horaire`, `定时`), not the recurring-job noun.
+- **The task graph (`tasks.diagram.*`) uses the verb "blocks", not the noun** (MIP-1685): the dependency
+  line's legend and "{source} blocks {target}" are `阻塞`, `Bloquea`, `Bloque`, `अवरुद्ध करता है`, `يحظر`
+  (the noun gave toy bricks / building blocks). The graph's "Legend" is a map key: `图例`, `संकेत सूची`,
+  `وسيلة الإيضاح` (not a story: `传奇`, `दंतकथा`, `أسطورة`). Collapse / expand are about a panel:
+  `折叠`/`展开`, `संक्षिप्त करें`/`विस्तृत करें` (not a building falling). `localeGlossary.test.ts` pins these.
 - Placeholders (`{name}`, `{count, plural, ...}`) are never translated. The coverage test
   (`src/__tests__/localeCatalogCoverage.test.ts`) fails on a missing key, a changed argument,
   or an Arabic string that is just English; `localeGlossary.test.ts` pins the terms above that
