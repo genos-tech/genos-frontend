@@ -29,29 +29,29 @@ type MobileSpotlightFabProps = {
     onPress: () => void;
 };
 
-/** Live value of `--mobile-bottom-inset` (the tab bar, or the keyboard
- *  when it's up). Read from the computed root style rather than
- *  hard-coded so the drag bounds honour the notch and the keyboard the
- *  same way the layouts do. */
-const readBottomInset = (): number => {
-    const raw = getComputedStyle(document.documentElement).getPropertyValue(
-        "--mobile-bottom-inset"
-    );
-    const parsed = Number.parseFloat(raw);
-    return Number.isFinite(parsed) ? parsed : 60;
-};
-
-/** The status bar's height in px (`--app-top-inset`, MIP-1665). A custom property holding `env()` is
- *  not resolved when read back, so this lays out a box of that height and measures it. */
-const readTopInset = (): number => {
+/**
+ * A CSS length in px, as the browser resolves it: lays out a box of that height and measures it.
+ * A custom property cannot be read back as a number: `getPropertyValue` returns its TEXT
+ * (`max(calc(60px + 34px), 0px)`, `62px` only by luck), and `parseFloat` of that text is NaN. That is
+ * how the bottom limit was always the 60 px fallback (MIP-1680). `length` is a CSS expression
+ * (`var(--x, 60px)`).
+ */
+const measureLength = (length: string): number => {
     const probe = document.createElement("div");
-    probe.style.cssText =
-        "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:var(--app-top-inset, 0px)";
+    probe.style.cssText = `position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:${length}`;
     document.body.appendChild(probe);
     const height = probe.getBoundingClientRect().height;
     probe.remove();
-    return Number.isFinite(height) ? height : 0;
+    return height;
 };
+
+/** Live value of `--mobile-bottom-inset` (the tab bar and the home indicator, or the keyboard when
+ *  it's up), so the drag bounds honour them the same way the layouts do. The CSS fallback is the
+ *  tab bar's 60 px, for the moment before the variable exists. */
+const readBottomInset = (): number => measureLength("var(--mobile-bottom-inset, 60px)");
+
+/** The status bar's height in px (`--app-top-inset`, MIP-1665). */
+const readTopInset = (): number => measureLength("var(--app-top-inset, 0px)");
 
 // Floating action button for the global Spotlight overlay, reachable from
 // every mobile workspace screen. Desktop reaches the same surface via
@@ -284,7 +284,6 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
                 to decide the lift (see `baseRef`). */}
             <Box
                 ref={baseRef}
-                aria-hidden
                 sx={{
                     position: "fixed",
                     ...anchorSx,
@@ -293,6 +292,7 @@ export const MobileSpotlightFab = ({ onPress }: MobileSpotlightFabProps) => {
                     visibility: "hidden",
                     pointerEvents: "none",
                 }}
+                aria-hidden
             />
             <IconButton
                 aria-label={t.layout.mobile.openGenos}
