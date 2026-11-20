@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 
 import { formatBlogDate, listBlogArticles, type BlogArticle } from "./blog/blog";
 import { LpShell } from "./kit/LpShell";
+import { BLOG_META } from "./seo/pageMeta";
+import { useDocumentMeta } from "./useDocumentMeta";
 
 function PostMeta({ article }: { article: BlogArticle }) {
     return (
@@ -20,6 +22,7 @@ function PostMeta({ article }: { article: BlogArticle }) {
  * append via articles.json + `npm run blog:sync`.
  */
 export default function BlogPage() {
+    useDocumentMeta(BLOG_META);
     const articles = useMemo(() => listBlogArticles(), []);
     const featured = articles.filter((a) => a.featured);
 

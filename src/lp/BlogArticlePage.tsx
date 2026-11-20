@@ -5,6 +5,8 @@ import { formatBlogDate, getBlogArticle, listBlogArticles } from "./blog/blog";
 import { BlogMarkdown } from "./blog/BlogMarkdown";
 import { APP_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
+import { articleMeta, BLOG_META } from "./seo/pageMeta";
+import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
  * `/blog/:slug` — one English LP blog article.
@@ -12,6 +14,20 @@ import { LpShell } from "./kit/LpShell";
 export default function BlogArticlePage() {
     const { slug = "" } = useParams<{ slug: string }>();
     const article = getBlogArticle(slug);
+    // Before the early return below: a hook cannot be skipped. An unknown slug
+    // redirects to /blog, so until then it carries the blog index's meta, not a
+    // made-up article.
+    useDocumentMeta(
+        article
+            ? {
+                  ...articleMeta(article),
+                  ogTitle: article.title,
+                  path: `/blog/${article.slug}`,
+                  type: "article",
+                  publishedTime: article.publishedAt,
+              }
+            : { ...BLOG_META, path: "/blog" }
+    );
 
     if (!article) {
         return <Navigate to="/blog" replace />;

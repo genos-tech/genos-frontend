@@ -2,7 +2,9 @@ import { Link } from "react-router-dom";
 
 import { LpShell } from "./kit/LpShell";
 import type { Lang } from "./lpLang";
+import { SUPPORT_META } from "./seo/pageMeta";
 import { SUPPORT_EMAIL, SUPPORT_MCP_ADDRESS, SUPPORT_UI_LABELS } from "./supportLabels";
+import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
  * `/support` — how to get help with Genos.
@@ -164,6 +166,7 @@ const COPY: Record<
 
 function SupportBody({ lang }: { lang: Lang }) {
     const c = COPY[lang];
+    useDocumentMeta({ ...SUPPORT_META[lang], lang });
 
     return (
         <>
