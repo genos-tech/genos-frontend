@@ -1672,6 +1672,26 @@ export const zh: DeepPartial<Messages> = {
             cancel: "取消",
             genericError: "无法删除群组。请再试一次。",
         },
+        // Restoring a soft-deleted group chat as its owner (MIP-1715).
+        recentlyDeleted: {
+            menu: "最近删除的群组",
+            title: "最近删除的群组",
+            description: "你删除的群组。恢复后，群内所有人都能再次看到它。",
+            loadError: "无法加载已删除的群组。",
+            emptyTitle: "没有已删除的群组",
+            emptyBody: "你删除的群组会显示在这里，方便恢复。永久删除的群组无法恢复。",
+            meta: "成员：{count} · 删除于 {date}",
+            restore: "恢复",
+            restoreAria: "恢复 {name}",
+            confirmTitle: "恢复此群组？",
+            confirmDescription:
+                "群组将连同成员、消息和文件按原样恢复。无法恢复的内容：删除时，该群成员对在此聊天中所写笔记的访问权限已被撤销，只有再次共享后，他们才能重新看到这些笔记。",
+            confirm: "恢复",
+            cancel: "取消",
+            restored: "已恢复“{name}”。",
+            gone: "无法再恢复“{name}”。",
+            restoreError: "无法恢复群组。请再试一次。",
+        },
         addMembers: {
             openButton: "添加成员",
             headingProject: "向 {projectName} 添加成员",

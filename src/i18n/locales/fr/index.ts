@@ -1755,6 +1755,28 @@ export const fr: DeepPartial<Messages> = {
             cancel: "Annuler",
             genericError: "Impossible de supprimer le groupe. Veuillez réessayer.",
         },
+        // Restoring a soft-deleted group chat as its owner (MIP-1715).
+        recentlyDeleted: {
+            menu: "Groupes supprimés récemment",
+            title: "Groupes supprimés récemment",
+            description:
+                "Les groupes que vous avez supprimés. Restaurez-en un pour le rendre à tous ses membres.",
+            loadError: "Impossible de charger vos groupes supprimés.",
+            emptyTitle: "Aucun groupe supprimé",
+            emptyBody:
+                "Les groupes que vous supprimez apparaissent ici pour que vous puissiez les restaurer. Les groupes supprimés définitivement ne peuvent pas être restaurés.",
+            meta: "Membres : {count} · Supprimé le {date}",
+            restore: "Restaurer",
+            restoreAria: "Restaurer {name}",
+            confirmTitle: "Restaurer ce groupe ?",
+            confirmDescription:
+                "Le groupe revient pour tous ses membres, avec ses membres, ses messages et ses fichiers tels qu'ils étaient. Ce qui ne revient pas : l'accès que les membres de ce groupe avaient aux notes écrites dans ce chat a été retiré à la suppression, ils ne les revoient donc que si quelqu'un les partage de nouveau.",
+            confirm: "Restaurer",
+            cancel: "Annuler",
+            restored: "« {name} » a été restauré.",
+            gone: "« {name} » ne peut plus être restauré.",
+            restoreError: "Impossible de restaurer le groupe. Veuillez réessayer.",
+        },
         addMembers: {
             openButton: "Ajouter des membres",
             headingProject: "Ajouter des membres à {projectName}",

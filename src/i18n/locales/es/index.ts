@@ -271,6 +271,28 @@ export const es: DeepPartial<Messages> = {
             cancel: "Cancelar",
             genericError: "No se pudo eliminar el grupo. Inténtalo de nuevo.",
         },
+        // Restoring a soft-deleted group chat as its owner (MIP-1715).
+        recentlyDeleted: {
+            menu: "Grupos eliminados recientemente",
+            title: "Grupos eliminados recientemente",
+            description:
+                "Grupos que eliminaste. Restaura uno para que vuelva a verse para todos sus miembros.",
+            loadError: "No se pudieron cargar tus grupos eliminados.",
+            emptyTitle: "No hay grupos eliminados",
+            emptyBody:
+                "Los grupos que elimines aparecerán aquí para que puedas restaurarlos. Los grupos eliminados de forma permanente no se pueden restaurar.",
+            meta: "Miembros: {count} · Eliminado el {date}",
+            restore: "Restaurar",
+            restoreAria: "Restaurar {name}",
+            confirmTitle: "¿Restaurar este grupo?",
+            confirmDescription:
+                "El grupo vuelve para todos sus miembros, con sus miembros, mensajes y archivos tal como estaban. Lo que no puede devolver: el acceso que los miembros de este grupo tenían a las notas escritas en este chat se retiró al eliminarlo, así que solo volverán a verlas si alguien las comparte de nuevo.",
+            confirm: "Restaurar",
+            cancel: "Cancelar",
+            restored: "Se restauró «{name}».",
+            gone: "«{name}» ya no se puede restaurar.",
+            restoreError: "No se pudo restaurar el grupo. Inténtalo de nuevo.",
+        },
         externalShares: {
             title: "Equipos con acceso",
             explainer:

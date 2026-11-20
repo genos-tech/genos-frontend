@@ -89,6 +89,27 @@ export const common = {
         cancel: "Cancel",
         genericError: "Couldn't delete the group. Please try again.",
     },
+    // Restoring a soft-deleted group chat as its owner (MIP-1715).
+    recentlyDeleted: {
+        menu: "Recently deleted groups",
+        title: "Recently deleted groups",
+        description: "Groups you deleted. Restore one to put it back for everyone in it.",
+        loadError: "Couldn't load your deleted groups.",
+        emptyTitle: "No deleted groups",
+        emptyBody:
+            "Groups you delete appear here so you can restore them. Groups deleted permanently cannot be restored.",
+        meta: "Members: {count} · Deleted {date}",
+        restore: "Restore",
+        restoreAria: "Restore {name}",
+        confirmTitle: "Restore this group?",
+        confirmDescription:
+            "The group comes back for everyone in it, with its members, messages and files as they were. What it cannot bring back: the access this group's members had to notes written in this chat was removed when it was deleted, so they see those notes again only if someone shares them again.",
+        confirm: "Restore",
+        cancel: "Cancel",
+        restored: '"{name}" was restored.',
+        gone: '"{name}" can no longer be restored.',
+        restoreError: "Couldn't restore the group. Please try again.",
+    },
     addMembers: {
         openButton: "Add members",
         headingProject: "Add members to {projectName}",

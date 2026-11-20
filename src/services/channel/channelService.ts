@@ -82,6 +82,16 @@ function v3BaseURL(): string {
     return legacy.replace(/\/api\/v\d+$/, "").replace(/\/$/, "");
 }
 
+/** A soft-deleted group the caller may restore (`GET /api/v3/channels/deleted/`, MIP-1715). */
+export type DeletedChannel = {
+    id: string;
+    title: string;
+    isPrivate: boolean;
+    /** When it was deleted (ISO). */
+    deletedAt: string;
+    memberCount: number;
+};
+
 /**
  * Errors raised by `ChannelService` REST + socket methods.
  *
@@ -2178,6 +2188,44 @@ export class ChannelService {
         // `refreshChannels`, not `listChannels`: only the refresh reconciles, and the reconcile is
         // what evicts what the server no longer lists. Best-effort and never throws: the chat is
         // gone either way, and a failed refresh is reconciled by the next sync.
+        await this.refreshChannels();
+    }
+
+    /**
+     * The group chats the caller deleted softly and may still restore (MIP-1715), newest first.
+     * Only their own: the server lists nothing for a chat someone else owns. Not part of the
+     * chat store: a deleted chat is not in `channels`, and this list is read when the dialog opens.
+     */
+    async listDeletedChannels(teamId: string): Promise<DeletedChannel[]> {
+        try {
+            const res = await this.api().get<{ channels: DeletedChannel[] }>(
+                "/api/v3/channels/deleted/",
+                { params: { team_id: teamId } }
+            );
+            return res.data.channels ?? [];
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+    }
+
+    /**
+     * Restore a soft-deleted group chat as its owner (MIP-1715). Everything comes back as it was
+     * except the access the chat's membership had written on its notes. The server answers 404
+     * for a chat that is not (or no longer) restorable (a second click, a hard delete, not the
+     * owner), which surfaces as `NOT_FOUND`.
+     *
+     * Afterwards the chat list is refreshed, which brings the chat into this device's sidebar:
+     * `refreshChannels` ingests the list, `listChannels` alone only returns it. Best-effort and
+     * never throws: the chat is restored either way, and the next sync finds it. Other members'
+     * open apps are not told (no live notice exists for "a chat appeared"); they see it at their
+     * next list refresh.
+     */
+    async restoreChannel(channelId: string): Promise<void> {
+        try {
+            await this.api().post(`/api/v3/channels/${channelId}/restore/`);
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
         await this.refreshChannels();
     }
 
