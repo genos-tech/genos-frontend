@@ -130,7 +130,8 @@ describe("sanitizeCaptureResult", () => {
     });
 
     it("passes a missing event through and survives an odd shape", () => {
-        expect(sanitizeCaptureResult(null)).toBeNull();
+        // posthog-js can hand a null when an earlier `before_send` dropped the event.
+        expect(sanitizeCaptureResult(null as unknown as CaptureResult)).toBeNull();
         const odd = event({ properties: { $current_url: 42 as unknown as string } });
         expect(() => sanitizeCaptureResult(odd)).not.toThrow();
     });
