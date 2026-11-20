@@ -9,13 +9,13 @@ type PreviewEditMirrorArgs = {
     working: TaskProps;
     /** The host's preview slot (`useTM.currentPreviewTask`, or a modal's own). */
     preview: TaskProps | undefined;
-    myself: UserProps;
     /** Writes the host's preview slot. */
     setPreview: (task: TaskProps) => void;
     /** Pushes an edited task onto its table row (`useTM.syncPreviewEdit`). */
     syncRow: (task: TaskProps) => void;
     setAssignee: (assignee: UserProps | null) => void;
-    setReporter: (reporter: UserProps) => void;
+    /** `null` = no reporter (the account is gone), never "the viewer". */
+    setReporter: (reporter: UserProps | null) => void;
 };
 
 /** Is `working` an edit to hand over: a task (it has an id), not already the
@@ -73,8 +73,7 @@ export const usePreviewEditMirror = (args: PreviewEditMirrorArgs): void => {
     latest.current = args;
 
     useEffect(() => {
-        const { working, preview, myself, setPreview, syncRow, setAssignee, setReporter } =
-            latest.current;
+        const { working, preview, setPreview, syncRow, setAssignee, setReporter } = latest.current;
         if (isEditOfShownTask(working, preview)) {
             // Not to the slot when it already says the same (MIP-1439), but to the row
             // either way: a refused save puts the stored task back into the working copy
@@ -84,6 +83,6 @@ export const usePreviewEditMirror = (args: PreviewEditMirrorArgs): void => {
             syncRow(working);
         }
         setAssignee(working?.assignee ?? null);
-        setReporter(working?.reporter || myself);
+        setReporter(working?.reporter ?? null);
     }, [args.working]);
 };

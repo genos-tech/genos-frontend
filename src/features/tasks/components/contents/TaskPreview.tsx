@@ -67,7 +67,6 @@ import { useConvertTaskMilestone } from "../../hooks/useConvertTaskMilestone";
 import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { useFollowConvertedMilestone } from "../../hooks/useFollowConvertedMilestone";
 import { useRecordTaskOpen } from "../../hooks/useRecordTaskOpen";
-import { isStatusName, statusSolid, toneSolid } from "../../meta/taskTone";
 import { forgetCachedSubtree } from "../../services/forgetCachedSubtree";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
@@ -85,12 +84,16 @@ import { Milestone } from "../../sprint-milestone/types";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { shouldFallBackToTable } from "../../utils/mainPanelVisibility";
 import {
+    milestoneReporterPatch,
+    milestoneReporterToUserProps,
+} from "../../utils/milestoneReporter";
+import {
     countMilestoneTaskStatuses,
     milestoneTaskStatuses,
 } from "../../utils/milestoneTaskProgress";
+import { milestoneToTaskProps } from "../../utils/milestoneTaskProps";
 import { dropRefusedMove } from "../../utils/moveRefusal";
 import { getTaskKind } from "../../utils/taskKind";
-import { effortLevels, priorities } from "../../utils/taskMeta";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
 import { StatusLabel } from "../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../modals/ModalConvertTaskMilestone";
@@ -183,8 +186,10 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     const [assignee, setAssignee] = useState<UserProps | null>(
         useTM.currentPreviewTask?.assignee ?? null
     );
-    const [reporter, setReporter] = useState<UserProps>(
-        useTM.currentPreviewTask?.reporter || myself
+    // `null` = the reporter's account is gone (SET_NULL): same rule as the
+    // assignee, never the viewer in its place (MIP-1730).
+    const [reporter, setReporter] = useState<UserProps | null>(
+        useTM.currentPreviewTask?.reporter ?? null
     );
     // For task comments
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
@@ -243,13 +248,10 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     // copy back to what is stored. The assignee / reporter chips keep their own
     // copies (`usePreviewEditMirror` below re-reads them when the working copy
     // changes), so tell them directly.
-    const handleStoredTaskRestored = useCallback(
-        (storedTask: TaskProps) => {
-            setAssignee(storedTask.assignee ?? null);
-            setReporter(storedTask.reporter || myself);
-        },
-        [myself]
-    );
+    const handleStoredTaskRestored = useCallback((storedTask: TaskProps) => {
+        setAssignee(storedTask.assignee ?? null);
+        setReporter(storedTask.reporter ?? null);
+    }, []);
 
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
@@ -542,7 +544,6 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     usePreviewEditMirror({
         working: taskEditState.tmpCurrentTaskContent,
         preview: useTM.currentPreviewTask,
-        myself,
         setPreview: useTM.setCurrentPreviewTask,
         syncRow: useTM.syncPreviewEdit,
         setAssignee,
@@ -1158,99 +1159,6 @@ type MilestonePreviewInnerProps = {
     useNM: NoteManagementState;
 };
 
-// Build a TaskProps-shaped wrapper around a milestone so we can reuse
-// `TaskMainBlock`/`TaskBodyBlock`/`TaskTabBlock` directly. The milestone's
-// backing TaskMaster row (`m.taskId`) becomes `id` so all task plumbing
-// (comments, notes, attachments, body) routes through the existing task
-// endpoints. Fields that don't apply to milestones are filled with safe
-// defaults.
-const milestoneToTaskProps = (
-    m: Milestone,
-    project: ProjectManagementState["currentProject"],
-    fallbackUser: UserProps,
-    attachments: TaskProps["attachments"] = [],
-    assignee?: UserProps,
-    reporter?: UserProps,
-    collaborators: UserProps[] = []
-): TaskProps => {
-    const backingTaskId = (m.taskId ?? m.milestoneId) as number;
-    // Milestones store only the priority / effort label + numeric code,
-    // not the chip colors. Look the colors up from the master tables so
-    // the chips in TaskMainBlock render with the same styling as the
-    // dropdown options (instead of falling back to transparent).
-    const priorityMeta = priorities.find((p) => p.priority === m.priority);
-    const effortMeta = effortLevels.find((e) => e.level === m.effortLevel);
-    return {
-        // Backing task id; falls back to the milestone id if the
-        // backend hasn't backfilled yet (extremely rare on fresh data).
-        id: backingTaskId,
-        project: project,
-        title: m.title,
-        body: (m.description as PartialBlock[]) ?? [],
-        assignee: assignee ?? fallbackUser,
-        reporter: reporter ?? fallbackUser,
-        collaborators,
-        // Thread origin off the backing task (serialized on the
-        // milestone payload) — v3 UUID strings riding the legacy
-        // number-typed slots, same cast as everywhere else.
-        chatType: m.chatType ?? null,
-        chatId: (m.chatId ?? null) as unknown as number | null,
-        threadId: (m.threadId ?? null) as unknown as number | null,
-        startDate: m.startDate ?? null,
-        dueDate: m.dueDate ?? "",
-        status: {
-            code: 0,
-            status: m.status as string,
-            // The status's own fill from the tone source; an unknown one is neutral.
-            ...(isStatusName(m.status as string)
-                ? statusSolid(m.status as Parameters<typeof statusSolid>[0])
-                : { color: toneSolid("neutral").bg, textColor: toneSolid("neutral").fg }),
-        },
-        priority: {
-            code: m.priorityCode ?? -1,
-            priority: m.priority ?? "",
-            color: priorityMeta?.color ?? "",
-            textColor: priorityMeta?.textColor ?? "",
-        },
-        effortLevel: {
-            code: m.effortLevelCode ?? -1,
-            level: m.effortLevel ?? "",
-            color: effortMeta?.color ?? "",
-            textColor: effortMeta?.textColor ?? "",
-        },
-        tags: (m.tags as TagListProps[]) ?? [],
-        // Milestones now persist their own `links` (mirrors
-        // `TaskMaster.links`). Reading from `m.links` ensures the
-        // URL/Link section in the milestone preview survives a
-        // milestone refresh — the previous hard-coded `[]` would
-        // wipe a freshly-added link the moment any field on the
-        // milestone bumped `tsUpdatedAt`.
-        links: (m.links as TaskProps["links"]) ?? [],
-        attachments,
-        parentTaskId: null,
-        // The backing task is itself the root, so children created
-        // beneath it inherit `rootTaskId = backingTaskId`. This makes
-        // `TaskSubTasksBlock`'s "+ Sub Task" button work out of the
-        // box for milestones (it requires `rootTaskId != null`).
-        rootTaskId: backingTaskId,
-        isMilestone: true,
-        // Sprint id is exposed via the SprintMilestonePicker in
-        // TaskMainBlock; we attach it as a loose extra field so the
-        // picker can read it without TS gymnastics on the official
-        // TaskProps shape.
-        sprintId: m.sprintId ?? null,
-        // Grouping folder (MIP-847), edited by MilestoneFolderPicker in
-        // TaskMainBlock the same loose-field way as `sprintId`.
-        folderId: m.folderId ?? null,
-        milestoneId: m.milestoneId,
-        // Custom-field values come off the backing task row via the
-        // milestone payload; `?? {}` (not undefined) so the preview's
-        // save path knows the map was LOADED — undefined would make
-        // persistFromTaskContent skip the diff entirely.
-        customFieldValues: m.customFieldValues ?? {},
-    } as TaskProps;
-};
-
 const milestoneAssigneesToUserProps = (m: Milestone, teamMembers: UserProps[]): UserProps[] => {
     return m.assignees
         .map<UserProps | null>((a) => {
@@ -1295,35 +1203,6 @@ const milestoneCollaboratorsToUserProps = (
             } as unknown as UserProps;
         })
         .filter((u): u is UserProps => u != null);
-};
-
-// Resolve the milestone's reporter (FK on the milestone) to a UserProps,
-// preferring a hit in the team-members list so fields like avatar /
-// status are populated. Falls back to a synthesised UserProps from the
-// embedded payload, then to the supplied fallback (e.g. `myself`).
-const milestoneReporterToUserProps = (
-    m: Milestone | null | undefined,
-    teamMembers: UserProps[],
-    fallback: UserProps
-): UserProps => {
-    if (!m) return fallback;
-    const reporterId = m.reporter?.userId ?? m.reporterId ?? null;
-    if (reporterId == null) return fallback;
-    const found = teamMembers.find((u) => String(u.userId) === String(reporterId));
-    if (found) return found;
-    if (m.reporter) {
-        return {
-            userId: String(m.reporter.userId),
-            userName: m.reporter.username || m.reporter.email || "",
-            userEmail: m.reporter.email || "",
-            avatarImgPath: m.reporter.profileImageUrl || "",
-            teamId: "",
-            teamName: "",
-            tsLastSeen: "",
-            tsJoined: "",
-        } as unknown as UserProps;
-    }
-    return fallback;
 };
 
 const MilestonePreviewInner = ({
@@ -1560,7 +1439,7 @@ const MilestonePreviewInner = ({
     const [assignee, setAssignee] = useState<UserProps | null>(null);
     // Reporter follows the same lookup pattern as assignee but resolves
     // from the milestone's FK reporter (single user, like normal tasks).
-    const [reporter, setReporter] = useState<UserProps>(myself);
+    const [reporter, setReporter] = useState<UserProps | null>(null);
     const [uploadedFiles, setUploadedFiles] = useState<TaskProps["attachments"]>([]);
 
     // Same one-shot tab-index init the regular-task branch uses, keyed
@@ -1620,11 +1499,7 @@ const MilestonePreviewInner = ({
         const firstAssignee =
             milestoneAssigneesToUserProps(milestone, useTEM.teamMembers)[0] ?? myself;
         setAssignee(firstAssignee);
-        const resolvedReporter = milestoneReporterToUserProps(
-            milestone,
-            useTEM.teamMembers,
-            myself
-        );
+        const resolvedReporter = milestoneReporterToUserProps(milestone, useTEM.teamMembers);
         setReporter(resolvedReporter);
         setTaskContentLike(
             milestoneToTaskProps(
@@ -1883,7 +1758,7 @@ const MilestonePreviewInner = ({
             myself,
             milestone: updated,
             sprintName,
-            reporter: milestoneReporterToUserProps(updated, useTEM.teamMembers, myself),
+            reporter: milestoneReporterToUserProps(updated, useTEM.teamMembers),
             assignees: milestoneAssigneesToUserProps(updated, useTEM.teamMembers),
             systemUserId: usePM.currentProject?.systemUserId,
         });
@@ -2064,14 +1939,9 @@ const MilestonePreviewInner = ({
         // Reporter diff (single-user FK on the milestone). Mirrors the
         // assignee diff above so a swap from picker -> server is sent
         // exactly once and only when something actually changed.
-        const nextReporterId = next.reporter?.userId ? String(next.reporter.userId) : null;
-        const currentReporterId = milestone.reporter?.userId
-            ? String(milestone.reporter.userId)
-            : milestone.reporterId != null
-              ? String(milestone.reporterId)
-              : null;
-        if (nextReporterId !== currentReporterId) {
-            patch.reporterId = nextReporterId;
+        const reporterChange = milestoneReporterPatch(next, milestone);
+        if (reporterChange !== undefined) {
+            patch.reporterId = reporterChange;
         }
         // Collaborators diff (backing-task M2M exposed on the milestone).
         // Compare id SETS so reordering / identity churn doesn't trigger a

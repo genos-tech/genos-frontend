@@ -177,7 +177,6 @@ const useHarness = () => {
     usePreviewEditMirror({
         working: state.tmpCurrentTaskContent,
         preview: tm.currentPreviewTask,
-        myself,
         setPreview: tm.setCurrentPreviewTask,
         syncRow: tm.syncPreviewEdit,
         setAssignee: vi.fn(),
