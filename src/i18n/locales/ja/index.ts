@@ -2574,6 +2574,8 @@ export const ja: DeepPartial<Messages> = {
             messageReminder: "リマインダー",
             todoReminder: "To-Do リマインダー",
             genosReport: "Genos レポート",
+            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
+            trialNotice: "無料トライアル",
         },
         report: {
             showMore: "残り{count}件を表示",

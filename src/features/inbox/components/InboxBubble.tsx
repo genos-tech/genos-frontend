@@ -13,6 +13,7 @@ import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
+import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import { Box, Button, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -66,7 +67,8 @@ type RequestLabelKey =
     | "externalShare"
     | "messageReminder"
     | "todoReminder"
-    | "genosReport";
+    | "genosReport"
+    | "trialNotice";
 
 // What Genos itself files in your inbox (the digest, a schedule's report).
 const GENOS_WRITES_TO_YOU = { dark: "#c084fc", light: "#9333ea" };
@@ -193,6 +195,20 @@ const GENOS_REPORT = GENOS_REPORT_ITEM_TYPE;
 /** `item_optionals.kind` for the to-do flavour of the type above. */
 const TODO_REMINDER_KIND = "todo_reminder";
 
+/** `item_optionals.kind` of the first-month-of-Core trial notice (an activity, item type 0). Written
+ *  by genos-api's `first_month_trial_notices`. */
+const TRIAL_NOTICE_KIND = "core_trial_notice";
+
+/** The chip of that notice. Type 0 is the catch-all activity type and has no entry in
+ *  `ITEM_TYPE_CONFIG` (its other cards stay chipless), so this one is picked by `kind`. Green with
+ *  the plans-page icon, like the "Free trial" chip on Settings > Plan and usage. */
+const TRIAL_NOTICE_CONFIG: (typeof ITEM_TYPE_CONFIG)[number] = {
+    labelKey: "trialNotice",
+    icon: <WorkspacePremiumRoundedIcon sx={{ fontSize: 14 }} />,
+    role: "success",
+    colorScheme: ITEM_TYPE_CONFIG[2].colorScheme, // never read: `role` wins; no new literal hex
+};
+
 /** The request types answered over HTTP rather than a socket event. */
 const HTTP_ANSWERED = [OWNERSHIP_CLAIM, TEAM_CONNECTION, EXTERNAL_SHARE];
 
@@ -246,7 +262,11 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     // read by answering it.
     const isActivityCard = isActivityItemType(inboxItem.itemType);
 
-    const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
+    // Keyed on BOTH the type and the kind: type 0 carries every plain activity, and only this
+    // one gets a chip.
+    const isTrialNotice =
+        inboxItem.itemType === 0 && inboxItem.itemOptionals?.kind === TRIAL_NOTICE_KIND;
+    const config = isTrialNotice ? TRIAL_NOTICE_CONFIG : ITEM_TYPE_CONFIG[inboxItem.itemType];
     // Anything that isn't an activity is something somebody is waiting on
     // an answer to. Asked as "not an activity" rather than as a numeric
     // range: an upper bound is how the two cross-team types shipped as

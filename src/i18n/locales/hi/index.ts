@@ -3920,6 +3920,8 @@ export const hi: DeepPartial<Messages> = {
             messageReminder: "रिमाइंडर",
             todoReminder: "टू-डू रिमाइंडर",
             genosReport: "Genos रिपोर्ट",
+            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
+            trialNotice: "मुफ़्त ट्रायल",
         },
         report: {
             showMore: "{count} और दिखाएँ",
