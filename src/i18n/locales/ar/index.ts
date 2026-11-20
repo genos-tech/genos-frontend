@@ -570,6 +570,13 @@ export const ar: DeepPartial<Messages> = {
             heading: "الخطة والاستخدام",
             description: "خطتك الحالية ومقدار ما استخدمته من كل حد.",
             viaTeam: "عبر فريق {team}",
+            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
+            trialChip: "تجربة مجانية",
+            // TODO(copy)
+            trialEnds: "ينتهي شهر Core المجاني في {date}.",
+            // TODO(copy)
+            trialAfter:
+                "بعد ذلك تعود إلى الخطة المجانية. تبقى بياناتك، وتتوقف التطبيقات المتصلة مؤقتًا حتى تعود إلى خطة مدفوعة.",
             tierFree: "مجاني",
             tierCore: "كور",
             tierPro: "برو",
@@ -1346,6 +1353,11 @@ export const ar: DeepPartial<Messages> = {
             title: "التطبيقات المتصلة",
             blurb: "تطبيقات الذكاء الاصطناعي التي سمحت لها باستخدام Genos نيابةً عنك. عند إبطال تطبيق يتوقف عن العمل مع طلبه التالي.",
             empty: "لا توجد تطبيقات متصلة بعد.",
+            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
+            paused: "متوقف مؤقتًا",
+            // TODO(copy)
+            pausedNote:
+                "متوقف مؤقتًا: خطتك الحالية لا تشمل التطبيقات المتصلة. يبقى هنا ويعمل من جديد على Core أو أعلى.",
             loadFailed: "تعذّر تحميل تطبيقاتك المتصلة.",
             saveFailed: "تعذّر حفظ هذا التغيير.",
             revokeFailed: "تعذّر إبطال هذا التطبيق. حاول مرة أخرى.",

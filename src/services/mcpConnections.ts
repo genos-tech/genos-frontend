@@ -129,6 +129,10 @@ export const submitConsentDecision = async (
 
 export interface McpConnection {
     id: string;
+    /** The plan doesn't include connected apps right now (the first month of Core
+     *  ended, or a subscription lapsed). Kept, refused on every call, and back
+     *  when the plan is. Absent on an older backend = not paused. */
+    paused?: boolean;
     client: {
         name: string;
         kind: "registered" | "metadata_document";

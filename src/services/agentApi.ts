@@ -524,6 +524,10 @@ export interface AgentFeatures {
     tier: SubscriptionTier;
     tier_source?: "personal" | "team";
     tier_team?: string | null;
+    // End of the first-month Core trial (ISO timestamp). Present (non-null) ONLY
+    // while the trial is what gives this account its plan: a payer, a paying
+    // team's member, or an account whose trial ended gets null/absent.
+    trial_ends_at?: string | null;
     llm_ask: QuotaBlock;
     web_search: QuotaBlock;
     task_create?: MonthlyQuotaBlock;
