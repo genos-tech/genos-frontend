@@ -65,7 +65,7 @@ type Props = {
 // is a plain button, the board card is a @hello-pangea/dnd <Draggable> with
 // its own selected / dragging chrome, and each keeps its own click behaviour.
 export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
 
     const tags = asTags(milestone.tags);
     const total = milestone.tasksTotal ?? 0;
@@ -77,14 +77,19 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
 
     const daysLeft = daysUntil(milestone.dueDate);
     const dueLabel = milestone.dueDate
-        ? new Date(milestone.dueDate).toLocaleDateString(undefined, {
+        ? new Date(milestone.dueDate).toLocaleDateString(locale, {
               month: "short",
               day: "numeric",
           })
         : null;
     const small = { ...type("body-xs"), color: g.text.tertiary } as const;
     // Empty when the server has recorded none yet (old milestones before the backfill).
-    const lastProgress = formatRelativeAge(milestone.lastProgressAt, t.tasks.activity);
+    const lastProgress = formatRelativeAge(
+        milestone.lastProgressAt,
+        t.tasks.activity,
+        Date.now(),
+        locale
+    );
 
     return (
         <>

@@ -266,7 +266,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         onOpenDiagram,
     } = props;
 
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const isChild = depth > 0;
     const taskIdStr = String(task.id);
@@ -1320,7 +1320,12 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 // Null until the server has recorded any. Shown as an age, with
                 // the exact time on hover: "Last Updated" is the exact time, and
                 // this one is read as "is it moving?".
-                const age = formatRelativeAge(task.lastProgressAt, t.tasks.activity);
+                const age = formatRelativeAge(
+                    task.lastProgressAt,
+                    t.tasks.activity,
+                    Date.now(),
+                    locale
+                );
                 return (
                     <AppTooltip
                         title={

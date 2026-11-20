@@ -1,4 +1,4 @@
-import { fmt } from "../../../i18n";
+import { fmt, type Locale } from "../../../i18n";
 
 // The strings `formatRelativeAge` needs: `t.tasks.activity`'s age wording.
 export type RelativeAgeMessages = {
@@ -36,13 +36,16 @@ export const parseServerTime = (value: unknown): number | null => {
     return Number.isNaN(ms) ? null : ms;
 };
 
-// "just now" / "5 minutes ago" / "2 days ago", and from a week on the date.
-// Smaller than Intl.RelativeTimeFormat so no dependency is pulled in; the
+// "just now" / "5 minutes ago" / "2 days ago", and from a week on the date, in the
+// app's language (`locale` from `useTranslation()`; the codes are valid `Intl` tags).
+// Never the browser's: `toLocaleDateString(undefined, ...)` followed the browser, so an
+// Arabic app on an English browser showed "Nov 11, 2026" (MIP-1807). Smaller than Intl.RelativeTimeFormat so no dependency is pulled in; the
 // activity feed uses the same wording. Empty for a value that is not a time.
 export const formatRelativeAge = (
     value: unknown,
     messages: RelativeAgeMessages,
-    now: number = Date.now()
+    now: number = Date.now(),
+    locale: Locale = "en"
 ): string => {
     const ts = parseServerTime(value);
     if (ts === null) return "";
@@ -59,7 +62,7 @@ export const formatRelativeAge = (
     if (days < 7) {
         return fmt(days === 1 ? messages.dayAgo : messages.daysAgo, { count: days });
     }
-    return new Date(ts).toLocaleDateString(undefined, {
+    return new Date(ts).toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
         year: "numeric",
