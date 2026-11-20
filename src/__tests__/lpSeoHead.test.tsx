@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import articlesManifest from "../lp/blog/articles.json";
 import { pageUrl } from "../lp/seo/head";
-import { SITE_ORIGIN } from "../lp/seo/routes";
+import { routeFor, SITE_ORIGIN } from "../lp/seo/routes";
 import { useDocumentMeta } from "../lp/useDocumentMeta";
 
 const setLanguage = (value: string) =>
@@ -81,7 +81,7 @@ describe("useDocumentMeta", () => {
         );
         expect(document.title).toBe("T");
         expect(content('meta[property="og:description"]')).toBe("OD");
-        expect(href('link[rel="canonical"]')).toBe(`${SITE_ORIGIN}/home`);
+        expect(href('link[rel="canonical"]')).toBe(`${SITE_ORIGIN}/`);
     });
 
     it("canonicalises a trailing slash or different case to the page's own URL", () => {
@@ -140,6 +140,9 @@ const renderAt = async (c: PageCase) => {
     );
 };
 
+// `/home` is an alias of `/`: its canonical, og:url and hreflang name `/` (MIP-1747).
+const canonOf = (path: string): string => routeFor(path)?.canonicalPath ?? path;
+
 describe.each(PAGES)("$path", (c) => {
     it("sets a real title, description, share card and canonical (English)", async () => {
         setLanguage("en-US");
@@ -151,8 +154,8 @@ describe.each(PAGES)("$path", (c) => {
         expect(content('meta[property="og:description"]')).toBeTruthy();
         expect(content('meta[property="og:image"]')).toBe(`${SITE_ORIGIN}/genos-share.png`);
         expect(content('meta[name="twitter:card"]')).toBe("summary_large_image");
-        expect(href('link[rel="canonical"]')).toBe(pageUrl(c.path, "en"));
-        expect(content('meta[property="og:url"]')).toBe(pageUrl(c.path, "en"));
+        expect(href('link[rel="canonical"]')).toBe(pageUrl(canonOf(c.path), "en"));
+        expect(content('meta[property="og:url"]')).toBe(pageUrl(canonOf(c.path), "en"));
         for (const tag of [document.title, content('meta[name="description"]')!]) {
             expect(tag).not.toMatch(/secretary|秘書/i);
         }
@@ -162,13 +165,13 @@ describe.each(PAGES)("$path", (c) => {
         it("serves a Japanese version with its own canonical and the full alternate set", async () => {
             setLanguage("ja-JP");
             await renderAt(c);
-            expect(href('link[rel="canonical"]')).toBe(pageUrl(c.path, "ja"));
+            expect(href('link[rel="canonical"]')).toBe(pageUrl(canonOf(c.path), "ja"));
             expect(document.documentElement.lang).toBe("ja");
             expect(content('meta[property="og:locale"]')).toBe("ja_JP");
             const alt = (l: string) => href(`link[rel="alternate"][hreflang="${l}"]`);
-            expect(alt("en")).toBe(pageUrl(c.path, "en"));
-            expect(alt("ja")).toBe(pageUrl(c.path, "ja"));
-            expect(alt("x-default")).toBe(pageUrl(c.path));
+            expect(alt("en")).toBe(pageUrl(canonOf(c.path), "en"));
+            expect(alt("ja")).toBe(pageUrl(canonOf(c.path), "ja"));
+            expect(alt("x-default")).toBe(pageUrl(canonOf(c.path)));
         });
 
         it("moves canonical, <html lang> and the title when the visitor switches language", async () => {
@@ -176,7 +179,9 @@ describe.each(PAGES)("$path", (c) => {
             await renderAt(c);
             const english = document.title;
             fireEvent.click(screen.getByRole("button", { name: "日本語" }));
-            await waitFor(() => expect(href('link[rel="canonical"]')).toBe(pageUrl(c.path, "ja")));
+            await waitFor(() =>
+                expect(href('link[rel="canonical"]')).toBe(pageUrl(canonOf(c.path), "ja"))
+            );
             expect(document.documentElement.lang).toBe("ja");
             expect(document.title).not.toBe(english);
         });
@@ -185,7 +190,7 @@ describe.each(PAGES)("$path", (c) => {
             setLanguage("ja-JP");
             await renderAt(c);
             expect(document.head.querySelector('link[rel="alternate"]')).toBeNull();
-            expect(href('link[rel="canonical"]')).toBe(pageUrl(c.path));
+            expect(href('link[rel="canonical"]')).toBe(pageUrl(canonOf(c.path)));
             // the shell may still be in Japanese here, so <html lang> stays the app's (set
             // to "en" before the render by beforeEach), not forced by the page
             expect(document.documentElement.lang).toBe("en");
