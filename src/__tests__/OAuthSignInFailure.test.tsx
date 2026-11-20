@@ -67,4 +67,29 @@ describe("OAuth sign-in failure", () => {
         expect(screen.getByRole("button", { name: "Go to sign up" })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Back to sign in" })).toBeNull();
     });
+
+    it("says Google could not confirm the address, and that nothing was created (MIP-1770)", async () => {
+        renderAt("?error=email_not_verified");
+        expect(
+            await screen.findByText(/could not confirm.*no account was created.*sign up/is)
+        ).toBeInTheDocument();
+        // No other method exists to point at, and the generic text is not shown.
+        expect(screen.queryByText(/instead/i)).toBeNull();
+        expect(screen.queryByText("OAuth flow failed.")).toBeNull();
+        // The way out is the sign-in page, where sign-up is reachable.
+        expect(screen.getByRole("button", { name: "Back to sign in" })).toBeInTheDocument();
+    });
+
+    it("does not say whether the address is registered", async () => {
+        renderAt("?error=email_not_verified&primary=email");
+        const alert = await screen.findByRole("alert");
+        expect(alert.textContent).not.toMatch(/already|exists|in use|registered/i);
+        expect(alert.textContent).not.toMatch(/your email and password instead/i);
+    });
+
+    it("still shows the generic message for a code it does not know", async () => {
+        renderAt("?error=something_new");
+        expect(await screen.findByText("OAuth flow failed.")).toBeInTheDocument();
+        expect(screen.queryByText(/could not confirm/i)).toBeNull();
+    });
 });

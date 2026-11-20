@@ -4694,6 +4694,8 @@ export const es: DeepPartial<Messages> = {
                     unknown_provider: "Proveedor de OAuth desconocido.",
                     terms_required:
                         "Para crear una cuenta, primero acepta los Términos del servicio y la Política de privacidad en la página de registro.",
+                    email_not_verified:
+                        "Google no pudo confirmar esta dirección de correo electrónico, por lo que no se creó ninguna cuenta. Verifica la dirección con Google e inténtalo de nuevo, o regístrate con tu correo electrónico y contraseña.",
                     fallback: "Error en el flujo de OAuth.",
                 },
                 methods: {

@@ -220,6 +220,8 @@ export const ja: DeepPartial<Messages> = {
                     unknown_provider: "不明な OAuth プロバイダーです。",
                     terms_required:
                         "アカウントを作成するには、まずサインアップ画面で利用規約とプライバシーポリシーに同意してください。",
+                    email_not_verified:
+                        "Google でこのメールアドレスを確認できなかったため、アカウントは作成されませんでした。Google でメールアドレスを確認してからもう一度お試しいただくか、メールアドレスとパスワードで登録してください。",
                     fallback: "OAuth フローが失敗しました。",
                 },
                 methods: {
