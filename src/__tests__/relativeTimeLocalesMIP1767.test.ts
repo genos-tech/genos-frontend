@@ -411,3 +411,16 @@ describe("the activity feed reads as a native sentence (es, fr, ar, hi)", () => 
         });
     }
 });
+
+describe('"just now" uses the catalog\'s own wording in es, fr and hi (MIP-1775)', () => {
+    const justNow = (locale: string, path: string) => read(catalogs[locale], path);
+    it("the activity feed", () => {
+        expect(justNow("es", "tasks.activity.justNow")).toBe("justo ahora");
+        expect(justNow("fr", "tasks.activity.justNow")).toBe("à l'instant");
+        expect(justNow("hi", "tasks.activity.justNow")).toBe("अभी-अभी");
+    });
+    it("the History modal", () => {
+        expect(justNow("es", "history.relative.justNow")).toBe("Justo ahora");
+        expect(justNow("hi", "history.relative.justNow")).toBe("अभी-अभी");
+    });
+});

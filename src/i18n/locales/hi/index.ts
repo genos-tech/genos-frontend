@@ -2870,7 +2870,8 @@ export const hi: DeepPartial<Messages> = {
             pullRequest: "एक पुल अनुरोध",
             wasMerged: "विलय कर दिया गया",
             linkedPullRequest: "लिंक्ड पुल अनुरोध",
-            justNow: "बस अब",
+            // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
+            justNow: "अभी-अभी",
             minuteAgo: "{count} मिनट पहले",
             minutesAgo: "{count} मिनट पहले",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. One hour is "घंटा", more are "घंटे".
@@ -5957,7 +5958,8 @@ export const hi: DeepPartial<Messages> = {
             teamNote: "टीम नोट",
         },
         relative: {
-            justNow: "बस अब",
+            // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
+            justNow: "अभी-अभी",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. Devanagari words instead of Latin unit letters (m, h, d, w, mo, y).
             minutes: "{count} मिनट पहले",
             hours: "{count, plural, one {# घंटा पहले} other {# घंटे पहले}}",

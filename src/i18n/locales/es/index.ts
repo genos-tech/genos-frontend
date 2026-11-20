@@ -3191,7 +3191,8 @@ export const es: DeepPartial<Messages> = {
             pullRequest: "una PR",
             wasMerged: "fue fusionado",
             linkedPullRequest: "Solicitud de extracción vinculada",
-            justNow: "En este momento",
+            // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
+            justNow: "justo ahora",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sits inside the phrase; the singular uses a word.
             minuteAgo: "hace un minuto",
             minutesAgo: "hace {count} minutos",
@@ -5994,7 +5995,8 @@ export const es: DeepPartial<Messages> = {
             teamNote: "nota del equipo",
         },
         relative: {
-            justNow: "En este momento",
+            // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
+            justNow: "Justo ahora",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "Hace" first, no English unit letters (w, mo, y).
             minutes: "Hace {count} min",
             hours: "Hace {count} h",

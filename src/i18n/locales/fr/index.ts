@@ -5679,7 +5679,8 @@ export const fr: DeepPartial<Messages> = {
             pullRequest: "une pull request",
             wasMerged: "a été fusionné",
             linkedPullRequest: "Demande d'extraction liée",
-            justNow: "tout à l'heure",
+            // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
+            justNow: "à l'instant",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sits inside the phrase; the singular uses a word.
             minuteAgo: "il y a une minute",
             minutesAgo: "il y a {count} minutes",
