@@ -7,6 +7,10 @@ import { createRoot } from "react-dom/client";
 import { Outlet, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
+import {
+    AnalyticsRouteGate,
+    startAnalyticsOutsideMarketing,
+} from "./components/AnalyticsRouteGate";
 import { PageNotFound } from "./components/layout/pageNotFound";
 import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
 import { AcceptInviteHandler } from "./features/admin/components/AcceptInviteHandler";
@@ -20,7 +24,6 @@ import { SignUpForm } from "./features/admin/components/SignUpForm";
 import { VerifyEmailHandler } from "./features/admin/components/VerifyEmailHandler";
 import { RootGate } from "./features/admin/RootGate";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
-import { analytics } from "./services/analytics";
 import { registerServiceWorkerOnBoot } from "./services/notifications/pushSubscription";
 import { startLongTaskObserver } from "./services/perfObserver";
 import { startLabellingExternalLinks } from "./utils/labelExternalLinks";
@@ -52,10 +55,12 @@ const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
 const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
 
-// Initialize PostHog once, before React mounts. No-ops when
-// VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
-// in .env.local is the local-dev kill switch.
-analytics.init();
+// Initialize PostHog once, before React mounts, unless this first page is a public
+// marketing page: those store nothing and send nothing until a visitor enters the app
+// (MIP-1742; the route gate below covers a later client-side move into the app). No-ops
+// when VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank in
+// .env.local is the local-dev kill switch.
+startAnalyticsOutsideMarketing(window.location.pathname);
 
 // Register the push service worker at boot. Previously registration only
 // happened after the user granted notification permission, which meant a
@@ -107,6 +112,7 @@ const publicSegmentPage = (segment: SegmentKey) => (
 
 const tree = (
     <Router>
+        <AnalyticsRouteGate />
         <Routes>
             {/* Public company / marketing page. Fully isolated from the auth
                 stack: no AuthProvider, no guards, no redirects. */}

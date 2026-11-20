@@ -1007,6 +1007,34 @@ a.lp-row:hover .lp-row__arrow {
     color: var(--lp-text-tertiary);
 }
 
+.lp-footer__analytics {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+}
+
+/* A text control that looks like the footer links; it acts, it does not navigate. */
+.lp-footer__switch {
+    appearance: none;
+    background: none;
+    border: 0;
+    /* A 24px-tall hit area (WCAG 2.2 target size) without moving the text off the
+       baseline of its neighbours. */
+    padding: 4px 0;
+    margin-block: -4px;
+    font: inherit;
+    color: var(--lp-text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.lp-footer__switch:hover {
+    color: var(--lp-text);
+}
+
 /* ---------- prose (blog, legal, privacy, support) ---------- */
 
 .lp-prose {
