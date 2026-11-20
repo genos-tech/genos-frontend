@@ -235,7 +235,7 @@ describe("sanitizeMarketingCaptureResult (marketing start after Accept)", () => 
     });
 
     it("passes a missing event through", () => {
-        expect(sanitizeMarketingCaptureResult(null)).toBeNull();
+        expect(sanitizeMarketingCaptureResult(null as unknown as CaptureResult)).toBeNull();
     });
 });
 
