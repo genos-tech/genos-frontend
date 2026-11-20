@@ -3142,7 +3142,7 @@ export const ar: DeepPartial<Messages> = {
             linkedPullRequest: "طلب سحب مرتبط",
             justNow: "الآن",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "منذ" first with the count inside the phrase; one is said as a
-            // word, kept in a plural so {count} stays (the catalog contract tests need it). Arabic dual (2) and 11+ forms are not expressed (fmt has one/other only).
+            // word, kept in a plural so {count} stays (the catalog contract tests need it). Arabic dual (2) and 11+ forms are not expressed (fmt has one/other only; MIP-1806).
             minuteAgo: "{count, plural, one {منذ دقيقة} other {منذ # دقائق}}",
             minutesAgo: "منذ {count} دقائق",
             hourAgo: "{count, plural, one {منذ ساعة} other {منذ # ساعات}}",
@@ -5848,7 +5848,7 @@ export const ar: DeepPartial<Messages> = {
         relative: {
             justNow: "الآن",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. Arabic words, "منذ" first, no Latin unit letters. Dual (2) and
-            // 11+ forms are not expressed (fmt has one/other only).
+            // 11+ forms are not expressed (fmt has one/other only; MIP-1806).
             minutes: "{count, plural, one {منذ دقيقة} other {منذ # دقائق}}",
             hours: "{count, plural, one {منذ ساعة} other {منذ # ساعات}}",
             days: "{count, plural, one {منذ يوم} other {منذ # أيام}}",
