@@ -69,6 +69,7 @@ function PlansBody({ lang }: { lang: Lang }) {
         description: META[lang].description,
         ogTitle: META[lang].title,
         ogDescription: META[lang].description,
+        lang,
     });
 
     useEffect(() => {

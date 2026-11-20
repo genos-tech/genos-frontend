@@ -1,0 +1,16 @@
+# Public pages (/home, /plans, /features-guide, /blog, ...) are open to crawlers.
+# The signed-in app and the sign-in / invite / OAuth handoffs are not pages to
+# index. This is a request to well-behaved crawlers, not access control: every one
+# of these routes enforces its own sign-in. Keep this list in step with
+# ROBOTS_DISALLOW in src/lp/seo/routes.ts (a test compares them).
+User-agent: *
+Disallow: /workspace/
+Disallow: /signin
+Disallow: /signup
+Disallow: /reset-password
+Disallow: /oauth/
+Disallow: /verify-email
+Disallow: /accept-invite
+Disallow: /jointeam
+
+Sitemap: https://genosai.dev/sitemap.xml

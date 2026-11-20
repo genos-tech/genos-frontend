@@ -52,6 +52,7 @@ function SegmentBody({
         description: t.meta.description,
         ogTitle: t.meta.ogTitle,
         ogDescription: t.meta.ogDescription,
+        lang,
     });
 
     const secondaryHref =

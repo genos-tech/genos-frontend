@@ -89,6 +89,7 @@ function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) =>
         description: META[lang].description,
         ogTitle: META[lang].title,
         ogDescription: META[lang].description,
+        lang,
     });
 
     return (
