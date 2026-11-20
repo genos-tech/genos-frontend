@@ -16,7 +16,18 @@ import shots from "./shots.json";
 export type ShotName = keyof typeof shots;
 
 /** The rectangle of one shot; a language may override parts of it (an answer can run longer in Japanese). */
-export type ShotRect = { width: number; height: number; x: number; y: number };
+export type ShotRect = {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+    /**
+     * Where the callouts the page draws over the picture point, as fractions of it (0 to 1, from
+     * the top left). `scripts/lp-screenshots.mjs` measures them on every retake and refuses a
+     * picture where they moved, so a label never points at nothing.
+     */
+    callouts?: Record<"claude" | "you", { x: number; y: number }>;
+};
 
 export const SHOTS = shots as Record<
     ShotName,
@@ -24,8 +35,8 @@ export const SHOTS = shots as Record<
 >;
 
 export const shotRect = (name: ShotName, lang: "ja" | "en"): ShotRect => {
-    const { width, height, x, y } = SHOTS[name];
-    return { width, height, x, y, ...SHOTS[name][lang] };
+    const { width, height, x, y, callouts } = SHOTS[name];
+    return { width, height, x, y, callouts, ...SHOTS[name][lang] };
 };
 
 export const SHOT_NAMES = Object.keys(shots) as ShotName[];

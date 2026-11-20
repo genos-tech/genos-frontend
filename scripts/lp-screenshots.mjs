@@ -83,6 +83,7 @@ const UI = {
         // The "Launch plan" project the v2 demo seeds with agent-written rows (genos-api MIP-1740).
         launch: "Launch plan",
         recordTask: "Book the demo room",
+        milestone: "March launch",
         activityTab: "Activity",
     },
     ja: {
@@ -105,6 +106,7 @@ const UI = {
         priorities: "今週の優先事項",
         launch: "ローンチ計画",
         recordTask: "デモ用の会議室を予約する",
+        milestone: "3月のローンチ",
         activityTab: "アクティビティ",
     },
 };
@@ -258,6 +260,115 @@ const expandNextRow = async (page) => {
         .click();
 };
 
+/**
+ * The task panel as the hero picture shows it (MIP-1611): the Activity tab open and the task's body
+ * (details, description, sub-tasks) folded away, so the title sits right above the tab strip. The app
+ * cannot show both in one window, because that body is taller than the screen; nothing in the picture
+ * is edited, it is the same panel with that block hidden. Returns where the callouts point (page
+ * pixels) and throws unless the feed has rows with Claude's mark AND rows without it.
+ */
+const recordPanel = async (page, lang, { phone = false } = {}) => {
+    await page.getByText(UI[lang].activityTab, { exact: true }).first().click();
+    await settle(page, 2000);
+    const folded = await page.evaluate(() => {
+        const tabs = [...document.querySelectorAll('[role="tablist"]')].find((list) =>
+            /Activity|アクティビティ/.test(list.textContent ?? "")
+        );
+        if (!tabs) return "No tab strip with an Activity tab.";
+        // Walk up from the tab strip to the level where a sibling is taller than 400px: that is
+        // the body block (details, description, sub-tasks). Hide it.
+        let block = tabs;
+        while (block.parentElement) {
+            const tall = [...block.parentElement.children].filter(
+                (c) => c !== block && c.getBoundingClientRect().height > 400
+            );
+            if (tall.length === 1) {
+                tall[0].style.display = "none";
+                return null;
+            }
+            block = block.parentElement;
+        }
+        return "Could not find the task body to fold away.";
+    });
+    if (folded) throw new Error(folded);
+    if (phone) {
+        // 390 px is too narrow for four tab labels (in Japanese they wrap letter by letter), so the
+        // strip keeps only the open tab. Desktop keeps the whole strip.
+        await page.evaluate(() => {
+            for (const tab of document.querySelectorAll('[role="tab"][aria-selected="false"]')) {
+                if (/Comments|Notes|Attachments|コメント|ノート|添付/.test(tab.textContent ?? ""))
+                    tab.style.display = "none";
+            }
+        });
+    }
+    await settle(page, 1200);
+    const feed = await page.evaluate(() => {
+        const tabs = [...document.querySelectorAll('[role="tablist"]')].find((list) =>
+            /Activity|アクティビティ/.test(list.textContent ?? "")
+        );
+        // The feed is the tab strip's block: climb until a parent also holds the task's header.
+        let block = tabs.parentElement;
+        for (
+            let i = 0;
+            i < 6 && block.parentElement && block.getBoundingClientRect().height < 250;
+            i++
+        )
+            block = block.parentElement;
+        const visible = (e) => e.getClientRects().length > 0;
+        const leaves = [...block.querySelectorAll("*")].filter(
+            (e) => visible(e) && e.children.length === 0 && (e.textContent ?? "").trim()
+        );
+        const names = leaves.filter((e) => /^(Sam Taylor|佐藤 結衣)$/.test(e.textContent.trim()));
+        const marks = [...block.querySelectorAll('[data-via-app="claude"]')].filter(visible);
+        const box = (e) => {
+            const b = e.getBoundingClientRect();
+            return { left: b.left, right: b.right, top: b.top, bottom: b.bottom };
+        };
+        // Each feed row, top to bottom: its name, whether it carries a mark, and where its text ends
+        // (the rightmost text of the row, leaving out the time stamp that sits at the far right).
+        const rows = names.map((name) => {
+            let row = name;
+            while (row.parentElement && row.getBoundingClientRect().height < 30)
+                row = row.parentElement;
+            // The row is the lowest ancestor that is as wide as the feed and has a time stamp.
+            while (
+                row.parentElement &&
+                row.getBoundingClientRect().width < block.getBoundingClientRect().width * 0.8
+            )
+                row = row.parentElement;
+            const parts = leaves
+                .filter((e) => row.contains(e))
+                .map(box)
+                .sort((a, b) => a.right - b.right);
+            const text = parts.length > 1 ? parts.slice(0, -1) : parts;
+            const mark = [...row.querySelectorAll('[data-via-app="claude"]')].find(visible);
+            return {
+                marked: Boolean(mark),
+                mark: mark ? box(mark) : null,
+                end: Math.max(...text.map((p) => p.right)),
+                top: name.getBoundingClientRect().top,
+                mid: (name.getBoundingClientRect().top + name.getBoundingClientRect().bottom) / 2,
+            };
+        });
+        return { marks: marks.length, rows };
+    });
+    const marked = feed.rows.filter((r) => r.marked);
+    const plain = feed.rows.filter((r) => !r.marked);
+    if (!marked.length || !plain.length) {
+        throw new Error(
+            `The Activity feed must show some rows with Claude's mark and some without: ${feed.marks} marks in ${feed.rows.length} rows. Is the api on the demo-agent-records seed?`
+        );
+    }
+    const first = marked[0];
+    const you = plain[0];
+    return {
+        points: {
+            claude: { x: first.mark.right, y: (first.mark.top + first.mark.bottom) / 2 },
+            you: { x: you.end, y: you.mid },
+        },
+    };
+};
+
 /** Scenes: each stages the page and returns; the runner takes the picture. */
 const SCENES = {
     tasks: async (page, lang) => {
@@ -295,12 +406,14 @@ const SCENES = {
             throw new Error(`The task panel did not open for ${UI[lang].task}.`);
         }
     },
-    // The hero picture of /home (MIP-1611): the Activity tab of a task whose history mixes rows
-    // written through a connected Claude app (they carry Claude's round mark) with rows the person
-    // wrote (no mark). The demo's "Launch plan" project seeds exactly that (genos-api
-    // `demo_launch_plan`, v2 sign-in only). The scene refuses to take the picture unless a "via
-    // Claude" mark is in the panel AND some row has none, so a retake against an api without that
-    // seed fails instead of producing an unlabelled hero.
+    // The hero picture of /home (MIP-1611): one task of the demo's "Launch plan" project, showing its
+    // TITLE and its Activity feed together, where some rows were written through a connected Claude
+    // app (they carry Claude's round mark) and some by the person (no mark). genos-api
+    // `demo_launch_plan` seeds exactly that (v2 sign-in only). The scene refuses to take the picture
+    // unless the feed has a Claude mark AND a row without one, so a retake against an api without the
+    // seed fails instead of producing an unlabelled hero. It also reports where the mark and a row
+    // without it are, so the callouts the page draws over the picture stay aligned (see the check in
+    // the run loop). The `-dark` and `-phone` names are the same scene in other windows.
     record: async (page, lang) => {
         await rail(page, lang, "tasks");
         await openProject(page, lang, UI[lang].launch);
@@ -316,30 +429,20 @@ const SCENES = {
             .filter({ has: page.locator('svg[data-testid="OpenInNewIcon"]') })
             .click();
         await settle(page, 4500);
-        // The panel is a scrolling sheet on the right: go to the bottom, open the Activity tab.
-        const toBottom = () =>
-            page.evaluate(() => {
-                const sheet = [...document.querySelectorAll("*")].find(
-                    (e) =>
-                        e.scrollHeight > e.clientHeight + 40 &&
-                        e.getBoundingClientRect().left > 600 &&
-                        e.clientHeight > 300
-                );
-                if (sheet) sheet.scrollTop = sheet.scrollHeight;
-            });
-        await toBottom();
-        await settle(page, 800);
-        await page.getByText(UI[lang].activityTab, { exact: true }).first().click();
-        await settle(page, 2000);
-        await toBottom();
-        await settle(page, 800);
-        const marks = await page.locator('[data-via-app="claude"]').count();
-        const rows = await page.getByText(/^(Sam Taylor|佐藤 結衣)$/).count();
-        if (marks < 1 || marks >= rows) {
-            throw new Error(
-                `The Activity feed must show some rows with Claude's mark and some without: ${marks} marks in ${rows} rows. Is the api on the demo-agent-records seed?`
-            );
-        }
+        return recordPanel(page, lang);
+    },
+    // The same task in the phone layout: the project's milestone card opens the milestone, whose list
+    // holds the task.
+    "record-phone": async (page, lang) => {
+        await page.goto(`${BASE}/workspace/tasks`, { waitUntil: "load" });
+        await page.addStyleTag({ content: HIDE });
+        await settle(page, 6000);
+        await page.getByText(UI[lang].launch, { exact: true }).first().waitFor({ timeout: 15000 });
+        await page.getByText(UI[lang].milestone).first().click();
+        await settle(page, 3000);
+        await page.getByText(UI[lang].recordTask).first().click();
+        await settle(page, 4000);
+        return recordPanel(page, lang, { phone: true });
     },
     board: async (page, lang) => {
         await ensureTasks(page, lang);
@@ -377,6 +480,8 @@ const SCENES = {
         return composer ? { x: Math.max(0, Math.round(composer.x) - 18) } : undefined;
     },
     "tasks-dark": async (page, lang) => SCENES.tasks(page, lang),
+    "record-dark": async (page, lang) => SCENES.record(page, lang),
+    "record-phone-dark": async (page, lang) => SCENES["record-phone"](page, lang),
     // Phone: no rail, so go by URL; the table becomes a list.
     "phone-tasks": async (page) => {
         await page.goto(`${BASE}/workspace/tasks`, { waitUntil: "load" });
@@ -454,6 +559,37 @@ const SHOTS = JSON.parse(
     readFileSync(new URL("../src/lp/kit/shots.json", import.meta.url), "utf8")
 );
 
+/**
+ * The callouts the page draws over a picture point at fractions of it (`callouts` in shots.json). Where
+ * the mark and a row without it ended up this time is measured and compared with what is declared, so a
+ * retake that moved them fails loudly instead of leaving a label pointing at nothing. Without a declared
+ * value the measurement is only printed, to paste in.
+ */
+const CALLOUTS_FROM = { "record-dark": "record" };
+const checkCallouts = (name, lang, shot, points) => {
+    const measured = Object.fromEntries(
+        Object.entries(points).map(([key, p]) => [
+            key,
+            {
+                x: Number(((p.x - shot.x) / shot.width).toFixed(3)),
+                y: Number(((p.y - shot.y) / shot.height).toFixed(3)),
+            },
+        ])
+    );
+    const owner = SHOTS[CALLOUTS_FROM[name] ?? name];
+    const declared = { ...owner, ...owner?.[lang] }.callouts;
+    console.log(`  ${lang}/${name} callouts measured: ${JSON.stringify(measured)}`);
+    if (!declared) return;
+    for (const [key, m] of Object.entries(measured)) {
+        const d = declared[key];
+        if (!d || Math.abs(d.x - m.x) > 0.04 || Math.abs(d.y - m.y) > 0.04) {
+            throw new Error(
+                `${lang}/${name}: the "${key}" callout is declared at ${JSON.stringify(d)} but the picture has it at ${JSON.stringify(m)}. Update callouts in src/lp/kit/shots.json.`
+            );
+        }
+    }
+};
+
 /** What to take, in which browser: desktop light, desktop dark, phone. */
 const PLAN = [
     {
@@ -472,8 +608,9 @@ const PLAN = [
             "approval",
         ],
     },
-    { viewport: DESKTOP, dark: true, scenes: ["tasks-dark"] },
-    { viewport: PHONE, dark: false, scenes: ["phone-tasks", "phone-chat"] },
+    { viewport: DESKTOP, dark: true, scenes: ["tasks-dark", "record-dark"] },
+    { viewport: PHONE, dark: false, scenes: ["phone-tasks", "phone-chat", "record-phone"] },
+    { viewport: PHONE, dark: true, scenes: ["record-phone-dark"] },
 ];
 
 const browser = await chromium.launch({ executablePath: findChrome() });
@@ -496,6 +633,7 @@ try {
                 // A scene may say where its picture starts (a pane that moves with the layout).
                 const staged = await SCENES[name](page, lang, session);
                 if (staged && typeof staged.x === "number") shot.x = staged.x;
+                if (staged?.points) checkCallouts(name, lang, shot, staged.points);
                 await page.mouse.move(run.viewport.width - 20, run.viewport.height - 5); // no hover tooltips in the picture
                 await settle(page, 700);
                 const png = join(workdir, `${lang}-${name}.png`);
