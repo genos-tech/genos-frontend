@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2, Plus } from "lucide-react";
 
-import { APP_URL } from "./kit/links";
+import { DEMO_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { Shot } from "./kit/Shot";
 import { SHOT_ALT } from "./kit/shotAlts";
@@ -71,7 +71,7 @@ function SegmentBody({
                         </p>
                         <p className="lp-lead">{t.hero.lead}</p>
                         <div className="lp-actions" style={{ paddingTop: 8 }}>
-                            <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
+                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
                                 {t.hero.primary}
                                 <ArrowRight size={16} aria-hidden />
                             </a>
@@ -259,7 +259,7 @@ function SegmentBody({
                             <p className="lp-body">{t.cta.body}</p>
                         </div>
                         <div className="lp-actions">
-                            <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
+                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
                                 {t.cta.primary}
                                 <ArrowRight size={16} aria-hidden />
                             </a>

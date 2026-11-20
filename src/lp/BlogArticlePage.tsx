@@ -3,7 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 
 import { formatBlogDate, getBlogArticle, listBlogArticles } from "./blog/blog";
 import { BlogMarkdown } from "./blog/BlogMarkdown";
-import { APP_URL } from "./kit/links";
+import { DEMO_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { articleMeta, BLOG_META } from "./seo/pageMeta";
 import { useDocumentMeta } from "./useDocumentMeta";
@@ -79,7 +79,7 @@ export default function BlogArticlePage() {
                                 </div>
                                 <a
                                     className="lp-btn lp-btn--primary"
-                                    href={appHref(APP_URL)}
+                                    href={appHref(DEMO_URL)}
                                     rel="noreferrer"
                                     target="_blank"
                                 >
