@@ -24,7 +24,7 @@
 
 import type { CaptureOptions } from "posthog-js";
 
-import { sanitizeCaptureResult } from "./analyticsSanitize";
+import { sanitizeCaptureResult, sanitizeMarketingCaptureResult } from "./analyticsSanitize";
 
 const PREFERENCES_STORAGE_KEY = "genos-analytics-preferences:v1";
 
@@ -113,7 +113,9 @@ const start = (enabled?: boolean, onMarketingPage = false): void => {
                 disable_session_recording: true,
                 persistence: "localStorage+cookie",
                 // What leaves the browser must match the privacy page (MIP-1741).
-                before_send: sanitizeCaptureResult,
+                before_send: onMarketingPage
+                    ? sanitizeMarketingCaptureResult
+                    : sanitizeCaptureResult,
                 // Started from a marketing page, after "Accept" (MIP-1778): the visitor agreed to
                 // page views, button clicks and sign-ups, so everything else the library can switch
                 // on from its remote config stays off. Each of these only reduces collection.

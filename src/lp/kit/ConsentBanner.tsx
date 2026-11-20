@@ -12,7 +12,7 @@ const BANNER = {
     ja: {
         region: "Cookie と分析の同意",
         // TODO(copy)
-        text: "同意いただいた場合のみ、分析用の Cookie とブラウザのストレージを使い、このサイトでのページの閲覧、ボタンのクリック、サインアップ、アクセス元を集計して、Genos を試していただくうえで役立つ内容を調べます。拒否した場合は、何も保存・送信しません。",
+        text: "同意いただいた場合のみ、分析用の Cookie とブラウザのストレージを使い、このサイトでのページの閲覧、ボタンのクリック、サインアップ、アクセス元を集計して、Genos を試していただくうえで役立つ内容を調べます。拒否した場合は、分析のための保存・送信は行わず、選択内容のみを保存します。",
         // TODO(copy)
         accept: "同意する",
         // TODO(copy)
@@ -23,7 +23,7 @@ const BANNER = {
     en: {
         region: "Cookie and analytics consent",
         // TODO(copy)
-        text: "If you accept, we use an analytics cookie and browser storage to count page views, button clicks, sign-ups and where visitors come from on this site, to learn what helps people try Genos. If you reject, nothing is stored or sent.",
+        text: "If you accept, we use an analytics cookie and browser storage to count page views, button clicks, sign-ups and where visitors come from on this site, to learn what helps people try Genos. If you reject, nothing is stored or sent for analytics; only your choice is remembered.",
         // TODO(copy)
         accept: "Accept",
         // TODO(copy)

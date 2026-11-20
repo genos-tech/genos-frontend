@@ -110,12 +110,15 @@ export const trackCtaClicked = (cta: string | null, page: string, lang: string):
 export type SignupMethod = "email" | "invite" | "google" | "github" | "oauth";
 
 /**
- * An account was created (the API confirmed it). No email, name or id is sent. A caller whose
+ * An account was created (the API confirmed it), counted only after "Accept". No email, name or id is sent. A caller whose
  * code can run twice for one account (the OAuth bounce page) passes a `latch` name, and the
  * event then leaves at most once per tab; the latch is only written while analytics runs.
  */
 export const trackSignupCompleted = (method: SignupMethod, latch?: string): void => {
-    if (!analytics.isActive()) return;
+    // Only for a visitor who accepted the banner and has not switched analytics off: the
+    // sign-up pages belong to the app, where analytics starts by default for a visitor who
+    // never saw the banner, and that visitor's sign-up is not counted here.
+    if (!analytics.isActive() || !marketingAnalyticsAllowed()) return;
     if (latch) {
         const key = `genos-signup-reported:${latch}`;
         try {

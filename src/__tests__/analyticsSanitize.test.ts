@@ -12,7 +12,10 @@ import type { CaptureResult } from "posthog-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { analytics } from "../services/analytics";
-import { sanitizeCaptureResult } from "../services/analyticsSanitize";
+import {
+    sanitizeCaptureResult,
+    sanitizeMarketingCaptureResult,
+} from "../services/analyticsSanitize";
 
 const posthogMock = vi.hoisted(() => ({
     init: vi.fn(),
@@ -198,6 +201,41 @@ describe("campaign values (MIP-1778)", () => {
         // Only `properties` is unpacked: a carrier in the person properties is just dropped.
         const out = clean({ $set: { genos_utm: { utm_source: "x" } } });
         expect(out.$set).toEqual({});
+    });
+});
+
+describe("sanitizeMarketingCaptureResult (marketing start after Accept)", () => {
+    it("is the same sanitizer, minus the device fields the privacy row does not list", () => {
+        const input = event({
+            properties: {
+                $current_url: "https://genosai.dev/plans?x=1",
+                $raw_user_agent: "UA",
+                $browser: "Chrome",
+                $os: "Mac OS X",
+                $device_type: "Desktop",
+                $screen_width: 1440,
+                $viewport_height: 800,
+                title: "A page",
+                distinct_id: "d",
+                $device_id: "d",
+                token: "t",
+                path: "/plans",
+            },
+        });
+        const out = sanitizeMarketingCaptureResult(input);
+        expect(out?.properties).toEqual({
+            $current_url: "https://genosai.dev/plans",
+            distinct_id: "d",
+            $device_id: "d",
+            token: "t",
+            path: "/plans",
+        });
+        // The app's sanitizer keeps them (the app start is unchanged).
+        expect(sanitizeCaptureResult(input)?.properties).toHaveProperty("$browser");
+    });
+
+    it("passes a missing event through", () => {
+        expect(sanitizeMarketingCaptureResult(null)).toBeNull();
     });
 });
 

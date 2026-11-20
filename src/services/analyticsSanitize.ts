@@ -104,6 +104,14 @@ const cleanProperties = (properties: Properties): Properties => {
     return out;
 };
 
+// What the library derives from the device. The privacy page's PostHog row does not list it, so a
+// start from a marketing page (after "Accept") does not send it: sending less needs no new wording.
+// Kept, because ingestion needs them: `token`, `distinct_id`, `$device_id`, `$session_id`,
+// `$window_id`, `$time`, `$insert_id`, `$lib*`. The request address is seen by PostHog's server
+// and is a PostHog project setting, not something the browser can drop.
+const DEVICE_KEY =
+    /^(\$raw_user_agent|\$browser|\$browser_version|\$os|\$os_version|\$device_type|\$screen_height|\$screen_width|\$viewport_height|\$viewport_width|title)$/;
+
 export const sanitizeCaptureResult: BeforeSendFn = (event: CaptureResult | null) => {
     if (!event) return event;
     try {
@@ -120,5 +128,20 @@ export const sanitizeCaptureResult: BeforeSendFn = (event: CaptureResult | null)
     } catch {
         // Never lose an event to a surprise in its shape.
         return event;
+    }
+};
+
+/** The sanitizer for a marketing start: the same, and without the device fields. */
+export const sanitizeMarketingCaptureResult: BeforeSendFn = (event) => {
+    const out = sanitizeCaptureResult(event);
+    if (!out?.properties) return out;
+    try {
+        const properties: Properties = {};
+        for (const [key, value] of Object.entries(out.properties)) {
+            if (!DEVICE_KEY.test(key)) properties[key] = value;
+        }
+        return { ...out, properties };
+    } catch {
+        return out;
     }
 };

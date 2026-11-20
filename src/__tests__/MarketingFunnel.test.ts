@@ -52,6 +52,20 @@ const throughBeforeSend = (name: string, passed: Record<string, unknown>): Captu
             gclid: "click-id",
             $browser_language: "ja-JP",
             $timezone: "Asia/Tokyo",
+            $raw_user_agent: "Mozilla/5.0",
+            $browser: "Chrome",
+            $browser_version: 141,
+            $os: "Mac OS X",
+            $os_version: "10.15.7",
+            $device_type: "Desktop",
+            $screen_height: 900,
+            $screen_width: 1440,
+            $viewport_height: 800,
+            $viewport_width: 1400,
+            title: "Genos page title",
+            $lib: "web",
+            $session_id: "s-1",
+            $device_id: "anon-id",
             token: "phc_x",
             distinct_id: "anon-id",
         },
@@ -145,6 +159,30 @@ describe("after Accept", () => {
         }
         expect(JSON.stringify(sent)).not.toContain("SECRET");
         expect(sent).not.toHaveProperty("genos_utm");
+        // The device fields the privacy row does not list are not sent from a marketing start...
+        for (const key of [
+            "$raw_user_agent",
+            "$browser",
+            "$browser_version",
+            "$os",
+            "$os_version",
+            "$device_type",
+            "$screen_height",
+            "$screen_width",
+            "$viewport_height",
+            "$viewport_width",
+            "title",
+        ]) {
+            expect(sent, key).not.toHaveProperty(key);
+        }
+        // ...and what ingestion needs stays.
+        expect(sent).toMatchObject({
+            token: "phc_x",
+            distinct_id: "anon-id",
+            $device_id: "anon-id",
+            $session_id: "s-1",
+            $lib: "web",
+        });
     });
 
     it("deletes the stored landing address and referrer the library keeps for the session", async () => {
@@ -189,6 +227,21 @@ describe("after Accept", () => {
         const [name, props] = lastEvent();
         expect(name).toBe("signup_completed");
         expect(props).toEqual({ method: "email" });
+    });
+
+    it("does not count a sign-up for a visitor who never answered the banner, or who rejected", async () => {
+        const { analytics, funnel, consent } = await load();
+        // The app start (a visitor who went straight to /signup) runs by default.
+        analytics.init();
+        await analytics.whenReady();
+        posthog.capture.mockClear();
+        funnel.trackSignupCompleted("email");
+        funnel.trackSignupCompleted("google", "oauth");
+        expect(posthog.capture).not.toHaveBeenCalled();
+
+        consent.chooseConsent("rejected");
+        funnel.trackSignupCompleted("email");
+        expect(posthog.capture).not.toHaveBeenCalled();
     });
 
     it("counts an OAuth sign-up once per tab", async () => {
