@@ -23,6 +23,7 @@ import { ModalNoteHistory } from "../features/notes/common/components/ModalNoteH
 import { ModalNoteSharing } from "../features/notes/common/components/ModalNoteSharing";
 import { ModalFolderName } from "../features/notes/my-notes/modals/ModalFolderName";
 import { ModalMoveToFolder } from "../features/notes/my-notes/modals/ModalMoveToFolder";
+import { en } from "../i18n/locales/en";
 import { UserProps } from "../types/admin";
 
 vi.mock("../context/AuthContext", () => ({
@@ -74,7 +75,12 @@ describe("small dialogs", () => {
         expect(facts()).toMatchObject({ layer: "10010", ...FLAT });
         const create = screen.getByRole("button", { name: /^Create/i }) as HTMLButtonElement;
         expect(create.disabled).toBe(true);
-        fireEvent.change(screen.getByRole("textbox"), { target: { value: "Acme" } });
+        fireEvent.change(
+            screen.getByPlaceholderText(en.admin.createTeamModal.teamNamePlaceholder),
+            {
+                target: { value: "Acme" },
+            }
+        );
         expect(create.disabled).toBe(false);
     });
 
