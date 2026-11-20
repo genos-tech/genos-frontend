@@ -4,28 +4,36 @@ import {
     CheckCircle2,
     ClipboardCheck,
     FileText,
+    FolderOpen,
+    History,
+    Info,
     MessageSquareText,
+    Plug,
     Plus,
     ShieldCheck,
+    TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { HOME_COPY, type HomeCopy, type LineKind } from "./copy/home";
+import { HOME_COPY, type HomeCopy, type IdeaKey, type LineKind } from "./copy/home";
 import { APP_URL, SIGNUP_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { Shot } from "./kit/Shot";
+import { SHOT_ALT } from "./kit/shotAlts";
 import type { Lang } from "./lpLang";
 import { MCP_TOOLS } from "./mcpTools";
 import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
- * /home, rebuilt from zero for MIP-1232.
+ * /home, rebuilt from zero for MIP-1232, with a new top for MIP-1611.
  *
- * One idea carries the page: the history of the work stays connected, so an
- * AI (Genos's own, or Claude / ChatGPT over MCP) can answer from it and move it
- * forward with your OK. The hero shows that literally: a decision's line from
- * the thread where it was discussed, to the note where it was decided, to the
- * task where it was done, next to the Genos answer that cites all three.
+ * The top of the page is the agent record: the work your AI agent did, kept as
+ * tasks and notes you can open. Hero (layout A of the design boards, with a
+ * real product screenshot on its right), the idea in three lines, three steps,
+ * "why not just the AI's own memory?" answered by showing, what it works with,
+ * and a short FAQ. Everything below that is the earlier page (the decision's
+ * line and Genos's answer, the workspace, Ask Genos, MCP, the secretary,
+ * audiences, trust and plans, the other FAQ), reordered and not rewritten.
  *
  * Every picture is a real screenshot of the demo workspace (`kit/Shot`), so the
  * page shows exactly what "Try the demo" opens.
@@ -37,6 +45,17 @@ const LINE_ICON: Record<LineKind, typeof MessageSquareText> = {
     task: CheckCircle2,
 };
 
+const IDEA_ICON: Record<IdeaKey, typeof TrendingUp> = {
+    more: TrendingUp,
+    lose: History,
+    keep: FolderOpen,
+};
+
+const HOW_ICON = [Plug, MessageSquareText, FileText] as const;
+
+/** Where "Connect Claude" goes: the steps, which also say what the plan needs. */
+const CONNECT_PATH = "/developers#connect-an-ai-app";
+
 const withTools = (text: string) => text.replace("{tools}", String(MCP_TOOLS.length));
 
 function ComingBadge({ label }: { label: string }) {
@@ -45,64 +64,206 @@ function ComingBadge({ label }: { label: string }) {
 
 function Hero({ t, lang, appHref }: { t: HomeCopy; lang: Lang; appHref: (u: string) => string }) {
     return (
-        <section className="lp-hero">
-            <div className="lp-container">
+        <section className="lp-hero lp-hero--record">
+            <div className="lp-container lp-hero__grid">
                 <div className="lp-hero__copy lp-stack-m">
                     <h1 className="lp-display">{t.hero.title}</h1>
                     <p className="lp-lead">{t.hero.sub}</p>
                     <div className="lp-actions" style={{ paddingTop: 8 }}>
-                        <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
+                        <Link className="lp-btn lp-btn--primary" to={CONNECT_PATH}>
                             {t.hero.primary}
                             <ArrowRight size={16} aria-hidden />
-                        </a>
-                        <a className="lp-btn lp-btn--secondary" href={appHref(SIGNUP_URL)}>
+                        </Link>
+                        <a className="lp-btn lp-btn--secondary" href={appHref(APP_URL)}>
                             {t.hero.secondary}
                         </a>
                     </div>
+                    {/* TODO(recording): "Watch a real session" goes here, as a third button
+                        or a link under the note, once a real recording exists (Ken, 2026-11-20:
+                        the hero shows only the product screenshot until then). Nothing is
+                        drawn for it now: no chat card, no placeholder button. */}
                     <p className="lp-small">{t.hero.note}</p>
                 </div>
 
-                <div className="lp-hero__stage">
-                    <div>
-                        <p className="lp-small" id="lp-line-label" style={{ marginBottom: 16 }}>
-                            {t.line.label}
-                        </p>
-                        <ol aria-labelledby="lp-line-label" className="lp-line">
-                            {t.line.items.map((item) => {
-                                const Icon = LINE_ICON[item.kind];
-                                return (
-                                    <li key={item.kind} className="lp-line__item">
-                                        <span className="lp-line__dot" aria-hidden>
-                                            <Icon />
-                                        </span>
-                                        <div className="lp-line__when">{item.tag}</div>
-                                        <div className="lp-line__what">{item.what}</div>
-                                        <div className="lp-line__where">{item.where}</div>
-                                    </li>
-                                );
-                            })}
-                        </ol>
-                    </div>
-                    <Shot alt={t.heroAlt} lang={lang} name="ask" priority />
+                <div className="lp-hero__panel">
+                    {/* The labels in the picture are the app's own marks, drawn from rows the
+                        demo workspace stamped (genos-api, MIP-1740): do not add chips on top. */}
+                    <Shot alt={t.hero.alt} lang={lang} name="record" priority />
+                    <p className="lp-hero__legend">{t.hero.legend}</p>
                 </div>
             </div>
         </section>
     );
 }
 
-function Works({ t }: { t: HomeCopy }) {
+function Idea({ t }: { t: HomeCopy }) {
     return (
-        <div className="lp-container">
-            <div className="lp-works">
-                <span>{t.works.label}</span>
-                {t.works.items.map((item) => (
-                    <span key={item.name}>
-                        <strong translate="no">{item.name}</strong>
-                        {item.note && <span className="lp-small"> ({item.note})</span>}
-                    </span>
-                ))}
+        <section className="lp-section lp-section--flush lp-section--tight" id="idea">
+            <div className="lp-container lp-stack-l">
+                <h2 className="lp-kicker">{t.idea.kicker}</h2>
+                <ol className="lp-tiles">
+                    {t.idea.tiles.map((tile) => {
+                        const Icon = IDEA_ICON[tile.key];
+                        return (
+                            <li
+                                key={tile.key}
+                                className={
+                                    tile.key === "keep" ? "lp-tile lp-tile--accent" : "lp-tile"
+                                }
+                            >
+                                <span className="lp-tile__icon" aria-hidden>
+                                    <Icon size={22} />
+                                </span>
+                                <h3 className="lp-tile__title">{tile.title}</h3>
+                                <p className="lp-body">{tile.body}</p>
+                            </li>
+                        );
+                    })}
+                </ol>
             </div>
-        </div>
+        </section>
+    );
+}
+
+function HowItWorks({ t }: { t: HomeCopy }) {
+    return (
+        <section className="lp-section" id="how">
+            <div className="lp-container lp-stack-l">
+                <div className="lp-head">
+                    <p className="lp-kicker">{t.how.kicker}</p>
+                    <h2 className="lp-h2">{t.how.title}</h2>
+                </div>
+                <ol className="lp-how">
+                    {t.how.steps.map((step, index) => {
+                        const Icon = HOW_ICON[index];
+                        return (
+                            <li key={step.title} className="lp-how__step">
+                                <div className="lp-how__head">
+                                    <span className="lp-how__n lp-num">{index + 1}</span>
+                                    <span className="lp-how__icon" aria-hidden>
+                                        <Icon size={18} />
+                                    </span>
+                                </div>
+                                <h3 className="lp-h3">{step.title}</h3>
+                                <p className="lp-body">{step.body}</p>
+                            </li>
+                        );
+                    })}
+                </ol>
+                <p className="lp-small">
+                    {t.how.plan}{" "}
+                    <Link className="lp-link" to={CONNECT_PATH}>
+                        {t.how.link}
+                        <ArrowRight size={16} aria-hidden />
+                    </Link>
+                </p>
+            </div>
+        </section>
+    );
+}
+
+/** "Why not just the AI's own memory?", answered by showing what Genos keeps. */
+function AgentRecord({ t, lang }: { t: HomeCopy; lang: Lang }) {
+    const alt = SHOT_ALT[lang];
+    return (
+        <section className="lp-section lp-section--subtle" id="record">
+            <div className="lp-container lp-stack-l">
+                <div className="lp-head">
+                    <h2 className="lp-h2">{t.record.title}</h2>
+                    <p className="lp-lead">{t.record.sub}</p>
+                </div>
+                <div className="lp-record">
+                    <Shot
+                        alt={alt.tasks}
+                        caption={t.record.tasksCaption}
+                        lang={lang}
+                        name="tasks"
+                    />
+                    <Shot alt={alt.note} caption={t.record.noteCaption} lang={lang} name="note" />
+                </div>
+                <ul className="lp-points lp-points--cols">
+                    {t.record.points.map((point) => (
+                        <li key={point}>
+                            <CheckCircle2 aria-hidden />
+                            <span>{point}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </section>
+    );
+}
+
+/** Which agents work today, what is kept, and the two integrations the old strip listed. */
+function WorksWith({ t }: { t: HomeCopy }) {
+    const works = t.works;
+    return (
+        <section className="lp-section lp-section--tight" id="works">
+            <div className="lp-container lp-stack-m">
+                <h2 className="lp-kicker">{works.label}</h2>
+                <ul className="lp-agents">
+                    {works.agents.map((agent) => (
+                        <li key={agent.name} className="lp-agent">
+                            <strong translate="no">{agent.name}</strong>
+                            {agent.where && (
+                                <span className="lp-small" translate="no">
+                                    {agent.where}
+                                </span>
+                            )}
+                            {agent.coming ? (
+                                <ComingBadge label={agent.state} />
+                            ) : (
+                                <span className="lp-badge lp-badge--success">{agent.state}</span>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+                <p className="lp-kept">
+                    <Info aria-hidden />
+                    <span>{works.kept}</span>
+                </p>
+                <p className="lp-small">
+                    {works.also.label}:{" "}
+                    {works.also.items.map((item, index) => (
+                        <span key={item}>
+                            {index > 0 && " · "}
+                            <strong translate="no">{item}</strong>
+                        </span>
+                    ))}
+                </p>
+            </div>
+        </section>
+    );
+}
+
+/** The old hero: how one decision happened, next to the Genos answer that cites it. */
+function DecisionLine({ t, lang }: { t: HomeCopy; lang: Lang }) {
+    return (
+        <section className="lp-section lp-section--subtle" id="decision">
+            <div className="lp-container lp-stack-l">
+                <h2 className="lp-h2" id="lp-line-label">
+                    {t.line.label}
+                </h2>
+                <div className="lp-hero__stage lp-stage">
+                    <ol aria-labelledby="lp-line-label" className="lp-line">
+                        {t.line.items.map((item) => {
+                            const Icon = LINE_ICON[item.kind];
+                            return (
+                                <li key={item.kind} className="lp-line__item">
+                                    <span className="lp-line__dot" aria-hidden>
+                                        <Icon />
+                                    </span>
+                                    <div className="lp-line__when">{item.tag}</div>
+                                    <div className="lp-line__what">{item.what}</div>
+                                    <div className="lp-line__where">{item.where}</div>
+                                </li>
+                            );
+                        })}
+                    </ol>
+                    <Shot alt={t.heroAlt} lang={lang} name="ask" />
+                </div>
+            </div>
+        </section>
     );
 }
 
@@ -345,13 +506,21 @@ function TrustAndPlans({ t }: { t: HomeCopy }) {
     );
 }
 
-function Faq({ t }: { t: HomeCopy }) {
+function Faq({
+    id,
+    title,
+    items,
+}: {
+    id: string;
+    title: string;
+    items: Array<{ q: string; a: string }>;
+}) {
     return (
-        <section className="lp-section" id="faq">
+        <section className="lp-section" id={id}>
             <div className="lp-container lp-split" style={{ alignItems: "start" }}>
-                <h2 className="lp-h2">{t.faq.title}</h2>
+                <h2 className="lp-h2">{title}</h2>
                 <div className="lp-faq">
-                    {t.faq.items.map((item) => (
+                    {items.map((item) => (
                         <details key={item.q}>
                             <summary>
                                 {item.q}
@@ -401,14 +570,20 @@ function HomeBody({ lang, appHref }: { lang: Lang; appHref: (u: string) => strin
     return (
         <>
             <Hero appHref={appHref} lang={lang} t={t} />
-            <Works t={t} />
+            <Idea t={t} />
+            <HowItWorks t={t} />
+            <AgentRecord lang={lang} t={t} />
+            <WorksWith t={t} />
+            <Faq id="questions" items={t.questions.items} title={t.questions.title} />
+            {/* From here down is the earlier page, reordered and not rewritten (MIP-1611). */}
+            <DecisionLine lang={lang} t={t} />
             <Workspace lang={lang} t={t} />
             <Receipts lang={lang} t={t} />
             <Mcp t={t} />
             <Secretary lang={lang} t={t} />
             <Audiences t={t} />
             <TrustAndPlans t={t} />
-            <Faq t={t} />
+            <Faq id="faq" items={t.faq.items} title={t.faq.title} />
             <ClosingCta appHref={appHref} t={t} />
         </>
     );

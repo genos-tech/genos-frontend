@@ -19,21 +19,72 @@ import type { Lang } from "../lpLang";
  *    "framer-motion or plain CSS?" spike of the website-redesign project. The
  *    page shows what "Try the demo" opens, so these words and the screenshots
  *    are the same events.
+ *
+ * The agent-record top of the page (MIP-1611: `hero`, `idea`, `how`, `record`,
+ * `works`, `questions`) is written from the messaging brief v1 (Genos board,
+ * task note 176). What it may and may not say:
+ *  - "AI agent (e.g. Claude)", never "Claude" alone as the category. Works with
+ *    Claude today; ChatGPT is "coming"; other agents are not supported yet.
+ *  - Genos keeps what the agent writes, not the whole conversation. It is never
+ *    "always written down", "remembers everything" or "automatic".
+ *  - No "Secretary" / 秘書, no "MCP-native", no "AI memory", no first-month-free
+ *    offer, no data-safety claim, no team-sharing claim, no "see everything in
+ *    one place", and no number, logo or quote that is not real.
+ *    `LandingPageAgentRecord.test.tsx` pins these for the new blocks.
+ *  - ALL headline and subhead sentences there are PLACEHOLDER: Ken has not
+ *    chosen them (each carries `TODO(copy: Ken decides the sentences)`).
  */
 
 export type LineKind = "chat" | "note" | "task";
 
 type Point = { text: string; coming?: boolean; plan?: string };
 
+export type IdeaKey = "more" | "lose" | "keep";
+
 export type HomeCopy = {
     meta: { title: string; description: string };
-    hero: { title: string; sub: string; primary: string; secondary: string; note: string };
+    hero: {
+        title: string;
+        sub: string;
+        primary: string;
+        secondary: string;
+        note: string;
+        /** One line under the screenshot: what the agent's mark means. */
+        legend: string;
+        /** Alt text of the hero screenshot (`record`). */
+        alt: string;
+    };
+    /** The old hero (the decision's line and the Genos answer), moved below the new top. */
     line: {
         label: string;
         items: Array<{ kind: LineKind; tag: string; what: string; where: string }>;
     };
     heroAlt: string;
-    works: { label: string; items: Array<{ name: string; note?: string }> };
+    idea: {
+        kicker: string;
+        tiles: Array<{ key: IdeaKey; title: string; body: string }>;
+    };
+    how: {
+        kicker: string;
+        title: string;
+        steps: Array<{ title: string; body: string }>;
+        plan: string;
+        link: string;
+    };
+    record: {
+        title: string;
+        sub: string;
+        points: string[];
+        tasksCaption: string;
+        noteCaption: string;
+    };
+    works: {
+        label: string;
+        agents: Array<{ name: string; where?: string; state: string; coming?: boolean }>;
+        also: { label: string; items: string[] };
+        kept: string;
+    };
+    questions: { title: string; items: Array<{ q: string; a: string }> };
     workspace: {
         kicker: string;
         title: string;
@@ -89,16 +140,78 @@ export type HomeCopy = {
 export const HOME_COPY: Record<Lang, HomeCopy> = {
     ja: {
         meta: {
-            title: "Genos — AIが、仕事の経緯までわかるワークスペース",
+            // TODO(copy: Ken decides the sentences) — the page title and description follow the hero line.
+            title: "Genos — AIがした仕事を、あなたが開ける場所に残す",
+            // TODO(copy: Ken decides the sentences)
             description:
-                "チャット・タスク・ノートがつながったチームのワークスペース。Genosや、ClaudeやChatGPTから、根拠つきの答えと承認制の変更で仕事を進められます。",
+                "AIエージェントがした仕事を、読めるタスクとノートとしてGenosに残します。いまはClaudeで使えます。ChatGPTは近日公開です。",
         },
         hero: {
-            title: "AIが、仕事の経緯までわかるワークスペース。",
-            sub: "チャット、タスク、ノートが、仕事が進んだ順番のままつながっています。Genosに聞けば（ClaudeやChatGPTからでも）根拠つきで答え、変更はあなたが承認してから実行します。",
-            primary: "デモを試す",
-            secondary: "無料で始める",
-            note: "サンプルチームのワークスペースが数秒で開きます。登録もカードも不要です。",
+            // TODO(copy: Ken decides the sentences) — draft line from the review, not chosen.
+            title: "AIがした仕事を、あなたが開ける場所に残す。",
+            // TODO(copy: Ken decides the sentences) — draft subhead, not chosen.
+            sub: "AIエージェントに、もっと仕事を任せましょう。エージェントがしたことは、Genosが読めるタスクとノートとして残すので、セッションをまたいでも何も失われません。",
+            primary: "Claudeをつなぐ",
+            secondary: "デモを試す",
+            note: "いまはClaudeで使えます。ChatGPTは近日公開です。",
+            // TODO(copy: Ken decides the sentences)
+            legend: "エージェントが書いたものには、そのマークが付きます。それ以外はあなたのものです。",
+            alt: "Genosで開いたタスク。ステータス、担当者、タグ、説明が見える",
+        },
+        idea: {
+            // TODO(copy: Ken decides the sentences) — the three lines of the brief's story (section 2).
+            kicker: "考え方",
+            tiles: [
+                {
+                    key: "more",
+                    title: "AIで、こなせる仕事が増える。",
+                    body: "前より多くの仕事を扱えます。",
+                },
+                {
+                    key: "lose",
+                    title: "AIが何をしたか、見失いがち。",
+                    body: "任せるほど、見失うものも増えます。",
+                },
+                {
+                    key: "keep",
+                    title: "Genosが残します。あなたも開けます。",
+                    body: "エージェントが書いた、読めるタスクとノート。",
+                },
+            ],
+        },
+        how: {
+            kicker: "使い方",
+            // TODO(copy: Ken decides the sentences)
+            title: "一度つなげば、いつもどおりの仕事で。",
+            steps: [
+                {
+                    title: "エージェントをつなぐ",
+                    body: "ClaudeにGenosをコネクタとして追加し、Genosのアカウントでサインインします。",
+                },
+                {
+                    title: "いつもどおり使う",
+                    body: "これまでどおり、エージェントに計画や作業を頼みます。エージェントは、タスク・コメント・ノートをGenosに書きます。",
+                },
+                {
+                    title: "書いたものを開く",
+                    body: "Genosで読み、編集し、削除できます。エージェント経由で作られたものには印が付くので、あなたが書いたものと見分けられます。",
+                },
+            ],
+            plan: "エージェントの接続にはCoreプラン以上が必要です。",
+            link: "接続の手順を見る",
+        },
+        record: {
+            // TODO(copy: Ken decides the sentences) — answered by showing; keep the text minimal.
+            title: "AI自身のメモリだけでは、いけませんか？",
+            // TODO(copy: Ken decides the sentences)
+            sub: "Genosが残すものはこれです。開いて読める、タスク・ノート・コメント。",
+            points: [
+                "タスクとノートとして、読めます。",
+                "エージェントが書いたものは、編集も削除もできます。",
+                "エージェントが書いたものには印が付くので、あなたの仕事と見分けられます。",
+            ],
+            tasksCaption: "タスク一覧",
+            noteCaption: "ノート",
         },
         line: {
             label: "ひとつの決定がたどった経緯",
@@ -127,11 +240,37 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             "Genosの回答画面。「ホームページの作り直しを止めているものは何ですか？」に、リンクつきのタスクと出典チップを添えて答えている",
         works: {
             label: "連携",
+            agents: [
+                {
+                    name: "Claude",
+                    where: "claude.ai、Claude Desktop、Claude Code",
+                    state: "いま使えます",
+                },
+                { name: "ChatGPT", state: "近日公開", coming: true },
+            ],
+            // The two integrations the old strip listed, kept.
+            also: { label: "ほかの連携", items: ["Googleカレンダー", "GitHub"] },
+            kept: "Genosが残すのは、エージェントが書いたもの（タスク・コメント・ノート）です。会話の全文ではありません。",
+        },
+        questions: {
+            title: "よくある質問",
             items: [
-                { name: "Claude" },
-                { name: "ChatGPT", note: "近日公開" },
-                { name: "Googleカレンダー" },
-                { name: "GitHub" },
+                {
+                    q: "Genosは何を残しますか？",
+                    a: "エージェントがGenosに書いたもの（タスク・コメント・ノート）です。会話の全文は残しません。",
+                },
+                {
+                    q: "どのAIエージェントで使えますか？",
+                    a: "いまはClaude（claude.ai、Claude Desktop、Claude Code）で使えます。ChatGPTは近日公開です。ほかのエージェントは、まだ対応していません。",
+                },
+                {
+                    q: "エージェントが書いたものを、読んだり編集したり削除したりできますか？",
+                    a: "はい。あなたのワークスペースにある普通のタスク・コメント・ノートなので、自分で書いたものと同じように開いて、編集し、削除できます。",
+                },
+                {
+                    q: "どのプランが必要ですか？",
+                    a: "エージェントの接続にはCoreプラン以上が必要です。Freeプランではチャット・タスク・ノートを使えます。",
+                },
             ],
         },
         workspace: {
@@ -271,7 +410,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             link: "プランを比較する",
         },
         faq: {
-            title: "よくある質問",
+            title: "ほかの質問",
             items: [
                 {
                     q: "Genosとは何ですか？",
@@ -305,16 +444,78 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
     },
     en: {
         meta: {
-            title: "Genos — the workspace your AI already understands",
+            // TODO(copy: Ken decides the sentences) — the page title and description follow the hero line.
+            title: "Genos — the work your AI does, kept where you can open it",
+            // TODO(copy: Ken decides the sentences)
             description:
-                "A team workspace where chat, tasks and notes stay linked. Ask Genos, Claude or ChatGPT and get answers with sources and changes that wait for your OK.",
+                "Genos keeps what your AI agent did as tasks and notes you can read. Works with Claude today. ChatGPT coming.",
         },
         hero: {
-            title: "The workspace your AI already understands.",
-            sub: "Chat, tasks and notes live together in Genos, linked by how the work actually happened. Ask Genos (or Claude and ChatGPT) and get answers with sources, and changes that wait for your OK.",
-            primary: "Try the demo",
-            secondary: "Start free",
-            note: "The demo opens a sample team's workspace in seconds. No sign-up, no card.",
+            // TODO(copy: Ken decides the sentences) — draft line from the review, not chosen.
+            title: "The work your AI does, kept where you can open it.",
+            // TODO(copy: Ken decides the sentences) — draft subhead, not chosen.
+            sub: "Hand more work to your AI agent. Genos keeps what it did as tasks and notes you can read, so nothing is lost between sessions.",
+            primary: "Connect Claude",
+            secondary: "Try the demo",
+            note: "Works with Claude today. ChatGPT coming.",
+            // TODO(copy: Ken decides the sentences)
+            legend: "What your agent wrote carries its mark. The rest is yours.",
+            alt: "A task open in Genos, with its status, owner, tags and description",
+        },
+        idea: {
+            // TODO(copy: Ken decides the sentences) — the three lines of the brief's story (section 2).
+            kicker: "The idea",
+            tiles: [
+                {
+                    key: "more",
+                    title: "More gets done with AI.",
+                    body: "You handle more work than before.",
+                },
+                {
+                    key: "lose",
+                    title: "It gets hard to track what the AI did.",
+                    body: "The more you hand over, the more there is to lose track of.",
+                },
+                {
+                    key: "keep",
+                    title: "Genos keeps it, and you can open it.",
+                    body: "Tasks and notes you can read, written by your agent.",
+                },
+            ],
+        },
+        how: {
+            kicker: "How it works",
+            // TODO(copy: Ken decides the sentences)
+            title: "Connect it once. Then work as you do now.",
+            steps: [
+                {
+                    title: "Connect your agent",
+                    body: "Add Genos to Claude as a connector, and sign in with your Genos account.",
+                },
+                {
+                    title: "Work as usual",
+                    body: "Ask your agent to plan or do something, as you do now. It writes tasks, comments and notes into Genos.",
+                },
+                {
+                    title: "Open what it wrote",
+                    body: "Read it, edit it or delete it in Genos. What was made through your agent is marked, so you can tell it from your own.",
+                },
+            ],
+            plan: "Connecting an agent needs the Core plan or above.",
+            link: "See the steps",
+        },
+        record: {
+            // TODO(copy: Ken decides the sentences) — answered by showing; keep the text minimal.
+            title: "Why not just the AI's own memory?",
+            // TODO(copy: Ken decides the sentences)
+            sub: "Here is what Genos keeps: tasks, notes and comments you can open.",
+            points: [
+                "You read it as tasks and notes.",
+                "You can edit or delete what your agent wrote.",
+                "What your agent wrote is marked, so you can tell it from your own work.",
+            ],
+            tasksCaption: "The task list",
+            noteCaption: "A note",
         },
         line: {
             label: "How one decision happened",
@@ -343,11 +544,37 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             'A Genos answer to "What\'s blocking the homepage rebuild?", with linked tasks and source chips underneath',
         works: {
             label: "Works with",
+            agents: [
+                {
+                    name: "Claude",
+                    where: "claude.ai, Claude Desktop, Claude Code",
+                    state: "Works today",
+                },
+                { name: "ChatGPT", state: "Coming", coming: true },
+            ],
+            // The two integrations the old strip listed, kept.
+            also: { label: "Also connects to", items: ["Google Calendar", "GitHub"] },
+            kept: "Genos keeps what your agent writes down (tasks, comments and notes), not the whole conversation.",
+        },
+        questions: {
+            title: "Questions",
             items: [
-                { name: "Claude" },
-                { name: "ChatGPT", note: "coming" },
-                { name: "Google Calendar" },
-                { name: "GitHub" },
+                {
+                    q: "What does Genos keep?",
+                    a: "What your agent writes into Genos: tasks, comments and notes. It does not keep the whole conversation.",
+                },
+                {
+                    q: "Which AI agents does it work with?",
+                    a: "Claude today (claude.ai, Claude Desktop and Claude Code). ChatGPT is coming. Other agents are not supported yet.",
+                },
+                {
+                    q: "Can I read, edit and delete what my agent wrote?",
+                    a: "Yes. It is ordinary tasks, comments and notes in your workspace, so you can open, edit or delete them like your own.",
+                },
+                {
+                    q: "Which plan do I need?",
+                    a: "Connecting an agent needs the Core plan or above. The Free plan covers chat, tasks and notes.",
+                },
             ],
         },
         workspace: {
@@ -490,7 +717,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             link: "Compare plans",
         },
         faq: {
-            title: "Questions",
+            title: "More questions",
             items: [
                 {
                     q: "What is Genos?",

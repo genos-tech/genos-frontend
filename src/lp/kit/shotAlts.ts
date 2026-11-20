@@ -8,6 +8,8 @@ export const SHOT_ALT: Record<Lang, Record<ShotName, string>> = {
         chat: "Genosのチャット画面。チャンネルの会話とスレッド",
         tasks: "Genosのタスク一覧。ステータス・担当・優先度・スプリントが並ぶテーブル",
         task: "Genosのタスク詳細。本文・コメント・関連スレッド",
+        // TODO(shot): update with the retake that shows the agent's mark (see `record` in shots.json).
+        record: "Genosで開いたタスク。ステータス、担当者、タグ、説明が見える",
         note: "Genosのノート画面。見出し・チェックリスト・表を含む仕様メモ",
         approval: "Genosが提案した変更の承認カード。承認と却下のボタンがある",
         inbox: "Genosの受信箱。今日やることのレポートがプロジェクトごとに並んでいる",
@@ -22,6 +24,8 @@ export const SHOT_ALT: Record<Lang, Record<ShotName, string>> = {
         chat: "The Genos chat screen with a channel conversation and a thread",
         tasks: "The Genos task table with status, assignee, priority and sprint columns",
         task: "A Genos task open with its body, comments and linked thread",
+        // TODO(shot): update with the retake that shows the agent's mark (see `record` in shots.json).
+        record: "A task open in Genos, with its status, owner, tags and description",
         note: "A Genos note: a spec with headings, a checklist and a table",
         approval: "An approval card for a change Genos proposed, with Approve and Decline buttons",
         inbox: "The Genos Inbox with a report of today's work, grouped by project",

@@ -26,6 +26,12 @@
         "x": 720,
         "y": 0
     },
+    "record": {
+        "width": 684,
+        "height": 600,
+        "x": 756,
+        "y": 0
+    },
     "board": {
         "width": 1165,
         "height": 700,
