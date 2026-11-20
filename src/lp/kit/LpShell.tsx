@@ -5,7 +5,7 @@ import { Menu, Moon, Sun, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { useLpLang, type Lang } from "../lpLang";
-import { APP_URL, CONTACT_EMAIL, SIGNUP_URL } from "./links";
+import { APP_URL, CONTACT_EMAIL, DEMO_URL, SIGNUP_URL } from "./links";
 import { useLpMode } from "./lpTheme";
 
 export type NavKey = "home" | "features" | "developers" | "plans" | "blog" | "demo" | null;
@@ -193,7 +193,7 @@ export function LpShell({
                         </a>
                         <a
                             className="lp-btn lp-btn--primary lp-btn--sm lp-only-wide"
-                            href={appHref(APP_URL)}
+                            href={appHref(DEMO_URL)}
                         >
                             {t.tryDemo}
                         </a>
@@ -238,7 +238,7 @@ export function LpShell({
                             </Link>
                         ))}
                         <div className="lp-actions" style={{ marginTop: 12 }}>
-                            <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
+                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
                                 {t.tryDemo}
                             </a>
                             <a

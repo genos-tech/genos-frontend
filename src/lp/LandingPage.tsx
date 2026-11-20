@@ -18,7 +18,7 @@ import { Link } from "react-router-dom";
 
 import claudeMark from "../assets/ai-apps/claude.svg";
 import { HOME_COPY, type HomeCopy, type IdeaKey, type LineKind } from "./copy/home";
-import { APP_URL, SIGNUP_URL } from "./kit/links";
+import { DEMO_URL, SIGNUP_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { Shot } from "./kit/Shot";
 import { SHOT_ALT } from "./kit/shotAlts";
@@ -130,7 +130,7 @@ function Hero({ t, lang, appHref }: { t: HomeCopy; lang: Lang; appHref: (u: stri
                             {t.hero.primary}
                             <ArrowRight size={16} aria-hidden />
                         </Link>
-                        <a className="lp-btn lp-btn--secondary" href={appHref(APP_URL)}>
+                        <a className="lp-btn lp-btn--secondary" href={appHref(DEMO_URL)}>
                             {t.hero.secondary}
                         </a>
                     </div>
@@ -603,7 +603,7 @@ function ClosingCta({ t, appHref }: { t: HomeCopy; appHref: (u: string) => strin
                         <p className="lp-body">{t.cta.body}</p>
                     </div>
                     <div className="lp-actions">
-                        <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
+                        <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
                             {t.cta.primary}
                             <ArrowRight size={16} aria-hidden />
                         </a>

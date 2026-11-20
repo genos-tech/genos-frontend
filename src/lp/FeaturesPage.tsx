@@ -17,7 +17,7 @@ import {
 import { Link } from "react-router-dom";
 
 import { I18nProvider, useTranslation } from "../i18n";
-import { APP_URL } from "./kit/links";
+import { DEMO_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { Shot } from "./kit/Shot";
 import { SHOT_ALT } from "./kit/shotAlts";
@@ -100,7 +100,7 @@ function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) =>
                         <h1 className="lp-display">{copy.hero.title}</h1>
                         <p className="lp-lead">{copy.hero.lead}</p>
                         <div className="lp-actions" style={{ paddingTop: 8 }}>
-                            <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
+                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
                                 {copy.footerCta.button}
                                 <ArrowRight size={16} aria-hidden />
                             </a>
@@ -196,7 +196,7 @@ function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) =>
                             <p className="lp-body">{copy.footerCta.body}</p>
                         </div>
                         <div className="lp-actions">
-                            <a className="lp-btn lp-btn--primary" href={appHref(APP_URL)}>
+                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
                                 {copy.footerCta.button}
                                 <ArrowRight size={16} aria-hidden />
                             </a>
