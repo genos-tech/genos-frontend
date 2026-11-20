@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import { analytics } from "../../services/analytics";
 import { useLpLang, type Lang } from "../lpLang";
 import { APP_URL, CONTACT_EMAIL, DEMO_URL, SIGNUP_URL } from "./links";
 import { useLpMode } from "./lpTheme";
@@ -51,6 +52,12 @@ const SHELL = {
             contact: "お問い合わせ",
         },
         rights: "Genos. All rights reserved.",
+        // TODO(copy): MIP-1742 DRAFT wording for counsel and Ken, not approved text.
+        analyticsOff: "分析を停止する",
+        // TODO(copy)
+        analyticsIsOff: "このブラウザでは分析は停止中です。",
+        // TODO(copy)
+        analyticsOn: "再開する",
     },
     en: {
         skip: "Skip to content",
@@ -92,8 +99,35 @@ const SHELL = {
             contact: "Contact",
         },
         rights: "Genos. All rights reserved.",
+        // TODO(copy): MIP-1742 DRAFT wording for counsel and Ken, not approved text.
+        analyticsOff: "Turn analytics off",
+        // TODO(copy)
+        analyticsIsOff: "Analytics is off in this browser.",
+        // TODO(copy)
+        analyticsOn: "Turn on",
     },
 } as const;
+
+/**
+ * "Analytics off" for a visitor who is not signed in (MIP-1742). Stores the same preference
+ * the Settings switch reads, so the choice holds when they sign in later. Nothing is stored
+ * until it is used.
+ */
+function AnalyticsSwitch({ t }: { t: (typeof SHELL)[Lang] }) {
+    const [enabled, setEnabled] = useState(() => analytics.readStoredEnabled());
+    const choose = (next: boolean) => {
+        analytics.persistEnabled(next);
+        setEnabled(next);
+    };
+    return (
+        <span className="lp-footer__analytics">
+            <span role="status">{enabled ? "" : t.analyticsIsOff}</span>
+            <button className="lp-footer__switch" onClick={() => choose(!enabled)} type="button">
+                {enabled ? t.analyticsOff : t.analyticsOn}
+            </button>
+        </span>
+    );
+}
 
 type ShellApi = {
     lang: Lang;
@@ -331,6 +365,7 @@ export function LpShell({
                         <span>
                             © {year} {t.rights}
                         </span>
+                        <AnalyticsSwitch t={t} />
                         <span translate="no">{CONTACT_EMAIL}</span>
                     </div>
                 </div>

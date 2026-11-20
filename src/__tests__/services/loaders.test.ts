@@ -633,7 +633,7 @@ describe("analytics", () => {
         expect(posthog.init).not.toHaveBeenCalled();
     });
 
-    it("init configures posthog with env key/host and opt-out from stored preference", async () => {
+    it("init configures posthog with the env key/host", async () => {
         vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
         vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
         const { posthog, analytics } = await loadAnalytics();
@@ -649,13 +649,14 @@ describe("analytics", () => {
                 autocapture: false,
                 capture_pageview: false,
                 disable_session_recording: true,
-                opt_out_capturing_by_default: false,
                 persistence: "localStorage+cookie",
             })
         );
     });
 
-    it("init reads the opt-out preference from localStorage (enabled:false => opt_out default true)", async () => {
+    it("init does not load posthog-js at all when the stored preference is opted out", async () => {
+        // Opt-out by default still writes the cookie + storage and fetches config.js
+        // (MIP-1742 probe), so an opted-out visitor must never reach posthog.init.
         localStorage.setItem(PREF_KEY, JSON.stringify({ enabled: false }));
         vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
         vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
@@ -664,13 +665,76 @@ describe("analytics", () => {
         analytics.init();
         await analytics.whenReady();
 
-        expect(posthog.init).toHaveBeenCalledWith(
-            "phc_key",
-            expect.objectContaining({ opt_out_capturing_by_default: true })
-        );
+        expect(posthog.init).not.toHaveBeenCalled();
+        expect(analytics.isEnabled()).toBe(false);
     });
 
-    it("init treats a malformed preferences JSON as enabled (opt_out default false)", async () => {
+    it("turning analytics back on after an opted-out boot loads posthog-js and opts in", async () => {
+        localStorage.setItem(PREF_KEY, JSON.stringify({ enabled: false }));
+        vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
+        vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
+        const { posthog, analytics } = await loadAnalytics();
+
+        analytics.init();
+        analytics.setEnabled(true);
+        await analytics.whenReady();
+
+        expect(posthog.init).toHaveBeenCalledTimes(1);
+        expect(posthog.opt_in_capturing).toHaveBeenCalledTimes(1);
+        analytics.capture("$pageview", { path: "/workspace" });
+        expect(posthog.capture).toHaveBeenCalledWith("$pageview", { path: "/workspace" });
+    });
+
+    it("turning analytics on never loads posthog-js on a page that has not entered the app", async () => {
+        vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
+        vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
+        const { posthog, analytics } = await loadAnalytics();
+
+        analytics.setEnabled(true); // the footer's "turn on", on a marketing page
+        await analytics.whenReady();
+
+        expect(posthog.init).not.toHaveBeenCalled();
+    });
+
+    it("persistEnabled stores the preference under the Settings key, in the Settings shape", async () => {
+        const { analytics } = await loadAnalytics();
+
+        analytics.persistEnabled(false);
+        expect(JSON.parse(localStorage.getItem(PREF_KEY) ?? "null")).toEqual({ enabled: false });
+        expect(analytics.readStoredEnabled()).toBe(false);
+        expect(analytics.isEnabled()).toBe(false);
+
+        analytics.persistEnabled(true);
+        expect(JSON.parse(localStorage.getItem(PREF_KEY) ?? "null")).toEqual({ enabled: true });
+        expect(analytics.readStoredEnabled()).toBe(true);
+    });
+
+    it("persistEnabled(false) after posthog-js started opts it out and resets the identity", async () => {
+        vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
+        vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
+        const { posthog, analytics } = await loadAnalytics();
+
+        analytics.init();
+        await analytics.whenReady();
+        analytics.persistEnabled(false);
+
+        expect(posthog.opt_out_capturing).toHaveBeenCalledTimes(1);
+        expect(posthog.reset).toHaveBeenCalledTimes(1);
+    });
+
+    it("persistEnabled does not throw when storage is blocked", async () => {
+        const { analytics } = await loadAnalytics();
+        const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+            throw new Error("blocked");
+        });
+        try {
+            expect(() => analytics.persistEnabled(false)).not.toThrow();
+        } finally {
+            spy.mockRestore();
+        }
+    });
+
+    it("init treats a malformed preferences JSON as enabled", async () => {
         localStorage.setItem(PREF_KEY, "{not json");
         vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
         vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
@@ -679,10 +743,7 @@ describe("analytics", () => {
         analytics.init();
         await analytics.whenReady();
 
-        expect(posthog.init).toHaveBeenCalledWith(
-            "phc_key",
-            expect.objectContaining({ opt_out_capturing_by_default: false })
-        );
+        expect(posthog.init).toHaveBeenCalledTimes(1);
     });
 
     it("init is idempotent (second call no-ops)", async () => {
