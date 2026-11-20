@@ -3683,6 +3683,11 @@ export const ja: DeepPartial<Messages> = {
             title: "接続済みアプリ",
             blurb: "あなたとして Genos を使うことを許可した AI アプリです。取り消すと、次のリクエストから使えなくなります。",
             empty: "接続済みのアプリはまだありません。",
+            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
+            paused: "一時停止中",
+            // TODO(copy)
+            pausedNote:
+                "一時停止中: 現在のプランでは接続済みアプリを使えません。ここに残り、Core 以上のプランに戻ると再び使えます。",
             loadFailed: "接続済みアプリを読み込めませんでした。",
             saveFailed: "変更を保存できませんでした。",
             revokeFailed: "取り消せませんでした。もう一度お試しください。",
@@ -3920,6 +3925,13 @@ export const ja: DeepPartial<Messages> = {
             heading: "プランと使用状況",
             description: "現在のプランと、各上限の使用状況です。",
             viaTeam: "チーム {team} のプラン",
+            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
+            trialChip: "無料トライアル",
+            // TODO(copy)
+            trialEnds: "Core の無料期間は {date} に終わります。",
+            // TODO(copy)
+            trialAfter:
+                "その後は無料プランに戻ります。データは残り、接続済みのアプリは有料プランに戻るまで一時停止します。",
             tierFree: "無料",
             tierCore: "Core",
             tierPro: "Pro",

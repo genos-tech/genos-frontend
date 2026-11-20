@@ -62,6 +62,11 @@ export const settings = {
         title: "Connected apps",
         blurb: "AI apps you've allowed to use Genos as you. Revoke one and it stops working on its next request.",
         empty: "No apps connected yet.",
+        // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
+        paused: "Paused",
+        // TODO(copy)
+        pausedNote:
+            "Paused: your plan doesn't include connected apps right now. It stays here and works again on Core or above.",
         loadFailed: "Couldn't load your connected apps.",
         saveFailed: "Couldn't save that change.",
         revokeFailed: "Couldn't revoke that app. Try again.",
@@ -459,6 +464,13 @@ export const settings = {
         heading: "Plan & Usage",
         description: "Your current plan and how much of each limit you've used.",
         viaTeam: "via team {team}",
+        // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
+        trialChip: "Free trial",
+        // TODO(copy)
+        trialEnds: "Your free month of Core ends on {date}.",
+        // TODO(copy)
+        trialAfter:
+            "After that you go back to Free. Your data stays, and connected apps pause until you're on a paid plan again.",
         tierFree: "Free",
         tierCore: "Core",
         tierPro: "Pro",

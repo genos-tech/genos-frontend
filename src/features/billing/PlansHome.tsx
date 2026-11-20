@@ -35,6 +35,7 @@ import { formatPrice } from "../../utils/currency";
 import { CurrencyPicker } from "./CurrencyPicker";
 import { planCta } from "./planCta";
 import { MatrixCell, planMatrixGroups } from "./planMatrix";
+import { TrialEndNote } from "./TrialEndNote";
 
 /**
  * `/workspace/plans` — the tier comparison page.
@@ -166,6 +167,8 @@ export const PlansHome = () => {
     // here". So the packs section reads it from the agent features
     // endpoint, which is authenticated and already serves it elsewhere.
     const [credits, setCredits] = useState<CreditsBlock | null>(null);
+    // End of the first-month Core trial, while it is what gives the plan (MIP-1737).
+    const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
     // Bumped when the post-checkout reconcile finishes, so the page
     // refetches instead of showing the balance from before the purchase.
     const [reloadKey, setReloadKey] = useState(0);
@@ -203,7 +206,9 @@ export const PlansHome = () => {
             if (!cancelled) setCreditPacks(catalogue);
         });
         void fetchAgentFeatures(accessToken).then((features) => {
-            if (!cancelled) setCredits(features?.credits ?? null);
+            if (cancelled) return;
+            setCredits(features?.credits ?? null);
+            setTrialEndsAt(features?.trial_ends_at ?? null);
         });
         return () => {
             cancelled = true;
@@ -421,6 +426,10 @@ export const PlansHome = () => {
                         onChange={setCurrency}
                     /> */}
                 </Stack>
+
+                {trialEndsAt && (
+                    <TrialEndNote endsAt={trialEndsAt} locale={locale} sx={{ mb: 3 }} card />
+                )}
 
                 {/* Manage-your-subscription banner.
                     Without this the ONLY route to a downgrade or a cancel was
