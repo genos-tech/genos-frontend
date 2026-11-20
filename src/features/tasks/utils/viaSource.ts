@@ -115,6 +115,26 @@ export const viaSourceOfComment = (comment: Pick<TaskCommentProps, "via">): ViaS
     viaSourceFromVia(comment.via, true);
 
 /**
+ * The chip for one NOTE comment (MIP-1752), read from the Yjs comment's
+ * `metadata.via` that `comment_on_note` / `reply_to_note_comment` stamp.
+ *
+ * That value is already the reduced one every reader of the note may see
+ * (`{ kind, app? }`, never a name), because the whole Yjs doc goes to everyone who
+ * opens the note. So this never unlocks a name: even a `client_name` that somehow
+ * sat in the metadata is ignored (`ownRow` is always false), and an `app` other than
+ * the two official families falls back to the generic chip. `kind: "app"` / `"agent"`
+ * (stamped for completeness) and any other shape earn no chip.
+ *
+ * A comment someone edits in the editor loses its `via` (BlockNote's edit sends no
+ * metadata), so a hand-edited MCP comment is the person's now, like a task comment.
+ */
+export const viaSourceOfNoteComment = (comment: { metadata?: unknown }): ViaSource | null => {
+    const metadata = comment.metadata;
+    if (metadata === null || typeof metadata !== "object") return null;
+    return viaSourceFromVia((metadata as { via?: unknown }).via, false);
+};
+
+/**
  * The chip for one note version (MIP-1488). The version's actor is its `editor`,
  * and a key writes as its owner, so the name is read only when the viewer IS the
  * editor (the second lock; the API already reduces `via` for everyone else). A
