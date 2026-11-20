@@ -135,6 +135,29 @@ describe("SecurityLogSection", () => {
         expect(screen.getByText(/Something new/)).toBeInTheDocument();
     });
 
+    it("a deleted group chat reads from the client's own label, with the chat's title (MIP-1716)", async () => {
+        listTeamSecurityEvents.mockResolvedValue({
+            events: [
+                {
+                    ...EVENT,
+                    action: "channel.deleted",
+                    // Deliberately not the client's text: a pass proves the key is translated.
+                    actionLabel: "server label",
+                    targetType: "channel",
+                    targetId: "c1",
+                    targetLabel: "Launch war room",
+                    metadata: { mode: "hard", members: 3, messages: 120 },
+                },
+            ],
+            nextBefore: null,
+        });
+        render(<SecurityLogSection teamId="t1" />);
+
+        expect(await screen.findByText(/Group chat deleted/)).toBeInTheDocument();
+        expect(screen.queryByText(/server label/)).not.toBeInTheDocument();
+        expect(screen.getByText(/Launch war room/)).toBeInTheDocument();
+    });
+
     it("an event with no actor says someone did it", async () => {
         listTeamSecurityEvents.mockResolvedValue({
             events: [{ ...EVENT, actorId: null, actorLabel: "" }],

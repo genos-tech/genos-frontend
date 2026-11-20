@@ -3754,6 +3754,7 @@ export const ja: DeepPartial<Messages> = {
                     "mcp.updated": "AI アプリのアクセス変更",
                     "member.added": "メンバーの追加",
                     "member.removed": "メンバーの退出",
+                    "channel.deleted": "グループメッセージの削除",
                     "role.changed": "ロールの変更",
                     "owner.transferred": "オーナーの移譲",
                     "invite.sent": "招待の送信",

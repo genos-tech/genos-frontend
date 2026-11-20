@@ -702,6 +702,7 @@ export const hi: DeepPartial<Messages> = {
                     "mcp.updated": "AI ऐप का एक्सेस बदला",
                     "member.added": "सदस्य जोड़ा गया",
                     "member.removed": "सदस्य ने टीम छोड़ी",
+                    "channel.deleted": "ग्रुप चैट हटाई गई",
                     "role.changed": "रोल बदला गया",
                     "owner.transferred": "स्वामित्व ट्रांसफ़र हुआ",
                     "invite.sent": "आमंत्रण भेजा गया",

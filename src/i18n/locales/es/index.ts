@@ -1497,6 +1497,7 @@ export const es: DeepPartial<Messages> = {
                     "mcp.updated": "Acceso de la app de IA modificado",
                     "member.added": "Miembro añadido",
                     "member.removed": "Miembro que se fue",
+                    "channel.deleted": "Chat grupal eliminado",
                     "role.changed": "Rol cambiado",
                     "owner.transferred": "Propiedad transferida",
                     "invite.sent": "Invitación enviada",

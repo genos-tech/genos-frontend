@@ -1468,6 +1468,7 @@ export const ar: DeepPartial<Messages> = {
                     "mcp.updated": "تغيير صلاحيات تطبيق ذكاء اصطناعي",
                     "member.added": "إضافة عضو",
                     "member.removed": "مغادرة عضو",
+                    "channel.deleted": "حذف دردشة جماعية",
                     "role.changed": "تغيير الدور",
                     "owner.transferred": "نقل الملكية",
                     "invite.sent": "إرسال دعوة",
