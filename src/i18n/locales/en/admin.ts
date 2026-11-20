@@ -213,6 +213,60 @@ export const admin = {
         newTeam: "New Team",
         comingSoon: "Coming soon",
     },
+    // Remove everything the sample-data box made at team creation, in one action (MIP-1706).
+    // Owner only; the dialog lists what goes and what stays, and why.
+    sampleData: {
+        title: "Sample data",
+        description:
+            "Remove everything that was made for you when this team was created with sample data, in one step. Anything you added or changed stays.",
+        button: "Remove sample data…",
+        dialogTitle: "Remove the sample data?",
+        dialogBody:
+            "This permanently removes the sample items listed below, with everything inside them. Nothing you made or changed is removed.",
+        loading: "Checking what would be removed…",
+        loadFailed: "Couldn't check the sample data. Please try again.",
+        retry: "Try again",
+        removeFailed: "Couldn't remove the sample data. Please try again.",
+        notRecorded:
+            "This team has no recorded sample data. Sample items made before this existed can still be deleted one at a time, from each item's own menu.",
+        nothingToRemove:
+            "There is nothing to remove: the sample data is already gone, or what is left holds your own work (listed below).",
+        removeHeading: "Will be removed",
+        keepHeading: "Will stay",
+        projectContents:
+            "The projects hold {tasks, plural, one {# task} other {# tasks}} and {milestones, plural, one {# milestone} other {# milestones}}.",
+        type: {
+            project: "{count, plural, one {# project} other {# projects}}",
+            channel: "{count, plural, one {# group chat} other {# group chats}}",
+            note_folder: "{count, plural, one {# team folder} other {# team folders}}",
+            note: "{count, plural, one {# note} other {# notes}}",
+            todo_item: "{count, plural, one {# to-do} other {# to-dos}}",
+            todo_category: "{count, plural, one {# to-do tag} other {# to-do tags}}",
+            mention_group: "{count, plural, one {# mention group} other {# mention groups}}",
+            project_label: "{count, plural, one {# project label} other {# project labels}}",
+        },
+        keepReason: {
+            project_changed: "You added or changed something in it.",
+            note_edited: "You edited it.",
+            todo_edited: "You edited it or added to it.",
+            chat_in_use: "Someone wrote in it or joined it.",
+            folder_in_use: "It holds something that is not sample data.",
+            group_in_use: "Other people were added to it.",
+            label_in_use: "A project that stays still uses it.",
+            category_in_use: "A to-do that stays still uses it.",
+        },
+        confirm: "Remove sample data",
+        cancel: "Cancel",
+        resultTitle: "Sample data removed",
+        resultRemoved: "{count, plural, one {# item was} other {# items were}} removed.",
+        resultNothing: "Nothing was removed.",
+        resultKept:
+            "{count, plural, one {# item stays} other {# items stay}}, because of something you made or changed.",
+        resultFailed:
+            "{count, plural, one {# item} other {# items}} could not be removed: {names}. Run this again to retry.",
+        reload: "Reload",
+        close: "Close",
+    },
     teamProfile: {
         pendingInvites: {
             title: "Pending invites ({count})",

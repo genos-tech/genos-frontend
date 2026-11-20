@@ -3,6 +3,57 @@ import type { DeepPartial, Messages } from "../../types";
 /** Japanese dictionary. Kept in canonical English-key order for complete coverage. */
 export const ja: DeepPartial<Messages> = {
     admin: {
+        sampleData: {
+            title: "サンプルデータ",
+            description:
+                "サンプルデータ付きでこのチームを作成したときに用意されたものを、まとめて削除します。あなたが追加・変更したものは残ります。",
+            button: "サンプルデータを削除…",
+            dialogTitle: "サンプルデータを削除しますか？",
+            dialogBody:
+                "以下のサンプルを、その中身ごと完全に削除します。あなたが作成・変更したものは削除されません。",
+            loading: "削除される内容を確認しています…",
+            loadFailed: "サンプルデータを確認できませんでした。もう一度お試しください。",
+            retry: "再試行",
+            removeFailed: "サンプルデータを削除できませんでした。もう一度お試しください。",
+            notRecorded:
+                "このチームには、記録されているサンプルデータがありません。この機能の導入前に作成されたサンプルは、各項目のメニューから1つずつ削除できます。",
+            nothingToRemove:
+                "削除するものはありません。サンプルデータはすでに削除されているか、残っているものにあなたの作業が含まれています（下に表示）。",
+            removeHeading: "削除されるもの",
+            keepHeading: "残るもの",
+            projectContents:
+                "プロジェクトには{tasks}件のタスクと{milestones}件のマイルストーンが含まれています。",
+            type: {
+                project: "プロジェクト{count}件",
+                channel: "グループチャット{count}件",
+                note_folder: "チームフォルダ{count}件",
+                note: "ノート{count}件",
+                todo_item: "To-Do {count}件",
+                todo_category: "To-Doのタグ{count}件",
+                mention_group: "メンショングループ{count}件",
+                project_label: "プロジェクトのラベル{count}件",
+            },
+            keepReason: {
+                project_changed: "あなたが追加または変更したものがあります。",
+                note_edited: "あなたが編集しました。",
+                todo_edited: "あなたが編集または追加しました。",
+                chat_in_use: "ほかの人が書き込んだ、または参加しています。",
+                folder_in_use: "サンプルデータではないものが入っています。",
+                group_in_use: "ほかの人が追加されています。",
+                label_in_use: "残るプロジェクトがまだ使っています。",
+                category_in_use: "残るTo-Doがまだ使っています。",
+            },
+            confirm: "サンプルデータを削除",
+            cancel: "キャンセル",
+            resultTitle: "サンプルデータを削除しました",
+            resultRemoved: "{count}件を削除しました。",
+            resultNothing: "削除したものはありません。",
+            resultKept: "{count}件は、あなたが作成または変更したものがあるため残っています。",
+            resultFailed:
+                "{count}件を削除できませんでした：{names}。もう一度実行すると再試行します。",
+            reload: "再読み込み",
+            close: "閉じる",
+        },
         brand: {
             name: "Genos",
             tagline: "チームコラボレーションプラットフォーム",

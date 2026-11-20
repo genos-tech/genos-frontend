@@ -50,6 +50,7 @@ import { setTeamMemberRole } from "../../services/setTeamMemberRole";
 import { updateTeamProfile } from "../../services/updateTeamProfile";
 import { ConnectedTeamsPanel } from "../team/ConnectedTeamsPanel";
 import { ModalRequestOwnership } from "../team/ModalRequestOwnership";
+import { SampleDataPanel } from "../team/SampleDataPanel";
 import { TeamOwnershipClaimPanel } from "../team/TeamOwnershipClaimPanel";
 import { useOwnershipClaim } from "../team/useOwnershipClaim";
 import { useTeamConnections } from "../team/useTeamConnections";
@@ -979,6 +980,15 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                         labelColor={g.text.secondary}
                                         myTeamId={teamProfile.teamId}
                                         valueColor={g.text.primary}
+                                    />
+
+                                    {/* Owner only, like the server: removing the sample
+                                                data deletes projects, chats and notes in bulk.
+                                                The panel renders nothing for anyone else. */}
+                                    <SampleDataPanel
+                                        isOwner={isTeamOwner && !teamProfile.isGuest}
+                                        teamId={teamProfile.teamId}
+                                        zIndex={PROFILE_MODAL_Z_INDEX + 2}
                                     />
 
                                     <FormControl sx={{ mt: 1 }}>
