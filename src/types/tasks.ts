@@ -264,10 +264,12 @@ export type TaskProps = {
     body: PartialBlock[];
     // `null` means "Unassigned" — backend `TaskMaster.assignee` is a
     // SET_NULL FK so a task can legitimately have no assignee, and
-    // creating one defaults to null. Reporter is always set (the
-    // creator) and stays non-nullable.
+    // creating one defaults to null. The reporter is set at creation (the
+    // creator) but `reporter` is a SET_NULL FK too: a hard-deleted account
+    // leaves `null` here, and `GET /task/getTask/` sends exactly that. Read it
+    // as "a person who is gone", never as the person looking at it (MIP-1730).
     assignee: UserProps | null;
-    reporter: UserProps;
+    reporter: UserProps | null;
     // Additional members working on the task beside the single
     // `assignee`. Backend `TaskMaster.collaborators` is a M2M; the read
     // endpoints always emit an array (empty when none). Optional here so

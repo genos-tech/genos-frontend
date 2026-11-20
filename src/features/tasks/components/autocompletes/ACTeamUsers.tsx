@@ -18,9 +18,8 @@ import { personFilterOptions, personLabel } from "../../../../utils/personLabel"
 type ACTeamUsersProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    // Nullable so the assignee field can be empty / cleared. The
-    // reporter field always passes a value; widening the type doesn't
-    // affect it.
+    // Nullable so the assignee field can be empty / cleared, and so the
+    // reporter field can show a reporter whose account is gone.
     initialUser: UserProps | null;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
@@ -95,7 +94,14 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             // picker (built-in placeholder), not a silent fallback to
             // `myself` that would mislead the user into thinking they
             // were the assignee.
-            placeholder={isAssignee ? t.tasks.messageTemplate.unassigned : undefined}
+            // A reporter field with nobody in it is a reporter whose account is gone.
+            placeholder={
+                isAssignee
+                    ? t.tasks.messageTemplate.unassigned
+                    : initialUser
+                      ? undefined
+                      : t.tasks.messageTemplate.deletedUser
+            }
             size="sm"
             slotProps={{ input: { dir: "auto" } }}
             value={resolvedValue}

@@ -187,8 +187,10 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     const [assignee, setAssignee] = useState<UserProps | null>(
         useTM.currentPreviewTask?.assignee ?? null
     );
-    const [reporter, setReporter] = useState<UserProps>(
-        useTM.currentPreviewTask?.reporter || myself
+    // `null` = the reporter's account is gone (SET_NULL): same rule as the
+    // assignee, never the viewer in its place (MIP-1730).
+    const [reporter, setReporter] = useState<UserProps | null>(
+        useTM.currentPreviewTask?.reporter ?? null
     );
     // For task comments
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
@@ -247,13 +249,10 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     // copy back to what is stored. The assignee / reporter chips keep their own
     // copies (`usePreviewEditMirror` below re-reads them when the working copy
     // changes), so tell them directly.
-    const handleStoredTaskRestored = useCallback(
-        (storedTask: TaskProps) => {
-            setAssignee(storedTask.assignee ?? null);
-            setReporter(storedTask.reporter || myself);
-        },
-        [myself]
-    );
+    const handleStoredTaskRestored = useCallback((storedTask: TaskProps) => {
+        setAssignee(storedTask.assignee ?? null);
+        setReporter(storedTask.reporter ?? null);
+    }, []);
 
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
@@ -546,7 +545,6 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     usePreviewEditMirror({
         working: taskEditState.tmpCurrentTaskContent,
         preview: useTM.currentPreviewTask,
-        myself,
         setPreview: useTM.setCurrentPreviewTask,
         syncRow: useTM.syncPreviewEdit,
         setAssignee,
@@ -1174,7 +1172,7 @@ const milestoneToTaskProps = (
     fallbackUser: UserProps,
     attachments: TaskProps["attachments"] = [],
     assignee?: UserProps,
-    reporter?: UserProps,
+    reporter?: UserProps | null,
     collaborators: UserProps[] = []
 ): TaskProps => {
     const backingTaskId = (m.taskId ?? m.milestoneId) as number;
@@ -1192,7 +1190,9 @@ const milestoneToTaskProps = (
         title: m.title,
         body: (m.description as PartialBlock[]) ?? [],
         assignee: assignee ?? fallbackUser,
-        reporter: reporter ?? fallbackUser,
+        // No reporter stays none (MIP-1730): the viewer in its place was PATCHed in by the
+        // first edit. The assignee fallback below is a separate question (see its task).
+        reporter: reporter ?? null,
         collaborators,
         // Thread origin off the backing task (serialized on the
         // milestone payload) — v3 UUID strings riding the legacy
@@ -1535,7 +1535,7 @@ const MilestonePreviewInner = ({
     const [assignee, setAssignee] = useState<UserProps | null>(null);
     // Reporter follows the same lookup pattern as assignee but resolves
     // from the milestone's FK reporter (single user, like normal tasks).
-    const [reporter, setReporter] = useState<UserProps>(myself);
+    const [reporter, setReporter] = useState<UserProps | null>(null);
     const [uploadedFiles, setUploadedFiles] = useState<TaskProps["attachments"]>([]);
 
     // Same one-shot tab-index init the regular-task branch uses, keyed
@@ -1595,11 +1595,7 @@ const MilestonePreviewInner = ({
         const firstAssignee =
             milestoneAssigneesToUserProps(milestone, useTEM.teamMembers)[0] ?? myself;
         setAssignee(firstAssignee);
-        const resolvedReporter = milestoneReporterToUserProps(
-            milestone,
-            useTEM.teamMembers,
-            myself
-        );
+        const resolvedReporter = milestoneReporterToUserProps(milestone, useTEM.teamMembers);
         setReporter(resolvedReporter);
         setTaskContentLike(
             milestoneToTaskProps(
@@ -1858,7 +1854,7 @@ const MilestonePreviewInner = ({
             myself,
             milestone: updated,
             sprintName,
-            reporter: milestoneReporterToUserProps(updated, useTEM.teamMembers, myself),
+            reporter: milestoneReporterToUserProps(updated, useTEM.teamMembers),
             assignees: milestoneAssigneesToUserProps(updated, useTEM.teamMembers),
             systemUserId: usePM.currentProject?.systemUserId,
         });

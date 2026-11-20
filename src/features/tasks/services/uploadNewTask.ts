@@ -92,7 +92,7 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     // unassigned. Django's TaskMaster.assignee FK is
                     // already `null=True`, so passing null is valid.
                     assignee: taskContent.assignee?.userId ?? null,
-                    reporter: taskContent.reporter.userId,
+                    reporter: taskContent.reporter?.userId ?? null,
                     title: taskContent.title,
                     priority:
                         taskContent.priority.priority !== ""

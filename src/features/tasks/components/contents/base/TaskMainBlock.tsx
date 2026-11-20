@@ -140,7 +140,7 @@ type TaskMainBlockProps = {
     setMyself: (value: UserProps) => void;
     assignee: UserProps | null;
     setAssignee: (value: UserProps | null) => void;
-    reporter: UserProps;
+    reporter: UserProps | null;
     setReporter: (value: UserProps) => void;
     isOpenTeamMembersList: boolean;
     setIsOpenTeamMembersList: (value: boolean) => void;
@@ -675,8 +675,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     }}
                                 >
                                     <AvatarWithStatus
-                                        avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
-                                        isYou={myself.userId === reporter.userId}
+                                        // No reporter (the account is gone): the empty
+                                        // avatar, like an unassigned assignee, never the viewer.
+                                        avatarUser={
+                                            reporter
+                                                ? useTEM.teamMemberProfiles[reporter.userId]
+                                                : undefined
+                                        }
+                                        isYou={!!reporter && myself.userId === reporter.userId}
                                         myself={myself}
                                         setMyself={setMyself}
                                         showPulseDot={false}

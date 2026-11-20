@@ -61,7 +61,6 @@ afterEach(() => {
 // `/note/task/meta/` (task NOTES) is a different endpoint that ends the same way.
 const taskMetaRequests = () => requested.filter((url) => /(?<!\/note)\/task\/meta\//.test(url));
 
-const me = { userId: "me", userName: "Me" } as unknown as UserProps;
 const person = (userId: string) => ({ userId, userName: userId }) as unknown as UserProps;
 
 const task = (id: number, over: Partial<TaskProps> = {}): TaskProps =>
@@ -82,7 +81,7 @@ const setup = (initial: { working: TaskProps; preview: TaskProps | undefined }) 
     };
     const view = renderHook(
         (props: { working: TaskProps; preview: TaskProps | undefined }) =>
-            usePreviewEditMirror({ ...props, myself: me, ...calls }),
+            usePreviewEditMirror({ ...props, ...calls }),
         { initialProps: initial }
     );
     return { calls, view };
@@ -251,7 +250,7 @@ describe("usePreviewEditMirror", () => {
         expect(calls.syncRow).not.toHaveBeenCalled();
     });
 
-    it("a task with no assignee clears the chip, and no reporter falls back to the signed-in user", () => {
+    it("a task with no assignee clears the chip, and no reporter clears it too (never the signed-in user: MIP-1730)", () => {
         const a = task(1);
         const bare = task(2, { assignee: undefined, reporter: undefined });
         const { calls, view } = setup({ working: a, preview: a });
@@ -259,7 +258,7 @@ describe("usePreviewEditMirror", () => {
         view.rerender({ working: bare, preview: bare });
 
         expect(calls.setAssignee).toHaveBeenLastCalledWith(null);
-        expect(calls.setReporter).toHaveBeenLastCalledWith(me);
+        expect(calls.setReporter).toHaveBeenLastCalledWith(null);
     });
 
     it("does nothing on a re-render with the same working copy", () => {
@@ -395,7 +394,6 @@ describe("usePreviewEditMirror with two previews on one host slot", () => {
         usePreviewEditMirror({
             working,
             preview: slot,
-            myself: me,
             setPreview: (t) => {
                 pushes.push(`${name}:${t?.id ?? "none"}`);
                 setSlot(t);
@@ -475,7 +473,6 @@ describe("usePreviewEditMirror beside TaskPreview's sync effect (MIP-1439)", () 
         usePreviewEditMirror({
             working,
             preview: slot,
-            myself: me,
             setPreview: (t) => {
                 counters.pushes += 1;
                 setSlot(t);

@@ -4,15 +4,17 @@ import { Milestone } from "../sprint-milestone/types";
 // Resolve the milestone's reporter (FK on the milestone) to a UserProps,
 // preferring a hit in the team-members list so fields like avatar /
 // status are populated. Falls back to a synthesised UserProps from the
-// embedded payload, then to the supplied fallback (e.g. `myself`).
+// embedded payload. A milestone with NO reporter (the FK is SET_NULL, so a
+// hard-deleted account leaves none) resolves to `null`: never to the person
+// looking at it, which made the preview show them as the reporter and made
+// any edit PATCH them in as one (MIP-1730).
 export const milestoneReporterToUserProps = (
     m: Milestone | null | undefined,
-    teamMembers: UserProps[],
-    fallback: UserProps
-): UserProps => {
-    if (!m) return fallback;
+    teamMembers: UserProps[]
+): UserProps | null => {
+    if (!m) return null;
     const reporterId = m.reporter?.userId ?? m.reporterId ?? null;
-    if (reporterId == null) return fallback;
+    if (reporterId == null) return null;
     const found = teamMembers.find((u) => String(u.userId) === String(reporterId));
     if (found) return found;
     if (m.reporter) {
@@ -27,7 +29,7 @@ export const milestoneReporterToUserProps = (
             tsJoined: "",
         } as unknown as UserProps;
     }
-    return fallback;
+    return null;
 };
 
 // The reporter part of a milestone PATCH: what the preview's working copy says

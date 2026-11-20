@@ -7,7 +7,7 @@ type SendMilestoneUpdatedMessageInput = {
     myself: UserProps;
     milestone: Milestone;
     sprintName: string;
-    reporter: UserProps;
+    reporter: UserProps | null;
     assignees: UserProps[];
     systemUserId?: string | null;
 };
