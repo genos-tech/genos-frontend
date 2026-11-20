@@ -6091,6 +6091,7 @@ export const fr: DeepPartial<Messages> = {
             sprintLabel: "Sprint : ",
             assigneesLabel: "Assignés : ",
             unassigned: "Non assigné",
+            deletedUser: "Utilisateur supprimé",
         },
         diagram: {
             title: "Graphique des tâches",

@@ -6027,6 +6027,7 @@ export const ja: DeepPartial<Messages> = {
             sprintLabel: "スプリント：",
             assigneesLabel: "担当者：",
             unassigned: "未割り当て",
+            deletedUser: "削除済みユーザー",
         },
         diagram: {
             title: "タスクグラフ",

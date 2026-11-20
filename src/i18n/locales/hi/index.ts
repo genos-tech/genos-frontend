@@ -3341,6 +3341,7 @@ export const hi: DeepPartial<Messages> = {
             sprintLabel: "स्प्रिंट: ",
             assigneesLabel: "असाइनी: ",
             unassigned: "असाइन नहीं",
+            deletedUser: "हटाया गया उपयोगकर्ता",
         },
         diagram: {
             title: "कार्य ग्राफ़",

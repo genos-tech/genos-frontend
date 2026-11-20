@@ -5810,6 +5810,7 @@ export const zh: DeepPartial<Messages> = {
             sprintLabel: "冲刺：",
             assigneesLabel: "负责人：",
             unassigned: "未指派",
+            deletedUser: "已删除用户",
         },
         diagram: {
             title: "任务图",
