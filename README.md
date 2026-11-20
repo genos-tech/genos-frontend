@@ -37,6 +37,23 @@ Configure the backend endpoints and other build-time settings via a
 `VITE_VAPID_PUBLIC_KEY` for web push). See
 `genos-platform/docker/docker-compose.yml` for the values used in local dev.
 
+## Working in a git worktree
+
+A worktree has no `node_modules`, and a worktree must run against the packages
+its own `package-lock.json` names. Symlinking another checkout's `node_modules`
+(to save about 1 GB) is fine only while that install matches the lock; a stale
+one fails `tsc` and `vitest` with errors that are not in your branch (BlockNote
+0.49 installed against a 0.57 lock gave 49 type errors and 38 failing test
+files). Link it, check from the worktree, and fall back to `npm ci`:
+
+```bash
+ln -s /path/to/other-checkout/node_modules node_modules
+node -e 'const l=require("./package-lock.json").packages,h=require("./node_modules/.package-lock.json").packages;process.exit(Object.entries(l).some(([k,v])=>k&&!v.optional&&!v.link&&h[k]?.version!==v.version)?1:0)' \
+    || { rm node_modules; npm ci --no-audit --no-fund; }
+```
+
+Remove the symlink before committing (`rm node_modules`).
+
 ## Deployment (Railway)
 
 Configured by `railway.toml`:
