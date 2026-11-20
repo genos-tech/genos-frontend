@@ -11,11 +11,13 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import { Box, Chip, IconButton, Sheet, Typography } from "@mui/joy";
 
+import { viaSourceOfNoteComment } from "../../../features/tasks/utils/viaSource";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { BaseAvatar } from "../../ui/avatars/BaseAvatar";
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../ui/bubble";
 import { EmptyState } from "../../ui/feedback/EmptyState";
+import { ViaChip } from "../../ui/misc/ViaChip";
 import { commentFirstLine } from "./commentMentions";
 import { useNoteLink } from "./NoteLinkContext";
 import { useCommentAuthor } from "./useCommentAuthor";
@@ -134,6 +136,9 @@ const ThreadRow = memo(
         const author = useCommentAuthor(firstComment?.userId ?? "");
         const preview = commentFirstLine(firstComment?.body);
         const replyCount = Math.max(0, thread.comments.length - 1);
+        // "Written through a connected AI app" (MIP-1752): the mark of the comment whose author
+        // the row shows. It sits next to that name, as on a task comment card.
+        const via = firstComment ? viaSourceOfNoteComment(firstComment) : null;
         const authorName = author?.username || copy.unknownAuthor;
         const lastActivityAt = lastComment?.createdAt ?? thread.createdAt;
         // "Copy link to comment" (MIP-146). Offered only in a note that has a page to link to.
@@ -186,9 +191,20 @@ const ThreadRow = memo(
                     }
                     header={
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
-                            <BubbleAuthor sx={{ flex: 1, minWidth: 0, ...noWrap }}>
-                                {authorName}
-                            </BubbleAuthor>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.75,
+                                    flex: 1,
+                                    minWidth: 0,
+                                }}
+                            >
+                                <BubbleAuthor sx={{ minWidth: 0, ...noWrap }}>
+                                    {authorName}
+                                </BubbleAuthor>
+                                {via && <ViaChip size="sm" source={via} />}
+                            </Box>
                             <BubbleMeta sx={{ flexShrink: 0 }}>
                                 {formatRelative(lastActivityAt)}
                             </BubbleMeta>
