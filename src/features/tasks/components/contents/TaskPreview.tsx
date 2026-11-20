@@ -85,6 +85,10 @@ import { Milestone } from "../../sprint-milestone/types";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { shouldFallBackToTable } from "../../utils/mainPanelVisibility";
 import {
+    milestoneReporterPatch,
+    milestoneReporterToUserProps,
+} from "../../utils/milestoneReporter";
+import {
     countMilestoneTaskStatuses,
     milestoneTaskStatuses,
 } from "../../utils/milestoneTaskProgress";
@@ -1297,35 +1301,6 @@ const milestoneCollaboratorsToUserProps = (
         .filter((u): u is UserProps => u != null);
 };
 
-// Resolve the milestone's reporter (FK on the milestone) to a UserProps,
-// preferring a hit in the team-members list so fields like avatar /
-// status are populated. Falls back to a synthesised UserProps from the
-// embedded payload, then to the supplied fallback (e.g. `myself`).
-const milestoneReporterToUserProps = (
-    m: Milestone | null | undefined,
-    teamMembers: UserProps[],
-    fallback: UserProps
-): UserProps => {
-    if (!m) return fallback;
-    const reporterId = m.reporter?.userId ?? m.reporterId ?? null;
-    if (reporterId == null) return fallback;
-    const found = teamMembers.find((u) => String(u.userId) === String(reporterId));
-    if (found) return found;
-    if (m.reporter) {
-        return {
-            userId: String(m.reporter.userId),
-            userName: m.reporter.username || m.reporter.email || "",
-            userEmail: m.reporter.email || "",
-            avatarImgPath: m.reporter.profileImageUrl || "",
-            teamId: "",
-            teamName: "",
-            tsLastSeen: "",
-            tsJoined: "",
-        } as unknown as UserProps;
-    }
-    return fallback;
-};
-
 const MilestonePreviewInner = ({
     milestoneId,
     hostZIndex,
@@ -2064,14 +2039,9 @@ const MilestonePreviewInner = ({
         // Reporter diff (single-user FK on the milestone). Mirrors the
         // assignee diff above so a swap from picker -> server is sent
         // exactly once and only when something actually changed.
-        const nextReporterId = next.reporter?.userId ? String(next.reporter.userId) : null;
-        const currentReporterId = milestone.reporter?.userId
-            ? String(milestone.reporter.userId)
-            : milestone.reporterId != null
-              ? String(milestone.reporterId)
-              : null;
-        if (nextReporterId !== currentReporterId) {
-            patch.reporterId = nextReporterId;
+        const reporterChange = milestoneReporterPatch(next, milestone);
+        if (reporterChange !== undefined) {
+            patch.reporterId = reporterChange;
         }
         // Collaborators diff (backing-task M2M exposed on the milestone).
         // Compare id SETS so reordering / identity churn doesn't trigger a
