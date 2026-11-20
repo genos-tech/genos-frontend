@@ -18,7 +18,7 @@ import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { MenuDivider, MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
 import { SettingRow } from "../../components/ui/settings/SettingRow";
 import { NotificationPauseState } from "../../hooks/common/useNotificationPause";
-import { fmt, useTranslation } from "../../i18n";
+import { fmt, useTranslation, type Locale } from "../../i18n";
 import { Messages } from "../../i18n/types";
 // The one-shot-instant formatter and the datetime-local (de)serialiser are
 // shared with the custom-status expiry feature, which formats the same kind of
@@ -40,13 +40,16 @@ const HOUR = 60 * MINUTE;
  */
 export const formatPauseStatusText = (
     pause: Pick<NotificationPauseState, "isPausedNow" | "snoozeUntil" | "snoozeSchedule">,
-    p: Messages["services"]["notifications"]["pause"]
+    p: Messages["services"]["notifications"]["pause"],
+    locale: Locale
 ): string => {
     const { isPausedNow, snoozeUntil, snoozeSchedule } = pause;
     const untilActive = !!snoozeUntil && Date.parse(snoozeUntil) > Date.now();
     const scheduleEnabled = snoozeSchedule?.enabled === true;
     if (untilActive) {
-        return fmt(p.statusPausedUntil, { time: formatStatusExpiry(snoozeUntil as string) });
+        return fmt(p.statusPausedUntil, {
+            time: formatStatusExpiry(snoozeUntil as string, locale),
+        });
     }
     if (scheduleEnabled && isPausedNow) {
         return fmt(p.statusPausedSchedule, {
@@ -128,7 +131,7 @@ type SectionProps = {
  * profile-status dropdown uses `NotificationPausePresetItems` directly instead.
  */
 export const NotificationPauseSection = ({ pause }: SectionProps) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const p = t.services.notifications.pause;
 
     const {
@@ -184,7 +187,11 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
     // The "Resume" button is only meaningful for a one-shot pause; the shared
     // helper owns the wording of the status text itself.
     const untilActive = !!snoozeUntil && Date.parse(snoozeUntil) > Date.now();
-    const statusText = formatPauseStatusText({ isPausedNow, snoozeUntil, snoozeSchedule }, p);
+    const statusText = formatPauseStatusText(
+        { isPausedNow, snoozeUntil, snoozeSchedule },
+        p,
+        locale
+    );
 
     return (
         <Box>

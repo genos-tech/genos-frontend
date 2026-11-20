@@ -59,7 +59,7 @@ export const TaskNodeView = ({
     data: TaskNodeData;
     withHandles?: boolean;
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     // Popups (status menu, date editor) must stack ABOVE the enclosing diagram
     // dialog, whose z varies by host surface (diagramZIndex.ts). The default
     // context (9999) keeps the historical 10000 for page-hosted diagrams.
@@ -95,7 +95,7 @@ export const TaskNodeView = ({
     const [dateEditorOpen, setDateEditorOpen] = useState(false);
     const [statusMenuOpen, setStatusMenuOpen] = useState(false);
 
-    const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
+    const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status, locale);
     const scheduleLabel = useScheduleLabel(schedule, task.status);
 
     const emphasis: CardEmphasis | undefined = isInLineage

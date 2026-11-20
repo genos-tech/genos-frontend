@@ -1,4 +1,4 @@
-import { fmt, getMessages } from "../../../../i18n";
+import { fmt, getMessages, type Locale } from "../../../../i18n";
 import { formatDueLabel, type DueTone } from "../../utils/dashboardRowFormat";
 import { deriveDaysLeft } from "../../utils/daysLeft";
 
@@ -14,10 +14,11 @@ export type DueDisplay = { text: string; tone: DueTone };
  */
 export const dueDisplay = (
     dueDate: string | null | undefined,
-    style: "card" | "row"
+    style: "card" | "row",
+    locale: Locale
 ): DueDisplay => {
-    if (style === "row") return formatDueLabel(dueDate ?? null);
-    const b = getMessages().tasks.board;
+    if (style === "row") return formatDueLabel(dueDate ?? null, locale);
+    const b = getMessages(locale).tasks.board;
     // Fresh from dueDate: the row's `daysLeft` is a stale server snapshot, and a
     // cleared date must not claim "Expired" off a stale negative.
     const days = dueDate ? deriveDaysLeft(dueDate) : null;

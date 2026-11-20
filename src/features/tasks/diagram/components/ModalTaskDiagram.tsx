@@ -14,7 +14,7 @@ import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { fmt, useTranslation } from "../../../../i18n";
+import { fmt, useTranslation, type Locale } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { ToneLabel } from "../../components/meta/ToneLabel";
@@ -70,11 +70,11 @@ export type ModalTaskDiagramProps = {
 // ~700px). Graphs need real estate; we go to 94vw × 90vh so the
 // graph has room to breathe. The chrome (header + close) is
 // kept minimal so the canvas dominates.
-const fmtDateLabel = (iso: string | null): string | null => {
+const fmtDateLabel = (iso: string | null, locale: Locale): string | null => {
     if (!iso) return null;
     const d = new Date(iso.length >= 10 ? iso.slice(0, 10) : iso);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 };
 
 export const ModalTaskDiagram = ({
@@ -91,7 +91,7 @@ export const ModalTaskDiagram = ({
     zIndex,
     highlightAssigneeId,
 }: ModalTaskDiagramProps) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const effectiveZIndex = zIndex ?? DIAGRAM_DEFAULT_Z_INDEX;
 
     // Schedule rollup published by the canvas after each graph load.
@@ -113,13 +113,13 @@ export const ModalTaskDiagram = ({
 
     const rawSpanLabel = (() => {
         if (!overview) return null;
-        const start = fmtDateLabel(overview.spanStart);
-        const end = fmtDateLabel(overview.spanEnd);
+        const start = fmtDateLabel(overview.spanStart, locale);
+        const end = fmtDateLabel(overview.spanEnd, locale);
         if (start && end) return `${start} – ${end}`;
         return start ?? end ?? null;
     })();
     const sprintLabel = overview?.sprint
-        ? `${fmtDateLabel(overview.sprint.startDate)} – ${fmtDateLabel(overview.sprint.endDate)}`
+        ? `${fmtDateLabel(overview.sprint.startDate, locale)} – ${fmtDateLabel(overview.sprint.endDate, locale)}`
         : null;
     // Suppress the span row when it duplicates the sprint row — the
     // sprint chip already carries that period, and showing the same

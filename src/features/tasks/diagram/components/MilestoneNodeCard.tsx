@@ -7,7 +7,7 @@ import { Box, LinearProgress } from "@mui/joy";
 import { NodeProps } from "@xyflow/react";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { fmt, useTranslation } from "../../../../i18n";
+import { fmt, useTranslation, type Locale } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import {
     DueText,
@@ -29,11 +29,11 @@ import {
     useScheduleLabel,
 } from "./nodeTone";
 
-const fmtDate = (iso: string | null | undefined): string => {
+const fmtDate = (iso: string | null | undefined, locale: Locale): string => {
     if (!iso) return "";
     const d = new Date(iso.length >= 10 ? iso.slice(0, 10) : iso);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 };
 
 /**
@@ -54,7 +54,7 @@ export const MilestoneNodeView = ({
     data: TaskNodeData;
     withHandles?: boolean;
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
 
     const {
         task,
@@ -67,7 +67,7 @@ export const MilestoneNodeView = ({
         onOpenPreview,
     } = data;
 
-    const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
+    const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status, locale);
     const scheduleLabel = useScheduleLabel(schedule, task.status);
 
     const total = totalDescendantCount ?? 0;
@@ -215,7 +215,7 @@ export const MilestoneNodeView = ({
                         component="span"
                         sx={{ ...type("body-xs"), color: g.text.tertiary, whiteSpace: "nowrap" }}
                     >
-                        {fmtDate(sprint.startDate)} – {fmtDate(sprint.endDate)}
+                        {fmtDate(sprint.startDate, locale)} – {fmtDate(sprint.endDate, locale)}
                     </Box>
                 </Box>
             )}

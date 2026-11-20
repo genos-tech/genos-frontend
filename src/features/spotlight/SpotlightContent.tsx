@@ -51,7 +51,7 @@ import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../components/ui/feedback/ErrorState";
 import { SkeletonLines, SkeletonRows, Spinner } from "../../components/ui/feedback/Skeleton";
 import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
-import { fmt, useTranslation, type Messages } from "../../i18n";
+import { fmt, useTranslation, type Locale, type Messages } from "../../i18n";
 import type {
     AgentSessionDetail,
     AgentSessionSummary,
@@ -1878,6 +1878,7 @@ const HistoryListView = ({
     onRetry,
     onSelect,
 }: HistoryListViewProps) => {
+    const { locale } = useTranslation();
     if (isLoading && sessions.length === 0) {
         return <SkeletonRows count={4} label={ts.history.loading} />;
     }
@@ -1951,7 +1952,7 @@ const HistoryListView = ({
                             color: g.text.tertiary,
                         }}
                     >
-                        <Box component="span">{_relativeTime(s.last_active_at, ts)}</Box>
+                        <Box component="span">{_relativeTime(s.last_active_at, ts, locale)}</Box>
                         <Box component="span" sx={{ opacity: 0.6 }}>
                             ·
                         </Box>
@@ -2172,7 +2173,7 @@ const HistoryArchiveTurn = ({
 // bundle defines. Anything older than a day falls back to ISO date.
 // Exported (as `relativeTimeLabel` below) for the Genos page's session
 // sidebar, which renders the same "2h ago"-style stamps on its rows.
-function _relativeTime(iso: string, ts: SpotlightMessages): string {
+function _relativeTime(iso: string, ts: SpotlightMessages, locale: Locale): string {
     const then = new Date(iso).getTime();
     if (Number.isNaN(then)) return iso;
     const deltaMs = Date.now() - then;
@@ -2184,9 +2185,8 @@ function _relativeTime(iso: string, ts: SpotlightMessages): string {
     const days = Math.floor(deltaMs / (24 * 60 * 60 * 1000));
     if (days < 7) return fmt(ts.history.relativeDays, { count: days });
     // Past a week, the absolute date is more readable than "23 days
-    // ago". Locale-default short date — the spotlight overlay isn't
-    // i18n-strict beyond message-bundle strings today.
-    return new Date(then).toLocaleDateString();
+    // ago", in the app's language (never the browser's).
+    return new Date(then).toLocaleDateString(locale);
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

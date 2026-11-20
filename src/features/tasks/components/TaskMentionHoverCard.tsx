@@ -5,7 +5,7 @@ import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { SkeletonLines } from "../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../context/AuthContext";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
-import { fmt, useTranslation } from "../../../i18n";
+import { fmt, useTranslation, type Locale } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { TaskProps, TaskTableProps } from "../../../types/tasks";
 import { getCachedOrFetchTaskStatus, type TaskStatusResult } from "../services/taskStatusCache";
@@ -81,12 +81,12 @@ const vmFromFull = (t: TaskProps): CardVM => ({
     tags: t.tags ?? [],
 });
 
-const fmtDate = (iso?: string | null): string | null => {
+const fmtDate = (iso: string | null | undefined, locale: Locale): string | null => {
     if (!iso) return null;
     const d = new Date(iso);
     return Number.isNaN(d.getTime())
         ? iso
-        : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        : d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 };
 
 // Same rule as the cards: red when expired, amber within a week, else quiet.
@@ -104,7 +104,7 @@ const dueColor = (daysLeft: number | null | undefined): string => {
 // available yet. Mirrors `LinkedPrCard` + `PrHoverDetails`. The pieces are the task
 // family's (MIP-1124): status, priority, effort and tags read as on every card.
 export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const { myself, tasks, projects } = useHashMentionData();
     const [result, setResult] = useState<TaskStatusResult | null>(null);
@@ -154,8 +154,8 @@ export const TaskMentionHoverCard = ({ projectId, taskId, displayId, title }: Pr
 
     const headerId = vm?.displayId || displayId;
     const headerTitle = vm?.title || title;
-    const dueStr = fmtDate(vm?.dueDate);
-    const startStr = fmtDate(vm?.startDate);
+    const dueStr = fmtDate(vm?.dueDate, locale);
+    const startStr = fmtDate(vm?.startDate, locale);
 
     return (
         <Stack spacing={0.75} sx={surfaceSx}>

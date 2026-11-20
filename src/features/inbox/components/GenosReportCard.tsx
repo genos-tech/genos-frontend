@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
-import { fmt, useTranslation } from "../../../i18n";
+import { fmt, useTranslation, type Locale } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { DueText, type DueTone } from "../../tasks/components/card";
 import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
@@ -217,7 +217,8 @@ const ProjectHeader = ({ project, avatar }: { project: ReportProject; avatar?: s
 const dueFor = (
     item: ReportItemV2,
     todayIso: string,
-    t: ReturnType<typeof useTranslation>["t"]
+    t: ReturnType<typeof useTranslation>["t"],
+    locale: Locale
 ): { text: string; tone: DueTone } | null => {
     // A finished task has no due date worth showing.
     if (item.status === "Closed") return null;
@@ -230,7 +231,7 @@ const dueFor = (
     if (item.dueDate === todayIso) return { text: t.tasks.dueLabel.dueToday, tone: "today" };
     const [y, m, d] = item.dueDate.split("-").map(Number);
     const sameYear = y === Number(todayIso.slice(0, 4));
-    const when = new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    const when = new Date(y, m - 1, d).toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
         ...(sameYear ? {} : { year: "numeric" }),
@@ -256,8 +257,8 @@ const TaskRow = ({
     /** A sibling row has the buttons: keep this row's marks in the same column. */
     reserveAnswers?: boolean;
 }) => {
-    const { t } = useTranslation();
-    const due = dueFor(item, todayIso, t);
+    const { t, locale } = useTranslation();
+    const due = dueFor(item, todayIso, t, locale);
     const title = item.title !== "" ? item.title : item.text;
     const notable = item.priority !== null && NOTABLE_PRIORITIES.has(item.priority);
     const row = (

@@ -35,7 +35,7 @@ interface Props {
  * what goes: turning the switch OFF, and stopping one answer.
  */
 export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const m = t.settings.genosMemory.shared;
     const pref = useShareAnswersPreference();
     const list = useSharedAnswers({ accessToken, teamId, refreshKey });
@@ -162,7 +162,7 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
                                 {a.answer_snippet}
                             </Typography>
                             <Typography level="body-xs" sx={{ mt: 0.5, color: "text.tertiary" }}>
-                                {relativeTimeLabel(a.started_at, t.spotlight)}
+                                {relativeTimeLabel(a.started_at, t.spotlight, locale)}
                                 {" · "}
                                 {a.audience_size > 1
                                     ? fmt(m.audienceMany, { count: a.audience_size })

@@ -8,7 +8,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { fmt, Messages, useTranslation } from "../../../../i18n";
+import { fmt, Messages, useTranslation, type Locale } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ModalNoteHistory } from "./ModalNoteHistory";
 
@@ -24,7 +24,7 @@ interface NoteHistoryChipProps {
 }
 
 // Format an ISO timestamp as a short relative string.
-const relTime = (iso: string, t: Messages): string => {
+const relTime = (iso: string, t: Messages, locale: Locale): string => {
     const ts = new Date(iso).getTime();
     if (!ts) return "";
     const diff = Date.now() - ts;
@@ -37,7 +37,7 @@ const relTime = (iso: string, t: Messages): string => {
     if (hr < 24) return fmt(t.notes.history.relTime.hoursShort, { n: hr });
     const day = Math.floor(hr / 24);
     if (day < 7) return fmt(t.notes.history.relTime.daysShort, { n: day });
-    return new Date(iso).toLocaleDateString(undefined, {
+    return new Date(iso).toLocaleDateString(locale, {
         month: "short",
         day: "numeric",
     });
@@ -56,7 +56,7 @@ export const NoteHistoryChip = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const isMobile = useIsMobile();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
 
     // Periodic re-render so the relative time advances without waiting
     // for a new save.
@@ -79,7 +79,7 @@ export const NoteHistoryChip = ({
     const tsForChip = head.tsUpdatedAt || head.tsCreatedAt;
     const summary = fmt(t.notes.history.chipSummary, {
         name: editorName,
-        time: relTime(tsForChip, t),
+        time: relTime(tsForChip, t, locale),
     });
 
     return (

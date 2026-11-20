@@ -61,10 +61,10 @@ type CommentsSidebarProps = {
 
 /**
  * A best-effort local relative-time formatter (no new dep), mirroring the one
- * the task activity feed uses. Falls back to a locale date past a week.
+ * the task activity feed uses. Falls back to a date past a week, in the app's language (not the browser's).
  */
 const useRelativeTime = () => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const rel = t.common.editor.commentsSidebar;
     return (date: Date): string => {
         const ts = date instanceof Date ? date.getTime() : NaN;
@@ -86,7 +86,7 @@ const useRelativeTime = () => {
         if (days < 7) {
             return fmt(rel.daysAgo, { count: days });
         }
-        return date.toLocaleDateString(undefined, {
+        return date.toLocaleDateString(locale, {
             month: "short",
             day: "numeric",
             year: "numeric",

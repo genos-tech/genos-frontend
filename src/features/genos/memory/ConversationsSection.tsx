@@ -52,7 +52,7 @@ type Target = { kind: "one"; session: AgentSessionSummary } | { kind: "all" };
  * shape as the shared-answers list below it).
  */
 export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const m = t.settings.genosMemory.conversations;
     const { sessions, isLoading, loadFailed, reload } = useGenosSessions({
         accessToken,
@@ -170,7 +170,7 @@ export const ConversationsSection = ({ accessToken, teamId, onChanged }: Props) 
                                         {s.first_query || t.spotlight.states.untitled}
                                     </Typography>
                                     <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-                                        {relativeTimeLabel(s.last_active_at, t.spotlight)}
+                                        {relativeTimeLabel(s.last_active_at, t.spotlight, locale)}
                                         {" · "}
                                         {fmt(t.spotlight.history.turnCount, {
                                             count: s.turn_count,

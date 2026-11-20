@@ -164,7 +164,7 @@ describe("HelperUtils", () => {
 
     describe("formatTimestamp", () => {
         it("returns a non-empty string (locale/TZ dependent)", () => {
-            const result = HelperUtils.formatTimestamp(Date.UTC(2025, 5, 15, 10, 30, 0));
+            const result = HelperUtils.formatTimestamp(Date.UTC(2025, 5, 15, 10, 30, 0), "en");
             expect(typeof result).toBe("string");
             expect(result.length).toBeGreaterThan(0);
         });
