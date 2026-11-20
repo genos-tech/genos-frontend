@@ -1219,6 +1219,9 @@ export const tasks = {
         sprintLabel: "Sprint: ",
         assigneesLabel: "Assignees: ",
         unassigned: "Unassigned",
+        // A person whose account row is gone (the reporter is NULL after a hard delete): the
+        // same words the server writes on the same card (genos-api `task_card.DELETED_USER`).
+        deletedUser: "Deleted user",
     },
 
     // Task graph (React Flow diagram) — tooltips on nodes and modal chrome.

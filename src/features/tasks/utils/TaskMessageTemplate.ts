@@ -167,7 +167,25 @@ const mentionNode = (myself: UserProps, user: UserProps) => ({
     type: "mention",
 });
 
-export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => {
+// What a card says for a person whose account row is gone. `GET /task/getTask/` sends
+// `reporter: null` for a task whose reporter was hard-deleted (the FK is SET_NULL), although
+// `TaskProps.reporter` is typed non-null, and the server writes this same muted italic text on
+// the card it renders (genos-api `task_card._person`), so the card reads the same whichever
+// side rewrote it last.
+const deletedUserText = (text: string) => ({
+    styles: { italic: true, textColor: "gray" } as const,
+    text,
+    type: "text",
+});
+
+// The reporter row's value: a mention for a person, the words "Deleted user" for none.
+const reporterNode = (myself: UserProps, reporter: UserProps | null | undefined, text: string) =>
+    reporter ? mentionNode(myself, reporter) : deletedUserText(text);
+
+// `TaskProps` with the reporter as the server really sends it.
+type TaskCardSource = Omit<TaskProps, "reporter"> & { reporter: UserProps | null | undefined };
+
+export const taskMessageTemplate = (myself: UserProps, task: TaskCardSource) => {
     const m = getMessages().tasks.messageTemplate;
     return [
         {
@@ -208,7 +226,10 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => {
         },
         {
             children: [],
-            content: [labelText(m.reporterLabel), mentionNode(myself, task.reporter)],
+            content: [
+                labelText(m.reporterLabel),
+                reporterNode(myself, task.reporter, m.deletedUser),
+            ],
             props: DEFAULT_BLOCK_PROPS,
             type: "paragraph",
         },
@@ -233,7 +254,7 @@ export const milestoneMessageTemplate = (
     myself: UserProps,
     milestone: Milestone,
     sprintName: string,
-    reporter: UserProps,
+    reporter: UserProps | null | undefined,
     assignees: UserProps[]
 ) => {
     const m = getMessages().tasks.messageTemplate;
@@ -273,7 +294,7 @@ export const milestoneMessageTemplate = (
         },
         {
             children: [],
-            content: [labelText(m.reporterLabel), mentionNode(myself, reporter)],
+            content: [labelText(m.reporterLabel), reporterNode(myself, reporter, m.deletedUser)],
             props: DEFAULT_BLOCK_PROPS,
             type: "paragraph",
         },

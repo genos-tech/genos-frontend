@@ -120,7 +120,10 @@ export const sendUpdatedSpecificTask = async (
                 parent_task_id: updatedTask.parentTaskId,
                 // Nullable per `TaskProps.assignee: UserProps | null`.
                 assignee: updatedTask.assignee?.userId ?? null,
-                reporter: updatedTask.reporter.userId,
+                // A task whose reporter was hard-deleted comes back from the server with
+                // `reporter: null` (SET_NULL) although it is typed non-null. Send null: the PUT
+                // drops a null, so the stored reporter is left alone.
+                reporter: updatedTask.reporter?.userId ?? null,
                 title: updatedTask.title,
                 priority: updatedTask.priority !== null ? updatedTask.priority.priority : null,
                 effort_level:

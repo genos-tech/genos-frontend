@@ -3057,6 +3057,7 @@ export const ar: DeepPartial<Messages> = {
             sprintLabel: "السبرنت: ",
             assigneesLabel: "المُسنَد إليهم: ",
             unassigned: "غير مُسنَدة",
+            deletedUser: "مستخدم محذوف",
         },
         projects: {
             sharedByTeam: "شاركها {team} مع فريقك",

@@ -3106,6 +3106,7 @@ export const es: DeepPartial<Messages> = {
             sprintLabel: "Sprint: ",
             assigneesLabel: "Asignados: ",
             unassigned: "Sin asignar",
+            deletedUser: "Usuario eliminado",
         },
         projects: {
             sharedByTeam: "Compartido con tu equipo por {team}",
