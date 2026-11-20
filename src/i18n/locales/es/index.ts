@@ -2682,6 +2682,11 @@ export const es: DeepPartial<Messages> = {
             loadingTask: "Cargando tarea…",
             taskProgress: "Progreso de la tarea",
             taskProgressOther: "Otros",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
+            startMilestone: "Iniciar hito",
+            completeMilestone: "Completar hito",
+            totalCount: "{count} en total",
+            dueDateTbd: "Por definir",
         },
         createForm: {
             bootstrapFailed: "No se pudo preparar una nueva tarea",
@@ -2868,6 +2873,10 @@ export const es: DeepPartial<Messages> = {
             attachments: "Adjuntos",
             activity: "Actividad",
             downloadFileTooltip: 'Descargar "{name}"',
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The empty comment list and the attachment drop zone of the task / milestone panel.
+            noComments: "Aún no hay comentarios",
+            dropFilesHere: "Arrastra y suelta archivos aquí",
+            dropFilesBrowse: "o usa el botón de abajo para explorar",
         },
         sprintFilter: {
             all: "Todos",

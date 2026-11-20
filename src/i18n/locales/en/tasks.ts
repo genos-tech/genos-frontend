@@ -446,6 +446,10 @@ export const tasks = {
         tasksInThisMilestone: "Tasks in this milestone",
         taskProgress: "Task progress",
         taskProgressOther: "Other",
+        startMilestone: "Start Milestone",
+        completeMilestone: "Complete Milestone",
+        totalCount: "{count} total",
+        dueDateTbd: "TBD",
         taskButton: "Task",
         emptyMilestoneTasks: "No tasks yet. Create a task and assign it to this milestone.",
         menu: {
@@ -893,6 +897,9 @@ export const tasks = {
         attachments: "Attachments",
         activity: "Activity",
         downloadFileTooltip: 'Download "{name}"',
+        noComments: "No comments yet",
+        dropFilesHere: "Drag & Drop files here",
+        dropFilesBrowse: "or use the button below to browse",
     },
 
     // Sprint filter (in TaskFilterMenu), immediately left of the

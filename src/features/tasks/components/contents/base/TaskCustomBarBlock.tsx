@@ -1,12 +1,15 @@
 import CheckIcon from "@mui/icons-material/Check";
 import { Chip, Stack } from "@mui/joy";
 
+import { useTranslation } from "../../../../../i18n";
+
 type TaskCustomBarBlockProps = {
     taskBodySaved: boolean;
 };
 
 export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
     const { taskBodySaved } = props;
+    const { t } = useTranslation();
 
     if (!taskBodySaved) {
         return null;
@@ -38,7 +41,7 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                     },
                 }}
             >
-                Saved
+                {t.notes.editor.savedChip}
             </Chip>
         </Stack>
     );

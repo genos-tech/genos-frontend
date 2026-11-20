@@ -5388,6 +5388,11 @@ export const ja: DeepPartial<Messages> = {
             tasksInThisMilestone: "このマイルストーンのタスク",
             taskProgress: "タスクの進捗状況",
             taskProgressOther: "その他",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
+            startMilestone: "マイルストーンを開始",
+            completeMilestone: "マイルストーンを完了",
+            totalCount: "合計 {count} 件",
+            dueDateTbd: "未定",
             taskButton: "タスク",
             emptyMilestoneTasks:
                 "まだタスクはありません。タスクを作成してこのマイルストーンに割り当ててください。",
@@ -5804,6 +5809,10 @@ export const ja: DeepPartial<Messages> = {
             attachments: "添付ファイル",
             activity: "アクティビティ",
             downloadFileTooltip: "「{name}」をダウンロード",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The empty comment list and the attachment drop zone of the task / milestone panel.
+            noComments: "コメントはまだありません",
+            dropFilesHere: "ファイルをここにドラッグ＆ドロップ",
+            dropFilesBrowse: "または下のボタンから選択",
         },
         sprintFilter: {
             all: "すべて",

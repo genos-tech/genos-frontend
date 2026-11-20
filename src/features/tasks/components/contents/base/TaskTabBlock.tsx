@@ -783,7 +783,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             sx={{ fontWeight: 600 }}
                                             noWrap
                                         >
-                                            New Note
+                                            {t.notes.header.newNote}
                                         </Typography>
                                     </ListItemButton>
                                     {/* Import a markdown file as a new note on this
@@ -888,7 +888,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             fontWeight: 500,
                                         }}
                                     >
-                                        Drag & Drop files here
+                                        {t.tasks.tabs.dropFilesHere}
                                     </Typography>
                                     <Typography
                                         level="body-xs"
@@ -898,7 +898,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 : "rgba(0,0,0,0.35)",
                                         }}
                                     >
-                                        or use the button below to browse
+                                        {t.tasks.tabs.dropFilesBrowse}
                                     </Typography>
                                 </Box>
                             )}

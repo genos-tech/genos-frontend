@@ -1,5 +1,6 @@
 import { Button, Input, Stack, useColorScheme } from "@mui/joy";
 
+import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { getFormattedDateStr } from "../../../../../../utils/dateUtils";
 
@@ -14,6 +15,7 @@ type Props = {
 // past (e.g. when scheduling for a task already in progress).
 export const TaskStartDateInput = ({ taskContent, setTaskContent, setTaskUpdated }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     return (
         <Stack alignItems="center" direction="row" justifyContent="center" spacing={1.5}>
             <Input
@@ -47,7 +49,7 @@ export const TaskStartDateInput = ({ taskContent, setTaskContent, setTaskUpdated
                     if (setTaskUpdated) setTaskUpdated(true);
                 }}
             >
-                Clear
+                {t.common.actions.clear}
             </Button>
         </Stack>
     );

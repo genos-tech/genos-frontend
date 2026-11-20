@@ -11,6 +11,7 @@ import { TeamManagementState } from "../../../../../../hooks/common/useTeamManag
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { useUndoHidden } from "../../../../../../hooks/common/useUndoableAction";
 import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../../../i18n";
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { TaskCommentProps } from "../../../../../../types/tasks";
@@ -113,6 +114,7 @@ export const TaskCommentList = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // A comment being deleted leaves the list at once while its Undo window is
     // open (the real DELETE goes out when it ends). Filtered here, ABOVE the
@@ -300,7 +302,7 @@ export const TaskCommentList = ({
                     level="body-sm"
                     sx={{ color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)" }}
                 >
-                    No comments yet
+                    {t.tasks.tabs.noComments}
                 </Typography>
             </Box>
         );
