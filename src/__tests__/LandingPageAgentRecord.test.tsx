@@ -15,6 +15,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HOME_COPY } from "../lp/copy/home";
+import { shotRect } from "../lp/kit/shots";
 import LandingPage from "../lp/LandingPage";
 
 const LANGS = ["en", "ja"] as const;
@@ -54,10 +55,19 @@ const BANNED: Array<[string, RegExp]> = [
     ["one place", /\bone place\b|ひとつの場所|1つの場所/i],
 ];
 
+/**
+ * Ken's own English subhead of the record section says "AI memory" (his text, 2026-11-20); the
+ * brief's rule against the phrase is waived for that one sentence and for nothing else.
+ */
+const KENS_AI_MEMORY_SENTENCE = "AI memory lives inside the agent.";
+const withoutKensSentence = (text: string) => text.split(KENS_AI_MEMORY_SENTENCE).join("");
+
 /** The new copy blocks, as one string per language. */
 const newCopy = (lang: (typeof LANGS)[number]) => {
     const t = HOME_COPY[lang];
-    return JSON.stringify([t.hero, t.idea, t.how, t.record, t.works, t.questions]);
+    return withoutKensSentence(
+        JSON.stringify([t.hero, t.idea, t.how, t.record, t.works, t.questions])
+    );
 };
 
 describe("the agent-record top of /home", () => {
@@ -76,9 +86,9 @@ describe("the agent-record top of /home", () => {
                 .concat(container.querySelector(".lp-hero")?.textContent ?? "")
                 .join(" ");
             expect(sections.length).toBeGreaterThan(500);
-            const found = BANNED.filter(([, pattern]) => pattern.test(sections)).map(
-                ([name]) => name
-            );
+            const found = BANNED.filter(([, pattern]) =>
+                pattern.test(withoutKensSentence(sections))
+            ).map(([name]) => name);
             expect(found).toEqual([]);
         }
     );
@@ -87,19 +97,84 @@ describe("the agent-record top of /home", () => {
         const { container } = renderHome(lang);
         const hero = container.querySelector(".lp-hero") as HTMLElement;
         expect(hero.textContent).not.toMatch(/watch a real session|実際のセッション/i);
-        // One image (the product screenshot), two buttons (connect, demo), nothing else.
-        expect(hero.querySelectorAll("img")).toHaveLength(1);
+        // Two buttons (connect, demo), nothing else to click.
         expect(hero.querySelectorAll("a.lp-btn")).toHaveLength(2);
         expect(hero.querySelector(".lp-transcript, .lp-msg")).toBeNull();
     });
 
     it.each(LANGS)("%s: the hero shows the real screenshot, loaded first", (lang) => {
         const { container } = renderHome(lang);
-        const img = container.querySelector(".lp-hero img") as HTMLImageElement;
+        const img = container.querySelector(".lp-hero .lp-shot__light img") as HTMLImageElement;
         expect(img.getAttribute("src")).toBe(`/lp/shots/${lang}/record.webp`);
         expect(img.getAttribute("loading")).toBe("eager");
         expect(img.getAttribute("alt")).toBe(HOME_COPY[lang].hero.alt);
     });
+
+    it.each(LANGS)(
+        "%s: the hero has a dark picture (lazy) and a phone crop of each, picked by the window and theme",
+        (lang) => {
+            const { container } = renderHome(lang);
+            const dark = container.querySelector(
+                ".lp-hero .lp-shot__dark img"
+            ) as HTMLImageElement;
+            expect(dark.getAttribute("src")).toBe(`/lp/shots/${lang}/record-dark.webp`);
+            expect(dark.getAttribute("loading")).toBe("lazy");
+            expect(dark.getAttribute("alt")).toBe(HOME_COPY[lang].hero.alt);
+            // The phone crops are <source>s under 640 px (the width lp.css stacks the labels at).
+            const sources = [...container.querySelectorAll(".lp-hero picture source")].map(
+                (el) => [el.getAttribute("media"), el.getAttribute("srcset")]
+            );
+            expect(sources).toEqual([
+                ["(max-width: 640px)", expect.stringContaining(`/${lang}/record-phone.webp`)],
+                ["(max-width: 640px)", expect.stringContaining(`/${lang}/record-phone-dark.webp`)],
+            ]);
+            expect(sources[0][1]).toContain("record-phone@2x.webp");
+        }
+    );
+
+    it.each(LANGS)(
+        "%s: the hero labels are real text over the picture, in the language",
+        (lang) => {
+            const { container } = renderHome(lang);
+            const tags = [
+                ...container.querySelectorAll(".lp-hero .lp-proof__tag"),
+            ] as HTMLElement[];
+            const copy = HOME_COPY[lang].hero.callouts;
+            expect(tags.map((tag) => tag.textContent)).toEqual([copy.claude, copy.you]);
+            // Not hidden from a screen reader, and placed by fractions of the picture.
+            for (const tag of tags) {
+                expect(tag.closest("[aria-hidden]")).toBeNull();
+                expect(tag.style.getPropertyValue("--x")).not.toBe("");
+                expect(tag.style.getPropertyValue("--y")).not.toBe("");
+            }
+            // The labels name the Claude mark and the person; the mark copy stays the app's own file.
+            expect(tags[0].querySelector("img")?.getAttribute("alt")).toBe("");
+        }
+    );
+
+    it.each(LANGS)("%s: the hero subhead is two paragraphs", (lang) => {
+        const { container } = renderHome(lang);
+        const paragraphs = container.querySelectorAll(".lp-hero__copy .lp-lead");
+        expect(paragraphs).toHaveLength(2);
+        expect(HOME_COPY[lang].hero.sub.split("\n\n")).toHaveLength(2);
+    });
+
+    it.each(["en", "ja"] as const)(
+        "%s: the labels point inside the picture where the retake measured them",
+        (lang) => {
+            const { callouts } = shotRect("record", lang);
+            expect(callouts).toBeDefined();
+            for (const key of ["claude", "you"] as const) {
+                const point = callouts![key];
+                expect(point.x).toBeGreaterThan(0);
+                expect(point.x).toBeLessThan(0.85); // room for the label before the time stamp
+                expect(point.y).toBeGreaterThan(0);
+                expect(point.y).toBeLessThan(1);
+            }
+            // The claude label is at a marked row above the unmarked one it is compared with.
+            expect(callouts!.claude.y).toBeLessThan(callouts!.you.y);
+        }
+    );
 
     it.each(LANGS)("%s: Connect Claude opens the steps, and the demo button stays", (lang) => {
         renderHome(lang);
@@ -122,10 +197,14 @@ describe("the agent-record top of /home", () => {
             ]);
             // The kept line names what is kept and what is not; the FAQ says it again.
             expect(copy.works.kept).toMatch(
-                lang === "ja" ? /会話の全文ではありません/ : /not the whole conversation/
+                lang === "ja"
+                    ? /会話の全文を保存するものではありません/
+                    : /does not store the full text of your conversations/
             );
             expect(copy.questions.items[0].a).toMatch(
-                lang === "ja" ? /会話の全文は残しません/ : /does not keep the whole conversation/
+                lang === "ja"
+                    ? /会話の全文を保存するわけではありません/
+                    : /does not store the full text of your conversations/
             );
             // Connecting needs Core (connectApp.plan): the steps and the FAQ both say so.
             expect(copy.how.plan).toMatch(/Core/);
@@ -142,15 +221,19 @@ describe("the agent-record top of /home", () => {
         expect(container.querySelectorAll("#how .lp-how__step")).toHaveLength(3);
     });
 
-    it("every headline and subhead sentence of the new top is marked as a placeholder", () => {
-        // The sentences are Ken's to choose (brief section 11). Each one in copy/home.ts carries a
-        // TODO(copy: Ken decides the sentences); losing the markers would make a draft look final.
-        // A source read, because comments are not among a module's values. Nine per language:
-        // meta title and description, hero title, subhead and legend, idea kicker, how title,
-        // record title and subhead.
+    it("the English is marked for Ken's review and the callout wording as a draft", () => {
+        // Ken's final English (2026-11-20) is a translation he re-checks: every English string of the
+        // new top carries TODO(copy: Ken's final English; Ken to review). The callouts over the hero
+        // picture are the page author's draft in both languages (TODO(copy)). A source read, because
+        // comments are not among a module's values.
         const source = readFileSync(join(__dirname, "..", "lp", "copy", "home.ts"), "utf8");
-        const markers = source.match(/TODO\(copy: Ken decides the sentences\)/g) ?? [];
-        expect(markers.length).toBeGreaterThanOrEqual(18);
+        const english = source.match(/TODO\(copy: Ken's final English; Ken to review\)/g) ?? [];
+        expect(english.length).toBeGreaterThanOrEqual(40);
+        const drafts = source.match(/TODO\(copy\): draft wording/g) ?? [];
+        expect(drafts).toHaveLength(2);
+        expect(source).not.toMatch(/Ken decides the sentences/);
+        // The four English lines softened from Ken's draft say so where they are.
+        expect(source.match(/SOFTENED from Ken's draft/g) ?? []).toHaveLength(4);
     });
 
     it("the new top comes first, and every earlier section is still on the page, in its old order", () => {
@@ -170,14 +253,32 @@ describe("the agent-record top of /home", () => {
             "secretary",
             "for",
             "trust",
-            "faq",
         ]);
     });
 
-    it("the earlier FAQ keeps all of its questions", () => {
-        const { container } = renderHome("en");
-        const asked = [...container.querySelectorAll("#faq summary")].map((el) => el.textContent);
-        expect(asked).toEqual(HOME_COPY.en.faq.items.map((item) => item.q));
-        expect(HOME_COPY.en.faq.items).toHaveLength(5);
+    it.each(LANGS)(
+        "%s: one FAQ: Ken's four questions, then the two earlier ones that stay true",
+        (lang) => {
+            const { container } = renderHome(lang);
+            const asked = [...container.querySelectorAll("#questions summary")].map(
+                (el) => el.textContent
+            );
+            expect(asked).toEqual(HOME_COPY[lang].questions.items.map((item) => item.q));
+            expect(HOME_COPY[lang].questions.items).toHaveLength(6);
+            // The earlier list is merged into this one, not kept beside it.
+            expect(container.querySelector("#faq")).toBeNull();
+            expect(container.querySelectorAll("details")).toHaveLength(6);
+        }
+    );
+
+    it("the FAQ drops the earlier answers the brief rules out, and keeps the true ones", () => {
+        const text = JSON.stringify(HOME_COPY.en.questions);
+        // "Any MCP client" and the comparison with Slack, Notion and Jira (brief sections 5 and 6),
+        // and "everything links back" (brief section 8).
+        expect(text).not.toMatch(/MCP client|Slack|Notion|Jira|everything/i);
+        expect(HOME_COPY.en.questions.items.map((item) => item.q).slice(4)).toEqual([
+            "Who can see what Genos notes about my work?",
+            "Can I try it without signing up?",
+        ]);
     });
 });

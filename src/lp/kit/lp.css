@@ -2002,7 +2002,7 @@ a.lp-row:hover .lp-row__arrow {
 }
 
 .lp-hero--record .lp-display {
-    font-size: clamp(2.25rem, 1.5rem + 2.4vw, 3.5rem);
+    font-size: clamp(2rem, 1.4rem + 2.2vw, 3.25rem);
 }
 
 .lp-root[lang="ja"] .lp-hero--record .lp-display {
@@ -2044,6 +2044,134 @@ a.lp-row:hover .lp-row__arrow {
     .lp-hero__panel {
         padding: 12px;
         border-radius: 16px;
+    }
+}
+
+/* The hero's proof (MIP-1611): the screenshot, with a label at the agent's mark and one at a row
+   without it. Placed by fractions of the picture (`--x`, `--y` from shots.json `callouts`), so they
+   follow its scale. The dark picture takes the light one's place under `data-mode="dark"`. */
+.lp-shot__light,
+.lp-shot__dark {
+    display: block;
+}
+
+.lp-shot__dark {
+    display: none;
+}
+
+.lp-root[data-mode="dark"] .lp-shot--has-dark .lp-shot__light {
+    display: none;
+}
+
+.lp-root[data-mode="dark"] .lp-shot--has-dark .lp-shot__dark {
+    display: block;
+}
+
+.lp-proof {
+    position: relative;
+}
+
+.lp-proof__tags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lp-proof__tag {
+    position: absolute;
+    left: calc(var(--x) * 100% + 12px);
+    top: calc(var(--y) * 100%);
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--lp-border-strong);
+    background: var(--lp-surface);
+    color: var(--lp-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    box-shadow: var(--lp-shadow-sm);
+}
+
+/* The little arrow back at the thing the label is about. */
+.lp-proof__tag::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    transform: translateY(-50%) rotate(45deg);
+    border-left: 1px solid var(--lp-border-strong);
+    border-bottom: 1px solid var(--lp-border-strong);
+    background: var(--lp-surface);
+}
+
+.lp-proof__tag--claude {
+    border-color: var(--lp-accent-border);
+    background: var(--lp-accent-subtle);
+    color: var(--lp-accent-text);
+}
+
+.lp-proof__tag--claude::before {
+    border-color: var(--lp-accent-border);
+    background: var(--lp-accent-subtle);
+}
+
+/* Over the picture the arrow does the pointing; the icons only help once the labels stack. */
+.lp-proof__icon {
+    display: none;
+}
+
+.lp-proof__icon--you {
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--lp-border-strong);
+    color: var(--lp-text-secondary);
+}
+
+.lp-points strong {
+    font-weight: 600;
+}
+
+/* A phone: the narrow crop (Shot's <source>) replaces the wide one, and the labels leave the picture
+   and stack under it, each beside a larger copy of the thing it names. */
+@media (max-width: 640px) {
+    .lp-shot img[data-narrow] {
+        aspect-ratio: var(--lp-narrow-ratio);
+    }
+
+    .lp-proof__tags {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .lp-proof__tag {
+        position: static;
+        transform: none;
+        justify-self: start;
+        padding: 4px 12px 4px 6px;
+        font-size: 0.875rem;
+    }
+
+    .lp-proof__tag::before {
+        display: none;
+    }
+
+    .lp-proof__icon {
+        display: inline-grid;
+        flex: none;
+    }
+
+    .lp-proof__icon--you {
+        display: inline-grid;
     }
 }
 

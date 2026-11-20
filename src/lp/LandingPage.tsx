@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import {
     ArrowRight,
     CheckCircle2,
@@ -12,14 +12,17 @@ import {
     Plus,
     ShieldCheck,
     TrendingUp,
+    User,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import claudeMark from "../assets/ai-apps/claude.svg";
 import { HOME_COPY, type HomeCopy, type IdeaKey, type LineKind } from "./copy/home";
 import { APP_URL, SIGNUP_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { Shot } from "./kit/Shot";
 import { SHOT_ALT } from "./kit/shotAlts";
+import { shotRect } from "./kit/shots";
 import type { Lang } from "./lpLang";
 import { MCP_TOOLS } from "./mcpTools";
 import { useDocumentMeta } from "./useDocumentMeta";
@@ -62,13 +65,66 @@ function ComingBadge({ label }: { label: string }) {
     return <span className="lp-badge lp-badge--coming">{label}</span>;
 }
 
+/**
+ * The hero's proof: the real screenshot of a task's Activity (title and rows), with two labels drawn
+ * over it in HTML, so the claim does not rest on a 16 px icon. They are real text (screen readers
+ * read them), translated, and follow the picture's own scale because they are placed by fractions
+ * (`callouts` in shots.json, checked on every retake). On a narrow window the picture is the phone
+ * crop and the labels stack under it, each with a larger copy of the mark.
+ */
+function HeroProof({ t, lang }: { t: HomeCopy; lang: Lang }) {
+    const points = shotRect("record", lang).callouts;
+    const at = (key: "claude" | "you") =>
+        points ? ({ "--x": points[key].x, "--y": points[key].y } as CSSProperties) : undefined;
+    return (
+        <div className="lp-proof">
+            <Shot
+                alt={t.hero.alt}
+                lang={lang}
+                name="record"
+                priority
+                variants={{
+                    dark: "record-dark",
+                    narrow: "record-phone",
+                    narrowDark: "record-phone-dark",
+                }}
+            />
+            <ul className="lp-proof__tags">
+                <li className="lp-proof__tag lp-proof__tag--claude" style={at("claude")}>
+                    <img
+                        alt=""
+                        aria-hidden
+                        className="lp-proof__icon"
+                        height={20}
+                        src={claudeMark}
+                        width={20}
+                    />
+                    <span>{t.hero.callouts.claude}</span>
+                </li>
+                <li className="lp-proof__tag lp-proof__tag--you" style={at("you")}>
+                    <span aria-hidden className="lp-proof__icon lp-proof__icon--you">
+                        <User size={14} />
+                    </span>
+                    <span>{t.hero.callouts.you}</span>
+                </li>
+            </ul>
+        </div>
+    );
+}
+
 function Hero({ t, lang, appHref }: { t: HomeCopy; lang: Lang; appHref: (u: string) => string }) {
     return (
         <section className="lp-hero lp-hero--record">
             <div className="lp-container lp-hero__grid">
                 <div className="lp-hero__copy lp-stack-m">
                     <h1 className="lp-display">{t.hero.title}</h1>
-                    <p className="lp-lead">{t.hero.sub}</p>
+                    <div className="lp-stack-s">
+                        {t.hero.sub.split("\n\n").map((paragraph) => (
+                            <p key={paragraph} className="lp-lead">
+                                {paragraph}
+                            </p>
+                        ))}
+                    </div>
                     <div className="lp-actions" style={{ paddingTop: 8 }}>
                         <Link className="lp-btn lp-btn--primary" to={CONNECT_PATH}>
                             {t.hero.primary}
@@ -86,9 +142,9 @@ function Hero({ t, lang, appHref }: { t: HomeCopy; lang: Lang; appHref: (u: stri
                 </div>
 
                 <div className="lp-hero__panel">
-                    {/* The labels in the picture are the app's own marks, drawn from rows the
-                        demo workspace stamped (genos-api, MIP-1740): do not add chips on top. */}
-                    <Shot alt={t.hero.alt} lang={lang} name="record" priority />
+                    {/* The marks in the picture are the app's own, drawn from rows the demo workspace
+                        stamped (genos-api, MIP-1740). The two labels over it are HTML (HeroProof). */}
+                    <HeroProof lang={lang} t={t} />
                     <p className="lp-hero__legend">{t.hero.legend}</p>
                 </div>
             </div>
@@ -183,9 +239,11 @@ function AgentRecord({ t, lang }: { t: HomeCopy; lang: Lang }) {
                 </div>
                 <ul className="lp-points lp-points--cols">
                     {t.record.points.map((point) => (
-                        <li key={point}>
+                        <li key={point.lead}>
                             <CheckCircle2 aria-hidden />
-                            <span>{point}</span>
+                            <span>
+                                <strong>{point.lead}</strong> {point.text}
+                            </span>
                         </li>
                     ))}
                 </ul>
@@ -583,7 +641,6 @@ function HomeBody({ lang, appHref }: { lang: Lang; appHref: (u: string) => strin
             <Secretary lang={lang} t={t} />
             <Audiences t={t} />
             <TrustAndPlans t={t} />
-            <Faq id="faq" items={t.faq.items} title={t.faq.title} />
             <ClosingCta appHref={appHref} t={t} />
         </>
     );
