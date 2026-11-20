@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 
 import { CONTACT_EMAIL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
+import { LEGAL_META } from "./seo/pageMeta";
+import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
  * `/legal` — 特定商取引法に基づく表記 (the disclosure Japanese law
@@ -155,6 +157,7 @@ const EN_ROWS: Row[] = [
 ];
 
 export default function LegalPage() {
+    useDocumentMeta(LEGAL_META);
     return (
         <LpShell active={null}>
             {() => (

@@ -5,6 +5,7 @@ import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vitest/config";
 
 import { bundleGuard } from "./scripts/bundleGuard";
+import { lpSeo } from "./scripts/lpSeo";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,7 +13,7 @@ export default defineConfig({
     // if a chunk that must stay lazy becomes statically reachable from the
     // entry. See scripts/bundleGuard.ts for why that check earns a hard
     // failure while the size budget is only a warning.
-    plugins: [react(), tailwindcss(), bundleGuard()],
+    plugins: [react(), tailwindcss(), bundleGuard(), lpSeo()],
     server: {
         port: 3000,
         strictPort: true,

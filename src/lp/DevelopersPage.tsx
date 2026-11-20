@@ -14,6 +14,8 @@ import {
     MCP_WRITES,
     type McpTool,
 } from "./mcpTools";
+import { DEVELOPERS_META } from "./seo/pageMeta";
+import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
  * `/developers` — the public API, webhook and WebSocket reference.
@@ -165,6 +167,7 @@ const TOC = [
 ];
 
 export default function DevelopersPage() {
+    useDocumentMeta(DEVELOPERS_META);
     // A link straight to a section (/developers#webhooks) has to scroll once this lazy
     // route has rendered: the browser tried before the section existed and gave up.
     // The ids are plain ASCII, so the hash is used as is (a malformed %-escape must not throw).
