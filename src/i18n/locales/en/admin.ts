@@ -158,6 +158,9 @@ export const admin = {
                 unknown_provider: "Unknown OAuth provider.",
                 terms_required:
                     "To create an account, first agree to the Terms of Service and the Privacy Policy on the sign-up page.",
+                // TODO(copy): draft wording for Ken (MIP-1770); ja is the other real locale.
+                email_not_verified:
+                    "Google could not confirm that you own this email address, so no account was created. Verify the address with Google and try again, or sign up with your email and password.",
                 fallback: "OAuth flow failed.",
             },
             methods: {

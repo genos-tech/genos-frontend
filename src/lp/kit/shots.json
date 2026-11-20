@@ -26,6 +26,34 @@
         "x": 720,
         "y": 0
     },
+    "record": {
+        "width": 684,
+        "height": 430,
+        "x": 756,
+        "y": 0,
+        "callouts": {
+            "claude": {
+                "x": 0.466,
+                "y": 0.543
+            },
+            "you": {
+                "x": 0.434,
+                "y": 0.659
+            }
+        },
+        "ja": {
+            "callouts": {
+                "claude": {
+                    "x": 0.493,
+                    "y": 0.543
+                },
+                "you": {
+                    "x": 0.461,
+                    "y": 0.659
+                }
+            }
+        }
+    },
     "board": {
         "width": 1165,
         "height": 700,
@@ -73,5 +101,23 @@
         "height": 844,
         "x": 0,
         "y": 0
+    },
+    "record-dark": {
+        "width": 684,
+        "height": 430,
+        "x": 756,
+        "y": 0
+    },
+    "record-phone": {
+        "width": 390,
+        "height": 420,
+        "x": 0,
+        "y": 38
+    },
+    "record-phone-dark": {
+        "width": 390,
+        "height": 420,
+        "x": 0,
+        "y": 38
     }
 }
