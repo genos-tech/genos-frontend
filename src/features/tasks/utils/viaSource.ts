@@ -125,6 +125,11 @@ export const viaSourceOfComment = (comment: Pick<TaskCommentProps, "via">): ViaS
  * the two official families falls back to the generic chip. `kind: "app"` / `"agent"`
  * (stamped for completeness) and any other shape earn no chip.
  *
+ * Trust: unlike a task comment's `via` (the API's answer for this viewer), this one is
+ * read from the shared Yjs doc, which an editor's browser writes directly. It is
+ * trustworthy only because genos-collab strips a browser-written `via` (genos-collab
+ * #35), so that guard has to be live before this chip ships.
+ *
  * A comment someone edits in the editor loses its `via` (BlockNote's edit sends no
  * metadata), so a hand-edited MCP comment is the person's now, like a task comment.
  */
