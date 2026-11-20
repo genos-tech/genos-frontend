@@ -29,6 +29,8 @@ export const buildSitemapXml = (articles: readonly SitemapArticle[]): string => 
         `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${escapeXml(href)}"/>`;
 
     for (const route of LP_ROUTES) {
+        // An alias (`/home`) is not a page of its own: its canonical (`/`) is listed instead.
+        if (route.canonicalPath) continue;
         if (route.langs === "toggle") {
             const alternates = [
                 link("en", pageUrl(route.path, "en")),

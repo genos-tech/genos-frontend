@@ -95,7 +95,7 @@ describe("useSignOut wipes the local cache", () => {
         await result.current();
 
         expect(setAccessToken).toHaveBeenCalledWith(null);
-        expect(navigate).toHaveBeenCalledWith("/");
+        expect(navigate).toHaveBeenCalledWith("/signin");
     });
 
     it("still signs out when the wipe reports it could not finish", async () => {
@@ -105,7 +105,7 @@ describe("useSignOut wipes the local cache", () => {
         await result.current();
 
         expect(setAccessToken).toHaveBeenCalledWith(null);
-        expect(navigate).toHaveBeenCalledWith("/");
+        expect(navigate).toHaveBeenCalledWith("/signin");
     });
 
     it("keeps the last-user marker so the next sign-in still sees a user change", async () => {
