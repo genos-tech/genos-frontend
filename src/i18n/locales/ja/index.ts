@@ -1738,6 +1738,28 @@ export const ja: DeepPartial<Messages> = {
             cancel: "キャンセル",
             genericError: "グループを削除できませんでした。もう一度お試しください。",
         },
+        // Restoring a soft-deleted group chat as its owner (MIP-1715).
+        recentlyDeleted: {
+            menu: "最近削除したグループ",
+            title: "最近削除したグループ",
+            description:
+                "あなたが削除したグループです。復元すると、メンバー全員に再び表示されます。",
+            loadError: "削除したグループを読み込めませんでした。",
+            emptyTitle: "削除したグループはありません",
+            emptyBody:
+                "削除したグループはここに表示され、復元できます。完全に削除したグループは復元できません。",
+            meta: "メンバー: {count} · 削除日 {date}",
+            restore: "復元",
+            restoreAria: "{name} を復元",
+            confirmTitle: "このグループを復元しますか？",
+            confirmDescription:
+                "メンバー、メッセージ、ファイルは削除前のままグループごと元に戻ります。元に戻せないもの: このチャットに書かれたノートへのメンバーのアクセス権は削除時に取り消されているため、誰かが再び共有しない限り、メンバーはそれらのノートを見られません。",
+            confirm: "復元",
+            cancel: "キャンセル",
+            restored: "「{name}」を復元しました。",
+            gone: "「{name}」はもう復元できません。",
+            restoreError: "グループを復元できませんでした。もう一度お試しください。",
+        },
         addMembers: {
             openButton: "メンバーを追加",
             headingProject: "{projectName} にメンバーを追加",

@@ -9,6 +9,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import RestoreFromTrashRoundedIcon from "@mui/icons-material/RestoreFromTrashRounded";
 import { Badge, Box, Chip, Divider, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -48,6 +49,7 @@ import { EMPTY_TAG_ID_SET, makeTagFilter, pruneSelection } from "../../utils/gmT
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalCreateMDM } from "../modals/ModalCreateMDM";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
+import { ModalRecentlyDeletedChats } from "../modals/ModalRecentlyDeletedChats";
 import { ChatList } from "./ChatList";
 import { ChatSearch } from "./ChatSearch";
 import { ActivityDivider } from "./ChatSidebarDividers";
@@ -178,6 +180,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openCreateGM, setOpenCreateGM] = useState(false);
     const [openCreateMDM, setOpenCreateMDM] = useState(false);
+    // The owner's soft-deleted groups, with Restore (MIP-1715).
+    const [openRecentlyDeleted, setOpenRecentlyDeleted] = useState(false);
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
     // Flagged pane: false = active flags, true = past/completed flags.
     const [showPastFlagged, setShowPastFlagged] = useState(false);
@@ -600,6 +604,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         icon: <PeopleRoundedIcon />,
                                         onClick: () => setOpenCreateMDM(true),
                                     },
+                                    {
+                                        id: "recently-deleted",
+                                        label: t.common.recentlyDeleted.menu,
+                                        icon: <RestoreFromTrashRoundedIcon />,
+                                        divider: true,
+                                        onClick: () => setOpenRecentlyDeleted(true),
+                                    },
                                     // Mark all currently-filtered activities as read. Only
                                     // meaningful on the Activity tab: the visible feed is
                                     // what gets cleared.
@@ -926,6 +937,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
+            />
+            <ModalRecentlyDeletedChats
+                open={openRecentlyDeleted}
+                teamId={myself.teamId}
+                onClose={() => setOpenRecentlyDeleted(false)}
             />
             <ModalCreateMDM
                 myself={myself}
