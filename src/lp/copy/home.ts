@@ -156,7 +156,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             note: "いまはClaudeで使えます。ChatGPTは近日公開です。",
             // TODO(copy: Ken decides the sentences)
             legend: "エージェントが書いたものには、そのマークが付きます。それ以外はあなたのものです。",
-            alt: "Genosで開いたタスク。ステータス、担当者、タグ、説明が見える",
+            alt: "Genosのタスクのアクティビティ。「これを作成しました」とコメントの1件にClaudeの丸いマークが付き、優先度の変更ともう1件のコメントにはマークが付いていない",
         },
         idea: {
             // TODO(copy: Ken decides the sentences) — the three lines of the brief's story (section 2).
@@ -460,7 +460,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             note: "Works with Claude today. ChatGPT coming.",
             // TODO(copy: Ken decides the sentences)
             legend: "What your agent wrote carries its mark. The rest is yours.",
-            alt: "A task open in Genos, with its status, owner, tags and description",
+            alt: "The Activity tab of a task in Genos. Two rows carry Claude's round mark (created this, posted a comment); two have no mark (changed priority, posted a comment).",
         },
         idea: {
             // TODO(copy: Ken decides the sentences) — the three lines of the brief's story (section 2).

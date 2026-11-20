@@ -80,6 +80,10 @@ const UI = {
         report: "What to do today",
         showTasks: "Show tasks",
         priorities: "This week's priorities",
+        // The "Launch plan" project the v2 demo seeds with agent-written rows (genos-api MIP-1740).
+        launch: "Launch plan",
+        recordTask: "Book the demo room",
+        activityTab: "Activity",
     },
     ja: {
         demo: /デモ/,
@@ -99,6 +103,9 @@ const UI = {
         report: "今日やること",
         showTasks: "タスクの表示",
         priorities: "今週の優先事項",
+        launch: "ローンチ計画",
+        recordTask: "デモ用の会議室を予約する",
+        activityTab: "アクティビティ",
     },
 };
 
@@ -232,11 +239,11 @@ const askGenos = async (page, lang, question, { expect, attempts = 5 }) => {
  * now sits in the row and, in Japanese, pushes the name out of its clipped box: the text is found
  * but "not visible", so a click on it times out. The row is a button that contains the name.
  */
-const openProject = async (page, lang) => {
-    const rows = page.getByRole("button").filter({ hasText: UI[lang].project });
+const openProject = async (page, lang, name = UI[lang].project) => {
+    const rows = page.getByRole("button").filter({ hasText: name });
     const found = await rows.count();
     if (found !== 1) {
-        throw new Error(`Expected one sidebar row for "${UI[lang].project}", found ${found}.`);
+        throw new Error(`Expected one sidebar row for "${name}", found ${found}.`);
     }
     await rows.first().click({ position: { x: 24, y: 8 } }); // left of the chip, on the row
 };
@@ -286,6 +293,52 @@ const SCENES = {
         // The task's own panel is showing: its title is in the page twice (row and panel).
         if ((await page.getByText(UI[lang].task).count()) < 2) {
             throw new Error(`The task panel did not open for ${UI[lang].task}.`);
+        }
+    },
+    // The hero picture of /home (MIP-1611): the Activity tab of a task whose history mixes rows
+    // written through a connected Claude app (they carry Claude's round mark) with rows the person
+    // wrote (no mark). The demo's "Launch plan" project seeds exactly that (genos-api
+    // `demo_launch_plan`, v2 sign-in only). The scene refuses to take the picture unless a "via
+    // Claude" mark is in the panel AND some row has none, so a retake against an api without that
+    // seed fails instead of producing an unlabelled hero.
+    record: async (page, lang) => {
+        await rail(page, lang, "tasks");
+        await openProject(page, lang, UI[lang].launch);
+        await settle(page, 3500);
+        await expandNextRow(page);
+        await settle(page, 1500);
+        const row = page.locator(".task-table-row").filter({ hasText: UI[lang].recordTask });
+        const found = await row.count();
+        if (found !== 1)
+            throw new Error(`Expected one row for ${UI[lang].recordTask}, found ${found}.`);
+        await row
+            .locator("button")
+            .filter({ has: page.locator('svg[data-testid="OpenInNewIcon"]') })
+            .click();
+        await settle(page, 4500);
+        // The panel is a scrolling sheet on the right: go to the bottom, open the Activity tab.
+        const toBottom = () =>
+            page.evaluate(() => {
+                const sheet = [...document.querySelectorAll("*")].find(
+                    (e) =>
+                        e.scrollHeight > e.clientHeight + 40 &&
+                        e.getBoundingClientRect().left > 600 &&
+                        e.clientHeight > 300
+                );
+                if (sheet) sheet.scrollTop = sheet.scrollHeight;
+            });
+        await toBottom();
+        await settle(page, 800);
+        await page.getByText(UI[lang].activityTab, { exact: true }).first().click();
+        await settle(page, 2000);
+        await toBottom();
+        await settle(page, 800);
+        const marks = await page.locator('[data-via-app="claude"]').count();
+        const rows = await page.getByText(/^(Sam Taylor|佐藤 結衣)$/).count();
+        if (marks < 1 || marks >= rows) {
+            throw new Error(
+                `The Activity feed must show some rows with Claude's mark and some without: ${marks} marks in ${rows} rows. Is the api on the demo-agent-records seed?`
+            );
         }
     },
     board: async (page, lang) => {
@@ -406,7 +459,18 @@ const PLAN = [
     {
         viewport: DESKTOP,
         dark: false,
-        scenes: ["tasks", "board", "task", "note", "chat", "todo", "inbox", "ask", "approval"],
+        scenes: [
+            "tasks",
+            "board",
+            "task",
+            "record",
+            "note",
+            "chat",
+            "todo",
+            "inbox",
+            "ask",
+            "approval",
+        ],
     },
     { viewport: DESKTOP, dark: true, scenes: ["tasks-dark"] },
     { viewport: PHONE, dark: false, scenes: ["phone-tasks", "phone-chat"] },
