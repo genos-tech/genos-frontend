@@ -5681,12 +5681,12 @@ export const fr: DeepPartial<Messages> = {
             linkedPullRequest: "Demande d'extraction liée",
             // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
             justNow: "à l'instant",
-            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sits inside the phrase; the singular uses a word.
-            minuteAgo: "il y a une minute",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sits inside the phrase ("il y a 5 minutes", "il y a 1 minute").
+            minuteAgo: "il y a {count} minute",
             minutesAgo: "il y a {count} minutes",
-            hourAgo: "il y a une heure",
+            hourAgo: "il y a {count} heure",
             hoursAgo: "il y a {count} heures",
-            dayAgo: "il y a un jour",
+            dayAgo: "il y a {count} jour",
             daysAgo: "il y a {count} jours",
             progress: {
                 scopeLabel: "Afficher",

@@ -61,13 +61,6 @@ const FAMILIES: Record<string, string[]> = {
 // Fixed text with the count baked in.
 const FIXED_ONE = ["notes.history.relTime.oneMinute", "notes.history.relTime.oneMinShort"];
 
-// Used by formatRelativeAge for a count of exactly 1 only.
-const SINGULAR_KEYS = new Set([
-    "tasks.activity.minuteAgo",
-    "tasks.activity.hourAgo",
-    "tasks.activity.dayAgo",
-]);
-
 const UNITS = [
     "second",
     "seconds",
@@ -109,10 +102,7 @@ describe("relative-time templates, every locale", () => {
                     it(`${family}.${key} shows only the count's digits`, () => {
                         const template = read(catalog, `${family}.${key}`);
                         expect(template, "template is missing").toBeTruthy();
-                        // formatRelativeAge picks minuteAgo / hourAgo / dayAgo for a
-                        // count of exactly 1 (a locale may say it as a word), so only 1.
-                        const counts = SINGULAR_KEYS.has(`${family}.${key}`) ? [1] : COUNTS;
-                        for (const count of counts) {
+                        for (const count of COUNTS) {
                             const out = render(template as string, count);
                             expect(onlyTheCount(out, count), `"${out}" for ${count}`).toBe(true);
                         }
@@ -266,13 +256,6 @@ const PLACEMENT: Record<string, RegExp> = {
     hi: /^5\S*(?: \S+)* पहले(?: अपडेट किया गया)?$|^5\S*(?: \S+)* पहले अपडेट किया गया$/,
 };
 
-// A singular template ("hace un minuto") says the count as a word, on purpose.
-const SINGULAR_WORDS = [
-    "tasks.activity.minuteAgo",
-    "tasks.activity.hourAgo",
-    "tasks.activity.dayAgo",
-];
-
 describe("the count sits inside the phrase", () => {
     for (const locale of Object.keys(PLACEMENT)) {
         describe(locale, () => {
@@ -280,8 +263,7 @@ describe("the count sits inside the phrase", () => {
                 (p) =>
                     !p.includes("hover.units") &&
                     !p.includes("oneMinute") &&
-                    !p.includes("oneMinShort") &&
-                    !(["es", "fr", "ar"].includes(locale) && SINGULAR_KEYS.has(p))
+                    !p.includes("oneMinShort")
             )) {
                 it(`${path} for 5`, () => {
                     const template = read(catalogs[locale], path) as string;
@@ -377,19 +359,19 @@ describe("the activity feed reads as a native sentence (es, fr, ar, hi)", () => 
     // 1 minute, 5 minutes, 1 hour, 3 hours, 1 day, 3 days
     const expected: Record<string, string[]> = {
         es: [
-            "hace un minuto",
+            "hace 1 minuto",
             "hace 5 minutos",
-            "hace una hora",
+            "hace 1 hora",
             "hace 3 horas",
-            "hace un día",
+            "hace 1 día",
             "hace 3 días",
         ],
         fr: [
-            "il y a une minute",
+            "il y a 1 minute",
             "il y a 5 minutes",
-            "il y a une heure",
+            "il y a 1 heure",
             "il y a 3 heures",
-            "il y a un jour",
+            "il y a 1 jour",
             "il y a 3 jours",
         ],
         ar: ["منذ دقيقة", "منذ 5 دقائق", "منذ ساعة", "منذ 3 ساعات", "منذ يوم", "منذ 3 أيام"],

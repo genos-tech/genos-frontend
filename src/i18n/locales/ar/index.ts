@@ -3141,13 +3141,13 @@ export const ar: DeepPartial<Messages> = {
             wasMerged: "تم دمجها",
             linkedPullRequest: "طلب سحب مرتبط",
             justNow: "الآن",
-            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "منذ" first with the count inside the phrase; the singular uses a
-            // word. Arabic dual (2) and 11+ forms are not expressed (fmt has one/other only).
-            minuteAgo: "منذ دقيقة",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "منذ" first with the count inside the phrase; one is said as a
+            // word, kept in a plural so {count} stays (the catalog contract tests need it). Arabic dual (2) and 11+ forms are not expressed (fmt has one/other only).
+            minuteAgo: "{count, plural, one {منذ دقيقة} other {منذ # دقائق}}",
             minutesAgo: "منذ {count} دقائق",
-            hourAgo: "منذ ساعة",
+            hourAgo: "{count, plural, one {منذ ساعة} other {منذ # ساعات}}",
             hoursAgo: "منذ {count} ساعات",
-            dayAgo: "منذ يوم",
+            dayAgo: "{count, plural, one {منذ يوم} other {منذ # أيام}}",
             daysAgo: "منذ {count} أيام",
             progress: {
                 scopeLabel: "عرض",

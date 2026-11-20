@@ -3193,12 +3193,12 @@ export const es: DeepPartial<Messages> = {
             linkedPullRequest: "Solicitud de extracción vinculada",
             // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
             justNow: "justo ahora",
-            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sits inside the phrase; the singular uses a word.
-            minuteAgo: "hace un minuto",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sits inside the phrase ("hace 5 minutos", "hace 1 minuto").
+            minuteAgo: "hace {count} minuto",
             minutesAgo: "hace {count} minutos",
-            hourAgo: "hace una hora",
+            hourAgo: "hace {count} hora",
             hoursAgo: "hace {count} horas",
-            dayAgo: "hace un día",
+            dayAgo: "hace {count} día",
             daysAgo: "hace {count} días",
             progress: {
                 scopeLabel: "Mostrar",
