@@ -12,6 +12,11 @@
  *  - ja and zh carry no Latin letters outside a placeholder (the "d", "w", "y"
  *    unit letters of the English short form are not Japanese or Chinese);
  *  - English reads "1 day ago" / "2 days ago" in every plural-aware family.
+ *
+ * MIP-1775 adds the part digits cannot see, for es, fr, ar and hi: where the
+ * count sits in the sentence ("hace 5 minutos", "il y a 5 minutes", "منذ 5
+ * دقائق", "5 मिनट पहले"), no line break in a one-line label, no Latin unit
+ * letters inside Arabic or Devanagari text, and the exact feed wording.
  */
 import { describe, expect, it } from "vitest";
 
@@ -56,6 +61,13 @@ const FAMILIES: Record<string, string[]> = {
 // Fixed text with the count baked in.
 const FIXED_ONE = ["notes.history.relTime.oneMinute", "notes.history.relTime.oneMinShort"];
 
+// Used by formatRelativeAge for a count of exactly 1 only.
+const SINGULAR_KEYS = new Set([
+    "tasks.activity.minuteAgo",
+    "tasks.activity.hourAgo",
+    "tasks.activity.dayAgo",
+]);
+
 const UNITS = [
     "second",
     "seconds",
@@ -97,7 +109,10 @@ describe("relative-time templates, every locale", () => {
                     it(`${family}.${key} shows only the count's digits`, () => {
                         const template = read(catalog, `${family}.${key}`);
                         expect(template, "template is missing").toBeTruthy();
-                        for (const count of COUNTS) {
+                        // formatRelativeAge picks minuteAgo / hourAgo / dayAgo for a
+                        // count of exactly 1 (a locale may say it as a word), so only 1.
+                        const counts = SINGULAR_KEYS.has(`${family}.${key}`) ? [1] : COUNTS;
+                        for (const count of counts) {
                             const out = render(template as string, count);
                             expect(onlyTheCount(out, count), `"${out}" for ${count}`).toBe(true);
                         }
@@ -205,6 +220,194 @@ describe("formatRelativeAge over every unit it covers (the activity feed)", () =
         it(`${name}: en "${enText}", ja "${jaText}"`, () => {
             expect(formatRelativeAge(ago(ms), messages("en"), NOW)).toBe(enText);
             expect(formatRelativeAge(ago(ms), messages("ja"), NOW)).toBe(jaText);
+        });
+    }
+});
+
+// ---------------------------------------------------------------------------
+// MIP-1775: placement and script, es / fr / ar / hi
+// ---------------------------------------------------------------------------
+
+const ALL_PATHS = [
+    ...Object.entries(FAMILIES).flatMap(([family, keys]) => keys.map((key) => `${family}.${key}`)),
+    ...FIXED_ONE,
+    "integrations.pullRequest.hover.ago",
+    ...UNITS.map((unit) => `integrations.pullRequest.hover.units.${unit}`),
+];
+
+describe("no relative-time template breaks the line", () => {
+    for (const locale of Object.keys(catalogs)) {
+        it(`${locale} has no newline in any relative-time template`, () => {
+            const offenders = ALL_PATHS.filter((path) =>
+                /[\r\n]/.test(read(catalogs[locale], path) ?? "")
+            );
+            expect(offenders).toEqual([]);
+        });
+    }
+});
+
+describe("ar and hi relative times carry no Latin letters outside a placeholder", () => {
+    for (const locale of ["ar", "hi"]) {
+        it(`${locale}`, () => {
+            const offenders = ALL_PATHS.filter((path) =>
+                /[A-Za-z]/.test(stripPlaceholders(read(catalogs[locale], path) ?? ""))
+            );
+            expect(offenders).toEqual([]);
+        });
+    }
+});
+
+// Where the count sits for a count of 5, per language: after "hace" / "il y a" /
+// "منذ" / "قبل", and before "पहले". Every unit form (long and short) counts.
+const PLACEMENT: Record<string, RegExp> = {
+    es: /^(?:actualizado )?hace 5(?:\s|$)/i,
+    fr: /^(?:mis à jour )?il y a 5(?:\s|$)/i,
+    ar: /^(?:حُدّث )?(?:منذ|قبل) 5(?!\d)/,
+    hi: /^5\S*(?: \S+)* पहले(?: अपडेट किया गया)?$|^5\S*(?: \S+)* पहले अपडेट किया गया$/,
+};
+
+// A singular template ("hace un minuto") says the count as a word, on purpose.
+const SINGULAR_WORDS = [
+    "tasks.activity.minuteAgo",
+    "tasks.activity.hourAgo",
+    "tasks.activity.dayAgo",
+];
+
+describe("the count sits inside the phrase", () => {
+    for (const locale of Object.keys(PLACEMENT)) {
+        describe(locale, () => {
+            for (const path of ALL_PATHS.filter(
+                (p) =>
+                    !p.includes("hover.units") &&
+                    !p.includes("oneMinute") &&
+                    !p.includes("oneMinShort") &&
+                    !(["es", "fr", "ar"].includes(locale) && SINGULAR_KEYS.has(p))
+            )) {
+                it(`${path} for 5`, () => {
+                    const template = read(catalogs[locale], path) as string;
+                    const out =
+                        path === "integrations.pullRequest.hover.ago"
+                            ? fmt(template, {
+                                  count: 5,
+                                  unit: read(
+                                      catalogs[locale],
+                                      "integrations.pullRequest.hover.units.minutes"
+                                  ) as string,
+                              })
+                            : render(template, 5);
+                    expect(out, path).toMatch(PLACEMENT[locale]);
+                });
+            }
+        });
+    }
+
+    it("the PR hover card names the unit right (fr minute, hi second, fr year)", () => {
+        const unit = (locale: string, key: string) =>
+            read(catalogs[locale], `integrations.pullRequest.hover.units.${key}`);
+        expect(unit("fr", "minute")).toBe("minute");
+        expect(unit("fr", "minutes")).toBe("minutes");
+        expect(unit("fr", "year")).toBe("an");
+        expect(unit("hi", "second")).toBe("सेकंड");
+    });
+
+    const hover = (locale: string, count: number, unit: string) =>
+        fmt(read(catalogs[locale], "integrations.pullRequest.hover.ago") as string, {
+            count,
+            unit: read(catalogs[locale], `integrations.pullRequest.hover.units.${unit}`) as string,
+        });
+    it("the PR hover card reads as a sentence", () => {
+        expect(hover("es", 5, "minutes")).toBe("hace 5 minutos");
+        expect(hover("fr", 5, "minutes")).toBe("il y a 5 minutes");
+        expect(hover("fr", 1, "minute")).toBe("il y a 1 minute");
+        expect(hover("fr", 3, "years")).toBe("il y a 3 ans");
+        expect(hover("ar", 5, "minutes")).toBe("منذ 5 دقائق");
+        expect(hover("hi", 5, "minutes")).toBe("5 मिनट पहले");
+        expect(hover("hi", 1, "second")).toBe("1 सेकंड पहले");
+    });
+});
+
+describe("the History modal's labels are one line in es, fr, ar and hi", () => {
+    const rel = (locale: string, key: string, count: number) =>
+        render(read(catalogs[locale], `history.relative.${key}`) as string, count);
+    it("fr", () => {
+        expect(read(fr, "history.relative.justNow")).toBe("À l'instant");
+        expect(rel("fr", "minutes", 5)).toBe("Il y a 5 min");
+        expect(rel("fr", "hours", 3)).toBe("Il y a 3 h");
+        expect(rel("fr", "days", 2)).toBe("Il y a 2 j");
+        expect(rel("fr", "months", 2)).toBe("Il y a 2 mois");
+        expect(rel("fr", "years", 1)).toBe("Il y a 1 an");
+        expect(rel("fr", "years", 3)).toBe("Il y a 3 ans");
+    });
+    it("es puts hace first, also for months", () => {
+        expect(rel("es", "minutes", 5)).toBe("Hace 5 min");
+        expect(rel("es", "months", 1)).toBe("Hace 1 mes");
+        expect(rel("es", "months", 4)).toBe("Hace 4 meses");
+        expect(rel("es", "years", 2)).toBe("Hace 2 años");
+    });
+    it("ar reads right to left, in Arabic words", () => {
+        expect(rel("ar", "minutes", 5)).toBe("منذ 5 دقائق");
+        expect(rel("ar", "days", 1)).toBe("منذ يوم");
+        expect(rel("ar", "months", 3)).toBe("منذ 3 أشهر");
+    });
+    it("hi puts the unit after the count, in Devanagari", () => {
+        expect(rel("hi", "minutes", 5)).toBe("5 मिनट पहले");
+        expect(rel("hi", "hours", 1)).toBe("1 घंटा पहले");
+        expect(rel("hi", "days", 3)).toBe("3 दिन पहले");
+    });
+});
+
+describe("the activity feed reads as a native sentence (es, fr, ar, hi)", () => {
+    const NOW = Date.parse("2026-11-20T12:00:00Z");
+    const ago = (ms: number) => new Date(NOW - ms).toISOString();
+    const MIN = 60_000;
+    const HOUR = 60 * MIN;
+    const DAY = 24 * HOUR;
+    const messages = (locale: string) => {
+        const key = (k: string) => read(catalogs[locale], `tasks.activity.${k}`) as string;
+        return {
+            justNow: key("justNow"),
+            minuteAgo: key("minuteAgo"),
+            minutesAgo: key("minutesAgo"),
+            hourAgo: key("hourAgo"),
+            hoursAgo: key("hoursAgo"),
+            dayAgo: key("dayAgo"),
+            daysAgo: key("daysAgo"),
+        };
+    };
+    // 1 minute, 5 minutes, 1 hour, 3 hours, 1 day, 3 days
+    const expected: Record<string, string[]> = {
+        es: [
+            "hace un minuto",
+            "hace 5 minutos",
+            "hace una hora",
+            "hace 3 horas",
+            "hace un día",
+            "hace 3 días",
+        ],
+        fr: [
+            "il y a une minute",
+            "il y a 5 minutes",
+            "il y a une heure",
+            "il y a 3 heures",
+            "il y a un jour",
+            "il y a 3 jours",
+        ],
+        ar: ["منذ دقيقة", "منذ 5 دقائق", "منذ ساعة", "منذ 3 ساعات", "منذ يوم", "منذ 3 أيام"],
+        hi: [
+            "1 मिनट पहले",
+            "5 मिनट पहले",
+            "1 घंटा पहले",
+            "3 घंटे पहले",
+            "1 दिन पहले",
+            "3 दिन पहले",
+        ],
+    };
+    const spans = [MIN, 5 * MIN, HOUR, 3 * HOUR, DAY, 3 * DAY];
+    for (const [locale, lines] of Object.entries(expected)) {
+        it(locale, () => {
+            expect(spans.map((ms) => formatRelativeAge(ago(ms), messages(locale), NOW))).toEqual(
+                lines
+            );
         });
     }
 });
