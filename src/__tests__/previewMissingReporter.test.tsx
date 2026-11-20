@@ -20,18 +20,21 @@
  * A task or milestone that HAS a reporter is pinned unchanged.
  */
 import { useState } from "react";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, render, renderHook, waitFor } from "@testing-library/react";
 import axios, { type InternalAxiosRequestConfig } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ACTeamUsers } from "../features/tasks/components/autocompletes/ACTeamUsers";
 import { usePreviewEditMirror } from "../features/tasks/components/contents/utils/usePreviewEditMirror";
 import { Milestone } from "../features/tasks/sprint-milestone/types";
 import {
     milestoneReporterPatch,
     milestoneReporterToUserProps,
 } from "../features/tasks/utils/milestoneReporter";
+import { milestoneToTaskProps } from "../features/tasks/utils/milestoneTaskProps";
 import { useSendUpdatedTask } from "../hooks/tasks/useSendUpdatedTask";
 import { useTaskEditState } from "../hooks/tasks/useTaskEditState";
+import { getMessages } from "../i18n";
 import { UserProps } from "../types/admin";
 import { TaskProps } from "../types/tasks";
 
@@ -249,5 +252,73 @@ describe("the milestone preview, for a milestone that HAS a reporter (unchanged)
     it("reads the stored reporter from reporterId alone, too", () => {
         const idOnly = milestone({ reporterId: "u-bo", reporter: null });
         expect(milestoneReporterPatch({ reporter: bo }, idOnly)).toBeUndefined();
+    });
+});
+
+describe("the milestone preview's working copy, end to end", () => {
+    // The chain the preview runs on every refresh and edit: payload -> resolved reporter ->
+    // task-shaped working copy -> the diff that becomes the PATCH.
+    const workingCopyOf = (m: Milestone) =>
+        milestoneToTaskProps(
+            m,
+            null,
+            viewer,
+            [],
+            person("u-ann", "Ann"),
+            milestoneReporterToUserProps(m, [viewer, bo]),
+            []
+        );
+
+    it("keeps a missing reporter missing, and an edit of anything else sends none", () => {
+        const orphan = milestone();
+        const working = workingCopyOf(orphan);
+        expect(working.reporter).toBeNull();
+        expect(milestoneReporterPatch(working, orphan)).toBeUndefined();
+    });
+
+    it("keeps the reporter a milestone has, and an edit of anything else sends none", () => {
+        const filed = milestone({ reporterId: "u-bo", reporter: embedded("u-bo", "Bo") as never });
+        const working = workingCopyOf(filed);
+        expect(working.reporter?.userId).toBe("u-bo");
+        expect(milestoneReporterPatch(working, filed)).toBeUndefined();
+    });
+});
+
+describe("the reporter picker for a reporter whose account is gone", () => {
+    const props = (initialUser: UserProps | null, isAssignee = false) => ({
+        myself: viewer,
+        setMyself: () => {},
+        initialUser,
+        taskContent: makeTask(initialUser),
+        setTaskContent: () => {},
+        setUser: () => {},
+        isOpenTeamMembersList: false,
+        setIsOpenTeamMembersList: () => {},
+        isAssignee,
+        useTEM: { teamMembers: [viewer, bo], teamMemberProfiles: {} } as never,
+        socket: null,
+        useCM: {} as never,
+        useUISM: {} as never,
+    });
+
+    it("says Deleted user where a reporter would be, and no one is chosen", () => {
+        const view = render(<ACTeamUsers {...props(null)} />);
+        const input = view.container.querySelector("input")!;
+        expect(input.placeholder).toBe(getMessages().tasks.messageTemplate.deletedUser);
+        expect(input.value).toBe("");
+    });
+
+    it("shows a reporter that exists as the chosen person, with no placeholder", () => {
+        const view = render(<ACTeamUsers {...props(bo)} />);
+        const input = view.container.querySelector("input")!;
+        expect(input.value).toContain("Bo");
+        expect(input.placeholder).toBe("");
+    });
+
+    it("keeps the assignee's own placeholder for an unassigned task", () => {
+        const view = render(<ACTeamUsers {...props(null, true)} />);
+        expect(view.container.querySelector("input")!.placeholder).toBe(
+            getMessages().tasks.messageTemplate.unassigned
+        );
     });
 });

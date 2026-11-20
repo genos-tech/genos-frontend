@@ -318,7 +318,6 @@ describe("usePreviewEditMirror wired to the real table state", () => {
                 usePreviewEditMirror({
                     working: props.working,
                     preview: tm.currentPreviewTask,
-                    myself: meUser,
                     setPreview: tm.setCurrentPreviewTask,
                     syncRow: tm.syncPreviewEdit,
                     setAssignee: vi.fn(),
