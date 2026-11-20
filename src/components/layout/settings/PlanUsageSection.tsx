@@ -4,6 +4,7 @@ import { Box, Button, Chip, Divider, LinearProgress, Sheet, Stack, Typography } 
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
+import { TrialEndNote } from "../../../features/billing/TrialEndNote";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     AgentFeatures,
@@ -208,6 +209,11 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                 <WorkspacePremiumRoundedIcon />
                 <Typography level="title-md">{p.heading}</Typography>
                 <Box sx={{ flex: 1 }} />
+                {data.trial_ends_at && (
+                    <Chip color="success" size="sm" variant="outlined">
+                        {p.trialChip}
+                    </Chip>
+                )}
                 <Chip color={TIER_COLOR[data.tier]} size="sm" variant="soft">
                     {tierLabel}
                 </Chip>
@@ -216,6 +222,9 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                 <Typography level="body-xs" sx={{ color: "text.tertiary", mb: 0.5 }}>
                     {fmt(p.viaTeam, { team: data.tier_team })}
                 </Typography>
+            )}
+            {data.trial_ends_at && (
+                <TrialEndNote endsAt={data.trial_ends_at} locale={locale} sx={{ mb: 1 }} />
             )}
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
                 {p.description}

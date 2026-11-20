@@ -581,6 +581,13 @@ export const es: DeepPartial<Messages> = {
             heading: "Plan y uso",
             description: "Tu plan actual y cuánto has usado de cada límite.",
             viaTeam: "vía equipo {team}",
+            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
+            trialChip: "Prueba gratuita",
+            // TODO(copy)
+            trialEnds: "Tu mes gratis de Core termina el {date}.",
+            // TODO(copy)
+            trialAfter:
+                "Después vuelves a Free. Tus datos se conservan y las apps conectadas se pausan hasta que vuelvas a un plan de pago.",
             tierFree: "Gratis",
             tierCore: "Core",
             tierPro: "Pro",
@@ -1374,6 +1381,11 @@ export const es: DeepPartial<Messages> = {
             title: "Apps conectadas",
             blurb: "Apps de IA a las que has permitido usar Genos como si fueras tú. Si revocas una, deja de funcionar en su próxima solicitud.",
             empty: "Aún no hay apps conectadas.",
+            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
+            paused: "En pausa",
+            // TODO(copy)
+            pausedNote:
+                "En pausa: tu plan actual no incluye apps conectadas. Se queda aquí y vuelve a funcionar con Core o superior.",
             loadFailed: "No se pudieron cargar tus apps conectadas.",
             saveFailed: "No se pudo guardar ese cambio.",
             revokeFailed: "No se pudo revocar esa app. Inténtalo de nuevo.",

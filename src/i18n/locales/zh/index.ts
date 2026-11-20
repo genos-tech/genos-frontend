@@ -3557,6 +3557,11 @@ export const zh: DeepPartial<Messages> = {
             title: "已连接的应用",
             blurb: "你已允许以你的身份使用 Genos 的 AI 应用。撤销后，该应用在下一次请求时就会失效。",
             empty: "还没有已连接的应用。",
+            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
+            paused: "已暂停",
+            // TODO(copy)
+            pausedNote:
+                "已暂停：你当前的套餐暂不包含已连接的应用。它会保留在这里，升级到 Core 或更高套餐后即可再次使用。",
             loadFailed: "无法加载已连接的应用。",
             saveFailed: "无法保存该更改。",
             revokeFailed: "无法撤销该应用，请重试。",
@@ -3788,6 +3793,13 @@ export const zh: DeepPartial<Messages> = {
             heading: "套餐与用量",
             description: "你当前的套餐以及各项限额的使用情况。",
             viaTeam: "来自团队 {team}",
+            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
+            trialChip: "免费试用",
+            // TODO(copy)
+            trialEnds: "Core 的免费月将于 {date} 结束。",
+            // TODO(copy)
+            trialAfter:
+                "之后将回到免费版。你的数据会保留，已连接的应用会暂停,直到你再次使用付费套餐。",
             tierFree: "免费版",
             tierCore: "核心版",
             tierPro: "专业版",

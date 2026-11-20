@@ -180,6 +180,24 @@ describe("PlansHome", () => {
         billingApi.fetchBillingSubscription.mockResolvedValue(null);
     });
 
+    it("names the end of the first month of Core above the plans, and only while it runs", async () => {
+        // MIP-1737. The server says whether the trial grants the plan; the page never works it out.
+        // The viewer's OWN tier stays free, so the buy buttons and the Free card are unchanged.
+        agentApi.fetchAgentFeatures.mockResolvedValue({
+            trial_ends_at: "2026-12-20T12:00:00+00:00",
+        });
+        renderPage();
+        const note = await screen.findByTestId("trial-end-note");
+        expect(note.textContent).toMatch(/Your free month of Core ends on December 20, 2026\./);
+    });
+
+    it("shows no trial note when the trial is not what grants the plan", async () => {
+        agentApi.fetchAgentFeatures.mockResolvedValue({ trial_ends_at: null });
+        renderPage();
+        await screen.findByText("Do more of your best work with Genos");
+        expect(screen.queryByTestId("trial-end-note")).toBeNull();
+    });
+
     it("renders every tier as a column, with Stripe prices and limits", async () => {
         // The page moved from five cards to one comparison table, so the
         // limits are now short CELLS under a shared row label rather than

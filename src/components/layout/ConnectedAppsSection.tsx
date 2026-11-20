@@ -135,8 +135,9 @@ export const ConnectedAppsSection = () => {
                 return (
                     <Sheet
                         key={c.id}
+                        data-paused={c.paused ? "true" : undefined}
                         data-testid="connected-app"
-                        sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+                        sx={{ borderRadius: 8, p: 1.25, minWidth: 0, opacity: c.paused ? 0.7 : 1 }}
                         variant="soft"
                     >
                         <Stack spacing={1} sx={{ minWidth: 0 }}>
@@ -160,6 +161,11 @@ export const ConnectedAppsSection = () => {
                                         </Typography>
                                     )}
                                 </Box>
+                                {c.paused && (
+                                    <Chip color="warning" size="sm" variant="soft">
+                                        {a.paused}
+                                    </Chip>
+                                )}
                                 {choice.destructive && (
                                     <Chip color="danger" size="sm" variant="soft">
                                         {a.canDelete}
@@ -178,6 +184,11 @@ export const ConnectedAppsSection = () => {
                                     ? ` · ${fmt(a.defaultTeam, { team: defaultName })}`
                                     : ""}
                             </Typography>
+                            {c.paused && (
+                                <Typography level="body-xs" sx={{ opacity: 0.85 }}>
+                                    {a.pausedNote}
+                                </Typography>
+                            )}
                             <Typography level="body-xs" sx={{ opacity: 0.6 }}>
                                 {c.lastUsedAt
                                     ? fmt(a.lastUsed, {
