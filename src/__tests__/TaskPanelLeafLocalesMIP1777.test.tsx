@@ -15,16 +15,13 @@ import { TaskDueDateInput } from "../features/tasks/components/contents/base/sub
 import { TaskStartDateInput } from "../features/tasks/components/contents/base/sub/TaskStartDateInput";
 import { TaskCustomBarBlock } from "../features/tasks/components/contents/base/TaskCustomBarBlock";
 import { I18nProvider, loadLocale } from "../i18n";
-import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";
-import { ja } from "../i18n/locales/ja";
 
 vi.mock("../features/tasks/services/loadTaskComments", () => ({
     loadTaskComments: vi.fn(async () => []),
 }));
 
-const CATALOGS = { en, ja, ar } as const;
-type L = keyof typeof CATALOGS;
+type L = "en" | "ja" | "ar";
 
 const inLocale = async (locale: L, ui: React.ReactElement) => {
     await loadLocale(locale);
@@ -44,15 +41,15 @@ beforeEach(() => window.localStorage.removeItem("genos-locale"));
 
 describe("task / milestone panel leaves are not hard-coded English (MIP-1777)", () => {
     for (const locale of ["ja", "ar"] as const) {
-        const c = CATALOGS[locale];
-
         it(`${locale}: the Saved chip`, async () => {
+            const c = await loadLocale(locale);
             await inLocale(locale, <TaskCustomBarBlock taskBodySaved />);
             expect(screen.getByText(c.notes.editor.savedChip)).toBeInTheDocument();
             expect(screen.queryByText("Saved")).toBeNull();
         });
 
         it(`${locale}: the due date TBD button and the start date Clear button`, async () => {
+            const c = await loadLocale(locale);
             await inLocale(
                 locale,
                 <>
@@ -71,6 +68,7 @@ describe("task / milestone panel leaves are not hard-coded English (MIP-1777)", 
         });
 
         it(`${locale}: the empty comment list`, async () => {
+            const c = await loadLocale(locale);
             await inLocale(
                 locale,
                 <TaskCommentList
@@ -85,6 +83,7 @@ describe("task / milestone panel leaves are not hard-coded English (MIP-1777)", 
                     taskComments={[]}
                     useCM={{} as never}
                     useTEM={{} as never}
+                    useTM={{} as never}
                     useUISM={{} as never}
                 />
             );

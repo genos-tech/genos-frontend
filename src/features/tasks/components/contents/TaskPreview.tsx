@@ -2872,9 +2872,6 @@ const MilestonePreviewInner = ({
                     myself={myself}
                     open={openTaskDiagram}
                     projectId={milestone.projectId}
-                    rootLabel={fmt(t.app.diagram.label, {
-                        title: milestone.title || t.app.diagram.milestoneFallback,
-                    })}
                     rootTaskId={milestone.taskId}
                     usePM={usePM}
                     useSM={useSM}
@@ -2883,6 +2880,9 @@ const MilestonePreviewInner = ({
                     // lift the graph above the host dialog or it opens
                     // invisibly behind it — see diagramZIndex.ts.
                     zIndex={hostZIndex != null ? hostZIndex + DIAGRAM_LIFT : undefined}
+                    rootLabel={fmt(t.app.diagram.label, {
+                        title: milestone.title || t.app.diagram.milestoneFallback,
+                    })}
                     onClose={() => setOpenTaskDiagram(false)}
                 />
             )}

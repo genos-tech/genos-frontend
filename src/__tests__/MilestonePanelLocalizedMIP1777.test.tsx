@@ -17,9 +17,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskPreview } from "../features/tasks/components/contents/TaskPreview";
 import { fmt, I18nProvider, loadLocale } from "../i18n";
-import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";
-import { ja } from "../i18n/locales/ja";
 
 type Pending = { url: string; resolve: (data: unknown) => void; reject: (e: unknown) => void };
 const network = vi.hoisted(() => ({
@@ -267,14 +265,11 @@ afterEach(() => {
     vi.clearAllMocks();
 });
 
-const CATALOGS = { en, ja, ar } as const;
-
 describe("the milestone panel header reads in the member's language (MIP-1777)", () => {
     for (const locale of ["ja", "ar"] as const) {
-        const c = CATALOGS[locale];
-
         it(`${locale}: an Open milestone shows the translated chip, Start button and total`, async () => {
             await mount(locale, "Open");
+            const c = await loadLocale(locale);
             expect(c.tasks.preview.startMilestone).not.toBe(en.tasks.preview.startMilestone);
             expect(
                 screen.getByRole("button", { name: c.tasks.preview.startMilestone })
@@ -291,6 +286,7 @@ describe("the milestone panel header reads in the member's language (MIP-1777)",
 
         it(`${locale}: a WIP milestone shows the translated Complete button`, async () => {
             await mount(locale, "WIP");
+            const c = await loadLocale(locale);
             expect(
                 screen.getByRole("button", { name: c.tasks.preview.completeMilestone })
             ).toBeInTheDocument();
@@ -315,6 +311,7 @@ describe("the milestone panel header reads in the member's language (MIP-1777)",
 
     it("a Pending milestone offers Start too", async () => {
         await mount("ja", "Pending");
+        const ja = await loadLocale("ja");
         expect(
             screen.getByRole("button", { name: ja.tasks.preview.startMilestone })
         ).toBeInTheDocument();
