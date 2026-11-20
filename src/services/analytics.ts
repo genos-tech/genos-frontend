@@ -13,6 +13,8 @@
  * later mirrors any in-app changes back into the wrapper via setEnabled.
  */
 
+import { sanitizeCaptureResult } from "./analyticsSanitize";
+
 const PREFERENCES_STORAGE_KEY = "genos-analytics-preferences:v1";
 
 type IdentityTraits = {
@@ -115,6 +117,8 @@ export const analytics = {
                     disable_session_recording: true,
                     opt_out_capturing_by_default: optedOutByDefault,
                     persistence: "localStorage+cookie",
+                    // What leaves the browser must match the privacy page (MIP-1741).
+                    before_send: sanitizeCaptureResult,
                 });
                 client = posthog;
                 const replay = queue;
