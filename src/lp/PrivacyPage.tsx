@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { CONTACT_EMAIL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { PROCESSORS } from "./privacyProcessors";
+import { PRIVACY_META } from "./seo/pageMeta";
+import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
  * `/privacy` — プライバシーポリシー (privacy policy).
@@ -267,6 +269,7 @@ const EN_SECTIONS: Section[] = [
 ];
 
 export default function PrivacyPage() {
+    useDocumentMeta(PRIVACY_META);
     return (
         <LpShell active={null}>
             {() => (

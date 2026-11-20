@@ -9,8 +9,9 @@ import { AppTooltip } from "../AppTooltip";
 import { ViaAppIcon } from "./ViaAppIcon";
 
 type ViaChipProps = {
-    /** What `viaSourceOfRow` / `viaSourceOfComment` decided. `name` is only
-     *  ever set for the owner; this component shows what it is given. */
+    /** What `viaSourceOfRow` / `viaSourceOfComment` / `viaSourceOfNoteVersion` /
+     *  `viaSourceOfNoteComment` decided. `name` is only ever set for the owner (a note
+     *  comment never has one); this component shows what it is given. */
     source: ViaSource;
     /** `sm` on a history row or comment header. */
     size?: "sm" | "md";
