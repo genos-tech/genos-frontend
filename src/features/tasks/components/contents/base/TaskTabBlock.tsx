@@ -325,6 +325,19 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const commentCount = taskComments.filter(
         (c) => !hiddenKeys.has(taskCommentKey(c.taskId, c.commentId))
     ).length;
+    // Keep the selected tab inside the strip when it scrolls. Done by hand, not
+    // with `scrollIntoView`, which would also scroll the panel up or down to the strip.
+    const tabListRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const list = tabListRef.current;
+        const tab = list?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+        if (!list || !tab) return;
+        const edge = list.getBoundingClientRect();
+        const box = tab.getBoundingClientRect();
+        if (box.left < edge.left) list.scrollLeft -= edge.left - box.left;
+        else if (box.right > edge.right) list.scrollLeft += box.right - edge.right;
+    }, [tabIndex]);
+
     const tabs = [
         {
             label: t.tasks.tabs.comments,
@@ -430,15 +443,24 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 onChange={(_, value) => setTabIndex(value as number)}
             >
                 <TabList
+                    ref={tabListRef}
                     sx={{
                         px: 2,
                         pt: 1.5,
                         pb: 0,
                         gap: 0.5,
+                        // A strip that does not fit scrolls sideways (the same as the
+                        // dashboard's tabs) instead of squeezing the tabs, which in
+                        // Japanese wrapped each label letter by letter (MIP-1768).
+                        flexWrap: "nowrap",
+                        overflowX: "auto",
                         borderBottom: "1px solid",
                         borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                         [`&& .${tabClasses.root}`]: {
-                            flex: "initial",
+                            // `0 0 auto`, not `initial` (`0 1 auto` lets a tab shrink below
+                            // its label); `nowrap` keeps a label whole.
+                            flex: "0 0 auto",
+                            whiteSpace: "nowrap",
                             bgcolor: "transparent",
                             borderRadius: "10px 10px 0 0",
                             px: 2,
