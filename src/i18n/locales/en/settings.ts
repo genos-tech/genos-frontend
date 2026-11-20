@@ -352,6 +352,7 @@ export const settings = {
                 "mcp.updated": "AI app access changed",
                 "member.added": "Member added",
                 "member.removed": "Member left",
+                "channel.deleted": "Group chat deleted",
                 "role.changed": "Role changed",
                 "owner.transferred": "Ownership transferred",
                 "invite.sent": "Invite sent",

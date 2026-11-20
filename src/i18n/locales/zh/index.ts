@@ -3631,6 +3631,7 @@ export const zh: DeepPartial<Messages> = {
                     "mcp.updated": "AI 应用的访问权限已更改",
                     "member.added": "成员已添加",
                     "member.removed": "成员已离开",
+                    "channel.deleted": "群聊已删除",
                     "role.changed": "角色已更改",
                     "owner.transferred": "所有权已转移",
                     "invite.sent": "已发送邀请",
