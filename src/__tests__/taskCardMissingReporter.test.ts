@@ -30,7 +30,7 @@ import { UserProps } from "../types/admin";
 import { TaskProps } from "../types/tasks";
 
 const put = vi.fn();
-const updateTaskCard = vi.fn(async (..._a: unknown[]) => undefined);
+const updateTaskCard = vi.fn(async () => undefined);
 const loadSpecificTask = vi.fn();
 
 vi.mock("../services/api", () => ({ authApi: () => ({ put }) }));
@@ -53,7 +53,7 @@ vi.mock("../features/tasks/services/loadSpecificTask", () => ({
     loadSpecificTask: (...a: unknown[]) => loadSpecificTask(...a),
 }));
 vi.mock("../services/channel/channelService", () => ({
-    channelService: { updateTaskCard: (...a: unknown[]) => updateTaskCard(...a) },
+    channelService: { updateTaskCard: (...a: unknown[]) => updateTaskCard(...(a as [])) },
 }));
 
 const myself = {
