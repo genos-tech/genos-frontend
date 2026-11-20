@@ -319,7 +319,6 @@ export const MentionMenuItems = (
                        user-profile modal underneath the menu. */
                     identity={<UserAvatar clickable={false} size={36} userId={user.userId} />}
                     label={user.userName}
-                    subtitle={user.userEmail}
                     trigger="@"
                     variant="person"
                     trailing={

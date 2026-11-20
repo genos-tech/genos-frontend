@@ -3,6 +3,7 @@ import { AutocompleteOption, ListItemContent, Stack, Typography } from "@mui/joy
 import Autocomplete from "@mui/joy/Autocomplete";
 
 import { useTranslation } from "../../i18n";
+import { personFilterOptions } from "../../utils/personLabel";
 import { sortMembersMyselfFirst } from "../editors/Mention";
 import { UserAvatar } from "./avatars/UserAvatar";
 
@@ -63,12 +64,13 @@ export const PersonPicker = ({ options, onPick, placeholder, myUserId, disabled 
     const label = (person: PickablePerson) => {
         const name =
             person.userId === myUserId ? `${person.userName} ${youSuffix}` : person.userName;
-        return person.userEmail ? `${name} - ${person.userEmail}` : name;
+        return name;
     };
 
     return (
         <Autocomplete
             disabled={disabled}
+            filterOptions={personFilterOptions}
             getOptionLabel={label}
             inputValue={inputValue}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}

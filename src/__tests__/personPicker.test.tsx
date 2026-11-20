@@ -63,6 +63,14 @@ describe("the person picker", () => {
         expect(screen.getByRole("option").textContent).toMatch(/Zoe/);
     });
 
+    it("does not show anybody's email, in the list or after a pick (MIP-1703)", async () => {
+        show(<PersonPicker options={people} placeholder="Add" onPick={() => {}} />);
+        await userEvent.click(screen.getByPlaceholderText("Add"));
+        for (const option of screen.getAllByRole("option")) {
+            expect(option.textContent).not.toMatch(/@acme\.test/);
+        }
+    });
+
     it("hands back the person picked and comes back empty for the next one", async () => {
         const onPick = vi.fn();
         show(<PersonPicker options={people} placeholder="Add" onPick={onPick} />);

@@ -411,17 +411,6 @@ export const ModalCreateGM: React.FC<Props> = ({
                                     >
                                         {member.userName}
                                     </Typography>
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{
-                                            color: g.text.tertiary,
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                        }}
-                                    >
-                                        {member.userEmail}
-                                    </Typography>
                                 </Box>
                             </Clickable>
                         );

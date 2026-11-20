@@ -177,11 +177,9 @@ const kindSubtitle = (t: Messages, c: AgentMentionCandidate): string => {
         case "message":
             return "";
         case "user":
-            // The editor's `@` row shows the person's email — the one
-            // reliable way to tell two same-named teammates apart. Falls
-            // back to the generic "Person" label when the source dataset
-            // carried no email.
-            return c.email || e.mentionPerson;
+            // The generic "Person" label, never the email (MIP-1703): the editor's `@`
+            // row no longer shows it either, so the two menus still read the same.
+            return e.mentionPerson;
         case "group":
             // Editor parity: the group's own description, with the generic
             // "Mention group" label as the fallback.

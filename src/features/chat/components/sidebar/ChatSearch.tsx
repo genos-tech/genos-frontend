@@ -9,6 +9,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { createFilterOptions } from "@mui/joy/Autocomplete";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -28,6 +29,11 @@ import { ChannelKind, type Channel } from "../../../../types/channel";
 import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
 import { personLabel } from "../../../../utils/personLabel";
 import { loadSearchList } from "../../services/loadChatSearchList";
+
+const filterSearchOptions = createFilterOptions<SearchListProps>({
+    stringify: (option) =>
+        option.type === "People" ? `${option.name} ${option.email ?? ""}` : option.name,
+});
 
 type ChatSearchProps = {
     myself: UserProps;
@@ -225,6 +231,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
             <Autocomplete
                 aria-label={t.chat.sidebar.searchAriaLabel}
                 endDecorator={loading ? <Spinner /> : null}
+                // Typing an email still finds a person, though it is not shown (MIP-1703).
+                filterOptions={filterSearchOptions}
                 groupBy={(option) => option.type}
                 isOptionEqualToValue={(option, value) => option.name === value.name}
                 loading={loading}
@@ -238,7 +246,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                               {
                                   userId: option.userId,
                                   userName: option.name,
-                                  userEmail: option.email,
                               },
                               myself.userId,
                               t.common.personPicker.youSuffix
@@ -321,18 +328,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                                   ? `🔒 ${option.name}`
                                                   : option.name}
                                         </Typography>
-                                        {option.type === "People" && (
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.45)"
-                                                        : "rgba(0,0,0,0.45)",
-                                                }}
-                                            >
-                                                {option.email}
-                                            </Typography>
-                                        )}
                                     </Box>
                                 </Stack>
                             </ListItemContent>

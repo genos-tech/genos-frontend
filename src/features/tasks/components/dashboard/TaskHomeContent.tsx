@@ -2121,17 +2121,6 @@ export const TaskHomeContent = ({
                                                                             {o.name}
                                                                         </bdi>
                                                                     </Typography>
-                                                                    {o.email && (
-                                                                        <Typography
-                                                                            level="body-xs"
-                                                                            sx={{
-                                                                                color: textMuted,
-                                                                            }}
-                                                                            noWrap
-                                                                        >
-                                                                            {o.email}
-                                                                        </Typography>
-                                                                    )}
                                                                 </ListItemContent>
                                                                 <Chip size="sm" variant="soft">
                                                                     {o.count}
@@ -2200,15 +2189,6 @@ export const TaskHomeContent = ({
                                                                 {selectedMember.name}
                                                             </bdi>
                                                         </Typography>
-                                                        {selectedMember.email && (
-                                                            <Typography
-                                                                level="body-xs"
-                                                                sx={{ color: textMuted }}
-                                                                noWrap
-                                                            >
-                                                                {selectedMember.email}
-                                                            </Typography>
-                                                        )}
                                                     </Box>
                                                 </Stack>
                                             ) : (
