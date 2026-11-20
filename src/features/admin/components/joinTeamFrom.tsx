@@ -9,9 +9,7 @@ import {
     Alert,
     Box,
     Button,
-    Checkbox,
     FormControl,
-    FormHelperText,
     FormLabel,
     Input,
     Link,
@@ -19,7 +17,6 @@ import {
     ListItemButton,
     ListItemDecorator,
     Stack,
-    Textarea,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -29,6 +26,7 @@ import { io, Socket } from "socket.io-client";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { JoinTeamFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
+import { useTeamSetupFields } from "../../../hooks/common/useTeamSetupFields";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import { useTranslation } from "../../../i18n";
 import { clearPrivateProfile, ensurePrivateProfile } from "../../../services/privateProfileStore";
@@ -41,13 +39,8 @@ import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
 import { acceptInvite, previewInvite } from "../services/teamInvite";
-import {
-    departmentsProblem,
-    MAX_DEPARTMENT_NAME_LENGTH,
-    MAX_DEPARTMENTS,
-    parseDepartments,
-} from "../utils/departments";
 import { LanguageSwitchButton } from "./LanguageSwitchButton";
+import { TeamSetupFields } from "./TeamSetupFields";
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
@@ -72,14 +65,10 @@ export const JoinTeam = () => {
     const [moveToTeamErrorMessage, setMoveToTeamErrorMessage] = useState<string | null>(null);
     const [searchTeamErrorMessage, setSearchTeamErrorMessage] = useState<string | null>(null);
     const [createTeamErrorMessage, setCreateTeamErrorMessage] = useState<string | null>(null);
-    // Starter workspace opt-in (readiness plan §3.3). Default ON: a new
-    // team benefits from landing in a populated app, and the seeded
-    // project's last task is "delete this project".
-    const [withStarter, setWithStarter] = useState(true);
-    // Departments to set up with the team (MIP-1691): one per line or comma-separated.
-    const [departmentsText, setDepartmentsText] = useState("");
-    const departments = parseDepartments(departmentsText);
-    const problem = departmentsProblem(departments);
+    // The sample data (readiness plan §3.3, default ON) and the departments (MIP-1691): the
+    // same two choices the in-app Create New Team modal makes (MIP-1709).
+    const setup = useTeamSetupFields();
+    const { withStarter, departments, problem } = setup;
     const { accessToken, setAccessToken } = useAuth();
     const [joinedTeams, setJoinedTeams] = useState<Team[]>([]);
     const { mode } = useColorScheme();
@@ -729,63 +718,26 @@ export const JoinTeam = () => {
                             }}
                         />
                     </FormControl>
-                    <FormControl error={problem !== null} sx={{ mt: 1.5 }}>
-                        <FormLabel
-                            sx={{
-                                color: styles.labelColor,
-                                fontSize: "0.8rem",
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.05em",
-                                mb: 0.75,
-                            }}
-                        >
-                            {t.admin.joinTeam.departmentsLabel}
-                        </FormLabel>
-                        <Textarea
-                            maxRows={6}
-                            minRows={2}
-                            name="departments"
-                            placeholder={t.admin.joinTeam.departmentsPlaceholder}
-                            value={departmentsText}
-                            sx={{
-                                ...inputStyle,
-                                "&:focus-within": {
-                                    borderColor: palette.inputFocusBorder,
-                                    boxShadow: palette.inputFocusShadow,
-                                },
-                            }}
-                            onChange={(event) => setDepartmentsText(event.target.value)}
-                        />
-                        <FormHelperText
-                            sx={{ color: problem ? undefined : styles.subtitleColor, mt: 0.5 }}
-                        >
-                            {problem === "tooMany"
-                                ? t.admin.joinTeam.departmentsTooMany.replace(
-                                      "{max}",
-                                      String(MAX_DEPARTMENTS)
-                                  )
-                                : problem === "tooLong"
-                                  ? t.admin.joinTeam.departmentsTooLong.replace(
-                                        "{max}",
-                                        String(MAX_DEPARTMENT_NAME_LENGTH)
-                                    )
-                                  : t.admin.joinTeam.departmentsHint}
-                        </FormHelperText>
-                    </FormControl>
-                    <Checkbox
-                        checked={withStarter}
-                        label={t.admin.joinTeam.starterOptIn}
-                        size="sm"
-                        sx={{ mt: 1.5, color: styles.labelColor }}
-                        onChange={(e) => setWithStarter(e.target.checked)}
+                    <TeamSetupFields
+                        checkboxColor={styles.labelColor}
+                        fields={setup}
+                        hintColor={styles.subtitleColor}
+                        labelSx={{
+                            color: styles.labelColor,
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                            mb: 0.75,
+                        }}
+                        textareaSx={{
+                            ...inputStyle,
+                            "&:focus-within": {
+                                borderColor: palette.inputFocusBorder,
+                                boxShadow: palette.inputFocusShadow,
+                            },
+                        }}
                     />
-                    <Typography
-                        level="body-xs"
-                        sx={{ color: styles.subtitleColor, mt: 0.5, ml: 3.5 }}
-                    >
-                        {t.admin.joinTeam.starterOptInHint}
-                    </Typography>
                     <Button
                         disabled={problem !== null}
                         startDecorator={<AddCircleRoundedIcon />}

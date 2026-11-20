@@ -3,8 +3,10 @@ import { Alert, Button, Input } from "@mui/joy";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
+import { useTeamSetupFields } from "../../../../hooks/common/useTeamSetupFields";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { TeamSetupFields } from "../TeamSetupFields";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -28,13 +30,15 @@ export const ModalCreateTeam: React.FC<Props> = ({
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [teamName, setTeamName] = useState("");
+    // The sample data and the departments, as on the first-run page (MIP-1709).
+    const setup = useTeamSetupFields();
     // One create at a time (MIP-1189, the same family as MIP-1184): a second Enter or click
     // while the request runs used to create a second team. The ref answers at once, the
     // state shows it and keeps the dialog from being dismissed meanwhile.
     const creatingRef = useRef(false);
     const [isCreating, setIsCreating] = useState(false);
     const handleCreateTeam = () => {
-        if (teamName.trim() && !creatingRef.current) {
+        if (teamName.trim() && setup.problem === null && !creatingRef.current) {
             void createTeam();
         }
     };
@@ -52,6 +56,10 @@ export const ModalCreateTeam: React.FC<Props> = ({
                     team_name: teamName,
                     team_email: `${teamName}@genos.tech`,
                     owner_id: myself.userId,
+                    // As `createTeam` sends them: the server wants the literal `true` to seed,
+                    // and a department list only when some are named.
+                    ...(setup.withStarter ? { with_starter: true } : {}),
+                    ...(setup.departments.length > 0 ? { departments: setup.departments } : {}),
                 }),
             });
 
@@ -59,7 +67,12 @@ export const ModalCreateTeam: React.FC<Props> = ({
 
             if (!createTeamResponse.ok) {
                 console.error(createTeamData);
-                throw new Error(createTeamData.hint || t.admin.createTeamModal.creationFailed);
+                // The form checks the list first, so this is the server's backstop.
+                throw new Error(
+                    createTeamData.code === "invalid_departments"
+                        ? t.admin.auth.errors.invalidDepartments
+                        : createTeamData.hint || t.admin.createTeamModal.creationFailed
+                );
             } else {
                 setMyself({ ...myself, teamId: createTeamData.teamId });
                 setOpenCreateTeam(false);
@@ -93,7 +106,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
                         {t.admin.createTeamModal.cancel}
                     </Button>
                     <Button
-                        disabled={!teamName.trim()}
+                        disabled={!teamName.trim() || setup.problem !== null}
                         loading={isCreating}
                         onClick={handleCreateTeam}
                     >
@@ -113,6 +126,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
                     }
                 }}
             />
+            <TeamSetupFields fields={setup} />
             {errorMessage && errorMessage !== "" && (
                 <Alert color="danger" sx={{ mt: 1.5 }}>
                     {errorMessage}
