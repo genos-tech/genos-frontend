@@ -7,7 +7,7 @@ import { APP_URL } from "../kit/links";
  *
  * Deliberately a plain module with no React and no copy imports: the sitemap
  * plugin (scripts/lpSeo.ts) runs in the build's Node process, and a route added
- * to `main.tsx` without being added here fails `seoRoutes.test.ts`, so the
+ * to `main.tsx` without being added here fails `lpSeoRoutes.test.ts`, so the
  * sitemap cannot quietly fall behind the router.
  */
 
@@ -56,16 +56,17 @@ const BLOG_ARTICLE = /^\/blog\/[^/]+$/;
 /** The route a path belongs to; a blog article is an English-only page. */
 export const routeFor = (path: string): LpRoute | undefined => {
     const clean = path.length > 1 ? path.replace(/\/+$/, "") : path;
-    const fixed = LP_ROUTES.find((r) => r.path === clean);
+    // React Router matches case-insensitively, so `/Plans` is the plans page.
+    const fixed = LP_ROUTES.find((r) => r.path === clean.toLowerCase());
     if (fixed) return fixed;
-    if (BLOG_ARTICLE.test(clean)) return { path: clean, langs: "en-only" };
+    if (BLOG_ARTICLE.test(clean.toLowerCase())) return { path: clean, langs: "en-only" };
     return undefined;
 };
 
 /**
  * Paths a crawler should not spend time on: the signed-in app and the auth
  * handoffs. `/` is not listed: it is the sign-in entry and redirects there.
- * (robots.txt in `public/` mirrors this list; `seoRoutes.test.ts` checks it.)
+ * (robots.txt in `public/` mirrors this list; `lpSeoRoutes.test.ts` checks it.)
  */
 export const ROBOTS_DISALLOW: readonly string[] = [
     "/workspace/",

@@ -84,6 +84,20 @@ describe("useDocumentMeta", () => {
         expect(href('link[rel="canonical"]')).toBe(`${SITE_ORIGIN}/home`);
     });
 
+    it("canonicalises a trailing slash or different case to the page's own URL", () => {
+        for (const path of ["/plans/", "/Plans"]) {
+            document.head.innerHTML = "<title>Genos</title>";
+            const { unmount } = renderHook(() =>
+                useDocumentMeta({ title: "T", description: "D", lang: "en", path })
+            );
+            expect(href('link[rel="canonical"]'), path).toBe(`${SITE_ORIGIN}/plans`);
+            expect(href('link[rel="alternate"][hreflang="ja"]'), path).toBe(
+                `${SITE_ORIGIN}/plans?lang=ja`
+            );
+            unmount();
+        }
+    });
+
     it("leaves <html lang> alone on a bilingual page", () => {
         document.documentElement.lang = "fr";
         renderHook(() => useDocumentMeta({ title: "T", description: "D", path: "/privacy" }));
@@ -172,7 +186,9 @@ describe.each(PAGES)("$path", (c) => {
             await renderAt(c);
             expect(document.head.querySelector('link[rel="alternate"]')).toBeNull();
             expect(href('link[rel="canonical"]')).toBe(pageUrl(c.path));
-            if (c.langs === "en-only") expect(document.documentElement.lang).toBe("en");
+            // the shell may still be in Japanese here, so <html lang> stays the app's (set
+            // to "en" before the render by beforeEach), not forced by the page
+            expect(document.documentElement.lang).toBe("en");
         });
     }
 });

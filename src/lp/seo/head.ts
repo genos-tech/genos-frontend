@@ -38,9 +38,11 @@ export const pageUrl = (path: string, lang: SeoLang = "en"): string =>
  */
 export const buildHeadTags = (spec: HeadSpec): HeadTag[] => {
     const route = routeFor(spec.path);
+    // The route's own path, so `/plans/` and `/Plans` canonicalise to `/plans`.
+    const path = route?.path ?? spec.path;
     const toggles = route?.langs === "toggle";
     const lang = toggles ? (spec.lang ?? "en") : undefined;
-    const url = pageUrl(spec.path, lang);
+    const url = pageUrl(path, lang);
     const image = `${SITE_ORIGIN}${SHARE_IMAGE_PATH}`;
     const m = (attr: "name" | "property", key: string, content: string): HeadTag => ({
         kind: "meta",
@@ -72,21 +74,19 @@ export const buildHeadTags = (spec: HeadSpec): HeadTag[] => {
     }
     if (toggles) {
         tags.push(
-            { kind: "link", rel: "alternate", hreflang: "en", href: pageUrl(spec.path, "en") },
-            { kind: "link", rel: "alternate", hreflang: "ja", href: pageUrl(spec.path, "ja") },
-            { kind: "link", rel: "alternate", hreflang: "x-default", href: pageUrl(spec.path) }
+            { kind: "link", rel: "alternate", hreflang: "en", href: pageUrl(path, "en") },
+            { kind: "link", rel: "alternate", hreflang: "ja", href: pageUrl(path, "ja") },
+            { kind: "link", rel: "alternate", hreflang: "x-default", href: pageUrl(path) }
         );
     }
     return tags;
 };
 
 /**
- * The `<html lang>` a page should set: only where the page is wholly in one
- * language. A bilingual legal page leaves the app's own value alone.
+ * The `<html lang>` a page should set: only where the whole page, shell
+ * included, follows the ja/en toggle. English-only and bilingual pages leave
+ * the app's own value alone: their shell (header, footer) may still be shown
+ * in Japanese, and the English text is already marked `lang="en"` in place.
  */
-export const htmlLangFor = (path: string, lang?: SeoLang): SeoLang | undefined => {
-    const route = routeFor(path);
-    if (route?.langs === "en-only") return "en";
-    if (route?.langs === "toggle") return lang ?? "en";
-    return undefined;
-};
+export const htmlLangFor = (path: string, lang?: SeoLang): SeoLang | undefined =>
+    routeFor(path)?.langs === "toggle" ? (lang ?? "en") : undefined;
