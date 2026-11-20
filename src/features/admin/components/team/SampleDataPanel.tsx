@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 import DeleteSweepRoundedIcon from "@mui/icons-material/DeleteSweepRounded";
 import { Alert, Box, Button, FormControl, FormLabel, Typography } from "@mui/joy";
 
+import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -162,17 +163,17 @@ export const SampleDataPanel = ({ isOwner, teamId, zIndex }: Props) => {
         if (!preview) return null;
         if (!preview.recorded) {
             return (
-                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                    {s.notRecorded}
-                </Typography>
+                <EmptyState body={s.notRecorded} data-empty="sample-data-not-recorded" size="sm" />
             );
         }
         return (
             <Box sx={{ maxHeight: "45vh", overflowY: "auto", pr: 0.5 }}>
                 {preview.remove.length === 0 ? (
-                    <Typography level="body-sm" sx={{ color: g.text.secondary, mb: 1 }}>
-                        {s.nothingToRemove}
-                    </Typography>
+                    <EmptyState
+                        body={s.nothingToRemove}
+                        data-empty="sample-data-nothing-to-remove"
+                        size="sm"
+                    />
                 ) : (
                     <>
                         <Typography level="title-md" sx={{ mb: 0.5 }}>
