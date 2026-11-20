@@ -21,9 +21,9 @@ const read = (rel: string) => readFileSync(resolve(root, rel), "utf8");
 const publicPathsInRouter = (): string[] => {
     const src = read("src/main.tsx");
     const re =
-        /element=\{publicPage\(\w+\)\}\s+path="([^"]+)"|element=\{publicSegmentPage\("\w+"\)\}\s+path="([^"]+)"/g;
+        /element=\{publicPage\(\w+\)\}\s+path="([^"]+)"|element=\{publicSegmentPage\("\w+"\)\}\s+path="([^"]+)"|element=\{<RootGate>\{publicPage\(\w+\)\}<\/RootGate>\}\s+path="([^"]+)"/g;
     const out: string[] = [];
-    for (const m of src.matchAll(re)) out.push(m[1] ?? m[2]);
+    for (const m of src.matchAll(re)) out.push(m[1] ?? m[2] ?? m[3]);
     return out;
 };
 
@@ -55,7 +55,7 @@ describe("sitemap.xml", () => {
 
     it("lists every public page and every article, once, on the real origin", () => {
         const expected = [
-            ...LP_ROUTES.flatMap((r) =>
+            ...LP_ROUTES.filter((r) => !r.canonicalPath).flatMap((r) =>
                 r.langs === "toggle"
                     ? [pageUrl(r.path, "en"), pageUrl(r.path, "ja")]
                     : [`${SITE_ORIGIN}${r.path}`]
@@ -74,12 +74,12 @@ describe("sitemap.xml", () => {
                 expect(path.startsWith(blocked.replace(/\/$/, "")), loc).toBe(false);
             }
         }
-        expect(locs).not.toContain(`${SITE_ORIGIN}/`);
+        // `/` IS listed now: it is the home page for signed-out visitors (MIP-1747).
     });
 
     it("gives each Japanese/English page the full alternate set, itself included", () => {
         const blocks = xml.split("<url>").slice(1);
-        const toggle = LP_ROUTES.filter((r) => r.langs === "toggle");
+        const toggle = LP_ROUTES.filter((r) => r.langs === "toggle" && !r.canonicalPath);
         for (const r of toggle) {
             const pair = blocks.filter(
                 (b) =>
@@ -198,5 +198,51 @@ describe("index.html (what a crawler without JavaScript receives)", () => {
         ]) {
             expect(text, forbidden).not.toContain(forbidden);
         }
+    });
+});
+
+describe("the root address (MIP-1747)", () => {
+    const spec = {
+        title: "t",
+        description: "d",
+        ogTitle: "t",
+        ogDescription: "d",
+    };
+
+    it("is the home page: `/` and its alias `/home` both canonicalise to `/`", () => {
+        for (const path of ["/", "/home"]) {
+            const tags = buildHeadTags({ ...spec, path, lang: "en" });
+            expect(tags).toContainEqual({
+                kind: "link",
+                rel: "canonical",
+                href: `${SITE_ORIGIN}/`,
+            });
+            expect(tags).toContainEqual({
+                kind: "link",
+                rel: "alternate",
+                hreflang: "ja",
+                href: `${SITE_ORIGIN}/?lang=ja`,
+            });
+        }
+        const ja = buildHeadTags({ ...spec, path: "/home", lang: "ja" });
+        expect(ja).toContainEqual({
+            kind: "link",
+            rel: "canonical",
+            href: `${SITE_ORIGIN}/?lang=ja`,
+        });
+    });
+
+    it("is listed in the sitemap once (in both languages) and the alias is not", () => {
+        const xml = buildSitemapXml(articles);
+        const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+        expect(locs).toContain(`${SITE_ORIGIN}/`);
+        expect(locs).toContain(`${SITE_ORIGIN}/?lang=ja`);
+        expect(locs.some((l) => l.includes("/home"))).toBe(false);
+    });
+
+    it("is not blocked in robots.txt", () => {
+        const robots = read("public/robots.txt");
+        expect(robots).not.toMatch(/^Disallow:\s*\/\s*$/m);
+        expect(ROBOTS_DISALLOW).not.toContain("/");
     });
 });

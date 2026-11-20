@@ -95,7 +95,8 @@ export const useSignOut = () => {
             }
 
             setAccessToken(null);
-            navigate("/");
+            // The sign-in form, as before: `/` is the home page for signed-out visitors now.
+            navigate("/signin");
         } catch (error) {
             console.error("Error logging out:", error);
         }

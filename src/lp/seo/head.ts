@@ -39,7 +39,7 @@ export const pageUrl = (path: string, lang: SeoLang = "en"): string =>
 export const buildHeadTags = (spec: HeadSpec): HeadTag[] => {
     const route = routeFor(spec.path);
     // The route's own path, so `/plans/` and `/Plans` canonicalise to `/plans`.
-    const path = route?.path ?? spec.path;
+    const path = route?.canonicalPath ?? route?.path ?? spec.path;
     const toggles = route?.langs === "toggle";
     const lang = toggles ? (spec.lang ?? "en") : undefined;
     const url = pageUrl(path, lang);

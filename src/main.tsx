@@ -18,6 +18,7 @@ import { ResetPasswordForm } from "./features/admin/components/ResetPasswordForm
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
 import { VerifyEmailHandler } from "./features/admin/components/VerifyEmailHandler";
+import { RootGate } from "./features/admin/RootGate";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { analytics } from "./services/analytics";
 import { registerServiceWorkerOnBoot } from "./services/notifications/pushSubscription";
@@ -109,6 +110,7 @@ const tree = (
         <Routes>
             {/* Public company / marketing page. Fully isolated from the auth
                 stack: no AuthProvider, no guards, no redirects. */}
+            <Route element={<RootGate>{publicPage(GenosLandingPage)}</RootGate>} path="/" />
             <Route element={publicPage(GenosLandingPage)} path="/home" />
 
             {/* Audience-specific landing pages linked from /home's route
@@ -175,7 +177,6 @@ const tree = (
                         Genos home if already logged in; /jointeam only
                         when the user has no team yet) */}
                     <Route element={<GuestGuard />}>
-                        <Route element={<SignInForm />} path="/" />
                         <Route element={<SignUpForm />} path="/signup" />
                         <Route element={<SignInForm />} path="/signin" />
                         <Route element={<ResetPasswordForm />} path="/reset-password" />

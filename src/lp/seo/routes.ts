@@ -32,11 +32,20 @@ export type LangMode = "toggle" | "en-only" | "bilingual";
 export interface LpRoute {
     path: string;
     langs: LangMode;
+    /**
+     * The address a crawler should treat as THE page when this route is an alias of
+     * another (`/home` shows the same page as `/`). The canonical, og:url and hreflang
+     * name that address; the sitemap lists it once, not the alias.
+     */
+    canonicalPath?: string;
 }
 
 /** Every public, indexable page that is a fixed path. `/blog/:slug` is added from the manifest. */
 export const LP_ROUTES: readonly LpRoute[] = [
-    { path: "/home", langs: "toggle" },
+    // The home page lives at `/` for signed-out visitors (a signed-in visit goes to the app).
+    // `/home` stays for existing links and points at `/`.
+    { path: "/", langs: "toggle" },
+    { path: "/home", langs: "toggle", canonicalPath: "/" },
     { path: "/for-research", langs: "toggle" },
     { path: "/for-teams", langs: "toggle" },
     { path: "/for-projects", langs: "toggle" },
@@ -65,7 +74,7 @@ export const routeFor = (path: string): LpRoute | undefined => {
 
 /**
  * Paths a crawler should not spend time on: the signed-in app and the auth
- * handoffs. `/` is not listed: it is the sign-in entry and redirects there.
+ * handoffs. `/` is not listed: it is the home page for signed-out visitors.
  * (robots.txt in `public/` mirrors this list; `lpSeoRoutes.test.ts` checks it.)
  */
 export const ROBOTS_DISALLOW: readonly string[] = [
