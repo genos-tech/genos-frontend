@@ -7,6 +7,7 @@
 // plugin disagrees with it on react-vs-@mui ordering; prettier wins.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
@@ -64,6 +65,7 @@ import { setGMMemberRole } from "../../services/setGMMemberRole";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
 import { ExternalSharesPanel } from "./ExternalSharesPanel";
 import { ModalAddMembers } from "./ModalAddMembers";
+import { ModalDeleteChat, type DeleteChatMode } from "./ModalDeleteChat";
 
 // GM profile-image upload uses the v3 host root (v3ApiBaseURL); the
 // legacy VITE_API_BASE_URL (`…/api/v2`) was double-prefixing the v3 path.
@@ -152,6 +154,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isGMOwner = !!gmProfile && myself.userId === gmProfile.ownerUserId;
     const canShowLeave = !!gmProfile && !isGMOwner;
+    // The owner cannot leave, so deleting is how an owner retires a group (MIP-1705). The server
+    // refuses anyone else; the button is only offered to the owner.
+    const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
 
     // Owner OR editor may manage: rename, image, remove members, and set
     // roles. Only the owner may transfer ownership.
@@ -303,6 +308,19 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             await channelService.removeMember(gmChat.chatId, ChannelKind.GM, myself.userId);
         } catch (error) {
             console.error("[ModalGMProfile] leave GM failed:", error);
+            return false;
+        }
+        setOpenModalGMProfile(false);
+        return true;
+    };
+
+    const handleDeleteGM = async (mode: DeleteChatMode) => {
+        // `deleteChannel` re-reads the chat list afterwards, which evicts the chat here; the
+        // other members are told by the server's membership notice (see `channelService`).
+        try {
+            await channelService.deleteChannel(gmChat.chatId, mode);
+        } catch (error) {
+            console.error("[ModalGMProfile] delete GM failed:", error);
             return false;
         }
         setOpenModalGMProfile(false);
@@ -1075,6 +1093,36 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                         />
                                     )}
 
+                                    {isGMOwner && (
+                                        <Box
+                                            sx={{
+                                                mt: 2,
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                            }}
+                                        >
+                                            <Button
+                                                color="danger"
+                                                variant="outlined"
+                                                startDecorator={
+                                                    <DeleteOutlineRoundedIcon fontSize="small" />
+                                                }
+                                                sx={{
+                                                    borderRadius: g.radius.sm,
+                                                    borderColor: g.danger.border,
+                                                    color: g.danger.text,
+                                                    "&:hover": {
+                                                        background: g.danger.subtle,
+                                                        borderColor: g.danger.border,
+                                                    },
+                                                }}
+                                                onClick={() => setOpenDeleteConfirm(true)}
+                                            >
+                                                {t.common.deleteChat.button}
+                                            </Button>
+                                        </Box>
+                                    )}
+
                                     {canShowLeave && (
                                         <Box
                                             sx={{
@@ -1118,6 +1166,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 title={t.common.leaveConfirm.gmTitle}
                 onCancel={() => setOpenLeaveConfirm(false)}
                 onConfirm={handleLeaveGM}
+            />
+            <ModalDeleteChat
+                chatName={liveChat.chatName ?? gmChat.chatName ?? ""}
+                open={openDeleteConfirm}
+                onCancel={() => setOpenDeleteConfirm(false)}
+                onConfirm={handleDeleteGM}
             />
             <ModalTransferOwner
                 candidates={transferCandidates}

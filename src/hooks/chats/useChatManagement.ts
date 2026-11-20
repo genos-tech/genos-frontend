@@ -753,8 +753,22 @@ export const useChatManagement = (
         // setState below bail without a render.
         const adapt = createCachedMessagesAdapter();
         const myUserId = myself.userId || "";
+        // The pane closes when its chat DISAPPEARS from the store: deleted by its owner
+        // (MIP-1705), or this person was removed from it. Only after it was seen there, so a
+        // chat that has not hydrated yet is never closed by mistake. Without this the pane kept
+        // a deleted chat's header over an empty body: the store dropped the chat, and this
+        // bridge simply stopped patching it.
+        let seenInStore = false;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
+            if (snapshot.channels.has(channelId)) {
+                seenInStore = true;
+            } else if (seenInStore) {
+                setCurrentMainChat((prev) =>
+                    prev && prev.chatId === channelId ? undefined : prev
+                );
+                return;
+            }
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
             if (messagesSlice === lastSliceRef && snapshot.flagsVersion === lastFlagsVersion)
                 return;
@@ -812,8 +826,18 @@ export const useChatManagement = (
         let lastFlagsVersion = -1;
         const adapt = createCachedMessagesAdapter();
         const myUserId = myself.userId || "";
+        // Same as the main pane's bridge above: a chat that leaves the store closes its pane.
+        let seenInStore = false;
         const apply = () => {
             const snapshot = channelService.getSnapshot();
+            if (snapshot.channels.has(channelId)) {
+                seenInStore = true;
+            } else if (seenInStore) {
+                setCurrentSubChat((prev) =>
+                    prev && prev.chatId === channelId ? undefined : prev
+                );
+                return;
+            }
             const messagesSlice = snapshot.messagesByChannel.get(channelId);
             if (messagesSlice === lastSliceRef && snapshot.flagsVersion === lastFlagsVersion)
                 return;

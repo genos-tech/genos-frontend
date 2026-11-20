@@ -253,6 +253,24 @@ export const es: DeepPartial<Messages> = {
             gmDescription:
                 "Ya no verás los mensajes de este grupo. Puedes volver a unirte más tarde si es público.",
         },
+        // Deleting a group chat as its owner (MIP-1705).
+        deleteChat: {
+            button: "Eliminar grupo",
+            title: "¿Eliminar este grupo?",
+            description:
+                "El grupo desaparece para todos sus miembros. Las notas escritas en este chat se conservan en ambos casos.",
+            softLabel: "Eliminar",
+            softHint:
+                "Oculta el grupo para todos. No se borra nada, así que aún se puede recuperar.",
+            hardLabel: "Eliminar definitivamente",
+            hardHint:
+                "Borra todos los mensajes, respuestas, reacciones, fijados y archivos de este grupo. No se puede deshacer.",
+            confirmSoft: "Eliminar",
+            confirmHard: "Eliminar definitivamente",
+            typeNameLabel: "Escribe el nombre del grupo para confirmar",
+            cancel: "Cancelar",
+            genericError: "No se pudo eliminar el grupo. Inténtalo de nuevo.",
+        },
         externalShares: {
             title: "Equipos con acceso",
             explainer:

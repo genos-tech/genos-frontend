@@ -2160,6 +2160,27 @@ export class ChannelService {
         }) as Promise<void>;
     }
 
+    /**
+     * Delete a group chat as its owner (MIP-1705).
+     *
+     * `soft` hides it from everyone and keeps every row; `hard` erases the messages, files and
+     * the chat. The server refuses anyone but the owner (403) and anything but a group chat
+     * (400). Afterwards the chat list is refreshed, which drops the chat from this device: the
+     * server no longer lists it, and `reconcileChannelList` evicts what it does not list. Other
+     * members learn the same way, through the membership notice the server pushes.
+     */
+    async deleteChannel(channelId: string, mode: "soft" | "hard" = "soft"): Promise<void> {
+        try {
+            await this.api().delete(`/api/v3/channels/${channelId}/`, { params: { mode } });
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+        // `refreshChannels`, not `listChannels`: only the refresh reconciles, and the reconcile is
+        // what evicts what the server no longer lists. Best-effort and never throws: the chat is
+        // gone either way, and a failed refresh is reconciled by the next sync.
+        await this.refreshChannels();
+    }
+
     /** Raw resync emit. Used by `triggerResync` and exposed for tests/
      *  dev tools that want to fire a resync with explicit channel ids
      *  + a custom `since`. Most callers should use `triggerResync()`. */
