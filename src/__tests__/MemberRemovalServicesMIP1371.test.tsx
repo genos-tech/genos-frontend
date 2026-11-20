@@ -18,9 +18,11 @@ import { listTeamInvites, revokeTeamInvite } from "../services/teamIntegrations"
 
 vi.mock("../services/api", () => ({ authApi: vi.fn(), nonAuthApi: vi.fn() }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
-const listChannels = vi.fn().mockResolvedValue([]);
+// `refreshChannels` is the call that ingests the list and EVICTS the chats it no longer names;
+// `listChannels` only returns it. The notice must use the first.
+const refreshChannels = vi.fn().mockResolvedValue(undefined);
 vi.mock("../services/channel/channelService", () => ({
-    channelService: { listChannels: (...a: unknown[]) => listChannels(...a) },
+    channelService: { refreshChannels: (...a: unknown[]) => refreshChannels(...a) },
 }));
 
 const get = vi.fn();
@@ -30,7 +32,7 @@ beforeEach(() => {
     get.mockReset();
     post.mockReset();
     del.mockReset();
-    listChannels.mockClear();
+    refreshChannels.mockClear();
     (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ get, post, delete: del });
 });
 
@@ -262,7 +264,7 @@ describe("the live notice", () => {
         window.addEventListener("genos:membership-removed", heard);
         handleMembershipRemoved(NOTICE);
         window.removeEventListener("genos:membership-removed", heard);
-        expect(listChannels).toHaveBeenCalledTimes(1);
+        expect(refreshChannels).toHaveBeenCalledTimes(1);
         expect(heard).toHaveBeenCalledTimes(1);
         expect((heard.mock.calls[0][0] as CustomEvent).detail).toEqual(NOTICE);
         // Still in the team: nothing is forgotten.
@@ -280,18 +282,18 @@ describe("the live notice", () => {
         Object.defineProperty(window, "location", { configurable: true, value: original });
         expect(assign).toHaveBeenCalledWith("/workspace");
         expect(localStorage.getItem("teamId")).toBeNull();
-        expect(listChannels).not.toHaveBeenCalled();
+        expect(refreshChannels).not.toHaveBeenCalled();
     });
 
     it("being removed from ANOTHER team leaves the one you are in alone", () => {
         handleMembershipRemoved({ ...NOTICE, scope: "team", teamId: "t-other" });
         expect(localStorage.getItem("teamId")).toBe("t-1");
-        expect(listChannels).toHaveBeenCalledTimes(1);
+        expect(refreshChannels).toHaveBeenCalledTimes(1);
     });
 
     it("a malformed notice does nothing", () => {
         handleMembershipRemoved(null as never);
-        expect(listChannels).not.toHaveBeenCalled();
+        expect(refreshChannels).not.toHaveBeenCalled();
     });
 });
 

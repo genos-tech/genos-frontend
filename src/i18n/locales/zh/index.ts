@@ -1657,6 +1657,21 @@ export const zh: DeepPartial<Messages> = {
             gmTitle: "退群？",
             gmDescription: "你将不再看到该群组的消息。如果是公开的，你可以稍后重新加入。",
         },
+        // Deleting a group chat as its owner (MIP-1705).
+        deleteChat: {
+            button: "删除群组",
+            title: "删除此群组？",
+            description: "群组将对其中所有人消失。无论选择哪种方式，在此聊天中写的笔记都会保留。",
+            softLabel: "删除",
+            softHint: "对所有人隐藏该群组。不会擦除任何内容，因此仍可恢复。",
+            hardLabel: "永久删除",
+            hardHint: "擦除此群组中的所有消息、回复、表情回应、置顶和文件。此操作无法撤销。",
+            confirmSoft: "删除",
+            confirmHard: "永久删除",
+            typeNameLabel: "输入群组名称以确认",
+            cancel: "取消",
+            genericError: "无法删除群组。请再试一次。",
+        },
         addMembers: {
             openButton: "添加成员",
             headingProject: "向 {projectName} 添加成员",

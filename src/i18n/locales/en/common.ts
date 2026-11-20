@@ -71,6 +71,24 @@ export const common = {
         gmDescription:
             "You'll no longer see this group's messages. You can re-join later if it's public.",
     },
+    // Deleting a group chat as its owner (MIP-1705).
+    deleteChat: {
+        button: "Delete group",
+        title: "Delete this group?",
+        description:
+            "The group disappears for everyone in it. Notes written in this chat are kept, either way.",
+        softLabel: "Delete",
+        softHint:
+            "Hides the group from everyone. Nothing is erased, so it can still be recovered.",
+        hardLabel: "Delete permanently",
+        hardHint:
+            "Erases every message, reply, reaction, pin and file in this group. This cannot be undone.",
+        confirmSoft: "Delete",
+        confirmHard: "Delete permanently",
+        typeNameLabel: "Type the group's name to confirm",
+        cancel: "Cancel",
+        genericError: "Couldn't delete the group. Please try again.",
+    },
     addMembers: {
         openButton: "Add members",
         headingProject: "Add members to {projectName}",

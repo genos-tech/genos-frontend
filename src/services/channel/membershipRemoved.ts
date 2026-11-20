@@ -17,10 +17,10 @@ export type MembershipRemovedNotice = {
  *  - removed from the team they are working in: the whole workspace is gone, so forget the
  *    saved team and load the app again, which picks another team (or the onboarding when
  *    there is none). Anything less would leave a screen of data they can no longer fetch.
- *  - anything else: the chat list is re-read from the server (`listChannels` evicts what the
- *    server no longer lists), and `genos:membership-removed` is dispatched for screens that
- *    keep their own lists. The project list refreshes on the team change feed, which the
- *    removal bumps.
+ *  - anything else: the chat list is refreshed from the server (`refreshChannels` evicts what
+ *    the server no longer lists; `listChannels` alone only returns it), and
+ *    `genos:membership-removed` is dispatched for screens that keep their own lists. The
+ *    project list refreshes on the team change feed, which the removal bumps.
  */
 export const handleMembershipRemoved = (notice: MembershipRemovedNotice): void => {
     if (!notice || typeof notice !== "object") return;
@@ -29,8 +29,9 @@ export const handleMembershipRemoved = (notice: MembershipRemovedNotice): void =
         window.location.assign("/workspace");
         return;
     }
-    void channelService.listChannels().catch(() => {
-        /* the next sync reconciles it */
-    });
+    // `refreshChannels`, not `listChannels`: `listChannels` only RETURNS the list. The refresh
+    // is what ingests it and evicts the chats it no longer names; without it the removed chat
+    // stayed in the sidebar until the next reload or reconnect.
+    void channelService.refreshChannels();
     window.dispatchEvent(new CustomEvent("genos:membership-removed", { detail: notice }));
 };

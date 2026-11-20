@@ -1721,6 +1721,23 @@ export const ja: DeepPartial<Messages> = {
             gmDescription:
                 "このグループのメッセージは表示されなくなります。公開されている場合は、後で再参加できます。",
         },
+        // Deleting a group chat as its owner (MIP-1705).
+        deleteChat: {
+            button: "グループを削除",
+            title: "このグループを削除しますか？",
+            description:
+                "メンバー全員からグループが見えなくなります。このチャットに書かれたノートは、どちらの方法でも残ります。",
+            softLabel: "削除",
+            softHint: "全員からグループを非表示にします。何も消去されないため、後で復元できます。",
+            hardLabel: "完全に削除",
+            hardHint:
+                "このグループのメッセージ、返信、リアクション、ピン、ファイルをすべて消去します。元に戻せません。",
+            confirmSoft: "削除",
+            confirmHard: "完全に削除",
+            typeNameLabel: "確認のため、グループ名を入力してください",
+            cancel: "キャンセル",
+            genericError: "グループを削除できませんでした。もう一度お試しください。",
+        },
         addMembers: {
             openButton: "メンバーを追加",
             headingProject: "{projectName} にメンバーを追加",
