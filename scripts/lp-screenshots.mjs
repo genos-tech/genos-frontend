@@ -2,7 +2,7 @@
 /**
  * Retake the product screenshots the marketing pages use (MIP-1232).
  *
- *   node scripts/lp-screenshots.mjs [--base http://localhost:3000] [--lang ja,en] [--only tasks,note]
+ *   node scripts/lp-screenshots.mjs [--base http://localhost:3000] [--lang ja,en] [--only tasks,note] [--out DIR]
  *
  * It signs into a FRESH demo workspace through the app's own "Try the demo" button
  * (the api seeds an isolated, throwaway team: see genos-api `demo_seeder` /
@@ -11,7 +11,8 @@
  * names, emails or messages can end up on the public site.
  *
  * Needs a running stack whose api seeds the demo (local only: it POSTs a demo
- * sign-in, which writes rows; never aim it at production), plus:
+ * sign-in, which writes rows; never aim it at production), ideally on a database with no
+ * leftover demo teams (the team's name gets a number once the pool of six is used up), plus:
  *   npm i --no-save playwright-core      (not a project dependency)
  *   CHROME_PATH=/path/to/chrome-or-chromium  (or a Playwright browser cache)
  *   cwebp on PATH                         (brew install webp)
@@ -33,7 +34,8 @@ const opt = (name, fallback) => {
 const BASE = opt("base", "http://localhost:3000");
 const LANGS = opt("lang", "ja,en").split(",");
 const ONLY = opt("only", "") ? new Set(opt("only", "").split(",")) : null;
-const OUT = new URL("../public/lp/shots/", import.meta.url).pathname;
+// `--out <dir>` writes somewhere else, so a try-out never overwrites the pictures on the site.
+const OUT = opt("out", new URL("../public/lp/shots/", import.meta.url).pathname);
 
 const DESKTOP = { width: 1440, height: 900 };
 const PHONE = { width: 390, height: 844 };
@@ -72,7 +74,7 @@ const UI = {
         project: "Website Redesign",
         note: /Design system inventory/,
         general: /^general/,
-        task: /Migrate marketing pages/,
+        task: /Investigate slow homepage load/,
         ask: "What's blocking the homepage rebuild?",
         write: "Add a to-do for tomorrow: review the hero illustration variants with Carol",
         report: "What to do today",
@@ -91,7 +93,7 @@ const UI = {
         project: "Web サイトリニューアル",
         note: /Design system|design system|デザインシステム/,
         general: /^全体/,
-        task: /マーケティングページ.*移行/,
+        task: /ホームページ読み込み遅延/,
         ask: "ホームページの作り直しを止めているものは何ですか？",
         write: "明日のTo-Doに追加：Carolとヒーロー画像のバリエーションをレビューする",
         report: "今日やること",
@@ -127,11 +129,21 @@ async function signInToDemo(browser, lang, viewport, dark = false) {
     await page.waitForURL((u) => !/signin/.test(String(u)), { timeout: 180000 });
     await page.addStyleTag({ content: HIDE });
     await settle(page, 6000);
+    // The api gives a visitor the first unused name of a pool of six; when none is free it adds a
+    // number ("Product & Design 5"), which then shows in the chat header of the picture.
+    if (session?.team_name && /\s\d+$/.test(session.team_name)) {
+        console.warn(
+            `  ! The demo team is called "${session.team_name}": the pool of names ran out, so a number ` +
+                "will show in the chats. Take the pictures on a database with no leftover demo teams."
+        );
+    }
     return { ctx, page, session };
 }
 
 // The desktop rail: its labels also appear elsewhere on screen, so click where the items are
-// (fixed at 1440x900).
+// (fixed at 1440x900). The rail is app chrome, so a bigger demo does not move it; but the
+// notification banner does, which is why HIDE hides it, and the chat page's group tab (142, 77)
+// below is the same kind of fixed point. Both were checked against the company demo (MIP-1710).
 const RAIL = { genos: 125, inbox: 197, chat: 268, tasks: 340, notes: 411, todo: 573 };
 const rail = async (page, lang, key) => {
     await page.keyboard.press("Escape");
@@ -215,20 +227,45 @@ const askGenos = async (page, lang, question, { expect, attempts = 5 }) => {
     );
 };
 
+/**
+ * Pick the Tasks sidebar's project by its row, not by its name text (MIP-1710). A department chip
+ * now sits in the row and, in Japanese, pushes the name out of its clipped box: the text is found
+ * but "not visible", so a click on it times out. The row is a button that contains the name.
+ */
+const openProject = async (page, lang) => {
+    const rows = page.getByRole("button").filter({ hasText: UI[lang].project });
+    const found = await rows.count();
+    if (found !== 1) {
+        throw new Error(`Expected one sidebar row for "${UI[lang].project}", found ${found}.`);
+    }
+    await rows.first().click({ position: { x: 24, y: 8 } }); // left of the chip, on the row
+};
+
+/** Open the next collapsed row of the task table (the milestone first, then its first parent). */
+const expandNextRow = async (page) => {
+    const row = page.locator('.task-table-row[aria-expanded="false"]').first();
+    // The chevron is found by its icon: its label ("Expand", "拡大する") is translated.
+    await row
+        .locator("button")
+        .filter({ has: page.locator('svg[data-testid="KeyboardArrowRightRoundedIcon"]') })
+        .click();
+};
+
 /** Scenes: each stages the page and returns; the runner takes the picture. */
 const SCENES = {
     tasks: async (page, lang) => {
         tasksStaged = true;
         await rail(page, lang, "tasks");
-        await page.getByText(UI[lang].project, { exact: true }).first().click();
+        await openProject(page, lang);
         await settle(page, 3500);
         // Open the milestone, then its first parent, so the table shows the tree
-        // (statuses, tags, effort, sub-tasks) instead of two collapsed lines. The
-        // chevrons have no accessible name on `main`, so they are clicked where they are.
-        await page.mouse.click(370, 183);
+        // (statuses, tags, effort, sub-tasks) instead of two collapsed lines.
+        await expandNextRow(page);
         await settle(page, 1500);
-        await page.mouse.click(370, 223);
+        await expandNextRow(page);
         await settle(page, 1500);
+        const shown = await page.locator(".task-table-row").count();
+        if (shown < 5) throw new Error(`The task tree did not open: ${shown} rows are showing.`);
         await page.mouse.move(900, 760);
         await settle(page, 800);
     },
@@ -236,9 +273,20 @@ const SCENES = {
         await ensureTasks(page, lang);
         await page.getByText(UI[lang].table, { exact: true }).first().click();
         await settle(page, 2500);
-        // The title is click-to-edit; the open icon beside the id opens the task.
-        await page.mouse.click(462, 224);
+        // The title is click-to-edit; the open icon beside the id opens the task. The row is
+        // found by its title, so it does not matter where the table puts it.
+        const row = page.locator(".task-table-row").filter({ hasText: UI[lang].task });
+        const found = await row.count();
+        if (found !== 1) throw new Error(`Expected one row for ${UI[lang].task}, found ${found}.`);
+        await row
+            .locator("button")
+            .filter({ has: page.locator('svg[data-testid="OpenInNewIcon"]') })
+            .click();
         await settle(page, 4500);
+        // The task's own panel is showing: its title is in the page twice (row and panel).
+        if ((await page.getByText(UI[lang].task).count()) < 2) {
+            throw new Error(`The task panel did not open for ${UI[lang].task}.`);
+        }
     },
     board: async (page, lang) => {
         await ensureTasks(page, lang);
