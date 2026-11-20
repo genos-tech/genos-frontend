@@ -9,24 +9,34 @@
  * `primary` param is for.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useAuth } from "../context/AuthContext";
 import { OAuthSuccessHandler } from "../features/admin/components/OAuthSuccessHandler";
+import { rememberOAuthProvider } from "../features/integrations/oauthProvider";
 
 vi.mock("../context/AuthContext", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../context/AuthContext")>()),
     useAuth: vi.fn(),
 }));
 
+const LandedAt = ({ name }: { name: string }) => {
+    const { search } = useLocation();
+    return <div data-testid="landed">{`${name}${search}`}</div>;
+};
+
 const renderAt = (search: string) => {
     window.history.replaceState({}, "", `/oauth/success${search}`);
     render(
         <CssVarsProvider>
             <MemoryRouter initialEntries={["/oauth/success"]}>
-                <OAuthSuccessHandler />
+                <Routes>
+                    <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
+                    <Route element={<LandedAt name="signup" />} path="/signup" />
+                    <Route element={<LandedAt name="signin" />} path="/signin" />
+                </Routes>
             </MemoryRouter>
         </CssVarsProvider>
     );
@@ -35,6 +45,7 @@ const renderAt = (search: string) => {
 describe("OAuth sign-in failure", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        sessionStorage.clear();
         (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({ setAccessToken: vi.fn() });
     });
 
@@ -76,8 +87,28 @@ describe("OAuth sign-in failure", () => {
         // No other method exists to point at, and the generic text is not shown.
         expect(screen.queryByText(/instead/i)).toBeNull();
         expect(screen.queryByText("OAuth flow failed.")).toBeNull();
-        // The way out is the sign-in page, where sign-up is reachable.
+        // Sign-up is one click away (MIP-1773), and sign-in stays available.
+        expect(screen.getByRole("button", { name: "Go to sign up" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Back to sign in" })).toBeInTheDocument();
+    });
+
+    it("sends email_not_verified to plain sign-up, not the provider that just failed (MIP-1773)", async () => {
+        rememberOAuthProvider("google");
+        renderAt("?error=email_not_verified");
+        fireEvent.click(await screen.findByRole("button", { name: "Go to sign up" }));
+        expect((await screen.findByTestId("landed")).textContent).toBe("signup");
+    });
+
+    it("keeps Back to sign in working next to it (MIP-1773)", async () => {
+        renderAt("?error=email_not_verified");
+        fireEvent.click(await screen.findByRole("button", { name: "Back to sign in" }));
+        expect((await screen.findByTestId("landed")).textContent).toBe("signin");
+    });
+
+    it("offers no sign-up button for a refusal that is not about the address (MIP-1773)", async () => {
+        renderAt("?error=consent_denied");
+        await screen.findByRole("button", { name: "Back to sign in" });
+        expect(screen.queryByRole("button", { name: "Go to sign up" })).toBeNull();
     });
 
     it("does not say whether the address is registered", async () => {
