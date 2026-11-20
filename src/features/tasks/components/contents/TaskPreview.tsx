@@ -84,6 +84,11 @@ import { Milestone } from "../../sprint-milestone/types";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { shouldFallBackToTable } from "../../utils/mainPanelVisibility";
 import {
+    milestoneAssigneePatch,
+    milestoneAssigneesToUserProps,
+    milestoneFirstAssignee,
+} from "../../utils/milestoneAssignee";
+import {
     milestoneReporterPatch,
     milestoneReporterToUserProps,
 } from "../../utils/milestoneReporter";
@@ -1159,26 +1164,6 @@ type MilestonePreviewInnerProps = {
     useNM: NoteManagementState;
 };
 
-const milestoneAssigneesToUserProps = (m: Milestone, teamMembers: UserProps[]): UserProps[] => {
-    return m.assignees
-        .map<UserProps | null>((a) => {
-            if (!a.userId) return null;
-            const found = teamMembers.find((u) => String(u.userId) === String(a.userId));
-            if (found) return found;
-            return {
-                userId: String(a.userId),
-                userName: a.username || a.email || "",
-                userEmail: a.email || "",
-                avatarImgPath: a.profileImageUrl || "",
-                teamId: "",
-                teamName: "",
-                tsLastSeen: "",
-                tsJoined: "",
-            } as unknown as UserProps;
-        })
-        .filter((u): u is UserProps => u != null);
-};
-
 // Milestone collaborators ride the payload in the same embedded-user
 // shape as assignees; resolve them to UserProps the same way (prefer a
 // live team-member hit so avatar/status are populated, else synthesise).
@@ -1425,7 +1410,7 @@ const MilestonePreviewInner = ({
     // the per-save sync this defers).
     useEffect(() => () => flushPendingMilestoneSyncRef.current(), []);
     const [taskContentLike, setTaskContentLike] = useState<TaskProps>(() =>
-        milestoneToTaskProps(milestone ?? ({} as Milestone), milestoneProject, myself)
+        milestoneToTaskProps(milestone ?? ({} as Milestone), milestoneProject)
     );
     // Opens the React Flow task-graph modal anchored on this milestone.
     const [openTaskDiagram, setOpenTaskDiagram] = useState(false);
@@ -1496,8 +1481,7 @@ const MilestonePreviewInner = ({
     );
     useEffect(() => {
         if (!milestone) return;
-        const firstAssignee =
-            milestoneAssigneesToUserProps(milestone, useTEM.teamMembers)[0] ?? myself;
+        const firstAssignee = milestoneFirstAssignee(milestone, useTEM.teamMembers);
         setAssignee(firstAssignee);
         const resolvedReporter = milestoneReporterToUserProps(milestone, useTEM.teamMembers);
         setReporter(resolvedReporter);
@@ -1505,7 +1489,6 @@ const MilestonePreviewInner = ({
             milestoneToTaskProps(
                 milestone,
                 milestoneProject,
-                myself,
                 backingTask?.attachments ?? [],
                 firstAssignee,
                 resolvedReporter,
@@ -1929,12 +1912,9 @@ const MilestonePreviewInner = ({
         }
         // Single-assignee: persist as a single-element list against the
         // milestone's multi-assignee API. An empty list clears it.
-        const nextAssigneeId = next.assignee?.userId ? String(next.assignee.userId) : null;
-        const currentAssigneeId = milestone.assignees?.[0]?.userId
-            ? String(milestone.assignees[0].userId)
-            : null;
-        if (nextAssigneeId !== currentAssigneeId) {
-            patch.assigneeIds = nextAssigneeId ? [nextAssigneeId] : [];
+        const assigneeChange = milestoneAssigneePatch(next, milestone);
+        if (assigneeChange !== undefined) {
+            patch.assigneeIds = assigneeChange;
         }
         // Reporter diff (single-user FK on the milestone). Mirrors the
         // assignee diff above so a swap from picker -> server is sent
