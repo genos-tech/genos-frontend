@@ -226,9 +226,6 @@ export const MentionGroupEditor = ({
                                 <Typography level="body-md" sx={{ fontWeight: 500 }} noWrap>
                                     {row.user?.userName || row.userId}
                                 </Typography>
-                                <Typography level="body-sm" sx={{ opacity: 0.65 }} noWrap>
-                                    {row.user?.userEmail || ""}
-                                </Typography>
                             </Box>
                             <AppTooltip size="sm" title={t.settings.mentionGroups.removeMember}>
                                 <IconButton
@@ -298,9 +295,6 @@ export const MentionGroupEditor = ({
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                 <Typography level="body-md" sx={{ fontWeight: 500 }} noWrap>
                                     {u.userName}
-                                </Typography>
-                                <Typography level="body-sm" sx={{ opacity: 0.65 }} noWrap>
-                                    {u.userEmail}
                                 </Typography>
                             </Box>
                             <CheckRoundedIcon sx={{ fontSize: 18, color: "primary.500" }} />

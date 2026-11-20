@@ -351,17 +351,6 @@ export const ModalNoteSharing = ({
                                             >
                                                 {u.userName}
                                             </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: g.text.tertiary,
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {u.userEmail}
-                                            </Typography>
                                         </Box>
                                         <Button
                                             loading={savingUserId === u.userId}

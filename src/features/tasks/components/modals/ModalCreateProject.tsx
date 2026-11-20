@@ -463,17 +463,6 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     >
                                         <bdi className="g-bidi-island">{member.userName}</bdi>
                                     </Typography>
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{
-                                            color: g.text.tertiary,
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                        }}
-                                    >
-                                        {member.userEmail}
-                                    </Typography>
                                 </Box>
                             </Clickable>
                         );

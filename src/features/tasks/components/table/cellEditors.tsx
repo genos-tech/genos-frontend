@@ -493,7 +493,6 @@ export const MemberAutocomplete = ({
     open,
     blurOnSelect,
     clearOnBlur,
-    showEmail,
     minWidth,
 }: {
     members: UserProps[];
@@ -506,8 +505,6 @@ export const MemberAutocomplete = ({
     open?: boolean;
     blurOnSelect?: boolean;
     clearOnBlur?: boolean;
-    /** A second line with the address under each name (the row's own editor has it). */
-    showEmail?: boolean;
     minWidth?: number;
 }) => (
     <Autocomplete
@@ -515,7 +512,7 @@ export const MemberAutocomplete = ({
         blurOnSelect={blurOnSelect}
         clearOnBlur={clearOnBlur}
         disabled={disabled}
-        getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
+        getOptionLabel={(option) => option.userName}
         isOptionEqualToValue={(option, selected) => option.userId === selected?.userId}
         options={members}
         placeholder={placeholder}
@@ -547,19 +544,6 @@ export const MemberAutocomplete = ({
                     >
                         {option.userName}
                     </Typography>
-                    {showEmail ? (
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                color: g.text.tertiary,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
-                            {option.userEmail}
-                        </Typography>
-                    ) : null}
                 </Box>
             </AutocompleteOption>
         )}

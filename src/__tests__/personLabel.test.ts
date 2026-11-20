@@ -8,40 +8,38 @@
 
 import { describe, expect, it } from "vitest";
 
-import { personLabel } from "../utils/personLabel";
+import { personFilterOptions, personLabel } from "../utils/personLabel";
 
 const YOU = "(You)";
 const ME = "u-me";
 
 describe("personLabel", () => {
-    it("badges me, by id, and shows the email after a dash", () => {
-        expect(personLabel({ userId: ME, userName: "Ann", userEmail: "a@x.io" }, ME, YOU)).toBe(
-            "Ann (You) - a@x.io"
-        );
+    it("badges me, by id, and never shows the email (MIP-1703)", () => {
+        expect(
+            personLabel({ userId: ME, userName: "Ann", userEmail: "a@x.io" } as never, ME, YOU)
+        ).toBe("Ann (You)");
     });
 
-    it("leaves a teammate unbadged", () => {
-        expect(personLabel({ userId: "u-2", userName: "Bob", userEmail: "b@x.io" }, ME, YOU)).toBe(
-            "Bob - b@x.io"
-        );
+    it("leaves a teammate unbadged and without an address", () => {
+        expect(
+            personLabel({ userId: "u-2", userName: "Bob", userEmail: "b@x.io" } as never, ME, YOU)
+        ).toBe("Bob");
     });
 
     it("does not badge a teammate whose email equals mine", () => {
         // Two accounts can share a display address (a shared inbox, an alias).
         expect(
-            personLabel({ userId: "u-2", userName: "Bob", userEmail: "same@x.io" }, ME, YOU)
-        ).toBe("Bob - same@x.io");
+            personLabel(
+                { userId: "u-2", userName: "Bob", userEmail: "same@x.io" } as never,
+                ME,
+                YOU
+            )
+        ).toBe("Bob");
     });
 
     it("badges me even when my email is blank", () => {
-        expect(personLabel({ userId: ME, userName: "Ann", userEmail: "" }, ME, YOU)).toBe(
+        expect(personLabel({ userId: ME, userName: "Ann", userEmail: "" } as never, ME, YOU)).toBe(
             "Ann (You)"
-        );
-    });
-
-    it("does not badge a teammate with a blank email just because mine is blank too", () => {
-        expect(personLabel({ userId: "u-2", userName: "Bob", userEmail: "" }, ME, YOU)).toBe(
-            "Bob"
         );
     });
 
@@ -51,13 +49,32 @@ describe("personLabel", () => {
             expect(personLabel({ userId: "", userName: "Ghost" }, mine, YOU)).toBe("Ghost");
         }
     });
+});
 
-    it("shows no dangling dash when there is no email", () => {
-        for (const userEmail of [undefined, null, ""]) {
-            expect(personLabel({ userId: "u-2", userName: "Bob", userEmail }, ME, YOU)).toBe(
-                "Bob"
-            );
-        }
+describe("personFilterOptions: typing still finds a person by email, though it is not shown", () => {
+    const people = [
+        { userName: "Zoe", userEmail: "zoe@acme.test" },
+        { userName: "Ann", userEmail: "ann@acme.test" },
+        { userName: "Bob", userEmail: null },
+        { userName: "Cy" },
+    ];
+    const run = (inputValue: string) =>
+        personFilterOptions(people, { inputValue, getOptionLabel: (p) => p.userName }).map(
+            (p) => p.userName
+        );
+
+    it("matches the name", () => {
+        expect(run("ann")).toEqual(["Ann"]);
+    });
+
+    it("matches the email", () => {
+        expect(run("zoe@")).toEqual(["Zoe"]);
+        expect(run("acme")).toEqual(["Zoe", "Ann"]);
+    });
+
+    it("does not invent a match from a missing email", () => {
+        expect(run("null")).toEqual([]);
+        expect(run("undefined")).toEqual([]);
     });
 });
 

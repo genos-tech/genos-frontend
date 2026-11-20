@@ -199,7 +199,10 @@ describe("collaborators already on the task who the rule would not admit", () =>
         await open();
         await waitFor(() => expect(get).toHaveBeenCalled());
         expect(onChange).not.toHaveBeenCalled();
-        expect(screen.getByText("Bob")).toBeInTheDocument();
+        // The chip, not the list's row for him: the row used to read "Bob - <email>", so a
+        // plain `getByText("Bob")` only ever found the chip (MIP-1703 took the address off).
+        const chips = screen.getAllByText("Bob").filter((el) => !el.closest('[role="option"]'));
+        expect(chips).toHaveLength(1);
     });
 });
 

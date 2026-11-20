@@ -11,7 +11,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { useProjectMemberIds } from "../../../../hooks/tasks/useProjectMemberIds";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { personLabel } from "../../../../utils/personLabel";
+import { personFilterOptions, personLabel } from "../../../../utils/personLabel";
 import {
     allowedCollaboratorIds,
     collaboratorOptions,
@@ -127,6 +127,7 @@ export const MultiMemberPicker = ({
     return (
         <Autocomplete
             disabled={disabled}
+            filterOptions={personFilterOptions}
             getOptionLabel={optionLabel}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
             loading={loading}

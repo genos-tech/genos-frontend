@@ -13,7 +13,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
-import { personLabel } from "../../../../utils/personLabel";
+import { personFilterOptions, personLabel } from "../../../../utils/personLabel";
 
 type ACTeamUsersProps = {
     myself: UserProps;
@@ -86,6 +86,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
     return (
         <Autocomplete
             key={taskContent.id}
+            filterOptions={personFilterOptions}
             getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
             options={sortedMembers}

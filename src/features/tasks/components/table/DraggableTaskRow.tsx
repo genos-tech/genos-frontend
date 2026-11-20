@@ -507,7 +507,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         autoFocus
                         blurOnSelect
                         open
-                        showEmail
                         onChange={(member) => {
                             if (member) {
                                 void commitCustomField(def.fieldId, String(member.userId));
@@ -969,7 +968,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             autoFocus
                             blurOnSelect
                             open
-                            showEmail
                             onChange={(member) => {
                                 if (member) {
                                     handleSelectChange("assigneeId", member.userId);
