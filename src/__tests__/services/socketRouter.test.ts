@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
 import { requestInboxResync } from "../../features/inbox/inboxResyncEvent";
+import { CHANNEL_APPEARED_DEBOUNCE_MS } from "../../services/channel/channelAppeared";
 import { channelService } from "../../services/channel/channelService";
 import { handleMembershipRemoved } from "../../services/channel/membershipRemoved";
 import { registerSocketRouter, V3_NAMESPACE } from "../../services/channel/socketRouter";
@@ -138,6 +139,7 @@ describe("registerSocketRouter", () => {
             "channel.member_added",
             "channel.member_removed",
             "membership.removed",
+            "channel.appeared",
             "resync.batch",
             "pin.added",
             "pin.removed",
@@ -152,7 +154,7 @@ describe("registerSocketRouter", () => {
         ];
         expect([...env.handlers.keys()].sort()).toEqual([...expected].sort());
         expect(env.socket.on).toHaveBeenCalledTimes(expected.length);
-        expect(expected).toHaveLength(23);
+        expect(expected).toHaveLength(24);
     });
 
     // ---- inbox.changed (MIP-1627) -----------------------------------------
@@ -320,6 +322,32 @@ describe("registerSocketRouter", () => {
         expect(handleMembershipRemoved).toHaveBeenCalledWith(notice);
     });
 
+    it("channel.appeared (MIP-1719) hands the notice to the appeared handler, which re-reads the list", () => {
+        vi.useFakeTimers();
+        try {
+            const refresh = vi.spyOn(channelService, "refreshChannels").mockResolvedValue();
+            env.fire("channel.appeared", { teamId: "t1", channelId: "c1", kind: ChannelKind.GM });
+            expect(refresh).not.toHaveBeenCalled(); // debounced
+            vi.advanceTimersByTime(CHANNEL_APPEARED_DEBOUNCE_MS);
+            expect(refresh).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("teardown cancels a channel.appeared read that has not started", () => {
+        vi.useFakeTimers();
+        try {
+            const refresh = vi.spyOn(channelService, "refreshChannels").mockResolvedValue();
+            env.fire("channel.appeared", { teamId: "t1", channelId: "c1", kind: ChannelKind.GM });
+            teardown();
+            vi.advanceTimersByTime(CHANNEL_APPEARED_DEBOUNCE_MS * 4);
+            expect(refresh).not.toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it("channel.member_removed routes to handleChannelMemberRemoved with the full event", () => {
         const e = { channelId: "c1", channelKind: ChannelKind.GM, userId: "u-bob" };
         env.fire("channel.member_removed", e);
@@ -451,8 +479,8 @@ describe("registerSocketRouter", () => {
         // second registration's teardown only removes its own handlers.
         const env2 = makeFakeSocket();
         const teardown2 = registerSocketRouter(env2.socket);
-        expect(env2.socket.on).toHaveBeenCalledTimes(23);
+        expect(env2.socket.on).toHaveBeenCalledTimes(24);
         teardown2();
-        expect(env2.socket.off).toHaveBeenCalledTimes(23);
+        expect(env2.socket.off).toHaveBeenCalledTimes(24);
     });
 });
