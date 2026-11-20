@@ -262,7 +262,6 @@ describe("the milestone preview's working copy, end to end", () => {
         milestoneToTaskProps(
             m,
             null,
-            viewer,
             [],
             person("u-ann", "Ann"),
             milestoneReporterToUserProps(m, [viewer, bo]),

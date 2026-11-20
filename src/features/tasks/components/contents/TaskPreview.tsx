@@ -86,6 +86,7 @@ import { shouldFallBackToTable } from "../../utils/mainPanelVisibility";
 import {
     milestoneAssigneePatch,
     milestoneAssigneesToUserProps,
+    milestoneFirstAssignee,
 } from "../../utils/milestoneAssignee";
 import {
     milestoneReporterPatch,
@@ -1409,7 +1410,7 @@ const MilestonePreviewInner = ({
     // the per-save sync this defers).
     useEffect(() => () => flushPendingMilestoneSyncRef.current(), []);
     const [taskContentLike, setTaskContentLike] = useState<TaskProps>(() =>
-        milestoneToTaskProps(milestone ?? ({} as Milestone), milestoneProject, myself)
+        milestoneToTaskProps(milestone ?? ({} as Milestone), milestoneProject)
     );
     // Opens the React Flow task-graph modal anchored on this milestone.
     const [openTaskDiagram, setOpenTaskDiagram] = useState(false);
@@ -1480,8 +1481,7 @@ const MilestonePreviewInner = ({
     );
     useEffect(() => {
         if (!milestone) return;
-        const firstAssignee =
-            milestoneAssigneesToUserProps(milestone, useTEM.teamMembers)[0] ?? myself;
+        const firstAssignee = milestoneFirstAssignee(milestone, useTEM.teamMembers);
         setAssignee(firstAssignee);
         const resolvedReporter = milestoneReporterToUserProps(milestone, useTEM.teamMembers);
         setReporter(resolvedReporter);
@@ -1489,7 +1489,6 @@ const MilestonePreviewInner = ({
             milestoneToTaskProps(
                 milestone,
                 milestoneProject,
-                myself,
                 backingTask?.attachments ?? [],
                 firstAssignee,
                 resolvedReporter,

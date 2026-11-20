@@ -16,9 +16,8 @@ import { effortLevels, priorities } from "./taskMeta";
 export const milestoneToTaskProps = (
     m: Milestone,
     project: ProjectManagementState["currentProject"],
-    fallbackUser: UserProps,
     attachments: TaskProps["attachments"] = [],
-    assignee?: UserProps,
+    assignee?: UserProps | null,
     reporter?: UserProps | null,
     collaborators: UserProps[] = []
 ): TaskProps => {
@@ -36,9 +35,9 @@ export const milestoneToTaskProps = (
         project: project,
         title: m.title,
         body: (m.description as PartialBlock[]) ?? [],
-        assignee: assignee ?? fallbackUser,
-        // No reporter stays none (MIP-1730): the viewer in its place was PATCHed in by the
-        // first edit. The assignee fallback below is a separate question (see its task).
+        // A missing assignee / reporter stays missing (MIP-1731 / MIP-1730): the viewer in
+        // its place was PATCHed in by the first edit.
+        assignee: assignee ?? null,
         reporter: reporter ?? null,
         collaborators,
         // Thread origin off the backing task (serialized on the

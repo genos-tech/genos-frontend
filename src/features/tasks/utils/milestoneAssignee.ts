@@ -26,6 +26,12 @@ export const milestoneAssigneesToUserProps = (
         .filter((u): u is UserProps => u != null);
 };
 
+// The one assignee the preview shows (single-assignee UX over the multi-assignee API). A
+// milestone nobody is assigned to has none: `null`, never the person looking at it, which made
+// the preview show them as the assignee and made any edit PATCH them in (MIP-1731).
+export const milestoneFirstAssignee = (m: Milestone, teamMembers: UserProps[]): UserProps | null =>
+    milestoneAssigneesToUserProps(m, teamMembers)[0] ?? null;
+
 // The assignee part of a milestone PATCH: what the preview's working copy says
 // against what the milestone stores. Single-assignee UX over the multi-assignee
 // API, so a change is a one-element list and a cleared picker is `[]`.
