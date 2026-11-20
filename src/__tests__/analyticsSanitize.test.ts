@@ -137,6 +137,70 @@ describe("sanitizeCaptureResult", () => {
     });
 });
 
+describe("campaign values (MIP-1778)", () => {
+    it("lets only the five utm_* values of the carrier through, and drops the library's own", () => {
+        const out = clean({
+            properties: {
+                utm_source: "library",
+                utm_term: "library",
+                $initial_utm_source: "library",
+                gclid: "g",
+                genos_utm: {
+                    utm_source: "newsletter",
+                    utm_medium: "email",
+                    utm_campaign: "launch 2026",
+                    utm_content: "a.b-c_d~e+f",
+                    utm_term: "ai",
+                    utm_id: "9",
+                    gclid: "g",
+                },
+            },
+        });
+        expect(out.properties).toEqual({
+            utm_source: "newsletter",
+            utm_medium: "email",
+            utm_campaign: "launch 2026",
+            utm_content: "a.b-c_d~e+f",
+            utm_term: "ai",
+        });
+    });
+
+    it("drops the session-entry copies of campaign values too (seen in a real browser)", () => {
+        const out = clean({
+            properties: {
+                $session_entry_utm_source: "<raw from the url>",
+                $session_entry_utm_campaign: "launch",
+                $session_entry_gclid: "g",
+                $session_entry_pathname: "/home",
+            },
+        });
+        expect(out.properties).toEqual({ $session_entry_pathname: "/home" });
+    });
+
+    it("checks each value: at most 100 characters, plain characters only, strings only", () => {
+        const out = clean({
+            properties: {
+                genos_utm: {
+                    utm_source: "a".repeat(100),
+                    utm_medium: "a".repeat(101),
+                    utm_campaign: "<script>alert(1)</script>",
+                    utm_content: "https://x.example/?a=1",
+                    utm_term: 42,
+                },
+            },
+        });
+        expect(out.properties).toEqual({ utm_source: "a".repeat(100) });
+    });
+
+    it("never sends the carrier itself, and ignores a carrier that is not an object", () => {
+        expect(clean({ properties: { genos_utm: "x" } }).properties).toEqual({});
+        expect(clean({ properties: { genos_utm: null } }).properties).toEqual({});
+        // Only `properties` is unpacked: a carrier in the person properties is just dropped.
+        const out = clean({ $set: { genos_utm: { utm_source: "x" } } });
+        expect(out.$set).toEqual({});
+    });
+});
+
 describe("analytics.init", () => {
     beforeEach(() => {
         vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");

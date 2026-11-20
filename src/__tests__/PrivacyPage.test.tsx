@@ -99,11 +99,24 @@ describe("PrivacyPage", () => {
         expect(en).toMatch(/PostHog: Product analytics\. Your user ID, team ID, role/);
         expect(ja).toContain("チーム名は送信しません");
         expect(en).toContain("The team name is not sent");
-        // The data is tied to the user id, so the page must not call it anonymous.
+        // The data is tied to the user id once signed in, so the page must not call it anonymous.
         expect(en).toMatch(/PostHog: Product analytics[^]*?\(not anonymous\)/);
-        // The opt-out path matches the Settings UI (General → Privacy & analytics).
-        expect(ja).toContain("「設定 → 一般 → プライバシーと分析」");
-        expect(en).toContain("Settings → General → Privacy & analytics");
+        expect(ja).toContain("クリックの自動取得とセッション録画は行っていません");
+        expect(en).toContain("Click auto-capture and session recording are not used");
+    });
+
+    // The row below is the wording Ken's counsel approved on 2026-11-21 (note 178 of MIP-1266),
+    // applied as drafted: do not edit it here without counsel (and flag the change in the PR).
+    // It says the opt-out is "Settings > General > Privacy & analytics" (with ">", as approved)
+    // or the link at the bottom of the marketing pages, and it does not repeat "on by default".
+    it("carries the counsel-approved PostHog row (marketing funnel, MIP-1778)", () => {
+        const posthog = PROCESSORS.find((p) => p.name === "PostHog");
+        expect(posthog?.en).toBe(
+            'Product analytics. Your user ID, team ID, role, the path of the pages you view (without query strings), demo started / completed / failed events, which button you click on our marketing pages (for example "Try the demo"), the moment you sign up, the language of the page, and the marketing source of your visit (the utm_source, utm_medium, utm_campaign, utm_content and utm_term values in the link you arrived by, and the website you came from, domain only) are sent. Before you sign in, this is tied to a random browser ID, and once you sign in it is tied to your user ID (not anonymous). The team name is not sent. Click auto-capture and session recording are not used. You can stop it for that browser in Settings > General > Privacy & analytics, or from the link at the bottom of our marketing pages.'
+        );
+        expect(posthog?.ja).toBe(
+            "プロダクト分析。ユーザー ID、チーム ID、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベント、マーケティングページでクリックしたボタン（例:「デモを試す」）、サインアップ、ページの言語、およびアクセス元（アクセスしたリンクに含まれる utm_source・utm_medium・utm_campaign・utm_content・utm_term の値と、参照元ウェブサイトのドメインのみ）が送信されます。サインイン前はランダムなブラウザ ID に、サインイン後はユーザー ID に紐づきます（匿名ではありません）。チーム名は送信しません。クリックの自動取得とセッション録画は行っていません。「設定 → 一般 → プライバシーと分析」またはマーケティングページ下部のリンクから、そのブラウザでの送信を停止できます。"
+        );
     });
 
     it("states the hosting as Railway only", () => {

@@ -135,7 +135,11 @@ function DemoBody({ lang, appHref }: { lang: Lang; appHref: (url: string) => str
                         <h1 className="lp-display">{copy.hero.title}</h1>
                         <p className="lp-lead">{copy.hero.lead}</p>
                         <div className="lp-actions" style={{ paddingTop: 8 }}>
-                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
+                            <a
+                                className="lp-btn lp-btn--primary"
+                                data-cta="demo_hero_try_demo"
+                                href={appHref(DEMO_URL)}
+                            >
                                 {copy.login.cta}
                                 <ArrowRight size={16} aria-hidden />
                             </a>
@@ -255,7 +259,11 @@ function DemoBody({ lang, appHref }: { lang: Lang; appHref: (url: string) => str
                             <p className="lp-body">{copy.footerCta.body}</p>
                         </div>
                         <div className="lp-actions">
-                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
+                            <a
+                                className="lp-btn lp-btn--primary"
+                                data-cta="demo_closing_try_demo"
+                                href={appHref(DEMO_URL)}
+                            >
                                 {copy.footerCta.button}
                                 <ArrowRight size={16} aria-hidden />
                             </a>

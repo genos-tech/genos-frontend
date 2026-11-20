@@ -79,6 +79,7 @@ export default function BlogArticlePage() {
                                 </div>
                                 <a
                                     className="lp-btn lp-btn--primary"
+                                    data-cta="blog_article_try_demo"
                                     href={appHref(DEMO_URL)}
                                     rel="noreferrer"
                                     target="_blank"

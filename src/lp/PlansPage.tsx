@@ -112,6 +112,7 @@ function PlansBody({ lang }: { lang: Lang }) {
         return (
             <Link
                 className={`lp-btn ${highlighted ? "lp-btn--primary" : "lp-btn--secondary"} lp-btn--block`}
+                data-cta="plans_signup"
                 to="/signup"
             >
                 {p.startForFree}

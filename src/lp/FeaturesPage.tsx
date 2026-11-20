@@ -100,7 +100,11 @@ function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) =>
                         <h1 className="lp-display">{copy.hero.title}</h1>
                         <p className="lp-lead">{copy.hero.lead}</p>
                         <div className="lp-actions" style={{ paddingTop: 8 }}>
-                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
+                            <a
+                                className="lp-btn lp-btn--primary"
+                                data-cta="features_hero_try_demo"
+                                href={appHref(DEMO_URL)}
+                            >
                                 {copy.footerCta.button}
                                 <ArrowRight size={16} aria-hidden />
                             </a>
@@ -196,7 +200,11 @@ function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) =>
                             <p className="lp-body">{copy.footerCta.body}</p>
                         </div>
                         <div className="lp-actions">
-                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
+                            <a
+                                className="lp-btn lp-btn--primary"
+                                data-cta="features_closing_try_demo"
+                                href={appHref(DEMO_URL)}
+                            >
                                 {copy.footerCta.button}
                                 <ArrowRight size={16} aria-hidden />
                             </a>

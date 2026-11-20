@@ -10,6 +10,7 @@ import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthConte
 import { DatabaseUtils } from "../../../db/utils";
 import { fmt, useTranslation } from "../../../i18n";
 import { authApi } from "../../../services/api";
+import { trackSignupCompleted } from "../../../services/marketingFunnel";
 import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { takeReturn } from "../../../utils/pendingReturn";
@@ -36,6 +37,16 @@ interface MeResponse {
     about_me: string | null;
     ts_created_at: string;
 }
+
+// The bounce page sees every Google / GitHub sign-in, new or returning, and the API does not say
+// which. An account the API created moments ago is a sign-up (MIP-1778); the window is generous
+// for a slow consent screen and short enough that a returning person almost never falls inside it. Not checked against a real
+// Google / GitHub sign-up yet.
+const NEW_ACCOUNT_WINDOW_MS = 3 * 60 * 1000;
+const isNewAccount = (createdAt: string | null | undefined): boolean => {
+    const created = createdAt ? Date.parse(createdAt) : NaN;
+    return Number.isFinite(created) && Math.abs(Date.now() - created) < NEW_ACCOUNT_WINDOW_MS;
+};
 
 // Reasons whose remedy is "use the method this account actually signs in
 // with". The backend sends `primary` alongside them so we can name it
@@ -110,6 +121,9 @@ export const OAuthSuccessHandler = () => {
         // after we navigate away. History replaceState is silent —
         // no extra browser history entry.
         window.history.replaceState({}, "", window.location.pathname);
+        // Read before it is forgotten: the sign-in page's button names the provider (the
+        // sign-up page does not, so a sign-up reports plain "oauth").
+        const providerHint = peekRememberedOAuthProvider();
         // A sign-in that worked has no use for the hint.
         forgetRememberedOAuthProvider();
 
@@ -151,6 +165,11 @@ export const OAuthSuccessHandler = () => {
 
                 if (isDifferentUser) {
                     await DatabaseUtils.clearTeamScopedStores();
+                }
+
+                if (isNewAccount(me.ts_created_at)) {
+                    // Once per tab; no email, name or id is sent.
+                    trackSignupCompleted(providerHint ?? "oauth", "oauth");
                 }
 
                 // An AI app's consent request waiting for this sign-in goes first.
