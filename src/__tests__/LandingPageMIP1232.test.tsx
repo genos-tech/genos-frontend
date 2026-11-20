@@ -83,8 +83,10 @@ describe("/home", () => {
         setLanguage("en-US");
         renderHome();
         fireEvent.click(screen.getByRole("button", { name: "日本語" }));
+        // The demo button is the hero's second (MIP-1611); its first, Connect Claude, goes to the
+        // steps on an LP page, which keeps the choice in the browser instead of in the address.
         const demo = screen
-            .getAllByRole("link", { name: HOME_COPY.ja.hero.primary })
+            .getAllByRole("link", { name: HOME_COPY.ja.hero.secondary })
             .map((a) => a.getAttribute("href"));
         expect(demo.length).toBeGreaterThan(0);
         for (const href of demo) expect(href).toContain("lang=ja");
