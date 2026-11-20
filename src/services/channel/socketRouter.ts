@@ -34,6 +34,7 @@ import type {
     Pin,
     ReadAdvancedPayload,
 } from "../../types/channel";
+import { cancelChannelAppeared, handleChannelAppeared } from "./channelAppeared";
 import { channelService } from "./channelService";
 import { handleMembershipRemoved, type MembershipRemovedNotice } from "./membershipRemoved";
 
@@ -123,6 +124,11 @@ export function registerSocketRouter(socket: Socket): () => void {
     // Removed from a team / project / chat by its owner or an editor (MIP-1371): the server
     // has already taken this socket out of those rooms; this updates the app's own state.
     on<MembershipRemovedNotice>("membership.removed", (n) => handleMembershipRemoved(n));
+    // The mirror of the removal above (MIP-1719): a chat became visible to this person with no
+    // `channel.created` (a restored group, a group made over REST). The notice names no chat
+    // content; the app re-reads its chat list, coalescing a burst into one read.
+    on<unknown>("channel.appeared", (n) => handleChannelAppeared(n));
+    offs.push(cancelChannelAppeared);
 
     on<{
         // The connect-time auto-replay (connect_handlers.py) pushes ONE
