@@ -50,6 +50,8 @@ const team = [viewer, ann, bo];
 const embedded = (userId: string, username: string) => ({
     userId,
     username,
+    firstName: username,
+    lastName: "",
     email: `${username}@x.dev`,
     profileImageUrl: "",
 });
