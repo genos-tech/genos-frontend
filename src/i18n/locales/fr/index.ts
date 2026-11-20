@@ -6,6 +6,63 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const fr: DeepPartial<Messages> = {
     admin: {
+        sampleData: {
+            title: "Données d'exemple",
+            description:
+                "Supprime en une seule fois tout ce qui a été créé avec les données d'exemple à la création de cette équipe. Ce que vous avez ajouté ou modifié est conservé.",
+            button: "Supprimer les données d'exemple…",
+            dialogTitle: "Supprimer les données d'exemple ?",
+            dialogBody:
+                "Cette action supprime définitivement les éléments d'exemple listés ci-dessous, avec tout leur contenu. Rien de ce que vous avez créé ou modifié n'est supprimé.",
+            loading: "Vérification de ce qui serait supprimé…",
+            loadFailed: "Impossible de vérifier les données d'exemple. Veuillez réessayer.",
+            retry: "Réessayer",
+            removeFailed: "Impossible de supprimer les données d'exemple. Veuillez réessayer.",
+            notRecorded:
+                "Cette équipe n'a aucune donnée d'exemple enregistrée. Les exemples créés avant cette fonction peuvent toujours être supprimés un par un, depuis le menu de chaque élément.",
+            nothingToRemove:
+                "Il n'y a rien à supprimer : les données d'exemple ont déjà disparu, ou ce qu'il reste contient votre propre travail (ci-dessous).",
+            removeHeading: "Sera supprimé",
+            keepHeading: "Sera conservé",
+            projectContents:
+                "Les projets contiennent {tasks, plural, one {# tâche} other {# tâches}} et {milestones, plural, one {# jalon} other {# jalons}}.",
+            type: {
+                project: "{count, plural, one {# projet} other {# projets}}",
+                channel:
+                    "{count, plural, one {# discussion de groupe} other {# discussions de groupe}}",
+                note_folder:
+                    "{count, plural, one {# dossier d'équipe} other {# dossiers d'équipe}}",
+                note: "{count, plural, one {# note} other {# notes}}",
+                todo_item: "{count, plural, one {# élément À faire} other {# éléments À faire}}",
+                todo_category: "{count, plural, one {# balise À faire} other {# balises À faire}}",
+                mention_group:
+                    "{count, plural, one {# groupe de mention} other {# groupes de mention}}",
+                project_label:
+                    "{count, plural, one {# libellé de projet} other {# libellés de projet}}",
+            },
+            keepReason: {
+                project_changed: "Vous y avez ajouté ou modifié quelque chose.",
+                note_edited: "Vous l'avez modifiée.",
+                todo_edited: "Vous l'avez modifié ou y avez ajouté quelque chose.",
+                chat_in_use: "Quelqu'un y a écrit ou l'a rejointe.",
+                folder_in_use: "Il contient quelque chose qui n'est pas une donnée d'exemple.",
+                group_in_use: "D'autres personnes y ont été ajoutées.",
+                label_in_use: "Un projet conservé l'utilise encore.",
+                category_in_use: "Un élément À faire conservé l'utilise encore.",
+            },
+            confirm: "Supprimer les données d'exemple",
+            cancel: "Annuler",
+            resultTitle: "Données d'exemple supprimées",
+            resultRemoved:
+                "{count, plural, one {# élément a été supprimé.} other {# éléments ont été supprimés.}}",
+            resultNothing: "Rien n'a été supprimé.",
+            resultKept:
+                "{count, plural, one {# élément est conservé} other {# éléments sont conservés}}, car vous avez créé ou modifié quelque chose dedans.",
+            resultFailed:
+                "{count, plural, one {# élément n'a pas pu être supprimé} other {# éléments n'ont pas pu être supprimés}} : {names}. Relancez l'action pour réessayer.",
+            reload: "Recharger",
+            close: "Fermer",
+        },
         brand: {
             name: "Genos",
             tagline: "Plateforme de collaboration d'équipe",

@@ -5,6 +5,54 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const zh: DeepPartial<Messages> = {
     admin: {
+        sampleData: {
+            title: "示例数据",
+            description:
+                "一键删除创建此团队时附带示例数据所生成的全部内容。你添加或修改过的内容会保留。",
+            button: "删除示例数据…",
+            dialogTitle: "删除示例数据？",
+            dialogBody: "这将永久删除下列示例及其中的全部内容。你创建或修改过的内容不会被删除。",
+            loading: "正在检查将被删除的内容…",
+            loadFailed: "无法检查示例数据，请重试。",
+            retry: "重试",
+            removeFailed: "无法删除示例数据，请重试。",
+            notRecorded:
+                "此团队没有已记录的示例数据。在此功能推出之前生成的示例，仍可从各项自己的菜单中逐个删除。",
+            nothingToRemove:
+                "没有可删除的内容：示例数据已被删除，或剩下的内容含有你自己的工作（见下方）。",
+            removeHeading: "将被删除",
+            keepHeading: "将保留",
+            projectContents: "这些项目共包含 {tasks} 个任务和 {milestones} 个里程碑。",
+            type: {
+                project: "{count} 个项目",
+                channel: "{count} 个群聊",
+                note_folder: "{count} 个团队文件夹",
+                note: "{count} 篇笔记",
+                todo_item: "{count} 条待办事项",
+                todo_category: "{count} 个待办事项标签",
+                mention_group: "{count} 个提及组",
+                project_label: "{count} 个项目标签",
+            },
+            keepReason: {
+                project_changed: "你在其中添加或修改了内容。",
+                note_edited: "你编辑过它。",
+                todo_edited: "你编辑过它或在其中添加了内容。",
+                chat_in_use: "有人在其中发过消息或已加入。",
+                folder_in_use: "其中有不属于示例数据的内容。",
+                group_in_use: "已添加了其他人。",
+                label_in_use: "仍有保留的项目在使用它。",
+                category_in_use: "仍有保留的待办事项在使用它。",
+            },
+            confirm: "删除示例数据",
+            cancel: "取消",
+            resultTitle: "示例数据已删除",
+            resultRemoved: "已删除 {count} 项。",
+            resultNothing: "没有删除任何内容。",
+            resultKept: "有 {count} 项保留，因为其中有你创建或修改的内容。",
+            resultFailed: "有 {count} 项无法删除：{names}。再次运行即可重试。",
+            reload: "重新加载",
+            close: "关闭",
+        },
         brand: {
             name: "Genos",
             tagline: "团队协作平台",

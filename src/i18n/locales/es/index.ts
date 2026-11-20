@@ -4454,6 +4454,64 @@ export const es: DeepPartial<Messages> = {
         },
     },
     admin: {
+        sampleData: {
+            title: "Datos de muestra",
+            description:
+                "Elimina de una vez todo lo que se creó al crear este equipo con datos de muestra. Lo que hayas añadido o cambiado se conserva.",
+            button: "Eliminar datos de muestra…",
+            dialogTitle: "¿Eliminar los datos de muestra?",
+            dialogBody:
+                "Esto elimina de forma permanente los elementos de muestra de la lista, con todo lo que contienen. No se elimina nada que hayas creado o cambiado.",
+            loading: "Comprobando qué se eliminaría…",
+            loadFailed: "No se pudieron comprobar los datos de muestra. Inténtalo de nuevo.",
+            retry: "Reintentar",
+            removeFailed: "No se pudieron eliminar los datos de muestra. Inténtalo de nuevo.",
+            notRecorded:
+                "Este equipo no tiene datos de muestra registrados. Los elementos de muestra creados antes de esta función se siguen pudiendo eliminar de uno en uno, desde el menú de cada elemento.",
+            nothingToRemove:
+                "No hay nada que eliminar: los datos de muestra ya no están, o lo que queda contiene tu propio trabajo (más abajo).",
+            removeHeading: "Se eliminará",
+            keepHeading: "Se conservará",
+            projectContents:
+                "Los proyectos contienen {tasks, plural, one {# tarea} other {# tareas}} y {milestones, plural, one {# hito} other {# hitos}}.",
+            type: {
+                project: "{count, plural, one {# proyecto} other {# proyectos}}",
+                channel: "{count, plural, one {# chat de grupo} other {# chats de grupo}}",
+                note_folder:
+                    "{count, plural, one {# carpeta de equipo} other {# carpetas de equipo}}",
+                note: "{count, plural, one {# nota} other {# notas}}",
+                todo_item:
+                    "{count, plural, one {# elemento de Por hacer} other {# elementos de Por hacer}}",
+                todo_category:
+                    "{count, plural, one {# etiqueta de Por hacer} other {# etiquetas de Por hacer}}",
+                mention_group:
+                    "{count, plural, one {# grupo de menciones} other {# grupos de menciones}}",
+                project_label:
+                    "{count, plural, one {# etiqueta de proyecto} other {# etiquetas de proyecto}}",
+            },
+            keepReason: {
+                project_changed: "Añadiste o cambiaste algo en él.",
+                note_edited: "La editaste.",
+                todo_edited: "Lo editaste o añadiste algo.",
+                chat_in_use: "Alguien escribió en él o se unió.",
+                folder_in_use: "Contiene algo que no son datos de muestra.",
+                group_in_use: "Se añadió a otras personas.",
+                label_in_use: "Un proyecto que se conserva aún la usa.",
+                category_in_use: "Un elemento de Por hacer que se conserva aún la usa.",
+            },
+            confirm: "Eliminar datos de muestra",
+            cancel: "Cancelar",
+            resultTitle: "Datos de muestra eliminados",
+            resultRemoved:
+                "{count, plural, one {Se eliminó # elemento.} other {Se eliminaron # elementos.}}",
+            resultNothing: "No se eliminó nada.",
+            resultKept:
+                "{count, plural, one {# elemento se conserva} other {# elementos se conservan}}, porque contienen algo que creaste o cambiaste.",
+            resultFailed:
+                "{count, plural, one {No se pudo eliminar # elemento} other {No se pudieron eliminar # elementos}}: {names}. Vuelve a ejecutarlo para reintentar.",
+            reload: "Recargar",
+            close: "Cerrar",
+        },
         brand: {
             name: "Genos",
             tagline: "Plataforma de colaboración para equipos",
