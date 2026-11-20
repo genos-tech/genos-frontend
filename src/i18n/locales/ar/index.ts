@@ -4606,6 +4606,8 @@ export const ar: DeepPartial<Messages> = {
                     unknown_provider: "موفر OAuth غير معروف.",
                     terms_required:
                         "لإنشاء حساب، وافق أولًا على شروط الخدمة وسياسة الخصوصية في صفحة التسجيل.",
+                    email_not_verified:
+                        "تعذّر على Google تأكيد عنوان البريد الإلكتروني هذا، لذلك لم يتم إنشاء أي حساب. تحقق من العنوان لدى Google وحاول مرة أخرى، أو سجّل باستخدام بريدك الإلكتروني وكلمة المرور.",
                     fallback: "فشل تدفق OAuth.",
                 },
                 methods: {

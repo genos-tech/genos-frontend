@@ -203,6 +203,8 @@ export const zh: DeepPartial<Messages> = {
                     provider_already_connected: "你已经有一个为此提供商连接的账号。先断开它。",
                     unknown_provider: "未知的 OAuth 提供商。",
                     terms_required: "创建账号前，请先在注册页面同意服务条款和隐私政策。",
+                    email_not_verified:
+                        "Google 无法确认此邮箱地址，因此未创建账号。请先在 Google 验证该邮箱后重试，或使用邮箱和密码注册。",
                     fallback: "OAuth 流程失败。",
                 },
                 methods: {
