@@ -39,6 +39,20 @@ export const CHANGELOG_META: Record<SeoLang, Meta> = {
     },
 };
 
+/** MIP-1265: what Genos does for accessibility and which browsers and devices it supports. */
+export const ACCESSIBILITY_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "アクセシビリティ | Genos",
+        description:
+            "Genos のアクセシビリティの取り組み、まだできていないこと、対応しているブラウザーと端末。",
+    },
+    en: {
+        title: "Accessibility | Genos",
+        description:
+            "What Genos does for accessibility, what is not done yet, and which browsers and devices Genos supports.",
+    },
+};
+
 /** English-only reference. */
 export const DEVELOPERS_META: Meta = {
     title: "Developers | Genos",
