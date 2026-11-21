@@ -6,6 +6,7 @@ import IosShareRounded from "@mui/icons-material/IosShareRounded";
 import { Box, Button, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
+import { isDismissed, markDismissed } from "../../hooks/common/useInstallBannerEligible";
 import {
     isIOSDevice,
     isStandaloneDisplay,
@@ -15,21 +16,6 @@ import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useTranslation } from "../../i18n";
 import { g } from "../../theme/tokens";
 import { ModalFrame } from "../ui/modal/ModalFrame";
-
-// localStorage, not sessionStorage (contrast PermissionBanner): "no" to
-// installing should stick across visits — re-asking every session is how
-// install banners get hated.
-const DISMISSED_KEY = "pwa:installBannerDismissed";
-
-const isDismissed = (): boolean => {
-    if (typeof localStorage === "undefined") return false;
-    return localStorage.getItem(DISMISSED_KEY) === "1";
-};
-
-const markDismissed = () => {
-    if (typeof localStorage === "undefined") return;
-    localStorage.setItem(DISMISSED_KEY, "1");
-};
 
 // One numbered row of the iOS how-to dialog.
 const HowToStep = ({ step, icon, text }: { step: number; icon: ReactNode; text: string }) => (
