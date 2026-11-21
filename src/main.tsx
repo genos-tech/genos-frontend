@@ -55,6 +55,7 @@ const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
 const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
 const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
+const GenosSecurityPage = lazy(() => import("./lp/SecurityPage"));
 const GenosAccessibilityPage = lazy(() => import("./lp/AccessibilityPage"));
 const GenosChangelogPage = lazy(() => import("./lp/ChangelogPage"));
 
@@ -172,6 +173,7 @@ const tree = (
 
             {/* Moving into Genos (MIP-1260): what imports today and what does not. Public, like /docs. */}
             <Route element={publicPage(GenosMigratePage)} path="/migrate" />
+            <Route element={publicPage(GenosSecurityPage)} path="/security" />
             {/* Accessibility statement and supported browsers (MIP-1265). */}
             <Route element={publicPage(GenosAccessibilityPage)} path="/accessibility" />
             {/* Changelog, public roadmap and RSS (MIP-1257). changelog.rss is a build asset. */}
