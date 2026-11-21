@@ -194,7 +194,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     // pair. Task body (chat_type=5) carries the same shape — `chatName`
     // is the project name and `taskId` is set. Task note (chat_type=7)
     // gets the task chip only when the backend populated `taskId`
-    // (project/task FK columns on `ActivityFact`).
+    // (project/task FK columns on the v3 `Activity` row).
     const showProjectAndTaskChips =
         activity.chatType === 3 || isTaskComment || isTaskBody || isTaskNote;
 
