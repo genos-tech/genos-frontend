@@ -26,6 +26,19 @@ export const CONTACT_META: Record<SeoLang, Meta> = {
     },
 };
 
+export const SECURITY_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "セキュリティとデータの扱い | Genos",
+        description:
+            "データの保存場所、暗号化、サインイン、アクセス権、アカウント削除、報告の方法を、現在の仕組みに基づいて説明します。",
+    },
+    en: {
+        title: "Security and data handling | Genos",
+        description:
+            "Where Genos keeps your data, how it is encrypted, how sign-in and access work, what account deletion removes, and how to report a problem.",
+    },
+};
+
 export const SUPPORT_META: Record<SeoLang, Meta> = {
     ja: {
         title: "サポート | Genos",

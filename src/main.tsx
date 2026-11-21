@@ -55,6 +55,7 @@ const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
 const GenosContactPage = lazy(() => import("./lp/ContactPage"));
 const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
+const GenosSecurityPage = lazy(() => import("./lp/SecurityPage"));
 const GenosAccessibilityPage = lazy(() => import("./lp/AccessibilityPage"));
 const GenosChangelogPage = lazy(() => import("./lp/ChangelogPage"));
 
@@ -171,6 +172,7 @@ const tree = (
             {/* Contact form (MIP-1261): mailed to support, not stored. ?topic=enterprise is the Enterprise variant. */}
             <Route element={publicPage(GenosContactPage)} path="/contact" />
             <Route element={publicPage(GenosSupportPage)} path="/support" />
+            <Route element={publicPage(GenosSecurityPage)} path="/security" />
             {/* Accessibility statement and supported browsers (MIP-1265). */}
             <Route element={publicPage(GenosAccessibilityPage)} path="/accessibility" />
             {/* Changelog, public roadmap and RSS (MIP-1257). changelog.rss is a build asset. */}
