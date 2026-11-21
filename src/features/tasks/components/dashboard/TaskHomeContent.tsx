@@ -1,4 +1,4 @@
-import { Key, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -29,8 +29,6 @@ import {
     Grid,
     IconButton,
     LinearProgress,
-    ListItemContent,
-    ListItemDecorator,
     Option,
     Select,
     Stack,
@@ -40,7 +38,6 @@ import {
     Typography,
 } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
-import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
 import Tab, { tabClasses } from "@mui/joy/Tab";
 import { Socket } from "socket.io-client";
@@ -79,10 +76,15 @@ import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilest
 import { computeAssigneeStats, computeUpNext } from "../../utils/dashboardStats";
 import { isDueWithin, isOverdueDate, sprintWindowMs } from "../../utils/dueWindow";
 import { deriveEffectiveTasks, EffectiveTask } from "../../utils/effectiveTasks";
-import { projectAvatarSrc } from "../../utils/projectAvatar";
+import { projectAvatarSrc, projectAvatarSrcMap } from "../../utils/projectAvatar";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
 import { sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
+import {
+    isSameMember,
+    memberOptionLabel,
+    renderMemberOption,
+} from "../autocompletes/MemberPickerParts";
 import { TaskCard, TaskListItem, TaskListPanel } from "../card";
 import { getStatusIcon } from "../meta/statusIcons";
 import { StatusLabel } from "../meta/StatusLabel";
@@ -228,6 +230,7 @@ export const TaskHomeContent = ({
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const projectsSync = useSyncFailure("projects");
+    const projectAvatars = useMemo(() => projectAvatarSrcMap(useCM.allChats), [useCM.allChats]);
     // The open project's rows: the cards below are computed from them, so a read that
     // is still running or failed must not draw as "no tasks / nothing assigned" (MIP-1323).
     const tasksSync = useTasksSyncFailure(usePM.currentProject?.projectId);
@@ -2014,8 +2017,8 @@ export const TaskHomeContent = ({
                                                     {t.tasks.dashboard.memberTasks.pickLabel}
                                                 </Typography>
                                                 <Autocomplete
-                                                    getOptionLabel={(o) => o.name}
-                                                    isOptionEqualToValue={(o, v) => o.id === v.id}
+                                                    getOptionLabel={memberOptionLabel}
+                                                    isOptionEqualToValue={isSameMember}
                                                     options={projectMembers}
                                                     size="sm"
                                                     value={selectedMember}
@@ -2023,51 +2026,7 @@ export const TaskHomeContent = ({
                                                         t.tasks.dashboard.memberTasks
                                                             .pickPlaceholder
                                                     }
-                                                    renderOption={(optProps, o) => {
-                                                        // MUI derives the option key from
-                                                        // getOptionLabel (the NAME), so two members
-                                                        // with the same name collide. Drop that key
-                                                        // (extract it out of the spread) and key by
-                                                        // the unique member id instead.
-                                                        const { key: _labelKey, ...rest } =
-                                                            optProps as typeof optProps & {
-                                                                key?: Key;
-                                                            };
-                                                        void _labelKey;
-                                                        return (
-                                                            <AutocompleteOption
-                                                                key={o.id}
-                                                                {...rest}
-                                                            >
-                                                                <ListItemDecorator>
-                                                                    <UserAvatar
-                                                                        clickable={false}
-                                                                        showPulseDot={false}
-                                                                        size={22}
-                                                                        userId={o.id}
-                                                                    />
-                                                                </ListItemDecorator>
-                                                                <ListItemContent
-                                                                    sx={{ minWidth: 0 }}
-                                                                >
-                                                                    <Typography
-                                                                        level="body-sm"
-                                                                        sx={{
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                        noWrap
-                                                                    >
-                                                                        <bdi className="g-bidi-island">
-                                                                            {o.name}
-                                                                        </bdi>
-                                                                    </Typography>
-                                                                </ListItemContent>
-                                                                <Chip size="sm" variant="soft">
-                                                                    {o.count}
-                                                                </Chip>
-                                                            </AutocompleteOption>
-                                                        );
-                                                    }}
+                                                    renderOption={renderMemberOption()}
                                                     startDecorator={
                                                         <PersonRoundedIcon sx={{ fontSize: 16 }} />
                                                     }
@@ -2592,6 +2551,8 @@ export const TaskHomeContent = ({
                             {/* Agent Activity tab (MIP-1613): who uses which AI agent, for what. */}
                             {!tasksUnread && activeTab === "agent" && (
                                 <AgentActivityTab
+                                    projectAvatars={projectAvatars}
+                                    projectRecords={usePM.teamProjects}
                                     teamId={myself.teamId}
                                     projects={usePM.teamProjects.map((p) => ({
                                         id: p.projectId,
