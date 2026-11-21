@@ -23,11 +23,11 @@ import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
 import { BillingReturnSnackbar } from "./components/layout/BillingReturnSnackbar";
 import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
+import { FirstScreenPrompt } from "./components/layout/FirstScreenPrompt";
 import { FreezeRouterWhenHidden } from "./components/layout/FreezeRouterWhenHidden";
 import { FreezeWhenHidden } from "./components/layout/FreezeWhenHidden";
 import { HistoryShell } from "./components/layout/HistoryShell";
 import { IdleReloadSnackbar } from "./components/layout/IdleReloadSnackbar";
-import { InstallBanner } from "./components/layout/InstallBanner";
 import { MentionGroupModal } from "./components/layout/MentionGroupModal";
 import { MobileAccountSheet } from "./components/layout/MobileAccountSheet";
 import { MobileSpotlightFab } from "./components/layout/MobileSpotlightFab";
@@ -120,7 +120,6 @@ import { markTeamHydrated } from "./services/hydrationState";
 import { intentDestination } from "./services/notifications/intentDestination";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
-import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
 import { startPerfRecorder, type PerfRecorder } from "./services/perf/startPerfRecorder";
 import { refreshAllData } from "./services/refreshAllData";
@@ -1639,7 +1638,9 @@ const AppBody = () => {
                                                         ) : (
                                                             <div className="main-container">
                                                                 <SkipToContent />
-                                                                <PermissionBanner
+                                                                {/* One prompt, and not on the first
+                                                                    screen of a new account (MIP-1866). */}
+                                                                <FirstScreenPrompt
                                                                     masterEnabled={
                                                                         useNotif.preferences
                                                                             .masterEnabled
@@ -1651,7 +1652,6 @@ const AppBody = () => {
                                                                         useNotif.requestPermission
                                                                     }
                                                                 />
-                                                                <InstallBanner />
                                                                 {/* Sidebar lives here (outside <Routes>) so it
                                 is mounted once for the whole authenticated
                                 shell. Switching services only swaps the
