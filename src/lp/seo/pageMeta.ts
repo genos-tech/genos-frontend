@@ -38,6 +38,20 @@ export const SUPPORT_META: Record<SeoLang, Meta> = {
     },
 };
 
+/** The help hub (MIP-1259). Says what the page holds, not what the product promises. */
+export const DOCS_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "ドキュメント | Genos",
+        description:
+            "Genosのはじめ方、Claudeの接続、APIキー、スケジュール、データのエクスポート、キーボードショートカット、よくある質問。",
+    },
+    en: {
+        title: "Docs | Genos",
+        description:
+            "Getting started with Genos, connecting Claude, API keys, schedules, exporting your data, keyboard shortcuts and the FAQ.",
+    },
+};
+
 /** MIP-1257: dated updates, the public roadmap and the RSS feed. */
 export const CHANGELOG_META: Record<SeoLang, Meta> = {
     ja: {
