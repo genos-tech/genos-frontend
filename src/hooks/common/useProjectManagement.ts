@@ -4,6 +4,7 @@ import {
     PROJECT_DELETED_EVENT,
     type ProjectDeletedDetail,
 } from "../../features/agentQA/approvedProjectWrites";
+import { refreshArchivedProjects } from "../../features/archive/archiveApi";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { isProjectGoneError } from "../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
@@ -130,6 +131,9 @@ export const useProjectManagement = (
             return;
         }
         syncStatus.report("projects", true);
+        // The archived projects sit in their own section (MIP-1693). Read beside the active list,
+        // never awaited: a slow archive read must not hold the projects up.
+        void refreshArchivedProjects(myself, accessToken, loadedTeamProjects);
         // A project the list no longer holds (deleted, left, access lost) has no
         // task load worth retrying: its failure must not hold the banner up for a
         // stale `lastProjectId` (MIP-1323).

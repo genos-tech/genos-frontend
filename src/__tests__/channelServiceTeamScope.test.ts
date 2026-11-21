@@ -97,8 +97,12 @@ describe("channelService team scoping", () => {
         await channelService.listChannels();
         channelService.setCurrentTeamId(TEAM_B);
         await channelService.listChannels();
-        expect(get).toHaveBeenLastCalledWith("/api/v3/channels/", {
+        expect(get).toHaveBeenCalledWith("/api/v3/channels/", {
             params: { team_id: TEAM_B, limit: 200 },
+        });
+        // The archived chats are listed for the new team too (MIP-1693).
+        expect(get).toHaveBeenCalledWith("/api/v3/channels/", {
+            params: { team_id: TEAM_B, include_archived: "true", limit: 200 },
         });
     });
 

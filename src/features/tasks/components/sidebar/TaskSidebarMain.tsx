@@ -21,6 +21,7 @@ import { loadProjectTags } from "../../services/loadProjectTags";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { loadRecentTasks } from "../../services/recentTasks";
 import { FavoritesListItem } from "./FavoritesListItem";
+import { ArchivedProjectsListItem } from "./projects_subs/ArchivedProjectsListItem";
 import { ProjectsListItem } from "./ProjectsListItem";
 import { RecentsListItem } from "./RecentsListItem";
 import { TaskSidebarSearchBox } from "./SearchBox";
@@ -332,6 +333,8 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                         useTEM={slices.tree.tem}
                         useTM={slices.tree.tm}
                     />
+
+                    <ArchivedProjectsListItem usePM={slices.tree.pm} />
                 </List>
             </Box>
         </Sheet>

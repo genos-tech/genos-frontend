@@ -991,6 +991,9 @@ export const ja: DeepPartial<Messages> = {
             serverError: "サーバーエラーが発生しました。しばらくしてからもう一度お試しください。",
             permissionDenied: "この操作を行う権限がありません。",
             requestFailed: "リクエストを完了できませんでした。もう一度お試しください。",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived:
+                "アーカイブされているため読み取り専用です。変更するにはアーカイブを解除してください。",
             limitReached:
                 "プランの上限に達しました。詳細は 設定 → プランと使用状況 をご確認ください。",
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
@@ -1784,6 +1787,34 @@ export const ja: DeepPartial<Messages> = {
                 "このグループのメッセージは表示されなくなります。公開されている場合は、後で再参加できます。",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "プロジェクトをアーカイブ",
+            unarchiveMenuProject: "プロジェクトのアーカイブを解除",
+            archiveMenuChat: "グループをアーカイブ",
+            unarchiveMenuChat: "グループのアーカイブを解除",
+            archiveInstead: "代わりにアーカイブ",
+            archiveInsteadHint:
+                "すべてを残します。アーカイブを解除するまで読み取り専用になります。",
+            ownerOnly: "アーカイブとアーカイブ解除はオーナーだけができます。",
+            projectBannerTitle: "このプロジェクトはアーカイブされています",
+            chatBannerTitle: "このグループはアーカイブされています",
+            projectBannerBody:
+                "読み取り専用です。アーカイブを解除するまで、新しいタスク、編集、コメントはできません。何も削除されていません。",
+            chatBannerBody:
+                "読み取り専用です。アーカイブを解除するまで、新しいメッセージは送れません。何も削除されていません。",
+            unarchiveAction: "アーカイブを解除",
+            showArchived: "アーカイブを表示",
+            hideArchived: "アーカイブを隠す",
+            archivedSection: "アーカイブ済み",
+            archivedBadge: "アーカイブ済み",
+            newTaskDisabled:
+                "タスクを追加するには、このプロジェクトのアーカイブを解除してください。",
+            composerDisabled:
+                "このグループはアーカイブされています。メッセージを送るにはアーカイブを解除してください。",
+            archiveFailed: "アーカイブできませんでした。もう一度お試しください。",
+            unarchiveFailed: "アーカイブを解除できませんでした。もう一度お試しください。",
+        },
         deleteChat: {
             button: "グループを削除",
             title: "このグループを削除しますか？",
