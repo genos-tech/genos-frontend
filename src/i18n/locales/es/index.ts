@@ -630,6 +630,7 @@ export const es: DeepPartial<Messages> = {
             planEnds: "El plan termina el",
             cancelScheduled:
                 "La cancelación está programada: tu plan sigue activo hasta esa fecha.",
+            pendingChange: "Cambio a {plan} el {date}",
             pastDue:
                 "Hay un problema con el pago: actualiza tu método de pago en el portal de facturación.",
             plansHeading: "Planes y precios",

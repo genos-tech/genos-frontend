@@ -4031,6 +4031,7 @@ export const fr: DeepPartial<Messages> = {
             planEnds: "Fin du forfait le",
             cancelScheduled:
                 "L'annulation est programmée — votre forfait reste actif jusqu'à cette date.",
+            pendingChange: "Changement vers {plan} le {date}",
             pastDue:
                 "Problème de paiement — mettez à jour votre moyen de paiement dans le portail de facturation.",
             plansHeading: "Forfaits et tarifs",

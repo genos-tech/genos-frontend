@@ -3842,6 +3842,7 @@ export const zh: DeepPartial<Messages> = {
             planRenews: "续订日期",
             planEnds: "套餐结束日期",
             cancelScheduled: "已安排取消——你的套餐在此日期前保持有效。",
+            pendingChange: "{date} 变更为{plan}",
             pastDue: "付款出现问题——请在账单门户中更新你的付款方式。",
             plansHeading: "套餐与定价",
             plansSubheading: "所有套餐都包含全部功能——区别仅在于使用上限和历史记录。",

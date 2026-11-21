@@ -870,6 +870,7 @@ export const hi: DeepPartial<Messages> = {
             planRenews: "नवीनीकरण तिथि",
             planEnds: "प्लान समाप्ति तिथि",
             cancelScheduled: "रद्दीकरण निर्धारित है — आपका प्लान इस तिथि तक सक्रिय रहेगा।",
+            pendingChange: "{date} को {plan} में बदलाव",
             pastDue: "भुगतान में समस्या है — कृपया बिलिंग पोर्टल में अपनी भुगतान विधि अपडेट करें।",
             plansHeading: "प्लान और मूल्य",
             plansSubheading:
