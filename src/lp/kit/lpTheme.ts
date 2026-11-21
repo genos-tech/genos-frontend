@@ -12,7 +12,7 @@ import { roleVars } from "../../theme/tokens/tokenStyles";
  * root. `lp.css` only ever reads those variables: change a role in
  * `theme/tokens/roles.ts` and the LP follows, light and dark alike.
  */
-const varsFor = (mode: Mode): CSSProperties => {
+export const lpVarsFor = (mode: Mode): CSSProperties => {
     const out: Record<string, string> = {};
     for (const [key, value] of roleVars(buildRoles("purple", mode))) {
         out[`--lp-${key}`] = value;
@@ -67,6 +67,6 @@ export const useLpMode = (): {
         };
     }, [mode]);
 
-    const style = useMemo(() => varsFor(mode), [mode]);
+    const style = useMemo(() => lpVarsFor(mode), [mode]);
     return { mode, toggleMode, style };
 };
