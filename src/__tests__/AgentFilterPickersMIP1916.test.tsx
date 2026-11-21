@@ -19,11 +19,12 @@ const mount = (onChange = vi.fn()) => {
             <I18nProvider>
                 <AgentFilterBar
                     filters={DEFAULT_AGENT_FILTERS}
+                    projectAvatars={new Map()}
+                    projects={[{ id: 1, name: "Launch" }]}
                     people={[
                         { id: "u1", name: "Ada" },
                         { id: "u2", name: "Ben" },
                     ]}
-                    projectAvatars={new Map()}
                     projectRecords={[
                         {
                             projectId: 1,
@@ -32,7 +33,6 @@ const mount = (onChange = vi.fn()) => {
                             projectLabels: [],
                         },
                     ]}
-                    projects={[{ id: 1, name: "Launch" }]}
                     onChange={onChange}
                     onClear={vi.fn()}
                 />

@@ -2020,13 +2020,13 @@ export const TaskHomeContent = ({
                                                     getOptionLabel={memberOptionLabel}
                                                     isOptionEqualToValue={isSameMember}
                                                     options={projectMembers}
+                                                    renderOption={renderMemberOption()}
                                                     size="sm"
                                                     value={selectedMember}
                                                     placeholder={
                                                         t.tasks.dashboard.memberTasks
                                                             .pickPlaceholder
                                                     }
-                                                    renderOption={renderMemberOption()}
                                                     startDecorator={
                                                         <PersonRoundedIcon sx={{ fontSize: 16 }} />
                                                     }

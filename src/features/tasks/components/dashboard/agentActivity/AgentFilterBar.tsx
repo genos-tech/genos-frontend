@@ -121,6 +121,7 @@ export const AgentFilterBar = ({
                     renderOption={renderProjectOption(projectAvatars)}
                     size="sm"
                     slotProps={projectListboxSlotProps(popupZIndex)}
+                    value={selectedProject}
                     // Omitted while empty: Joy still lays out the decorator's gap around nothing.
                     startDecorator={
                         selectedProject ? (
@@ -130,7 +131,6 @@ export const AgentFilterBar = ({
                             />
                         ) : undefined
                     }
-                    value={selectedProject}
                     onChange={(_, value) =>
                         onChange({ ...filters, projectId: value ? value.projectId : null })
                     }
