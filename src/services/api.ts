@@ -54,7 +54,8 @@ export const unregisterApiHealthListener = () => {
  * error passes through untouched.
  */
 export const attachArchivedToast = (instance: AxiosInstance): AxiosInstance => {
-    instance.interceptors.response.use(undefined, (error) => {
+    // Optional chain: a test double for the instance may have no interceptor registry.
+    instance.interceptors?.response?.use(undefined, (error) => {
         if (
             !axios.isCancel(error) &&
             error?.response?.status === 409 &&
