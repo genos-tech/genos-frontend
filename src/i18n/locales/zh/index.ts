@@ -1083,6 +1083,14 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // TODO(copy): MIP-1956 — draft wording for a native reader.
+        liveRegion: {
+            newMessage: "{name}: {preview}",
+            more: "{count, plural, other {另有 # 条消息}}",
+            attachment: "发送了一个附件",
+            listLabel: "消息",
+            threadListLabel: "主题回复",
+        },
         retentionBanner: "根据你的套餐，超过 {days} 天的消息已被隐藏。升级后可查看完整历史记录。",
         composer: {
             placeholder: "输入消息…",
@@ -1666,6 +1674,8 @@ export const zh: DeepPartial<Messages> = {
             },
             toast: {
                 region: "通知",
+                // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+                bannerRegion: "状态提醒",
                 undo: "撤销",
             },
         },

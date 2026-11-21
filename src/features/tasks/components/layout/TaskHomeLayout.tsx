@@ -115,7 +115,7 @@ export const TaskHomeLayout = ({
     };
 
     const renderMainContent = () => (
-        <Box className="MainContent" component="main" sx={mainPanelSx}>
+        <Box className="MainContent" sx={mainPanelSx}>
             {useTM.isTaskDashboardVisible && (
                 <TaskDashboard
                     myself={myself}

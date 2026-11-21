@@ -291,18 +291,14 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                         resizes back to ≥md. */}
                     {!isMobile && (
                         <>
-                            <SectionHeader
-                                as="div"
-                                label={t.tasks.sidebar.viewsHeader}
-                                sx={{ mt: 1.5 }}
-                            />
+                            <SectionHeader label={t.tasks.sidebar.viewsHeader} sx={{ mt: 1.5 }} />
                             <TaskTableListItem useTM={slices.tableView.tm} />
                             <SprintBoardListItem useTM={slices.boardView.tm} />
                         </>
                     )}
 
                     {/* Section Header - Tasks */}
-                    <SectionHeader as="div" label={t.tasks.sidebar.tasksHeader} sx={{ mt: 1.5 }} />
+                    <SectionHeader label={t.tasks.sidebar.tasksHeader} sx={{ mt: 1.5 }} />
 
                     <FavoritesListItem
                         useCM={slices.tree.cm}
@@ -318,11 +314,7 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                     />
 
                     {/* Section Header - Projects */}
-                    <SectionHeader
-                        as="div"
-                        label={t.tasks.sidebar.projectsHeader}
-                        sx={{ mt: 1.5 }}
-                    />
+                    <SectionHeader label={t.tasks.sidebar.projectsHeader} sx={{ mt: 1.5 }} />
 
                     <ProjectsListItem
                         myself={myself}

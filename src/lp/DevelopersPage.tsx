@@ -127,12 +127,7 @@ const Params = ({ rows, title }: { rows: Row[]; title: string }) => {
             </div>
             {/* MIP-1851: the table scrolls sideways on a narrow screen; keyboard users must be
                 able to focus the scroll region to reach the cells past the edge. */}
-            <div
-                aria-labelledby={labelId}
-                className="lp-params__scroll"
-                role="region"
-                tabIndex={0}
-            >
+            <div aria-labelledby={labelId} className="lp-params__scroll" role="group" tabIndex={0}>
                 <table aria-labelledby={labelId} role="table">
                     <tbody role="rowgroup">
                         {rows.map((r) => (

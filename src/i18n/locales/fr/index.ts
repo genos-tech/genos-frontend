@@ -1150,6 +1150,14 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // TODO(copy): MIP-1956 — draft wording for a native reader.
+        liveRegion: {
+            newMessage: "{name}: {preview}",
+            more: "{count, plural, one {+# message de plus} other {+# messages de plus}}",
+            attachment: "a envoyé une pièce jointe",
+            listLabel: "Messages",
+            threadListLabel: "Réponses du fil",
+        },
         retentionBanner:
             "Les messages de plus de {days} jours sont masqués avec votre forfait. Passez à un forfait supérieur pour voir tout l'historique.",
         composer: {
@@ -1754,6 +1762,8 @@ export const fr: DeepPartial<Messages> = {
             },
             toast: {
                 region: "Notifications",
+                // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+                bannerRegion: "Alertes d'état",
                 undo: "Annuler",
             },
         },
