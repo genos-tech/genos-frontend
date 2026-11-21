@@ -5194,6 +5194,11 @@ export const hi: DeepPartial<Messages> = {
                 teamNotFoundShort: "टीम नहीं मिली।",
                 duplicateTeamName: "कृपया किसी दूसरे टीम के नाम से कोशिश करें।",
                 invalidDepartments: "कृपया विभाग के नाम जाँचें।",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "कृपया टीम का नाम जाँचें।",
+                teamEmailFailed: "इस टीम का पता नहीं बन सका। कृपया फिर से कोशिश करें।",
+                rateLimited: "बहुत अधिक प्रयास हो गए। एक मिनट रुककर फिर से कोशिश करें।",
+                serverError: "सर्वर टीम नहीं बना सका। कुछ देर बाद फिर से कोशिश करें।",
             },
             oauth: {
                 failureReasons: {

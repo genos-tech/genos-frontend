@@ -4697,6 +4697,11 @@ export const ar: DeepPartial<Messages> = {
                 teamNotFoundShort: "لم يتم العثور على الفريق.",
                 duplicateTeamName: "يُرجى المحاولة باسم فريق مختلف.",
                 invalidDepartments: "يرجى التحقق من أسماء الأقسام.",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "يرجى التحقق من اسم الفريق.",
+                teamEmailFailed: "تعذّر إنشاء عنوان بريد لهذا الفريق. يُرجى المحاولة مرة أخرى.",
+                rateLimited: "محاولات كثيرة. يُرجى الانتظار دقيقة ثم المحاولة مرة أخرى.",
+                serverError: "تعذّر على الخادم إنشاء الفريق. يُرجى المحاولة بعد قليل.",
             },
             passwordReset: {
                 title: "قم بتعيين كلمة مرور جديدة",

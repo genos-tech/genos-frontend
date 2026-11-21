@@ -4764,6 +4764,13 @@ export const es: DeepPartial<Messages> = {
                 teamNotFoundShort: "Equipo no encontrado.",
                 duplicateTeamName: "Prueba con un nombre de equipo diferente.",
                 invalidDepartments: "Revisa los nombres de los departamentos.",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "Revisa el nombre del equipo.",
+                teamEmailFailed:
+                    "No pudimos crear la dirección de este equipo. Inténtalo de nuevo.",
+                rateLimited: "Demasiados intentos. Espera un minuto y vuelve a intentarlo.",
+                serverError:
+                    "El servidor no pudo crear el equipo. Inténtalo de nuevo en unos minutos.",
             },
             passwordReset: {
                 title: "Establecer una nueva contraseña",

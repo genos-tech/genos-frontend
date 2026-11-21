@@ -209,6 +209,13 @@ export const fr: DeepPartial<Messages> = {
                 teamNotFoundShort: "Équipe introuvable.",
                 duplicateTeamName: "Veuillez essayer avec un autre nom d'équipe.",
                 invalidDepartments: "Vérifiez les noms des départements.",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "Vérifiez le nom de l'équipe.",
+                teamEmailFailed:
+                    "Nous n'avons pas pu créer l'adresse de cette équipe. Veuillez réessayer.",
+                rateLimited: "Trop de tentatives. Patientez une minute puis réessayez.",
+                serverError:
+                    "Le serveur n'a pas pu créer l'équipe. Veuillez réessayer dans un instant.",
             },
             oauth: {
                 failureReasons: {
