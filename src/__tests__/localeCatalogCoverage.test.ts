@@ -123,6 +123,8 @@ const ARABIC_SAME_AS_ENGLISH_OK: Record<string, string> = {
     "tasks.linkedPr.paste": "an example URL",
     "tasks.activity.via.apps.claude": "the product name Claude",
     "tasks.activity.via.apps.chatgpt": "the product name ChatGPT",
+    "tasks.dashboard.agentActivity.agents.claude": "the product name Claude",
+    "tasks.dashboard.agentActivity.agents.chatgpt": "the product name ChatGPT",
     "admin.inviteMembers.emailPlaceholder": "an example e-mail address",
     "integrations.github.webhook.contentTypeLabel": "GitHub's own `application/json` option",
     "integrations.github.webhook.eventSelectionLabel": "quotes GitHub's English radio label",

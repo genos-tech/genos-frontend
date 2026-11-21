@@ -27,7 +27,8 @@ import { Team, TeamProfileProps, UserProps } from "../../types/admin";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { plainButtonSx } from "../ui/plainButtonStyles";
-import { SettingsModal } from "./SettingsModal";
+import { useOpenSettingsRequest } from "./settingsEvents";
+import { SettingsModal, SettingsTabKey } from "./SettingsModal";
 
 type MobileAccountSheetProps = {
     open: boolean;
@@ -118,11 +119,18 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
     const [userProfileOpen, setUserProfileOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settingsTab, setSettingsTab] = useState<SettingsTabKey | undefined>(undefined);
     // SettingsModal fires listConnections/listCalendars from mount effects
     // that don't check `open`, so mounting it eagerly would cost every
     // session those requests even if Settings is never opened. Mount on
     // first open, then keep it mounted so closing still animates.
     const [settingsMounted, setSettingsMounted] = useState(false);
+    // A request to open Settings on a tab (MIP-1613: Connect Claude → Developer).
+    useOpenSettingsRequest((tab) => {
+        setSettingsMounted(true);
+        setSettingsTab(tab as SettingsTabKey | undefined);
+        setSettingsOpen(true);
+    });
     const [signOutOpen, setSignOutOpen] = useState(false);
     const [signOutBusy, setSignOutBusy] = useState(false);
 
@@ -364,6 +372,7 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
 
             {settingsMounted && (
                 <SettingsModal
+                    initialTab={settingsTab}
                     myself={myself}
                     open={settingsOpen}
                     setMyself={setMyself}
@@ -371,7 +380,10 @@ export const MobileAccountSheet = (props: MobileAccountSheetProps) => {
                     useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
-                    onClose={() => setSettingsOpen(false)}
+                    onClose={() => {
+                        setSettingsOpen(false);
+                        setSettingsTab(undefined);
+                    }}
                 />
             )}
 
