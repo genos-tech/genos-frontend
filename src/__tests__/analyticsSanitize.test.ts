@@ -12,7 +12,10 @@ import type { CaptureResult } from "posthog-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { analytics } from "../services/analytics";
-import { sanitizeCaptureResult } from "../services/analyticsSanitize";
+import {
+    sanitizeCaptureResult,
+    sanitizeMarketingCaptureResult,
+} from "../services/analyticsSanitize";
 
 const posthogMock = vi.hoisted(() => ({
     init: vi.fn(),
@@ -134,6 +137,105 @@ describe("sanitizeCaptureResult", () => {
         expect(sanitizeCaptureResult(null as unknown as CaptureResult)).toBeNull();
         const odd = event({ properties: { $current_url: 42 as unknown as string } });
         expect(() => sanitizeCaptureResult(odd)).not.toThrow();
+    });
+});
+
+describe("campaign values (MIP-1778)", () => {
+    it("lets only the five utm_* values of the carrier through, and drops the library's own", () => {
+        const out = clean({
+            properties: {
+                utm_source: "library",
+                utm_term: "library",
+                $initial_utm_source: "library",
+                gclid: "g",
+                genos_utm: {
+                    utm_source: "newsletter",
+                    utm_medium: "email",
+                    utm_campaign: "launch 2026",
+                    utm_content: "a.b-c_d~e+f",
+                    utm_term: "ai",
+                    utm_id: "9",
+                    gclid: "g",
+                },
+            },
+        });
+        expect(out.properties).toEqual({
+            utm_source: "newsletter",
+            utm_medium: "email",
+            utm_campaign: "launch 2026",
+            utm_content: "a.b-c_d~e+f",
+            utm_term: "ai",
+        });
+    });
+
+    it("drops the session-entry copies of campaign values too (seen in a real browser)", () => {
+        const out = clean({
+            properties: {
+                $session_entry_utm_source: "<raw from the url>",
+                $session_entry_utm_campaign: "launch",
+                $session_entry_gclid: "g",
+                $session_entry_pathname: "/home",
+            },
+        });
+        expect(out.properties).toEqual({ $session_entry_pathname: "/home" });
+    });
+
+    it("checks each value: at most 100 characters, plain characters only, strings only", () => {
+        const out = clean({
+            properties: {
+                genos_utm: {
+                    utm_source: "a".repeat(100),
+                    utm_medium: "a".repeat(101),
+                    utm_campaign: "<script>alert(1)</script>",
+                    utm_content: "https://x.example/?a=1",
+                    utm_term: 42,
+                },
+            },
+        });
+        expect(out.properties).toEqual({ utm_source: "a".repeat(100) });
+    });
+
+    it("never sends the carrier itself, and ignores a carrier that is not an object", () => {
+        expect(clean({ properties: { genos_utm: "x" } }).properties).toEqual({});
+        expect(clean({ properties: { genos_utm: null } }).properties).toEqual({});
+        // Only `properties` is unpacked: a carrier in the person properties is just dropped.
+        const out = clean({ $set: { genos_utm: { utm_source: "x" } } });
+        expect(out.$set).toEqual({});
+    });
+});
+
+describe("sanitizeMarketingCaptureResult (marketing start after Accept)", () => {
+    it("is the same sanitizer, minus the device fields the privacy row does not list", () => {
+        const input = event({
+            properties: {
+                $current_url: "https://genosai.dev/plans?x=1",
+                $raw_user_agent: "UA",
+                $browser: "Chrome",
+                $os: "Mac OS X",
+                $device_type: "Desktop",
+                $screen_width: 1440,
+                $viewport_height: 800,
+                title: "A page",
+                distinct_id: "d",
+                $device_id: "d",
+                token: "t",
+                path: "/plans",
+            },
+        });
+        const out = sanitizeMarketingCaptureResult(input);
+        expect(out?.properties).toEqual({
+            $current_url: "https://genosai.dev/plans",
+            distinct_id: "d",
+            $device_id: "d",
+            token: "t",
+            path: "/plans",
+        });
+        // The app's sanitizer keeps them (the app start is unchanged).
+        expect(sanitizeCaptureResult(input)?.properties).toHaveProperty("$browser");
+    });
+
+    it("passes a missing event through", () => {
+        expect(sanitizeMarketingCaptureResult(null as unknown as CaptureResult)).toBeNull();
     });
 });
 

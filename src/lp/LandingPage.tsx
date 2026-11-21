@@ -126,11 +126,19 @@ function Hero({ t, lang, appHref }: { t: HomeCopy; lang: Lang; appHref: (u: stri
                         ))}
                     </div>
                     <div className="lp-actions" style={{ paddingTop: 8 }}>
-                        <Link className="lp-btn lp-btn--primary" to={CONNECT_PATH}>
+                        <Link
+                            className="lp-btn lp-btn--primary"
+                            data-cta="hero_connect"
+                            to={CONNECT_PATH}
+                        >
                             {t.hero.primary}
                             <ArrowRight size={16} aria-hidden />
                         </Link>
-                        <a className="lp-btn lp-btn--secondary" href={appHref(DEMO_URL)}>
+                        <a
+                            className="lp-btn lp-btn--secondary"
+                            data-cta="hero_try_demo"
+                            href={appHref(DEMO_URL)}
+                        >
                             {t.hero.secondary}
                         </a>
                     </div>
@@ -603,11 +611,19 @@ function ClosingCta({ t, appHref }: { t: HomeCopy; appHref: (u: string) => strin
                         <p className="lp-body">{t.cta.body}</p>
                     </div>
                     <div className="lp-actions">
-                        <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
+                        <a
+                            className="lp-btn lp-btn--primary"
+                            data-cta="closing_try_demo"
+                            href={appHref(DEMO_URL)}
+                        >
                             {t.cta.primary}
                             <ArrowRight size={16} aria-hidden />
                         </a>
-                        <a className="lp-btn lp-btn--secondary" href={appHref(SIGNUP_URL)}>
+                        <a
+                            className="lp-btn lp-btn--secondary"
+                            data-cta="closing_signup"
+                            href={appHref(SIGNUP_URL)}
+                        >
                             {t.cta.secondary}
                         </a>
                     </div>

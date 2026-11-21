@@ -6,9 +6,10 @@
  *   - VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are missing (e.g. local dev
  *     without analytics, or production builds that haven't shipped a key
  *     yet),
- *   - `init()` has not been called (the public marketing pages never call it,
- *     see `components/AnalyticsRouteGate`), or
- *   - the user has switched analytics off (Settings, or the marketing footer).
+ *   - `init()` has not been called (the public marketing pages call
+ *     `startWithConsent()` instead, and only after the visitor pressed "Accept" in the
+ *     consent banner; see `components/AnalyticsRouteGate` and `services/marketingConsent`), or
+ *   - the user has switched analytics off (Settings, or the marketing banner / footer).
  *
  * `init()` reads the opt-out preference directly from localStorage so it
  * can apply *before* React has mounted; the AnalyticsPreferencesProvider
@@ -21,7 +22,9 @@
  * request. Only not initialising stores and sends nothing.
  */
 
-import { sanitizeCaptureResult } from "./analyticsSanitize";
+import type { CaptureOptions } from "posthog-js";
+
+import { sanitizeCaptureResult, sanitizeMarketingCaptureResult } from "./analyticsSanitize";
 
 const PREFERENCES_STORAGE_KEY = "genos-analytics-preferences:v1";
 
@@ -47,6 +50,24 @@ let client: PostHogClient | null = null;
 let loading: Promise<void> | null = null;
 let failed = false;
 let queue: Array<(posthog: PostHogClient) => void> = [];
+// Started from a marketing page after "Accept" (`startWithConsent`): the library is kept to the
+// minimum the visitor agreed to, see `scrubSessionProps`.
+let marketingStart = false;
+
+// posthog-js 1.445.4 keeps the session's entry data in its persistence under `$client_session_props`:
+// the FULL landing address (query string and all) and the full referrer. It has no option to stop
+// that. What leaves the browser is already cut down by the sanitizer (`$session_entry_url` is a
+// path, the referrer a domain), but the stored copy would stay in localStorage, so on a marketing
+// start it is deleted right after each capture. The next capture of the same session reads nothing
+// and adds no `$session_entry_*`; PostHog derives a session's entry from its first event anyway.
+const scrubSessionProps = (posthog: PostHogClient): void => {
+    if (marketingStart) posthog.unregister("$client_session_props");
+};
+
+// What posthog-js leaves in the browser, by name: `ph_<key>_posthog` (cookie, localStorage,
+// sessionStorage), `ph_<key>_session_registered_properties`, `..._primary_window_exists`,
+// `..._window_id`, `__ph_opt_in_out_<key>`. Probed with 1.445.4 (MIP-1778).
+const POSTHOG_STORAGE_KEY = /^(ph_|__ph_)/;
 
 const whenLoaded = (call: (posthog: PostHogClient) => void): void => {
     if (client) call(client);
@@ -72,7 +93,7 @@ const readUserEnabledFromStorage = (): boolean => {
 // Loads and configures posthog-js. Idempotent, and a no-op without a key/host or while the
 // preference is off. `enabled` is the value a caller has just decided on (the switch being
 // turned on); without it the stored preference decides.
-const start = (enabled?: boolean): void => {
+const start = (enabled?: boolean, onMarketingPage = false): void => {
     if (initialized) return;
     const key = import.meta.env.VITE_POSTHOG_KEY;
     const host = import.meta.env.VITE_POSTHOG_HOST;
@@ -92,7 +113,35 @@ const start = (enabled?: boolean): void => {
                 disable_session_recording: true,
                 persistence: "localStorage+cookie",
                 // What leaves the browser must match the privacy page (MIP-1741).
-                before_send: sanitizeCaptureResult,
+                before_send: onMarketingPage
+                    ? sanitizeMarketingCaptureResult
+                    : sanitizeCaptureResult,
+                // Started from a marketing page, after "Accept" (MIP-1778): the visitor agreed to
+                // page views, button clicks and sign-ups, so everything else the library can switch
+                // on from its remote config stays off. Each of these only reduces collection.
+                ...(onMarketingPage
+                    ? {
+                          capture_heatmaps: false,
+                          capture_dead_clicks: false,
+                          capture_exceptions: false,
+                          capture_performance: false,
+                          // Do not keep the landing address and referrer in the browser: probed
+                          // with 1.445.4, the cookie and localStorage hold `$initial_person_info`
+                          // = the FULL landing URL (query string and all) and the full referrer,
+                          // and sessionStorage the raw `utm_*` and `$referrer`. Nothing the
+                          // privacy page lists needs them: the path, the campaign values and the
+                          // referrer's domain are sent from the event itself.
+                          save_referrer: false,
+                          save_campaign_params: false,
+                          disable_surveys: true,
+                          disable_conversations: true,
+                          disable_product_tours: true,
+                          disable_web_experiments: true,
+                          // The wrapper uses no feature flag, and the `/flags/` request carries the
+                          // browser's timezone and device ID in a body `before_send` never sees.
+                          advanced_disable_flags: true,
+                      }
+                    : {}),
             });
             client = posthog;
             const replay = queue;
@@ -124,21 +173,66 @@ export const ANALYTICS_EVENTS = {
     // `failed` property would put non-entrants in the funnel's first step
     // and depress the conversion rate by however many 429s we served.
     DEMO_START_FAILED: "demo_start_failed",
+    // The marketing funnel (MIP-1266 step 2, MIP-1778): which button on a marketing page was
+    // pressed, and an account was created. Properties are listed in `services/marketingFunnel`.
+    CTA_CLICKED: "cta_clicked",
+    SIGNUP_COMPLETED: "signup_completed",
 } as const;
 
 export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS] | string;
 
+/** Deletes every cookie and web-storage entry posthog-js wrote, in this browser. */
+const clearPostHogStorage = (): void => {
+    if (typeof window === "undefined") return;
+    for (const storage of [window.localStorage, window.sessionStorage]) {
+        try {
+            for (const key of Object.keys(storage)) {
+                if (POSTHOG_STORAGE_KEY.test(key)) storage.removeItem(key);
+            }
+        } catch {
+            // Storage blocked: nothing was written there either.
+        }
+    }
+    try {
+        const host = window.location.hostname;
+        const labels = host.split(".");
+        // The library sets its cookie on the host, or on the parent domain (`.genosai.dev`).
+        const domains = [undefined, host];
+        for (let i = 1; i < labels.length - 1; i++) domains.push(`.${labels.slice(i).join(".")}`);
+        for (const cookie of document.cookie.split(";")) {
+            const name = cookie.split("=")[0]?.trim();
+            if (!name || !POSTHOG_STORAGE_KEY.test(name)) continue;
+            for (const domain of domains) {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/${
+                    domain ? `; domain=${domain}` : ""
+                }`;
+            }
+        }
+    } catch {
+        // Cookies blocked.
+    }
+};
+
 export const analytics = {
-    capture(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
+    capture(
+        event: AnalyticsEvent,
+        properties?: Record<string, unknown>,
+        options?: CaptureOptions
+    ): void {
         if (!initialized || !userEnabled) return;
         if (client) {
-            client.capture(event, properties);
+            if (options) client.capture(event, properties, options);
+            else client.capture(event, properties);
+            scrubSessionProps(client);
             return;
         }
         if (failed) return;
         // Replayed after the chunk loads: pin the moment it actually happened.
         const timestamp = new Date();
-        queue.push((posthog) => posthog.capture(event, properties, { timestamp }));
+        queue.push((posthog) => {
+            posthog.capture(event, properties, { ...options, timestamp });
+            scrubSessionProps(posthog);
+        });
     },
 
     identify(distinctId: string, traits?: IdentityTraits): void {
@@ -149,6 +243,26 @@ export const analytics = {
     init(): void {
         entered = true;
         start();
+    },
+
+    /**
+     * Starts the library on a marketing page. Only for a visitor who pressed "Accept" in the
+     * consent banner (`services/marketingConsent` decides; this does not check).
+     */
+    startWithConsent(): void {
+        entered = true;
+        if (!initialized) marketingStart = true;
+        start(true, true);
+    },
+
+    /** Whether the library has been started and the person has not switched it off. */
+    isActive(): boolean {
+        return initialized && userEnabled;
+    },
+
+    /** Whether a PostHog key and host were built in. Without them nothing here does anything. */
+    isConfigured(): boolean {
+        return Boolean(import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST);
     },
 
     /** Resolves once posthog-js has loaded and every queued call has been replayed. */
@@ -179,6 +293,17 @@ export const analytics = {
                 posthog.reset();
             }
         });
+    },
+
+    /**
+     * Deletes what posthog-js stored in this browser (its cookie and web-storage entries).
+     * For a visitor who rejects or withdraws on a marketing page: "off" there means nothing
+     * is kept, not only that nothing is sent. Runs after any pending opt-out / reset has
+     * been replayed, because `reset()` writes a fresh identifier of its own.
+     */
+    forgetStoredIdentifiers(): void {
+        clearPostHogStorage();
+        if (loading) void loading.then(clearPostHogStorage);
     },
 
     /** The stored preference, without starting anything. Default: on. */

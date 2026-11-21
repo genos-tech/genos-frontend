@@ -321,6 +321,64 @@
     border-color: var(--lp-success-border);
 }
 
+/* ---------- consent banner (MIP-1778) ---------- */
+
+/* In the page flow above the header, never over the page: it cannot cover a button. */
+.lp-consent {
+    background: var(--lp-surface);
+    border-bottom: 1px solid var(--lp-border);
+    color: var(--lp-text);
+}
+
+.lp-consent:focus-visible {
+    outline-offset: -2px;
+}
+
+.lp-consent__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding-block: 14px;
+}
+
+.lp-consent__text {
+    flex: 1 1 420px;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--lp-text-secondary);
+}
+
+.lp-consent__link {
+    white-space: nowrap;
+    color: var(--lp-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Same component, same size: "Accept" and "Reject" carry the same weight. */
+.lp-consent__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 12px;
+}
+
+.lp-consent__actions .lp-btn {
+    min-width: 120px;
+}
+
+@media (max-width: 640px) {
+    .lp-consent__actions {
+        flex: 1 1 100%;
+    }
+
+    .lp-consent__actions .lp-btn {
+        flex: 1 1 0;
+    }
+}
+
 /* ---------- header ---------- */
 
 .lp-header {

@@ -62,8 +62,8 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "PostHog",
-        ja: "プロダクト分析。ユーザー ID、チーム ID、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベントが送信され、ユーザー ID に紐づきます（匿名ではありません）。チーム名は送信しません。クリックの自動取得とセッション録画は行っていません。この分析は初期状態で有効で、「設定 → 一般 → プライバシーと分析」からそのブラウザでの送信を停止できます。",
-        en: "Product analytics. Your user ID, team ID, role, the path of the pages you view (without query strings) and demo started / completed / failed events are sent, tied to your user ID (not anonymous). The team name is not sent. Click auto-capture and session recording are not used. Analytics is on by default; you can stop it for that browser in Settings → General → Privacy & analytics.",
+        ja: "プロダクト分析。ユーザー ID、チーム ID、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベント、マーケティングページでクリックしたボタン（例:「デモを試す」）、サインアップ、ページの言語、およびアクセス元（アクセスしたリンクに含まれる utm_source・utm_medium・utm_campaign・utm_content・utm_term の値と、参照元ウェブサイトのドメインのみ）が送信されます。サインイン前はランダムなブラウザ ID に、サインイン後はユーザー ID に紐づきます（匿名ではありません）。チーム名は送信しません。クリックの自動取得とセッション録画は行っていません。「設定 → 一般 → プライバシーと分析」またはマーケティングページ下部のリンクから、そのブラウザでの送信を停止できます。",
+        en: 'Product analytics. Your user ID, team ID, role, the path of the pages you view (without query strings), demo started / completed / failed events, which button you click on our marketing pages (for example "Try the demo"), the moment you sign up, the language of the page, and the marketing source of your visit (the utm_source, utm_medium, utm_campaign, utm_content and utm_term values in the link you arrived by, and the website you came from, domain only) are sent. Before you sign in, this is tied to a random browser ID, and once you sign in it is tied to your user ID (not anonymous). The team name is not sent. Click auto-capture and session recording are not used. You can stop it for that browser in Settings > General > Privacy & analytics, or from the link at the bottom of our marketing pages.',
     },
     {
         name: "GIPHY",

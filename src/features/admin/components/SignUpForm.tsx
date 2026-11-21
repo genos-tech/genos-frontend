@@ -29,6 +29,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
+import { trackSignupCompleted } from "../../../services/marketingFunnel";
 import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
@@ -199,6 +200,8 @@ export const SignUpForm = () => {
             acceptedTerms
         );
         if (signUpRes && "access" in signUpRes) {
+            // The API created the account: count it (no email, name or id is sent; MIP-1778).
+            trackSignupCompleted("invite");
             // Invite signup: the backend auto-verified the email and issued
             // a JWT. Mirror SignInForm's localStorage dance, then route to
             // /jointeam — its consume funnel redeems the (still-pending)
@@ -219,6 +222,7 @@ export const SignUpForm = () => {
             return;
         }
         if (signUpRes && signUpRes.message === "verification_email_sent" && "email" in signUpRes) {
+            trackSignupCompleted("email");
             setVerificationSentTo(signUpRes.email);
             setErrorMessage(null);
         }

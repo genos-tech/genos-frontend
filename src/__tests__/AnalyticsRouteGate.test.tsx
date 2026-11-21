@@ -1,6 +1,8 @@
 /**
  * Marketing pages store nothing and send nothing (MIP-1742): posthog-js is started
- * only once the router is on a path that is not a public marketing page. Probed with
+ * only once the router is on a path that is not a public marketing page (or, on a
+ * marketing page, once the visitor accepted the consent banner: MIP-1778, see
+ * MarketingConsentBanner.test.tsx). Probed with
  * posthog-js 1.445.4: no init option holds on its own (memory persistence still
  * requests config.js, opt-out by default still writes the cookie and storage).
  */
@@ -17,7 +19,14 @@ import { LP_ROUTES } from "../lp/seo/routes";
 import { analytics } from "../services/analytics";
 
 vi.mock("../services/analytics", () => ({
-    analytics: { init: vi.fn(), capture: vi.fn() },
+    analytics: {
+        init: vi.fn(),
+        capture: vi.fn(),
+        startWithConsent: vi.fn(),
+        isConfigured: () => true,
+        // The stored Settings preference: default on.
+        readStoredEnabled: () => true,
+    },
 }));
 
 beforeEach(() => {

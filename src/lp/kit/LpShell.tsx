@@ -1,11 +1,14 @@
 import "./lp.css";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useRef, useState, type ReactNode } from "react";
 import { Menu, Moon, Sun, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { analytics } from "../../services/analytics";
+import { chooseConsent, useMarketingConsent } from "../../services/marketingConsent";
+import { trackCtaClicked, trackMarketingPageview } from "../../services/marketingFunnel";
 import { useLpLang, type Lang } from "../lpLang";
+import { ConsentBanner } from "./ConsentBanner";
 import { APP_URL, CONTACT_EMAIL, DEMO_URL, SIGNUP_URL } from "./links";
 import { useLpMode } from "./lpTheme";
 
@@ -52,12 +55,12 @@ const SHELL = {
             contact: "お問い合わせ",
         },
         rights: "Genos. All rights reserved.",
-        // TODO(copy): MIP-1742 DRAFT wording for counsel and Ken, not approved text.
-        analyticsOff: "分析を停止する",
+        // TODO(copy): MIP-1778 DRAFT wording for counsel and Ken, not approved text.
+        analyticsSettings: "Cookie・分析の設定",
         // TODO(copy)
         analyticsIsOff: "このブラウザでは分析は停止中です。",
         // TODO(copy)
-        analyticsOn: "再開する",
+        analyticsIsOn: "このブラウザでは分析を許可しています。",
     },
     en: {
         skip: "Skip to content",
@@ -99,35 +102,40 @@ const SHELL = {
             contact: "Contact",
         },
         rights: "Genos. All rights reserved.",
-        // TODO(copy): MIP-1742 DRAFT wording for counsel and Ken, not approved text.
-        analyticsOff: "Turn analytics off",
+        // TODO(copy): MIP-1778 DRAFT wording for counsel and Ken, not approved text.
+        analyticsSettings: "Cookie and analytics settings",
         // TODO(copy)
         analyticsIsOff: "Analytics is off in this browser.",
         // TODO(copy)
-        analyticsOn: "Turn on",
+        analyticsIsOn: "Analytics is on in this browser.",
     },
 } as const;
 
 /**
- * "Analytics off" for a visitor who is not signed in (MIP-1742). Stores the same preference
- * the Settings switch reads, so the choice holds when they sign in later. Nothing is stored
- * until it is used.
+ * The footer control that reopens the analytics choice (MIP-1742, MIP-1778). It writes
+ * nothing itself: it opens the consent banner, where "Accept" or "Reject" is recorded. The
+ * status next to it says what is in force, so the page says whether analytics is on.
  */
-function AnalyticsSwitch({ t }: { t: (typeof SHELL)[Lang] }) {
-    const [enabled, setEnabled] = useState(() => analytics.readStoredEnabled());
-    const choose = (next: boolean) => {
-        analytics.persistEnabled(next);
-        setEnabled(next);
-    };
+const AnalyticsSettings = forwardRef<
+    HTMLButtonElement,
+    {
+        t: (typeof SHELL)[Lang];
+        state: "accepted" | "rejected" | "none";
+        allowed: boolean;
+        onOpen: () => void;
+    }
+>(function AnalyticsSettings({ t, state, allowed, onOpen }, ref) {
     return (
         <span className="lp-footer__analytics">
-            <span role="status">{enabled ? "" : t.analyticsIsOff}</span>
-            <button className="lp-footer__switch" onClick={() => choose(!enabled)} type="button">
-                {enabled ? t.analyticsOff : t.analyticsOn}
+            <span role="status">
+                {state === "none" ? "" : allowed ? t.analyticsIsOn : t.analyticsIsOff}
+            </span>
+            <button ref={ref} className="lp-footer__switch" onClick={onOpen} type="button">
+                {t.analyticsSettings}
             </button>
         </span>
     );
-}
+});
 
 type ShellApi = {
     lang: Lang;
@@ -154,6 +162,51 @@ export function LpShell({
     const t = SHELL[lang];
     const year = new Date().getFullYear();
 
+    // Consent and the funnel (MIP-1778). Nothing below sends anything until the visitor has
+    // accepted: `consent.allowed` is false before that, and `analytics` is not even started.
+    const { pathname } = useLocation();
+    const consent = useMarketingConsent();
+    const [reopened, setReopened] = useState(false);
+    const rootRef = useRef<HTMLDivElement>(null);
+    const bannerRef = useRef<HTMLElement>(null);
+    const settingsRef = useRef<HTMLButtonElement>(null);
+    const latest = useRef({ lang, pathname });
+    useEffect(() => {
+        latest.current = { lang, pathname };
+    }, [lang, pathname]);
+
+    // A page view for each marketing page, and for the page the visitor was on when they
+    // accepted. The language is read when the page is entered; switching it is not a new view.
+    useEffect(() => {
+        if (consent.allowed) trackMarketingPageview(pathname, latest.current.lang);
+    }, [pathname, consent.allowed]);
+
+    // One delegated listener: any element carrying a `data-cta` name reports its press.
+    useEffect(() => {
+        const root = rootRef.current;
+        if (!root) return undefined;
+        const onClick = (event: MouseEvent) => {
+            const target = event.target instanceof Element ? event.target : null;
+            const cta = target?.closest("[data-cta]")?.getAttribute("data-cta") ?? null;
+            // A no-op unless the visitor accepted (checked inside).
+            if (cta) trackCtaClicked(cta, latest.current.pathname, latest.current.lang);
+        };
+        root.addEventListener("click", onClick);
+        return () => root.removeEventListener("click", onClick);
+    }, []);
+
+    const showBanner = consent.needed || reopened;
+    useEffect(() => {
+        if (reopened) bannerRef.current?.focus();
+    }, [reopened]);
+    const choose = (choice: "accepted" | "rejected") => {
+        chooseConsent(choice);
+        if (reopened) {
+            setReopened(false);
+            settingsRef.current?.focus();
+        }
+    };
+
     useEffect(() => {
         if (!menuOpen) return undefined;
         const onKey = (event: KeyboardEvent) => {
@@ -172,10 +225,11 @@ export function LpShell({
     ];
 
     return (
-        <div className="lp-root" data-mode={mode} lang={lang} style={style}>
+        <div ref={rootRef} className="lp-root" data-mode={mode} lang={lang} style={style}>
             <a className="lp-btn lp-btn--secondary lp-skip" href="#lp-main">
                 {t.skip}
             </a>
+            {showBanner && <ConsentBanner ref={bannerRef} lang={lang} onChoose={choose} />}
             <header className="lp-header">
                 <div className="lp-container lp-header__row">
                     <Link aria-label="Genos" className="lp-logo" to="/home">
@@ -221,12 +275,14 @@ export function LpShell({
                         </button>
                         <a
                             className="lp-btn lp-btn--ghost lp-btn--sm lp-only-wide"
+                            data-cta="nav_sign_in"
                             href={appHref(`${APP_URL}/signin`)}
                         >
                             {t.signIn}
                         </a>
                         <a
                             className="lp-btn lp-btn--primary lp-btn--sm lp-only-wide"
+                            data-cta="nav_try_demo"
                             href={appHref(DEMO_URL)}
                         >
                             {t.tryDemo}
@@ -272,11 +328,16 @@ export function LpShell({
                             </Link>
                         ))}
                         <div className="lp-actions" style={{ marginTop: 12 }}>
-                            <a className="lp-btn lp-btn--primary" href={appHref(DEMO_URL)}>
+                            <a
+                                className="lp-btn lp-btn--primary"
+                                data-cta="menu_try_demo"
+                                href={appHref(DEMO_URL)}
+                            >
                                 {t.tryDemo}
                             </a>
                             <a
                                 className="lp-btn lp-btn--secondary"
+                                data-cta="menu_sign_in"
                                 href={appHref(`${APP_URL}/signin`)}
                             >
                                 {t.signIn}
@@ -353,7 +414,9 @@ export function LpShell({
                             <h2>{t.cols.company}</h2>
                             <ul>
                                 <li>
-                                    <a href={appHref(SIGNUP_URL)}>{t.links.signup}</a>
+                                    <a data-cta="footer_signup" href={appHref(SIGNUP_URL)}>
+                                        {t.links.signup}
+                                    </a>
                                 </li>
                                 <li>
                                     <a href={`mailto:${CONTACT_EMAIL}`}>{t.links.contact}</a>
@@ -365,7 +428,15 @@ export function LpShell({
                         <span>
                             © {year} {t.rights}
                         </span>
-                        <AnalyticsSwitch t={t} />
+                        {analytics.isConfigured() && (
+                            <AnalyticsSettings
+                                ref={settingsRef}
+                                allowed={consent.allowed}
+                                state={consent.state}
+                                t={t}
+                                onOpen={() => setReopened(true)}
+                            />
+                        )}
                         <span translate="no">{CONTACT_EMAIL}</span>
                     </div>
                 </div>
