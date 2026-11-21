@@ -1,6 +1,9 @@
 import { PartialBlock } from "@blocknote/core";
 
+import { resolveInitialLocale } from "../../../i18n/localeSource";
+import type { Locale } from "../../../i18n/types";
 import sharedTemplates from "./builtinTaskTemplates.json";
+import { DEFAULT_TEMPLATE_ORDER, DEFAULT_TEMPLATE_TEXT } from "./defaultTemplateText";
 
 // ---------------------------------------------------------------------------
 // Body templates
@@ -115,7 +118,30 @@ const TEMPLATE_META: Record<
     },
 };
 
-const buildTemplate = (shared: SharedTemplate): TaskTemplate => {
+// The default template's section headings and lines in `locale` (MIP-1818). The JSON keeps the
+// English; `DEFAULT_TEMPLATE_ORDER` says which word each position is. Only this template is
+// translated: a line the order doesn't cover (a changed JSON) keeps its English.
+const localizeDefault = (shared: SharedTemplate, locale: Locale): SharedTemplate => {
+    const words = DEFAULT_TEMPLATE_TEXT[locale];
+    return {
+        ...shared,
+        sections: shared.sections.map((sec, i) => {
+            const keys = DEFAULT_TEMPLATE_ORDER[i] ?? [];
+            return {
+                heading: words[keys[0]] ?? sec.heading,
+                items: sec.items.map((item, j) => ({
+                    ...item,
+                    text: words[keys[j + 1]] ?? item.text,
+                })),
+            };
+        }),
+    };
+};
+
+const buildTemplate = (shared: SharedTemplate, locale?: Locale): TaskTemplate => {
+    if (locale && locale !== "en" && shared.id === "default") {
+        shared = localizeDefault(shared, locale);
+    }
     const id = shared.id as TaskTemplateId;
     const meta = TEMPLATE_META[id];
     if (!meta) throw new Error(`builtinTaskTemplates.json: unknown template id "${shared.id}"`);
@@ -137,11 +163,23 @@ const buildTemplate = (shared: SharedTemplate): TaskTemplate => {
 // In the file's order, which is the picker's order.
 export const TASK_TEMPLATE_OPTIONS: TaskTemplate[] = (
     sharedTemplates.templates as SharedTemplate[]
-).map(buildTemplate);
+).map((s) => buildTemplate(s));
 
 export const TASK_TEMPLATES = Object.fromEntries(
     TASK_TEMPLATE_OPTIONS.map((t) => [t.id, t])
 ) as Record<TaskTemplateId, TaskTemplate>;
+
+/**
+ * A built-in template's blocks in the app language (MIP-1818). The standard task template's
+ * headings and hint lines follow the language the form is opened in, so what is SAVED reads in
+ * it; the other three stay English for now. `locale` defaults to the current one.
+ */
+export const getTemplateBlocks = (id: TaskTemplateId, locale?: Locale): PartialBlock[] => {
+    const loc = locale ?? resolveInitialLocale();
+    if (id !== "default" || loc === "en") return TASK_TEMPLATES[id].blocks;
+    const shared = (sharedTemplates.templates as SharedTemplate[]).find((t) => t.id === id)!;
+    return buildTemplate(shared, loc).blocks;
+};
 
 // ---------------------------------------------------------------------------
 // Custom (project-scoped) templates
@@ -180,7 +218,9 @@ export const parseCustomTemplateValue = (value: string): number | null => {
 // Initial body used by the rich CreateTaskForm and by the title-only
 // createQuickTask service — both want a fresh task to land with the same
 // scaffold so the body editor never feels empty on first open.
-export const taskContentTemplate: PartialBlock[] = TASK_TEMPLATES.default.blocks;
+// Built when asked, in the current language (MIP-1818), not once at load.
+export const getTaskContentTemplate = (locale?: Locale): PartialBlock[] =>
+    getTemplateBlocks("default", locale);
 
 // ---------------------------------------------------------------------------
 // Untouched template prompts (MIP-825)
@@ -217,14 +257,20 @@ const promptRun = (block: BlockLike): InlineLike | null => {
     return run?.type === "text" && typeof run.text === "string" ? run : null;
 };
 
-const BUILT_IN_PROMPTS: ReadonlySet<string> = new Set(
-    Object.values(TASK_TEMPLATES).flatMap((tpl) =>
-        (tpl.blocks as BlockLike[])
-            .map(promptRun)
-            .filter((run): run is InlineLike => run != null && isPromptStyle(run.styles))
-            .map((run) => run.text as string)
-    )
-);
+// Every language's default-template lines count (MIP-1818): a form opened in ja, a draft saved
+// in one language and reopened in another, all strip the same way.
+const promptTexts = (blocks: PartialBlock[]): string[] =>
+    (blocks as BlockLike[])
+        .map(promptRun)
+        .filter((run): run is InlineLike => run != null && isPromptStyle(run.styles))
+        .map((run) => run.text as string);
+
+const BUILT_IN_PROMPTS: ReadonlySet<string> = new Set([
+    ...Object.values(TASK_TEMPLATES).flatMap((tpl) => promptTexts(tpl.blocks)),
+    ...(Object.keys(DEFAULT_TEMPLATE_TEXT) as Locale[]).flatMap((loc) =>
+        promptTexts(getTemplateBlocks("default", loc))
+    ),
+]);
 
 const isUntouchedPrompt = (block: unknown): boolean => {
     const run = promptRun(block as BlockLike);

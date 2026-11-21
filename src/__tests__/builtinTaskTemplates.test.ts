@@ -3,9 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import shared from "../features/tasks/utils/builtinTaskTemplates.json";
 import {
+    getTaskContentTemplate,
     TASK_TEMPLATE_OPTIONS,
     TASK_TEMPLATES,
-    taskContentTemplate,
 } from "../features/tasks/utils/taskTemplates";
 import { en } from "../i18n/locales/en";
 import golden from "./fixtures/taskTemplates.golden.json";
@@ -47,8 +47,8 @@ describe("built-in task templates: what the form builds is what it built before"
     });
 
     it("starts a quick-add task and a new form from the standard template, as before", () => {
-        expect(taskContentTemplate).toEqual(golden.options[0].blocks);
-        expect(taskContentTemplate).toBe(TASK_TEMPLATES.default.blocks);
+        expect(getTaskContentTemplate("en")).toEqual(golden.options[0].blocks);
+        expect(getTaskContentTemplate("en")).toBe(TASK_TEMPLATES.default.blocks);
     });
 
     it("keeps the English label the agent matches, equal to the English picker label", () => {

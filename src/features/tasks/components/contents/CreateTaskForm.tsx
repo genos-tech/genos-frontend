@@ -69,11 +69,12 @@ import { effortLevels, priorities } from "../../utils/taskMeta";
 import {
     CustomTaskTemplate,
     customTemplateValue,
+    getTaskContentTemplate,
+    getTemplateBlocks,
     parseCustomTemplateValue,
     stripUntouchedPrompts,
     TASK_TEMPLATE_OPTIONS,
     TASK_TEMPLATES,
-    taskContentTemplate,
     TaskTemplateId,
 } from "../../utils/taskTemplates";
 import { ModalManageTaskTemplates } from "../modals/ModalManageTaskTemplates";
@@ -155,10 +156,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // milestone form doesn't briefly show the task scaffold. The project
     // default (possibly a custom template) is applied once the async load
     // resolves; a restored draft overrides both.
-    const [body, setBody] = useState<PartialBlock[]>(
+    const [body, setBody] = useState<PartialBlock[]>(() =>
         useTM.isCreatingTask.creationKind === "milestone"
             ? TASK_TEMPLATES.milestone.blocks
-            : taskContentTemplate
+            : getTaskContentTemplate()
     );
     // New tasks/milestones/subtasks start unassigned by design — the
     // creator picks an assignee if/when they're ready. Reporter still
@@ -250,10 +251,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             if (custom) return { value, blocks: custom.body };
         } else {
             const builtin = TASK_TEMPLATES[value as TaskTemplateId];
-            if (builtin) return { value, blocks: builtin.blocks };
+            if (builtin) return { value, blocks: getTemplateBlocks(builtin.id) };
         }
         const fallback = creationKind === "milestone" ? "milestone" : "default";
-        return { value: fallback, blocks: TASK_TEMPLATES[fallback].blocks };
+        return { value: fallback, blocks: getTemplateBlocks(fallback) };
     };
 
     // The project's saved default for a kind, or the built-in fallback.
@@ -798,7 +799,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 id: useTM.initialEmptyTaskId,
                 project: usePM.currentProject,
                 title: "",
-                body: taskContentTemplate,
+                body: getTaskContentTemplate(),
                 // New tasks start unassigned; reporter is the creator.
                 assignee: null,
                 reporter: myself,
@@ -1149,8 +1150,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         if ((taskContent?.attachments?.length || 0) > 0) return true;
         const bodyStr = JSON.stringify(body);
         const matchesAnyTemplate =
-            TASK_TEMPLATE_OPTIONS.some((t) => JSON.stringify(t.blocks) === bodyStr) ||
-            useTM.projectTaskTemplates.some((t) => JSON.stringify(t.body) === bodyStr);
+            TASK_TEMPLATE_OPTIONS.some(
+                (t) =>
+                    JSON.stringify(t.blocks) === bodyStr ||
+                    JSON.stringify(getTemplateBlocks(t.id)) === bodyStr
+            ) || useTM.projectTaskTemplates.some((t) => JSON.stringify(t.body) === bodyStr);
         return !matchesAnyTemplate;
     }, [taskTitle, taskContent?.attachments, body, useTM.projectTaskTemplates]);
 
