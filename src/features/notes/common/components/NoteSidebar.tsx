@@ -254,7 +254,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // RecentNoteItem opens the note (loadNote) and marks it read on click,
     // which clears it from this list.
     const renderUnreadNotes = () => (
-        <Box>
+        <Box role="none">
             {unreadNotes.map((n) => {
                 const found = findNoteMeta(n.noteType, n.noteId);
                 // Fall back to the activity's title without mutating the
@@ -687,13 +687,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     const renderMyNotesSection = () => {
         return (
-            <Box>
+            <Box role="none">
                 {/* "New note" / "New folder" live in the family row's "+", and that row is
                     the "move to the top level" drop target (see `noteTypesConfig`). Nothing
                     here but the empty state, which has to say where to start because the
                     "+" only shows on hover. */}
                 {myNotesIsEmpty && (
-                    <Box sx={{ px: 1.5 }}>
+                    <Box component="li" sx={{ px: 1.5, listStyle: "none" }}>
                         <EmptyState
                             body={t.notes.list.empty}
                             data-empty="my-notes"
@@ -953,9 +953,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     //
     // Box root ON PURPOSE — see renderMyNotesSection.
     const renderTeamNotesSection = () => (
-        <Box>
+        <Box role="none">
             {teamFolderTags.length > 0 && (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, px: 1, py: 0.5 }}>
+                <Box
+                    component="li"
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        px: 1,
+                        py: 0.5,
+                        listStyle: "none",
+                    }}
+                >
                     {teamFolderTags.map((tag) => {
                         const isOn = teamTagFilter.has(tag.tagId);
                         return (
@@ -1271,7 +1281,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     //
     // Box root ON PURPOSE — see renderMyNotesSection.
     const renderGroupedSharedNotes = () => (
-        <Box>
+        <Box role="none">
             {/* Folders first: a folder is the bigger unit, and it is the
                 one thing in here that arrived from outside the company
                 rather than from a colleague. Unfiltered — the tag chips
@@ -1395,7 +1405,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         }
 
         return (
-            <Box>
+            <Box role="none">
                 {hasFolders && (
                     <FavoriteNoteSection
                         defaultExpanded={true}

@@ -212,6 +212,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                         <NavItem
                                             actions={favoriteStar}
                                             actionsOverlay={true}
+                                            as="div"
                                             expanded={open}
                                             selected={isSelected}
                                             label={
@@ -294,6 +295,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                             }}
                                         />
                                     )}
+                                    asListItem
                                 >
                                     <MilestonesListItem
                                         currentProjectId={projectId}

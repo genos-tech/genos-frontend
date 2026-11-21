@@ -31,6 +31,7 @@ export const ArchivedProjectsListItem = ({ usePM }: ArchivedProjectsListItemProp
             storageKey="archived-projects"
             renderToggle={({ open, setOpen }) => (
                 <NavItem
+                    as="div"
                     expanded={open}
                     icon={<ArchiveOutlinedIcon />}
                     label={fmt(t.common.archive.archivedSection, {
@@ -41,6 +42,7 @@ export const ArchivedProjectsListItem = ({ usePM }: ArchivedProjectsListItemProp
                     }}
                 />
             )}
+            asListItem
         >
             <List sx={navNestedListSx}>
                 {archivedProjects.map((project) => (
