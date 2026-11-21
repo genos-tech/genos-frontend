@@ -1,0 +1,135 @@
+import { CssVarsProvider } from "@mui/joy/styles";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { MilestoneProgressTab } from "../features/tasks/components/dashboard/milestoneProgress/MilestoneProgressTab";
+import { loadTaskProgress } from "../features/tasks/services/loadTaskProgress";
+import { EffectiveTask } from "../features/tasks/utils/effectiveTasks";
+
+// MIP-1187: the Milestones tab of the Tasks dashboard. Mounts the real tab with seeded
+// task rows; the progress request is stubbed so the expand-to-load path is exercised.
+
+vi.mock("../context/AuthContext", () => ({
+    useAuth: () => ({ accessToken: "test-token" }),
+}));
+vi.mock("../features/tasks/services/loadTaskProgress", () => ({
+    loadTaskProgress: vi.fn(),
+}));
+
+const NOW_ISO = new Date().toISOString();
+const daysFromToday = (n: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const row = (over: Partial<EffectiveTask> & { id: string }) =>
+    ({
+        title: `Task ${over.id}`,
+        status: "Open",
+        effectiveStatus: "Open",
+        effectiveCloseDate: null,
+        dueDate: null,
+        milestoneId: 7,
+        isMilestone: false,
+        assigneeName: "Dana",
+        lastProgressAt: null,
+        ...over,
+    }) as unknown as EffectiveTask;
+
+const milestone = {
+    milestoneId: 7,
+    taskId: 700,
+    title: "Beta launch",
+    status: "WIP",
+    sprintId: null,
+    dueDate: daysFromToday(-3),
+} as never;
+
+const tasks: EffectiveTask[] = [
+    row({ id: "700", isMilestone: true, lastProgressAt: NOW_ISO }),
+    row({ id: "1", effectiveStatus: "Closed", status: "Closed" }),
+    row({ id: "2", effectiveStatus: "WIP", status: "WIP", dueDate: daysFromToday(-2) }),
+    row({ id: "3", effectiveStatus: "Blocked", status: "Blocked" }),
+    row({ id: "4", effectiveStatus: "Open", status: "Open", dueDate: daysFromToday(4) }),
+];
+
+const mount = (list: EffectiveTask[] = tasks, milestones = [milestone]) =>
+    render(
+        <CssVarsProvider>
+            <MilestoneProgressTab
+                effectiveTasks={list}
+                milestones={milestones as never}
+                sprints={[]}
+            />
+        </CssVarsProvider>
+    );
+
+describe("MilestoneProgressTab (MIP-1187)", () => {
+    beforeEach(() => {
+        vi.mocked(loadTaskProgress).mockReset();
+    });
+
+    it("shows the summary numbers and the milestone's due line", () => {
+        mount();
+        const tiles = screen.getByRole("list", { name: /Milestone progress/ });
+        expect(within(tiles).getByText("Tasks closed").previousSibling?.textContent).toBe("1/4");
+        expect(within(tiles).getByText("Overdue").previousSibling?.textContent).toBe("1");
+        expect(within(tiles).getByText("Blocked").previousSibling?.textContent).toBe("1");
+        expect(screen.getByText("Beta launch")).toBeTruthy();
+        expect(screen.getByText("Overdue by 3 days")).toBeTruthy();
+        expect(screen.getByText("1 of 4 closed")).toBeTruthy();
+    });
+
+    it("reads the progress by status with an accessible bar", () => {
+        mount();
+        expect(screen.getByRole("img", { name: "1 of 4 closed" })).toBeTruthy();
+        expect(screen.getByText("Blocked 1")).toBeTruthy();
+        expect(screen.getByText("Closed 1")).toBeTruthy();
+    });
+
+    it("lists what needs attention once the card is opened, and loads recent progress then", async () => {
+        vi.mocked(loadTaskProgress).mockResolvedValue({
+            entries: [
+                {
+                    activityId: 9,
+                    actionType: "status_changed",
+                    fieldName: "status",
+                    oldValue: null,
+                    newValue: "Closed",
+                    metadata: {},
+                    actor: { userId: "u1", userName: "Ken", avatarImgPath: null },
+                    tsCreatedAt: NOW_ISO,
+                    sourceTask: {
+                        id: "2",
+                        displayId: "MIP-2",
+                        title: "Write docs",
+                        isMilestone: false,
+                        isDeleted: false,
+                    },
+                } as never,
+            ],
+            nextCursor: null,
+        });
+        mount();
+        expect(loadTaskProgress).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole("button", { name: "Show details" }));
+
+        expect(screen.getByText("Needs attention")).toBeTruthy();
+        expect(screen.getByText("Task 2")).toBeTruthy();
+        expect(screen.getByText("Task 3")).toBeTruthy();
+        await waitFor(() => expect(screen.getByText("MIP-2 Write docs")).toBeTruthy());
+        expect(screen.getByText("by Ken")).toBeTruthy();
+        expect(loadTaskProgress).toHaveBeenCalledWith(
+            "test-token",
+            700,
+            expect.objectContaining({ minDepth: 1, limit: 5 })
+        );
+    });
+
+    it("shows the empty state when the project has no ongoing milestone", () => {
+        mount(tasks, []);
+        expect(screen.getByText("No ongoing milestones in this project.")).toBeTruthy();
+    });
+});

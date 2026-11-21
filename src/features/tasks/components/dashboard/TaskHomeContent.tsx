@@ -91,10 +91,11 @@ import { ProjectTagChip } from "../ProjectTagChip";
 import { AgentActivityTab } from "./agentActivity/AgentActivityTab";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { DashboardTaskRow } from "./DashboardTaskRow";
+import { MilestoneProgressTab } from "./milestoneProgress/MilestoneProgressTab";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
 /** The dashboard's tabs. `agent` is the Agent Activity tab (MIP-1613). */
-type TaskDashboardTab = "overall" | "sprint" | "mytasks" | "members" | "agent";
+type TaskDashboardTab = "overall" | "sprint" | "milestones" | "mytasks" | "members" | "agent";
 
 type TaskHomeContentProps = {
     useTM: TaskManagementState;
@@ -715,6 +716,18 @@ export const TaskHomeContent = ({
         });
         return { overdue, upcoming };
     }, [effectiveTasks]);
+
+    // ── Milestones tab (MIP-1187) ──
+    // The current project's ongoing milestones, in the sidebar's order. Same visibility rule
+    // as the sprint section above (`selectVisibleMilestones`), then Closed ones are dropped.
+    const ongoingProjectMilestones = useMemo<Milestone[]>(() => {
+        const projectId = usePM.currentProject?.projectId;
+        if (!projectId) return [];
+        return selectVisibleMilestones(
+            useSM.projectMilestones[projectId] ?? [],
+            useSM.projectSprints[projectId] ?? []
+        ).filter(isOngoingMilestone);
+    }, [usePM.currentProject?.projectId, useSM.projectMilestones, useSM.projectSprints]);
 
     // ── My Tasks (badge) + Focus user (shared tasks body) ──
     // `myTasks`/`myStats` stay pinned to the logged-in user so the "My Tasks"
@@ -1473,17 +1486,21 @@ export const TaskHomeContent = ({
                             project + sprint selectors stay pinned above because
                             the Overall tab's "Closed (Sprint)" column depends on
                             the selected sprint. */}
+                            {/* MIP-1187: the row wraps on md+ so the quick actions move to their own
+                            line when the tabs (now six) no longer fit beside them; before, the
+                            tabs scrolled Member's Tasks and Agent Activity out of view at 1440. */}
                             <Stack
                                 alignItems={{ md: "center" }}
                                 direction={{ xs: "column", md: "row" }}
+                                flexWrap={{ md: "wrap" }}
                                 spacing={1.5}
-                                sx={{ mt: 1 }}
+                                sx={{ mt: 1, rowGap: 1.5 }}
                             >
                                 <Tabs
                                     aria-label={t.tasks.dashboard.sectionsAriaLabel}
                                     value={activeTab}
                                     sx={{
-                                        flex: 1,
+                                        flex: { xs: 1, md: "1 1 auto" },
                                         minWidth: 0,
                                         width: { xs: "100%", md: "auto" },
                                         backgroundColor: "transparent",
@@ -1553,6 +1570,10 @@ export const TaskHomeContent = ({
                                         <Tab value="sprint" indicatorInset>
                                             <CalendarMonthRoundedIcon sx={{ fontSize: 16 }} />
                                             {t.tasks.dashboard.tabSprint}
+                                        </Tab>
+                                        <Tab value="milestones" indicatorInset>
+                                            <FlagRoundedIcon sx={{ fontSize: 16 }} />
+                                            {t.tasks.dashboard.tabMilestones}
                                         </Tab>
                                         <Tab value="mytasks" indicatorInset>
                                             <PersonRoundedIcon sx={{ fontSize: 16 }} />
@@ -1682,6 +1703,15 @@ export const TaskHomeContent = ({
                                         onRetry: tasksSync.retry,
                                         title: t.common.feedback.sync.tasksFailed,
                                     }}
+                                />
+                            )}
+
+                            {/* ════════ TAB: Milestones — progress check (MIP-1187) ════════ */}
+                            {!tasksUnread && activeTab === "milestones" && (
+                                <MilestoneProgressTab
+                                    effectiveTasks={effectiveTasks}
+                                    milestones={ongoingProjectMilestones}
+                                    sprints={projectSprints}
                                 />
                             )}
 
