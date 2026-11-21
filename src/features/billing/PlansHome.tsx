@@ -256,7 +256,7 @@ export const PlansHome = () => {
     if (!plans) {
         return (
             <Box sx={{ flex: 1, minWidth: 0, p: 3 }}>
-                <LinearProgress size="sm" />
+                <LinearProgress aria-label={t.common.feedback.loading} size="sm" />
             </Box>
         );
     }

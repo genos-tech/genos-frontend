@@ -118,6 +118,10 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
             </Stack>
 
             <LinearProgress
+                aria-label={fmt(t.settings.llmModel.creditsRemaining, {
+                    balance: formatCredits(monthly),
+                    limit: formatCredits(credits.limit),
+                })}
                 color={empty ? "warning" : "primary"}
                 size="sm"
                 sx={{ "--LinearProgress-radius": "6px" }}
