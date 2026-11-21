@@ -2447,3 +2447,57 @@ a.lp-row:hover .lp-row__arrow {
     height: 18px;
     color: var(--lp-accent-text);
 }
+
+/* /docs (MIP-1259): the search box, the guide index and the anchors' scroll offset. */
+.lp-docs-search {
+    display: grid;
+    gap: 6px;
+    margin-top: 16px;
+}
+.lp-docs-search input {
+    font: inherit;
+    padding: 10px 12px;
+    border: 1px solid var(--lp-border);
+    border-radius: 8px;
+    background: var(--lp-surface);
+    color: var(--lp-text);
+    max-width: 100%;
+}
+.lp-docs-index {
+    margin-bottom: 32px;
+}
+.lp-docs-index h2 {
+    font-size: 1rem;
+    margin: 0 0 8px;
+}
+.lp-docs-index ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+}
+.lp-prose section[id] {
+    scroll-margin-top: 80px;
+}
+.lp-prose kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.9em;
+    padding: 2px 6px;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 4px;
+    background: var(--lp-bg-subtle);
+    white-space: nowrap;
+}
+.lp-docs-code {
+    overflow-x: auto;
+    max-width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 8px;
+    background: var(--lp-bg-subtle);
+    font-size: 0.875rem;
+}
+.lp-docs-code code {
+    white-space: pre;
+}
