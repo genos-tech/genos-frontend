@@ -37,12 +37,12 @@ const withLock = <T>(fn: () => Promise<T>): Promise<T> => {
     return locks.request(REFRESH_LOCK_NAME, { mode: "exclusive" }, () => fn()) as Promise<T>;
 };
 
-const attemptOnce = async (): Promise<RefreshResult> => {
+const attemptOnce = async (method: "POST" | "GET" = "POST"): Promise<RefreshResult> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
     try {
         const response = await fetch(`${base_url}/user/signin/refresh/`, {
-            method: "POST",
+            method,
             credentials: "include",
             signal: controller.signal,
         });
@@ -54,6 +54,12 @@ const attemptOnce = async (): Promise<RefreshResult> => {
         }
         if (response.status === 401 || response.status === 403) {
             return { kind: "unauthenticated" };
+        }
+        // An API that predates POST refresh answers 400 (it wants a token in the body) or 405. The
+        // API keeps GET for one release, so a frontend deployed first still gets a session.
+        if (method === "POST" && (response.status === 400 || response.status === 405)) {
+            clearTimeout(timeoutId);
+            return attemptOnce("GET");
         }
         console.error(`[AUTH] Token refresh failed with status ${response.status}`);
         return { kind: "transient" };
@@ -68,12 +74,12 @@ const attemptOnce = async (): Promise<RefreshResult> => {
 };
 
 const run = async (): Promise<RefreshResult> => {
-    let result = await withLock(attemptOnce);
+    let result = await withLock(() => attemptOnce());
     if (result.kind === "unauthenticated") {
         await new Promise((resolve) =>
             setTimeout(resolve, RETRY_BASE_MS + Math.random() * RETRY_JITTER_MS)
         );
-        result = await withLock(attemptOnce);
+        result = await withLock(() => attemptOnce());
     }
     return result;
 };
