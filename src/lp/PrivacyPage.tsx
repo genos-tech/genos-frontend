@@ -121,7 +121,8 @@ const JA_SECTIONS: Section[] = [
                     ))}
                 </ul>
                 <p>
-                    利用する事業者は、設定や提供状況により変更されることがあります。変更する場合は、本ページを更新します。
+                    利用する事業者は、設定や提供状況により変更されることがあります。変更する場合は、本ページを更新します。事業者の一覧は
+                    <Link to="/subprocessors">サブプロセッサー一覧</Link>にもあります。
                 </p>
                 <p>
                     また、チームの管理者が Webhook
@@ -236,7 +237,8 @@ const EN_SECTIONS: Section[] = [
                 </ul>
                 <p>
                     The providers we use can change with configuration and availability; we will
-                    update this page when they do.
+                    update this page when they do. The list is also on the{" "}
+                    <Link to="/subprocessors">Subprocessors</Link> page.
                 </p>
                 <p>
                     If a team administrator configures a webhook, the events they choose (chat,
