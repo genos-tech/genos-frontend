@@ -8,6 +8,7 @@ import { I18nProvider, useTranslation } from "../i18n";
 import type { Messages } from "../i18n/types";
 import { BillingPlans, fetchPublicBillingPlans, PlanTier } from "../services/billingApi";
 import { formatPrice } from "../utils/currency";
+import { PRICING_SECURITY_LINK } from "./copy/security";
 import { LpShell } from "./kit/LpShell";
 import { useSyncAppLocale } from "./kit/useSyncAppLocale";
 import type { Lang } from "./lpLang";
@@ -132,6 +133,12 @@ function PlansBody({ lang }: { lang: Lang }) {
                     </div>
                 </div>
             </section>
+
+            <div className="lp-container" style={{ paddingBottom: 16 }}>
+                <Link className="lp-link" to="/security">
+                    {PRICING_SECURITY_LINK[lang]}
+                </Link>
+            </div>
 
             <section className="lp-section lp-section--flush" style={{ paddingTop: 0 }}>
                 <div className="lp-container">
