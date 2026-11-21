@@ -1799,14 +1799,15 @@ export const ja: DeepPartial<Messages> = {
             ownerOnly: "アーカイブとアーカイブ解除はオーナーだけができます。",
             projectBannerTitle: "このプロジェクトはアーカイブされています",
             chatBannerTitle: "このグループはアーカイブされています",
+            chatBannerProjectTitle: "このプロジェクトのチャットはアーカイブされています",
             projectBannerBody:
                 "読み取り専用です。アーカイブを解除するまで、新しいタスク、編集、コメントはできません。何も削除されていません。",
             chatBannerBody:
                 "読み取り専用です。アーカイブを解除するまで、新しいメッセージは送れません。何も削除されていません。",
             unarchiveAction: "アーカイブを解除",
-            showArchived: "アーカイブを表示",
+            showArchived: "アーカイブを表示 ({count})",
             hideArchived: "アーカイブを隠す",
-            archivedSection: "アーカイブ済み",
+            archivedSection: "アーカイブ済み ({count})",
             archivedBadge: "アーカイブ済み",
             newTaskDisabled:
                 "タスクを追加するには、このプロジェクトのアーカイブを解除してください。",

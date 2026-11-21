@@ -24,7 +24,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation, type Messages } from "../../../../i18n";
+import { fmt, useTranslation, type Messages } from "../../../../i18n";
 import { useSyncFailure, type SyncScope } from "../../../../services/syncStatus";
 import { useShortcut } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
@@ -940,7 +940,7 @@ export const ChatList = (props: ChatListProps) => {
         if (targetChatType >= CHAT_TYPES.ACTIVITY || archivedInPane === 0) return null;
         const label = showArchivedChats
             ? t.common.archive.hideArchived
-            : `${t.common.archive.showArchived} (${archivedInPane})`;
+            : fmt(t.common.archive.showArchived, { count: archivedInPane });
         return (
             <Box sx={{ px: 1.5, py: 0.75, flexShrink: 0 }}>
                 <Button
