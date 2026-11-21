@@ -33,6 +33,9 @@ export const useCreateTaskBlockedByArchive = (
     const archived = useIsProjectArchived(projectId);
     useEffect(() => {
         if (archived && flag) {
+            // An entry that opened the form without a chat to check (a thread's "create task")
+            // still says why nothing opened, with the same message as the others.
+            emitRequestError("archived");
             setIsCreatingTask((prev) => ({ ...prev, flag: false }));
         }
         // the setter is a stable useState setter

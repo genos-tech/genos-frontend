@@ -41,6 +41,7 @@ describe("chat 'create task' entry for an archived project (MIP-1934)", () => {
     });
 
     it("drops a create intent while the project is archived, so the form cannot appear on unarchive", () => {
+        const emit = vi.spyOn(notifier, "emitRequestError").mockImplementation(() => {});
         const setIsCreatingTask = vi.fn();
         const { result } = renderHook(() =>
             useCreateTaskBlockedByArchive(7, true, setIsCreatingTask)
@@ -51,6 +52,7 @@ describe("chat 'create task' entry for an archived project (MIP-1934)", () => {
         act(() => markProjectArchived(project(7), true));
         expect(result.current).toBe(true);
         expect(setIsCreatingTask).toHaveBeenCalledTimes(1);
+        expect(emit).toHaveBeenCalledWith("archived");
         const updater = setIsCreatingTask.mock.calls[0][0];
         expect(updater({ flag: true, parentTaskId: 3 })).toEqual({ flag: false, parentTaskId: 3 });
     });
