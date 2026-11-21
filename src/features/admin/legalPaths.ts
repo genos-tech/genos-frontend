@@ -1,12 +1,12 @@
 /**
  * Where the signup consent checkbox sends people to read what they agree to.
  *
- * The Terms of Service have no page of their own yet: the text is waiting for
- * counsel. Until it ships, the "Terms of Service" link opens the legal notice
- * (`/legal`), the only terms-like page we publish. When a `/terms` route
- * exists, this constant is the only thing that changes.
+ * The Terms of Service are the interim v1 page at `/terms` (MIP-1843). That
+ * route exists only when the build has `VITE_SHOW_TERMS_PAGE=true`; until then
+ * the link leads to the 404 page. Switch the flag on in the same release that
+ * ships this constant.
  */
-export const TERMS_PATH = "/legal";
+export const TERMS_PATH = "/terms";
 
 /** The Privacy Policy page. */
 export const PRIVACY_PATH = "/privacy";
