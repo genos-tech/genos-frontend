@@ -138,6 +138,7 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                 icon={<FlagRoundedIcon sx={{ color: g.warning.solid }} />}
                                 label={row.title}
                                 lines={2}
+                                selected={selected}
                                 actions={
                                     <IconButton
                                         aria-label={`${t.tasks.sidebar.removeFromFavorites}: ${row.title}`}
@@ -162,7 +163,6 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                 rootProps={{
                                     "data-testid": `favorite-milestone-${row.milestoneId}`,
                                 }}
-                                selected={selected}
                                 // The remove star shows with the row's other actions:
                                 // hover, keyboard focus, always on touch.
                                 secondary={

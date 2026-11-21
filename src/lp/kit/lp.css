@@ -722,11 +722,22 @@
     }
 }
 
+/* Reduced motion: every animation and transition on the marketing pages stops (the content
+   is already in its final state without them, so nothing is lost). Covers the line draw-in,
+   the FAQ chevron, the hover fades. */
 @media (prefers-reduced-motion: reduce) {
-    .lp-line__item,
-    .lp-line__item::before {
+    .lp-root *,
+    .lp-root *::before,
+    .lp-root *::after {
         animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
     }
+}
+
+/* The skip link moves focus into <main>; that is a programmatic target, not a control. */
+#lp-main:focus {
+    outline: none;
 }
 
 /* ---------- "works with" strip ---------- */

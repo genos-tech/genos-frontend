@@ -484,9 +484,6 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 },
                                                             },
                                                         }}
-                                                        onChange={(e) =>
-                                                            setNameDraft(e.target.value)
-                                                        }
                                                         // Pin keydown to the inner <input>
                                                         // via slotProps so Enter/Escape
                                                         // always land on the typing
@@ -499,6 +496,9 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             "--Input-radius": g.radius.md,
                                                         }}
                                                         autoFocus
+                                                        onChange={(e) =>
+                                                            setNameDraft(e.target.value)
+                                                        }
                                                     />
                                                     <Button
                                                         loading={nameSaving}

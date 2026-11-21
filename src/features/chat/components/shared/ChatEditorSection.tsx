@@ -10,6 +10,8 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { ArchivedBanner } from "../../../archive/ArchivedBanner";
+import { useIsChatArchived } from "../../../archive/archiveState";
 
 interface ChatEditorSectionProps {
     useCM: ChatManagementState;
@@ -52,6 +54,16 @@ export const ChatEditorSection = ({
     pendingFiles,
     clearPendingFiles,
 }: ChatEditorSectionProps) => {
+    // An archived group chat (or project chat) takes no message, so its composer is replaced by the
+    // read-only notice (MIP-1693). The thread belongs to the chat, so it is covered too.
+    const archived = useIsChatArchived(chat as ChatProps);
+    if (archived) {
+        return (
+            <Box sx={{ paddingLeft: 1, paddingRight: 1, paddingBottom: 1 }}>
+                <ArchivedBanner kind="chat" />
+            </Box>
+        );
+    }
     if (isThread) {
         return (
             <Box sx={{ paddingLeft: 1, paddingRight: 1, paddingBottom: 1 }}>

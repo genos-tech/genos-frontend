@@ -68,6 +68,13 @@ const serve = (total: number, pageSize: number) => {
 
 const ids = () => [...channelService.getSnapshot().channels.keys()].sort();
 
+/**
+ * The calls of the default list's walk. A list call also walks the archived chats (MIP-1693,
+ * `include_archived=true`), in parallel; the paging contract below is about the default walk, so
+ * its calls are told apart by the flag, and the archived walk has its own test.
+ */
+const pageCalls = () => get.mock.calls.filter((call) => !call[1]?.params?.include_archived);
+
 describe("listChannels follows the pages", () => {
     beforeEach(() => {
         get.mockReset();
@@ -86,7 +93,7 @@ describe("listChannels follows the pages", () => {
         expect(list.map((c) => c.id)).toEqual(
             Array.from({ length: 25 }, (_, i) => `chan-${String(i + 1).padStart(3, "0")}`)
         );
-        expect(get).toHaveBeenCalledTimes(3);
+        expect(pageCalls()).toHaveLength(3);
     });
 
     it("sends the cursor on every page after the first, and not on the first", async () => {
@@ -94,9 +101,9 @@ describe("listChannels follows the pages", () => {
 
         await channelService.listChannels();
 
-        expect(get.mock.calls[0][1].params).not.toHaveProperty("cursor");
-        expect(get.mock.calls[1][1].params.cursor).toBe("chan-010");
-        expect(get.mock.calls[2][1].params.cursor).toBe("chan-020");
+        expect(pageCalls()[0][1].params).not.toHaveProperty("cursor");
+        expect(pageCalls()[1][1].params.cursor).toBe("chan-010");
+        expect(pageCalls()[2][1].params.cursor).toBe("chan-020");
     });
 
     it("keeps the team and the page size on every page", async () => {
@@ -104,7 +111,7 @@ describe("listChannels follows the pages", () => {
 
         await channelService.listChannels();
 
-        for (const call of get.mock.calls) {
+        for (const call of pageCalls()) {
             expect(call[1].params.team_id).toBe(TEAM);
             expect(call[1].params.limit).toBe(200);
         }
@@ -116,7 +123,7 @@ describe("listChannels follows the pages", () => {
         const list = await channelService.listChannels();
 
         expect(list).toHaveLength(5);
-        expect(get).toHaveBeenCalledTimes(1);
+        expect(pageCalls()).toHaveLength(1);
     });
 
     it("treats a server that predates paging as a single page, as before", async () => {
@@ -125,7 +132,7 @@ describe("listChannels follows the pages", () => {
         const list = await channelService.listChannels();
 
         expect(list).toHaveLength(2);
-        expect(get).toHaveBeenCalledTimes(1);
+        expect(pageCalls()).toHaveLength(1);
     });
 
     it("stops if has_more arrives without a cursor, rather than looping", async () => {
@@ -136,7 +143,7 @@ describe("listChannels follows the pages", () => {
         const list = await channelService.listChannels();
 
         expect(list).toHaveLength(1);
-        expect(get).toHaveBeenCalledTimes(1);
+        expect(pageCalls()).toHaveLength(1);
     });
 
     it("throws on a server that never says it is done, instead of returning a short list", async () => {
@@ -145,7 +152,8 @@ describe("listChannels follows the pages", () => {
         });
 
         await expect(channelService.listChannels()).rejects.toThrow();
-        expect(get.mock.calls.length).toBeLessThanOrEqual(50);
+        // The cap applies to each walk (the default one and the archived one).
+        expect(pageCalls().length).toBeLessThanOrEqual(50);
     });
 
     it("throws if a later page fails, instead of returning a short list", async () => {
@@ -166,7 +174,7 @@ describe("listChannels follows the pages", () => {
 
         expect(a).toHaveLength(25);
         expect(b).toHaveLength(25);
-        expect(get).toHaveBeenCalledTimes(3);
+        expect(pageCalls()).toHaveLength(3);
     });
 });
 
@@ -243,5 +251,35 @@ describe("refreshChannels never evicts a real channel", () => {
         await channelService.refreshChannels();
 
         expect(ids()).toEqual(before);
+    });
+
+    it("also walks the archived chats, and keeps the ones the default list does not name", async () => {
+        const all = serve(12, 10);
+        // The default list leaves out chat 3, which is archived.
+        const archived = all[2].id;
+        const original = get.getMockImplementation()!;
+        get.mockImplementation(
+            async (url: string, config?: { params?: Record<string, string> }) => {
+                if (!config?.params?.include_archived) {
+                    const page = await original(url, config);
+                    return {
+                        data: {
+                            ...page.data,
+                            channels: page.data.channels.filter(
+                                (c: { id: string }) => c.id !== archived
+                            ),
+                        },
+                    };
+                }
+                return original(url, config);
+            }
+        );
+
+        const list = await channelService.listChannels();
+
+        expect(list).toHaveLength(12);
+        expect(get.mock.calls.some((call) => call[1]?.params?.include_archived === "true")).toBe(
+            true
+        );
     });
 });

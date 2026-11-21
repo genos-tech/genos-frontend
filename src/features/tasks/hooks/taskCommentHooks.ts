@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
 
 import { TaskCommentProps } from "../../../types/tasks";
+import { smoothScrollBehavior } from "../../../utils/motion";
 
 export const useScrollToBottomOnNewTaskComment = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
@@ -45,7 +46,7 @@ export const useScrollToTaskCommentByCommentId = (
             virtuosoRef.current?.scrollToIndex({
                 index,
                 align: "center",
-                behavior: "smooth",
+                behavior: smoothScrollBehavior(),
             });
         }, 300);
         return () => clearTimeout(timer);

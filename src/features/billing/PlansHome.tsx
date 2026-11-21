@@ -287,14 +287,30 @@ export const PlansHome = () => {
             month: "long",
             day: "numeric",
         });
+        const pendingPlan = subscription.pending_plan;
+        const pendingAt = subscription.pending_change_at;
         return (
-            <Typography
-                color={willEnd ? "warning" : undefined}
-                level="body-sm"
-                sx={willEnd ? undefined : { color: "text.tertiary" }}
-            >
-                {`${willEnd ? p.planEnds : p.planRenews} ${dateLabel}`}
-            </Typography>
+            <>
+                <Typography
+                    color={willEnd ? "warning" : undefined}
+                    level="body-sm"
+                    sx={willEnd ? undefined : { color: "text.tertiary" }}
+                >
+                    {`${willEnd ? p.planEnds : p.planRenews} ${dateLabel}`}
+                </Typography>
+                {pendingPlan && pendingAt != null && (
+                    <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                        {fmt(p.pendingChange, {
+                            plan: tierLabel[pendingPlan],
+                            date: new Date(pendingAt * 1000).toLocaleDateString(locale, {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                            }),
+                        })}
+                    </Typography>
+                )}
+            </>
         );
     };
 
@@ -336,8 +352,8 @@ export const PlansHome = () => {
                 return (
                     <Button
                         disabled={busy}
-                        variant={cta.plan === "pro" ? "solid" : "soft"}
                         size="sm"
+                        variant={cta.plan === "pro" ? "solid" : "soft"}
                         // Pro is the tier we expect most people to buy,
                         // so it carries the solid (primary) treatment;
                         // core and max flank it as soft.

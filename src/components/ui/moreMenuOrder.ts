@@ -47,6 +47,7 @@ export const MORE_MENU_GROUPS = [
             "tags",
             "members",
             "customizeFields",
+            "archive",
             "versionHistory",
         ],
     },

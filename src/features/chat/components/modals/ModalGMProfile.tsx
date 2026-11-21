@@ -7,6 +7,7 @@
 // plugin disagrees with it on react-vs-@mui ordering; prettier wins.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -14,6 +15,7 @@ import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
+import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import {
     Box,
     Button,
@@ -49,6 +51,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { addMembersToGMWithNotice } from "../../../../services/addMembersWithNotice";
 import { channelService } from "../../../../services/channel/channelService";
+import { emitRequestError } from "../../../../services/requestErrorNotifier";
 import { v3ApiBaseURL } from "../../../../services/v3Api";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
@@ -61,6 +64,8 @@ import {
 } from "../../../../utils/gmProfileImageVersion";
 import { canManageMembers, MemberRole, resolveMyRole } from "../../../../utils/memberRoles";
 import { withoutDeletedUsers } from "../../../../utils/teamRoster";
+import { ArchivedBanner } from "../../../archive/ArchivedBanner";
+import { useIsChatArchived } from "../../../archive/archiveState";
 import { setGMMemberRole } from "../../services/setGMMemberRole";
 import { resolveLegacyChatId } from "../../utils/channelIdResolvers";
 import { ExternalSharesPanel } from "./ExternalSharesPanel";
@@ -153,6 +158,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     // gmProfile presence and ownerUserId mismatch.
     const [openLeaveConfirm, setOpenLeaveConfirm] = useState(false);
     const isGMOwner = !!gmProfile && myself.userId === gmProfile.ownerUserId;
+    // Archive state (MIP-1693): the owner archives or restores the group; others see the notice only.
+    const gmArchived = useIsChatArchived(gmChat);
     const canShowLeave = !!gmProfile && !isGMOwner;
     // The owner cannot leave, so deleting is how an owner retires a group (MIP-1705). The server
     // refuses anyone else; the button is only offered to the owner.
@@ -311,6 +318,22 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             return false;
         }
         setOpenModalGMProfile(false);
+        return true;
+    };
+
+    // Archive or restore the group (owner only; the API decides). A refusal leaves it as it was.
+    const handleArchiveGM = async (): Promise<boolean> => {
+        try {
+            if (gmArchived) await channelService.unarchiveChannel(gmChat.chatId);
+            else await channelService.archiveChannel(gmChat.chatId);
+        } catch (error) {
+            console.error("[ModalGMProfile] archive GM failed:", error);
+            emitRequestError(
+                "serverMessage",
+                gmArchived ? t.common.archive.unarchiveFailed : t.common.archive.archiveFailed
+            );
+            return false;
+        }
         return true;
     };
 
@@ -1093,6 +1116,44 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                         />
                                     )}
 
+                                    {gmArchived && (
+                                        <ArchivedBanner
+                                            kind="chat"
+                                            onRestore={
+                                                isGMOwner
+                                                    ? () => void handleArchiveGM()
+                                                    : undefined
+                                            }
+                                        />
+                                    )}
+
+                                    {isGMOwner && (
+                                        <Box
+                                            sx={{
+                                                mt: 2,
+                                                display: "flex",
+                                                justifyContent: "flex-end",
+                                            }}
+                                        >
+                                            <Button
+                                                sx={{ borderRadius: g.radius.sm }}
+                                                variant="outlined"
+                                                startDecorator={
+                                                    gmArchived ? (
+                                                        <UnarchiveOutlinedIcon fontSize="small" />
+                                                    ) : (
+                                                        <ArchiveOutlinedIcon fontSize="small" />
+                                                    )
+                                                }
+                                                onClick={() => void handleArchiveGM()}
+                                            >
+                                                {gmArchived
+                                                    ? t.common.archive.unarchiveMenuChat
+                                                    : t.common.archive.archiveMenuChat}
+                                            </Button>
+                                        </Box>
+                                    )}
+
                                     {isGMOwner && (
                                         <Box
                                             sx={{
@@ -1172,6 +1233,11 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 open={openDeleteConfirm}
                 onCancel={() => setOpenDeleteConfirm(false)}
                 onConfirm={handleDeleteGM}
+                onArchive={async () => {
+                    const ok = await handleArchiveGM();
+                    if (ok) setOpenDeleteConfirm(false);
+                    return ok;
+                }}
             />
             <ModalTransferOwner
                 candidates={transferCandidates}

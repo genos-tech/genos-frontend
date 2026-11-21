@@ -330,6 +330,11 @@ export interface BillingSubscription {
     cancel_at_period_end: boolean;
     current_period_end: number | null; // unix seconds
     cancel_at: number | null; // unix seconds
+    // A plan change scheduled for the period end (a downgrade, which
+    // takes effect at renewal with no credit): the plan it switches to
+    // and when. Null or absent when nothing is pending.
+    pending_plan?: PurchasablePlan | null;
+    pending_change_at?: number | null; // unix seconds
 }
 
 /**
