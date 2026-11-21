@@ -117,8 +117,9 @@ const useSMWith = (sprints: Sprint[], milestones: Milestone[]) =>
     }) as never;
 
 describe("the sprint / milestone picker", () => {
-    // "Deleted" milestones are never offered, so the picker has no option for them.
-    it.each(STATUS_NAMES.filter((n) => n !== "Deleted"))(
+    // "Deleted" and "Closed" milestones are never offered (MIP-1751), so the picker has
+    // no option for them. Closed is covered by SprintMilestonePickerHidesClosed.test.tsx.
+    it.each(STATUS_NAMES.filter((n) => n !== "Deleted" && n !== "Closed"))(
         "milestone option, status %s: StatusLabel (icon + word), no Chip",
         (s) => {
             wrap(
