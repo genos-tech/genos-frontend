@@ -23,6 +23,10 @@ const ALLOWED: Record<string, { max: number; why: string }> = {
     "i18n/collate.ts": { max: 0, why: "the helper itself uses Intl.Collator" },
     "devtools/blocknoteCompat/cli.ts": { max: 1, why: "dev CLI listing file names, no UI" },
     "features/tasks/services/loadTaskVelocity.ts": { max: 1, why: "ISO date strings" },
+    "features/tasks/components/dashboard/agentActivity/AgentActivityTab.tsx": {
+        max: 1,
+        why: "ISO last_used_at timestamps (latest connection)",
+    },
     "features/calendar/utils/multiDay.ts": { max: 1, why: "event ids, a stable tie-break" },
     "features/chat/hooks/useWarmRecentChannels.ts": { max: 1, why: "ISO timestamps" },
     "features/channel/hooks/useChannelList.ts": { max: 1, why: "ISO timestamps" },
