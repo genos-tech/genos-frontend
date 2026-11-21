@@ -11,15 +11,6 @@ export type ScheduleStatus = {
     /** Tone for badges / left-edge stripes. */
     tone: ScheduleTone;
     /**
-     * Short relative description anchored on the due date. Examples:
-     *   - "Due in 5d"
-     *   - "Due tomorrow"
-     *   - "Due today"
-     *   - "Overdue 2d"
-     * Null when there is no due date.
-     */
-    relativeLabel: string | null;
-    /**
      * Inclusive span between start and due, in whole days. Null when
      * either date is missing. Minimum is 1 (start == due → "1d").
      */
@@ -52,19 +43,6 @@ const todayLocalMidnight = (): Date => {
 // The date in the app's language (`locale` from `useTranslation()`), not the browser's.
 const fmt = (d: Date | null, locale: Locale): string | null =>
     d == null ? null : d.toLocaleDateString(locale, { month: "short", day: "numeric" });
-
-const buildRelativeLabel = (daysUntilDue: number, isClosed: boolean): string => {
-    if (isClosed) return "Closed";
-    if (daysUntilDue < 0) {
-        const n = -daysUntilDue;
-        if (n === 0) return "Due today";
-        if (n === 1) return "Overdue 1d";
-        return `Overdue ${n}d`;
-    }
-    if (daysUntilDue === 0) return "Due today";
-    if (daysUntilDue === 1) return "Due tomorrow";
-    return `Due in ${daysUntilDue}d`;
-};
 
 const buildTone = (daysUntilDue: number | null, isClosed: boolean): ScheduleTone => {
     if (isClosed) return "success";
@@ -100,7 +78,6 @@ export const getScheduleStatus = (
 
     return {
         tone: buildTone(daysUntilDue, isClosed),
-        relativeLabel: due == null ? null : buildRelativeLabel(daysUntilDue ?? 0, isClosed),
         durationDays,
         startLabel: fmt(start, locale),
         dueLabel: fmt(due, locale),
