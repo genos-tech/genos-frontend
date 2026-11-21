@@ -5198,6 +5198,11 @@ export const zh: DeepPartial<Messages> = {
             tasksInThisMilestone: "此里程碑下的任务",
             taskProgress: "任务进度",
             taskProgressOther: "其他",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
+            startMilestone: "开始里程碑",
+            completeMilestone: "完成里程碑",
+            totalCount: "共 {count} 项",
+            dueDateTbd: "待定",
             taskButton: "任务",
             emptyMilestoneTasks: "暂无任务。创建任务并指定到此里程碑。",
             menu: {
@@ -5595,6 +5600,10 @@ export const zh: DeepPartial<Messages> = {
             attachments: "附件",
             activity: "动态",
             downloadFileTooltip: "下载“{name}”",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The empty comment list and the attachment drop zone of the task / milestone panel.
+            noComments: "暂无评论",
+            dropFilesHere: "将文件拖放到此处",
+            dropFilesBrowse: "或使用下方按钮浏览",
         },
         sprintFilter: {
             all: "全部",

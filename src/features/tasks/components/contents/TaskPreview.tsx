@@ -2251,7 +2251,7 @@ const MilestonePreviewInner = ({
                     >
                         <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />
                         <Typography level="body-xs" sx={{ color: "neutral.500" }}>
-                            Milestone
+                            {t.tasks.titleBlock.milestoneBadge}
                         </Typography>
                         {/* Status Transition Buttons — mirror the task-
                         header buttons (TaskTitleBlock.tsx:135) so the
@@ -2266,7 +2266,7 @@ const MilestonePreviewInner = ({
                                 variant="soft"
                                 onClick={() => handleMilestoneStatusChange("WIP")}
                             >
-                                Start Milestone
+                                {t.tasks.preview.startMilestone}
                             </Button>
                         )}
                         {milestone.status === "WIP" && (
@@ -2278,7 +2278,7 @@ const MilestonePreviewInner = ({
                                 variant="soft"
                                 onClick={() => handleMilestoneStatusChange("Closed")}
                             >
-                                Complete Milestone
+                                {t.tasks.preview.completeMilestone}
                             </Button>
                         )}
                         <PreviewTaskIdChip
@@ -2629,7 +2629,10 @@ const MilestonePreviewInner = ({
                                     ml: 0.5,
                                 }}
                             >
-                                · {milestoneTaskCounts.total} total
+                                ·{" "}
+                                {fmt(t.tasks.preview.totalCount, {
+                                    count: milestoneTaskCounts.total,
+                                })}
                             </Typography>
                         </Stack>
                     )}
@@ -2869,7 +2872,6 @@ const MilestonePreviewInner = ({
                     myself={myself}
                     open={openTaskDiagram}
                     projectId={milestone.projectId}
-                    rootLabel={`${milestone.title || "Milestone"} · diagram`}
                     rootTaskId={milestone.taskId}
                     usePM={usePM}
                     useSM={useSM}
@@ -2878,6 +2880,9 @@ const MilestonePreviewInner = ({
                     // lift the graph above the host dialog or it opens
                     // invisibly behind it — see diagramZIndex.ts.
                     zIndex={hostZIndex != null ? hostZIndex + DIAGRAM_LIFT : undefined}
+                    rootLabel={fmt(t.app.diagram.label, {
+                        title: milestone.title || t.app.diagram.milestoneFallback,
+                    })}
                     onClose={() => setOpenTaskDiagram(false)}
                 />
             )}

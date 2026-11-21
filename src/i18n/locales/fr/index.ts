@@ -5464,6 +5464,11 @@ export const fr: DeepPartial<Messages> = {
             tasksInThisMilestone: "Tâches dans ce jalon",
             taskProgress: "Progression de la tâche",
             taskProgressOther: "Autres",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
+            startMilestone: "Démarrer le jalon",
+            completeMilestone: "Terminer le jalon",
+            totalCount: "{count} au total",
+            dueDateTbd: "À définir",
             taskButton: "Tâche",
             emptyMilestoneTasks:
                 "Aucune tâche pour le moment. Créez une tâche et assignez-la à ce jalon.",
@@ -5881,6 +5886,10 @@ export const fr: DeepPartial<Messages> = {
             attachments: "Pièces jointes",
             activity: "Activité",
             downloadFileTooltip: 'Télécharger "{name}"',
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The empty comment list and the attachment drop zone of the task / milestone panel.
+            noComments: "Aucun commentaire pour l'instant",
+            dropFilesHere: "Glissez-déposez des fichiers ici",
+            dropFilesBrowse: "ou utilisez le bouton ci-dessous pour parcourir",
         },
         sprintFilter: {
             all: "Tous",

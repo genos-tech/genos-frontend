@@ -197,6 +197,8 @@ describe("feedback adoption", () => {
                 "no options in a listbox",
             "features/tasks/components/contents/base/CustomFieldsBlock.tsx":
                 "one hint row inside the properties list",
+            "features/tasks/components/contents/base/sub/TaskCommentList.tsx":
+                "the comments tab's own icon-plus-hint empty state, literal English until MIP-1777 moved it to a key (the scan only sees keys)",
             "features/tasks/components/contents/base/TaskDeliveriesBlock.tsx":
                 "fallback of a value",
             "features/tasks/components/dashboard/TaskHomeContent.tsx":

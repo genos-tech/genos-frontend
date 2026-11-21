@@ -166,6 +166,9 @@ const NOT_YET = new Set([
     "table/DraggableTaskRow.tsx",
     "table/QuickAddTaskRow.tsx",
     "table/cellEditors.tsx",
+    // The task panel's own words (MIP-1777 moved the milestone panel's; these two are MIP-1809).
+    "contents/base/TaskTitleBlock.tsx",
+    "contents/base/TaskCreateAttachmentBlock.tsx",
 ]);
 
 const jsxTextLiterals = (file: string): string[] => {
@@ -188,10 +191,16 @@ const jsxTextLiterals = (file: string): string[] => {
     return found;
 };
 
-describe("toolbar / board / dashboard components render no literal English", () => {
-    const files = ["board", "dashboard", "header", "layout", "sidebar", "table"].flatMap((d) =>
-        walk(join(TASKS, d))
-    );
+describe("toolbar / board / dashboard / task panel components render no literal English", () => {
+    const files = [
+        "board",
+        "contents",
+        "dashboard",
+        "header",
+        "layout",
+        "sidebar",
+        "table",
+    ].flatMap((d) => walk(join(TASKS, d)));
     for (const file of files) {
         const rel = file.slice(TASKS.length + 1);
         if (NOT_YET.has(rel)) continue;

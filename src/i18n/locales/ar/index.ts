@@ -2639,6 +2639,11 @@ export const ar: DeepPartial<Messages> = {
             loadingTask: "جارٍ تحميل المهمة...",
             taskProgress: "تقدم المهمة",
             taskProgressOther: "أخرى",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
+            startMilestone: "بدء المعلم",
+            completeMilestone: "إكمال المعلم",
+            totalCount: "{count} في المجموع",
+            dueDateTbd: "غير محدد",
         },
         createForm: {
             bootstrapFailed: "تعذّر تجهيز مهمة جديدة",
@@ -2824,6 +2829,10 @@ export const ar: DeepPartial<Messages> = {
             attachments: "المرفقات",
             activity: "النشاط",
             downloadFileTooltip: 'تنزيل "{name}"',
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The empty comment list and the attachment drop zone of the task / milestone panel.
+            noComments: "لا توجد تعليقات بعد",
+            dropFilesHere: "اسحب الملفات وأفلتها هنا",
+            dropFilesBrowse: "أو استخدم الزر أدناه للتصفح",
         },
         sprintFilter: {
             all: "الكل",

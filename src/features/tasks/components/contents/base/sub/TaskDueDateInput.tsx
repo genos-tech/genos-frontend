@@ -1,5 +1,6 @@
 import { Button, Input, Stack, useColorScheme } from "@mui/joy";
 
+import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { getFormattedDateStr, getFormattedTodayDateStr } from "../../../../../../utils/dateUtils";
 
@@ -11,6 +12,7 @@ type TaskDueDateInputProps = {
 export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
     const { taskContent, setTaskContent, setTaskUpdated } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     return (
         <Stack alignItems="center" direction="row" justifyContent="center" spacing={1.5}>
             <Input
@@ -61,7 +63,7 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
                     }
                 }}
             >
-                TBD
+                {t.tasks.preview.dueDateTbd}
             </Button>
         </Stack>
     );

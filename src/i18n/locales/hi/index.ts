@@ -2656,6 +2656,11 @@ export const hi: DeepPartial<Messages> = {
             tasksInThisMilestone: "इस माइलस्टोन के टास्क",
             taskProgress: "कार्य प्रगति",
             taskProgressOther: "अन्य",
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
+            startMilestone: "माइलस्टोन शुरू करें",
+            completeMilestone: "माइलस्टोन पूरा करें",
+            totalCount: "कुल {count}",
+            dueDateTbd: "तय नहीं",
             taskButton: "टास्क",
             emptyMilestoneTasks:
                 "अभी कोई टास्क नहीं। एक टास्क बनाएँ और उसे इस माइलस्टोन को असाइन करें।",
@@ -3068,6 +3073,10 @@ export const hi: DeepPartial<Messages> = {
             attachments: "अटैचमेंट",
             activity: "गतिविधि",
             downloadFileTooltip: '"{name}" डाउनलोड करें',
+            // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The empty comment list and the attachment drop zone of the task / milestone panel.
+            noComments: "अभी तक कोई टिप्पणी नहीं",
+            dropFilesHere: "फ़ाइलें यहाँ खींचकर छोड़ें",
+            dropFilesBrowse: "या ब्राउज़ करने के लिए नीचे दिए बटन का उपयोग करें",
         },
         sprintFilter: {
             all: "सभी",
