@@ -1203,7 +1203,8 @@ export const SpotlightSection = () => {
     );
 };
 
-const PrivacySection = () => {
+/** Exported for its test (MIP-1781). */
+export const PrivacySection = () => {
     const { enabled, setEnabled } = useAnalyticsPreferences();
     const { t } = useTranslation();
     return (
@@ -1630,7 +1631,7 @@ const AutoSyncCalendarSection = () => {
  *   2. Message layout   – bubble vs compact rendering of chat messages.
  *   3. Genos            – model/effort, AI answers + web search, and the
  *                         "What Genos remembers" page.
- *   4. Privacy          – analytics opt-out.
+ *   4. Privacy          – analytics consent (off until accepted, MIP-1781).
  *   5. Language         – locale switcher (English / 日本語).
  *   6. Notifications    – delegates to `NotificationSettingsPanel`.
  *   7. Keyboard shortcuts – read-only reference for the global service shortcuts.

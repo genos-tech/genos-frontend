@@ -39,6 +39,11 @@ describe("useAnalyticsIdentity", () => {
         vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
         vi.stubEnv("VITE_POSTHOG_HOST", "https://eu.i.posthog.com");
         window.localStorage.clear();
+        // The app starts analytics only after "Accept" (MIP-1781).
+        window.localStorage.setItem(
+            "genos-marketing-consent:v1",
+            JSON.stringify({ choice: "accepted", v: 1 })
+        );
         posthogMock.identify.mockClear();
         analytics.init();
         await analytics.whenReady();

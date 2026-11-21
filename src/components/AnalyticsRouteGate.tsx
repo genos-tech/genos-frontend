@@ -13,8 +13,9 @@ import { marketingAnalyticsAllowed } from "../services/marketingConsent";
  * to not call `init`. A visitor who accepted earlier (and has not turned analytics off since)
  * gets it started on the next marketing page too.
  *
- * Everything else (sign-in, sign-up, demo, the workspace, an unknown path) starts it as
- * before, subject to the stored opt-out preference: the app's behaviour is unchanged.
+ * Everything else (sign-in, sign-up, demo, the workspace, an unknown path) calls `init()`, which
+ * starts the library only for someone who pressed "Accept" (MIP-1781: the consent is asked once,
+ * in the workspace, by `components/layout/AnalyticsConsentPrompt`) and has not switched it off.
  */
 export const startAnalyticsOutsideMarketing = (pathname: string): void => {
     if (routeFor(pathname)) {

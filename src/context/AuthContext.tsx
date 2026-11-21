@@ -4,6 +4,7 @@ import { NoteService } from "../db/services/note.service";
 import { TaskService } from "../db/services/task.service";
 import { DatabaseUtils } from "../db/utils/database";
 import { analytics } from "../services/analytics";
+import { CONSENT_KEY, readConsent } from "../services/consentStorage";
 import {
     clearPrivateProfile,
     ensurePrivateProfile,
@@ -111,6 +112,17 @@ export const clearUserScopedLocalStorage = (): void => {
     ]) {
         const val = localStorage.getItem(key);
         if (val !== null) preserved.set(key, val);
+    }
+    // The analytics consent choice (MIP-1781). A visitor who chose on a marketing page, before
+    // any account existed on this browser, is not asked again at their first sign-in, so the
+    // choice is kept. When ANOTHER signed-in user was here before (`userId` is still stored:
+    // the callers set the new one after this), an "accepted" is that person's, not the new
+    // user's, and is dropped so the new user is asked. A "rejected" is kept: it errs towards
+    // sending nothing, and the new user can turn analytics on in Settings.
+    const consent = localStorage.getItem(CONSENT_KEY);
+    const otherUserWasHere = Boolean(localStorage.getItem("userId"));
+    if (consent !== null && !(otherUserWasHere && readConsent() === "accepted")) {
+        preserved.set(CONSENT_KEY, consent);
     }
     localStorage.clear();
     for (const [key, val] of preserved) {

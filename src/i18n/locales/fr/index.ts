@@ -4728,7 +4728,17 @@ export const fr: DeepPartial<Messages> = {
                 "Nous aide à comprendre quelles fonctionnalités sont utilisées afin de mieux les améliorer.",
             shareLabel: "Partager les données d'utilisation",
             shareHelper:
-                "Activé par défaut. Envoie votre ID utilisateur, l'ID de votre équipe et votre rôle ainsi que les pages que vous visitez, rattachés à votre compte. Aucun contenu de message ni clic n'est enregistré. Désactivez pour vous désinscrire totalement.",
+                "Désactivé tant que vous n'avez pas accepté. Si vous l'activez, envoie votre ID utilisateur, l'ID de votre équipe et votre rôle ainsi que les pages que vous visitez, rattachés à votre compte. Aucun contenu de message ni clic n'est enregistré. Désactivez pour arrêter l'envoi et supprimer ce que les analyses ont enregistré dans ce navigateur.",
+            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
+            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
+            consent: {
+                region: "Consentement aux analyses",
+                title: "Autoriser les analyses d'usage ?",
+                body: "Si vous acceptez, nous utilisons un cookie d'analyse et le stockage du navigateur pour enregistrer votre ID utilisateur, l'ID de votre équipe et votre rôle, ainsi que les pages que vous visitez dans Genos, rattachés à votre compte, afin de savoir quelles fonctionnalités sont utilisées. Aucun contenu de message n'est envoyé. Si vous refusez, rien n'est enregistré ni envoyé pour l'analyse ; seul votre choix est mémorisé. Vous pouvez le modifier à tout moment dans les Paramètres, sous Confidentialité et analyses.",
+                privacy: "Politique de confidentialité",
+                accept: "Accepter",
+                reject: "Refuser",
+            },
         },
         shortcuts: {
             heading: "Raccourcis clavier",

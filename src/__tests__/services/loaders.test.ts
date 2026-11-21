@@ -596,6 +596,7 @@ describe("loadInitialData", () => {
 // ===========================================================================
 describe("analytics", () => {
     const PREF_KEY = "genos-analytics-preferences:v1";
+    const CONSENT_KEY = "genos-marketing-consent:v1";
 
     const loadAnalytics = async () => {
         vi.resetModules();
@@ -617,6 +618,9 @@ describe("analytics", () => {
             },
         }));
         localStorage.clear();
+        // The app starts the library only after "Accept" (MIP-1781); these tests are about what
+        // it does once started.
+        localStorage.setItem(CONSENT_KEY, JSON.stringify({ choice: "accepted", v: 1 }));
     });
 
     afterEach(() => {
@@ -653,6 +657,19 @@ describe("analytics", () => {
                 persistence: "localStorage+cookie",
             })
         );
+    });
+
+    it("init does not load posthog-js at all before anyone pressed Accept (MIP-1781)", async () => {
+        localStorage.removeItem(CONSENT_KEY);
+        vi.stubEnv("VITE_POSTHOG_KEY", "phc_key");
+        vi.stubEnv("VITE_POSTHOG_HOST", "https://ph.example");
+        const { posthog, analytics } = await loadAnalytics();
+
+        analytics.init();
+        await analytics.whenReady();
+
+        expect(posthog.init).not.toHaveBeenCalled();
+        expect(analytics.isEnabled()).toBe(false);
     });
 
     it("init does not load posthog-js at all when the stored preference is opted out", async () => {
