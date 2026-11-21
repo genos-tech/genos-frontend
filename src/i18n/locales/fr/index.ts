@@ -1833,6 +1833,40 @@ export const fr: DeepPartial<Messages> = {
             archiveFailed: "Impossible d'archiver. Veuillez réessayer.",
             unarchiveFailed: "Impossible de désarchiver. Veuillez réessayer.",
         },
+        forceDelete: {
+            menu: "Supprimer définitivement",
+            phrase: "DELETE",
+            typeLabel: "Saisissez DELETE pour confirmer",
+            confirm: "Supprimer définitivement",
+            cancel: "Annuler",
+            failed: "Suppression impossible. Rien n’a été retiré. Réessayez.",
+            notAllowed:
+                "Seul son créateur ou le propriétaire du projet peut la supprimer définitivement.",
+            notAllowedMessage:
+                "Seul l’expéditeur ou le propriétaire du groupe peut le supprimer définitivement.",
+            notAllowedComment: "Seul son auteur peut le supprimer définitivement.",
+            incomplete:
+                "Certains de vos messages sont encore là. Réessayez pour supprimer le reste.",
+            hasSubtasks: "Supprimez ou déplacez d’abord ses sous-tâches.",
+            isMilestone: "La tâche d’un jalon est supprimée avec le jalon.",
+            taskLinked:
+                "Ce message appartient à une tâche. Supprimez plutôt la tâche ou le commentaire.",
+            done: "Supprimé définitivement.",
+            messageTitle: "Supprimer ce message définitivement ?",
+            messageDescription:
+                "Le texte, les fichiers, les réactions et les marqueurs de ce message sont effacés maintenant et ne peuvent pas être récupérés. Ceux qui l’ont vu ont pu le copier.",
+            commentTitle: "Supprimer ce commentaire définitivement ?",
+            commentDescription:
+                "Le commentaire, ses réactions et sa copie dans le chat du projet sont effacés maintenant et ne peuvent pas être récupérés.",
+            taskTitle: "Supprimer cette tâche définitivement ?",
+            taskDescription:
+                "La tâche, ses commentaires, fichiers, notes, historique et entrées de recherche sont effacés maintenant, sans les 30 jours de conservation habituels. Cette action est irréversible.",
+            myMessagesMenu: "Supprimer tous mes messages",
+            myMessagesTitle: "Supprimer tous vos messages dans ce chat ?",
+            myMessagesDescription:
+                "Tous les messages que vous avez écrits ici, avec leurs fichiers et réactions, sont effacés maintenant et ne peuvent pas être récupérés. Les messages de l’autre personne ne sont pas touchés et le chat reste.",
+            myMessagesDone: "Vos messages ont été supprimés.",
+        },
         deleteChat: {
             button: "Supprimer le groupe",
             title: "Supprimer ce groupe ?",
@@ -3937,6 +3971,7 @@ export const fr: DeepPartial<Messages> = {
                     "member.added": "Membre ajouté",
                     "member.removed": "Membre parti",
                     "channel.deleted": "Discussion de groupe supprimée",
+                    "data.force_deleted": "Données supprimées définitivement",
                     "role.changed": "Rôle modifié",
                     "owner.transferred": "Propriété transférée",
                     "invite.sent": "Invitation envoyée",
