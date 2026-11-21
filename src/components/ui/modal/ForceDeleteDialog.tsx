@@ -17,8 +17,8 @@ type Props = {
     /** The exact text to type. Defaults to the localized word. */
     confirmPhrase?: string;
     /** What is deleted, so a 403 names who may: a task (creator or project owner), a message
-     *  (sender or group owner) or a comment (author). Defaults to a task. */
-    kind?: "task" | "message" | "comment";
+     *  (sender or group owner) or a comment (author) or a note (owner). Defaults to a task. */
+    kind?: "task" | "message" | "comment" | "note";
     /** Runs the delete. A rejection keeps the dialog open and shows why. */
     onConfirm: () => Promise<unknown>;
     onClose: () => void;
@@ -59,16 +59,20 @@ export const ForceDeleteDialog = ({
                             ? copy.notAllowedMessage
                             : kind === "comment"
                               ? copy.notAllowedComment
-                              : copy.notAllowed
+                              : kind === "note"
+                                ? copy.notAllowedNote
+                                : copy.notAllowed
                         : e.code === "incomplete"
                           ? copy.incomplete
-                          : e.code === "has_subtasks"
-                            ? copy.hasSubtasks
-                            : e.code === "milestone"
-                              ? copy.isMilestone
-                              : e.code === "task_linked"
-                                ? copy.taskLinked
-                                : copy.failed
+                          : e.code === "has_children"
+                            ? copy.hasChildren
+                            : e.code === "has_subtasks"
+                              ? copy.hasSubtasks
+                              : e.code === "milestone"
+                                ? copy.isMilestone
+                                : e.code === "task_linked"
+                                  ? copy.taskLinked
+                                  : copy.failed
                     : copy.failed;
             setError(message);
             throw new Error(message);

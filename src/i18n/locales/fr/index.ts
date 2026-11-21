@@ -1865,6 +1865,11 @@ export const fr: DeepPartial<Messages> = {
             myMessagesDescription:
                 "Tous les messages que vous avez écrits ici, avec leurs fichiers et réactions, sont effacés maintenant et ne peuvent pas être récupérés. Les messages de l’autre personne ne sont pas touchés et le chat reste.",
             myMessagesDone: "Vos messages ont été supprimés.",
+            noteTitle: "Supprimer définitivement cette note ?",
+            noteDescription:
+                "La note, son historique, ses commentaires, ses fichiers et ses entrées de recherche sont effacés maintenant, ainsi que sa copie collaborative. Cette action est irréversible. Les personnes qui l'ont vue ont pu la copier.",
+            notAllowedNote: "Seul le propriétaire de la note peut la supprimer définitivement.",
+            hasChildren: "Supprimez ou déplacez d'abord ses sous-pages.",
         },
         deleteChat: {
             button: "Supprimer le groupe",

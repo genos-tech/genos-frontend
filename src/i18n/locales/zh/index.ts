@@ -1768,6 +1768,11 @@ export const zh: DeepPartial<Messages> = {
             myMessagesDescription:
                 "你在此处发送的所有消息及其文件和回应将立即清除，无法恢复。对方的消息不受影响，聊天会保留。",
             myMessagesDone: "已删除你的消息。",
+            noteTitle: "永久删除此笔记?",
+            noteDescription:
+                "笔记及其历史记录、评论、文件和搜索条目将立即被清除,协作副本也一并删除。此操作无法撤销。看过它的人可能已经复制了内容。",
+            notAllowedNote: "只有笔记的所有者可以永久删除。",
+            hasChildren: "请先删除或移动它的子页面。",
         },
         deleteChat: {
             button: "删除群组",

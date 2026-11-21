@@ -71,6 +71,7 @@ import { updateTeamNoteFolder as updateTeamNoteFolderApi } from "../../features/
 import { onTaskTouched } from "../../features/tasks/services/taskEvents";
 import { fmt, getMessages } from "../../i18n";
 import type { ToolResultNoteFolderRef } from "../../services/agentApi";
+import { forceDeleteNote } from "../../services/forceDelete";
 import { syncStatus, type NoteListScope } from "../../services/syncStatus";
 import { UserProps } from "../../types/admin";
 import {
@@ -236,6 +237,9 @@ export interface NoteManagementState {
     deleteMyNoteById: (noteId: number) => Promise<boolean>;
     deleteTaskNoteById: (noteId: number) => Promise<boolean>;
     deleteChatNoteById: (noteId: number) => Promise<boolean>;
+    /** "Delete permanently" (MIP-1584/1937): the owner's real delete, no recovery. Rejects with
+     *  `ForceDeleteError` (403 not the owner, 409 `has_children`) so the dialog can say why. */
+    forceDeleteNoteById: (family: AgentWrittenNoteType, noteId: number) => Promise<void>;
 
     // Favorite notes
     favoriteNotes: FavoriteNotesMetaResponse | null;
@@ -1635,6 +1639,14 @@ export const useNoteManagement = (
         return true;
     };
 
+    const forceDeleteNoteById = async (
+        family: AgentWrittenNoteType,
+        noteId: number
+    ): Promise<void> => {
+        await forceDeleteNote(accessToken, family, noteId);
+        await dropDeletedNotesLocally(family, [noteId]);
+    };
+
     // Tell the app-wide sync status whether a sidebar list loaded, so its empty state can
     // say "couldn't load" instead of "No favorites yet" (MIP-1323). Without a token the
     // loaders resolve undefined by design: not a failure.
@@ -2698,6 +2710,7 @@ export const useNoteManagement = (
         moveTaskNoteToTask,
         moveChatNoteToChat,
         deleteMyNoteById,
+        forceDeleteNoteById,
         deleteTaskNoteById,
         deleteChatNoteById,
 

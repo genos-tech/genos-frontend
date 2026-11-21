@@ -147,6 +147,11 @@ export const common = {
         myMessagesDescription:
             "Every message you wrote here, with its files and reactions, is erased now and cannot be recovered. The other person's messages are not touched, and the chat stays.",
         myMessagesDone: "Your messages were deleted.",
+        noteTitle: "Delete this note permanently?",
+        noteDescription:
+            "The note, its history, comments, files and search entries are erased now, and its collaborative copy with them. This cannot be undone. People who saw it may have copied it.",
+        notAllowedNote: "Only the note's owner can delete this permanently.",
+        hasChildren: "Delete or move its sub-pages first.",
     },
     // Restoring a soft-deleted group chat as its owner (MIP-1715).
     recentlyDeleted: {
