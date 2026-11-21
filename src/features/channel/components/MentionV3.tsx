@@ -22,6 +22,8 @@
 
 import { createReactInlineContentSpec } from "@blocknote/react";
 
+import { MentionChipV3 } from "./MentionChipV3";
+
 const SELF_BG = "rgba(0, 100, 200, 0.15)";
 const SELF_FG = "#1e40af";
 const OTHER_BG = "rgba(0, 0, 0, 0.06)";
@@ -44,20 +46,13 @@ export const createMentionSpecV3 = (currentUserId: string | null) =>
                 const { userId, userName } = props.inlineContent.props;
                 const isMe = !!currentUserId && userId === currentUserId;
                 return (
-                    <span
-                        data-is-self={isMe ? "true" : "false"}
-                        data-testid={`mention-chip-v3-${userId}`}
-                        style={{
-                            background: isMe ? SELF_BG : OTHER_BG,
-                            color: isMe ? SELF_FG : OTHER_FG,
-                            padding: "0 6px",
-                            borderRadius: 4,
-                            fontWeight: 500,
-                            display: "inline",
-                        }}
-                    >
-                        @{userName}
-                    </span>
+                    <MentionChipV3
+                        background={isMe ? SELF_BG : OTHER_BG}
+                        color={isMe ? SELF_FG : OTHER_FG}
+                        isMe={isMe}
+                        storedName={userName}
+                        userId={userId}
+                    />
                 );
             },
         }

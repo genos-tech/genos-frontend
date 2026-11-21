@@ -3230,6 +3230,14 @@ export class ChannelService {
                 this._members.set(m.channelId, arr);
             }
             this._rememberMemberIdentities(memberRows);
+            // The senders of the cached messages too, as `_upsertMessage` does
+            // for a live one. An anonymised sender (a deleted account) is how a
+            // mention chip learns not to show the real name typed in its text.
+            rememberPeople(
+                messageRows
+                    .map((m) => m.sender)
+                    .filter((u): u is NonNullable<typeof u> => u != null)
+            );
             // Sort messages by tsSent asc within each channel for stable
             // scroll / pagination behavior.
             const byChan = new Map<string, Message[]>();

@@ -19,6 +19,7 @@
 import type { CSSProperties } from "react";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useResolvedUserName } from "../../../components/ui/avatars/AvatarContext";
 import { fmt, useTranslation } from "../../../i18n";
 
 interface MessageBodyProps {
@@ -112,29 +113,37 @@ interface InlineSpanProps {
     currentUserId: string | null;
 }
 
+/** A user mention. Its own component so the live-name hook has a home: the
+ *  name typed into the text is a snapshot, and for a deleted account it is the
+ *  real name that must no longer show (MIP-1797). */
+function UserMentionSpan({ node, currentUserId }: InlineSpanProps) {
+    const { t } = useTranslation();
+    const userId = String(node.props?.userId ?? "");
+    const userName = useResolvedUserName(userId, String(node.props?.userName ?? "user"));
+    const isSelf = currentUserId !== null && userId === currentUserId;
+    return (
+        <AppTooltip
+            title={
+                isSelf
+                    ? t.chat.channel.body.mentionsYou
+                    : fmt(t.chat.channel.body.mentionsUser, { name: userName })
+            }
+        >
+            <span
+                data-self={isSelf ? "true" : "false"}
+                data-testid={`message-body-mention-${userId}`}
+                style={isSelf ? MENTION_SELF : MENTION_OTHER}
+            >
+                @{userName}
+            </span>
+        </AppTooltip>
+    );
+}
+
 function InlineSpan({ node, currentUserId }: InlineSpanProps) {
     const { t } = useTranslation();
     if (node?.type === "mention") {
-        const userId = String(node.props?.userId ?? "");
-        const userName = String(node.props?.userName ?? "user");
-        const isSelf = currentUserId !== null && userId === currentUserId;
-        return (
-            <AppTooltip
-                title={
-                    isSelf
-                        ? t.chat.channel.body.mentionsYou
-                        : fmt(t.chat.channel.body.mentionsUser, { name: userName })
-                }
-            >
-                <span
-                    data-self={isSelf ? "true" : "false"}
-                    data-testid={`message-body-mention-${userId}`}
-                    style={isSelf ? MENTION_SELF : MENTION_OTHER}
-                >
-                    @{userName}
-                </span>
-            </AppTooltip>
-        );
+        return <UserMentionSpan currentUserId={currentUserId} node={node} />;
     }
     if (node?.type === "mentionGroup") {
         const groupId = String(node.props?.groupId ?? "");

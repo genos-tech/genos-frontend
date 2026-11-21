@@ -12,6 +12,7 @@ import { UserProps } from "../../types/admin";
 import { ActivityMessageProps, NewMessageProps, NewThreadMessageProps } from "../../types/chat";
 import { InboxItemProps } from "../../types/common";
 import { buildAvatarSrc } from "../../utils/avatarSrc";
+import { storedMentionName } from "../../utils/mentionName";
 import { CATEGORY_BY_KEY, NotificationCategory } from "./categories";
 import { taskPath } from "./intentDestination";
 import { NotificationIntent } from "./types";
@@ -150,7 +151,7 @@ const extractInboxText = (body: unknown): string => {
             for (const span of content) {
                 if (!span || typeof span !== "object") continue;
                 if (span.type === "mention" && typeof span.props?.userName === "string") {
-                    lines.push(`@${span.props.userName}`);
+                    lines.push(`@${storedMentionName(span.props.userId, span.props.userName)}`);
                 } else if (typeof span.text === "string") {
                     lines.push(span.text);
                 }

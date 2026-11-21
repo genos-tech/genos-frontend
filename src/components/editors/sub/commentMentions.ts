@@ -1,5 +1,7 @@
 import { Socket } from "socket.io-client";
 
+import { storedMentionName } from "../../../utils/mentionName";
+
 // ─────────────────────────────────────────────────────────────────────────
 // Mention → activity plumbing for BlockNote *inline comments* (the
 // AddCommentButton → FloatingComposer → threads feature), NOT the
@@ -90,8 +92,10 @@ export const commentFirstLine = (body: unknown): string => {
                 const nn = node as Record<string, unknown>;
                 if (nn.type === "text" && typeof nn.text === "string") line += nn.text;
                 else if (nn.type === "mention" && nn.props && typeof nn.props === "object") {
-                    const name = (nn.props as Record<string, unknown>).userName;
-                    if (typeof name === "string") line += `@${name}`;
+                    const mention = nn.props as Record<string, unknown>;
+                    if (typeof mention.userName === "string") {
+                        line += `@${storedMentionName(mention.userId as string, mention.userName)}`;
+                    }
                 }
             }
         }
