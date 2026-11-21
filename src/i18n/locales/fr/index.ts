@@ -5228,6 +5228,7 @@ export const fr: DeepPartial<Messages> = {
             clearLabelFilter: "Effacer le filtre",
             noLabels: "Aucun libellé de projet pour l'instant",
             noProjectsMatchFilter: "Aucun projet ne correspond à ce filtre",
+            filterProjectsPlaceholder: "Filtrer les projets…",
             addMilestone: "Ajouter un jalon",
             pastMilestones: "Jalons passés",
             moveToNoSprint: "Déplacer vers : Aucun sprint",

@@ -27,13 +27,26 @@ import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind, type Channel } from "../../../../types/channel";
 import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
+import { orderGroupsFirst } from "../../../../utils/mentionOrder";
 import { personLabel } from "../../../../utils/personLabel";
 import { loadSearchList } from "../../services/loadChatSearchList";
 
-const filterSearchOptions = createFilterOptions<SearchListProps>({
+const matchSearchOptions = createFilterOptions<SearchListProps>({
     stringify: (option) =>
         option.type === "People" ? `${option.name} ${option.email ?? ""}` : option.name,
 });
+
+// Groups before people (MIP-1701): the Autocomplete lists a group where its
+// first option appears, so the order here decides where the group sits.
+type SearchFilterState = Parameters<ReturnType<typeof createFilterOptions<SearchListProps>>>[1];
+const filterSearchOptions = (
+    options: SearchListProps[],
+    state: SearchFilterState
+): SearchListProps[] =>
+    orderGroupsFirst(matchSearchOptions(options, state), state.inputValue, (option) => ({
+        label: option.name,
+        isGroup: option.type === "Group",
+    }));
 
 type ChatSearchProps = {
     myself: UserProps;

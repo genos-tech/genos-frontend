@@ -2396,6 +2396,7 @@ export const ar: DeepPartial<Messages> = {
             clearLabelFilter: "مسح الفلتر",
             noLabels: "لا توجد تسميات المشروع حتى الآن",
             noProjectsMatchFilter: "لا توجد مشاريع تتطابق مع هذا الفلتر",
+            filterProjectsPlaceholder: "تصفية المشاريع…",
             pastMilestones: "المعالم الماضية",
         },
         header: {
