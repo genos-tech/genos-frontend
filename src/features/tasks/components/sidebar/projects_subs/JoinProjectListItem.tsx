@@ -85,26 +85,26 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                 {unjoined.length > 0 && (
                     <ListItem sx={{ px: 1, py: 0.5, gap: 0.5 }}>
                         <Input
-                            size="sm"
-                            type="search"
-                            name="joinProjectFilter"
                             autoComplete="off"
-                            spellCheck={false}
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            name="joinProjectFilter"
                             placeholder={t.tasks.sidebar.filterProjectsPlaceholder}
+                            size="sm"
+                            spellCheck={false}
+                            sx={{ flex: 1, minWidth: 0 }}
+                            type="search"
+                            value={query}
                             slotProps={{
                                 input: {
                                     "aria-label": t.tasks.sidebar.filterProjectsPlaceholder,
                                 },
                             }}
-                            sx={{ flex: 1, minWidth: 0 }}
+                            onChange={(e) => setQuery(e.target.value)}
                         />
                         <ProjectLabelFilterMenu
-                            labels={allLabels}
                             activeIds={effectiveActiveIds}
-                            onToggle={toggleLabel}
+                            labels={allLabels}
                             onClear={() => setActiveLabelIds([])}
+                            onToggle={toggleLabel}
                         />
                     </ListItem>
                 )}
@@ -113,15 +113,15 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     return (
                         <NavItem
                             key={`listitem-team-project-${projectId}`}
+                            selected={projectId === usePM.currentProject?.projectId}
                             label={
                                 <ProjectIdentityRow
-                                    project={project}
                                     maxLabels={1}
                                     nameColor="inherit"
                                     nameWeight={400}
+                                    project={project}
                                 />
                             }
-                            selected={projectId === usePM.currentProject?.projectId}
                             onClick={() => {
                                 setOpenJoinProject({
                                     flag: true,

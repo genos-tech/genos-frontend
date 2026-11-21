@@ -114,10 +114,10 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                         actions={
                             <>
                                 <ProjectLabelFilterMenu
-                                    labels={allLabels}
                                     activeIds={effectiveActiveIds}
-                                    onToggle={toggleLabel}
+                                    labels={allLabels}
                                     onClear={() => setActiveLabelIds([])}
+                                    onToggle={toggleLabel}
                                 />
                             </>
                         }
@@ -129,7 +129,6 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                     {joinedProjects.length === 0 && projectsSync.failed && (
                         <ListItem sx={{ px: 1, py: 0.5 }}>
                             <DataState
-                                error
                                 hasData={false}
                                 loading={projectsSync.retrying}
                                 size="xs"
@@ -139,6 +138,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                     onRetry: projectsSync.retry,
                                     "data-error": "sidebar-projects",
                                 }}
+                                error
                             />
                         </ListItem>
                     )}
