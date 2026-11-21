@@ -22,11 +22,11 @@ export const deletedUserLabel = (): string => getMessages().tasks.messageTemplat
  * Reads the directory without subscribing, like `resolveDisplayName`; chips use
  * that (live, roster-aware) path instead.
  */
-export const storedMentionName = (
-    userId: string | number | null | undefined,
-    storedName: string
-): string => {
-    const seen = rememberedPerson(userId);
+export const storedMentionName = (userId: unknown, storedName: string): string => {
+    const seen =
+        typeof userId === "string" || typeof userId === "number"
+            ? rememberedPerson(userId)
+            : undefined;
     if ((seen && isDeletedUser(seen)) || isDeletedUser({ userName: storedName })) {
         return deletedUserLabel();
     }

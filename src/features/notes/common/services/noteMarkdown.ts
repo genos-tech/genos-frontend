@@ -246,7 +246,7 @@ const customInlineToText = (node: AnyRecord): string => {
     const props = (node.props ?? {}) as AnyRecord;
     switch (node.type) {
         case "mention":
-            return `@${props.userName ? storedMentionName(props.userId as string, String(props.userName)) : "user"}`;
+            return `@${props.userName == null ? "user" : storedMentionName(props.userId, String(props.userName))}`;
         case "mentionGroup":
             return `@${props.groupName ?? "group"}`;
         case "hashTask": {

@@ -94,7 +94,7 @@ export const commentFirstLine = (body: unknown): string => {
                 else if (nn.type === "mention" && nn.props && typeof nn.props === "object") {
                     const mention = nn.props as Record<string, unknown>;
                     if (typeof mention.userName === "string") {
-                        line += `@${storedMentionName(mention.userId as string, mention.userName)}`;
+                        line += `@${storedMentionName(mention.userId, mention.userName)}`;
                     }
                 }
             }

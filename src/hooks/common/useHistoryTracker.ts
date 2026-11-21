@@ -64,7 +64,7 @@ const textFromBlocks = (content: unknown): string => {
                 const mention = obj.props as Record<string, unknown> | undefined;
                 const user = mention?.userName;
                 if (typeof user === "string" && user) {
-                    parts.push(`@${storedMentionName(mention?.userId as string, user)}`);
+                    parts.push(`@${storedMentionName(mention?.userId, user)}`);
                 }
             } else if (nodeType === "mentionGroup") {
                 const group = (obj.props as Record<string, unknown> | undefined)?.groupName;

@@ -43,4 +43,23 @@ describe("hydrateFromIDB and the people directory", () => {
         await channelService.hydrateFromIDB();
         expect(rememberedPerson("gone")?.userName).toBe("Deleted user");
     });
+
+    it("a cached message from BEFORE the deletion never puts the real name back", async () => {
+        // IDB `getAll` returns rows in key order, not by time: the anonymised row
+        // can come first and the stale real-name row second.
+        const row = (id: string, userName: string, userEmail: string) =>
+            ({
+                id,
+                channelId: "c1",
+                channelKind: ChannelKind.GM,
+                tsSent: "2026-11-21T00:00:00Z",
+                sender: { userId: "gone", userName, userEmail },
+            }) as unknown as Message;
+        rows.messages = [
+            row("m_a", "Deleted user", "deleted-1@deleted.invalid"),
+            row("m_z", "Real Name", "real@example.test"),
+        ];
+        await channelService.hydrateFromIDB();
+        expect(rememberedPerson("gone")?.userName).toBe("Deleted user");
+    });
 });
