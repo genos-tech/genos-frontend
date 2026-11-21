@@ -1,3 +1,4 @@
+import { calendarDayMs } from "../../../utils/calendarDate";
 import { STATUS_RANK } from "./sortTask";
 
 /**
@@ -45,7 +46,7 @@ export type TopWeightRow = {
 // ms since epoch, or null for a missing/unparseable date.
 const dueTime = (dueDate: string | null | undefined): number | null => {
     if (!dueDate) return null;
-    const ms = new Date(dueDate).getTime();
+    const ms = calendarDayMs(dueDate);
     return Number.isNaN(ms) ? null : ms;
 };
 
@@ -56,8 +57,8 @@ const dueTime = (dueDate: string | null | undefined): number | null => {
  *   recently updated.
  */
 export const compareByUrgency = (a: TopWeightTask, b: TopWeightTask, todayMs: number): number => {
-    const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-    const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+    const da = a.dueDate ? calendarDayMs(a.dueDate) : Infinity;
+    const db = b.dueDate ? calendarDayMs(b.dueDate) : Infinity;
     const aOver = a.dueDate != null && da < todayMs;
     const bOver = b.dueDate != null && db < todayMs;
     if (aOver !== bOver) return aOver ? -1 : 1;

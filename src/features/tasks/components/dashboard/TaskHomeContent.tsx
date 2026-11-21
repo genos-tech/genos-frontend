@@ -65,6 +65,7 @@ import { useSyncFailure, useTasksSyncFailure } from "../../../../services/syncSt
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { startOfTodayMs } from "../../../../utils/calendarDate";
 import { isDeletedUser } from "../../../../utils/teamRoster";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { STATUS_TONE, toneCss, toneSolid } from "../../meta/taskTone";
@@ -74,11 +75,13 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
+import { computeAssigneeStats, computeUpNext } from "../../utils/dashboardStats";
+import { isDueWithin, isOverdueDate, sprintWindowMs } from "../../utils/dueWindow";
 import { deriveEffectiveTasks, EffectiveTask } from "../../utils/effectiveTasks";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
-import { compareByUrgency, sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
+import { sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { TaskCard, TaskListItem, TaskListPanel } from "../card";
 import { getStatusIcon } from "../meta/statusIcons";
 import { StatusLabel } from "../meta/StatusLabel";
@@ -102,11 +105,6 @@ type TaskHomeContentProps = {
 };
 
 // Midnight-of-today in ms — the "overdue" cutoff for the urgency sorts.
-const startOfTodayMs = (): number => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d.getTime();
-};
 
 // Per-assignee effort load, bucketed by due-window. Shared by the
 // current-project pass (which fixes the ROSTER) and the team-wide pass
@@ -209,74 +207,6 @@ const taskUpdatedAtById = (tasks: EffectiveTask[]): Record<number, string | null
     return out;
 };
 
-// KPI rollup for one person's tasks (active/closed/overdue/completion, …).
-// Extracted so the "My Tasks" tab, its tab badge, and the "Member's Tasks"
-// tab all compute the same numbers for whichever user is in focus.
-const computeAssigneeStats = (tasks: EffectiveTask[]) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const weekAhead = new Date(today);
-    weekAhead.setDate(weekAhead.getDate() + 7);
-
-    let openCount = 0;
-    let wipCount = 0;
-    let blockedCount = 0;
-    let pendingCount = 0;
-    let closedCount = 0;
-    let overdueCount = 0;
-    let dueThisWeekCount = 0;
-    for (const t of tasks) {
-        const isClosed = t.effectiveStatus === "Closed";
-        if (t.effectiveStatus === "Open") openCount++;
-        else if (t.effectiveStatus === "WIP") wipCount++;
-        else if (t.effectiveStatus === "Blocked") blockedCount++;
-        else if (t.effectiveStatus === "Pending") pendingCount++;
-        else if (isClosed) closedCount++;
-
-        if (!isClosed && t.dueDate) {
-            const d = new Date(t.dueDate);
-            d.setHours(0, 0, 0, 0);
-            if (d < today) overdueCount++;
-            else if (d <= weekAhead) dueThisWeekCount++;
-        }
-    }
-    const totalCount = openCount + wipCount + blockedCount + pendingCount + closedCount;
-    const activeCount = openCount + wipCount + blockedCount + pendingCount;
-    const completionPct = totalCount > 0 ? Math.round((closedCount / totalCount) * 100) : 0;
-    return {
-        openCount,
-        wipCount,
-        blockedCount,
-        pendingCount,
-        closedCount,
-        totalCount,
-        activeCount,
-        overdueCount,
-        dueThisWeekCount,
-        completionPct,
-    };
-};
-
-// Top 10 active tasks to look at next: overdue → priority → soonest due →
-// recent (urgency), or weight-first with urgency as tie-break. Shared by the
-// "Up Next" list for whichever user is in focus.
-const computeUpNext = (tasks: EffectiveTask[], upNextSort: "weight" | "urgency") => {
-    const todayMs = startOfTodayMs();
-    const active = tasks.filter((t) => t.effectiveStatus !== "Closed");
-    const byUrgency = (a: EffectiveTask, b: EffectiveTask): number =>
-        compareByUrgency(a, b, todayMs);
-    const byWeight = (a: EffectiveTask, b: EffectiveTask): number => {
-        const wa = computeTaskWeight(a);
-        const wb = computeTaskWeight(b);
-        if (wa !== wb) return wb - wa;
-        return byUrgency(a, b);
-    };
-    return active
-        .slice()
-        .sort(upNextSort === "weight" ? byWeight : byUrgency)
-        .slice(0, 10);
-};
-
 export const TaskHomeContent = ({
     useTM,
     usePM,
@@ -347,11 +277,14 @@ export const TaskHomeContent = ({
               null);
 
     const now = useMemo(() => {
-        if (selectedSprint) return new Date(selectedSprint.endDate).getTime();
+        // The sprint's last day is a calendar day: the window runs to the END of it, local time.
+        if (selectedSprint)
+            return sprintWindowMs(selectedSprint.startDate, selectedSprint.endDate).end;
         return Date.now();
     }, [selectedSprint?.sprintId]);
     const sprintStart = useMemo(() => {
-        if (selectedSprint) return new Date(selectedSprint.startDate).getTime();
+        if (selectedSprint)
+            return sprintWindowMs(selectedSprint.startDate, selectedSprint.endDate).start;
         return Date.now() - 14 * 86400000;
     }, [selectedSprint?.sprintId]);
     // ── All-project stats ──
@@ -552,7 +485,7 @@ export const TaskHomeContent = ({
             const tags = tk.tags ?? [];
             if (tags.length > 0) taggedCount++;
             const isClosed = tk.effectiveStatus === "Closed";
-            const isOverdue = !isClosed && !!tk.dueDate && new Date(tk.dueDate) < today;
+            const isOverdue = !isClosed && !!tk.dueDate && isOverdueDate(tk.dueDate, today);
             for (const tag of tags) {
                 if (!tag?.tagName) continue;
                 const entry = map.get(tag.tagName) ?? {
@@ -761,18 +694,14 @@ export const TaskHomeContent = ({
     // parent never appear in Overdue or Due-This-Week.
     const overdueAndUpcoming = useMemo(() => {
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const weekAhead = new Date(today);
-        weekAhead.setDate(weekAhead.getDate() + 7);
-
+        // Calendar days: due today is "upcoming", not overdue (MIP-1816).
         const overdue = effectiveTasks.filter((t) => {
             if (t.effectiveStatus === "Closed" || !t.dueDate) return false;
-            return new Date(t.dueDate) < today;
+            return isOverdueDate(t.dueDate, today);
         });
         const upcoming = effectiveTasks.filter((t) => {
             if (t.effectiveStatus === "Closed" || !t.dueDate) return false;
-            const d = new Date(t.dueDate);
-            return d >= today && d <= weekAhead;
+            return isDueWithin(t.dueDate, today);
         });
         return { overdue, upcoming };
     }, [effectiveTasks]);
