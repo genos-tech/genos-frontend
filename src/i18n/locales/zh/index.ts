@@ -6041,6 +6041,8 @@ export const zh: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "剩余任务 {remaining}（共 {total}）",
+                cardAriaLabel: "{id} {title}，{status}",
+                cardAriaHint: "按 Enter 或空格键打开预览。方向键可移动到相关联的任务。",
                 healthSummary: "已关闭 {actualPct}% · 预期 {expectedPct}%",
                 expectedByToday: "今天预计：{expectedPct}%",
                 openBlockerOne: "{count} 个未解决的阻塞项",

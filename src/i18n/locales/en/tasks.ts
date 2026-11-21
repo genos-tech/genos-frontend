@@ -1379,6 +1379,10 @@ export const tasks = {
         tooltips: {
             // BurndownSparkline header chip.
             tasksRemaining: "{remaining} of {total} tasks remaining",
+            // MIP-1830: a card's accessible name, and the hint React Flow reads with it.
+            cardAriaLabel: "{id} {title}, {status}",
+            cardAriaHint:
+                "Press Enter or Space to open the preview. Arrow keys move to a linked task.",
             // Health chip — used both on milestone nodes and the modal header.
             healthSummary: "Closed {actualPct}% · Expected {expectedPct}%",
             // ModalTaskDiagram progress-bar "expected by now" marker.

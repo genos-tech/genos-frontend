@@ -3524,6 +3524,9 @@ export const hi: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "{total} में से {remaining} कार्य शेष हैं",
+                cardAriaLabel: "{id} {title}, {status}",
+                cardAriaHint:
+                    "पूर्वावलोकन खोलने के लिए Enter या Space दबाएँ। तीर कुंजियाँ जुड़े हुए कार्य तक ले जाती हैं।",
                 healthSummary: "बंद {actualPct}% · अपेक्षित {expectedPct}%",
                 expectedByToday: "आज तक अपेक्षित: {expectedPct}%",
                 openBlockerOne: "{count} खुला अवरोधक",

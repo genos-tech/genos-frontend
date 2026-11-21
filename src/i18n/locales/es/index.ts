@@ -3540,6 +3540,9 @@ export const es: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "Quedan {remaining} de {total} tareas",
+                cardAriaLabel: "{id} {title}, {status}",
+                cardAriaHint:
+                    "Pulsa Intro o Espacio para abrir la vista previa. Las flechas llevan a una tarea enlazada.",
                 healthSummary: "Cerrado {actualPct}% · Esperado {expectedPct}%",
                 expectedByToday: "Esperado para hoy: {expectedPct}%",
                 openBlockerOne: "{count} bloqueador abierto",

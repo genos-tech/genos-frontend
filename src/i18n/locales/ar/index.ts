@@ -3493,6 +3493,9 @@ export const ar: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "متبقٍ {remaining} من أصل {total} مهمة",
+                cardAriaLabel: "{id} {title}، {status}",
+                cardAriaHint:
+                    "اضغط Enter أو المسافة لفتح المعاينة. مفاتيح الأسهم تنقل إلى مهمة مرتبطة.",
                 healthSummary: "مغلق {actualPct}% · المتوقع {expectedPct}%",
                 expectedByToday: "المتوقع اليوم: {expectedPct}%",
                 openBlockerOne: "{count} مانع مفتوح",
