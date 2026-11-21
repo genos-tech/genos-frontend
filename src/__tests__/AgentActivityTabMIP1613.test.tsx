@@ -44,6 +44,7 @@ import {
     agentWorkParams,
     loadAgentWork,
 } from "../features/tasks/services/loadAgentWork";
+import { fmt, getMessages } from "../i18n";
 import { authApi } from "../services/api";
 import realErrorsFixture from "./fixtures/agentWork.real.errors.json";
 import realPageFixture from "./fixtures/agentWork.real.json";
@@ -830,5 +831,98 @@ describe("the real API response (fixtures from genos-api PR #1008)", () => {
             "/workspace/tasks/project/1/task/77"
         );
         expect(agentTargetPath({ type: "task", id: 77 }, null)).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// MIP-1896: follow-ups from the review
+// ---------------------------------------------------------------------------
+
+describe("MIP-1896 Agent Activity follow-ups", () => {
+    it("Load more never shows a row twice when activity shifted the offset", () => {
+        const row = (id: string) => ({
+            id,
+            at: "2026-11-21T10:00:00Z",
+            user: null,
+            agent: null,
+            action: "task_status",
+            target: null,
+            text: null,
+        });
+        const group = (ids: string[]) => ({
+            project: { id: 1, name: "Launch" },
+            counts: { total: 9 },
+            items: ids.map(row),
+        });
+        const merged = mergeAgentWorkPages(
+            makePage({ groups: [group(["a3", "a2"])] }),
+            makePage({ groups: [group(["a2", "a1"])] })
+        );
+        expect(merged.groups[0].items.map((i) => i.id)).toEqual(["a3", "a2", "a1"]);
+    });
+
+    it("says '1 change' and '2 changes'", () => {
+        const one = fmt(getMessages().tasks.dashboard.agentActivity.groups.changes, { count: 1 });
+        const two = fmt(getMessages().tasks.dashboard.agentActivity.groups.changes, { count: 2 });
+        expect([one, two]).toEqual(["1 change", "2 changes"]);
+    });
+
+    it("shows 'Nothing matches' under an agent filter even when the other tiles are not zero", async () => {
+        get.mockResolvedValue(
+            okWith(
+                emptyPage({
+                    totals: { by_agent: { claude: 5, chatgpt: 0 }, decisions: 0, changes: 5 },
+                })
+            )
+        );
+        renderAt(
+            "/workspace/tasks?view=agent&agent=chatgpt",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
+        expect(await screen.findByText("Nothing matches these filters.")).toBeTruthy();
+    });
+
+    it("keeps the other people in the Person list after one is picked", async () => {
+        const full = makePage();
+        full.by_user_agent[0] = { ...full.by_user_agent[0], user: { id: UUID_ANA, name: "Ana" } };
+        get.mockResolvedValueOnce(okWith(full));
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
+        await screen.findByText("Pricing page copy");
+        // The next response is narrowed to Ana by the api.
+        const anaOnly = makePage();
+        anaOnly.by_user_agent = [full.by_user_agent[0]];
+        get.mockResolvedValue(okWith(anaOnly));
+        fireEvent.click(screen.getByRole("combobox", { name: /Person/ }));
+        fireEvent.click(await screen.findByRole("option", { name: "Ana" }));
+        await waitFor(() => expect(sent(get.mock.calls.length - 1).user_id).toBe(UUID_ANA));
+        await screen.findByText("Pricing page copy");
+        fireEvent.click(screen.getByRole("combobox", { name: /Person/ }));
+        expect(await screen.findByRole("option", { name: "Ken" })).toBeTruthy();
+    });
+
+    it("renders two decisions that share a note id but not a note type, with no duplicate key", async () => {
+        const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        const base = makePage().decisions[0];
+        get.mockResolvedValue(
+            okWith(
+                makePage({
+                    decisions: [
+                        { ...base, note_id: 9, note_type: 1, title: "Decision: personal" },
+                        { ...base, note_id: 9, note_type: 2, title: "Decision: on a task" },
+                    ],
+                })
+            )
+        );
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
+        expect(await screen.findByText("Decision: personal")).toBeTruthy();
+        expect(screen.getByText("Decision: on a task")).toBeTruthy();
+        expect(errors.mock.calls.flat().join(" ")).not.toMatch(/same key/);
+        errors.mockRestore();
     });
 });

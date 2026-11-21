@@ -84,14 +84,15 @@ export const common = {
         ownerOnly: "Only the owner can archive or unarchive.",
         projectBannerTitle: "This project is archived",
         chatBannerTitle: "This group is archived",
+        chatBannerProjectTitle: "This project's chat is archived",
         projectBannerBody:
             "It is read-only: no new tasks, edits or comments until it is unarchived. Nothing has been removed.",
         chatBannerBody:
             "It is read-only: no new messages until it is unarchived. Nothing has been removed.",
         unarchiveAction: "Unarchive",
-        showArchived: "Show archived",
+        showArchived: "Show archived ({count})",
         hideArchived: "Hide archived",
-        archivedSection: "Archived",
+        archivedSection: "Archived ({count})",
         archivedBadge: "Archived",
         newTaskDisabled: "Unarchive this project to add tasks.",
         composerDisabled: "This group is archived. Unarchive it to send messages.",
@@ -115,6 +116,38 @@ export const common = {
         typeNameLabel: "Type the group's name to confirm",
         cancel: "Cancel",
         genericError: "Couldn't delete the group. Please try again.",
+    },
+    // "Delete permanently" of a message, task, comment, note or all of one's messages in a chat
+    // (MIP-1584). Immediate and irreversible, so there is no Undo.
+    forceDelete: {
+        menu: "Delete permanently",
+        phrase: "DELETE",
+        typeLabel: "Type DELETE to confirm",
+        confirm: "Delete permanently",
+        cancel: "Cancel",
+        failed: "Couldn't delete it. Nothing was removed. Please try again.",
+        notAllowed: "Only its creator or the project owner can delete this permanently.",
+        notAllowedMessage: "Only the sender or the group owner can delete this permanently.",
+        notAllowedComment: "Only its author can delete this permanently.",
+        incomplete: "Some of your messages are still there. Try again to remove the rest.",
+        hasSubtasks: "Delete or move its sub-tasks first.",
+        isMilestone: "A milestone's task is deleted with the milestone.",
+        taskLinked: "This message belongs to a task. Delete the task or the comment instead.",
+        done: "Deleted permanently.",
+        messageTitle: "Delete this message permanently?",
+        messageDescription:
+            "The text, files, reactions and flags of this message are erased now and cannot be recovered. People who saw it may have copied it.",
+        commentTitle: "Delete this comment permanently?",
+        commentDescription:
+            "The comment, its reactions and its copy in the project chat are erased now and cannot be recovered.",
+        taskTitle: "Delete this task permanently?",
+        taskDescription:
+            "The task, its comments, files, notes, history and search entries are erased now, without the 30 days a deleted task normally keeps. This cannot be undone.",
+        myMessagesMenu: "Delete all my messages",
+        myMessagesTitle: "Delete all your messages in this chat?",
+        myMessagesDescription:
+            "Every message you wrote here, with its files and reactions, is erased now and cannot be recovered. The other person's messages are not touched, and the chat stays.",
+        myMessagesDone: "Your messages were deleted.",
     },
     // Restoring a soft-deleted group chat as its owner (MIP-1715).
     recentlyDeleted: {

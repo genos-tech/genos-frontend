@@ -22,9 +22,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { lpVarsFor } from "../lp/kit/lpTheme";
-import { composite, contrast } from "../theme/tokens/color";
-import { buildRoles, Mode, RoleColors, SemanticRoles } from "../theme/tokens/roles";
+import { lpRolesFor, lpSurfaces, lpTextBackdrops, lpVarsFor, withFill } from "../lp/kit/lpTheme";
+import { contrast } from "../theme/tokens/color";
+import { Mode, RoleColors, SemanticRoles } from "../theme/tokens/roles";
 import { MODES } from "../theme/tokens/tokenStyles";
 
 const AA_TEXT = 4.5;
@@ -35,44 +35,9 @@ const here = dirname(fileURLToPath(import.meta.url));
 type Pair = { name: string; fg: string; backdrops: Record<string, string>; min: number };
 
 /** Pairs measured below their threshold today: `name` → ratio at the time of
- *  writing. Brand decisions, not fixed here (see the PR body). */
-const KNOWN_BELOW_AA: Record<string, number> = {
-    // Tertiary text carries real content on the public pages (timeline dates,
-    // captions, footer line, field hints). It is held to 3:1 in the app
-    // (designTokens.test.ts); changing it is a role decision for roles.ts.
-    "light:text-tertiary": 3.11,
-    "dark:text-tertiary": 3.38,
-    // Accent text on the selected/pressed wash (lp.seg pressed, selected tabs).
-    "light:accent-text": 4.47,
-};
-
-/** The page background and the surfaces the public pages stack on. */
-const surfaces = (r: RoleColors): Record<string, string> => ({
-    bg: r.bg,
-    bgSubtle: r.bgSubtle,
-    surface: r.surface,
-    surfaceRaised: r.surfaceRaised,
-});
-
-/** Each surface, then the same surface under a translucent fill: how a
- *  hovered ghost button, a selected tab or a badge tint actually paints. */
-const withFill = (base: Record<string, string>, label: string, fill: { hex: string; a: number }) =>
-    Object.fromEntries(
-        Object.entries(base).map(([k, c]) => [`${k}+${label}`, composite(fill.hex, fill.a, c)])
-    );
-
-/** Every backdrop text on the public pages can sit on. */
-const textBackdrops = (r: RoleColors): Record<string, string> => {
-    const base = surfaces(r);
-    return {
-        ...base,
-        ...withFill(base, "hover", r.hover),
-        ...withFill(base, "active", r.active),
-        ...withFill(base, "accentSubtle", r.accentSubtle),
-        ...withFill(base, "successSubtle", r.success.subtle),
-        ...withFill(base, "dangerSubtle", r.danger.subtle),
-    };
-};
+ *  writing. Empty since MIP-1846: tertiary text and accent text are darkened
+ *  (light) or lightened (dark) on the public pages by `lpRolesFor`. */
+const KNOWN_BELOW_AA: Record<string, number> = {};
 
 const failures = (p: Pair) =>
     Object.entries(p.backdrops)
@@ -81,7 +46,7 @@ const failures = (p: Pair) =>
 
 /** Every pair the public pages paint, for one theme mode. */
 const pairsFor = (r: RoleColors): Pair[] => {
-    const surf = surfaces(r);
+    const surf = lpSurfaces(r);
     const gradient = Object.fromEntries(r.brandGradientStops.map((c, i) => [`gradient${i}`, c]));
     const solid = { accent: r.accent, accentHover: r.accentHover, ...gradient };
     const semantic = (name: string, s: SemanticRoles): Pair[] => [
@@ -94,10 +59,15 @@ const pairsFor = (r: RoleColors): Pair[] => {
         },
     ];
     return [
-        { name: "text", fg: r.text, backdrops: textBackdrops(r), min: AA_TEXT },
-        { name: "text-secondary", fg: r.textSecondary, backdrops: textBackdrops(r), min: AA_TEXT },
-        { name: "text-tertiary", fg: r.textTertiary, backdrops: textBackdrops(r), min: AA_TEXT },
-        { name: "accent-text", fg: r.accentText, backdrops: textBackdrops(r), min: AA_TEXT },
+        { name: "text", fg: r.text, backdrops: lpTextBackdrops(r), min: AA_TEXT },
+        {
+            name: "text-secondary",
+            fg: r.textSecondary,
+            backdrops: lpTextBackdrops(r),
+            min: AA_TEXT,
+        },
+        { name: "text-tertiary", fg: r.textTertiary, backdrops: lpTextBackdrops(r), min: AA_TEXT },
+        { name: "accent-text", fg: r.accentText, backdrops: lpTextBackdrops(r), min: AA_TEXT },
         { name: "accent-fg on accent fills", fg: r.accentFg, backdrops: solid, min: AA_TEXT },
         { name: "focus ring", fg: r.focus, backdrops: surf, min: NON_TEXT },
         {
@@ -117,7 +87,7 @@ const NON_COLOUR_VARS = new Set(["mono", "measure", "narrow-ratio"]);
 const lpCss = readFileSync(resolve(here, "../lp/kit/lp.css"), "utf8");
 
 describe.each(MODES as Mode[])("public pages contrast / %s", (mode) => {
-    const r = buildRoles("purple", mode);
+    const r = lpRolesFor(mode);
     const pairs = pairsFor(r);
 
     it.each(pairs.map((p) => [p.name, p] as const))("%s", (name, pair) => {

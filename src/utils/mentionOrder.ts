@@ -34,3 +34,27 @@ export const orderGroupsFirst = <T>(
         .sort((a, b) => a.rank - b.rank || a.index - b.index)
         .map(({ item }) => item);
 };
+
+// Variant for a list that is rendered under group headers (the chat search
+// Autocomplete, `groupBy`). The header only merges NEIGHBOURING options of one
+// kind, so every group must come before every person; the exact-name rule only
+// orders inside each section. Rank: group 0/1, person 2/3 (exact first).
+export const sectionedRank = (label: string, isGroup: boolean, query: string): number => {
+    const exact = label.trim().toLowerCase() === query.trim().toLowerCase();
+    return (isGroup ? 0 : 2) + (exact && query.trim() ? 0 : 1);
+};
+
+// Stable-sorts `items` by `sectionedRank`. Unlike `orderGroupsFirst` it also
+// sorts an empty query, since the sections must stay contiguous either way.
+export const orderBySection = <T>(
+    items: readonly T[],
+    query: string,
+    view: (item: T) => { label: string; isGroup: boolean }
+): T[] =>
+    items
+        .map((item, index) => {
+            const { label, isGroup } = view(item);
+            return { item, index, rank: sectionedRank(label, isGroup, query) };
+        })
+        .sort((a, b) => a.rank - b.rank || a.index - b.index)
+        .map(({ item }) => item);

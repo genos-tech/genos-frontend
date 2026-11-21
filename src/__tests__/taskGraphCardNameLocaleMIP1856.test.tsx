@@ -1,5 +1,6 @@
 /**
- * MIP-1856: a task graph card's accessible name says the status in the member's language.
+ * MIP-1925: a card depending on a task outside the graph (a band caption node, no `task`) must
+ * not crash the graph. MIP-1856: a task graph card's accessible name says the status in the member's language.
  *
  * The card shows its status through `StatusLabel`, which translates the status through
  * `t.tasks.filters`. The card's accessible name (MIP-1830, `cardAriaLabel`) used the raw enum
@@ -168,5 +169,28 @@ describe("a task graph card's accessible name uses the translated status (MIP-18
         await renderCanvasIn("en");
         await waitFor(() => expect(wrapperOf(4)).not.toBeNull());
         expect(wrapperOf(4).getAttribute("aria-label")).toBe("4 task 4, Open");
+    });
+});
+
+describe("a dependency on a task outside the graph (MIP-1925)", () => {
+    it("renders, names the cards, and leaves the band caption node without a card name", async () => {
+        loadTaskGraph.mockImplementation(async () => ({
+            rootTaskId: 1,
+            tasks: [
+                row(1, null, "Open", true),
+                row(2, 1, "WIP"),
+                row(3, 1, "Closed"),
+                row(4, 2, "Open"),
+            ],
+            externalTasks: [{ ...row(90, null, "Open"), projectId: 2, projectName: "Other" }],
+            dependencyEdges: [
+                { dependencyId: 1, blockerTaskId: 90, blockedTaskId: 4, otherStatus: "Open" },
+            ],
+        }));
+        await renderCanvasIn("en");
+        await waitFor(() => expect(wrapperOf(4)).not.toBeNull());
+        expect(wrapperOf(4).getAttribute("aria-label")).toBe("4 task 4, Open");
+        const bands = document.querySelectorAll('.react-flow__node[data-id^="band-"]');
+        bands.forEach((b) => expect(b.getAttribute("aria-label")).toBeNull());
     });
 });

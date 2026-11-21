@@ -64,6 +64,12 @@ import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderM
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
 import { folderTagChipSx, ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
 import { isInGuestFolder, splitFoldersByOwnership } from "../../team-notes/utils/guestFolders";
+import {
+    buildTemplateMenuItems,
+    resolveTemplate,
+    type ResolvedTemplate,
+    type TemplatePick,
+} from "../../templates/templateMenuItems";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
@@ -431,13 +437,25 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         },
     });
 
+    // MIP-1697: build the template (blocks come from the built-ins) and hand title + body to the
+    // creator of the surface the menu belongs to.
+    type ResolvedNoteOverrides = { title: string; body: ResolvedTemplate["blocks"] };
+    const createFromTemplate = async (
+        pick: TemplatePick,
+        create: (o: ResolvedNoteOverrides) => unknown
+    ) => {
+        const tpl = await resolveTemplate(pick, t.notes.noteTemplates);
+        if (tpl) void create({ title: tpl.title, body: tpl.blocks });
+    };
+
     // Folder-row menu shared by the task and chat sections: create a note
     // in this folder, or import one from a markdown file. `onCreate`
     // carries the folder's own anchor, so the new note lands with the
     // same metadata as its siblings.
     const buildFolderMenuItems = (
         onCreate: () => void,
-        importContext: ImportMarkdownContext
+        importContext: ImportMarkdownContext,
+        onCreateFromTemplate?: (o: ResolvedNoteOverrides) => unknown
     ): MoreMenuItem[] => [
         {
             id: "new-note-here",
@@ -446,6 +464,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
             onClick: onCreate,
         },
+        ...(onCreateFromTemplate
+            ? buildTemplateMenuItems({
+                  copy: t.notes.noteTemplates,
+                  idPrefix: "new-note-here",
+                  onPick: (pick) => createFromTemplate(pick, onCreateFromTemplate),
+              })
+            : []),
         {
             id: "import-note-here",
             kind: "import",
@@ -457,11 +482,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     // Folder menu for one task (task / subtask / milestone-backing task).
     const buildTaskFolderMenuItems = (projectId: number, taskId: number): MoreMenuItem[] =>
-        buildFolderMenuItems(() => void useNM.handleCreateNewTaskNote(null, projectId, taskId), {
-            kind: "task",
-            projectId,
-            taskId,
-        });
+        buildFolderMenuItems(
+            () => void useNM.handleCreateNewTaskNote(null, projectId, taskId),
+            { kind: "task", projectId, taskId },
+            (o) => useNM.handleCreateNewTaskNote(null, projectId, taskId, undefined, o)
+        );
 
     const buildChatFolderMenuItems = (chatGroup: ChatGroup): MoreMenuItem[] | undefined => {
         const { chatType, chatId, isThread, threadId } = chatGroup;
@@ -471,7 +496,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         if (threadId == null) return undefined;
         return buildFolderMenuItems(
             () => void useNM.handleCreateNewChatNote(null, chatType, chatId, isThread, threadId),
-            { kind: "chat", chatType, chatId, isThread, threadId }
+            { kind: "chat", chatType, chatId, isThread, threadId },
+            (o) =>
+                useNM.handleCreateNewChatNote(
+                    null,
+                    chatType,
+                    chatId,
+                    isThread,
+                    threadId,
+                    undefined,
+                    o
+                )
         );
     };
 
@@ -499,6 +534,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onCreateNoteHere: (folderId) => {
             void useNM.handleCreateNewMyNote(null, folderId);
         },
+        templateMenuItems: (folderId) =>
+            buildTemplateMenuItems({
+                copy: t.notes.noteTemplates,
+                idPrefix: "new-note-here",
+                onPick: (pick) =>
+                    createFromTemplate(pick, (o) =>
+                        useNM.handleCreateNewMyNote(null, folderId, o)
+                    ),
+            }),
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
         onExportFolder: (folder) =>
             setExportFolderTarget({
@@ -591,6 +635,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         // A plain root note: no parent, no folder.
                         onClick: () => void useNM.handleCreateNewMyNote(null),
                     },
+                    // MIP-1697: templates, one row each, after the blank note.
+                    ...buildTemplateMenuItems({
+                        copy: t.notes.noteTemplates,
+                        idPrefix: "new-note",
+                        divider: true,
+                        onPick: (pick) =>
+                            createFromTemplate(pick, (o) =>
+                                useNM.handleCreateNewMyNote(null, null, o)
+                            ),
+                    }),
                     {
                         id: "new-folder",
                         kind: "newSubfolder",
@@ -778,6 +832,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onCreateNoteHere: (folderId) => {
             void useNM.handleCreateNewMyNote(null, folderId);
         },
+        templateMenuItems: (folderId) =>
+            buildTemplateMenuItems({
+                copy: t.notes.noteTemplates,
+                idPrefix: "new-note-here",
+                onPick: (pick) =>
+                    createFromTemplate(pick, (o) =>
+                        useNM.handleCreateNewMyNote(null, folderId, o)
+                    ),
+            }),
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
         onExportFolder: (folder) =>
             setExportFolderTarget({

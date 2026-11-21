@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { CONTACT_COPY, type ContactCopy, type ContactTopic } from "./copy/contact";
 import { LpShell } from "./kit/LpShell";
@@ -281,7 +281,11 @@ function ContactBody({ lang }: { lang: Lang }) {
                             />
                         </div>
 
-                        <p className="lp-small lp-contact__privacy">{c.privacy}</p>
+                        <p className="lp-small lp-contact__privacy">
+                            {c.privacyBefore}
+                            <Link to="/privacy">{c.privacyLink}</Link>
+                            {c.privacyAfter}
+                        </p>
 
                         <div>
                             <button

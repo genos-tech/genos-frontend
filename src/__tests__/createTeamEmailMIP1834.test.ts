@@ -4,7 +4,7 @@ import { createTeam } from "../features/admin/services/createTeam";
 import { teamEmailFor } from "../features/admin/services/teamEmail";
 import { authApi } from "../services/api";
 
-// MIP-1834: `team_email` was built as `${teamName}@genos.tech`, so any name with a space,
+// MIP-1834: `team_email` was built as `${teamName}@genos.tech` (now teams.genosai.dev, MIP-1912), so any name with a space,
 // a Japanese character or a symbol produced an address the API refuses (400 "Enter a valid
 // email address."), and the UI then blamed the team name.
 
@@ -14,8 +14,8 @@ vi.mock("../services/api", () => ({
 }));
 
 // What the API accepts as an address for a team: an ASCII local part of sane length on the
-// genos.tech domain. (Django's EmailField is stricter on the domain; genos.tech is valid.)
-const VALID_TEAM_EMAIL = /^[a-z0-9]+(?:-[a-z0-9]+)*@genos\.tech$/;
+// teams.genosai.dev domain (a subdomain Genos owns, with no mailbox; MIP-1912).
+const VALID_TEAM_EMAIL = /^[a-z0-9]+(?:-[a-z0-9]+)*@teams\.genosai\.dev$/;
 
 const NAMES = [
     "Docs Walk Lab",
@@ -41,12 +41,14 @@ describe("teamEmailFor (MIP-1834)", () => {
     });
 
     it("keeps the readable slug of an ASCII name", () => {
-        expect(teamEmailFor("Docs Walk Lab")).toMatch(/^docs-walk-lab-[a-z0-9]{6}@genos\.tech$/);
+        expect(teamEmailFor("Docs Walk Lab")).toMatch(
+            /^docs-walk-lab-[a-z0-9]{6}@teams\.genosai\.dev$/
+        );
     });
 
     it("falls back to a fixed word when the name has no ASCII letters or digits", () => {
-        expect(teamEmailFor("営業部")).toMatch(/^team-[a-z0-9]{6}@genos\.tech$/);
-        expect(teamEmailFor("!!!")).toMatch(/^team-[a-z0-9]{6}@genos\.tech$/);
+        expect(teamEmailFor("営業部")).toMatch(/^team-[a-z0-9]{6}@teams\.genosai\.dev$/);
+        expect(teamEmailFor("!!!")).toMatch(/^team-[a-z0-9]{6}@teams\.genosai\.dev$/);
     });
 
     it("gives two names with the same slug different addresses", () => {
