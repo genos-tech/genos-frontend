@@ -163,7 +163,16 @@ export default tseslint.config(
             // promote back to "error" incrementally. react-hooks/rules-of-hooks
             // intentionally stays an ERROR — those are real bugs.
             "@typescript-eslint/no-explicit-any": "warn",
-            "@typescript-eslint/no-unused-vars": "warn",
+            // A leading underscore marks a deliberately unused binding (a rest-sibling
+            // to drop from an object, an unused callback arg, a placeholder in a test).
+            "@typescript-eslint/no-unused-vars": [
+                "warn",
+                {
+                    argsIgnorePattern: "^_",
+                    varsIgnorePattern: "^_",
+                    caughtErrorsIgnorePattern: "^_",
+                },
+            ],
             "react-hooks/exhaustive-deps": "warn",
             // Minor, low-count; demoted to warn for the baseline rather than
             // editing in-flight component code (empty WIP block, a @ts-ignore,
