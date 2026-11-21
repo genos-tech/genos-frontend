@@ -1,7 +1,6 @@
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
-import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
-import { Box, Stack, Typography, useColorScheme } from "@mui/joy";
+import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
@@ -53,156 +52,9 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         useTM,
         onMobileBack,
     } = props;
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
     const isMobile = useIsMobile();
     const { t } = useTranslation();
     const { accessToken } = useAuth();
-
-    const renderPlaceholder = (message: string, subtitle?: string) => (
-        <Box
-            sx={{
-                height: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                width: "100%",
-                background: isDark
-                    ? "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, transparent 70%)"
-                    : "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, transparent 70%)",
-                position: "relative",
-                overflow: "hidden",
-            }}
-        >
-            {/* Decorative background elements */}
-            <Box
-                sx={{
-                    position: "absolute",
-                    width: 300,
-                    height: 300,
-                    borderRadius: "50%",
-                    background: isDark
-                        ? "radial-gradient(circle, rgba(251,191,36,0.04) 0%, transparent 70%)"
-                        : "radial-gradient(circle, rgba(251,191,36,0.05) 0%, transparent 70%)",
-                    top: "20%",
-                    right: "15%",
-                    pointerEvents: "none",
-                }}
-            />
-            <Box
-                sx={{
-                    position: "absolute",
-                    width: 200,
-                    height: 200,
-                    borderRadius: "50%",
-                    background: isDark
-                        ? "radial-gradient(circle, rgba(245,158,11,0.03) 0%, transparent 70%)"
-                        : "radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)",
-                    bottom: "25%",
-                    left: "20%",
-                    pointerEvents: "none",
-                }}
-            />
-
-            {/* Main content */}
-            <Stack
-                alignItems="center"
-                spacing={2.5}
-                sx={{
-                    maxWidth: 280,
-                    textAlign: "center",
-                    zIndex: 1,
-                }}
-            >
-                {/* Icon container */}
-                <Box
-                    sx={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: "20px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: isDark
-                            ? "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.12) 100%)"
-                            : "linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(245,158,11,0.08) 100%)",
-                        border: isDark
-                            ? "1px solid rgba(251,191,36,0.15)"
-                            : "1px solid rgba(251,191,36,0.1)",
-                        boxShadow: isDark
-                            ? "0 8px 32px rgba(0,0,0,0.2)"
-                            : "0 8px 32px rgba(251,191,36,0.08)",
-                    }}
-                >
-                    <DescriptionOutlinedIcon
-                        sx={{
-                            fontSize: 36,
-                            color: isDark ? "#fcd34d" : "#f59e0b",
-                            opacity: 0.8,
-                        }}
-                    />
-                </Box>
-
-                {/* Text content */}
-                <Stack spacing={1}>
-                    <Typography
-                        level="h4"
-                        sx={{
-                            fontWeight: 700,
-                            fontSize: "1.25rem",
-                            color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
-                            letterSpacing: "-0.02em",
-                        }}
-                    >
-                        {message}
-                    </Typography>
-                    {subtitle && (
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                                fontSize: "0.875rem",
-                                lineHeight: 1.5,
-                            }}
-                        >
-                            {subtitle}
-                        </Typography>
-                    )}
-                </Stack>
-
-                {/* Hint indicator */}
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={0.5}
-                    sx={{
-                        mt: 1,
-                        px: 1.5,
-                        py: 0.75,
-                        borderRadius: "8px",
-                        background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                    }}
-                >
-                    <TouchAppOutlinedIcon
-                        sx={{
-                            fontSize: 18,
-                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.3)",
-                        }}
-                    />
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
-                            fontWeight: 500,
-                            fontSize: "0.75rem",
-                        }}
-                    >
-                        {t.notes.placeholder.selectFromSidebar}
-                    </Typography>
-                </Stack>
-            </Stack>
-        </Box>
-    );
 
     // Note Home page - show dashboard when Home is selected
     // Get the currently selected tab's note type

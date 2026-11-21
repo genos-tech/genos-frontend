@@ -1998,8 +1998,9 @@ export const ja: DeepPartial<Messages> = {
             loading: "読み込み中",
             preparingWorkspace: "ワークスペースを準備しています",
             takingLonger: "時間がかかっていますか？",
-            sessionExpired: "セッションの有効期限が切れている可能性があります",
-            signInAgain: "再度サインイン",
+            stillConnecting:
+                "サーバーへの接続を待っています。回線が遅い場合は少し時間がかかることがあります。",
+            reload: "再読み込み",
             offlineTitle: "オフラインです",
             offlineBody: "現在サーバーに接続できません。接続が回復すると自動的に再開します。",
         },
