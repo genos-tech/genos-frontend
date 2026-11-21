@@ -40,6 +40,7 @@ import SecurityPage from "../lp/SecurityPage";
 import SegmentLandingPage from "../lp/SegmentLandingPage";
 import SubprocessorsPage from "../lp/SubprocessorsPage";
 import SupportPage from "../lp/SupportPage";
+import TermsPage from "../lp/TermsPage";
 
 const ENABLED = process.env.A11Y_REPORT === "1";
 
@@ -68,6 +69,7 @@ const PAGES: [string, ReactElement][] = [
     ["/accessibility", <AccessibilityPage key="p" />],
     ["/changelog", <ChangelogPage key="p" />],
     ["/privacy", <PrivacyPage key="p" />],
+    ["/terms", <TermsPage key="p" />],
     ["/subprocessors", <SubprocessorsPage key="p" />],
     ["/cookies", <CookiesPage key="p" />],
     ["/legal", <LegalPage key="p" />],

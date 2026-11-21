@@ -60,6 +60,11 @@ const UUID_ANA = "3f2c9a1e-5b7d-4c8e-9f10-112233445566";
 
 const { mobileFlag } = vi.hoisted(() => ({ mobileFlag: { value: false } }));
 
+// MIP-1916: the Person filter rows carry the member avatar (needs an avatar context in the app).
+vi.mock("../components/ui/avatars/UserAvatar", () => ({
+    UserAvatar: ({ userId }: { userId: string }) => <span data-testid={`user-avatar-${userId}`} />,
+}));
+
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
@@ -895,11 +900,11 @@ describe("MIP-1896 Agent Activity follow-ups", () => {
         const anaOnly = makePage();
         anaOnly.by_user_agent = [full.by_user_agent[0]];
         get.mockResolvedValue(okWith(anaOnly));
-        fireEvent.click(screen.getByRole("combobox", { name: /Person/ }));
+        fireEvent.keyDown(screen.getByRole("combobox", { name: /Person/ }), { key: "ArrowDown" });
         fireEvent.click(await screen.findByRole("option", { name: "Ana" }));
         await waitFor(() => expect(sent(get.mock.calls.length - 1).user_id).toBe(UUID_ANA));
         await screen.findByText("Pricing page copy");
-        fireEvent.click(screen.getByRole("combobox", { name: /Person/ }));
+        fireEvent.keyDown(screen.getByRole("combobox", { name: /Person/ }), { key: "ArrowDown" });
         expect(await screen.findByRole("option", { name: "Ken" })).toBeTruthy();
     });
 
