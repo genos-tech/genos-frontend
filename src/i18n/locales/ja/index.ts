@@ -6305,6 +6305,9 @@ export const ja: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "残りのタスクは {remaining}/{total} 個です",
+                cardAriaLabel: "{id} {title}、{status}",
+                cardAriaHint:
+                    "Enter キーまたはスペースキーでプレビューを開きます。矢印キーでリンクされたタスクへ移動します。",
                 healthSummary: "Close済み {actualPct}% · 予想 {expectedPct}%",
                 expectedByToday: "今日までの予想: {expectedPct}%",
                 openBlockerOne: "{count} Openブロッカー",
