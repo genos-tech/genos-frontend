@@ -15,6 +15,10 @@ import { TaskTableProps } from "../types/tasks";
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
+vi.mock("../features/today/briefingToday", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("../features/today/briefingToday")>()),
+    loadBriefingToday: vi.fn().mockResolvedValue({ status: "unavailable" }),
+}));
 vi.mock("../features/tasks/services/loadTeamTasks", () => ({
     loadTeamTasks: vi.fn().mockResolvedValue([]),
 }));
@@ -127,8 +131,15 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         expect(screen.getByRole("tab", { name: /My Tasks/ })).toBeInTheDocument();
     });
 
-    it("shows Tag Insights on the default Overall tab, aggregated by tag", () => {
+    it("opens on the Today tab (MIP-1005), not on Overall", () => {
         renderDashboard();
+        expect(screen.getByRole("tab", { name: /Today/, selected: true })).toBeInTheDocument();
+        expect(screen.queryByText("Tag Insights")).not.toBeInTheDocument();
+    });
+
+    it("shows Tag Insights on the Overall tab, aggregated by tag", () => {
+        renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
         expect(screen.getByText("Tag Insights")).toBeInTheDocument();
         // "backend" (2 items) is the most-used tag, so it renders in both the
         // summary tile and the table row; "urgent" (1 item) renders once.
@@ -141,6 +152,7 @@ describe("TaskDashboard tabs + Tag Insights", () => {
 
     it("switches away from Overall content when another tab is selected", () => {
         renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
         expect(screen.getByText("Tag Insights")).toBeInTheDocument();
         fireEvent.click(screen.getByRole("tab", { name: /My Tasks/ }));
         // Overall tab body (with Tag Insights) unmounts on switch.

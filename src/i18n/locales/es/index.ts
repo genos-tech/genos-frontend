@@ -3163,6 +3163,45 @@ export const es: DeepPartial<Messages> = {
             tabMyTasks: "Mis tareas",
             tabMemberTasks: "Tareas de miembros",
             tabAgentActivity: "Actividad de agentes",
+            tabToday: "Hoy",
+            // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
+            today: {
+                heading: "Hoy",
+                subtitle:
+                    "Lo que vence, lo que te espera y lo que cambió, en todos tus proyectos.",
+                sinceFirst: "Cambios de hoy hasta ahora",
+                since: "Cambios desde {time}",
+                refresh: "Actualizar",
+                openToday: "Abrir Hoy",
+                sections: {
+                    due: "Vencen y vencidas",
+                    waiting: "Esperan tu respuesta",
+                    changed: "Qué cambió",
+                    next: "Mira esto primero",
+                    blocked: "Estás esperando",
+                    delegated: "Entregadas a otros",
+                },
+                overdueBy: "{n} días de retraso",
+                overdueByOne: "1 día de retraso",
+                dueToday: "Vence hoy",
+                request: "Solicitud",
+                mentionIn: "Te mencionaron en {where}",
+                mentionChat: "un chat",
+                mentionNote: "una nota",
+                moreCount: "+{n} más",
+                noLink: "No se puede abrir desde aquí",
+                empty: {
+                    title: "Nada espera tu respuesta",
+                    body: "Nada vence, nada requiere respuesta y nada cambió.",
+                    section: "Nada aquí.",
+                },
+                states: {
+                    loading: "Cargando Hoy",
+                    error: "No se pudo cargar Hoy.",
+                    retry: "Reintentar",
+                    unavailable: "Hoy aún no está disponible en este servidor.",
+                },
+            },
             // TODO(copy): MIP-1613 draft for a native reader.
             agentActivity: {
                 heading: "Actividad de agentes",
