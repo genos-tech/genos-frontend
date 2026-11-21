@@ -9,6 +9,7 @@ import type { Messages } from "../i18n/types";
 import { BillingPlans, fetchPublicBillingPlans, PlanTier } from "../services/billingApi";
 import { formatPrice } from "../utils/currency";
 import { PRICING_SECURITY_LINK } from "./copy/security";
+import { BillingFaq } from "./BillingFaq";
 import { LpShell } from "./kit/LpShell";
 import { useSyncAppLocale } from "./kit/useSyncAppLocale";
 import type { Lang } from "./lpLang";
@@ -258,6 +259,8 @@ function PlansBody({ lang }: { lang: Lang }) {
                     )}
                 </div>
             </section>
+
+            <BillingFaq firstMonthOffer={plans?.first_month_offer === true} lang={lang} />
         </>
     );
 }

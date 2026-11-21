@@ -217,6 +217,11 @@ export interface BillingPlans {
     currency?: string;
     /** Currencies with prices actually configured, default first. */
     supported_currencies?: string[];
+    /**
+     * Whether the first-month Core offer is switched on (FIRST_MONTH_CORE_TRIAL). Public and
+     * user-agnostic. Optional so an older server does not blank the page; absent means off.
+     */
+    first_month_offer?: boolean;
 }
 
 /**
