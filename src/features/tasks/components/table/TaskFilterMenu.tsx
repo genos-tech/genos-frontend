@@ -1623,6 +1623,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setSelectedMilestoneKeys(next.milestoneKeys);
         setSelectedMemberKeys(next.memberKeys);
 
+        // MIP-1751: the same later-wins rule as the sidebar. A saved filter
+        // that narrows by milestone or sprint drops an active sidebar scope,
+        // which would otherwise AND with it and empty the table. The scope
+        // chip and the sidebar stay in step through `setTableMilestoneFilter`.
+        const narrowsMilestoneOrSprint =
+            !(next.milestoneKeys.length === 1 && next.milestoneKeys[0] === MILESTONE_ALL) ||
+            !(next.sprintKeys.length === 1 && next.sprintKeys[0] === SPRINT_ALL);
+        if (narrowsMilestoneOrSprint && useTM.tableMilestoneFilterId != null) {
+            useTM.setTableMilestoneFilter(null);
+        }
+
         applyFilters(next);
         // Persist like any other selection change, so the applied filter
         // survives the table/board/dashboard remount the same way a
@@ -1671,6 +1682,32 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         selectedMemberKeys,
         outdatedMilestoneKey,
     ]);
+
+    // MIP-1751: a sidebar milestone scope (`tableMilestoneFilterId`) and the
+    // header's milestone multi-select are ANDed by `applyFilters`, so a stale
+    // multi-select (say, milestone A kept in storage) hid every row of the
+    // scoped milestone B, its own backing row included. The later choice
+    // wins: scoping to a milestone clears the multi-select. The dropdown is
+    // hidden while a scope is active, so the only way to get here with a
+    // selection is a leftover from before the scope was set.
+    //
+    // The first run is the mount. It clears the in-memory selection but does
+    // not persist: at mount the tags are still at their defaults (they restore
+    // asynchronously), and `persistFilters` writes the whole selection.
+    const milestoneScopeMountRef = React.useRef(true);
+    useEffect(() => {
+        const isMount = milestoneScopeMountRef.current;
+        milestoneScopeMountRef.current = false;
+        if (useTM.tableMilestoneFilterId == null) return;
+        if (selectedMilestoneKeys.length === 1 && selectedMilestoneKeys[0] === MILESTONE_ALL) {
+            return;
+        }
+        const cleared: FilterSelection = { ...selection, milestoneKeys: [MILESTONE_ALL] };
+        setSelectedMilestoneKeys(cleared.milestoneKeys);
+        applyFilters(cleared);
+        if (!isMount) persistFilters(cleared);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useTM.tableMilestoneFilterId]);
 
     // NOTE: there used to be a second `applyFilters` pass here, keyed on
     // `[isTaskUpdated]`. It was redundant and expensive.

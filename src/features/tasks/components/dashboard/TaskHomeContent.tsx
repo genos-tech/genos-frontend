@@ -14,6 +14,7 @@ import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -87,9 +88,13 @@ import { getStatusIcon } from "../meta/statusIcons";
 import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectIdentityRow } from "../ProjectIdentityRow";
 import { ProjectTagChip } from "../ProjectTagChip";
+import { AgentActivityTab } from "./agentActivity/AgentActivityTab";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { DashboardTaskRow } from "./DashboardTaskRow";
 import { TaskVelocitySection } from "./TaskVelocitySection";
+
+/** The dashboard's tabs. `agent` is the Agent Activity tab (MIP-1613). */
+type TaskDashboardTab = "overall" | "sprint" | "mytasks" | "members" | "agent";
 
 type TaskHomeContentProps = {
     useTM: TaskManagementState;
@@ -229,8 +234,13 @@ export const TaskHomeContent = ({
     const { accessToken } = useAuth();
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<"overall" | "sprint" | "mytasks" | "members">(
-        "overall"
+    // `?view=agent` (written by the Agent Activity tab, MIP-1613) opens that tab on a
+    // shared link. Read once, from the address bar, so this component needs no router.
+    const [activeTab, setActiveTab] = useState<TaskDashboardTab>(() =>
+        typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("view") === "agent"
+            ? "agent"
+            : "overall"
     );
     // How the My Tasks "Up Next" list is ordered. Default "weight" so the
     // most pressing task (priority × urgency) surfaces first — the whole
@@ -1479,10 +1489,7 @@ export const TaskHomeContent = ({
                                         backgroundColor: "transparent",
                                     }}
                                     onChange={(_, value) =>
-                                        value &&
-                                        setActiveTab(
-                                            value as "overall" | "sprint" | "mytasks" | "members"
-                                        )
+                                        value && setActiveTab(value as TaskDashboardTab)
                                     }
                                 >
                                     <TabList
@@ -1585,6 +1592,10 @@ export const TaskHomeContent = ({
                                         <Tab value="members" indicatorInset>
                                             <GroupsRoundedIcon sx={{ fontSize: 16 }} />
                                             {t.tasks.dashboard.tabMemberTasks}
+                                        </Tab>
+                                        <Tab value="agent" indicatorInset>
+                                            <SmartToyRoundedIcon sx={{ fontSize: 16 }} />
+                                            {t.tasks.dashboard.tabAgentActivity}
                                         </Tab>
                                     </TabList>
                                 </Tabs>
@@ -2578,6 +2589,16 @@ export const TaskHomeContent = ({
                             )}
 
                             {/* ════════ TAB: Overall Insights ════════ */}
+                            {/* Agent Activity tab (MIP-1613): who uses which AI agent, for what. */}
+                            {!tasksUnread && activeTab === "agent" && (
+                                <AgentActivityTab
+                                    projects={usePM.teamProjects.map((p) => ({
+                                        id: p.projectId,
+                                        name: p.projectName,
+                                    }))}
+                                />
+                            )}
+
                             {!tasksUnread && activeTab === "overall" && (
                                 <>
                                     {/* ════════ Section B: Status Distribution ════════ */}

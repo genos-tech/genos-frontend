@@ -46,6 +46,9 @@ const SAME_AS_ENGLISH_OK = new Set([
     // Brand names of the two AI apps (MIP-1568): the vendors' own spelling in every locale.
     "activity.via.apps.claude",
     "activity.via.apps.chatgpt",
+    // MIP-1613: the same two vendor names in the Agent Activity filter and chips.
+    "dashboard.agentActivity.agents.claude",
+    "dashboard.agentActivity.agents.chatgpt",
 ]);
 
 describe("tasks catalog: every locale has every English key", () => {

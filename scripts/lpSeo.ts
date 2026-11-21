@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
 
+import type { ChangelogEntry } from "../src/lp/changelog/changelog";
+import { buildChangelogRss } from "../src/lp/changelog/rss";
 import { buildSitemapXml, type SitemapArticle } from "../src/lp/seo/sitemap";
 
 // Emits `sitemap.xml` into the build output from the same route list the app
@@ -24,6 +26,12 @@ const readArticles = (root: string): SitemapArticle[] => {
         .map((a) => ({ slug: a.slug, publishedAt: a.publishedAt }));
 };
 
+// The changelog entries, read from disk for the same reason as the manifest above.
+const readChangelog = (root: string): ChangelogEntry[] =>
+    JSON.parse(
+        readFileSync(join(root, "src/lp/changelog/entries.json"), "utf8")
+    ) as ChangelogEntry[];
+
 export const lpSeo = (): Plugin => {
     let root = process.cwd();
     return {
@@ -37,6 +45,12 @@ export const lpSeo = (): Plugin => {
                 type: "asset",
                 fileName: "sitemap.xml",
                 source: buildSitemapXml(readArticles(root)),
+            });
+            // changelog.rss from the same entries the /changelog page shows (MIP-1257).
+            this.emitFile({
+                type: "asset",
+                fileName: "changelog.rss",
+                source: buildChangelogRss(readChangelog(root)),
             });
         },
     };

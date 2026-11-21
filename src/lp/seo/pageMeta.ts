@@ -39,6 +39,20 @@ export const SUPPORT_META: Record<SeoLang, Meta> = {
     },
 };
 
+/** MIP-1257: dated updates, the public roadmap and the RSS feed. */
+export const CHANGELOG_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "変更履歴 | Genos",
+        description:
+            "Genos の最近の変更、ロードマップ（利用可能なものと近日公開のもの）、RSS フィード。",
+    },
+    en: {
+        title: "Changelog | Genos",
+        description:
+            "Recent changes to Genos, a roadmap of what works today and what is coming, and an RSS feed.",
+    },
+};
+
 /** MIP-1265: what Genos does for accessibility and which browsers and devices it supports. */
 export const ACCESSIBILITY_META: Record<SeoLang, Meta> = {
     ja: {

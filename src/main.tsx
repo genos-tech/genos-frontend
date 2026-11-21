@@ -56,6 +56,7 @@ const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
 const GenosContactPage = lazy(() => import("./lp/ContactPage"));
 const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
 const GenosAccessibilityPage = lazy(() => import("./lp/AccessibilityPage"));
+const GenosChangelogPage = lazy(() => import("./lp/ChangelogPage"));
 
 // Initialize PostHog once, before React mounts, unless this first page is a public
 // marketing page: those store nothing and send nothing until a visitor enters the app
@@ -172,6 +173,8 @@ const tree = (
             <Route element={publicPage(GenosSupportPage)} path="/support" />
             {/* Accessibility statement and supported browsers (MIP-1265). */}
             <Route element={publicPage(GenosAccessibilityPage)} path="/accessibility" />
+            {/* Changelog, public roadmap and RSS (MIP-1257). changelog.rss is a build asset. */}
+            <Route element={publicPage(GenosChangelogPage)} path="/changelog" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>
