@@ -177,6 +177,7 @@ export const DroppableNoteList = ({ containerId, kind, children }: DroppableNote
             <Box
                 ref={provided.innerRef}
                 {...provided.droppableProps}
+                role="none"
                 sx={{
                     borderRadius: "8px",
                     transition: "background-color 0.15s ease",
@@ -216,6 +217,9 @@ export const DraggableNoteRow = ({ kind, noteId, index, children }: DraggableNot
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...(isMobile ? {} : provided.dragHandleProps)}
+                    // The handle's `role="button"` made the list's child a button, not an item
+                    // (MIP-1955). The row inside has its own button; the lift keys still work.
+                    role="none"
                     sx={{
                         opacity: snapshot.isDragging ? 0.85 : 1,
                         borderRadius: "8px",

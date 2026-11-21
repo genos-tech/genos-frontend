@@ -193,7 +193,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
 
     return (
         <Box>
-            <ListItem sx={{ p: 0 }} nested>
+            <ListItem component="li" sx={{ p: 0 }} nested>
                 {/* Passive markers, in the row's end: whose folder, its tags,
                    and its visibility.
                    Keep the "..." trigger visible while its portal menu is open. */}
@@ -304,7 +304,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                 />
 
                 {isExpanded && (
-                    <List sx={navNestedListSx}>
+                    <List component="div" role="list" sx={navNestedListSx}>
                         {folder.childFolders
                             .filter((c) => !visibleFolderIds || visibleFolderIds.has(c.folderId))
                             .map((child) => (

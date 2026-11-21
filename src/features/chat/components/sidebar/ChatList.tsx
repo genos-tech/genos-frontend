@@ -942,7 +942,7 @@ export const ChatList = (props: ChatListProps) => {
             ? t.common.archive.hideArchived
             : `${t.common.archive.showArchived} (${archivedInPane})`;
         return (
-            <Box sx={{ px: 1.5, py: 0.75, flexShrink: 0 }}>
+            <Box component="li" sx={{ px: 1.5, py: 0.75, flexShrink: 0, listStyle: "none" }}>
                 <Button
                     aria-expanded={showArchivedChats}
                     size="sm"
@@ -1029,9 +1029,16 @@ export const ChatList = (props: ChatListProps) => {
         return null;
     };
 
+    // A div, not a `ul`: its children are the Virtuoso scrollers, never `li` (MIP-1955). No list
+    // role when the pane shows an empty state: that would be a list with no items.
+    const listRole =
+        targetChatType < CHAT_TYPES.ACTIVITY && targetChats.length === 0 ? undefined : "list";
+
     return (
         <List
             className="custom-scrollbar"
+            component="div"
+            role={listRole}
             size="sm"
             sx={{
                 p: 0,

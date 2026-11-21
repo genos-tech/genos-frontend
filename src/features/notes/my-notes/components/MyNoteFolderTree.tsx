@@ -164,7 +164,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
 
     return (
         <Box>
-            <ListItem sx={{ p: 0 }} nested>
+            <ListItem component="li" sx={{ p: 0 }} nested>
                 {/* Folder header — always a drop target so notes can be
                     filed into a COLLAPSED folder too. */}
                 <DroppableHeader containerId={myFolderContainerId(folder.folderId)} kind={1}>
@@ -175,7 +175,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                     subtrees pay zero render cost — same trade-off as
                     NoteTreeRenderer). */}
                 {isExpanded && (
-                    <List sx={navNestedListSx}>
+                    <List component="div" role="list" sx={navNestedListSx}>
                         {folder.childFolders.map((child) => (
                             <MyNoteFolderTree
                                 key={`folder-${child.folderId}`}
