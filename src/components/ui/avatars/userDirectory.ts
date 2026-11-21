@@ -23,7 +23,7 @@
 import { useSyncExternalStore } from "react";
 
 import type { UserProps } from "../../../types/admin";
-import { isDeletedUser } from "../../../utils/teamRoster";
+import { DELETED_EMAIL_SUFFIX, DELETED_USERNAME, isDeletedUser } from "../../../utils/teamRoster";
 
 /** What a denormalized user looks like across the payloads that carry one. */
 export type SeenPerson = {
@@ -84,6 +84,32 @@ export const rememberPeople = (seen: readonly SeenPerson[] | null | undefined): 
         changed = true;
     }
     if (changed) for (const listener of listeners) listener();
+};
+
+/**
+ * Remember accounts the roster says are deleted (`deletedUserIds`, MIP-1820).
+ *
+ * The client cannot tell "deleted" from "left the team" for an id it holds no
+ * profile for (the roster omits both), so the API lists the deleted ones. Each
+ * becomes the anonymised profile a deleted sender already arrives as, so every
+ * surface that resolves a name through the directory (chips, headers, cells)
+ * shows the localised "Deleted user" with no further rule, and a stale copy of
+ * the person cannot put the real name back (`rememberPeople` keeps what says
+ * "deleted"). Safe on every poll: an id already held changes nothing and
+ * notifies nobody. Anything that is not a list of non-empty strings is ignored,
+ * so an older API or a guest changes nothing.
+ */
+export const rememberDeletedUsers = (ids: readonly unknown[] | null | undefined): void => {
+    if (!Array.isArray(ids)) return;
+    rememberPeople(
+        ids
+            .filter((id): id is string => typeof id === "string" && id !== "")
+            .map((id) => ({
+                userId: id,
+                userName: DELETED_USERNAME,
+                userEmail: `${id}${DELETED_EMAIL_SUFFIX}`,
+            }))
+    );
 };
 
 /** The remembered profile, or undefined. Reads without subscribing. */

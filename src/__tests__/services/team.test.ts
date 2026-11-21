@@ -75,6 +75,8 @@ describe("loadTeamMembers", () => {
         expect(result).toEqual({
             serverTime: "2026-05-25T12:00:00Z",
             members: mockMembers,
+            // An answer without the key (an older API) is an empty list.
+            deletedUserIds: [],
         });
     });
 

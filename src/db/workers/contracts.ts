@@ -114,6 +114,8 @@ export type UsersRequests = {
         req: { myself: UserProps; accessToken: string };
         res: UserProps[];
     };
+    // The ids the roster listed as deleted accounts (MIP-1820), as kept in IDB.
+    popDeletedUserIds: { req: Record<string, never>; res: string[] };
     popSpecificUser: { req: { userId: number }; res: UserProps | null };
     popTeamMembers: { req: { myself: UserProps }; res: UserProps[] };
     popTeamUsers: {
