@@ -53,6 +53,8 @@ const SHELL = {
             docs: "ドキュメント",
             security: "セキュリティ",
             privacy: "プライバシー",
+            subprocessors: "サブプロセッサー一覧",
+            cookies: "Cookie と分析",
             legal: "利用規約・特商法",
             terms: "利用規約",
             legalNotice: "特定商取引法に基づく表記",
@@ -104,6 +106,8 @@ const SHELL = {
             docs: "Docs",
             security: "Security",
             privacy: "Privacy",
+            subprocessors: "Subprocessors",
+            cookies: "Cookies & analytics",
             legal: "Terms and legal",
             terms: "Terms of Service",
             legalNotice: "Legal notice",
@@ -428,6 +432,12 @@ export function LpShell({
                                 </li>
                                 <li>
                                     <Link to="/privacy">{t.links.privacy}</Link>
+                                </li>
+                                <li>
+                                    <Link to="/subprocessors">{t.links.subprocessors}</Link>
+                                </li>
+                                <li>
+                                    <Link to="/cookies">{t.links.cookies}</Link>
                                 </li>
                                 {showTerms && (
                                     <li>
