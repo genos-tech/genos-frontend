@@ -90,14 +90,15 @@ export const hi: DeepPartial<Messages> = {
             ownerOnly: "केवल मालिक संग्रहित या संग्रह-मुक्त कर सकता है।",
             projectBannerTitle: "यह प्रोजेक्ट संग्रहित है",
             chatBannerTitle: "यह समूह संग्रहित है",
+            chatBannerProjectTitle: "इस प्रोजेक्ट की चैट संग्रहित है",
             projectBannerBody:
                 "यह केवल-पढ़ने योग्य है: संग्रह हटाने तक नए कार्य, संपादन या टिप्पणियाँ नहीं हो सकतीं। कुछ भी हटाया नहीं गया है।",
             chatBannerBody:
                 "यह केवल-पढ़ने योग्य है: संग्रह हटाने तक नए संदेश नहीं भेजे जा सकते। कुछ भी हटाया नहीं गया है।",
             unarchiveAction: "संग्रह हटाएँ",
-            showArchived: "संग्रहित दिखाएँ",
+            showArchived: "संग्रहित दिखाएँ ({count})",
             hideArchived: "संग्रहित छिपाएँ",
-            archivedSection: "संग्रहित",
+            archivedSection: "संग्रहित ({count})",
             archivedBadge: "संग्रहित",
             newTaskDisabled: "कार्य जोड़ने के लिए इस प्रोजेक्ट का संग्रह हटाएँ।",
             composerDisabled: "यह समूह संग्रहित है। संदेश भेजने के लिए इसका संग्रह हटाएँ।",

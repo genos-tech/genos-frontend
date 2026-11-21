@@ -268,14 +268,15 @@ export const es: DeepPartial<Messages> = {
             ownerOnly: "Solo el propietario puede archivar o desarchivar.",
             projectBannerTitle: "Este proyecto está archivado",
             chatBannerTitle: "Este grupo está archivado",
+            chatBannerProjectTitle: "El chat de este proyecto está archivado",
             projectBannerBody:
                 "Es de solo lectura: no se pueden crear tareas, editar ni comentar hasta desarchivarlo. No se ha eliminado nada.",
             chatBannerBody:
                 "Es de solo lectura: no se pueden enviar mensajes hasta desarchivarlo. No se ha eliminado nada.",
             unarchiveAction: "Desarchivar",
-            showArchived: "Mostrar archivados",
+            showArchived: "Mostrar archivados ({count})",
             hideArchived: "Ocultar archivados",
-            archivedSection: "Archivados",
+            archivedSection: "Archivados ({count})",
             archivedBadge: "Archivado",
             newTaskDisabled: "Desarchiva este proyecto para añadir tareas.",
             composerDisabled: "Este grupo está archivado. Desarchívalo para enviar mensajes.",

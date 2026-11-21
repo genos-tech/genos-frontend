@@ -84,14 +84,15 @@ export const common = {
         ownerOnly: "Only the owner can archive or unarchive.",
         projectBannerTitle: "This project is archived",
         chatBannerTitle: "This group is archived",
+        chatBannerProjectTitle: "This project's chat is archived",
         projectBannerBody:
             "It is read-only: no new tasks, edits or comments until it is unarchived. Nothing has been removed.",
         chatBannerBody:
             "It is read-only: no new messages until it is unarchived. Nothing has been removed.",
         unarchiveAction: "Unarchive",
-        showArchived: "Show archived",
+        showArchived: "Show archived ({count})",
         hideArchived: "Hide archived",
-        archivedSection: "Archived",
+        archivedSection: "Archived ({count})",
         archivedBadge: "Archived",
         newTaskDisabled: "Unarchive this project to add tasks.",
         composerDisabled: "This group is archived. Unarchive it to send messages.",

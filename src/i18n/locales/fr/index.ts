@@ -1818,14 +1818,15 @@ export const fr: DeepPartial<Messages> = {
             ownerOnly: "Seul le propriétaire peut archiver ou désarchiver.",
             projectBannerTitle: "Ce projet est archivé",
             chatBannerTitle: "Ce groupe est archivé",
+            chatBannerProjectTitle: "Le chat de ce projet est archivé",
             projectBannerBody:
                 "Lecture seule : aucune nouvelle tâche, modification ni commentaire tant qu'il n'est pas désarchivé. Rien n'a été supprimé.",
             chatBannerBody:
                 "Lecture seule : aucun nouveau message tant qu'il n'est pas désarchivé. Rien n'a été supprimé.",
             unarchiveAction: "Désarchiver",
-            showArchived: "Afficher les archivés",
+            showArchived: "Afficher les archivés ({count})",
             hideArchived: "Masquer les archivés",
-            archivedSection: "Archivés",
+            archivedSection: "Archivés ({count})",
             archivedBadge: "Archivé",
             newTaskDisabled: "Désarchivez ce projet pour ajouter des tâches.",
             composerDisabled: "Ce groupe est archivé. Désarchivez-le pour envoyer des messages.",
