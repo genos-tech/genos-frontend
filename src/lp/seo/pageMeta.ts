@@ -12,6 +12,20 @@ import type { SeoLang } from "./head";
 
 type Meta = { title: string; description: string };
 
+/** MIP-1261: the contact form (general, Enterprise enquiry, security, press). */
+export const CONTACT_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "お問い合わせ | Genos",
+        description:
+            "Genosへのお問い合わせフォーム。一般的なご質問、Enterprise のお問い合わせ、セキュリティに関するご報告、報道関係。返信はメールでいたします。",
+    },
+    en: {
+        title: "Contact | Genos",
+        description:
+            "Send Genos a message: a general question, an Enterprise enquiry, a security report or a press enquiry. We reply by email.",
+    },
+};
+
 export const SUPPORT_META: Record<SeoLang, Meta> = {
     ja: {
         title: "サポート | Genos",

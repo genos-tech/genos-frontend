@@ -2447,3 +2447,103 @@ a.lp-row:hover .lp-row__arrow {
     height: 18px;
     color: var(--lp-accent-text);
 }
+
+/* ---------- contact form (MIP-1261) ---------- */
+
+.lp-contact {
+    display: grid;
+    gap: 20px;
+}
+
+.lp-field {
+    display: grid;
+    gap: 6px;
+}
+
+.lp-field > label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--lp-text);
+}
+
+.lp-field input,
+.lp-field select,
+.lp-field textarea {
+    width: 100%;
+    min-width: 0;
+    font: inherit;
+    /* 16px or larger: iOS zooms the page into any smaller field. */
+    font-size: 1rem;
+    color: var(--lp-text);
+    background: var(--lp-surface);
+    border: 1px solid var(--lp-border-strong);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.lp-field input,
+.lp-field select {
+    height: 44px;
+}
+
+.lp-field textarea {
+    min-height: 160px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+.lp-field input[aria-invalid="true"],
+.lp-field select[aria-invalid="true"],
+.lp-field textarea[aria-invalid="true"] {
+    border-color: var(--lp-danger-border);
+}
+
+.lp-field__meta {
+    display: flex;
+    justify-content: flex-end;
+    color: var(--lp-text-tertiary);
+}
+
+.lp-field__error {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--lp-danger-text);
+}
+
+.lp-contact__alert {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--lp-danger-border);
+    background: var(--lp-danger-subtle);
+    color: var(--lp-danger-text);
+}
+
+.lp-contact__privacy {
+    margin: 0;
+    color: var(--lp-text-secondary);
+}
+
+/* Off-screen, not display:none: some bots skip display:none fields by design. */
+.lp-contact__hp {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.lp-contact__sent {
+    display: grid;
+    gap: 8px;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--lp-success-border);
+    background: var(--lp-success-subtle);
+    color: var(--lp-success-text);
+}
+
+.lp-contact__sent-heading {
+    margin: 0;
+    font-size: 1.125rem;
+}

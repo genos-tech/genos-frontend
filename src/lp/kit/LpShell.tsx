@@ -419,7 +419,7 @@ export function LpShell({
                                     </a>
                                 </li>
                                 <li>
-                                    <a href={`mailto:${CONTACT_EMAIL}`}>{t.links.contact}</a>
+                                    <Link to="/contact">{t.links.contact}</Link>
                                 </li>
                             </ul>
                         </div>
