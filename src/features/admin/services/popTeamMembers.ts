@@ -1,4 +1,5 @@
 import { usersChannel } from "../../../db/workers/channels";
+import { compareText } from "../../../i18n/collate";
 import { UserProps } from "../../../types/admin";
 
 // Loads the team members through the persistent users channel and post-
@@ -13,8 +14,6 @@ export const popTeamMembers = async (myself: UserProps): Promise<UserProps[]> =>
         const bIsMe = String(b.userId) === myselfId;
         if (aIsMe && !bIsMe) return -1;
         if (!aIsMe && bIsMe) return 1;
-        return (a.userName ?? "").localeCompare(b.userName ?? "", undefined, {
-            sensitivity: "base",
-        });
+        return compareText(a.userName ?? "", b.userName ?? "", { sensitivity: "base" });
     });
 };

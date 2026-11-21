@@ -7,6 +7,7 @@ import { Box, Button, List, ListItem, ListItemButton, Typography } from "@mui/jo
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../../../i18n";
+import { compareText } from "../../../../i18n/collate";
 import { g } from "../../../../theme/tokens";
 import { MyNoteFolderProps } from "../../../../types/notes";
 import { collectDescendantFolderIds } from "../../../../utils/note";
@@ -43,7 +44,7 @@ const flattenFolders = (folders: MyNoteFolderProps[]): FolderRow[] => {
         list.push(f);
         byParent.set(key, list);
     });
-    byParent.forEach((list) => list.sort((a, b) => a.name.localeCompare(b.name)));
+    byParent.forEach((list) => list.sort((a, b) => compareText(a.name, b.name)));
 
     const rows: FolderRow[] = [];
     const visited = new Set<number>();

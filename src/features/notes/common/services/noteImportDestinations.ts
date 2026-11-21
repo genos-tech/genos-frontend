@@ -1,4 +1,5 @@
 import { fmt, Messages } from "../../../../i18n";
+import { compareText } from "../../../../i18n/collate";
 import { ChatNoteMetaProps, MyNoteFolderProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 
@@ -92,7 +93,7 @@ export const buildTaskNoteDestinations = (
     }
 
     return Array.from(byKey.values()).sort((a, b) =>
-        a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+        compareText(a.label, b.label, { sensitivity: "base" })
     );
 };
 
@@ -143,7 +144,7 @@ export const buildChatNoteDestinations = (
     }
 
     return Array.from(byKey.values()).sort((a, b) =>
-        a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+        compareText(a.label, b.label, { sensitivity: "base" })
     );
 };
 
@@ -165,7 +166,7 @@ export const flattenFolders = (folders: MyNoteFolderProps[]): DestinationOption[
     const rows: DestinationOption[] = [];
     const walk = (parentId: number | null, prefix: string) => {
         const kids = [...(byParent.get(parentId) ?? [])].sort((a, b) =>
-            a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+            compareText(a.name, b.name, { sensitivity: "base" })
         );
         for (const f of kids) {
             const label = prefix ? `${prefix} › ${f.name}` : f.name;

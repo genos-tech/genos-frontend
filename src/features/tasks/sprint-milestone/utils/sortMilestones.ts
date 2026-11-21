@@ -1,3 +1,4 @@
+import { compareText } from "../../../../i18n/collate";
 import { parseCalendarDate } from "../../../../utils/calendarDate";
 import { statusSolid } from "../../meta/taskTone";
 import { Milestone, Sprint } from "../types";
@@ -92,7 +93,7 @@ export const compareMilestones = (a: Milestone, b: Milestone): number => {
     if (dateCmp !== 0) return dateCmp;
     const statusCmp = compareMilestoneStatus(a.status as string, b.status as string);
     if (statusCmp !== 0) return statusCmp;
-    return a.title.localeCompare(b.title);
+    return compareText(a.title, b.title);
 };
 
 // Sprint statuses that count as "the sprint is over". Closed milestones

@@ -14,6 +14,7 @@ import { UserProfile } from "../../features/admin/components/modals/ModalUserPro
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { fmt, getMessages, useTranslation } from "../../i18n";
+import { compareText } from "../../i18n/collate";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
@@ -182,9 +183,7 @@ export const sortMembersMyselfFirst = <T extends { userId: string; userName: str
     return [...members].sort((a, b) => {
         if (a.userId === myselfUserId) return -1;
         if (b.userId === myselfUserId) return 1;
-        return (a.userName || "").localeCompare(b.userName || "", undefined, {
-            sensitivity: "base",
-        });
+        return compareText(a.userName || "", b.userName || "", { sensitivity: "base" });
     });
 };
 

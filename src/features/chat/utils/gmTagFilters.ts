@@ -14,6 +14,7 @@
  * convention as `makeChipFilter`.
  */
 
+import { compareText } from "../../../i18n/collate";
 import { AllChatProps } from "../../../types/chat";
 import { PersonalTag } from "../../../types/personalTags";
 
@@ -44,7 +45,7 @@ export const makeTagFilter = (
 };
 
 const byPinOrder = (a: PersonalTag, b: PersonalTag): number =>
-    a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
+    a.sortOrder - b.sortOrder || compareText(a.name, b.name);
 
 /**
  * The chips rendered in the filter row.

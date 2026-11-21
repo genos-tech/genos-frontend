@@ -12,6 +12,7 @@
  * the dialog can tell the user what it is about to do before it does it.
  */
 
+import { compareText } from "../../../../i18n/collate";
 import { MyNoteFolderProps, MyNoteMetaProps } from "../../../../types/notes";
 import { buildMyNoteTree, collectDescendantFolderIds } from "../../../../utils/note";
 
@@ -113,9 +114,9 @@ export const buildFolderExportPlan = (args: {
     let folderCount = 0;
 
     const byName = (a: { name: string }, b: { name: string }) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+        compareText(a.name, b.name, { sensitivity: "base" });
     const byTitle = (a: { title: string }, b: { title: string }) =>
-        a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+        compareText(a.title, b.title, { sensitivity: "base" });
 
     const walkNote = (
         note: ReturnType<typeof buildMyNoteTree>[number],
