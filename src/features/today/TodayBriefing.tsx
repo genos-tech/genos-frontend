@@ -9,7 +9,6 @@ import { requestAppNavigate } from "../../services/appNavigate";
 import { focusRing, g } from "../../theme/tokens";
 import { formatAgentWhen } from "../tasks/components/dashboard/agentActivity/agentActivityLinks";
 import {
-    BriefingChange,
     BriefingMention,
     BriefingTask,
     BriefingToday,
@@ -17,6 +16,7 @@ import {
     mentionHref,
     taskHref,
 } from "./briefingToday";
+import { changeLine, reasonLine } from "./briefingWords";
 import { BriefingTodayView } from "./useBriefingToday";
 
 /** `page` is the Tasks dashboard tab; `card` is the compact block on the Genos page. */
@@ -162,12 +162,6 @@ const taskMeta = (task: BriefingTask, a: TodayCopy): string => {
 
 type TodayCopy = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["today"];
 
-const changeLine = (c: BriefingChange): string => {
-    const { by, summary, text } = c.latest;
-    const head = [by, summary].filter(Boolean).join(" ");
-    return text ? `${head}: ${text}` : head;
-};
-
 const mentionWhere = (m: BriefingMention, a: TodayCopy): string => {
     if (m.source === "chat") return m.chatTitle || a.mentionChat;
     if (m.source === "note") return m.title || a.mentionNote;
@@ -258,7 +252,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                 ...d.changed.items.map((c) => ({
                     href: changeHref(c),
                     primary: [c.displayId, c.title].filter(Boolean).join(" "),
-                    secondary: `${secs.changed} · ${changeLine(c)}`,
+                    secondary: `${secs.changed} · ${changeLine(c, a)}`,
                     onOpen: open,
                     noLink: a.noLink,
                 })),
@@ -350,7 +344,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                             meta={formatAgentWhen(c.latestAt, locale)}
                             noLink={a.noLink}
                             primary={[c.displayId, c.title].filter(Boolean).join(" ")}
-                            secondary={changeLine(c)}
+                            secondary={changeLine(c, a)}
                             onOpen={open}
                         />
                     ))}
@@ -366,7 +360,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                             href={taskHref(task)}
                             noLink={a.noLink}
                             primary={`${task.displayId} ${task.title}`}
-                            secondary={(task.reasons ?? []).join(" · ")}
+                            secondary={reasonLine(task, a, locale)}
                             onOpen={open}
                         />
                     ))}
