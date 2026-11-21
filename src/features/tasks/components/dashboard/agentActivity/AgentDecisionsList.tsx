@@ -1,6 +1,7 @@
 import { Box, Link, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
+import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
@@ -19,9 +20,7 @@ export const AgentDecisionsList = ({ decisions }: { decisions: AgentWorkDecision
                 {a.decisions.title}
             </Typography>
             {decisions.length === 0 ? (
-                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                    {a.decisions.empty}
-                </Typography>
+                <EmptyState body={a.decisions.empty} data-empty="agent-decisions" size="xs" />
             ) : (
                 <Box
                     component="ul"

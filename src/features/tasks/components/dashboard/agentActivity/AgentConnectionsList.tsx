@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from "@mui/joy";
 
 import { requestOpenSettings } from "../../../../../components/layout/settingsEvents";
+import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
@@ -18,9 +19,7 @@ export const AgentConnectionsList = ({ connections }: { connections: AgentWorkCo
                 {a.connections.title}
             </Typography>
             {connections.length === 0 ? (
-                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                    {a.connections.empty}
-                </Typography>
+                <EmptyState body={a.connections.empty} data-empty="agent-connections" size="xs" />
             ) : (
                 <Box
                     component="ul"
