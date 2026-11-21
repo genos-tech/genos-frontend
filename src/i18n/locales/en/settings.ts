@@ -506,7 +506,7 @@ export const settings = {
         cancelPlan: "Cancel plan",
         changeTeamPlan: "Change plan",
         planChangeHint:
-            "Pick any plan below to switch — Stripe prorates the difference. Cancelling keeps your plan until the end of the current billing period.",
+            "Pick any plan below to switch. An upgrade takes effect now and is charged the difference. A downgrade takes effect at the end of the current billing period, with no credit. Cancelling keeps your plan until the end of the current billing period.",
         manageBilling: "Manage billing",
         manageBillingHint: "Change plan, payment method, or cancel via the secure Stripe portal.",
         upgradeHint: "Checkout is handled securely by Stripe.",
