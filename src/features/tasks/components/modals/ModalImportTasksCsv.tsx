@@ -36,7 +36,8 @@ type Step = "upload" | "map" | "preview" | "result";
 const STEP_ORDER: Step[] = ["upload", "map", "preview", "result"];
 const MAX_MB = 5;
 const NOT_USED = "-1";
-const NO_PRIORITY = "";
+// A priority the person set to "none": the server reads it as "leave this value without one".
+const NO_PRIORITY = "none";
 
 const FIELDS: ImportField[] = [
     "title",
@@ -139,23 +140,17 @@ export const ModalImportTasksCsv = ({
         }
     };
 
-    const valueMaps = (p: ImportPreview) => ({
-        status: Object.fromEntries(p.status_values.map((v) => [v.value, v.mapped ?? "Open"])),
-        priority: Object.fromEntries(p.priority_values.map((v) => [v.value, v.mapped ?? ""])),
-    });
-
     const onPickFile = async (picked: File | null) => {
         if (!picked) return;
         setBusy(true);
         setError(null);
         try {
             const p = await previewTaskImport(accessToken ?? null, { projectId, file: picked });
-            const maps = valueMaps(p);
             setFile(picked);
             setPreview(p);
             setMapping(p.mapping);
-            setStatusMap(maps.status);
-            setPriorityMap(maps.priority);
+            setStatusMap({});
+            setPriorityMap({});
             setStep("map");
         } catch (e) {
             setError(errorText(e));
@@ -164,10 +159,6 @@ export const ModalImportTasksCsv = ({
             if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
-
-    // Only the values the person set; an empty priority means "none".
-    const nonEmpty = (m: Record<string, string>) =>
-        Object.fromEntries(Object.entries(m).filter(([, v]) => v !== ""));
 
     const toPreview = async () => {
         if (!file) return;
@@ -182,8 +173,8 @@ export const ModalImportTasksCsv = ({
                 projectId,
                 file,
                 mapping,
-                statusMap: nonEmpty(statusMap),
-                priorityMap: nonEmpty(priorityMap),
+                statusMap,
+                priorityMap,
             });
             setPreview(p);
             setStep("preview");
@@ -203,8 +194,8 @@ export const ModalImportTasksCsv = ({
                 projectId,
                 file,
                 mapping,
-                statusMap: nonEmpty(statusMap),
-                priorityMap: nonEmpty(priorityMap),
+                statusMap,
+                priorityMap,
                 createTags,
             });
             setRun(result);
@@ -293,8 +284,6 @@ export const ModalImportTasksCsv = ({
                 return fmt(c.warnAssigneeNotEmail, v);
             case "assignee_unknown":
                 return fmt(c.warnAssigneeUnknown, v);
-            case "assignee_not_member":
-                return fmt(c.warnAssigneeNotMember, v);
             case "parent_missing":
                 return fmt(c.warnParentMissing, v);
             case "parent_cycle":
@@ -333,7 +322,15 @@ export const ModalImportTasksCsv = ({
                     onChange={(_, v) => {
                         const next = { ...mapping };
                         if (v === null || v === NOT_USED) delete next[field];
-                        else next[field] = [Number(v)];
+                        else {
+                            // Jira repeats Labels and carries two ids: changing the first column
+                            // keeps the others, so no tag or parent link is lost by a touch.
+                            const picked = Number(v);
+                            const rest = (mapping[field] ?? [])
+                                .slice(1)
+                                .filter((x) => x !== picked);
+                            next[field] = [picked, ...rest];
+                        }
                         setMapping(next);
                     }}
                 >
@@ -382,8 +379,12 @@ export const ModalImportTasksCsv = ({
                                 size="sm"
                                 slotProps={{ button: { "aria-label": v.value } }}
                                 sx={{ width: 150, flexShrink: 0 }}
-                                value={map[v.value] ?? (allowNone ? NO_PRIORITY : "Open")}
-                                onChange={(_, val) => setMap({ ...map, [v.value]: val ?? "" })}
+                                value={
+                                    map[v.value] ?? v.mapped ?? (allowNone ? NO_PRIORITY : "Open")
+                                }
+                                onChange={(_, val) =>
+                                    setMap({ ...map, [v.value]: val ?? NO_PRIORITY })
+                                }
                             >
                                 {allowNone && <Option value={NO_PRIORITY}>{c.noPriority}</Option>}
                                 {options.map((o) => (

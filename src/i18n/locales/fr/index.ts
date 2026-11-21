@@ -5330,8 +5330,7 @@ export const fr: DeepPartial<Messages> = {
                 "La date « {value} » peut être jour-mois ou mois-jour : laissée vide",
             warnDateUnparsable: "La date « {value} » n’a pas été comprise : laissée vide",
             warnAssigneeNotEmail: "« {value} » n’est pas une adresse e-mail : sans responsable",
-            warnAssigneeUnknown: "Aucun utilisateur Genos n’a l’e-mail {value} : sans responsable",
-            warnAssigneeNotMember: "{value} n’est pas membre de ce projet : sans responsable",
+            warnAssigneeUnknown: "{value} n’est pas membre de ce projet : sans responsable",
             warnParentMissing:
                 "La tâche parente « {value} » n’est pas dans le fichier : sans parent",
             warnParentCycle: "La tâche parente « {value} » créerait une boucle : sans parent",

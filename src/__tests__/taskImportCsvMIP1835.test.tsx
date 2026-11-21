@@ -176,7 +176,7 @@ describe("the import dialog", () => {
         );
         expect(screen.getByTestId("import-row-3").textContent).toContain("No title");
         expect(screen.getByTestId("import-row-2").textContent).toContain(
-            "No Genos user has the e-mail x@y.test"
+            "x@y.test is not a member of this project"
         );
         expect(api.commitTaskImport).not.toHaveBeenCalled();
 

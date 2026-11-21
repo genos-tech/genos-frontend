@@ -2529,10 +2529,7 @@ export const es: DeepPartial<Messages> = {
             warnDateAmbiguous: "La fecha “{value}” puede ser día-mes o mes-día: se deja vacía",
             warnDateUnparsable: "No se entendió la fecha “{value}”: se deja vacía",
             warnAssigneeNotEmail: "“{value}” no es un correo electrónico: se deja sin responsable",
-            warnAssigneeUnknown:
-                "Ningún usuario de Genos tiene el correo {value}: se deja sin responsable",
-            warnAssigneeNotMember:
-                "{value} no es miembro de este proyecto: se deja sin responsable",
+            warnAssigneeUnknown: "{value} no es miembro de este proyecto: se deja sin responsable",
             warnParentMissing:
                 "La tarea superior “{value}” no está en el archivo: sin tarea superior",
             warnParentCycle: "La tarea superior “{value}” crearía un bucle: sin tarea superior",

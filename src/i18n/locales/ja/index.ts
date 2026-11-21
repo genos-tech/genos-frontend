@@ -5263,8 +5263,6 @@ export const ja: DeepPartial<Messages> = {
             warnDateUnparsable: "日付「{value}」を解釈できません: 空にします",
             warnAssigneeNotEmail: "「{value}」はメールアドレスではありません: 担当者なしにします",
             warnAssigneeUnknown:
-                "メールアドレス{value}のGenosユーザーはいません: 担当者なしにします",
-            warnAssigneeNotMember:
                 "{value}はこのプロジェクトのメンバーではありません: 担当者なしにします",
             warnParentMissing: "親「{value}」がファイルにありません: 親なしにします",
             warnParentCycle: "親「{value}」だと循環になります: 親なしにします",

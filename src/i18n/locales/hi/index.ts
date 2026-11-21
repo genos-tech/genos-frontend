@@ -2518,9 +2518,7 @@ export const hi: DeepPartial<Messages> = {
             warnDateAmbiguous: "तारीख “{value}” दिन-महीना या महीना-दिन हो सकती है: खाली छोड़ी गई",
             warnDateUnparsable: "तारीख “{value}” समझ नहीं आई: खाली छोड़ी गई",
             warnAssigneeNotEmail: "“{value}” ईमेल पता नहीं है: असाइनी नहीं रखा गया",
-            warnAssigneeUnknown:
-                "ईमेल {value} वाला कोई Genos उपयोगकर्ता नहीं है: असाइनी नहीं रखा गया",
-            warnAssigneeNotMember: "{value} इस प्रोजेक्ट का सदस्य नहीं है: असाइनी नहीं रखा गया",
+            warnAssigneeUnknown: "{value} इस प्रोजेक्ट का सदस्य नहीं है: असाइनी नहीं रखा गया",
             warnParentMissing: "पैरेंट “{value}” फ़ाइल में नहीं है: कोई पैरेंट नहीं",
             warnParentCycle: "पैरेंट “{value}” से चक्र बनेगा: कोई पैरेंट नहीं",
             warnTitleTruncated: "शीर्षक 255 अक्षरों तक छोटा किया गया",
