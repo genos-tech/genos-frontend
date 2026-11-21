@@ -23,19 +23,7 @@ import { describe, expect, it } from "vitest";
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 /** file (relative to src, forward slashes) -> the most such calls it may hold, and why. */
-const ALLOWED: Record<string, { max: number; why: string }> = {
-    // The two sites below are fixed in PR #1060 (MIP-1807), which is not on main yet. They
-    // are listed so this guard passes on main as well as on a merge with that PR (max, not
-    // exact: they are 0 once it lands).
-    "features/tasks/utils/relativeAge.ts": {
-        max: 1,
-        why: "fixed in PR #1060, remove this entry after it merges",
-    },
-    "features/tasks/components/MilestoneCardBody.tsx": {
-        max: 1,
-        why: "fixed in PR #1060, remove this entry after it merges",
-    },
-};
+const ALLOWED: Record<string, { max: number; why: string }> = {};
 
 // A date or time written with no locale tag (or `undefined`): the browser's language.
 const DATE_TO_LOCALE = /\.toLocale(?:Date|Time)?String\(\s*(?:undefined\s*[,)]|\))/g;
