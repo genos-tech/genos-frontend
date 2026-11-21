@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
+import { rememberDeletedUsers } from "../../components/ui/avatars/userDirectory";
 import { usersChannel } from "../../db/workers/channels";
 import { findTeam } from "../../features/admin/services/findTeam";
 import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
@@ -52,8 +53,20 @@ export const useTeamManagement = (
     // hands it to `teamMemberProfiles`, the map every avatar resolves a person
     // through. `alsoMembers` additionally feeds `teamMembers` (the 60 s poll
     // does; `funcSetTeamMembers` has its own, sorted, read for that list).
-    const loadProfiles = (who: UserProps, alsoMembers: boolean) =>
-        usersChannel
+    const loadProfiles = (who: UserProps, alsoMembers: boolean) => {
+        // The accounts the roster listed as deleted (MIP-1820), kept in IDB by
+        // the roster load, go into the people directory so a mention of one
+        // reads "Deleted user" even when nothing else on screen names them.
+        // Read with the profiles so a cold start knows them from the cache
+        // before the network answers. Never lets this break the roster read.
+        void (async () => {
+            try {
+                rememberDeletedUsers(await usersChannel.request("popDeletedUserIds", {}));
+            } catch (err) {
+                console.error("popDeletedUserIds error:", err);
+            }
+        })();
+        return usersChannel
             .request("popTeamUsers", { myself: who })
             .then((data) => {
                 if (data && typeof data === "object" && "error" in data) {
@@ -80,6 +93,7 @@ export const useTeamManagement = (
             .catch((err) => {
                 console.error("popTeamUsers error:", err);
             });
+    };
 
     // Called when the roster has just been (re)written to IndexedDB (the boot
     // and wake refreshes). It must repaint BOTH lists: on a cold start the two

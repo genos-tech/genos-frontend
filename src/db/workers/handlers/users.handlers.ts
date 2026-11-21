@@ -5,7 +5,7 @@ import { loadTeamMembers } from "../../../features/admin/services/loadTeamMember
 import type { UserProps } from "../../../types/admin";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { isDeletedUser } from "../../../utils/teamRoster";
-import { UserRepository } from "../../repositories";
+import { CheckpointRepository, UserRepository } from "../../repositories";
 import { UserService } from "../../services";
 import type { UsersRequests } from "../contracts";
 import type { HandlerMap } from "../poolWorker";
@@ -14,6 +14,7 @@ import { syncWithCheckpoint } from "../utils/syncWithCheckpoint";
 const BATCH_SIZE = 1000;
 const userService = new UserService();
 const userRepo = new UserRepository();
+const checkpointRepo = new CheckpointRepository();
 
 const checkIsOnline = (
     myself: UserProps,
@@ -118,11 +119,24 @@ export const usersHandlers: HandlerMap<UsersRequests> = {
                 }
                 return {
                     serverTime: response.serverTime,
-                    data: response.members,
+                    data: {
+                        members: response.members,
+                        // Absent from an older API or a mocked loader.
+                        deletedUserIds: response.deletedUserIds ?? [],
+                        serverTime: response.serverTime,
+                    },
                     forceFull: response.forceFull,
                 };
             },
-            applier: async (members, hadCheckpoint) => {
+            applier: async ({ members, deletedUserIds, serverTime }, hadCheckpoint) => {
+                // Accounts the roster says are deleted: drop any row still
+                // cached under a real name (cached before the deletion, and the
+                // tombstone was never seen), and keep the ids so the next boot
+                // still knows them (the main thread reads them back through
+                // `popDeletedUserIds`). Both are idempotent.
+                for (const id of deletedUserIds) await userRepo.delete(id);
+                await checkpointRepo.addDeletedUserIds(deletedUserIds, serverTime);
+
                 // USER_INFO is intentionally excluded from team-scoped
                 // wipe (it spans teams for offline access), so a full
                 // load just upserts without clearing — preserves entries
@@ -163,6 +177,8 @@ export const usersHandlers: HandlerMap<UsersRequests> = {
         });
         return await userService.getTeamMembers(myself.teamId);
     },
+
+    popDeletedUserIds: async () => checkpointRepo.getDeletedUserIds(),
 
     popSpecificUser: async ({ userId }) => {
         if (!userId) return null;

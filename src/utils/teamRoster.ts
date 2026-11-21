@@ -37,8 +37,8 @@ export const ownTeamOnly = <T extends { isExternal?: boolean }>(members: T[]): T
  * shape (`userEmail`/`userName`) and the task-assignee shape
  * (`email`/`name`) both flow through member pickers.
  */
-const DELETED_EMAIL_SUFFIX = "@deleted.invalid";
-const DELETED_USERNAME = "Deleted user";
+export const DELETED_EMAIL_SUFFIX = "@deleted.invalid";
+export const DELETED_USERNAME = "Deleted user";
 
 export const isDeletedUser = (member: {
     userEmail?: string | null;

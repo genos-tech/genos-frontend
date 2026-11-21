@@ -12,7 +12,14 @@ export interface CheckpointRecord {
     key: string;
     serverTime: string;
     lastUpdated: string;
+    // Only on the `DELETED_USER_IDS_KEY` row: see below.
+    deletedUserIds?: string[];
 }
+
+// The roster's deleted-account ids (MIP-1820), kept in the checkpoint store so
+// they live and die with the roster's own watermark: a team switch clears this
+// store and the full roster load that follows sends them again.
+const DELETED_USER_IDS_KEY = "teamMembers:deletedUserIds";
 
 export class CheckpointRepository extends BaseRepository<CheckpointRecord> {
     constructor() {
@@ -33,6 +40,30 @@ export class CheckpointRepository extends BaseRepository<CheckpointRecord> {
             key,
             serverTime,
             lastUpdated: new Date().toISOString(),
+        });
+    }
+
+    // Ids of accounts the roster said are deleted. A deleted account never
+    // comes back, so this only ever grows (the server sends the whole list each
+    // time; an id missing from a later answer is not a revival).
+    async getDeletedUserIds(): Promise<string[]> {
+        const res = await this.get(DELETED_USER_IDS_KEY);
+        if (!res.success || !res.data) return [];
+        const ids = res.data.deletedUserIds;
+        return Array.isArray(ids) ? ids : [];
+    }
+
+    async addDeletedUserIds(ids: readonly string[], serverTime: string): Promise<void> {
+        if (ids.length === 0) return;
+        const merged = new Set(await this.getDeletedUserIds());
+        const before = merged.size;
+        for (const id of ids) merged.add(id);
+        if (merged.size === before) return;
+        await this.put({
+            key: DELETED_USER_IDS_KEY,
+            serverTime,
+            lastUpdated: new Date().toISOString(),
+            deletedUserIds: [...merged].sort(),
         });
     }
 

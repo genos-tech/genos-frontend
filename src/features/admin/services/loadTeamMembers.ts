@@ -20,6 +20,12 @@ export interface TeamMembersDeltaResponse {
     serverTime: string;
     members: TeamMemberDeltaItem[];
     forceFull?: boolean;
+    /**
+     * Ids of anonymised accounts that were members of this team
+     * (`data.deletedUserIds`, MIP-1820). Always an array: an older API, a
+     * guest or a malformed value is an empty list.
+     */
+    deletedUserIds: string[];
 }
 
 export const loadTeamMembers = async (
@@ -48,6 +54,10 @@ export const loadTeamMembers = async (
         const members: TeamMemberDeltaItem[] = [];
         let serverTime: string | undefined;
         let forceFull: boolean | undefined;
+        // The server sends the whole list on the last page (and on a one-page
+        // response). Read it from whichever page carries it, so a change in
+        // which page that is cannot lose it.
+        const deletedUserIds = new Set<string>();
         let cursor: string | null = null;
         for (let page = 0; ; page += 1) {
             if (page >= MAX_PAGES) {
@@ -62,6 +72,12 @@ export const loadTeamMembers = async (
             ].join("&");
             const res = await api.get(`/team/getTeamMembers/?${query}`);
             members.push(...res.data.data.members);
+            const listed: unknown = res.data.data.deletedUserIds;
+            if (Array.isArray(listed)) {
+                for (const id of listed) {
+                    if (typeof id === "string" && id !== "") deletedUserIds.add(id);
+                }
+            }
             // The FIRST page's clock: a later one is later still, and the next
             // `since` would skip a change made while the pages were fetched.
             serverTime ??= res.data.server_time;
@@ -73,7 +89,12 @@ export const loadTeamMembers = async (
             }
             cursor = res.data.next_cursor;
         }
-        return { serverTime: serverTime as string, members, forceFull };
+        return {
+            serverTime: serverTime as string,
+            members,
+            forceFull,
+            deletedUserIds: [...deletedUserIds].sort(),
+        };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);
