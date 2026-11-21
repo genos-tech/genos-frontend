@@ -66,10 +66,23 @@ describe("/.well-known/security.txt", () => {
         expect(text).toMatch(/^Contact: mailto:genos\.support@genosai\.dev$/m);
     });
 
-    it("has a future expiry and the canonical location", () => {
+    it("expires 30 to 366 days ahead, so renewal fails early and visibly (MIP-1900)", () => {
         const expires = /^Expires: (.+)$/m.exec(text)?.[1];
         expect(expires).toBeTruthy();
-        expect(Date.parse(expires ?? "")).toBeGreaterThan(Date.now());
+        const days = (Date.parse(expires ?? "") - Date.now()) / 86_400_000;
+        expect(days).toBeGreaterThan(30);
+        expect(days).toBeLessThanOrEqual(366);
+    });
+
+    it("has the canonical location", () => {
         expect(text).toMatch(/^Canonical: https:\/\/genosai\.dev\/\.well-known\/security\.txt$/m);
+    });
+});
+
+describe("/security copy claims the code backs (MIP-1900)", () => {
+    it("has no billing-email, short-lived token or security-team claim", () => {
+        expect(JSON.stringify(SECURITY_COPY)).not.toMatch(
+            /team billing|チームの請求|short-lived|security team|セキュリティ担当/
+        );
     });
 });
