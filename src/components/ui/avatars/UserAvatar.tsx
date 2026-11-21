@@ -209,12 +209,12 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                             height={dotSize}
                             position="absolute"
                             right={dotInset + avatarBaselineRight}
-                            width={dotSize}
                             // PulseDot ships with `marginLeft: 4px` for the inline-
                             // beside-text usage; zero it out here so the dot fills
                             // the wrapper exactly and lands at the avatar's bottom-
                             // right corner regardless of avatar size.
                             sx={{ "& > span": { marginLeft: 0 } }}
+                            width={dotSize}
                         >
                             <PulseDot
                                 color={isOnline ? PRESENCE_COLOR.online : PRESENCE_COLOR.offline}

@@ -176,11 +176,11 @@ export const RepeatPicker = ({
                             <Input
                                 disabled={disabled}
                                 slotProps={{ input: { min: startDate } }}
-                                value={value.end.date}
                                 // Floored at the start date: an earlier
                                 // UNTIL yields a series with no occurrences
                                 // at all, which looks like the save failed.
                                 type="date"
+                                value={value.end.date}
                                 onChange={(e) =>
                                     set({ end: { kind: "onDate", date: e.target.value } })
                                 }

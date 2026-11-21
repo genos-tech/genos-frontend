@@ -54,8 +54,8 @@ function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNo
             lines={subLabel ? 2 : 1}
             secondary={subLabel}
             selected={isSelected}
-            unread={hasUnread}
             trailing={hasUnread ? <NoteUnreadDot /> : undefined}
+            unread={hasUnread}
             // Remove-from-favorites: hover-revealed on desktop, always visible
             // on touch.
             actions={

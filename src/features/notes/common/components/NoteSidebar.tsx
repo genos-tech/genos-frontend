@@ -1240,12 +1240,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 droppableKind={3}
                 groupKey={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
                 groupLabel={chatGroup.chatName}
-                tooltip={kindName}
                 // The channel's own avatar in place of the generic
                 // folder glyph, so a chat folder reads the same
                 // here as it does in the chat header / sidebar.
                 leadingIcon={renderChatLeadingIcon(chatGroup)}
                 menuItems={buildChatFolderMenuItems(chatGroup)}
+                tooltip={kindName}
                 defaultExpanded={chatGroup.notes.some(
                     (note) => note.noteId === useNM.currentChatNote?.noteId
                 )}

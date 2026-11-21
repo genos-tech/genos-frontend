@@ -54,10 +54,10 @@ export const InboxSyncButton = () => {
             <IconButton
                 aria-busy={syncing}
                 aria-label={t.inbox.sync.label}
-                data-testid="inbox-sync"
                 // Busy, not disabled: a disabled button drops keyboard focus, and the
                 // press that started this would lose its place in the header.
                 color="neutral"
+                data-testid="inbox-sync"
                 size="sm"
                 sx={{ "&:focus-visible": focusRing }}
                 variant="plain"

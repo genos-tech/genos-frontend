@@ -940,10 +940,10 @@ export const SpotlightContent = ({
                         </Button>
                     )}
                     <AppTooltip
-                        size="sm"
-                        title={!aiAnswersEnabled ? t.spotlight.errors.enableAiHint : ""}
                         // Empty title disables the tooltip in MUI Joy.
                         placement="bottom"
+                        size="sm"
+                        title={!aiAnswersEnabled ? t.spotlight.errors.enableAiHint : ""}
                     >
                         {/* Span wrapper lets the tooltip fire over a
                             disabled button (pointer events on a disabled
