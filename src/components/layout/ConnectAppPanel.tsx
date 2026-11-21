@@ -7,7 +7,12 @@ import { Alert, Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../i18n";
 import { g } from "../../theme/tokens";
-import { claudeCodeAddCommand } from "../../utils/mcpConnect";
+import {
+    claudeCodeAddCommand,
+    PLUGIN_COMMANDS,
+    PLUGIN_REPO_URL,
+    PLUGIN_ZIP_URL,
+} from "../../utils/mcpConnect";
 import { smoothScrollBehavior } from "../../utils/motion";
 
 /** The panel's anchor, and the window event that opens it (see `openConnectAppPanel`). */
@@ -91,12 +96,15 @@ const CopyBox = ({
     text,
     block,
     testId,
+    copyAria,
 }: {
     label: string;
     text: string;
     /** A command (wraps anywhere, shown as a block) rather than an address. */
     block?: boolean;
     testId: string;
+    /** Accessible name of the Copy button; defaults to the address or command wording. */
+    copyAria?: string;
 }) => {
     const { t } = useTranslation();
     const c = t.settings.connectedApps.connect;
@@ -142,7 +150,7 @@ const CopyBox = ({
                     {text}
                 </Box>
                 <Button
-                    aria-label={block ? c.copyCommandAria : c.copyAria}
+                    aria-label={copyAria ?? (block ? c.copyCommandAria : c.copyAria)}
                     color="neutral"
                     size="sm"
                     sx={{ flexShrink: 0, minHeight: g.control.md }}
@@ -295,6 +303,51 @@ export const ConnectAppPanel = ({
                                     )
                                 }
                             />
+                        </Stack>
+
+                        <Stack spacing={0.75}>
+                            <Typography level="title-sm">{c.pluginTitle}</Typography>
+                            <Typography level="body-sm">{c.pluginIntro}</Typography>
+                            <CopyBox
+                                copyAria={c.pluginCopyAria}
+                                label={c.pluginCodeLabel}
+                                testId="mcp-plugin-command"
+                                text={PLUGIN_COMMANDS}
+                                block
+                            />
+                            <Typography level="body-sm">{c.pluginDesktopLabel}</Typography>
+                            <Stack
+                                direction="row"
+                                spacing={1.5}
+                                sx={{ flexWrap: "wrap" }}
+                                useFlexGap
+                            >
+                                <Button
+                                    color="neutral"
+                                    component="a"
+                                    href={PLUGIN_ZIP_URL}
+                                    rel="noopener noreferrer"
+                                    size="sm"
+                                    target="_blank"
+                                    variant="outlined"
+                                >
+                                    {c.pluginZipLink}
+                                </Button>
+                                <Button
+                                    color="neutral"
+                                    component="a"
+                                    href={PLUGIN_REPO_URL}
+                                    rel="noopener noreferrer"
+                                    size="sm"
+                                    target="_blank"
+                                    variant="plain"
+                                >
+                                    {c.pluginRepoLink}
+                                </Button>
+                            </Stack>
+                            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                                {c.pluginNote}
+                            </Typography>
                         </Stack>
 
                         <Stack spacing={0.5}>

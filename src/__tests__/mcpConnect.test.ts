@@ -8,7 +8,13 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { claudeCodeAddCommand, MCP_PATH, mcpServerUrl } from "../utils/mcpConnect";
+import {
+    claudeCodeAddCommand,
+    MCP_PATH,
+    mcpServerUrl,
+    PLUGIN_REPO_URL,
+    PLUGIN_ZIP_URL,
+} from "../utils/mcpConnect";
 
 describe("mcpServerUrl", () => {
     it("is the origin plus the MCP path, exactly", () => {
@@ -62,5 +68,15 @@ describe("claudeCodeAddCommand", () => {
             "claude mcp add --transport http genos https://api.example.test/api/public/v1/mcp"
         );
         expect(cmd).not.toMatch(/--header|ApiKey|team_id/);
+    });
+});
+
+describe("the public plugin addresses", () => {
+    it("point at the public GitHub repo and its release zip, with no trailing slash", () => {
+        expect(PLUGIN_REPO_URL).toBe("https://github.com/genos-tech/genos-claude-plugin");
+        expect(PLUGIN_ZIP_URL).toBe(
+            "https://github.com/genos-tech/genos-claude-plugin/releases/latest/download/genos-claude-plugin.zip"
+        );
+        expect(PLUGIN_REPO_URL).not.toMatch(/\/$/);
     });
 });

@@ -1457,6 +1457,17 @@ export const ar: DeepPartial<Messages> = {
                 plan: "يتطلب الربط خطة Core أو أعلى. في خطة Free تذكر صفحة الموافقة أن ذلك غير متاح في خطتك.",
                 revoke: "لفصل تطبيق، أبطِله من الإعدادات ← المطور ← التطبيقات المتصلة.",
                 trap: "الصق العنوان كاملًا، بما في ذلك المسار في آخره. بدونه يذكر Claude أنه سجّل الدخول، ثم يُبلغ بأن Genos رفض طلبه.",
+                // TODO(copy): plugin wording (MIP-1870), Arabic draft to be reviewed.
+                pluginTitle: "أو أضف إضافة Genos: الاتصال مع ثلاث مهارات",
+                pluginIntro:
+                    "تجمع الإضافة هذا الاتصال مع مهارات Genos للعمل، فيعرف Claude كيف يعمل داخل Genos، لا كيف يصل إليه فقط. اختيارية: يعمل العنوان أعلاه وحده.",
+                pluginCodeLabel: "Claude Code: شغّل هذين الأمرين في المحادثة",
+                pluginCopyAria: "نسخ أوامر الإضافة",
+                pluginDesktopLabel:
+                    "claude.ai أو Claude Desktop: نزّل ملف zip ثم ارفعه من Customize ثم Plugins.",
+                pluginRepoLink: "صفحة الإضافة على GitHub",
+                pluginZipLink: "تنزيل ملف zip",
+                pluginNote: "تحتاج الإضافة إلى الخطة نفسها التي يحتاجها الاتصال: Core أو أعلى.",
                 menuNote:
                     "تتغير أسماء القوائم في التطبيقات الأخرى: ابحث عن الموصّلات أو خوادم MCP المخصصة.",
             },

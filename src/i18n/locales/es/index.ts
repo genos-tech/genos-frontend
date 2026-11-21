@@ -1485,6 +1485,17 @@ export const es: DeepPartial<Messages> = {
                 plan: "Conectar requiere el plan Core o superior. En Free, la página de aprobación indica que no está incluido en tu plan.",
                 revoke: "Para desconectar una app, revócala en Ajustes → Desarrolladores → Apps conectadas.",
                 trap: "Pega la dirección completa, con la ruta del final. Sin ella, Claude dice que inició sesión y luego informa de que Genos rechazó su solicitud.",
+                // TODO(copy): plugin wording (MIP-1870), English draft until it is translated.
+                pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+                pluginIntro:
+                    "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+                pluginCodeLabel: "Claude Code: run these two commands in the chat",
+                pluginCopyAria: "Copy the plugin commands",
+                pluginDesktopLabel:
+                    "claude.ai or Claude Desktop: download the zip, then upload it under Customize, Plugins.",
+                pluginRepoLink: "Plugin page on GitHub",
+                pluginZipLink: "Download the zip",
+                pluginNote: "The plugin needs the same plan as the connector: Core or above.",
                 menuNote:
                     "Los nombres de menú de otras apps cambian: busca conectores o servidores MCP personalizados.",
             },

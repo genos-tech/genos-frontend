@@ -33,3 +33,17 @@ export const mcpServerUrl = (apiOrigin: string | null | undefined): string => {
 /** The one-line Claude Code setup for OAuth: no `--header`, no key. */
 export const claudeCodeAddCommand = (url: string): string =>
     `claude mcp add --transport http genos ${url}`;
+
+/**
+ * The public Genos Claude plugin (skills plus the same connector; its license is not
+ * chosen yet). These are public GitHub addresses, so they live here in code,
+ * never in an i18n catalog (connectAppLocales.test checks that).
+ * `releases/latest/download` needs a published release (the first one is a manual step).
+ */
+export const PLUGIN_REPO_URL = "https://github.com/genos-tech/genos-claude-plugin";
+export const PLUGIN_ZIP_URL = `${PLUGIN_REPO_URL}/releases/latest/download/genos-claude-plugin.zip`;
+/** The two Claude Code commands, one per line, typed in a chat. */
+export const PLUGIN_COMMANDS = [
+    "/plugin marketplace add genos-tech/genos-claude-plugin",
+    "/plugin install genos@genos",
+].join("\n");

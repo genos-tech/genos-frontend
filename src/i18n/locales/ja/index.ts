@@ -3792,6 +3792,17 @@ export const ja: DeepPartial<Messages> = {
                 plan: "接続には Core プラン以上が必要です。Free では、承認ページに「現在のプランでは利用できません」と表示されます。",
                 revoke: "接続を解除するには、「設定 → Developer → 接続済みアプリ」で取り消します。",
                 trap: "アドレスは末尾のパスまで含めて、そのまま貼り付けてください。パスがないと、Claude はサインインできたと表示したあと、Genos にリクエストを拒否されたと報告します。",
+                // TODO(copy): plugin wording (MIP-1870) draft.
+                pluginTitle: "プラグインを入れる（スキルと接続をまとめて）",
+                pluginIntro:
+                    "プラグインには上の接続と、Genos の作業用スキル 3 種が入ります。Claude は Genos に接続するだけでなく、Genos での進め方も知った状態になります。任意です。上のアドレスだけでも使えます。",
+                pluginCodeLabel: "Claude Code: チャットで次の 2 行を実行します",
+                pluginCopyAria: "プラグインのコマンドをコピー",
+                pluginDesktopLabel:
+                    "claude.ai または Claude Desktop: zip をダウンロードし、Customize の Plugins からアップロードします。",
+                pluginRepoLink: "GitHub のプラグインページ",
+                pluginZipLink: "zip をダウンロード",
+                pluginNote: "プラグインも接続と同じプランが必要です: Core 以上。",
                 menuNote:
                     "他のアプリのメニュー名は変わることがあります。コネクタ、またはカスタム MCP サーバーの項目を探してください。",
             },
