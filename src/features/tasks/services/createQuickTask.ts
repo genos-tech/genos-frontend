@@ -2,7 +2,7 @@ import { fmt, getMessages } from "../../../i18n";
 import { LimitReachedError, parseLimitReached } from "../../../services/limitErrors";
 import { UserProps } from "../../../types/admin";
 import { TagListProps } from "../../../types/tasks";
-import { taskContentTemplate } from "../utils/taskTemplates";
+import { getTaskContentTemplate } from "../utils/taskTemplates";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -85,7 +85,7 @@ export const createQuickTask = async (
         // feels unfinished and gives the user nothing to flesh out — the
         // default template's Summary / Motivation / Acceptance / Notes
         // sections are the prompt to add detail later.
-        content: props.content ?? taskContentTemplate,
+        content: props.content ?? getTaskContentTemplate(),
         due_date: props.dueDate ?? null,
         links: null,
         tags: props.tags ?? [],
