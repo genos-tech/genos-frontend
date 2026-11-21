@@ -4039,6 +4039,15 @@ export const es: DeepPartial<Messages> = {
             loadingDestinations: "Cargando…",
             noDestinations: "No hay nada donde importar aquí.",
             importedTo: "Importado como nota en {where}.",
+            importedWithWarnings: "Importado. Algunas imágenes se dejaron fuera de la nota.",
+            imagesLeftOut: "Imágenes que se dejaron fuera de la nota:",
+            imagePlaceholder: "[La imagen {index} no se importó]",
+            imageWarning: {
+                "too-large":
+                    "La imagen {index} pesa {size}, más que tu límite de subida de {limit}.",
+                "upload-failed": "No se pudo subir la imagen {index} ({size}).",
+                undecodable: "No se pudo leer la imagen {index}.",
+            },
         },
         exportZip: {
             menuItem: "Exportar carpeta como .zip",

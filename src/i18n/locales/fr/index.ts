@@ -3354,6 +3354,15 @@ export const fr: DeepPartial<Messages> = {
             loadingDestinations: "Chargement…",
             noDestinations: "Rien dans quoi importer ici.",
             importedTo: "Importé comme note dans {where}.",
+            importedWithWarnings: "Importé. Certaines images ont été laissées de côté.",
+            imagesLeftOut: "Images laissées de côté :",
+            imagePlaceholder: "[L'image {index} n'a pas été importée]",
+            imageWarning: {
+                "too-large":
+                    "L'image {index} pèse {size}, au-delà de votre limite d'envoi de {limit}.",
+                "upload-failed": "L'image {index} ({size}) n'a pas pu être envoyée.",
+                undecodable: "L'image {index} n'a pas pu être lue.",
+            },
         },
         exportZip: {
             menuItem: "Exporter le dossier au format .zip",

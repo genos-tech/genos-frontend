@@ -145,6 +145,7 @@ describe("ModalImportMarkdown with an initialFile", () => {
         expect(useNM.handleCreateNewMyNote).toHaveBeenCalledWith(null, null, {
             title: "plan",
             body: [{ type: "paragraph", md: "# Plan\n\nbody" }],
+            dataImages: { uploadLimitBytes: null, onReport: expect.any(Function) },
         });
         expect(
             await screen.findByText(/Imported as a note in My Notes \(root\)/)

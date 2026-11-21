@@ -3988,6 +3988,14 @@ export const ar: DeepPartial<Messages> = {
             loadingDestinations: "جارٍ التحميل…",
             noDestinations: "لا يوجد ما يمكن الاستيراد إليه هنا.",
             importedTo: "تم الاستيراد كملاحظة في {where}.",
+            importedWithWarnings: "تم الاستيراد. تُركت بعض الصور خارج الملاحظة.",
+            imagesLeftOut: "الصور التي تُركت خارج الملاحظة:",
+            imagePlaceholder: "[لم يتم استيراد الصورة {index}]",
+            imageWarning: {
+                "too-large": "حجم الصورة {index} هو {size}، وهو أكبر من حد الرفع {limit}.",
+                "upload-failed": "تعذّر رفع الصورة {index} ({size}).",
+                undecodable: "تعذّرت قراءة الصورة {index}.",
+            },
         },
         exportZip: {
             menuItem: "تصدير المجلد بصيغة .zip",

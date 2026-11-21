@@ -3321,6 +3321,15 @@ export const ja: DeepPartial<Messages> = {
             loadingDestinations: "読み込み中…",
             noDestinations: "ここにはインポートできる先がありません。",
             importedTo: "{where} にノートとしてインポートしました。",
+            importedWithWarnings: "インポートしました。一部の画像はノートに含まれていません。",
+            imagesLeftOut: "ノートに含まれなかった画像:",
+            imagePlaceholder: "[画像 {index} はインポートされませんでした]",
+            imageWarning: {
+                "too-large":
+                    "画像 {index} は {size} で、アップロード上限 {limit} を超えています。",
+                "upload-failed": "画像 {index}（{size}）をアップロードできませんでした。",
+                undecodable: "画像 {index} を読み取れませんでした。",
+            },
         },
         exportZip: {
             menuItem: "フォルダを .zip でエクスポート",
