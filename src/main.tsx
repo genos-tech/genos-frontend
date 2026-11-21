@@ -55,6 +55,7 @@ const GenosLegalPage = lazy(() => import("./lp/LegalPage"));
 const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
 const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
+const GenosContactPage = lazy(() => import("./lp/ContactPage"));
 const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
 const GenosSecurityPage = lazy(() => import("./lp/SecurityPage"));
 const GenosAccessibilityPage = lazy(() => import("./lp/AccessibilityPage"));
@@ -170,6 +171,8 @@ const tree = (
                 app. Public and auth-free like /legal and /privacy; holds its
                 own ja + en copy. (There is no /terms route: the terms are an
                 unpublished draft.) */}
+            {/* Contact form (MIP-1261): mailed to support, not stored. ?topic=enterprise is the Enterprise variant. */}
+            <Route element={publicPage(GenosContactPage)} path="/contact" />
             <Route element={publicPage(GenosSupportPage)} path="/support" />
 
             {/* Moving into Genos (MIP-1260): what imports today and what does not. Public, like /docs. */}
