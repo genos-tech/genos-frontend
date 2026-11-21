@@ -345,6 +345,12 @@ jobs:
             - name: Prettier
               if: always() # report both, even if eslint failed
               run: npx prettier --check .
+            # The warning count may only fall (MIP-1849): ESLint warnings are not an error, so
+            # without this they rose unseen (1,142 on main). Fails when the total rises above
+            # scripts/lint-warning-baseline.json. Report-only job, so a rise shows red, not a blocked merge.
+            - name: ESLint warning ratchet
+              if: always()
+              run: npm run -s lint:ratchet
             # Counts below the design-ratchet baseline that nobody has locked in yet
             # (MIP-1408). Never fails: committing the lowered baseline is optional, because
             # two sweeps lowering the same line cannot merge. This just keeps the slack visible.

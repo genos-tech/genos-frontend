@@ -177,21 +177,21 @@ export const TaskProgressFeed = ({
     const progress = t.tasks.activity.progress;
     return (
         <DataState
+            error={failed}
+            hasData={entries.length > 0}
+            loading={loading}
+            skeleton={null}
             empty={{
                 body: progress.emptyBody,
                 "data-empty": "task-progress",
                 icon: <HistoryRoundedIcon />,
                 title: progress.empty,
             }}
-            error={failed}
             errorState={{
                 title: progress.loadFailed,
                 onRetry: () => void load(),
                 "data-error": "task-progress",
             }}
-            hasData={entries.length > 0}
-            loading={loading}
-            skeleton={null}
         >
             <Stack data-testid="task-progress-feed" spacing={0.5} sx={{ p: 1 }}>
                 {entries.map((entry) => (

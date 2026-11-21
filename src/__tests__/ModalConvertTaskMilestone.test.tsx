@@ -103,9 +103,6 @@ describe("the task menu's 'Convert to milestone'", () => {
                         useCM={{} as never}
                         useNM={{ taskNoteMeta: [] } as never}
                         usePM={{} as never}
-                        useSM={
-                            { applyMilestoneToState: vi.fn(), forgetMilestone: vi.fn() } as never
-                        }
                         useTM={{ isCreatingTask: { flag: false } } as never}
                         useUISM={{} as never}
                         taskContent={
@@ -118,6 +115,9 @@ describe("the task menu's 'Convert to milestone'", () => {
                                 project: { projectId: 7 },
                                 status: { status: "Open" },
                             } as never
+                        }
+                        useSM={
+                            { applyMilestoneToState: vi.fn(), forgetMilestone: vi.fn() } as never
                         }
                         {...(props as object)}
                     />

@@ -128,9 +128,9 @@ describe('the "+" menu', () => {
         render(
             <CssVarsProvider>
                 <MoreMenu
-                    TriggerIcon={Glyph}
                     ariaLabel={sidebar.newMenu}
                     items={[{ id: "a", label: "New note", icon: null, onClick: () => {} }]}
+                    TriggerIcon={Glyph}
                 />
             </CssVarsProvider>
         );

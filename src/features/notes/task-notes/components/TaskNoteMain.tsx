@@ -285,7 +285,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         useNM={useNM}
                         useTEM={useTEM}
                         useUISM={useUISM}
-                        onCloseNotes={handleCloseNotes}
                         focus={
                             isInTaskPage
                                 ? {
@@ -297,6 +296,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                   }
                                 : undefined
                         }
+                        onCloseNotes={handleCloseNotes}
                         onCopyNoteLink={handleCopyNoteLink}
                         onCreateChildNote={handleCreateChildNote}
                         onCreateNewNote={() => {}} // Don't create new task note in task note page

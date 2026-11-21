@@ -138,12 +138,12 @@ describe("ACTaskSelector with the host's rows (MIP-1353)", () => {
                 <ACTaskSelector
                     defaultProjectId={1}
                     excludeTaskIds={new Set()}
+                    myself={{ teamId: "t" } as never}
+                    usePM={usePM}
                     knownTasks={{
                         projectId: 1,
                         tasks: [...ROWS, row({ id: "5", title: "Brand new", status: "Open" })],
                     }}
-                    myself={{ teamId: "t" } as never}
-                    usePM={usePM}
                     onPick={vi.fn()}
                 />
             </CssVarsProvider>
@@ -192,11 +192,11 @@ describe("ModalManageDependencies hands the picker the open project's rows (MIP-
         render(
             <CssVarsProvider>
                 <ModalManageDependencies
-                    open
                     myself={{ teamId: "t", userId: "u" } as never}
                     taskContent={{ id: 10, project: ALPHA } as unknown as TaskProps}
                     usePM={{ teamProjects: [ALPHA, BETA], ...pm } as ProjectManagementState}
                     useTM={tm}
+                    open
                     onClose={vi.fn()}
                 />
             </CssVarsProvider>

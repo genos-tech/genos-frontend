@@ -77,12 +77,12 @@ describe("Connected teams", () => {
         return (
             <ConnectedTeamsPanel
                 borderColor="#ccc"
-                canDisconnect
-                canManage
                 connections={connections}
                 labelColor="#666"
                 myTeamId="t1"
                 valueColor="#111"
+                canDisconnect
+                canManage
             />
         );
     };
@@ -129,12 +129,12 @@ describe("Connected teams", () => {
                     </button>
                     <ConnectedTeamsPanel
                         borderColor="#ccc"
-                        canDisconnect
-                        canManage
                         connections={connections}
                         labelColor="#666"
                         myTeamId="t1"
                         valueColor="#111"
+                        canDisconnect
+                        canManage
                     />
                 </>
             );
@@ -233,9 +233,9 @@ describe("Project labels modal", () => {
             wrap(
                 <ModalManageProjectLabels
                     assignedLabels={[]}
-                    open
                     projectId={1}
                     teamId="t1"
+                    open
                     onAssignedChange={vi.fn()}
                     onClose={vi.fn()}
                 />
@@ -293,7 +293,7 @@ describe("Manage chat tags modal", () => {
             wrap(
                 <>
                     <PersonalGMTagsBootstrap />
-                    <ModalManageGMTags open setOpen={vi.fn()} />
+                    <ModalManageGMTags setOpen={vi.fn()} open />
                 </>
             )
         );
@@ -552,12 +552,12 @@ describe("Note history", () => {
                     myself={myself}
                     noteId={1}
                     noteType={1}
-                    open
                     setMyself={vi.fn()}
                     socket={null}
                     useCM={{} as never}
                     useNM={nm}
                     useUISM={{} as never}
+                    open
                     onClose={vi.fn()}
                 />
             )

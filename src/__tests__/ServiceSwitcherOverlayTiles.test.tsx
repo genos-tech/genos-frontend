@@ -19,8 +19,8 @@ const renderOverlay = (over: Partial<Parameters<typeof ServiceSwitcherOverlay>[0
     render(
         <CssVarsProvider>
             <ServiceSwitcherOverlay
-                previewIndex={1}
                 mruOrder={MRU}
+                previewIndex={1}
                 onHighlight={onHighlight}
                 onSelect={onSelect}
                 {...over}

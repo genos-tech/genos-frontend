@@ -37,13 +37,13 @@ export const ExternalChatChip = ({
     if (!row?.isExternal) return null;
     return (
         <ExternalChip
+            label={row.hostTeamName || t.chat.sidebar.externalBadge}
+            size={size}
             hint={
                 row.hostTeamName
                     ? fmt(t.chat.sidebar.sharedByTeamHint, { team: row.hostTeamName })
                     : t.chat.sidebar.externalBadgeHint
             }
-            label={row.hostTeamName || t.chat.sidebar.externalBadge}
-            size={size}
         />
     );
 };

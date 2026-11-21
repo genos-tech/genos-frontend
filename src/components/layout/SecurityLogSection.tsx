@@ -128,7 +128,7 @@ export const SecurityLogSection = ({ teamId }: Props) => {
                 <EmptyState body={s.empty} data-empty="security-log" size="xs" />
             )}
             {events.map((e) => (
-                <SecurityEventRow event={e} key={e.id} />
+                <SecurityEventRow key={e.id} event={e} />
             ))}
             {moreFailed && (
                 <Typography color="danger" level="body-xs">

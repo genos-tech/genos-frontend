@@ -33,11 +33,11 @@ describe("TabStrip", () => {
                 <TabStrip
                     ariaLabel="Open notes"
                     closeLabel="Close"
+                    value="a"
                     tabs={[
                         { id: "a", label: "Alpha", closable: true },
                         { id: "b", label: "Beta", closable: true },
                     ]}
-                    value="a"
                     onChange={() => {}}
                     onClose={() => {}}
                 />

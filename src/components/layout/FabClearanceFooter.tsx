@@ -8,7 +8,7 @@ import { FAB_CLEARANCE_VAR } from "./spotlightFabPosition";
  * changes between renders.
  */
 export const FabClearanceFooter = () => (
-    <div aria-hidden style={{ height: `var(${FAB_CLEARANCE_VAR}, 0px)` }} />
+    <div style={{ height: `var(${FAB_CLEARANCE_VAR}, 0px)` }} aria-hidden />
 );
 
 /** `components` prop for a Virtuoso list: one shared object, so it is stable. */

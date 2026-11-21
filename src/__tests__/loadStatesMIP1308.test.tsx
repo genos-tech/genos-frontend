@@ -128,14 +128,6 @@ describe("Sub Tasks block", () => {
         render(
             wrap(
                 <TaskSubTasksBlock
-                    currentTaskContent={
-                        {
-                            id: parentId,
-                            rootTaskId: parentId,
-                            title: "Parent",
-                            project: { projectId: 46, projectName: "Destination" },
-                        } as unknown as TaskProps
-                    }
                     emptyText="No tasks yet"
                     forceLoad={true}
                     myself={{ userId: "u1", teamId: "t1" } as never}
@@ -146,6 +138,14 @@ describe("Sub Tasks block", () => {
                     useTEM={{ teamMemberProfiles: {} } as never}
                     useTM={{ currentPreviewTaskId: -1 } as never}
                     useUISM={{} as never}
+                    currentTaskContent={
+                        {
+                            id: parentId,
+                            rootTaskId: parentId,
+                            title: "Parent",
+                            project: { projectId: 46, projectName: "Destination" },
+                        } as unknown as TaskProps
+                    }
                 />
             )
         );
@@ -175,14 +175,6 @@ describe("Sub Tasks block", () => {
         view.rerender(
             wrap(
                 <TaskSubTasksBlock
-                    currentTaskContent={
-                        {
-                            id: 904,
-                            rootTaskId: 904,
-                            title: "Next",
-                            project: { projectId: 46, projectName: "Destination" },
-                        } as unknown as TaskProps
-                    }
                     emptyText="No tasks yet"
                     forceLoad={true}
                     myself={{ userId: "u1", teamId: "t1" } as never}
@@ -193,6 +185,14 @@ describe("Sub Tasks block", () => {
                     useTEM={{ teamMemberProfiles: {} } as never}
                     useTM={{ currentPreviewTaskId: -1 } as never}
                     useUISM={{} as never}
+                    currentTaskContent={
+                        {
+                            id: 904,
+                            rootTaskId: 904,
+                            title: "Next",
+                            project: { projectId: 46, projectName: "Destination" },
+                        } as unknown as TaskProps
+                    }
                 />
             )
         );

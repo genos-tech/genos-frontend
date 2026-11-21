@@ -72,7 +72,6 @@ const Opener = () => {
     return (
         <ModalTaskDiagram
             myself={{ userId: "u1", teamId: "t1" } as never}
-            open
             projectId={1}
             rootLabel="KDS-1 · One"
             rootTaskId={1}
@@ -86,6 +85,7 @@ const Opener = () => {
                     allTasks: [],
                 } as never
             }
+            open
             onClose={vi.fn()}
         />
     );

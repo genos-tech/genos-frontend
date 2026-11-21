@@ -39,7 +39,7 @@ const Parent = ({ children }: { children?: ReactNode }) => {
     return (
         <Ctx.Provider value={s.ctx}>
             <FreezeWhenHidden active={s.active}>
-                <Home value={s.value} isActiveRoute={s.active} />
+                <Home isActiveRoute={s.active} value={s.value} />
             </FreezeWhenHidden>
             {children}
         </Ctx.Provider>

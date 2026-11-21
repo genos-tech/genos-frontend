@@ -57,11 +57,11 @@ const Page = ({ useNM }: { useNM: NoteManagementState }) => {
                         listRef={filter.resultsRef}
                         locate={() => null}
                         query={filter.query}
+                        useNM={useNM}
                         result={{
                             hits: notes.map((note) => ({ noteType: 1, note })),
                             total: notes.length,
                         }}
-                        useNM={useNM}
                         onKeyDown={filter.onResultsKeyDown}
                         onOpened={filter.onOpened}
                     />

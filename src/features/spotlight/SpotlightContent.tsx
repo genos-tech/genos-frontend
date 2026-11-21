@@ -637,7 +637,7 @@ export const SpotlightContent = ({
                     desktop columns, so typing lifts the box noticeably
                     without slamming it against the top of the page. */}
             {variant === "page" && !inAgentMode && hasQuery && (
-                <Box aria-hidden sx={{ order: -1, flexShrink: 0, height: "18dvh" }} />
+                <Box sx={{ order: -1, flexShrink: 0, height: "18dvh" }} aria-hidden />
             )}
 
             {/* Input row + Ask button.
@@ -760,8 +760,8 @@ export const SpotlightContent = ({
                             same words merely typed. */}
                     <MentionHighlightOverlay
                         containerRef={inputRowRef}
-                        ranges={mention.highlightRanges}
                         elementRef={inputRef}
+                        ranges={mention.highlightRanges}
                         value={localInput}
                     />
                     <Box
@@ -953,8 +953,8 @@ export const SpotlightContent = ({
                                 color="primary"
                                 disabled={!hasQuery || askDisabled}
                                 size="sm"
-                                variant="solid"
                                 startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
+                                variant="solid"
                                 sx={{
                                     // Mobile: collapse to an icon-only
                                     // square so the row stays single-line
@@ -1096,6 +1096,7 @@ export const SpotlightContent = ({
                                 color="neutral"
                                 size="sm"
                                 startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 14 }} />}
+                                title={item}
                                 variant="soft"
                                 sx={{
                                     "--Chip-minHeight": "28px",
@@ -1108,7 +1109,6 @@ export const SpotlightContent = ({
                                     // the title attribute shows it in full.
                                     maxWidth: { xs: "100%", sm: 340 },
                                 }}
-                                title={item}
                                 onClick={() => onAsk(item, undefined, "starter")}
                             >
                                 {item}
@@ -1783,18 +1783,18 @@ const ConversationPanel = memo(
                                 askDisabled={askDisabled}
                                 askedQuery={turn.askedQuery}
                                 askError={turn.askError}
+                                droppedReferences={turn.droppedReferences}
                                 elapsedMs={turn.elapsedMs}
                                 isCurrent={false}
                                 labels={turnLabels}
                                 layout={turnLayout}
-                                droppedReferences={turn.droppedReferences}
                                 mentions={turn.mentions}
                                 noteScopes={noteScopes}
+                                renderAnswerStatus={renderSaveAnswerStatus}
+                                renderExtraActions={renderSaveAnswerActions}
                                 runId={turn.runId}
                                 selection={turn.selection}
                                 toolEvents={turn.toolEvents}
-                                renderAnswerStatus={renderSaveAnswerStatus}
-                                renderExtraActions={renderSaveAnswerActions}
                                 undoSteps={turn.undo}
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
@@ -1820,6 +1820,8 @@ const ConversationPanel = memo(
                                 mentions={ask.askedMentions}
                                 noteScopes={noteScopes}
                                 pendingApproval={ask.pendingApproval}
+                                renderAnswerStatus={renderSaveAnswerStatus}
+                                renderExtraActions={renderSaveAnswerActions}
                                 runId={ask.runId}
                                 selection={ask.askedSelection}
                                 toolEvents={ask.toolEvents}
@@ -1829,8 +1831,6 @@ const ConversationPanel = memo(
                                 onPreview={onPreview}
                                 onReject={onReject}
                                 onRetry={onRetry}
-                                renderAnswerStatus={renderSaveAnswerStatus}
-                                renderExtraActions={renderSaveAnswerActions}
                                 onUndo={onUndo}
                             />
                         )}
@@ -2143,6 +2143,7 @@ const HistoryArchiveTurn = ({
                             <Box sx={markdownAnswerSx()}>
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
+                                    urlTransform={agentQAUrlTransform}
                                     components={{
                                         ...agentMarkdownComponents,
                                         a: ({ href, children }) => (
@@ -2155,7 +2156,6 @@ const HistoryArchiveTurn = ({
                                             </CitationLink>
                                         ),
                                     }}
-                                    urlTransform={agentQAUrlTransform}
                                 >
                                     {answerForRender}
                                 </ReactMarkdown>

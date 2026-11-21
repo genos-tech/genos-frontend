@@ -398,7 +398,7 @@ describe("Ctrl+Z inside a dialog (MIP-1395)", () => {
     // a dialog; the Undo chord has to get through it while a toast is up.
     const mountDialog = (body: React.ReactNode) =>
         mount(
-            <ModalFrame open onClose={() => {}} title="Task graph">
+            <ModalFrame title="Task graph" open onClose={() => {}}>
                 {body}
             </ModalFrame>
         );

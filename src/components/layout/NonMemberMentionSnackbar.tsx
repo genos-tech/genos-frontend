@@ -124,7 +124,6 @@ export const NonMemberMentionSnackbar = ({ myself, socket }: Props) => {
             // No auto-hide: this asks a question, and a prompt that vanishes
             // mid-read is worse than none.
             duration={null}
-            open
             tone="warning"
             actions={
                 <Stack alignItems="center" direction="row" spacing={0.5}>
@@ -149,6 +148,7 @@ export const NonMemberMentionSnackbar = ({ myself, socket }: Props) => {
                     </Button>
                 </Stack>
             }
+            open
         >
             <Typography level="body-sm">
                 {/* A note is SHARED, not joined — the two read very

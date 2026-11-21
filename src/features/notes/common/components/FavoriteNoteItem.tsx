@@ -52,9 +52,9 @@ function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNo
             icon={<DescriptionOutlinedIcon />}
             label={note.title || t.notes.defaults.untitled}
             lines={subLabel ? 2 : 1}
+            secondary={subLabel}
             selected={isSelected}
             unread={hasUnread}
-            secondary={subLabel}
             trailing={hasUnread ? <NoteUnreadDot /> : undefined}
             // Remove-from-favorites: hover-revealed on desktop, always visible
             // on touch.

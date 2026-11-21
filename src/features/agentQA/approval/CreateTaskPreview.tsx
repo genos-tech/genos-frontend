@@ -87,7 +87,7 @@ export const CreateTaskPreview = ({ args }: ApprovalPreviewProps) => {
             ) : null}
 
             {links.length ? (
-                <LinkLines links={links} label={t.agentApproval.fieldLabels.links} />
+                <LinkLines label={t.agentApproval.fieldLabels.links} links={links} />
             ) : null}
 
             {body ? (

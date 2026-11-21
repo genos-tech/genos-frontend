@@ -210,9 +210,9 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                     // A custom "/" SuggestionMenuController is mounted below —
                     // the built-in menu must be off or BOTH render on "/",
                     // stacking duplicate group labels (the "Media x3" bug).
-                    slashMenu={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
+                    slashMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo // custom font
                     onChange={composer.viewProps.onChange}
@@ -271,13 +271,13 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
 
                     <GenosSuggestionMenus
                         editor={editor}
+                        slash={{ preset: "chat", setShowGifPicker }}
                         getMentionSources={() => ({
                             teamMemberProfiles: useTEM.teamMemberProfiles,
                             teamMembers: useTEM.teamMembers,
                             myselfUserId: myself.userId,
                             mentionGroups,
                         })}
-                        slash={{ preset: "chat", setShowGifPicker }}
                     />
                 </BlockNoteView>
             </Box>

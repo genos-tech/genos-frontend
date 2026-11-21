@@ -94,6 +94,8 @@ const tabs = (taskId: number, allTasks: TaskTableProps[]) => (
                     taskNotes={[]}
                     tmpCurrentTaskContent={content(taskId)}
                     useCM={{ allChats: [] } as unknown as ChatManagementState}
+                    useTEM={{} as unknown as TeamManagementState}
+                    useUISM={{} as unknown as UIStateManagementState}
                     useNM={
                         {
                             tabsApi: { openTab: vi.fn() },
@@ -103,14 +105,12 @@ const tabs = (taskId: number, allTasks: TaskTableProps[]) => (
                             teamNoteFolders: [],
                         } as unknown as NoteManagementState
                     }
-                    useTEM={{} as unknown as TeamManagementState}
                     useTM={
                         {
                             allTasks,
                             setIsTaskTableVisible: vi.fn(),
                         } as unknown as TaskManagementState
                     }
-                    useUISM={{} as unknown as UIStateManagementState}
                     onAttachmentDeleted={vi.fn()}
                 />
             </UrlLinkModalProvider>

@@ -129,6 +129,7 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
                     {prState != null && (
                         <Chip
                             size="sm"
+                            variant="soft"
                             startDecorator={
                                 <PrStateIcon
                                     color={PR_CHIP[prState].color}
@@ -136,7 +137,6 @@ export const PrHoverDetails = ({ payload, isDark, includeHeader = false }: Props
                                     state={prState}
                                 />
                             }
-                            variant="soft"
                             sx={{
                                 backgroundColor: PR_CHIP[prState].bg,
                                 color: PR_CHIP[prState].color,

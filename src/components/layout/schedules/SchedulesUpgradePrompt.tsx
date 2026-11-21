@@ -156,7 +156,7 @@ export const SchedulesUpgradePrompt = memo(({ hasKept, onNavigateAway }: Props) 
                             borderColor: g.border.subtle,
                         }}
                     >
-                        <Box aria-hidden sx={{ fontSize: 22, lineHeight: 1 }}>
+                        <Box sx={{ fontSize: 22, lineHeight: 1 }} aria-hidden>
                             {example.emoji}
                         </Box>
                         <Box sx={{ minWidth: 0 }}>
@@ -190,9 +190,6 @@ export const SchedulesUpgradePrompt = memo(({ hasKept, onNavigateAway }: Props) 
                     </Typography>
                     {/* Inert and hidden from assistive tech: a picture of a report, not one. */}
                     <Box
-                        aria-hidden
-                        // React 19 passes `inert` through as the boolean attribute.
-                        inert
                         data-testid="schedules-upgrade-sample"
                         sx={{
                             p: { xs: 1.25, sm: 1.5 },
@@ -205,6 +202,9 @@ export const SchedulesUpgradePrompt = memo(({ hasKept, onNavigateAway }: Props) 
                             minWidth: 0,
                             overflow: "hidden",
                         }}
+                        aria-hidden
+                        // React 19 passes `inert` through as the boolean attribute.
+                        inert
                     >
                         <GenosReportCard report={sample} />
                     </Box>

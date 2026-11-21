@@ -1669,8 +1669,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     barRef={noteFilter.barRef}
                     value={filterQuery}
                     onChange={noteFilter.setQuery}
-                    onReopen={noteFilter.reopen}
                     onNewNote={() => void useNM.handleCreateNewMyNote(null)}
+                    onReopen={noteFilter.reopen}
                 />
             </Box>
 

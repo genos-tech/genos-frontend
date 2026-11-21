@@ -45,7 +45,7 @@ describe("chipHitAreaSx", () => {
     it("reaches (44 - height) / 2 above and below the chip, inside the coarse media query only", () => {
         const { container } = render(
             <CssVarsProvider>
-                <Chip onClick={() => {}} sx={chipHitAreaSx(26)}>
+                <Chip sx={chipHitAreaSx(26)} onClick={() => {}}>
                     Unread
                 </Chip>
             </CssVarsProvider>

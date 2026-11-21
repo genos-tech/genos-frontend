@@ -168,9 +168,9 @@ const renderBounce = (search: string) => {
         <CssVarsProvider>
             <MemoryRouter initialEntries={["/oauth/success"]}>
                 <Routes>
-                    <Route path="/oauth/success" element={<OAuthSuccessHandler />} />
-                    <Route path="/signup" element={<SignUpAt />} />
-                    <Route path="/signin" element={<div>signin page</div>} />
+                    <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
+                    <Route element={<SignUpAt />} path="/signup" />
+                    <Route element={<div>signin page</div>} path="/signin" />
                 </Routes>
             </MemoryRouter>
         </CssVarsProvider>

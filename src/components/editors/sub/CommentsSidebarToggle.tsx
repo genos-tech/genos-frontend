@@ -65,9 +65,9 @@ export const CommentsSidebarToggle = ({
                 <IconButton
                     aria-label={label}
                     aria-pressed={open}
+                    color={open ? "primary" : "neutral"}
                     size="sm"
                     variant={open ? "soft" : "plain"}
-                    color={open ? "primary" : "neutral"}
                     onClick={onToggle}
                 >
                     <ChatBubbleOutlineRoundedIcon />

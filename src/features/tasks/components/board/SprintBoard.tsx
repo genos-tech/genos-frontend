@@ -761,6 +761,12 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     the quick-add "+" is how the first card gets made. */}
                 <DataState
                     error={syncFailure.failed && useTM.allTasks.length === 0}
+                    size="md"
+                    errorState={{
+                        "data-error": "sprint-board",
+                        onRetry: syncFailure.retry,
+                        title: t.common.feedback.sync.tasksFailed,
+                    }}
                     hasData={
                         useTM.allTasks.length > 0 ||
                         COLUMNS.some((column) => (boardTasks[column.id] ?? []).length > 0)
@@ -771,20 +777,14 @@ export const SprintBoard = (props: SprintBoardProps) => {
                             syncFailure.retrying) &&
                         !isQuickAddOpen
                     }
-                    size="md"
-                    errorState={{
-                        "data-error": "sprint-board",
-                        onRetry: syncFailure.retry,
-                        title: t.common.feedback.sync.tasksFailed,
-                    }}
                     skeleton={
                         <SprintBoardSkeleton
+                            containerStyle={getBoardContainerStyles(mode)}
+                            label={t.tasks.table.loadingTasks}
                             columns={COLUMNS.map((column) => ({
                                 id: column.id,
                                 title: t.tasks.board[column.titleKey],
                             }))}
-                            containerStyle={getBoardContainerStyles(mode)}
-                            label={t.tasks.table.loadingTasks}
                         />
                     }
                     fill

@@ -218,6 +218,8 @@ describe("the group profile modal frame (MIP-1126 batch 1)", () => {
                         setOpenModalGMProfile={vi.fn()}
                         setOpenUserProfile={vi.fn()}
                         socket={null}
+                        useTEM={{ teamMemberProfiles: {} } as never}
+                        useUISM={{} as never}
                         useCM={
                             {
                                 allChats: [],
@@ -225,8 +227,6 @@ describe("the group profile modal frame (MIP-1126 batch 1)", () => {
                                 setAllChats: vi.fn(),
                             } as never
                         }
-                        useTEM={{ teamMemberProfiles: {} } as never}
-                        useUISM={{} as never}
                     />
                 </div>
             </CssVarsProvider>

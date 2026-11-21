@@ -677,11 +677,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     <AvatarWithStatus
                                         // No reporter (the account is gone): the empty
                                         // avatar, like an unassigned assignee, never the viewer.
-                                        avatarUser={
-                                            reporter
-                                                ? useTEM.teamMemberProfiles[reporter.userId]
-                                                : undefined
-                                        }
                                         isYou={!!reporter && myself.userId === reporter.userId}
                                         myself={myself}
                                         setMyself={setMyself}
@@ -689,6 +684,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         socket={socket}
                                         useCM={useCM}
                                         useUISM={useUISM}
+                                        avatarUser={
+                                            reporter
+                                                ? useTEM.teamMemberProfiles[reporter.userId]
+                                                : undefined
+                                        }
                                     />
                                     <ACTeamUsers
                                         initialUser={taskContent.reporter}

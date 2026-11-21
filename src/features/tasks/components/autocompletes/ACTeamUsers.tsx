@@ -95,6 +95,9 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             // `myself` that would mislead the user into thinking they
             // were the assignee.
             // A reporter field with nobody in it is a reporter whose account is gone.
+            size="sm"
+            slotProps={{ input: { dir: "auto" } }}
+            value={resolvedValue}
             placeholder={
                 isAssignee
                     ? t.tasks.messageTemplate.unassigned
@@ -102,9 +105,6 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                       ? undefined
                       : t.tasks.messageTemplate.deletedUser
             }
-            size="sm"
-            slotProps={{ input: { dir: "auto" } }}
-            value={resolvedValue}
             renderOption={(props, option) => {
                 return (
                     <AutocompleteOption

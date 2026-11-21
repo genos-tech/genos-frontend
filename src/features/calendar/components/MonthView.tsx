@@ -384,6 +384,9 @@ export const MonthView = ({
                                         <Sheet
                                             key={key}
                                             aria-current={isToday ? "date" : undefined}
+                                            role="gridcell"
+                                            tabIndex={-1}
+                                            variant="outlined"
                                             aria-description={
                                                 eventCount > 0
                                                     ? t.calendar.dayEnterOpens
@@ -404,9 +407,6 @@ export const MonthView = ({
                                                       ]
                                                     : []),
                                             ].join(", ")}
-                                            role="gridcell"
-                                            tabIndex={-1}
-                                            variant="outlined"
                                             {...{
                                                 [ROVING_GROUP_ATTR]: "month",
                                                 [ROVING_ITEM_ATTR]: key,
