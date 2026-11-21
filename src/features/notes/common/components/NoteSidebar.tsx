@@ -3,6 +3,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
@@ -64,6 +65,7 @@ import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderM
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
 import { folderTagChipSx, ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
 import { isInGuestFolder, splitFoldersByOwnership } from "../../team-notes/utils/guestFolders";
+import { buildNoteTemplate, NOTE_TEMPLATE_IDS } from "../../templates/noteTemplates";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
@@ -591,6 +593,21 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         // A plain root note: no parent, no folder.
                         onClick: () => void useNM.handleCreateNewMyNote(null),
                     },
+                    // MIP-1697: built-in templates, one row each, after the blank note.
+                    ...NOTE_TEMPLATE_IDS.map((id, i) => ({
+                        id: `new-note-${id}`,
+                        kind: "newNoteFromTemplate" as const,
+                        label: t.notes.noteTemplates[id].label,
+                        icon: <DescriptionOutlinedIcon sx={{ fontSize: 16 }} />,
+                        divider: i === 0,
+                        onClick: () => {
+                            const tpl = buildNoteTemplate(id, t.notes.noteTemplates);
+                            void useNM.handleCreateNewMyNote(null, null, {
+                                title: tpl.title,
+                                body: tpl.blocks,
+                            });
+                        },
+                    })),
                     {
                         id: "new-folder",
                         kind: "newSubfolder",
