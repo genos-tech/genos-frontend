@@ -21,6 +21,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TodoCategoryProps, TodoItemProps, TodoReminderProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM, getLocalTomorrowDate } from "../../../../utils/dateUtils";
+import { smoothScrollBehavior } from "../../../../utils/motion";
 import { viaSourceOfTodoItem } from "../../../tasks/utils/viaSource";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { formatCompletedAt } from "../../utils/todoCompletion";
@@ -216,7 +217,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
     useEffect(() => {
         if (!isHighlighted) return;
         const id = setTimeout(() => {
-            rootRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            rootRef.current?.scrollIntoView({ behavior: smoothScrollBehavior(), block: "center" });
         }, 120);
         return () => clearTimeout(id);
     }, [isHighlighted]);

@@ -1644,6 +1644,7 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     common: {
+        skipToContent: "跳到内容",
         searchField: {
             clear: "清除搜索",
         },

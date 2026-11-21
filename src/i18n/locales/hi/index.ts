@@ -6,6 +6,7 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const hi: DeepPartial<Messages> = {
     common: {
+        skipToContent: "सामग्री पर जाएँ",
         searchField: {
             clear: "खोज साफ़ करें",
         },

@@ -28,6 +28,7 @@ import { useSyncFailure, type SyncScope } from "../../../../services/syncStatus"
 import { useShortcut } from "../../../../shortcuts";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
+import { smoothScrollBehavior } from "../../../../utils/motion";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { ChatListItemLive } from "../../hooks/useChatListItem";
 import { useChatRouting } from "../../hooks/useChatRouting";
@@ -669,7 +670,7 @@ export const ChatList = (props: ChatListProps) => {
         if (prevFirstNonPinnedKeyRef.current && prevFirstNonPinnedKeyRef.current !== key) {
             const ref = chatTypeLookup[targetChatType];
             requestAnimationFrame(() => {
-                ref?.current?.scrollTo({ top: 0, behavior: "smooth" });
+                ref?.current?.scrollTo({ top: 0, behavior: smoothScrollBehavior() });
             });
         }
         prevFirstNonPinnedKeyRef.current = key;
@@ -742,7 +743,7 @@ export const ChatList = (props: ChatListProps) => {
     ) => {
         virtuosoRef.current?.scrollToIndex({
             index: nextIdx,
-            behavior: "smooth",
+            behavior: smoothScrollBehavior(),
             align: "center",
         });
         // Wait for Virtuoso to mount the row before synthesising the
@@ -806,7 +807,7 @@ export const ChatList = (props: ChatListProps) => {
             chatRouting.navigateToChat(next.chatType, next.chatId as unknown as number);
             chatTypeLookup[targetChatType]?.current?.scrollToIndex({
                 index: nextIdx,
-                behavior: "smooth",
+                behavior: smoothScrollBehavior(),
                 align: "center",
             });
             return;

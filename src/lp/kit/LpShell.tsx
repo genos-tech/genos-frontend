@@ -237,7 +237,11 @@ export function LpShell({
 
     return (
         <div ref={rootRef} className="lp-root" data-mode={mode} lang={lang} style={style}>
-            <a className="lp-btn lp-btn--secondary lp-skip" href="#lp-main">
+            <a
+                className="lp-btn lp-btn--secondary lp-skip"
+                href="#lp-main"
+                onClick={() => document.getElementById("lp-main")?.focus()}
+            >
                 {t.skip}
             </a>
             {showBanner && <ConsentBanner ref={bannerRef} lang={lang} onChoose={choose} />}
@@ -358,7 +362,10 @@ export function LpShell({
                 </div>
             )}
 
-            <main id="lp-main">{children({ lang, appHref })}</main>
+            {/* tabIndex -1: the skip link moves focus here; it stays out of the tab order. */}
+            <main id="lp-main" tabIndex={-1}>
+                {children({ lang, appHref })}
+            </main>
 
             <footer className="lp-footer">
                 <div className="lp-container">

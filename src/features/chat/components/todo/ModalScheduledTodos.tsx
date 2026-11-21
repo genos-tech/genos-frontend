@@ -32,6 +32,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { TodoCategoryProps, TodoScheduleProps } from "../../../../types/chat";
 import { getLocalCurrentDate } from "../../../../utils/dateUtils";
+import { smoothScrollBehavior } from "../../../../utils/motion";
 import { RepeatPicker } from "../../../calendar/components/RepeatPicker";
 import {
     buildRecurrence,
@@ -210,7 +211,10 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
         setSpec(parseRecurrence([s.rrule]));
         setError(null);
         // The form is at the top and the list is long: bring it into view.
-        titleField.anchorRef.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+        titleField.anchorRef.current?.scrollIntoView?.({
+            block: "nearest",
+            behavior: smoothScrollBehavior(),
+        });
         requestAnimationFrame(() => titleField.inputRef.current?.focus());
     };
 

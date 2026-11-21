@@ -34,6 +34,7 @@ import {
     TagListProps,
     TaskTableProps,
 } from "../../../../types/tasks";
+import { smoothScrollBehavior } from "../../../../utils/motion";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import type { TaskGraphScope } from "../../diagram/types";
 import { toneSolid } from "../../meta/taskTone";
@@ -299,7 +300,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         const node = rowRef.current;
         if (!node) return;
         const id = window.requestAnimationFrame(() => {
-            node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            node.scrollIntoView({ behavior: smoothScrollBehavior(), block: "nearest" });
         });
         return () => window.cancelAnimationFrame(id);
     }, [isSelected]);

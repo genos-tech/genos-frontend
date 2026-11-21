@@ -1,5 +1,7 @@
 export const common = {
     // The shared SearchField (components/ui/SearchField.tsx).
+    // The skip link at the top of the app shell (components/layout/SkipToContent.tsx).
+    skipToContent: "Skip to content",
     searchField: {
         clear: "Clear search",
     },

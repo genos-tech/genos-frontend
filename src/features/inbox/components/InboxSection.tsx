@@ -11,6 +11,7 @@ import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { useSyncFailure } from "../../../services/syncStatus";
+import { smoothScrollBehavior } from "../../../utils/motion";
 import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
 
@@ -58,7 +59,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                     ref.current.scrollToIndex({
                         index: itemIndex,
                         align: "center",
-                        behavior: "smooth",
+                        behavior: smoothScrollBehavior(),
                     });
                 }
             }
