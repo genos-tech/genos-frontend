@@ -264,8 +264,9 @@ export function useAgentMentionDraft({
                         c.ref.label.toLowerCase().includes(q) ||
                         displayIdMatches(q, taskDisplayId(c))
                 )
-                // The `@` pool lists groups before people (MIP-1701), so the
-                // 8-row cap keeps the best group; `#` (tasks) keeps the match rank.
+                // `@` puts groups before people (MIP-1701): the pool lists people
+                // first, and the 8-row cap would otherwise cut the groups off.
+                // `#` (tasks) keeps the match rank alone.
                 .sort(
                     (a, b) =>
                         (trigger.char === "@"
