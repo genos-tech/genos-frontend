@@ -189,6 +189,11 @@ export const zh: DeepPartial<Messages> = {
                 teamNotFoundShort: "未找到团队。",
                 duplicateTeamName: "请尝试使用其他团队名称。",
                 invalidDepartments: "请检查部门名称。",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "请检查团队名称。",
+                teamEmailFailed: "无法为该团队设置地址，请重试。",
+                rateLimited: "尝试次数过多，请等待一分钟后再试。",
+                serverError: "服务器无法创建团队，请稍后再试。",
             },
             oauth: {
                 failureReasons: {

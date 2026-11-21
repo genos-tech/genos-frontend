@@ -199,6 +199,13 @@ export const ja: DeepPartial<Messages> = {
                 teamNotFoundShort: "チームが見つかりません。",
                 duplicateTeamName: "別のチーム名でお試しください。",
                 invalidDepartments: "部署名を確認してください。",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "チーム名を確認してください。",
+                teamEmailFailed:
+                    "チームのアドレスを設定できませんでした。もう一度お試しください。",
+                rateLimited: "試行回数が多すぎます。1分ほど待ってからもう一度お試しください。",
+                serverError:
+                    "サーバーでチームを作成できませんでした。しばらくしてからもう一度お試しください。",
             },
             oauth: {
                 failureReasons: {

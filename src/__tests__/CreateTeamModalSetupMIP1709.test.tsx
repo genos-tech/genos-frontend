@@ -16,7 +16,11 @@ const myself = { userId: "u1", teamId: "t1", userName: "Ken" } as never;
 const copy = en.admin.joinTeam;
 const names = (n: number) => Array.from({ length: n }, (_, i) => `Dept ${i}`).join("\n");
 
-const created = { ok: true, status: 201, json: async () => ({ teamId: "t2" }) } as Response;
+const created = {
+    ok: true,
+    status: 201,
+    json: async () => ({ teamDetails: { teamId: "t2" } }),
+} as Response;
 
 const mount = () => {
     const setIsNewTeamCreated = vi.fn();
@@ -24,10 +28,10 @@ const mount = () => {
         <CssVarsProvider>
             <ModalCreateTeam
                 myself={myself}
-                openCreateTeam
                 setIsNewTeamCreated={setIsNewTeamCreated}
                 setMyself={vi.fn()}
                 setOpenCreateTeam={vi.fn()}
+                openCreateTeam
             />
         </CssVarsProvider>
     );

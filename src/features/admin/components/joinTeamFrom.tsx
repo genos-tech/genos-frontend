@@ -10,6 +10,7 @@ import {
     Box,
     Button,
     FormControl,
+    FormHelperText,
     FormLabel,
     Input,
     Link,
@@ -38,6 +39,7 @@ import { createTeam } from "../services/createTeam";
 import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams, membershipTeams } from "../services/loadMyTeams";
+import type { TeamCreateFailure } from "../services/teamCreateFailure";
 import { acceptInvite, previewInvite } from "../services/teamInvite";
 import { LanguageSwitchButton } from "./LanguageSwitchButton";
 import { TeamSetupFields } from "./TeamSetupFields";
@@ -64,7 +66,8 @@ export const JoinTeam = () => {
     const [searchTeamMessage, setSearchMessage] = useState<string | null>(null);
     const [moveToTeamErrorMessage, setMoveToTeamErrorMessage] = useState<string | null>(null);
     const [searchTeamErrorMessage, setSearchTeamErrorMessage] = useState<string | null>(null);
-    const [createTeamErrorMessage, setCreateTeamErrorMessage] = useState<string | null>(null);
+    // Where a refused create-team belongs (MIP-1841): the team name, the departments, or the form.
+    const [createFailure, setCreateFailure] = useState<TeamCreateFailure | null>(null);
     // The sample data (readiness plan §3.3, default ON) and the departments (MIP-1691): the
     // same two choices the in-app Create New Team modal makes (MIP-1709).
     const setup = useTeamSetupFields();
@@ -138,11 +141,12 @@ export const JoinTeam = () => {
     const _createTeam = async (teamName: string) => {
         const userId: string | null = localStorage.getItem("userId");
         if (userId) {
+            setCreateFailure(null);
             const createTeamRes: CreateTeamResponse = await createTeam(
                 accessToken,
                 teamName,
                 userId,
-                setCreateTeamErrorMessage,
+                setCreateFailure,
                 withStarter,
                 departments
             );
@@ -174,6 +178,11 @@ export const JoinTeam = () => {
             setFoundTeamDetails(undefined);
         }
     };
+
+    // A refusal about the departments goes once they are edited (MIP-1841).
+    useEffect(() => {
+        setCreateFailure(null);
+    }, [setup.departmentsText]);
 
     useEffect(() => {
         const userId: string | null = localStorage.getItem("userId");
@@ -663,7 +672,7 @@ export const JoinTeam = () => {
                     </Typography>
                 </Stack>
 
-                {createTeamErrorMessage && (
+                {createFailure?.field === "form" && (
                     <Alert
                         color="danger"
                         sx={{
@@ -672,7 +681,7 @@ export const JoinTeam = () => {
                             border: `1px solid ${palette.dangerTintBorder}`,
                         }}
                     >
-                        {createTeamErrorMessage}
+                        {createFailure.message}
                     </Alert>
                 )}
 
@@ -684,7 +693,7 @@ export const JoinTeam = () => {
                         _createTeam(teamName);
                     }}
                 >
-                    <FormControl required>
+                    <FormControl error={createFailure?.field === "teamName"} required>
                         <FormLabel
                             sx={{
                                 color: styles.labelColor,
@@ -716,12 +725,21 @@ export const JoinTeam = () => {
                                     boxShadow: palette.inputFocusShadow,
                                 },
                             }}
+                            onChange={() => {
+                                if (createFailure?.field === "teamName") setCreateFailure(null);
+                            }}
                         />
+                        {createFailure?.field === "teamName" && (
+                            <FormHelperText>{createFailure.message}</FormHelperText>
+                        )}
                     </FormControl>
                     <TeamSetupFields
                         checkboxColor={styles.labelColor}
                         fields={setup}
                         hintColor={styles.subtitleColor}
+                        departmentsError={
+                            createFailure?.field === "departments" ? createFailure.message : null
+                        }
                         labelSx={{
                             color: styles.labelColor,
                             fontSize: "0.8rem",
