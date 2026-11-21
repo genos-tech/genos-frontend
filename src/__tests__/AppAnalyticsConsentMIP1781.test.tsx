@@ -237,14 +237,62 @@ describe("a returning visitor", () => {
         expect(posthog.init).not.toHaveBeenCalled();
     });
 
-    it("keeps the choice when someone signs in (the sign-in wipe preserves the consent record)", async () => {
+    it("keeps the choice at the first sign-in on a browser with no earlier user (the wipe preserves the record)", async () => {
         localStorage.setItem(CONSENT_KEY, JSON.stringify({ choice: "accepted", v: 1 }));
         localStorage.setItem("someUserData", "x");
         const m = await load();
-        expect(m.auth.DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS).toContain(CONSENT_KEY);
         m.auth.clearUserScopedLocalStorage();
         expect(choice()).toEqual({ choice: "accepted", v: 1 });
         expect(localStorage.getItem("someUserData")).toBeNull();
+    });
+});
+
+describe("a different user signing in on the same browser", () => {
+    it("is asked: the previous person's Accept is not theirs", async () => {
+        localStorage.setItem(CONSENT_KEY, JSON.stringify({ choice: "accepted", v: 1 }));
+        localStorage.setItem("userId", "previous-user");
+        const m = await load();
+        m.auth.clearUserScopedLocalStorage();
+        expect(choice()).toBeNull();
+        await bootApp(m);
+        expect(prompt(m)).not.toBeNull();
+        expect(posthog.init).not.toHaveBeenCalled();
+    });
+
+    it("stays off after the previous person's Reject, and is not asked", async () => {
+        localStorage.setItem(CONSENT_KEY, JSON.stringify({ choice: "rejected", v: 1 }));
+        localStorage.setItem(PREF_KEY, JSON.stringify({ enabled: false }));
+        localStorage.setItem("userId", "previous-user");
+        const m = await load();
+        m.auth.clearUserScopedLocalStorage();
+        expect(choice()).toEqual({ choice: "rejected", v: 1 });
+        await bootApp(m);
+        expect(prompt(m)).toBeNull();
+        expect(posthog.init).not.toHaveBeenCalled();
+    });
+});
+
+describe("a browser that will not store the choice (private mode, full storage)", () => {
+    it("Accept still starts analytics on this page, and the question comes back at the next load", async () => {
+        const m = await load();
+        await bootApp(m);
+        const setItem = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+            throw new Error("QuotaExceededError");
+        });
+        try {
+            m.fireEvent.click(m.screen.getByRole("button", { name: "Accept" }));
+            await m.analytics.whenReady();
+            expect(posthog.init).toHaveBeenCalledTimes(1);
+            expect(prompt(m)).toBeNull();
+            expect(m.analytics.isEnabled()).toBe(true);
+            expect(choice()).toBeNull(); // nothing was stored
+        } finally {
+            setItem.mockRestore();
+        }
+        // The next load: nothing is remembered, so it is asked again and nothing starts.
+        const next = await load();
+        await bootApp(next);
+        expect(prompt(next)).not.toBeNull();
     });
 });
 

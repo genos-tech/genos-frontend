@@ -4,7 +4,7 @@ import { NoteService } from "../db/services/note.service";
 import { TaskService } from "../db/services/task.service";
 import { DatabaseUtils } from "../db/utils/database";
 import { analytics } from "../services/analytics";
-import { CONSENT_KEY } from "../services/consentStorage";
+import { CONSENT_KEY, readConsent } from "../services/consentStorage";
 import {
     clearPrivateProfile,
     ensurePrivateProfile,
@@ -78,10 +78,6 @@ export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
     "genos-locale",
     "genos-spotlight-preferences:v1",
     "genos-analytics-preferences:v1",
-    // The analytics consent choice (MIP-1781). Per browser like the preference above: a
-    // visitor who chose on a marketing page must not be asked again when they sign in, and
-    // someone signing in as another user on this device is not asked what the browser answered.
-    CONSENT_KEY,
     "genos-double-click-todo-preference:v1",
     "genos.sprintBoard.sortTiers.v2",
     "genos.taskTable.sortTiers.v2",
@@ -116,6 +112,17 @@ export const clearUserScopedLocalStorage = (): void => {
     ]) {
         const val = localStorage.getItem(key);
         if (val !== null) preserved.set(key, val);
+    }
+    // The analytics consent choice (MIP-1781). A visitor who chose on a marketing page, before
+    // any account existed on this browser, is not asked again at their first sign-in, so the
+    // choice is kept. When ANOTHER signed-in user was here before (`userId` is still stored:
+    // the callers set the new one after this), an "accepted" is that person's, not the new
+    // user's, and is dropped so the new user is asked. A "rejected" is kept: it errs towards
+    // sending nothing, and the new user can turn analytics on in Settings.
+    const consent = localStorage.getItem(CONSENT_KEY);
+    const otherUserWasHere = Boolean(localStorage.getItem("userId"));
+    if (consent !== null && !(otherUserWasHere && readConsent() === "accepted")) {
+        preserved.set(CONSENT_KEY, consent);
     }
     localStorage.clear();
     for (const [key, val] of preserved) {

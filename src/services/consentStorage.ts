@@ -9,27 +9,33 @@ export const CONSENT_KEY = "genos-marketing-consent:v1";
 
 export type ConsentChoice = "accepted" | "rejected";
 
-/** The stored choice, or null when none was made (or storage is blocked). */
+// The choice of this page load, kept only while the browser would not store it (private mode,
+// full or blocked storage): "Accept" must still do what it says on this page, and the choice is
+// asked again at the next load. Never set while storage works, so it cannot outlive a stored one.
+let unstored: ConsentChoice | null = null;
+
+/** The stored choice, or null when none was made (or storage is blocked and nothing was chosen here). */
 export const readConsent = (): ConsentChoice | null => {
     try {
         const raw = window.localStorage.getItem(CONSENT_KEY);
-        if (!raw) return null;
+        if (!raw) return unstored;
         const parsed: unknown = JSON.parse(raw);
         if (parsed && typeof parsed === "object") {
             const { choice, v } = parsed as { choice?: unknown; v?: unknown };
             if (v === 1 && (choice === "accepted" || choice === "rejected")) return choice;
         }
     } catch {
-        // Unreadable or blocked: treated as no choice, which loads nothing.
+        // Unreadable or blocked: no stored choice, so nothing loads unless it was chosen on this page.
     }
-    return null;
+    return unstored;
 };
 
-/** Records the choice. Blocked storage: it holds for this page only, and nothing loads next time. */
+/** Records the choice. Blocked storage: it holds for this page only, and is asked again next load. */
 export const writeConsent = (choice: ConsentChoice): void => {
     try {
         window.localStorage.setItem(CONSENT_KEY, JSON.stringify({ choice, v: 1 }));
+        unstored = null;
     } catch {
-        // Private mode / blocked storage.
+        unstored = choice;
     }
 };
