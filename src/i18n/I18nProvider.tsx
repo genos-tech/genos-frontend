@@ -8,6 +8,7 @@ import {
     useState,
 } from "react";
 
+import { setPluralLocale } from "./interpolate";
 import { getLoadedMessages, loadLocale } from "./localeLoaders";
 import { en } from "./locales/en";
 import { persistLocale, resolveInitialLocale } from "./localeSource";
@@ -88,6 +89,10 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
     // Memoized: a fresh `{ t, locale, setLocale }` on every render re-rendered
     // every consumer whenever this provider's parent did, and the top of each
     // screen reads it (MIP-958).
+    // `fmt` reads plural rules from this (MIP-1806). Written during render so a child
+    // formats with the locale it was rendered under; the write is idempotent.
+    setPluralLocale(locale);
+
     const value = useMemo(() => ({ t, locale, setLocale }), [t, locale, setLocale]);
 
     return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

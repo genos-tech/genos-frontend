@@ -175,9 +175,12 @@ export const ar: DeepPartial<Messages> = {
                 resolved: "تمت المعالجة",
                 replies: "{count, plural, one {# رد} other {# ردود}}",
                 justNow: "الآن",
-                minutesAgo: "{count, plural, one {قبل # دقيقة} other {قبل # دقائق}}",
-                hoursAgo: "{count, plural, one {قبل # ساعة} other {قبل # ساعات}}",
-                daysAgo: "{count, plural, one {قبل # يوم} other {قبل # أيام}}",
+                minutesAgo:
+                    "{count, plural, one {قبل دقيقة} two {قبل دقيقتين} few {قبل # دقائق} many {قبل # دقيقة} other {قبل # دقيقة}}",
+                hoursAgo:
+                    "{count, plural, one {قبل ساعة} two {قبل ساعتين} few {قبل # ساعات} many {قبل # ساعة} other {قبل # ساعة}}",
+                daysAgo:
+                    "{count, plural, one {قبل يوم} two {قبل يومين} few {قبل # أيام} many {قبل # يومًا} other {قبل # يومًا}}",
             },
             imageAttachment: "صورة مرفقة",
             attachmentUploadFailed: "فشل رفع المرفق",
@@ -3164,13 +3167,19 @@ export const ar: DeepPartial<Messages> = {
             linkedPullRequest: "طلب سحب مرتبط",
             justNow: "الآن",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "منذ" first with the count inside the phrase; one is said as a
-            // word, kept in a plural so {count} stays (the catalog contract tests need it). Arabic dual (2) and 11+ forms are not expressed (fmt has one/other only; MIP-1806).
-            minuteAgo: "{count, plural, one {منذ دقيقة} other {منذ # دقائق}}",
-            minutesAgo: "منذ {count} دقائق",
-            hourAgo: "{count, plural, one {منذ ساعة} other {منذ # ساعات}}",
-            hoursAgo: "منذ {count} ساعات",
-            dayAgo: "{count, plural, one {منذ يوم} other {منذ # أيام}}",
-            daysAgo: "منذ {count} أيام",
+            // word, kept in a plural so {count} stays (the catalog contract tests need it). Arabic plural forms (MIP-1806): one, two (dual), few (3-10, plural noun), many (11-99, singular noun), other (100+, singular noun); fmt reads them with Intl.PluralRules("ar"). Also draft for a native reader.
+            // TODO(copy): MIP-1806
+            minuteAgo:
+                "{count, plural, one {منذ دقيقة} two {منذ دقيقتين} few {منذ # دقائق} many {منذ # دقيقة} other {منذ # دقيقة}}",
+            minutesAgo:
+                "{count, plural, one {منذ دقيقة} two {منذ دقيقتين} few {منذ # دقائق} many {منذ # دقيقة} other {منذ # دقيقة}}",
+            hourAgo:
+                "{count, plural, one {منذ ساعة} two {منذ ساعتين} few {منذ # ساعات} many {منذ # ساعة} other {منذ # ساعة}}",
+            hoursAgo:
+                "{count, plural, one {منذ ساعة} two {منذ ساعتين} few {منذ # ساعات} many {منذ # ساعة} other {منذ # ساعة}}",
+            dayAgo: "{count, plural, one {منذ يوم} two {منذ يومين} few {منذ # أيام} many {منذ # يومًا} other {منذ # يومًا}}",
+            daysAgo:
+                "{count, plural, one {منذ يوم} two {منذ يومين} few {منذ # أيام} many {منذ # يومًا} other {منذ # يومًا}}",
             progress: {
                 scopeLabel: "عرض",
                 scopeOwn: "تغييراته",
@@ -3684,9 +3693,10 @@ export const ar: DeepPartial<Messages> = {
             relTime: {
                 justNow: "الآن",
                 oneMinute: "قبل دقيقة واحدة",
-                minutes: "قبل {n} دقائق",
-                hours: "قبل {n} ساعات",
-                days: "قبل {n} أيام",
+                minutes:
+                    "{n, plural, two {قبل دقيقتين} few {قبل # دقائق} many {قبل # دقيقة} other {قبل # دقيقة}}",
+                hours: "{n, plural, two {قبل ساعتين} few {قبل # ساعات} many {قبل # ساعة} other {قبل # ساعة}}",
+                days: "{n, plural, two {قبل يومين} few {قبل # أيام} many {قبل # يومًا} other {قبل # يومًا}}",
                 oneMinShort: "قبل 1د",
                 minutesShort: "قبل {n}د",
                 hoursShort: "قبل {n}س",
@@ -4172,9 +4182,12 @@ export const ar: DeepPartial<Messages> = {
             turnCount: "{count, plural, one {#دور} other {#دور}}",
             relativeJustNow: "الآن",
             // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sat before "قبل"; it now sits inside the phrase.
-            relativeMinutes: "{count, plural, one {قبل دقيقة} other {قبل # دقائق}}",
-            relativeHours: "{count, plural, one {قبل ساعة} other {قبل # ساعات}}",
-            relativeDays: "{count, plural, one {قبل يوم} other {قبل # أيام}}",
+            relativeMinutes:
+                "{count, plural, one {قبل دقيقة} two {قبل دقيقتين} few {قبل # دقائق} many {قبل # دقيقة} other {قبل # دقيقة}}",
+            relativeHours:
+                "{count, plural, one {قبل ساعة} two {قبل ساعتين} few {قبل # ساعات} many {قبل # ساعة} other {قبل # ساعة}}",
+            relativeDays:
+                "{count, plural, one {قبل يوم} two {قبل يومين} few {قبل # أيام} many {قبل # يومًا} other {قبل # يومًا}}",
             readOnlyHint: "للقراءة فقط - ابدأ محادثة جديدة لطلب المتابعة.",
         },
     },
@@ -5871,14 +5884,15 @@ export const ar: DeepPartial<Messages> = {
         },
         relative: {
             justNow: "الآن",
-            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. Arabic words, "منذ" first, no Latin unit letters. Dual (2) and
-            // 11+ forms are not expressed (fmt has one/other only; MIP-1806).
-            minutes: "{count, plural, one {منذ دقيقة} other {منذ # دقائق}}",
-            hours: "{count, plural, one {منذ ساعة} other {منذ # ساعات}}",
-            days: "{count, plural, one {منذ يوم} other {منذ # أيام}}",
-            weeks: "{count, plural, one {منذ أسبوع} other {منذ # أسابيع}}",
-            months: "{count, plural, one {منذ شهر} other {منذ # أشهر}}",
-            years: "{count, plural, one {منذ سنة} other {منذ # سنوات}}",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. Arabic words, "منذ" first, no Latin unit letters. Arabic plural forms (MIP-1806): one, two,
+            // few, many, other via Intl.PluralRules("ar"). TODO(copy): MIP-1806 the dual/singular forms need the same native read.
+            minutes:
+                "{count, plural, one {منذ دقيقة} two {منذ دقيقتين} few {منذ # دقائق} many {منذ # دقيقة} other {منذ # دقيقة}}",
+            hours: "{count, plural, one {منذ ساعة} two {منذ ساعتين} few {منذ # ساعات} many {منذ # ساعة} other {منذ # ساعة}}",
+            days: "{count, plural, one {منذ يوم} two {منذ يومين} few {منذ # أيام} many {منذ # يومًا} other {منذ # يومًا}}",
+            weeks: "{count, plural, one {منذ أسبوع} two {منذ أسبوعين} few {منذ # أسابيع} many {منذ # أسبوعًا} other {منذ # أسبوعًا}}",
+            months: "{count, plural, one {منذ شهر} two {منذ شهرين} few {منذ # أشهر} many {منذ # شهرًا} other {منذ # شهرًا}}",
+            years: "{count, plural, one {منذ سنة} two {منذ سنتين} few {منذ # سنوات} many {منذ # سنة} other {منذ # سنة}}",
         },
         messageNumber: "الرسالة رقم {id}",
         emptyTitle: "لا يوجد سجل بعد",
@@ -6068,22 +6082,26 @@ export const ar: DeepPartial<Messages> = {
                 comments: "{count, plural, one {# تعليق} other {# تعليقات}}",
                 updated: "تم التحديث {when}",
                 // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "منذ" first.
-                ago: "منذ {count} {unit}",
+                // The unit word carries the count (MIP-1806), so the Arabic dual and the
+                // singular noun after 11+ can be said; `ago` only adds the "منذ".
+                ago: "منذ {unit}",
                 units: {
                     second: "ثانية",
-                    seconds: "ثوانٍ",
+                    seconds:
+                        "{count, plural, two {ثانيتين} few {# ثوانٍ} many {# ثانية} other {# ثانية}}",
                     minute: "دقيقة",
-                    minutes: "دقائق",
+                    minutes:
+                        "{count, plural, two {دقيقتين} few {# دقائق} many {# دقيقة} other {# دقيقة}}",
                     hour: "ساعة",
-                    hours: "ساعات",
+                    hours: "{count, plural, two {ساعتين} few {# ساعات} many {# ساعة} other {# ساعة}}",
                     day: "يوم",
-                    days: "أيام",
+                    days: "{count, plural, two {يومين} few {# أيام} many {# يومًا} other {# يومًا}}",
                     week: "أسبوع",
-                    weeks: "أسابيع",
+                    weeks: "{count, plural, two {أسبوعين} few {# أسابيع} many {# أسبوعًا} other {# أسبوعًا}}",
                     month: "شهر",
-                    months: "أشهر",
+                    months: "{count, plural, two {شهرين} few {# أشهر} many {# شهرًا} other {# شهرًا}}",
                     year: "سنة",
-                    years: "سنوات",
+                    years: "{count, plural, two {سنتين} few {# سنوات} many {# سنة} other {# سنة}}",
                 },
             },
             linkedCard: {
@@ -6146,9 +6164,12 @@ export const ar: DeepPartial<Messages> = {
             sectionTitle: "ملخص",
             refresh: "تحديث الملخص",
             updatedJustNow: "تم تحديثه الآن",
-            updatedMinutes: "{count, plural, one {حُدّث قبل دقيقة} other {حُدّث قبل # دقائق}}",
-            updatedHours: "{count, plural, one {حُدّث قبل ساعة} other {حُدّث قبل # ساعات}}",
-            updatedDays: "{count, plural, one {حُدّث قبل يوم} other {حُدّث قبل # أيام}}",
+            updatedMinutes:
+                "{count, plural, one {حُدّث قبل دقيقة} two {حُدّث قبل دقيقتين} few {حُدّث قبل # دقائق} many {حُدّث قبل # دقيقة} other {حُدّث قبل # دقيقة}}",
+            updatedHours:
+                "{count, plural, one {حُدّث قبل ساعة} two {حُدّث قبل ساعتين} few {حُدّث قبل # ساعات} many {حُدّث قبل # ساعة} other {حُدّث قبل # ساعة}}",
+            updatedDays:
+                "{count, plural, one {حُدّث قبل يوم} two {حُدّث قبل يومين} few {حُدّث قبل # أيام} many {حُدّث قبل # يومًا} other {حُدّث قبل # يومًا}}",
             empty: "هذه المذكرة لا تحتوي على أي محتوى حتى الآن.",
             stale: {
                 banner: "تم تحديث الملاحظة منذ إنشاء هذا الملخص.",
@@ -6229,9 +6250,12 @@ export const ar: DeepPartial<Messages> = {
             sectionTitle: "ملخص",
             refresh: "تحديث الملخص",
             updatedJustNow: "تم تحديثه الآن",
-            updatedMinutes: "{count, plural, one {حُدّث قبل دقيقة} other {حُدّث قبل # دقائق}}",
-            updatedHours: "{count, plural, one {حُدّث قبل ساعة} other {حُدّث قبل # ساعات}}",
-            updatedDays: "{count, plural, one {حُدّث قبل يوم} other {حُدّث قبل # أيام}}",
+            updatedMinutes:
+                "{count, plural, one {حُدّث قبل دقيقة} two {حُدّث قبل دقيقتين} few {حُدّث قبل # دقائق} many {حُدّث قبل # دقيقة} other {حُدّث قبل # دقيقة}}",
+            updatedHours:
+                "{count, plural, one {حُدّث قبل ساعة} two {حُدّث قبل ساعتين} few {حُدّث قبل # ساعات} many {حُدّث قبل # ساعة} other {حُدّث قبل # ساعة}}",
+            updatedDays:
+                "{count, plural, one {حُدّث قبل يوم} two {حُدّث قبل يومين} few {حُدّث قبل # أيام} many {حُدّث قبل # يومًا} other {حُدّث قبل # يومًا}}",
             empty: "هذا الموضوع لا يحتوي على أية رسائل حتى الآن.",
             stale: {
                 banner: "وصلت رسائل جديدة في هذا الموضوع.",
