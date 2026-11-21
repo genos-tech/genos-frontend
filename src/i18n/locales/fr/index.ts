@@ -6221,6 +6221,7 @@ export const fr: DeepPartial<Messages> = {
                     loadMore: "Charger la suite",
                     loadingMore: "Chargement…",
                     loadMoreFailed: "Impossible de charger la suite. Réessayez.",
+                    noProject: "Aucun projet",
                 },
                 actions: {
                     task_created: "A créé {target}",
@@ -6245,6 +6246,9 @@ export const fr: DeepPartial<Messages> = {
                 },
                 states: {
                     loading: "Chargement de l'activité des agents…",
+                    errorTitle: "L'activité des agents n'a pas pu se charger",
+                    errorBody:
+                        "Une erreur est survenue au chargement de cette vue. Réessayez. Vos tâches et notes ne sont pas affectées.",
                     unavailableTitle: "L'activité des agents n'est pas encore disponible",
                     unavailableBody:
                         "Cette vue n'est pas encore activée pour votre espace de travail. Vos tâches et notes ne sont pas touchées.",

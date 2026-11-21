@@ -47,6 +47,9 @@ const PARAM = {
     kind: "kind",
 } as const;
 
+/** The API takes a user id as a UUID; any other value is a bad URL and is dropped, not sent. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const oneOf = <T extends string | number>(allowed: readonly T[], raw: string | null): T | null => {
     if (raw == null || raw === "") return null;
     const hit = allowed.find((value) => String(value) === raw);
@@ -63,7 +66,7 @@ export const parseAgentFilters = (params: URLSearchParams): AgentFilters => {
         days: period ?? DEFAULT_AGENT_PERIOD,
         projectId,
         agent: oneOf(AGENT_KINDS, params.get(PARAM.agent)),
-        userId: person && person.length <= 64 ? person : null,
+        userId: person && UUID.test(person) ? person : null,
         kind: oneOf(AGENT_WORK_KINDS, params.get(PARAM.kind)),
     };
 };
@@ -89,8 +92,9 @@ export const writeAgentFilters = (
     return next;
 };
 
-/** The request's query: the filters as the API names them. */
-export const agentFiltersToQuery = (filters: AgentFilters): AgentWorkQuery => ({
+/** The request's query: the filters as the API names them, for one team. */
+export const agentFiltersToQuery = (filters: AgentFilters, teamId: string): AgentWorkQuery => ({
+    teamId,
     days: filters.days,
     projectId: filters.projectId,
     agent: filters.agent,

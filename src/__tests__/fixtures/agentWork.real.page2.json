@@ -1,0 +1,256 @@
+{
+    "window": {
+        "days": 7,
+        "since": "2026-11-14T06:56:24.861814+00:00",
+        "until": "2026-11-21T06:56:24.861814+00:00"
+    },
+    "filters": {
+        "project_id": null,
+        "agent": null,
+        "user_id": null,
+        "kind": null
+    },
+    "totals": {
+        "by_agent": {
+            "claude": 6,
+            "chatgpt": 1,
+            "api_key": 2,
+            "other_app": 1,
+            "person": 2
+        },
+        "decisions": 1,
+        "changes": 12
+    },
+    "by_user_agent": [
+        {
+            "user": {
+                "id": "6124ac7b-3169-4245-a9bf-5ac04afe4aa3",
+                "name": "testuser"
+            },
+            "agent": "claude",
+            "count": 6,
+            "projects": [
+                {
+                    "id": 1,
+                    "name": "Launch",
+                    "code": "LAU"
+                },
+                {
+                    "id": 2,
+                    "name": "Website",
+                    "code": "WEB"
+                }
+            ]
+        },
+        {
+            "user": {
+                "id": "6124ac7b-3169-4245-a9bf-5ac04afe4aa3",
+                "name": "testuser"
+            },
+            "agent": "api_key",
+            "count": 2,
+            "projects": [
+                {
+                    "id": 1,
+                    "name": "Launch",
+                    "code": "LAU"
+                },
+                {
+                    "id": 2,
+                    "name": "Website",
+                    "code": "WEB"
+                }
+            ]
+        },
+        {
+            "user": {
+                "id": "88fceed8-d0fd-4a1d-9682-298c14575711",
+                "name": "otheruser"
+            },
+            "agent": "chatgpt",
+            "count": 1,
+            "projects": [
+                {
+                    "id": 1,
+                    "name": "Launch",
+                    "code": "LAU"
+                }
+            ]
+        },
+        {
+            "user": {
+                "id": "88fceed8-d0fd-4a1d-9682-298c14575711",
+                "name": "otheruser"
+            },
+            "agent": "other_app",
+            "count": 1,
+            "projects": [
+                {
+                    "id": 1,
+                    "name": "Launch",
+                    "code": "LAU"
+                }
+            ]
+        },
+        {
+            "user": {
+                "id": "88fceed8-d0fd-4a1d-9682-298c14575711",
+                "name": "otheruser"
+            },
+            "agent": "person",
+            "count": 1,
+            "projects": [
+                {
+                    "id": 1,
+                    "name": "Launch",
+                    "code": "LAU"
+                }
+            ]
+        },
+        {
+            "user": {
+                "id": "6124ac7b-3169-4245-a9bf-5ac04afe4aa3",
+                "name": "testuser"
+            },
+            "agent": "person",
+            "count": 1,
+            "projects": [
+                {
+                    "id": 2,
+                    "name": "Website",
+                    "code": "WEB"
+                }
+            ]
+        }
+    ],
+    "groups": [
+        {
+            "project": {
+                "id": 1,
+                "name": "Launch",
+                "code": "LAU"
+            },
+            "counts": {
+                "claude": 4,
+                "chatgpt": 1,
+                "api_key": 1,
+                "other_app": 1,
+                "person": 1,
+                "total": 8
+            },
+            "items": [
+                {
+                    "id": "activity:6",
+                    "at": "2026-11-21T06:56:24.729432+00:00",
+                    "user": {
+                        "id": "6124ac7b-3169-4245-a9bf-5ac04afe4aa3",
+                        "name": "testuser"
+                    },
+                    "agent": {
+                        "kind": "claude",
+                        "app": "claude"
+                    },
+                    "action": "task_comment",
+                    "target": {
+                        "type": "task",
+                        "id": 1,
+                        "title": "Spec: agent view"
+                    },
+                    "text": "Checked the window query; it is bounded."
+                },
+                {
+                    "id": "activity:4",
+                    "at": "2026-11-21T06:56:24.727408+00:00",
+                    "user": {
+                        "id": "6124ac7b-3169-4245-a9bf-5ac04afe4aa3",
+                        "name": "testuser"
+                    },
+                    "agent": {
+                        "kind": "claude",
+                        "app": "claude"
+                    },
+                    "action": "task_status",
+                    "target": {
+                        "type": "task",
+                        "id": 1,
+                        "title": "Spec: agent view"
+                    },
+                    "text": "Open → WIP"
+                },
+                {
+                    "id": "activity:8",
+                    "at": "2026-11-20T06:56:24.735291+00:00",
+                    "user": {
+                        "id": "6124ac7b-3169-4245-a9bf-5ac04afe4aa3",
+                        "name": "testuser"
+                    },
+                    "agent": {
+                        "kind": "api_key"
+                    },
+                    "action": "task_status",
+                    "target": {
+                        "type": "task",
+                        "id": 1,
+                        "title": "Spec: agent view"
+                    },
+                    "text": "Open → WIP"
+                }
+            ]
+        },
+        {
+            "project": {
+                "id": 2,
+                "name": "Website",
+                "code": "WEB"
+            },
+            "counts": {
+                "claude": 1,
+                "chatgpt": 0,
+                "api_key": 1,
+                "other_app": 0,
+                "person": 1,
+                "total": 3
+            },
+            "items": []
+        },
+        {
+            "project": null,
+            "counts": {
+                "claude": 1,
+                "chatgpt": 0,
+                "api_key": 0,
+                "other_app": 0,
+                "person": 0,
+                "total": 1
+            },
+            "items": []
+        }
+    ],
+    "decisions": [
+        {
+            "note_id": 1,
+            "note_type": 2,
+            "title": "Decision: ship Option A",
+            "at": "2026-11-19T06:56:24.747928+00:00",
+            "user": {
+                "id": "6124ac7b-3169-4245-a9bf-5ac04afe4aa3",
+                "name": "testuser"
+            },
+            "agent": {
+                "kind": "claude",
+                "app": "claude"
+            }
+        }
+    ],
+    "connections": [
+        {
+            "family": "other",
+            "last_used_at": "2026-11-18T06:56:24.752312+00:00"
+        },
+        {
+            "family": "claude",
+            "last_used_at": "2026-11-21T06:56:24.749377+00:00"
+        }
+    ],
+    "next_cursor": "6"
+}

@@ -201,6 +201,8 @@ describe("feedback adoption", () => {
                 "the comments tab's own icon-plus-hint empty state, literal English until MIP-1777 moved it to a key (the scan only sees keys)",
             "features/tasks/components/contents/base/TaskDeliveriesBlock.tsx":
                 "fallback of a value",
+            "features/tasks/components/dashboard/agentActivity/AgentProjectGroups.tsx":
+                "the name of the group of work on no project (a label, not an empty state)",
             "features/tasks/components/dashboard/TaskHomeContent.tsx":
                 "value labels and the tiny 'no overdue / none due this week / no members' lines inside dashboard cards",
             "features/tasks/components/modals/ModalCreateProject.tsx":
