@@ -8,6 +8,7 @@ import { Alert, Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 import { useTranslation } from "../../i18n";
 import { g } from "../../theme/tokens";
 import { claudeCodeAddCommand } from "../../utils/mcpConnect";
+import { smoothScrollBehavior } from "../../utils/motion";
 
 /** The panel's anchor, and the window event that opens it (see `openConnectAppPanel`). */
 export const CONNECT_APP_PANEL_ID = "connect-ai-app";
@@ -23,7 +24,7 @@ export const openConnectAppPanel = () => {
     window.requestAnimationFrame(() => {
         document
             .getElementById(CONNECT_APP_PANEL_ID)
-            ?.scrollIntoView?.({ block: "start", behavior: "smooth" });
+            ?.scrollIntoView?.({ block: "start", behavior: smoothScrollBehavior() });
     });
 };
 

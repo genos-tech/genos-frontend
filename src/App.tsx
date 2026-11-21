@@ -41,6 +41,7 @@ import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverl
 import { ServiceSwitchLoader } from "./components/layout/ServiceSwitchLoader";
 import { ServiceSwitchReady } from "./components/layout/ServiceSwitchReady";
 import { Sidebar } from "./components/layout/sidebar";
+import { APP_MAIN_ID, SkipToContent } from "./components/layout/SkipToContent";
 import { SyncStatusBanner } from "./components/layout/SyncStatusBanner";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
@@ -1637,6 +1638,7 @@ const AppBody = () => {
                                                             />
                                                         ) : (
                                                             <div className="main-container">
+                                                                <SkipToContent />
                                                                 <PermissionBanner
                                                                     permission={
                                                                         useNotif.permission
@@ -1899,6 +1901,15 @@ const AppBody = () => {
                                                                                                         }
                                                                                                         onOpenTodo={
                                                                                                             showTodoModal
+                                                                                                        }
+                                                                                                    />
+                                                                                                    {/* The skip link's target: focus lands at the start of the routed content, after the sidebar. */}
+                                                                                                    <div
+                                                                                                        id={
+                                                                                                            APP_MAIN_ID
+                                                                                                        }
+                                                                                                        tabIndex={
+                                                                                                            -1
                                                                                                         }
                                                                                                     />
                                                                                                     <Routes>

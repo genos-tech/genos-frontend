@@ -1704,6 +1704,7 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     common: {
+        skipToContent: "本文へスキップ",
         searchField: {
             clear: "検索をクリア",
         },

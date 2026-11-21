@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
 
 import { ActivityMessageProps, AllChatProps } from "../../../types/chat";
+import { smoothScrollBehavior } from "../../../utils/motion";
 
 export const useScrollToBottomOnNewMessage = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
@@ -16,7 +17,7 @@ export const useScrollToBottomOnNewMessage = (
             setTimeout(() => {
                 virtuoso.scrollToIndex({
                     index: targetIndex,
-                    behavior: "smooth",
+                    behavior: smoothScrollBehavior(),
                 });
             }, 200); // wait 200ms
         }

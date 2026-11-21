@@ -1725,6 +1725,7 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     common: {
+        skipToContent: "Aller au contenu",
         searchField: {
             clear: "Effacer la recherche",
         },

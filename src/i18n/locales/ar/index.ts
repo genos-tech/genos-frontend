@@ -7,6 +7,7 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const ar: DeepPartial<Messages> = {
     common: {
+        skipToContent: "تخطي إلى المحتوى",
         searchField: {
             clear: "مسح البحث",
         },
