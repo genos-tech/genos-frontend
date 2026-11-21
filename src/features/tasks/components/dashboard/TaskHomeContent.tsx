@@ -66,7 +66,7 @@ import { useSyncFailure, useTasksSyncFailure } from "../../../../services/syncSt
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
-import { startOfTodayMs } from "../../../../utils/calendarDate";
+import { startOfTodayMs, todayCalendarIso } from "../../../../utils/calendarDate";
 import { isDeletedUser } from "../../../../utils/teamRoster";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { STATUS_TONE, toneCss, toneSolid } from "../../meta/taskTone";
@@ -76,6 +76,7 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
+import { sprintBucketOf } from "../../sprint-milestone/utils/sprintBucket";
 import { computeAssigneeStats, computeUpNext } from "../../utils/dashboardStats";
 import { isDueWithin, isOverdueDate, sprintWindowMs } from "../../utils/dueWindow";
 import { deriveEffectiveTasks, EffectiveTask } from "../../utils/effectiveTasks";
@@ -159,12 +160,6 @@ const buildCapacityMap = (
         map.set(id, entry);
     }
     return map;
-};
-
-const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upcoming" => {
-    if (s.endDate < todayIso) return "past";
-    if (s.startDate <= todayIso && todayIso <= s.endDate) return "current";
-    return "upcoming";
 };
 
 // "Ongoing" for the Assigned Milestones section: anything not Closed
@@ -267,7 +262,7 @@ export const TaskHomeContent = ({
         return useSM.projectSprints[usePM.currentProject.projectId] ?? [];
     }, [usePM.currentProject?.projectId, useSM.projectSprints]);
 
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = todayCalendarIso();
     const groupedSprints = useMemo(() => {
         const out: Record<"past" | "current" | "upcoming", Sprint[]> = {
             past: [],
