@@ -51,9 +51,18 @@ type Draft = {
     title: string;
     markdown: string;
     folder: string;
+    // The folder the template had when the form opened: a save that leaves it alone does not
+    // send it, so renaming never needs Editor on the folder.
+    originalFolder: string;
 };
 
-const EMPTY: Draft = { name: "", title: "", markdown: "", folder: NO_FOLDER };
+const EMPTY: Draft = {
+    name: "",
+    title: "",
+    markdown: "",
+    folder: NO_FOLDER,
+    originalFolder: NO_FOLDER,
+};
 
 /**
  * Manage the team's note templates (MIP-1697): the list, and one form to create or edit.
@@ -85,7 +94,12 @@ export const ModalNoteTemplates = ({
         }
     }, [open]);
 
+    // Own folders only, and only where the person can edit (Owner 1 / Editor 2): the server
+    // refuses a default on any other. A folder already chosen stays listed.
     const ownFolders = folders.filter((f) => f.isExternal !== true);
+    const pickable = ownFolders.filter(
+        (f) => f.myRoleId <= 2 || String(f.folderId) === draft?.folder
+    );
     const folderName = (id: number | null) =>
         id == null ? null : (ownFolders.find((f) => f.folderId === id)?.name ?? null);
 
@@ -104,12 +118,17 @@ export const ModalNoteTemplates = ({
             title: full.title,
             markdown: await noteBlocksToMarkdown(full.body ?? []),
             folder: full.defaultFolderId == null ? NO_FOLDER : String(full.defaultFolderId),
+            originalFolder:
+                full.defaultFolderId == null ? NO_FOLDER : String(full.defaultFolderId),
         });
     };
 
     const remove = async (tpl: TeamNoteTemplate) => {
         setError(null);
-        if (await deleteTeamNoteTemplate(myself, tpl.templateId, accessToken)) onChanged();
+        setBusy(true);
+        const ok = await deleteTeamNoteTemplate(myself, tpl.templateId, accessToken);
+        setBusy(false);
+        if (ok) onChanged();
         else setError(copy.deleteFailed);
     };
 
@@ -124,7 +143,9 @@ export const ModalNoteTemplates = ({
                 name: draft.name.trim(),
                 title: draft.title,
                 body: await markdownToNoteBlocks(draft.markdown),
-                defaultFolderId: draft.folder === NO_FOLDER ? null : Number(draft.folder),
+                ...(draft.folder !== draft.originalFolder
+                    ? { defaultFolderId: draft.folder === NO_FOLDER ? null : Number(draft.folder) }
+                    : {}),
             },
             accessToken
         );
@@ -204,7 +225,7 @@ export const ModalNoteTemplates = ({
                             onChange={(_, v) => setDraft({ ...draft, folder: v ?? NO_FOLDER })}
                         >
                             <Option value={NO_FOLDER}>{copy.noDefault}</Option>
-                            {ownFolders.map((f) => (
+                            {pickable.map((f) => (
                                 <Option key={f.folderId} value={String(f.folderId)}>
                                     {f.name}
                                 </Option>
@@ -221,7 +242,7 @@ export const ModalNoteTemplates = ({
                         />
                     </FormControl>
                     {error && (
-                        <Typography color="danger" level="body-xs">
+                        <Typography color="danger" level="body-xs" role="alert">
                             {error}
                         </Typography>
                     )}
@@ -253,7 +274,7 @@ export const ModalNoteTemplates = ({
                                 </Stack>
                                 <AppTooltip size="sm" title={t.notes.folders.rename}>
                                     <IconButton
-                                        aria-label={t.notes.folders.rename}
+                                        aria-label={`${t.notes.folders.rename}: ${tpl.name}`}
                                         disabled={busy}
                                         size="sm"
                                         variant="plain"
@@ -264,8 +285,9 @@ export const ModalNoteTemplates = ({
                                 </AppTooltip>
                                 <AppTooltip size="sm" title={t.notes.folders.delete}>
                                     <IconButton
-                                        aria-label={t.notes.folders.delete}
+                                        aria-label={`${t.notes.folders.delete}: ${tpl.name}`}
                                         color="danger"
+                                        disabled={busy}
                                         size="sm"
                                         variant="plain"
                                         onClick={() => void remove(tpl)}
@@ -277,7 +299,7 @@ export const ModalNoteTemplates = ({
                         );
                     })}
                     {error && (
-                        <Typography color="danger" level="body-xs" sx={{ mt: 1 }}>
+                        <Typography color="danger" level="body-xs" role="alert" sx={{ mt: 1 }}>
                             {error}
                         </Typography>
                     )}

@@ -452,7 +452,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const myselfRef = useRef(myself);
     myselfRef.current = myself;
     const reloadTeamTemplates = useCallback(async () => {
-        setTeamTemplates(await loadTeamNoteTemplates(myselfRef.current, accessToken));
+        const teamId = myselfRef.current.teamId;
+        const loaded = await loadTeamNoteTemplates(myselfRef.current, accessToken);
+        // A slow answer for the team the person just left must not replace the new team's list.
+        if (myselfRef.current.teamId === teamId) setTeamTemplates(loaded);
     }, [accessToken]);
     useEffect(() => {
         if (accessToken) void reloadTeamTemplates();
@@ -461,12 +464,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     type ResolvedNoteOverrides = { title: string; body: ResolvedTemplate["blocks"] };
     const createFromTemplate = async (
         pick: TemplatePick,
-        create: (o: ResolvedNoteOverrides) => unknown
+        create: (o: ResolvedNoteOverrides | undefined) => unknown
     ) => {
         const tpl = await resolveTemplate(pick, t.notes.noteTemplates, (id) =>
             loadTeamNoteTemplate(myself, id, accessToken)
         );
-        if (tpl) void create({ title: tpl.title, body: tpl.blocks });
+        if (tpl) {
+            void create({ title: tpl.title, body: tpl.blocks });
+            return;
+        }
+        // The template is gone (deleted by someone else) or could not be read: still make the
+        // note, blank, and refresh the list so the dead row disappears.
+        void reloadTeamTemplates();
+        void create(undefined);
     };
 
     // Folder-row menu shared by the task and chat sections: create a note
@@ -476,7 +486,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const buildFolderMenuItems = (
         onCreate: () => void,
         importContext: ImportMarkdownContext,
-        onCreateFromTemplate?: (o: ResolvedNoteOverrides) => unknown
+        onCreateFromTemplate?: (o: ResolvedNoteOverrides | undefined) => unknown
     ): MoreMenuItem[] => [
         {
             id: "new-note-here",
