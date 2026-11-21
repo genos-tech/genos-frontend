@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { CONTACT_EMAIL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import {
@@ -35,6 +36,7 @@ import {
  * is mounted at `/terms` from main.tsx.
  */
 export default function TermsPage() {
+    useDocumentTitle(`${TERMS_TITLE_JA} | Genos`);
     return (
         <LpShell active={null}>
             {() => (
