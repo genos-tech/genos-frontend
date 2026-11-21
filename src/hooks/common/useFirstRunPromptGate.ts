@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
  *   - A visit is counted once per browser session (a sessionStorage flag), in localStorage.
  *   - The decision is made once per session and kept in sessionStorage, so a remount does not
  *     flip it. "open" once the visit count was already at least 1 before this session, or once
- *     the person has pointed or typed in this session.
+ *     the person has pointed at something in this session.
  *
  * Storage can be blocked or throw (private windows): every access is guarded, and without it the
  * prompts simply wait for the first action.
@@ -64,7 +64,9 @@ export const useFirstRunPromptGate = (): boolean => {
         if (seenAppBefore) setOpen(true);
     }, []);
 
-    // A first action in this visit opens the prompts for the rest of the session.
+    // A first press or tap in this visit opens the prompts for the rest of the session. Keyboard
+    // input is not listened to here: keydown listeners go through the shortcut registry (the
+    // keydown ratchet), and a keyboard-only visitor still gets the prompts on the second visit.
     useEffect(() => {
         if (open) return undefined;
         const onAction = () => {
@@ -72,10 +74,8 @@ export const useFirstRunPromptGate = (): boolean => {
             setOpen(true);
         };
         window.addEventListener("pointerdown", onAction, { once: true, capture: true });
-        window.addEventListener("keydown", onAction, { once: true, capture: true });
         return () => {
             window.removeEventListener("pointerdown", onAction, { capture: true });
-            window.removeEventListener("keydown", onAction, { capture: true });
         };
     }, [open]);
 
