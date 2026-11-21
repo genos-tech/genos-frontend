@@ -19,6 +19,7 @@ import {
 } from "../../../agentActivity/agentActivityFilters";
 import { useAgentWork } from "../../../hooks/useAgentWork";
 import { AgentWorkUserAgentRow } from "../../../services/loadAgentWork";
+import type { ProjectIdentity } from "../../ProjectIdentityRow";
 import { familyKind, formatAgentWhen } from "./agentActivityLinks";
 import { AgentConnectionsList } from "./AgentConnectionsList";
 import { AgentDecisionsList } from "./AgentDecisionsList";
@@ -31,6 +32,11 @@ const TASKS_PATH = "/workspace/tasks";
 
 type Props = {
     projects: { id: number; name: string }[];
+    /** The full project records (labels, lock, share mark), so the Project filter looks like the
+     *  other project pickers (MIP-1916). Optional: a project without one shows its name only. */
+    projectRecords?: readonly ProjectIdentity[];
+    /** Project id -> avatar url (`projectAvatarSrcMap`); a project missing from it gets the icon. */
+    projectAvatars?: Map<number, string>;
     /** The team the tab shows. The API needs it on every request; a change refetches. */
     teamId: string;
 };
@@ -49,7 +55,7 @@ const peopleFrom = (rows: AgentWorkUserAgentRow[]): { id: string; name: string }
  * Genos, and for what. Filters live in the URL query so a view can be shared. Every
  * failure is a calm state here; nothing in this tab throws into the dashboard.
  */
-export const AgentActivityTab = ({ projects, teamId }: Props) => {
+export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, teamId }: Props) => {
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.agentActivity;
     const location = useLocation();
@@ -250,6 +256,8 @@ export const AgentActivityTab = ({ projects, teamId }: Props) => {
                 <AgentFilterBar
                     filters={filters}
                     people={people}
+                    projectAvatars={projectAvatars}
+                    projectRecords={projectRecords}
                     projects={projects}
                     onChange={applyFilters}
                     onClear={clearFilters}
