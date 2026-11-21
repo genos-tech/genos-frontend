@@ -6,6 +6,7 @@ import { Alert, Box, Button, Input, Typography } from "@mui/joy";
 import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { TOUCH_TARGET } from "../../../../components/ui/touchTargets";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import {
@@ -209,11 +210,18 @@ export const ModalGroupDirectory = ({ open, myself, useCM, onClose }: Props) => 
                                 disabled={busyId !== null}
                                 loading={busyId === row.id}
                                 size="sm"
-                                sx={{ flexShrink: 0, minHeight: 36 }}
                                 variant={row.isJoined ? "outlined" : "solid"}
                                 aria-label={fmt(row.isJoined ? copy.openAria : copy.joinAria, {
                                     name: row.title,
                                 })}
+                                sx={{
+                                    flexShrink: 0,
+                                    minHeight: 36,
+                                    "@media (pointer: coarse)": {
+                                        minHeight: TOUCH_TARGET,
+                                        minWidth: TOUCH_TARGET,
+                                    },
+                                }}
                                 onClick={() => void act(row)}
                             >
                                 {row.isJoined ? copy.open : copy.join}
