@@ -15,6 +15,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BILLING_REFRESHED } from "../components/layout/BillingReturnSnackbar";
 import { PlansHome } from "../features/billing/PlansHome";
+import { SUPPORT_EMAIL } from "../lp/supportLabels";
 import type { BillingPlans } from "../services/billingApi";
 
 vi.mock("../context/AuthContext", () => ({
@@ -419,6 +420,17 @@ describe("PlansHome", () => {
         renderPage();
         const contact = await screen.findByText("Contact us");
         expect(contact.closest("a")?.getAttribute("href")).toContain("mailto:");
+    });
+
+    // MIP-1839: the Enterprise button used a second support address (genos.support@gmail.com).
+    // It must be the one every other page uses (SUPPORT_EMAIL), the same address as the site.
+    it("enterprise card mails the one support address the site uses (MIP-1839)", async () => {
+        renderPage();
+        const contact = await screen.findByText("Contact us");
+        expect(contact.closest("a")?.getAttribute("href")).toBe(
+            `mailto:${SUPPORT_EMAIL}?subject=Genos%20Enterprise`
+        );
+        expect(SUPPORT_EMAIL).toBe("genos.support@genosai.dev");
     });
 
     it("Stripe-dark backend still renders the comparison, without buttons", async () => {
