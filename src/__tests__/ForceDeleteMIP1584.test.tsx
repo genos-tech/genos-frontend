@@ -66,11 +66,35 @@ describe("forceDelete service", () => {
     });
 });
 
-const renderDialog = (onConfirm: () => Promise<unknown>, onClose = vi.fn()) =>
+describe("forceDeleteAllMyMessages never claims success it did not get (MIP-1943)", () => {
+    beforeEach(() => post.mockReset());
+
+    it("rejects when the server still reports messages after a round that removed none", async () => {
+        post.mockReturnValue(ok({ removed: { messages: 0 }, remaining: 5 }));
+        await expect(forceDeleteAllMyMessages("tok", "chan")).rejects.toMatchObject({
+            code: "incomplete",
+        });
+        expect(post.mock.calls.length).toBeLessThan(5);
+    });
+
+    it("rejects when the round cap is reached with messages left", async () => {
+        post.mockReturnValue(ok({ removed: { messages: 1 }, remaining: 5 }));
+        await expect(forceDeleteAllMyMessages("tok", "chan")).rejects.toMatchObject({
+            code: "incomplete",
+        });
+    });
+});
+
+const renderDialog = (
+    onConfirm: () => Promise<unknown>,
+    onClose = vi.fn(),
+    kind?: "task" | "message" | "comment"
+) =>
     render(
         <CssVarsProvider>
             <ForceDeleteDialog
                 description="gone for good"
+                kind={kind}
                 title="Delete it?"
                 open
                 onClose={onClose}
@@ -100,5 +124,25 @@ describe("ForceDeleteDialog", () => {
         fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
         await screen.findByText(/Only its creator or the project owner/);
         expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("words a 403 for what is being deleted (MIP-1943)", async () => {
+        const refuse = () => Promise.reject(new ForceDeleteError(403, "forbidden", "no"));
+        const first = renderDialog(refuse, vi.fn(), "message");
+        fireEvent.change(screen.getByRole("textbox"), { target: { value: "DELETE" } });
+        fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+        await screen.findByText(/Only the sender or the group owner/);
+        first.unmount();
+        renderDialog(refuse, vi.fn(), "comment");
+        fireEvent.change(screen.getByRole("textbox"), { target: { value: "DELETE" } });
+        fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+        await screen.findByText(/Only its author/);
+    });
+
+    it("says some are left when the batch loop gave up", async () => {
+        renderDialog(() => Promise.reject(new ForceDeleteError(0, "incomplete", "left")));
+        fireEvent.change(screen.getByRole("textbox"), { target: { value: "DELETE" } });
+        fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+        await screen.findByText(/still there/);
     });
 });

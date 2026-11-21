@@ -291,6 +291,11 @@ export const es: DeepPartial<Messages> = {
             failed: "No se pudo eliminar. No se quitó nada. Inténtalo de nuevo.",
             notAllowed:
                 "Solo su creador o el propietario del proyecto puede eliminarlo definitivamente.",
+            notAllowedMessage:
+                "Solo quien lo envió o el propietario del grupo puede eliminarlo definitivamente.",
+            notAllowedComment: "Solo su autor puede eliminarlo definitivamente.",
+            incomplete:
+                "Aún quedan algunos de tus mensajes. Inténtalo de nuevo para eliminar el resto.",
             hasSubtasks: "Elimina o mueve antes sus subtareas.",
             isMilestone: "La tarea de un hito se elimina con el hito.",
             taskLinked: "Este mensaje pertenece a una tarea. Elimina la tarea o el comentario.",

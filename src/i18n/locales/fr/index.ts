@@ -1841,6 +1841,11 @@ export const fr: DeepPartial<Messages> = {
             failed: "Suppression impossible. Rien n’a été retiré. Réessayez.",
             notAllowed:
                 "Seul son créateur ou le propriétaire du projet peut la supprimer définitivement.",
+            notAllowedMessage:
+                "Seul l’expéditeur ou le propriétaire du groupe peut le supprimer définitivement.",
+            notAllowedComment: "Seul son auteur peut le supprimer définitivement.",
+            incomplete:
+                "Certains de vos messages sont encore là. Réessayez pour supprimer le reste.",
             hasSubtasks: "Supprimez ou déplacez d’abord ses sous-tâches.",
             isMilestone: "La tâche d’un jalon est supprimée avec le jalon.",
             taskLinked:

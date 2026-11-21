@@ -683,6 +683,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                         <ForceDeleteDialog
                             description={t.common.forceDelete.commentDescription}
                             hostZIndex={hostZIndex}
+                            kind="comment"
                             open={openForceDelete}
                             title={t.common.forceDelete.commentTitle}
                             onClose={() => setOpenForceDelete(false)}

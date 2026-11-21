@@ -394,6 +394,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             {message.messageIdWithChatId && (
                 <ForceDeleteDialog
                     description={t.common.forceDelete.messageDescription}
+                    kind="message"
                     open={openForceDelete}
                     title={t.common.forceDelete.messageTitle}
                     onClose={() => setOpenForceDelete(false)}
@@ -401,12 +402,18 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                         await forceDeleteMessage(accessToken, message.messageIdWithChatId!);
                         // The server's delete is idempotent: this one tells the open chat and the
                         // other members' apps, and clears the local copy.
-                        await deleteMessage(
-                            accessToken,
-                            message.chatType,
-                            message.chatId as unknown as string,
-                            message.messageIdWithChatId!
-                        );
+                        // The erase has succeeded: a failure here must not tell the person that
+                        // nothing was removed (the sync clears the local copy anyway, MIP-1943).
+                        try {
+                            await deleteMessage(
+                                accessToken,
+                                message.chatType,
+                                message.chatId as unknown as string,
+                                message.messageIdWithChatId!
+                            );
+                        } catch {
+                            /* already erased on the server */
+                        }
                     }}
                 />
             )}

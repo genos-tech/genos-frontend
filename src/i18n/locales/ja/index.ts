@@ -1823,6 +1823,10 @@ export const ja: DeepPartial<Messages> = {
             cancel: "キャンセル",
             failed: "削除できませんでした。何も削除されていません。もう一度お試しください。",
             notAllowed: "完全に削除できるのは、作成者またはプロジェクトのオーナーのみです。",
+            notAllowedMessage: "完全に削除できるのは、送信者またはグループのオーナーのみです。",
+            notAllowedComment: "完全に削除できるのは、投稿者のみです。",
+            incomplete:
+                "まだ削除されていないメッセージがあります。もう一度実行して残りを削除してください。",
             hasSubtasks: "先にサブタスクを削除または移動してください。",
             isMilestone: "マイルストーンのタスクは、マイルストーンと一緒に削除されます。",
             taskLinked:

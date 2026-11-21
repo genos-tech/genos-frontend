@@ -81,17 +81,23 @@ export const forceDeleteNote = (
     noteId: number
 ) => post(accessToken, `/api/v3/notes/${family}/${noteId}/force-delete/`);
 
-/** Every batch of "all my messages" until the server says none remain (a guard stops a loop that
- *  makes no progress). */
+/** Rounds are 200 messages each (the server's batch); this is a runaway guard, not a limit anyone meets. */
+const MAX_ROUNDS = 200;
+
+/** Every batch of "all my messages" until the server says none remain. Resolves with how many were
+ *  erased; rejects with code `incomplete` when messages are still left because a round made no
+ *  progress or the guard ran out, so the caller never shows a success it did not get (MIP-1943). */
 export const forceDeleteAllMyMessages = async (
     accessToken: string | null,
     channelId: string
 ): Promise<number> => {
     let total = 0;
-    for (let round = 0; round < 50; round += 1) {
+    for (let round = 0; round < MAX_ROUNDS; round += 1) {
         const res = await forceDeleteMyMessages(accessToken, channelId);
-        total += res.removed.messages ?? 0;
+        const removed = res.removed.messages ?? 0;
+        total += removed;
         if (!res.remaining) return total;
+        if (removed === 0) break;
     }
-    return total;
+    throw new ForceDeleteError(0, "incomplete", "Some messages are still left.");
 };

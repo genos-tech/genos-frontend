@@ -19,7 +19,7 @@ import {
     NAV_KEEP_CLASS,
 } from "../../../../components/ui/nav/navStyles";
 import { anchoredTallHitAreaSx } from "../../../../components/ui/touchTargets";
-import { useAuth } from "../../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../../context/AuthContext";
 import { useTranslation } from "../../../../i18n";
 import { forceDeleteAllMyMessages } from "../../../../services/forceDelete";
 import { g } from "../../../../theme/tokens";
@@ -57,7 +57,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     isToDoVisible,
 }) => {
     const { t } = useTranslation();
-    const { accessToken } = useAuth();
+    const accessToken = useOptionalAccessToken();
     const [openForceDelete, setOpenForceDelete] = useState(false);
     // "Delete all my messages" (MIP-1584): a DM or a multi-person DM only. Each person deletes
     // their own side; the other person's messages and the chat stay.
