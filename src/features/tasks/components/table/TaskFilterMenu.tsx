@@ -24,6 +24,7 @@ import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
+import { startOfTodayMs } from "../../../../utils/calendarDate";
 import { SavedFilterPayload } from "../../services/projectSavedFilters";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import {
@@ -43,6 +44,7 @@ import {
     taskTypes,
 } from "../../types/TaskTableTypes";
 import { selectAncestorVerdicts } from "../../utils/closedByAncestor";
+import { isExpiredDue } from "../../utils/dueWindow";
 import {
     selectMilestoneRowsForSelection,
     selectMilestonesWithMatchingChildren,
@@ -1183,7 +1185,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             ? storedEffortLevels
             : [predefinedEffortLevelFilters[0]];
         const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
-        const now = Date.now();
+        const todayStart = startOfTodayMs();
 
         // --- Status predicate ---
         // Two axes: status-string match + expired-due-date check. Mirrors
@@ -1359,8 +1361,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 }
                 if (requireExpired) {
                     if (!task.dueDate) continue;
-                    const ts = new Date(task.dueDate).getTime();
-                    if (!Number.isFinite(ts) || ts >= now) continue;
+                    // A calendar day: due today is not expired (MIP-1816).
+                    if (!isExpiredDue(task.dueDate, todayStart)) continue;
                 }
             }
 

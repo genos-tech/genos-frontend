@@ -43,6 +43,19 @@ export const calendarDaysUntil = (
     return Math.round((due.getTime() - today.getTime()) / 86_400_000);
 };
 
+/** Local midnight of the viewer's today, in ms. */
+export const startOfTodayMs = (now: Date = new Date()): number =>
+    new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+/**
+ * A due / start / end date as the ms of its calendar day's LOCAL midnight, comparable with
+ * `startOfTodayMs()`: a day is "past" when this is `< startOfTodayMs()`, so a task due today is
+ * not overdue (MIP-1816). An unparseable string falls back to `new Date(iso).getTime()` (NaN
+ * when empty), as the callers always did.
+ */
+export const calendarDayMs = (iso: string): number =>
+    (parseCalendarDate(iso) ?? new Date(iso)).getTime();
+
 /** "Dec 2" in the app's language (`locale` from `useTranslation()`); `null` when unparseable. */
 export const formatMonthDay = (iso: string | null | undefined, locale: Locale): string | null => {
     const date = parseCalendarDate(iso);
