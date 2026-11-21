@@ -1,4 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
+import { calendarDaysUntil } from "../../../utils/calendarDate";
 import { EFFORT_RANK, PRIORITY_RANK } from "./sortTask";
 
 /**
@@ -73,17 +74,6 @@ export const EFFORT_HEAD_START_DAYS: Record<string, number> = {
 export const effortHeadStart = (effortLevel: string | null | undefined): number =>
     EFFORT_HEAD_START_DAYS[effortLevel ?? ""] ?? 0;
 
-// Whole-day difference from *today* to the due date, both normalized to
-// local midnight — matches the dashboard's `formatDueLabel` math so the
-// two never disagree on what "1 day left" means.
-const daysUntil = (dueDate: string, now: Date): number => {
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(dueDate);
-    d.setHours(0, 0, 0, 0);
-    return Math.round((d.getTime() - today.getTime()) / 86400000);
-};
-
 const clamp = (n: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, n));
 
 /**
@@ -103,8 +93,8 @@ export const urgencyPoints = (
     now: Date = new Date()
 ): number => {
     if (!dueDate) return 1;
-    const diff = daysUntil(dueDate, now);
-    if (Number.isNaN(diff)) return 1;
+    const diff = calendarDaysUntil(dueDate, now);
+    if (diff == null) return 1;
     return clamp(6 - diff, 1, 5);
 };
 
@@ -127,8 +117,8 @@ export const startUrgencyPoints = (
     now: Date = new Date()
 ): number => {
     if (!dueDate) return 1;
-    const diff = daysUntil(dueDate, now);
-    if (Number.isNaN(diff)) return 1;
+    const diff = calendarDaysUntil(dueDate, now);
+    if (diff == null) return 1;
     return clamp(6 - (diff - effortHeadStart(effortLevel)), 1, 5);
 };
 
@@ -160,8 +150,8 @@ export const dueBucket = (
     now: Date = new Date()
 ): DueBucket => {
     if (!dueDate) return "none";
-    const diff = daysUntil(dueDate, now);
-    if (Number.isNaN(diff)) return "none";
+    const diff = calendarDaysUntil(dueDate, now);
+    if (diff == null) return "none";
     if (diff < 0) return "overdue";
     if (diff === 0) return "today";
     if (diff <= 7) return "week";

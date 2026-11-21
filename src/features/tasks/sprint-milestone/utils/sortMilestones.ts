@@ -1,3 +1,4 @@
+import { parseCalendarDate } from "../../../../utils/calendarDate";
 import { statusSolid } from "../../meta/taskTone";
 import { Milestone, Sprint } from "../types";
 
@@ -283,7 +284,8 @@ export const groupMilestonesByYearAndSprint = (
         const raw =
             (m.sprintId != null ? sprintById.get(m.sprintId)?.endDate : null) || m.dueDate || null;
         if (!raw) return MILESTONE_YEAR_UNKNOWN;
-        const y = new Date(raw).getFullYear();
+        // A calendar day: `new Date("2026-01-01")` is Dec 31 2025 west of UTC (MIP-1811).
+        const y = (parseCalendarDate(raw) ?? new Date(raw)).getFullYear();
         return Number.isFinite(y) ? String(y) : MILESTONE_YEAR_UNKNOWN;
     };
     const sprintEndTime = (sprintId: number | null): number => {

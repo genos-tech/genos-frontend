@@ -8,6 +8,7 @@ import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { fmt, useTranslation, type Locale } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { TaskProps, TaskTableProps } from "../../../types/tasks";
+import { formatMonthDay } from "../../../utils/calendarDate";
 import { getCachedOrFetchTaskStatus, type TaskStatusResult } from "../services/taskStatusCache";
 import { deriveDaysLeft } from "../utils/daysLeft";
 import { MilestoneFlag, TagStrip } from "./card/parts";
@@ -83,10 +84,7 @@ const vmFromFull = (t: TaskProps): CardVM => ({
 
 const fmtDate = (iso: string | null | undefined, locale: Locale): string | null => {
     if (!iso) return null;
-    const d = new Date(iso);
-    return Number.isNaN(d.getTime())
-        ? iso
-        : d.toLocaleDateString(locale, { month: "short", day: "numeric" });
+    return formatMonthDay(iso, locale) ?? iso;
 };
 
 // Same rule as the cards: red when expired, amber within a week, else quiet.

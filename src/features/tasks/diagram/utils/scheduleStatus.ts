@@ -4,6 +4,7 @@
 // or overdue?" the same way, with the same color thresholds.
 
 import type { Locale } from "../../../../i18n";
+import { parseCalendarDate } from "../../../../utils/calendarDate";
 
 export type ScheduleTone = "neutral" | "amber" | "red" | "success";
 
@@ -34,15 +35,9 @@ export type ScheduleStatus = {
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-const parseIsoDate = (iso: string | null | undefined): Date | null => {
-    if (!iso) return null;
-    const trimmed = iso.length >= 10 ? iso.slice(0, 10) : iso;
-    const d = new Date(trimmed);
-    if (Number.isNaN(d.getTime())) return null;
-    // Anchor at local midnight so relative-day math doesn't drift
-    // across timezones.
-    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-};
+// A due date is a calendar day: local midnight of that day, in every time zone. `new Date("2026-12-02")`
+// is UTC midnight, which the local getters read as Dec 1 west of UTC (MIP-1811).
+const parseIsoDate = parseCalendarDate;
 
 const todayLocalMidnight = (): Date => {
     const n = new Date();
