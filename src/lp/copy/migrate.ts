@@ -41,7 +41,7 @@ export interface MigrateCopy {
 export const MIGRATE_COPY: Record<Lang, MigrateCopy> = {
     en: {
         title: "Moving to Genos",
-        lead: "What you can bring into Genos today, how to bring it, and what has no import yet. Genos does not sync with other tools. TODO(copy): MIP-1260",
+        lead: "What you can bring into Genos today, how to bring it, and what has no import yet. Genos does not sync with Slack, Notion, Jira or Google Docs. TODO(copy): MIP-1260",
         startHeading: "Start with one project",
         startIntro:
             "Move one piece of work first, not the whole company. Keep the old tool open, read-only, for its history.",
@@ -98,7 +98,7 @@ export const MIGRATE_COPY: Record<Lang, MigrateCopy> = {
     },
     ja: {
         title: "Genos への移行",
-        lead: "今すぐ Genos に持ち込めるもの、その方法、まだ取り込みができないものをまとめました。Genos は他のツールと同期しません。 TODO(copy): MIP-1260",
+        lead: "今すぐ Genos に持ち込めるもの、その方法、まだ取り込みができないものをまとめました。Genos は Slack、Notion、Jira、Google ドキュメントとは同期しません。 TODO(copy): MIP-1260",
         startHeading: "まずは1つのプロジェクトから",
         startIntro:
             "会社全体ではなく、1つの仕事から始めてください。古いツールは、履歴を見るために読み取り専用で開いたままにしておくと安心です。",
