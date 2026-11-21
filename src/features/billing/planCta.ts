@@ -99,6 +99,12 @@ export const planCta = ({
         return alreadyEnding ? { kind: "none" } : { kind: "cancel" };
     }
     if (!purchasable) return { kind: "none" };
+    // The plan row already says "Changes to <plan> on <date>" for a
+    // downgrade that is scheduled. Switching to that same plan again
+    // changes nothing in Stripe (MIP-1848, test mode), so no button.
+    if (subscription.pending_plan && subscription.pending_plan === cardTier) {
+        return { kind: "none" };
+    }
 
     const plan = cardTier as PurchasablePlan;
     return TIER_RANK[cardTier] > TIER_RANK[personalTier]

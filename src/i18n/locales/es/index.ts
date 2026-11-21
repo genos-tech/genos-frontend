@@ -119,11 +119,12 @@ export const es: DeepPartial<Messages> = {
             loading: "Cargando",
             preparingWorkspace: "Preparando tu espacio de trabajo",
             takingLonger: "¿Está tardando más de lo esperado?",
-            sessionExpired: "Es posible que tu sesión haya caducado",
-            signInAgain: "Iniciar sesión de nuevo",
             offlineTitle: "Estás sin conexión",
             offlineBody:
                 "No se puede conectar con el servidor ahora mismo. Se reanudará automáticamente en cuanto vuelva la conexión.",
+            stillConnecting:
+                "Seguimos conectando con el servidor. Con una conexión lenta puede tardar un momento.",
+            reload: "Recargar",
         },
         modalView: {
             chatUnavailable: "Este chat no está disponible.",
@@ -2433,6 +2434,7 @@ export const es: DeepPartial<Messages> = {
             clearLabelFilter: "Limpiar filtro",
             noLabels: "Aún no hay etiquetas de proyecto",
             noProjectsMatchFilter: "Ningún proyecto coincide con este filtro",
+            filterProjectsPlaceholder: "Filtrar proyectos…",
             pastMilestones: "Hitos pasados",
         },
         header: {

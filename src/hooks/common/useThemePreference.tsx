@@ -1,6 +1,7 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { ThemePreference, ThemePreferenceContext } from "./themePreferenceContext";
 import { DensityPreferenceProvider } from "./useDensityPreference";
 import { useUiSettings } from "./useUiSettings";
 
@@ -25,8 +26,6 @@ import { useUiSettings } from "./useUiSettings";
  * `mode` will now reliably be `"light"` or `"dark"`.
  */
 
-export type ThemePreference = "light" | "dark" | "system";
-
 const STORAGE_KEY = "genos-theme-preference";
 // Key inside the cross-device `ui_settings` store. localStorage stays the
 // synchronous source for first paint (theme is read pre-auth, before any
@@ -46,13 +45,6 @@ const systemPrefersDark = (): boolean =>
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-interface ThemePreferenceContextValue {
-    preference: ThemePreference;
-    setPreference: (p: ThemePreference) => void;
-}
-
-const ThemePreferenceContext = createContext<ThemePreferenceContextValue | null>(null);
 
 export const ThemePreferenceProvider = ({ children }: { children: ReactNode }) => {
     const { setMode } = useColorScheme();
@@ -122,15 +114,4 @@ export const ThemePreferenceProvider = ({ children }: { children: ReactNode }) =
             <DensityPreferenceProvider>{children}</DensityPreferenceProvider>
         </ThemePreferenceContext.Provider>
     );
-};
-
-export const useThemePreference = (): ThemePreferenceContextValue => {
-    const ctx = useContext(ThemePreferenceContext);
-    if (!ctx) {
-        // Provider not mounted yet (or consumed outside the tree). Return a
-        // no-op stub so callers don't crash; the real provider will take
-        // over once the App tree mounts.
-        return { preference: "system", setPreference: () => {} };
-    }
-    return ctx;
 };

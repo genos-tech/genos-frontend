@@ -288,11 +288,12 @@ export const hi: DeepPartial<Messages> = {
             loading: "लोड हो रहा है",
             preparingWorkspace: "आपका वर्कस्पेस तैयार किया जा रहा है",
             takingLonger: "उम्मीद से ज़्यादा समय लग रहा है?",
-            sessionExpired: "हो सकता है आपका सेशन समाप्त हो गया हो",
-            signInAgain: "फिर से साइन इन करें",
             offlineTitle: "आप ऑफ़लाइन हैं",
             offlineBody:
                 "अभी सर्वर से कनेक्ट नहीं हो पा रहा है। कनेक्शन लौटते ही यह अपने आप फिर से शुरू हो जाएगा।",
+            stillConnecting:
+                "अब भी सर्वर से कनेक्ट हो रहा है। धीमे कनेक्शन पर इसमें थोड़ा समय लग सकता है।",
+            reload: "फिर से लोड करें",
         },
         modalView: {
             openFullPage: "पेज पर ले जाएँ",
@@ -2417,6 +2418,7 @@ export const hi: DeepPartial<Messages> = {
             clearLabelFilter: "फ़िल्टर साफ़ करें",
             noLabels: "अभी तक कोई प्रोजेक्ट लेबल नहीं है",
             noProjectsMatchFilter: "कोई भी प्रोजेक्ट इस फ़िल्टर से मेल नहीं खाता",
+            filterProjectsPlaceholder: "प्रोजेक्ट फ़िल्टर करें…",
             addMilestone: "माइलस्टोन जोड़ें",
             pastMilestones: "पिछले माइलस्टोन",
             moveToNoSprint: "यहाँ ले जाएँ: कोई स्प्रिंट नहीं",

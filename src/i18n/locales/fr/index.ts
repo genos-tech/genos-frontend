@@ -2017,11 +2017,12 @@ export const fr: DeepPartial<Messages> = {
             loading: "Chargement",
             preparingWorkspace: "Préparation de votre espace de travail",
             takingLonger: "Cela prend plus de temps que prévu ?",
-            sessionExpired: "Votre session a peut-être expiré",
-            signInAgain: "Se reconnecter",
             offlineTitle: "Vous êtes hors ligne",
             offlineBody:
                 "Genos ne peut pas joindre le serveur pour le moment. Tout reprendra automatiquement dès le retour de la connexion.",
+            stillConnecting:
+                "Connexion au serveur en cours. Sur une connexion lente, cela peut prendre un moment.",
+            reload: "Recharger",
         },
         modalView: {
             openFullPage: "Aller à la page",
@@ -5227,6 +5228,7 @@ export const fr: DeepPartial<Messages> = {
             clearLabelFilter: "Effacer le filtre",
             noLabels: "Aucun libellé de projet pour l'instant",
             noProjectsMatchFilter: "Aucun projet ne correspond à ce filtre",
+            filterProjectsPlaceholder: "Filtrer les projets…",
             addMilestone: "Ajouter un jalon",
             pastMilestones: "Jalons passés",
             moveToNoSprint: "Déplacer vers : Aucun sprint",

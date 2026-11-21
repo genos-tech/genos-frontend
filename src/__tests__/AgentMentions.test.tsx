@@ -840,3 +840,49 @@ describe("useSpotlight keeps the agent stream running after close", () => {
         expect(result.current.ask.isStreaming).toBe(false);
     });
 });
+
+// MIP-1701: with 60 people in the pool, the `@` picker (8 rows) must still
+// show the matching groups. Groups sort before people.
+describe("useAgentMentionDraft: groups before people (MIP-1701)", () => {
+    const PEOPLE = Array.from({ length: 60 }, (_, i) => member(`u-p${i}`, `Pay Person ${i}`));
+    const GROUPS: AgentMentionCandidate[] = [
+        { ref: { kind: "group", groupId: 1, label: "payments" }, trigger: "@", key: "group:1" },
+        {
+            ref: { kind: "group", groupId: 2, label: "payments-oncall" },
+            trigger: "@",
+            key: "group:2",
+        },
+    ];
+
+    function useBigPoolHarness() {
+        const [value, setValue] = useState("");
+        const draft = useAgentMentionDraft({
+            value,
+            onChange: setValue,
+            members: [...PEOPLE, ...GROUPS],
+            entities: [],
+        });
+        return { value, setValue, draft };
+    }
+
+    it("shows the matching groups within the first 8 suggestions", () => {
+        const { result } = renderHook(() => useBigPoolHarness());
+        act(() => {
+            result.current.setValue("hi @pay");
+        });
+        act(() => {
+            result.current.draft.setCaret(7);
+        });
+        expect(result.current.draft.pickerOpen).toBe(true);
+        expect(result.current.draft.suggestions.map((s) => s.key)).toEqual([
+            "group:1",
+            "group:2",
+            "user:u-p0",
+            "user:u-p1",
+            "user:u-p2",
+            "user:u-p3",
+            "user:u-p4",
+            "user:u-p5",
+        ]);
+    });
+});

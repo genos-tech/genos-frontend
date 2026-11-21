@@ -621,13 +621,6 @@ export const useNoteManagement = (
         });
     }, []);
 
-    const chatTypeLabels: Record<number, string> = {
-        1: "DM",
-        2: "GM",
-        3: "PM",
-        4: "DM",
-    };
-
     // Chat Note related
     const handleCreateNewChatNote = async (
         parentNoteId: number | null,
