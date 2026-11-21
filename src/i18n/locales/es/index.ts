@@ -3938,6 +3938,8 @@ export const es: DeepPartial<Messages> = {
             teamConnection: "Conexión de equipo",
             externalShare: "Compartido con tu equipo",
             genosReport: "Informe de Genos",
+            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
+            trialNotice: "Prueba gratuita",
         },
         report: {
             showMore: "Mostrar {count} más",

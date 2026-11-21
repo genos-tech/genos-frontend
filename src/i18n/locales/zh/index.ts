@@ -2481,6 +2481,8 @@ export const zh: DeepPartial<Messages> = {
             messageReminder: "提醒",
             todoReminder: "待办提醒",
             genosReport: "Genos 报告",
+            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
+            trialNotice: "免费试用",
         },
         report: {
             showMore: "再显示 {count} 项",

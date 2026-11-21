@@ -3878,6 +3878,8 @@ export const ar: DeepPartial<Messages> = {
             teamConnection: "اتصال الفريق",
             externalShare: "مشتركة مع فريقك",
             genosReport: "تقرير Genos",
+            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
+            trialNotice: "تجربة مجانية",
         },
         report: {
             showMore: "عرض {count} أخرى",

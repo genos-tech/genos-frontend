@@ -2598,6 +2598,8 @@ export const fr: DeepPartial<Messages> = {
             messageReminder: "Rappel",
             todoReminder: "Rappel de tâche",
             genosReport: "Rapport Genos",
+            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
+            trialNotice: "Essai gratuit",
         },
         report: {
             showMore: "Afficher {count} de plus",
