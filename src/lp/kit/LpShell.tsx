@@ -12,6 +12,7 @@ import { isTermsPageEnabled } from "../termsFlag";
 import { ConsentBanner } from "./ConsentBanner";
 import { APP_URL, CONTACT_EMAIL, DEMO_URL, SIGNUP_URL } from "./links";
 import { useLpMode } from "./lpTheme";
+import { useLpScrollReset } from "./useLpScrollReset";
 
 export type NavKey = "home" | "features" | "developers" | "plans" | "blog" | "demo" | null;
 
@@ -170,6 +171,7 @@ export function LpShell({
     children: (api: ShellApi) => ReactNode;
 }) {
     const { lang, setLang, appHref } = useLpLang();
+    useLpScrollReset();
     const { mode, toggleMode, style } = useLpMode();
     const [menuOpen, setMenuOpen] = useState(false);
     const t = SHELL[lang];
