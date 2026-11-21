@@ -3141,12 +3141,14 @@ export const ar: DeepPartial<Messages> = {
             wasMerged: "تم دمجها",
             linkedPullRequest: "طلب سحب مرتبط",
             justNow: "الآن",
-            minuteAgo: "{count} منذ دقيقة",
-            minutesAgo: "{count} منذ دقائق",
-            hourAgo: "{count} منذ ساعة",
-            hoursAgo: "{count} منذ ساعات",
-            dayAgo: "{count} منذ يوم",
-            daysAgo: "{count} منذ أيام",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "منذ" first with the count inside the phrase; one is said as a
+            // word, kept in a plural so {count} stays (the catalog contract tests need it). Arabic dual (2) and 11+ forms are not expressed (fmt has one/other only; MIP-1806).
+            minuteAgo: "{count, plural, one {منذ دقيقة} other {منذ # دقائق}}",
+            minutesAgo: "منذ {count} دقائق",
+            hourAgo: "{count, plural, one {منذ ساعة} other {منذ # ساعات}}",
+            hoursAgo: "منذ {count} ساعات",
+            dayAgo: "{count, plural, one {منذ يوم} other {منذ # أيام}}",
+            daysAgo: "منذ {count} أيام",
             progress: {
                 scopeLabel: "عرض",
                 scopeOwn: "تغييراته",
@@ -4147,9 +4149,10 @@ export const ar: DeepPartial<Messages> = {
             listLoadFailed: "تعذر تحميل محادثاتك السابقة.",
             turnCount: "{count, plural, one {#دور} other {#دور}}",
             relativeJustNow: "الآن",
-            relativeMinutes: "{count, plural, one {# قبل دقيقة} other {# قبل دقيقة}}",
-            relativeHours: "{count, plural, one {# قبل ساعة} other {# قبل ساعات}}",
-            relativeDays: "{count, plural, one {# قبل يوم} other {# قبل أيام}}",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. The count sat before "قبل"; it now sits inside the phrase.
+            relativeMinutes: "{count, plural, one {قبل دقيقة} other {قبل # دقائق}}",
+            relativeHours: "{count, plural, one {قبل ساعة} other {قبل # ساعات}}",
+            relativeDays: "{count, plural, one {قبل يوم} other {قبل # أيام}}",
             readOnlyHint: "للقراءة فقط - ابدأ محادثة جديدة لطلب المتابعة.",
         },
     },
@@ -5846,12 +5849,14 @@ export const ar: DeepPartial<Messages> = {
         },
         relative: {
             justNow: "الآن",
-            minutes: "{count}م منذ",
-            hours: "{count}h منذ",
-            days: "{count}d منذ",
-            weeks: "{count}w منذ",
-            months: "{count}شهر مضت",
-            years: "{count}y مضت",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. Arabic words, "منذ" first, no Latin unit letters. Dual (2) and
+            // 11+ forms are not expressed (fmt has one/other only; MIP-1806).
+            minutes: "{count, plural, one {منذ دقيقة} other {منذ # دقائق}}",
+            hours: "{count, plural, one {منذ ساعة} other {منذ # ساعات}}",
+            days: "{count, plural, one {منذ يوم} other {منذ # أيام}}",
+            weeks: "{count, plural, one {منذ أسبوع} other {منذ # أسابيع}}",
+            months: "{count, plural, one {منذ شهر} other {منذ # أشهر}}",
+            years: "{count, plural, one {منذ سنة} other {منذ # سنوات}}",
         },
         messageNumber: "الرسالة رقم {id}",
         emptyTitle: "لا يوجد سجل بعد",
@@ -6040,7 +6045,8 @@ export const ar: DeepPartial<Messages> = {
                 files: "{count, plural, one {# ملف} other {# ملفات}}",
                 comments: "{count, plural, one {# تعليق} other {# تعليقات}}",
                 updated: "تم التحديث {when}",
-                ago: "{count} {unit} منذ",
+                // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. "منذ" first.
+                ago: "منذ {count} {unit}",
                 units: {
                     second: "ثانية",
                     seconds: "ثوانٍ",

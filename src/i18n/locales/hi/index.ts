@@ -2870,10 +2870,12 @@ export const hi: DeepPartial<Messages> = {
             pullRequest: "एक पुल अनुरोध",
             wasMerged: "विलय कर दिया गया",
             linkedPullRequest: "लिंक्ड पुल अनुरोध",
-            justNow: "बस अब",
+            // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
+            justNow: "अभी-अभी",
             minuteAgo: "{count} मिनट पहले",
             minutesAgo: "{count} मिनट पहले",
-            hourAgo: "{count} घंटे पहले",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. One hour is "घंटा", more are "घंटे".
+            hourAgo: "{count} घंटा पहले",
             hoursAgo: "{count} घंटे पहले",
             dayAgo: "{count} दिन पहले",
             daysAgo: "{count} दिन पहले",
@@ -4226,7 +4228,8 @@ export const hi: DeepPartial<Messages> = {
                 updated: "{when} को अपडेट",
                 ago: "{count} {unit} पहले",
                 units: {
-                    second: "दूसरा",
+                    // TODO(copy): MIP-1775 "दूसरा" is the ordinal "second"; "सेकंड" is the unit.
+                    second: "सेकंड",
                     seconds: "सेकंड",
                     minute: "मिनट",
                     minutes: "मिनट",
@@ -5957,13 +5960,15 @@ export const hi: DeepPartial<Messages> = {
             teamNote: "टीम नोट",
         },
         relative: {
-            justNow: "बस अब",
-            minutes: "{count}m पहले",
-            hours: "{count}h पहले",
-            days: "{count}d पहले",
-            weeks: "{count}w पहले",
-            months: "{count}mo पहले",
-            years: "{count}y पहले",
+            // TODO(copy): MIP-1775 draft, aligned with the catalog's own "just now" wording.
+            justNow: "अभी-अभी",
+            // TODO(copy): MIP-1775 draft wording, to be read by a native speaker. Devanagari words instead of Latin unit letters (m, h, d, w, mo, y).
+            minutes: "{count} मिनट पहले",
+            hours: "{count, plural, one {# घंटा पहले} other {# घंटे पहले}}",
+            days: "{count} दिन पहले",
+            weeks: "{count} सप्ताह पहले",
+            months: "{count, plural, one {# महीना पहले} other {# महीने पहले}}",
+            years: "{count} साल पहले",
         },
         messageNumber: "संदेश #{id}",
         emptyTitle: "अभी कोई हिस्ट्री नहीं",
