@@ -488,6 +488,58 @@
     }
 }
 
+/*
+ * Narrow headers (MIP-1851). Measured at 195 CSS px (a 390 px phone at 200% text) the full
+ * header is about 170 px too wide, so below 480 px the language switch moves into the menu;
+ * below 360 px the wordmark drops to the logo mark (the link keeps its "Genos" name). What
+ * remains at 195 px is the logo, the theme switch and the menu button, and it fits.
+ */
+.lp-menu__lang {
+    display: none;
+    margin-top: 12px;
+    justify-self: start;
+}
+
+@media (max-width: 480px) {
+    .lp-header__row {
+        gap: 12px;
+    }
+
+    .lp-header__lang {
+        display: none;
+    }
+
+    .lp-menu__lang {
+        display: inline-flex;
+    }
+}
+
+@media (max-width: 360px) {
+    .lp-logo__name {
+        display: none;
+    }
+}
+
+/* index.css gives the app's body a min-width (320 px, 280 px on phones) inside @layer base; an
+   unlayered rule wins over it, and only while LpShell has marked the body (MIP-1851). */
+body.lp-body {
+    min-width: 0;
+}
+
+/* Touch targets (WCAG 2.5.8 needs 24 px; on a touch screen the header controls are 44 px). */
+@media (pointer: coarse) {
+    .lp-header .lp-icon-btn,
+    .lp-menu .lp-seg button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .lp-header .lp-icon-btn {
+        width: 44px;
+        height: 44px;
+    }
+}
+
 /* Mobile menu: the one overlay on these pages, so the one blur. */
 .lp-menu {
     position: fixed;
