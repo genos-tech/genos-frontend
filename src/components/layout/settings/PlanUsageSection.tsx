@@ -343,6 +343,25 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                                     {p.cancelScheduled}
                                 </Typography>
                             )}
+                            {subscription.pending_plan &&
+                                subscription.pending_change_at != null && (
+                                    <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                                        {fmt(p.pendingChange, {
+                                            plan: {
+                                                core: p.tierCore,
+                                                pro: p.tierPro,
+                                                max: p.tierMax,
+                                            }[subscription.pending_plan],
+                                            date: new Date(
+                                                subscription.pending_change_at * 1000
+                                            ).toLocaleDateString(locale, {
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                            }),
+                                        })}
+                                    </Typography>
+                                )}
                             {subscription.status === "past_due" && (
                                 <Typography color="danger" level="body-xs">
                                     {p.pastDue}

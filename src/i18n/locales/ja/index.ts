@@ -3987,6 +3987,7 @@ export const ja: DeepPartial<Messages> = {
             planRenews: "次回更新日",
             planEnds: "プラン終了日",
             cancelScheduled: "解約が予約されています。プランはこの日まで有効です。",
+            pendingChange: "{date} に {plan} へ変更",
             pastDue: "お支払いに問題があります。ポータルからお支払い方法を更新してください。",
             plansHeading: "プランと料金",
             plansSubheading:

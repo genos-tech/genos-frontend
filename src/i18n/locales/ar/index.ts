@@ -620,6 +620,7 @@ export const ar: DeepPartial<Messages> = {
             planRenews: "يتجدد في",
             planEnds: "تنتهي الخطة في",
             cancelScheduled: "تم جدولة الإلغاء — تظل خطتك فعّالة حتى هذا التاريخ.",
+            pendingChange: "تغيير إلى {plan} في {date}",
             pastDue: "هناك مشكلة في الدفع — يرجى تحديث طريقة الدفع في بوابة الفوترة.",
             plansHeading: "الخطط والأسعار",
             plansSubheading:

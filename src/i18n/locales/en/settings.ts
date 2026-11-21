@@ -516,6 +516,7 @@ export const settings = {
         planRenews: "Renews on",
         planEnds: "Plan ends on",
         cancelScheduled: "Cancellation is scheduled — your plan stays active until this date.",
+        pendingChange: "Changes to {plan} on {date}",
         pastDue:
             "There's a payment problem — please update your payment method in the billing portal.",
         plansHeading: "Plans & pricing",
