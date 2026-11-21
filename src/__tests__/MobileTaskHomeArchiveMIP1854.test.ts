@@ -138,7 +138,7 @@ describe.skipIf(!chrome)(
                 expect(m.banner).toBeTruthy();
                 expect(m.bannerButtons.length).toBe(1);
                 expect(m.createPresent).toBe(false);
-                expect(m.listInert).toBe(true);
+                expect(m.listInert).toBe(false);
                 expect(m.scrollWidth).toBeLessThanOrEqual(m.innerWidth);
                 expect(m.bannerTop).toBeGreaterThanOrEqual(m.headerBottom ?? 0);
                 expect(withMenu.menuItems.some((i) => i?.length)).toBe(true);
@@ -159,7 +159,7 @@ describe.skipIf(!chrome)(
                 expect(m.banner).toBeTruthy();
                 expect(m.bannerButtons.length).toBe(0);
                 expect(m.createPresent).toBe(false);
-                expect(m.listInert).toBe(true);
+                expect(m.listInert).toBe(false);
                 expect(
                     withMenu.menuItems.filter((i) => i && /archive|アーカイブ/i.test(i)).length
                 ).toBe(0);

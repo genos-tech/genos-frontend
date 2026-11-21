@@ -45,6 +45,7 @@ import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { refuseCreateTaskInArchivedChat } from "../../../archive/createTaskGuard";
 import { createEvent, deleteEvent, getEvent } from "../../../integrations/services/calendar";
 import { redirectToOAuthConnect } from "../../../integrations/services/oauth";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
@@ -454,6 +455,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 <MenuRow
                                     icon={<AddTaskRoundedIcon />}
                                     onClick={() => {
+                                        if (refuseCreateTaskInArchivedChat(chat)) return;
                                         useCM.setIsMainChatVisible(true);
                                         useCM.setIsThreadVisible(false);
                                         useTM.setIsTaskPreviewVisible(false);
@@ -623,6 +625,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             color="primary"
                             variant="solid"
                             onClick={() => {
+                                if (refuseCreateTaskInArchivedChat(chat)) return;
                                 useCM.setIsMainChatVisible(true);
                                 useCM.setIsThreadVisible(false);
                                 useTM.setIsTaskPreviewVisible(false);
