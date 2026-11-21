@@ -98,7 +98,6 @@ export type ScheduleHealthTone = "on-track" | "at-risk" | "behind";
 
 export type ScheduleHealth = {
     tone: ScheduleHealthTone;
-    label: string;
     expectedPct: number;
     actualPct: number;
 };
@@ -159,8 +158,7 @@ export const computeHealth = (
     } else {
         tone = "on-track";
     }
-    const label = tone === "on-track" ? "On track" : tone === "at-risk" ? "At risk" : "Behind";
-    return { tone, label, expectedPct, actualPct };
+    return { tone, expectedPct, actualPct };
 };
 
 /** The tone a health verdict speaks in (the colors live in `nodeTone`'s
