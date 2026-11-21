@@ -10,6 +10,7 @@ import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
 import { clearPrivateProfile, ensurePrivateProfile } from "../../../services/privateProfileStore";
+import { refreshSession } from "../../../services/refreshSession";
 import { previewInvite } from "../services/teamInvite";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -24,13 +25,9 @@ type Phase = "loading" | "invalid" | "mismatch";
  */
 const loadSessionEmail = async (setAccessToken: (token: string) => void): Promise<string> => {
     try {
-        const response = await fetch(`${base_url}/user/signin/refresh/`, {
-            method: "GET",
-            credentials: "include",
-        });
-        if (!response.ok) return "";
-        const { access } = (await response.json()) as { access?: string };
-        if (!access) return "";
+        const result = await refreshSession();
+        if (result.kind !== "ok") return "";
+        const { access } = result;
         setAccessToken(access);
         const profile = await ensurePrivateProfile(access);
         return profile?.userEmail ?? "";
