@@ -70,6 +70,8 @@ export interface TeamInviteRow {
     memberRole: string;
     projectId: number | null;
     projectName: string | null;
+    /** The project is hidden from this viewer: `projectName` is null and the UI shows its own label. */
+    projectHidden?: boolean;
     invitedBy: string | null;
     expiresAt: string;
     createdAt: string;

@@ -299,6 +299,7 @@ export const fr: DeepPartial<Messages> = {
                 title: "Invitations en attente ({count})",
                 detail: "Invité par {name} · expire le {date}",
                 guestOf: "Invité de {project}",
+                guestOfHidden: "Invité d’un projet masqué",
                 cancelNamed: "Annuler l’invitation de {email}",
                 confirmTitle: "Annuler l’invitation de {email} ?",
                 confirmBody:
@@ -1937,6 +1938,7 @@ export const fr: DeepPartial<Messages> = {
             privateLabel: "Privé",
             privateHint:
                 "On le rejoint en le demandant au propriétaire. Le nom s'affiche avec un cadenas.",
+            privateLockedHint: "Un groupe partagé avec une autre équipe reste toujours privé.",
             hiddenLabel: "Masqué",
             hiddenHint:
                 "Seuls les membres voient qu'il existe. Il n'apparaît ni dans les listes ni dans la recherche, et on le rejoint sur invitation uniquement.",

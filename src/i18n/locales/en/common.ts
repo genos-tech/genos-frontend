@@ -221,6 +221,8 @@ export const common = {
     privacy: {
         privateLabel: "Private",
         privateHint: "People join by asking the owner. The name shows with a lock.",
+        // TODO(copy): MIP-1949 draft wording for a native reader.
+        privateLockedHint: "A group shared with another team always stays private.",
         hiddenLabel: "Hidden",
         hiddenHint:
             "Only members can see this exists. It is not listed or searchable, and people join by invitation only.",

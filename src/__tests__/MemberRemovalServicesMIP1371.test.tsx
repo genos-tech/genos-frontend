@@ -203,6 +203,16 @@ describe("PendingInvitesSection", () => {
         expect(screen.getByText("Guest of Site")).toBeInTheDocument();
     });
 
+    it("shows a translated label for a hidden project's invite (MIP-1949)", async () => {
+        get.mockResolvedValue({
+            data: {
+                invites: [{ ...INVITE, id: "i3", projectName: null, projectHidden: true }],
+            },
+        });
+        renderUi(<PendingInvitesSection teamId="t-1" zIndex={1300} />);
+        expect(await screen.findByText("Guest of a hidden project")).toBeInTheDocument();
+    });
+
     it("renders nothing when there are none, or the caller may not see them", async () => {
         get.mockResolvedValue({ data: { invites: [] } });
         const a = renderUi(<PendingInvitesSection teamId="t-1" zIndex={1300} />);

@@ -123,6 +123,11 @@ import { NotificationToastHost } from "./services/notifications/NotificationToas
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
 import { startPerfRecorder, type PerfRecorder } from "./services/perf/startPerfRecorder";
+import {
+    applyProjectPrivacyChange,
+    PROJECT_PRIVACY_CHANGED_EVENT,
+    type ProjectPrivacyChange,
+} from "./services/projectPrivacyChanged";
 import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 import { switchService } from "./services/serviceSwitch/serviceSwitchStore";
@@ -527,6 +532,19 @@ const AppBody = () => {
     // cold-start path in `loadInitialData` (empty cache → wait for this).
     const [firstRefreshDone, setFirstRefreshDone] = useState(false);
     const bootRefreshedTeamRef = useRef<string | null>(null);
+    // A project's Private/Hidden switch changed in its profile modal (MIP-1949): patch the shared
+    // list so the sidebar lock and the Join list agree at once, not at the next refetch.
+    useEffect(() => {
+        const onChanged = (e: Event) => {
+            const change = (e as CustomEvent<ProjectPrivacyChange>).detail;
+            if (!change) return;
+            const next = applyProjectPrivacyChange(usePM.teamProjects, change);
+            if (next !== usePM.teamProjects) usePM.setTeamProjects(next);
+        };
+        window.addEventListener(PROJECT_PRIVACY_CHANGED_EVENT, onChanged);
+        return () => window.removeEventListener(PROJECT_PRIVACY_CHANGED_EVENT, onChanged);
+    }, [usePM]);
+
     useEffect(() => {
         if (!accessToken || !myself.userId || !useTEM.currentTeamId) return;
         if (bootRefreshedTeamRef.current === useTEM.currentTeamId) return;

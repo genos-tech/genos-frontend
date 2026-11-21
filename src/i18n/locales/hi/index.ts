@@ -207,6 +207,7 @@ export const hi: DeepPartial<Messages> = {
         privacy: {
             privateLabel: "प्राइवेट",
             privateHint: "लोग मालिक से अनुरोध करके जुड़ते हैं। नाम ताले के साथ दिखता है।",
+            privateLockedHint: "दूसरी टीम के साथ साझा किया गया समूह हमेशा निजी रहता है।",
             hiddenLabel: "छिपा हुआ",
             hiddenHint:
                 "केवल सदस्य देख सकते हैं कि यह मौजूद है। यह सूचियों या खोज में नहीं दिखता, और लोग केवल आमंत्रण से जुड़ते हैं।",
@@ -5338,6 +5339,7 @@ export const hi: DeepPartial<Messages> = {
                 title: "लंबित आमंत्रण ({count})",
                 detail: "{name} ने आमंत्रित किया · {date} को समाप्त",
                 guestOf: "{project} के अतिथि",
+                guestOfHidden: "छिपे हुए प्रोजेक्ट के अतिथि",
                 cancelNamed: "{email} का आमंत्रण रद्द करें",
                 confirmTitle: "{email} का आमंत्रण रद्द करें?",
                 confirmBody:

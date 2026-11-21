@@ -269,6 +269,7 @@ export const zh: DeepPartial<Messages> = {
                 title: "待处理的邀请（{count}）",
                 detail: "邀请人 {name} · {date} 到期",
                 guestOf: "{project} 的访客",
+                guestOfHidden: "隐藏项目的访客",
                 cancelNamed: "取消对 {email} 的邀请",
                 confirmTitle: "取消对 {email} 的邀请？",
                 confirmBody: "邮件中的链接会立即失效。之后可以再次邀请。",
@@ -1837,6 +1838,7 @@ export const zh: DeepPartial<Messages> = {
         privacy: {
             privateLabel: "私有",
             privateHint: "通过向所有者申请加入。名称旁显示锁图标。",
+            privateLockedHint: "与其他团队共享的群组始终保持私密。",
             hiddenLabel: "隐藏",
             hiddenHint: "只有成员能看到它的存在。不会出现在列表或搜索中，只能通过邀请加入。",
             hiddenNeedsPrivate: "开启“私有”后才能隐藏。",

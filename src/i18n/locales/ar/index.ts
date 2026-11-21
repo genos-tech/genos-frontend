@@ -378,6 +378,7 @@ export const ar: DeepPartial<Messages> = {
         privacy: {
             privateLabel: "خاص",
             privateHint: "ينضم الناس بطلب من المالك. يظهر الاسم مع قفل.",
+            privateLockedHint: "تبقى المجموعة المشتركة مع فريق آخر خاصة دائماً.",
             hiddenLabel: "مخفي",
             hiddenHint:
                 "يرى الأعضاء فقط أن هذا موجود. لا يظهر في القوائم أو البحث، ولا ينضم أحد إلا بدعوة.",
@@ -4866,6 +4867,7 @@ export const ar: DeepPartial<Messages> = {
                 title: "الدعوات المعلّقة ({count})",
                 detail: "دعاه {name} · تنتهي في {date}",
                 guestOf: "ضيف في {project}",
+                guestOfHidden: "ضيف في مشروع مخفي",
                 cancelNamed: "إلغاء دعوة {email}",
                 confirmTitle: "إلغاء دعوة {email}؟",
                 confirmBody: "يتوقف الرابط في بريده فورًا. يمكنك دعوته مرة أخرى لاحقًا.",

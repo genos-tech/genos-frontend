@@ -380,6 +380,7 @@ export const es: DeepPartial<Messages> = {
         privacy: {
             privateLabel: "Privado",
             privateHint: "Se entra pidiéndolo al propietario. El nombre se ve con un candado.",
+            privateLockedHint: "Un grupo compartido con otro equipo siempre permanece privado.",
             hiddenLabel: "Oculto",
             hiddenHint:
                 "Solo los miembros ven que existe. No aparece en listas ni búsquedas y solo se entra por invitación.",
@@ -4946,6 +4947,7 @@ export const es: DeepPartial<Messages> = {
                 title: "Invitaciones pendientes ({count})",
                 detail: "Invitó {name} · caduca {date}",
                 guestOf: "Invitado de {project}",
+                guestOfHidden: "Invitado de un proyecto oculto",
                 cancelNamed: "Cancelar la invitación de {email}",
                 confirmTitle: "¿Cancelar la invitación de {email}?",
                 confirmBody:
