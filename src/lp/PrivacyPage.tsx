@@ -16,37 +16,31 @@ import { useDocumentMeta } from "./useDocumentMeta";
  * written from the one `PROCESSORS` table (privacyProcessors.ts), so a processor cannot
  * be added to one language and forgotten in the other.
  *
- * Every claim is grounded in the code (see genos-docs
- * `operations/THIRD_PARTY_REVIEW.md`, MIP-729, for what each processor
- * receives). Update this page — and that document — when a processor
- * is added or removed.
+ * Every claim is grounded in the code on `main` (see genos-docs
+ * `operations/THIRD_PARTY_REVIEW.md` for what each processor receives).
+ * Update this page — and that document — when a processor is added or
+ * removed, or when a deletion or retention behaviour changes.
+ *
+ * MIP-1792 (2026-11-21): the statements the personal-data review
+ * contradicted were rewritten to describe what the code does today:
+ * deletion (Team Notes kept, provider-side revoke, what stays), analytics
+ * (device fields sent in the app, IP discarded in PostHog, consent first),
+ * the Google Cloud Storage cost reports, embeddings on Vertex, the export.
+ * The wording is a draft for Ken's re-read; counsel's text is still pending.
  *
  * This text is rendered to users, so nothing here is a placeholder. What
- * could NOT be stated as fact is left OUT of the page and listed here for
- * the owner (legal sign-off) instead:
+ * could NOT be stated as fact is left OUT of the page and listed for the
+ * owner (legal sign-off) in the pull request instead:
  *
  * TODO(owner): legal review of the whole text; the Japanese was drafted
  *   by an AI assistant, not by a lawyer or native legal writer.
  * TODO(owner): add an effective / last-updated date when the text is
  *   approved. None is shown (it is a legal fact the owner sets).
- * TODO(owner): the previous text said the AI providers are used "via
- *   business-tier APIs that do not train on your data". Nothing in the
- *   repos documents the agreement behind that, so it is not claimed.
- *   Reinstate it once confirmed for the route in use (Gemini via AI
- *   Studio vs Vertex; Anthropic; OpenAI).
- * TODO(owner): which optional providers are live in production
- *   (EMBEDDING_PROVIDER, RAG_RERANKER_PROVIDER, LLM_PROVIDER, ...) is a
- *   Railway setting that was not checked. OpenAI is listed because it is
- *   the code default for embeddings; Anthropic and Cohere are described
- *   as "when configured".
- * TODO(owner): not stated because unknown: hosting region and any
- *   cross-border-transfer wording, vendor retention, signed DPAs,
- *   compliance regimes, retention periods, how long the security audit
- *   log is kept.
+ * TODO(owner): hosting region, vendor retention, signed DPAs, backups,
+ *   compliance regimes: not stated because not verified.
  * Decided (owner): MIP-767 Stripe keeps the customer email (needed for
- *   receipts and Checkout); MIP-864 PostHog stays on by default with the
- *   opt-out, and receives the team ID, not the team name (genos-frontend
- *   #573). Merge #573 before this page ships, so the PostHog entry is true.
+ *   receipts and Checkout); Stripe customer and billing history are kept
+ *   at account deletion (2026-11-02, MIP-874).
  */
 
 type Section = { heading: string; body: React.ReactNode };
@@ -91,15 +85,18 @@ const JA_SECTIONS: Section[] = [
                     とプラン情報のみを保持します）。
                 </li>
                 <li>
-                    <b>利用状況</b>：機能改善のためのプロダクト分析（PostHog。送信内容は第 3
-                    項のとおりです）。アプリ内の「設定 → 一般 →
-                    プライバシーと分析」から無効にできます。また、AI
+                    <b>利用状況</b>
+                    ：機能改善のためのプロダクト分析（PostHog）を行います。分析は、同意していただいた場合にのみ送信します。送信内容は第
+                    3
+                    項のとおりです。同意は、マーケティングページの同意バナー、またはアプリ内の案内で選択でき、「設定
+                    → 一般 → プライバシーと分析」からいつでも変更できます。また、AI
                     利用回数などプラン上限の計測データを保持します。
                 </li>
                 <li>
                     <b>Cookie 等</b>
-                    ：ログイン状態の維持と、プロダクト分析（PostHog）の識別子の保存のために、Cookie
-                    とブラウザストレージを使用します。広告目的の Cookie は使用しません。
+                    ：ログイン状態の維持のため、サインインを保つための Cookie（JavaScript
+                    からは読み取れない設定です）とブラウザのストレージを使用します。プロダクト分析の識別子は、同意していただいた場合に限り
+                    Cookie とブラウザのストレージに保存します。広告目的の Cookie は使用しません。
                 </li>
             </ul>
         ),
@@ -141,16 +138,33 @@ const JA_SECTIONS: Section[] = [
                     データはアカウントが有効な間保存されます。プランによるメッセージ履歴の表示期間は「非表示」であり、データの削除ではありません（アップグレードすると再び表示されます）。
                 </p>
                 <p>
-                    <b>アカウントの削除</b>
-                    ：アプリ内の「設定 → アカウント →
-                    アカウントを削除」から、ご自身で実行できます。実行すると、氏名・メールアドレス・プロフィールが匿名化され、すべての端末で直ちにサインアウトされます。非公開のノート・To-Do・AI
-                    の利用履歴は削除され、API キーは無効化され、Google・GitHub
-                    等の連携は削除されます。チームのメンバーと共同で作成した内容はそのチームに残り、「削除されたユーザー」の名義になります。あなたが最後のメンバーであるチームは閉鎖されます。他のメンバーがいるチームのオーナーである場合は、先にオーナー権限を譲渡する必要があります。
+                    一部の記録には自動で削除される期間があります。たとえば、セキュリティの監査記録は最長
+                    365 日、AI アプリからの通知は 90
+                    日保存されます。チャット、タスク、ノートなどの内容には、現時点で自動の削除期間を設けていません。
                 </p>
                 <p>
-                    この操作の対象は当サービス内のデータです。第 3
-                    項の事業者にすでに送信された情報や、セキュリティ上の監査記録は、この操作では自動的には削除されません。
+                    <b>アカウントの削除</b>
+                    ：アプリ内の「設定 → アカウント →
+                    アカウントを削除」から、ご自身で実行できます。実行すると、すべての端末から直ちにサインアウトされ、氏名・メールアドレス・プロフィールが匿名化されます。非公開のノート・To-Do・AI
+                    の利用履歴は削除され、API キーは無効化されます。Google・GitHub
+                    との連携情報は当サービスから削除され、各サービス側の許可の取り消しも行います。チームのメンバーと共同で作成した内容（チームのノートを含む）はそのチームに残り、「削除されたユーザー」の名義になります。あなたが最後のメンバーであるチームは閉鎖されますが、内容は削除されず保存されたままです。他のメンバーがいるチームのオーナーである場合は、先にオーナー権限を譲渡する必要があります。
                 </p>
+                <p>
+                    この操作の対象は当サービス内のデータです。次のものは、この操作では自動的には削除されません。
+                </p>
+                <ul>
+                    <li>
+                        第 3 項の事業者にすでに送信された情報。Stripe
+                        上の顧客情報と請求履歴を含みます。分析サービス（PostHog）上の情報も、アカウント削除では削除されません。
+                    </li>
+                    <li>
+                        他の人のメッセージ・タスク・ノートなどの中に含まれる、あなたの氏名（メンションや変更履歴の表示など）。
+                    </li>
+                    <li>
+                        セキュリティの監査記録（操作の種類と日時など）。IP
+                        アドレスとユーザーエージェントは、削除時に消去されます。
+                    </li>
+                </ul>
                 <p>
                     サインインできない場合など、アプリ内で削除できない場合は、下記メールアドレスまでご連絡ください。合理的な期間内に対応いたします。
                 </p>
@@ -165,11 +179,18 @@ const JA_SECTIONS: Section[] = [
         heading: "6. 開示・訂正・利用停止等の請求",
         body: (
             <>
-                ご自身が作成したデータは、アプリ内の「設定 → アカウント →
-                データをエクスポート」から JSON
-                ファイルでダウンロードできます。保有個人データの開示・訂正・利用停止等のご請求は、
-                <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
-                まで。
+                <p>
+                    ご自身が作成したデータは、アプリ内の「設定 → アカウント →
+                    データをエクスポート」から JSON
+                    ファイルでダウンロードできます。書き出しには、AI
+                    への質問と回答、リアクション、添付ファイルの情報（ファイル名など）、タスクの変更履歴、セキュリティの記録、API
+                    キーの名前と権限（キーの値は含みません）、連携アプリの情報などが含まれます。件数の多い項目は最新分に上限があり、上限を超えた場合は書き出しファイルにその旨が記載されます。他の利用者が作成したチーム内の内容は含まれません。
+                </p>
+                <p>
+                    保有個人データの開示・訂正・利用停止等のご請求は、
+                    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+                    まで。
+                </p>
             </>
         ),
     },
@@ -192,7 +213,7 @@ const JA_SECTIONS: Section[] = [
 const EN_SECTIONS: Section[] = [
     {
         heading: "What we collect",
-        body: "Account details (email, username, team; if you sign in with or connect Google or GitHub, the basic profile and whatever access you grant, such as calendar or repositories), the content you create (messages, tasks, notes, files), Stripe customer/plan references (card numbers never touch our servers), product analytics (PostHog — can be disabled in Settings → General → Privacy & analytics), and cookies/browser storage for keeping you signed in and for the analytics identifier. No advertising cookies.",
+        body: "Account details (email, username, team; if you sign in with or connect Google or GitHub, the basic profile and whatever access you grant, such as calendar or repositories), the content you create (messages, tasks, notes, files), Stripe customer/plan references (card numbers never touch our servers), product analytics (PostHog — sent only with your consent, and you can change it in Settings → General → Privacy & analytics), and cookies/browser storage: a sign-in cookie that JavaScript cannot read, and, only with consent, the analytics identifier. No advertising cookies.",
     },
     {
         heading: "How we use it",
@@ -234,19 +255,28 @@ const EN_SECTIONS: Section[] = [
                     messages, they don't delete them (upgrading restores visibility).
                 </p>
                 <p>
+                    Some records are deleted automatically on a schedule: security audit records
+                    after up to 365 days, AI-app notices after 90 days. Chat, task, note and
+                    similar content has no automatic deletion period yet.
+                </p>
+                <p>
                     <b>Deleting your account:</b> you can do it yourself in the app under Settings
                     → Account → Delete account. Your name, email and profile are anonymized and you
                     are signed out on every device immediately. Your private notes, to-dos and AI
-                    history are deleted, your API keys are revoked and your Google / GitHub
-                    connections are removed. Work you did with teammates stays in their workspace,
-                    attributed to "Deleted user". Teams where you were the last member are closed.
-                    If you own a team that still has other members, you must transfer ownership
-                    first.
+                    history are deleted, your API keys are revoked, and the Google and GitHub
+                    connection details we store are removed; we also revoke the access at Google
+                    and GitHub. Work you did with teammates, including team notes, stays in their
+                    workspace, attributed to "Deleted user". A team where you were the last member
+                    is closed, but its content is kept. If you own a team that still has other
+                    members, you must transfer ownership first.
                 </p>
                 <p>
-                    This applies to data within the service. Information already sent to the
-                    processors above, and security audit records, are not deleted automatically by
-                    it.
+                    Deletion covers the data within the service. The following are not deleted
+                    automatically: information already sent to the processors above (including
+                    Stripe's customer record and billing history, and the data stored in PostHog,
+                    which is not contacted on deletion); your name where other people's messages,
+                    tasks or notes mention you; and security audit records (the event and its time;
+                    the IP address and user agent are erased at deletion).
                 </p>
                 <p>
                     If you cannot sign in, or cannot delete in the app, email us at the address
@@ -259,10 +289,19 @@ const EN_SECTIONS: Section[] = [
         heading: "Your requests",
         body: (
             <>
-                You can download the data you created in the app under Settings → Account → Export
-                your data. Disclosure, correction, or deletion requests:{" "}
-                <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Seller information is on
-                the <Link to="/legal">Legal Notice</Link>.
+                <p>
+                    You can download the data you created in the app under Settings → Account →
+                    Export your data. The export includes your AI questions and answers, reactions,
+                    attachment details, task change history, security events, API key names and
+                    scopes (never the key values), and connected apps. Long lists are capped at the
+                    newest entries, and the file says so when a cap applies. Content other users
+                    created in a team is not included.
+                </p>
+                <p>
+                    Disclosure, correction, or deletion requests:{" "}
+                    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Seller information is
+                    on the <Link to="/legal">Legal Notice</Link>.
+                </p>
             </>
         ),
     },
