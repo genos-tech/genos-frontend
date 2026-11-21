@@ -16,7 +16,6 @@ export function SkipToContent() {
         <Box
             component="a"
             href={`#${APP_MAIN_ID}`}
-            onClick={() => document.getElementById(APP_MAIN_ID)?.focus()}
             sx={{
                 position: "fixed",
                 top: 8,
@@ -33,6 +32,7 @@ export function SkipToContent() {
                 transform: "translateY(calc(-100% - 16px))",
                 "&:focus-visible": { ...focusRing, transform: "none" },
             }}
+            onClick={() => document.getElementById(APP_MAIN_ID)?.focus()}
         >
             {t.common.skipToContent}
         </Box>

@@ -111,6 +111,9 @@ export const ModalTeamFolderName = (props: Props) => {
             hostZIndex={hostZIndex}
             open={open}
             size="md"
+            title={title}
+            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
+            zIndex={theme.zIndex.modal}
             actions={
                 <>
                     <Button color="neutral" variant="plain" onClick={onClose}>
@@ -123,9 +126,6 @@ export const ModalTeamFolderName = (props: Props) => {
             }
             ownsListboxPopups
             onClose={onClose}
-            title={title}
-            // Joy's modal layer on a page surface; a modal-hosted note lifts it (host + 2).
-            zIndex={theme.zIndex.modal}
         >
             <Stack spacing={2}>
                 <Input

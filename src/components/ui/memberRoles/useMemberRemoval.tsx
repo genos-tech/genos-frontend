@@ -104,8 +104,8 @@ export const useMemberRemoval = (opts: Options) => {
                     color="neutral"
                     data-testid={`remove-member-${member.userId}`}
                     size="sm"
-                    variant="plain"
                     sx={{ color: g.text.tertiary, "&:hover": { color: g.danger.text } }}
+                    variant="plain"
                     // The row is itself a button that opens the profile.
                     onClick={(e) => {
                         e.stopPropagation();

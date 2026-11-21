@@ -110,6 +110,9 @@ export const ProjectParamSelect = ({
             renderOption={renderProjectOption(avatars)}
             slotProps={projectListboxSlotProps(popupZIndex)}
             sx={{ minWidth: 0 }}
+            // "All projects" is how the optional picker says "none", so it cannot be cleared;
+            // the required one can be emptied again, like the milestone picker.
+            value={selected}
             startDecorator={
                 // The closed field is a text input, so only the name fits in it: the
                 // avatar rides beside it, as in the task pickers.
@@ -120,9 +123,6 @@ export const ProjectParamSelect = ({
                     />
                 ) : undefined
             }
-            // "All projects" is how the optional picker says "none", so it cannot be cleared;
-            // the required one can be emptied again, like the milestone picker.
-            value={selected}
             onChange={(_, option) => {
                 if (!option) {
                     onChange("");

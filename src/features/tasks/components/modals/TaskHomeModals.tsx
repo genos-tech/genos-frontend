@@ -5,6 +5,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { isOwnerOfProject } from "../../../archive/projectOwner";
 import { ModalCreateProject } from "./ModalCreateProject";
 import { ModalDeleteProject } from "./ModalDeleteProject";
 import { ModalJoinProject } from "./ModalJoinProject";
@@ -70,6 +71,11 @@ export const TaskHomeModals = ({
                 openDeleteProject={openDeleteProject}
                 setOpenDeleteProject={setOpenDeleteProject}
                 usePM={usePM}
+                canArchive={isOwnerOfProject(
+                    useTM.taskFieldRules,
+                    usePM.currentProject?.projectId,
+                    myself.userId
+                )}
             />
             <ModalManageTagsHost myself={myself} usePM={usePM} useTM={useTM} />
         </>

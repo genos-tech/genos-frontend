@@ -255,6 +255,32 @@ export const es: DeepPartial<Messages> = {
                 "Ya no verás los mensajes de este grupo. Puedes volver a unirte más tarde si es público.",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "Archivar proyecto",
+            unarchiveMenuProject: "Desarchivar proyecto",
+            archiveMenuChat: "Archivar grupo",
+            unarchiveMenuChat: "Desarchivar grupo",
+            archiveInstead: "Archivar en su lugar",
+            archiveInsteadHint:
+                "Lo conserva todo. Queda de solo lectura hasta que lo desarchives.",
+            ownerOnly: "Solo el propietario puede archivar o desarchivar.",
+            projectBannerTitle: "Este proyecto está archivado",
+            chatBannerTitle: "Este grupo está archivado",
+            projectBannerBody:
+                "Es de solo lectura: no se pueden crear tareas, editar ni comentar hasta desarchivarlo. No se ha eliminado nada.",
+            chatBannerBody:
+                "Es de solo lectura: no se pueden enviar mensajes hasta desarchivarlo. No se ha eliminado nada.",
+            unarchiveAction: "Desarchivar",
+            showArchived: "Mostrar archivados",
+            hideArchived: "Ocultar archivados",
+            archivedSection: "Archivados",
+            archivedBadge: "Archivado",
+            newTaskDisabled: "Desarchiva este proyecto para añadir tareas.",
+            composerDisabled: "Este grupo está archivado. Desarchívalo para enviar mensajes.",
+            archiveFailed: "No se pudo archivar. Inténtalo de nuevo.",
+            unarchiveFailed: "No se pudo desarchivar. Inténtalo de nuevo.",
+        },
         deleteChat: {
             button: "Eliminar grupo",
             title: "¿Eliminar este grupo?",
@@ -417,6 +443,8 @@ export const es: DeepPartial<Messages> = {
             serverError: "Error del servidor. Vuelve a intentarlo en unos momentos.",
             permissionDenied: "No tienes permiso para hacer eso.",
             requestFailed: "No se pudo completar la solicitud. Inténtalo de nuevo.",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived: "Está archivado y es de solo lectura. Desarchívalo para hacer cambios.",
             actionFailed: "No se pudo completar la acción. Inténtalo de nuevo.",
             limitReached:
                 "Has alcanzado un límite de tu plan. Consulta Configuración → Plan y uso.",
