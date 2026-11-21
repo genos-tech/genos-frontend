@@ -89,6 +89,13 @@ const TEN_DAYS_AGO = new Date(NOW - 10 * DAY).toISOString();
 const intl = (locale: string, options: Intl.DateTimeFormatOptions, date: Date) =>
     new Intl.DateTimeFormat(locale, options).format(date);
 
+// A `YYYY-MM-DD` date is a calendar day: that day at LOCAL midnight. (`new Date("2026-12-02")`
+// is UTC midnight, Dec 1 west of UTC: building the expected text that way hid MIP-1811.)
+const day = (iso: string): Date => {
+    const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+    return new Date(y, m - 1, d);
+};
+
 const MONTH: Record<string, RegExp> = { en: /Nov/, fr: /nov/, ja: /11月/, ar: /نوفمبر/ };
 const DEC: Record<string, RegExp> = { en: /Dec/, fr: /déc/, ja: /12月/, ar: /ديسمبر/ };
 
@@ -134,15 +141,13 @@ describe("pure helpers take the app's locale", () => {
         const labels = getMessages(locale).tasks.dueLabel;
         // 5 days out: the weekday.
         const weekday = formatDueLabel("2026-11-30", locale);
-        const d5 = new Date("2026-11-30");
-        d5.setHours(0, 0, 0, 0);
+        const d5 = day("2026-11-30");
         expect(weekday.text).toBe(
             fmt(labels.dueOn, { when: intl(locale, { weekday: "short" }, d5) })
         );
         // 14 days out: month and day.
         const later = formatDueLabel("2026-12-05", locale);
-        const d14 = new Date("2026-12-05");
-        d14.setHours(0, 0, 0, 0);
+        const d14 = day("2026-12-05");
         expect(later.text).toBe(
             fmt(labels.dueOn, { when: intl(locale, { month: "short", day: "numeric" }, d14) })
         );
@@ -160,15 +165,11 @@ describe("pure helpers take the app's locale", () => {
 
     it.each(LOCALES)("getScheduleStatus (graph node dates) in %s", (locale) => {
         const s = getScheduleStatus("2026-12-02", "2026-12-20", "Open", locale);
-        const at = (iso: string) => {
-            const d = new Date(iso);
-            return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        };
         expect(s.startLabel).toBe(
-            intl(locale, { month: "short", day: "numeric" }, at("2026-12-02"))
+            intl(locale, { month: "short", day: "numeric" }, day("2026-12-02"))
         );
         expect(s.dueLabel).toBe(
-            intl(locale, { month: "short", day: "numeric" }, at("2026-12-20"))
+            intl(locale, { month: "short", day: "numeric" }, day("2026-12-20"))
         );
         expect(s.startLabel).toMatch(DEC[locale]);
     });
@@ -337,14 +338,7 @@ describe("components render their dates in the app's language", () => {
     );
 
     const range = (locale: string) => {
-        const f = (iso: string) => {
-            const d = new Date(iso);
-            return intl(
-                locale,
-                { month: "short", day: "numeric" },
-                new Date(d.getFullYear(), d.getMonth(), d.getDate())
-            );
-        };
+        const f = (iso: string) => intl(locale, { month: "short", day: "numeric" }, day(iso));
         return `${f("2026-12-02")} – ${f("2026-12-20")}`;
     };
 
@@ -377,8 +371,7 @@ describe("components render their dates in the app's language", () => {
             )
         );
         expect(screen.getByText(range(locale))).toBeTruthy();
-        const f = (iso: string) =>
-            intl(locale, { month: "short", day: "numeric" }, new Date(iso.slice(0, 10)));
+        const f = (iso: string) => intl(locale, { month: "short", day: "numeric" }, day(iso));
         const sprint = screen.getByText((_, el) => {
             const own = el?.textContent ?? "";
             return own === `${f("2026-12-02")} – ${f("2026-12-16")}`;
@@ -400,8 +393,7 @@ describe("components render their dates in the app's language", () => {
                 onClose={vi.fn()}
             />
         );
-        const f = (iso: string) =>
-            intl(locale, { month: "short", day: "numeric" }, new Date(iso.slice(0, 10)));
+        const f = (iso: string) => intl(locale, { month: "short", day: "numeric" }, day(iso));
         await waitFor(() => {
             expect(document.body.textContent).toContain(`${f("2026-12-02")} – ${f("2026-12-20")}`);
             expect(document.body.textContent).toContain(`${f("2026-12-02")} – ${f("2026-12-16")}`);

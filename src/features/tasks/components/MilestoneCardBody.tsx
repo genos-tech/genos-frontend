@@ -6,6 +6,7 @@ import { AvatarGroup } from "../../../components/ui/avatars/BaseAvatar";
 import { fmt, useTranslation } from "../../../i18n";
 import { g, type } from "../../../theme/tokens";
 import { TagListProps } from "../../../types/tasks";
+import { calendarDaysUntil, formatMonthDay } from "../../../utils/calendarDate";
 import { Milestone, MilestoneAssignee } from "../sprint-milestone/types";
 import { formatRelativeAge } from "../utils/relativeAge";
 import {
@@ -24,16 +25,6 @@ import { SprintChip } from "./SprintChip";
 // shape at the edge, exactly like the task table does.
 const asTags = (tags: unknown): TagListProps[] =>
     Array.isArray(tags) ? (tags as TagListProps[]) : [];
-
-// Whole-number days between today and the due date (negative = overdue).
-const daysUntil = (due: string | null): number | null => {
-    if (!due) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(due);
-    d.setHours(0, 0, 0, 0);
-    return Math.round((d.getTime() - today.getTime()) / 86400000);
-};
 
 // The name stored on the milestone's assignee, used until the live profile
 // (rename-safe, from AvatarContext) resolves.
@@ -75,13 +66,8 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
     const assignees = (milestone.assignees ?? []).filter((a) => a.userId != null);
     const firstAssignee = assignees[0];
 
-    const daysLeft = daysUntil(milestone.dueDate);
-    const dueLabel = milestone.dueDate
-        ? new Date(milestone.dueDate).toLocaleDateString(locale, {
-              month: "short",
-              day: "numeric",
-          })
-        : null;
+    const daysLeft = calendarDaysUntil(milestone.dueDate);
+    const dueLabel = milestone.dueDate ? formatMonthDay(milestone.dueDate, locale) : null;
     const small = { ...type("body-xs"), color: g.text.tertiary } as const;
     // Empty when the server has recorded none yet (old milestones before the backfill).
     const lastProgress = formatRelativeAge(

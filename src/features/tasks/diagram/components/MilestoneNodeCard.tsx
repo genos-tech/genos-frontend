@@ -9,6 +9,7 @@ import { NodeProps } from "@xyflow/react";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { fmt, useTranslation, type Locale } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
+import { formatMonthDay } from "../../../../utils/calendarDate";
 import {
     DueText,
     MilestoneFlag,
@@ -31,9 +32,7 @@ import {
 
 const fmtDate = (iso: string | null | undefined, locale: Locale): string => {
     if (!iso) return "";
-    const d = new Date(iso.length >= 10 ? iso.slice(0, 10) : iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
+    return formatMonthDay(iso, locale) ?? iso;
 };
 
 /**

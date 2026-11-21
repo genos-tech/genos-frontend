@@ -17,6 +17,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation, type Locale } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
+import { formatMonthDay } from "../../../../utils/calendarDate";
 import { ToneLabel } from "../../components/meta/ToneLabel";
 import { DIAGRAM_DEFAULT_Z_INDEX, DiagramZIndexProvider } from "../diagramZIndex";
 import { ScheduleOverview, TaskGraphScope } from "../types";
@@ -72,9 +73,7 @@ export type ModalTaskDiagramProps = {
 // kept minimal so the canvas dominates.
 const fmtDateLabel = (iso: string | null, locale: Locale): string | null => {
     if (!iso) return null;
-    const d = new Date(iso.length >= 10 ? iso.slice(0, 10) : iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
+    return formatMonthDay(iso, locale) ?? iso;
 };
 
 export const ModalTaskDiagram = ({

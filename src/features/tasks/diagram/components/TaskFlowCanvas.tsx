@@ -48,6 +48,7 @@ import { useColorTheme } from "../../../../theme/ColorThemeProvider";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { parseCalendarDate } from "../../../../utils/calendarDate";
 import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { addTask } from "../../services/addTask";
 import { createTaskDependency } from "../../services/createTaskDependency";
@@ -164,8 +165,9 @@ const todayIsoLocal = (): string => {
     return `${y}-${m}-${day}`;
 };
 
+// `iso` is a calendar day: a UTC-midnight `new Date(iso)` is the day before west of UTC (MIP-1811).
 const addDaysIso = (iso: string, days: number): string => {
-    const d = new Date(iso);
+    const d = parseCalendarDate(iso) ?? new Date();
     d.setDate(d.getDate() + days);
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");

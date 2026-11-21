@@ -1,4 +1,5 @@
 import { fmt, getMessages, type Locale } from "../../../i18n";
+import { calendarDaysUntil, parseCalendarDate } from "../../../utils/calendarDate";
 import { predefinedPriorityFilters } from "../types/TaskTableTypes";
 
 // Pure formatting helpers for the dashboard task rows. Kept out of
@@ -28,11 +29,10 @@ export const formatDueLabel = (
 ): { text: string; tone: DueTone } => {
     const labels = getMessages(locale).tasks.dueLabel;
     if (!dueDate) return { text: labels.noDueDate, tone: "none" };
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(dueDate);
-    d.setHours(0, 0, 0, 0);
-    const diffDays = Math.round((d.getTime() - today.getTime()) / 86400000);
+    // A calendar day, not a UTC instant (MIP-1811).
+    const d = parseCalendarDate(dueDate);
+    const diffDays = calendarDaysUntil(dueDate);
+    if (d == null || diffDays == null) return { text: labels.noDueDate, tone: "none" };
     if (diffDays < 0) return { text: fmt(labels.overdue, { days: -diffDays }), tone: "overdue" };
     if (diffDays === 0) return { text: labels.dueToday, tone: "today" };
     if (diffDays === 1) return { text: labels.dueTomorrow, tone: "soon" };
