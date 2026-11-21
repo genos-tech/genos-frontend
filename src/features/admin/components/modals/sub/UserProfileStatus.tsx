@@ -83,7 +83,7 @@ export const UserProfileStatus = ({
     setSelectedEmoji,
 }: Props) => {
     const { accessToken } = useAuth();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     // The status-expiry ("clear after…") i18n subtree, aliased for the editor
     // dropdown and the custom-datetime modal below.
     const seT = t.services.notifications.statusExpiry;
@@ -512,7 +512,7 @@ export const UserProfileStatus = ({
                                         sx={{ color: "text.tertiary", whiteSpace: "nowrap" }}
                                     >
                                         {fmt(t.services.notifications.statusExpiry.until, {
-                                            time: formatStatusExpiry(statusExpiryIso),
+                                            time: formatStatusExpiry(statusExpiryIso, locale),
                                         })}
                                     </Typography>
                                 )}
@@ -567,7 +567,7 @@ export const UserProfileStatus = ({
                                         variant="outlined"
                                     >
                                         {newExpiry
-                                            ? formatStatusExpiry(newExpiry)
+                                            ? formatStatusExpiry(newExpiry, locale)
                                             : seT.clearAfterLabel}
                                     </MenuButton>
                                     <MenuSurface placement="bottom-end" zIndex={10010}>
@@ -760,7 +760,8 @@ export const UserProfileStatus = ({
                                 snoozeUntil: notif.snoozeUntil,
                                 snoozeSchedule: notif.snoozeSchedule,
                             },
-                            t.services.notifications.pause
+                            t.services.notifications.pause,
+                            locale
                         )}
                     </Typography>
                 </Stack>

@@ -1,4 +1,4 @@
-import { fmt, getMessages } from "../../../i18n";
+import { fmt, getMessages, type Locale } from "../../../i18n";
 import { predefinedPriorityFilters } from "../types/TaskTableTypes";
 
 // Pure formatting helpers for the dashboard task rows. Kept out of
@@ -21,8 +21,12 @@ export type DueTone = "overdue" | "today" | "soon" | "later" | "none";
 
 // Compact, human-readable due-date label. `tone` lets the caller pick the
 // right color without re-parsing the date.
-export const formatDueLabel = (dueDate: string | null): { text: string; tone: DueTone } => {
-    const labels = getMessages().tasks.dueLabel;
+// Wording and date come from the same `locale` (the app's, from `useTranslation()`), never the browser's.
+export const formatDueLabel = (
+    dueDate: string | null,
+    locale: Locale
+): { text: string; tone: DueTone } => {
+    const labels = getMessages(locale).tasks.dueLabel;
     if (!dueDate) return { text: labels.noDueDate, tone: "none" };
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -35,14 +39,14 @@ export const formatDueLabel = (dueDate: string | null): { text: string; tone: Du
     if (diffDays <= 6) {
         return {
             text: fmt(labels.dueOn, {
-                when: d.toLocaleDateString(undefined, { weekday: "short" }),
+                when: d.toLocaleDateString(locale, { weekday: "short" }),
             }),
             tone: "soon",
         };
     }
     return {
         text: fmt(labels.dueOn, {
-            when: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+            when: d.toLocaleDateString(locale, { month: "short", day: "numeric" }),
         }),
         tone: "later",
     };

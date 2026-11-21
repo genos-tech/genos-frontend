@@ -6,7 +6,7 @@ import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { fmt, useTranslation } from "../../../../i18n";
+import { fmt, useTranslation, type Locale } from "../../../../i18n";
 import {
     channelService,
     ChannelServiceError,
@@ -20,11 +20,11 @@ type Props = {
     onClose: () => void;
 };
 
-const formatDeleted = (iso: string): string => {
+const formatDeleted = (iso: string, locale: Locale): string => {
     const d = new Date(iso);
     return Number.isNaN(d.getTime())
         ? ""
-        : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+        : d.toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
 };
 
 /**
@@ -37,7 +37,7 @@ const formatDeleted = (iso: string): string => {
  * deleted softly stays here until it is restored or erased by a hard delete elsewhere.
  */
 export const ModalRecentlyDeletedChats = ({ open, teamId, onClose }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const copy = t.common.recentlyDeleted;
     const [rows, setRows] = useState<DeletedChannel[] | null>(null);
     const [loadFailed, setLoadFailed] = useState(false);
@@ -135,7 +135,7 @@ export const ModalRecentlyDeletedChats = ({ open, teamId, onClose }: Props) => {
                                     <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                                         {fmt(copy.meta, {
                                             count: row.memberCount,
-                                            date: formatDeleted(row.deletedAt),
+                                            date: formatDeleted(row.deletedAt, locale),
                                         })}
                                     </Typography>
                                 </Box>

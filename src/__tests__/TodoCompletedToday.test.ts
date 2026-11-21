@@ -132,8 +132,8 @@ describe("formatCompletedAt", () => {
         d.setMonth(6, 23); // July 23 — month is 0-indexed
         d.setHours(9, 5, 0, 0);
 
-        const out = formatCompletedAt(d.toISOString());
-        const expectedDate = d.toLocaleDateString(undefined, {
+        const out = formatCompletedAt(d.toISOString(), "en");
+        const expectedDate = d.toLocaleDateString("en", {
             month: "short",
             day: "numeric",
         });
@@ -147,10 +147,10 @@ describe("formatCompletedAt", () => {
     it("keeps the 24h clock past noon", () => {
         const d = new Date();
         d.setHours(14, 30, 0, 0);
-        expect(formatCompletedAt(d.toISOString()).endsWith(" 14:30")).toBe(true);
+        expect(formatCompletedAt(d.toISOString(), "en").endsWith(" 14:30")).toBe(true);
     });
 
     it("returns empty string for an unparseable timestamp", () => {
-        expect(formatCompletedAt("not-a-date")).toBe("");
+        expect(formatCompletedAt("not-a-date", "en")).toBe("");
     });
 });

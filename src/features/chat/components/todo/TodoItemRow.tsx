@@ -489,7 +489,7 @@ export const TodoItemRow = (props: TodoItemRowProps) => {
                                 color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
                             }}
                         >
-                            {formatCompletedAt(item.tsCompletedAt)}
+                            {formatCompletedAt(item.tsCompletedAt, locale)}
                         </Box>
                     </AppTooltip>
                 )}

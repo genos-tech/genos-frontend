@@ -1,3 +1,5 @@
+import type { Locale } from "../../i18n";
+
 // Helper utility functions
 export class HelperUtils {
     // Generate unique message ID with chat ID
@@ -75,8 +77,8 @@ export class HelperUtils {
     }
 
     // Format timestamp to readable date
-    static formatTimestamp(timestamp: number): string {
-        return new Date(timestamp).toLocaleString();
+    static formatTimestamp(timestamp: number, locale: Locale): string {
+        return new Date(timestamp).toLocaleString(locale);
     }
 
     // Get relative time (e.g., "2 hours ago")

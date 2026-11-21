@@ -14,7 +14,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { fmt, Messages, useTranslation } from "../../../../i18n";
+import { fmt, Messages, useTranslation, type Locale } from "../../../../i18n";
 import { focusRing, g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { NoteVersionDetail } from "../../../../types/notes";
@@ -34,7 +34,7 @@ interface ModalNoteHistoryProps {
     useUISM: UIStateManagementState;
 }
 
-const relTime = (iso: string, t: Messages): string => {
+const relTime = (iso: string, t: Messages, locale: Locale): string => {
     const ts = new Date(iso).getTime();
     if (!ts) return "";
     const diff = Date.now() - ts;
@@ -47,7 +47,7 @@ const relTime = (iso: string, t: Messages): string => {
     if (hr < 24) return fmt(t.notes.history.relTime.hours, { n: hr });
     const day = Math.floor(hr / 24);
     if (day < 7) return fmt(t.notes.history.relTime.days, { n: day });
-    return new Date(iso).toLocaleString(undefined, {
+    return new Date(iso).toLocaleString(locale, {
         month: "short",
         day: "numeric",
         hour: "numeric",
@@ -101,7 +101,7 @@ export const ModalNoteHistory = ({
 }: ModalNoteHistoryProps) => {
     const theme = useTheme();
     const { accessToken } = useAuth();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const hostZIndex = useNoteModalHostZIndex();
 
     const versions = useNM.currentNoteVersions;
@@ -356,7 +356,7 @@ export const ModalNoteHistory = ({
                                                     level="body-xs"
                                                     sx={{ color: g.text.secondary }}
                                                 >
-                                                    {relTime(v.tsUpdatedAt, t)}
+                                                    {relTime(v.tsUpdatedAt, t, locale)}
                                                 </Typography>
                                                 {via && <ViaChip size="sm" source={via} />}
                                             </Stack>
@@ -415,7 +415,7 @@ export const ModalNoteHistory = ({
                             </Typography>
                             <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                                 {fmt(t.notes.history.snapshotFrom, {
-                                    time: new Date(detail.tsUpdatedAt).toLocaleString(),
+                                    time: new Date(detail.tsUpdatedAt).toLocaleString(locale),
                                 })}
                             </Typography>
                             <Divider />

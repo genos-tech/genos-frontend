@@ -23,7 +23,7 @@ import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
  * get a 404: an empty list would read as a fact about the team rather than about their access.
  */
 export const TeamConnectedAppsSection = ({ teamId }: { teamId: string }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const a = t.settings.developer.teamApps;
     const [rows, setRows] = useState<TeamMcpConnection[] | null>(null);
@@ -72,7 +72,7 @@ export const TeamConnectedAppsSection = ({ teamId }: { teamId: string }) => {
                             <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
                                 {c.lastUsedAt
                                     ? fmt(t.settings.connectedApps.lastUsed, {
-                                          date: new Date(c.lastUsedAt).toLocaleDateString(),
+                                          date: new Date(c.lastUsedAt).toLocaleDateString(locale),
                                       })
                                     : t.settings.connectedApps.neverUsed}
                                 {c.otherTeams > 0 && (

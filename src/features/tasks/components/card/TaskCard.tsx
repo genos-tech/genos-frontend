@@ -237,10 +237,12 @@ export const TaskCard = ({
     dragging,
     onOpen,
 }: TaskCardProps) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const shownStatus = status ?? task.status;
     const due =
-        showDue && (dueWhenEmpty || task.dueDate) ? dueDisplay(task.dueDate, "card") : null;
+        showDue && (dueWhenEmpty || task.dueDate)
+            ? dueDisplay(task.dueDate, "card", locale)
+            : null;
     const hasFooter = showAssignee || due != null || footerEnd != null;
     return (
         <TaskCardFrame

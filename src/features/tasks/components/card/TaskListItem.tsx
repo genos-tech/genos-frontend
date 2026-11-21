@@ -72,10 +72,10 @@ export const TaskListItem = ({
     untitled,
     onOpen,
 }: TaskListItemProps) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const compact = variant === "compact";
     const shownStatus = status ?? task.status;
-    const due = dueDisplay(task.dueDate, "row");
+    const due = dueDisplay(task.dueDate, "row", locale);
     return (
         <Box
             data-testid="task-list-item"

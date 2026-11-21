@@ -3,6 +3,8 @@
 // it here means every surface answers "is this task on track, soon,
 // or overdue?" the same way, with the same color thresholds.
 
+import type { Locale } from "../../../../i18n";
+
 export type ScheduleTone = "neutral" | "amber" | "red" | "success";
 
 export type ScheduleStatus = {
@@ -47,8 +49,9 @@ const todayLocalMidnight = (): Date => {
     return new Date(n.getFullYear(), n.getMonth(), n.getDate());
 };
 
-const fmt = (d: Date | null): string | null =>
-    d == null ? null : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+// The date in the app's language (`locale` from `useTranslation()`), not the browser's.
+const fmt = (d: Date | null, locale: Locale): string | null =>
+    d == null ? null : d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 
 const buildRelativeLabel = (daysUntilDue: number, isClosed: boolean): string => {
     if (isClosed) return "Closed";
@@ -79,7 +82,8 @@ const buildTone = (daysUntilDue: number | null, isClosed: boolean): ScheduleTone
 export const getScheduleStatus = (
     startDate: string | null | undefined,
     dueDate: string | null | undefined,
-    status: string | null | undefined
+    status: string | null | undefined,
+    locale: Locale
 ): ScheduleStatus => {
     const start = parseIsoDate(startDate);
     const due = parseIsoDate(dueDate);
@@ -98,8 +102,8 @@ export const getScheduleStatus = (
         tone: buildTone(daysUntilDue, isClosed),
         relativeLabel: due == null ? null : buildRelativeLabel(daysUntilDue ?? 0, isClosed),
         durationDays,
-        startLabel: fmt(start),
-        dueLabel: fmt(due),
+        startLabel: fmt(start, locale),
+        dueLabel: fmt(due, locale),
         daysUntilDue,
     };
 };

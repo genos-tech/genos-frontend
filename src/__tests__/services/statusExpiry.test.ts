@@ -133,10 +133,10 @@ describe("statusExpiry.statusExpiryEndOfThisWeek (end of coming Friday, local)",
 
 describe("statusExpiry.formatStatusExpiry", () => {
     it("returns '' for missing / malformed values", () => {
-        expect(formatStatusExpiry(null)).toBe("");
-        expect(formatStatusExpiry(undefined)).toBe("");
-        expect(formatStatusExpiry("")).toBe("");
-        expect(formatStatusExpiry("not-a-date")).toBe("");
+        expect(formatStatusExpiry(null, "en")).toBe("");
+        expect(formatStatusExpiry(undefined, "en")).toBe("");
+        expect(formatStatusExpiry("", "en")).toBe("");
+        expect(formatStatusExpiry("not-a-date", "en")).toBe("");
     });
 
     it("omits the weekday when the instant is later today", () => {
@@ -145,7 +145,7 @@ describe("statusExpiry.formatStatusExpiry", () => {
         // calendar day (and flaked) whenever the suite happened to run
         // within 2h of local midnight.
         const laterToday = new Date(NOON_UTC + 2 * STATUS_EXPIRY_1H).toISOString();
-        const out = formatStatusExpiry(laterToday, NOON_UTC);
+        const out = formatStatusExpiry(laterToday, "en", NOON_UTC);
         expect(out).not.toBe("");
         // No three-letter weekday abbreviation when it's today.
         expect(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/.test(out)).toBe(false);
@@ -155,7 +155,7 @@ describe("statusExpiry.formatStatusExpiry", () => {
         // Eight days out is guaranteed a different calendar day regardless of
         // the local clock the test runs under.
         const nextWeek = new Date(NOON_UTC + 8 * 24 * STATUS_EXPIRY_1H).toISOString();
-        const out = formatStatusExpiry(nextWeek, NOON_UTC);
+        const out = formatStatusExpiry(nextWeek, "en", NOON_UTC);
         expect(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/.test(out)).toBe(true);
     });
 });

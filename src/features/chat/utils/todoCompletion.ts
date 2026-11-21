@@ -1,3 +1,4 @@
+import type { Locale } from "../../../i18n";
 import { TodoGroupProps, TodoItemProps } from "../../../types/chat";
 import { getLocalCurrentDate } from "../../../utils/dateUtils";
 
@@ -49,15 +50,15 @@ export const isCompletedToday = (item: TodoItemProps, today = getLocalCurrentDat
  * was ticked off, so a bare clock time couldn't be placed. The year is
  * left to the row's tooltip, which carries the full timestamp.
  *
- * The date is locale-aware (matching `formatDueLabel`, the app's other
- * short-date renderer) while the time stays a fixed zero-padded 24h
+ * The date is in the app's language (`locale` from `useTranslation()`, never the
+ * browser's; matching `formatDueLabel`, the app's other short-date renderer) while the time stays a fixed zero-padded 24h
  * `HH:mm`: it sits in a `tabular-nums` column, and a locale clock would
  * swing between "14:05" and "2:05 PM" and break that alignment.
  */
-export const formatCompletedAt = (iso: string): string => {
+export const formatCompletedAt = (iso: string, locale: Locale): string => {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
-    const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const date = d.toLocaleDateString(locale, { month: "short", day: "numeric" });
     const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
     return `${date} ${time}`;
 };

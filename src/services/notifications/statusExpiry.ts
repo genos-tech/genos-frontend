@@ -18,6 +18,7 @@
  * zone math the snooze presets use — imported, not re-derived.
  */
 
+import type { Locale } from "../../i18n";
 import { localDateParts, localWeekday, safeZone, wallClockToEpoch } from "./snooze";
 
 const MINUTE = 60_000;
@@ -99,6 +100,7 @@ export const STATUS_EXPIRY_4H = 4 * HOUR;
  */
 export const formatStatusExpiry = (
     iso: string | null | undefined,
+    locale: Locale,
     now: number = Date.now()
 ): string => {
     if (!iso) return "";
@@ -110,7 +112,7 @@ export const formatStatusExpiry = (
         d.getMonth() === nowDate.getMonth() &&
         d.getDate() === nowDate.getDate();
     return d.toLocaleString(
-        undefined,
+        locale,
         sameDay
             ? { hour: "numeric", minute: "2-digit" }
             : { weekday: "short", hour: "numeric", minute: "2-digit" }

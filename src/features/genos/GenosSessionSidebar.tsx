@@ -71,7 +71,7 @@ export const GenosSessionSidebar = ({
     onRetry,
 }: Props) => {
     const { mode } = useColorScheme();
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const isDark = mode === "dark";
     const isSearching = search.trim().length > 0;
     // The server already sorts pinned-first; splitting rather than
@@ -132,7 +132,7 @@ export const GenosSessionSidebar = ({
                 }
                 secondary={
                     <>
-                        {relativeTimeLabel(s.last_active_at, t.spotlight)}
+                        {relativeTimeLabel(s.last_active_at, t.spotlight, locale)}
                         {" · "}
                         {fmt(t.spotlight.history.turnCount, { count: s.turn_count })}
                         {pinError === s.session_id && (

@@ -27,7 +27,7 @@ export const PendingInvitesSection = ({
     refreshKey?: number;
     zIndex: number;
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const p = t.admin.teamProfile.pendingInvites;
     const [rows, setRows] = useState<TeamInviteRow[] | null>(null);
@@ -65,7 +65,7 @@ export const PendingInvitesSection = ({
                             <Typography level="body-xs" sx={{ color: g.text.secondary }} noWrap>
                                 {fmt(p.detail, {
                                     name: i.invitedBy ?? "—",
-                                    date: new Date(i.expiresAt).toLocaleDateString(),
+                                    date: new Date(i.expiresAt).toLocaleDateString(locale),
                                 })}
                             </Typography>
                         </Box>
