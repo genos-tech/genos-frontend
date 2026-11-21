@@ -11,7 +11,9 @@ import type { ActivityMessageProps } from "../types/chat";
 
 describe("addActivityMessage (MIP-1924)", () => {
     it("writes the row and does not read the whole store", async () => {
-        const add = vi.spyOn(ActivityService.prototype, "addActivityMessage").mockResolvedValue();
+        const add = vi
+            .spyOn(ActivityService.prototype, "addActivityMessage")
+            .mockResolvedValue(undefined);
         const readAll = vi.spyOn(ActivityService.prototype, "getAllActivityMessages");
         const activityMessage = { activityId: "a1" } as unknown as ActivityMessageProps;
 
