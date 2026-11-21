@@ -8,6 +8,7 @@ import {
 } from "../../features/notes/common/utils/noteDeleted";
 import { noteTypeFromBucket } from "../../features/notes/common/utils/noteTypeAlias";
 import { isV3Uuid } from "../../utils/legacyId";
+import { storedMentionName } from "../../utils/mentionName";
 import { ChatManagementState } from "../chats/useChatManagement";
 import { NoteManagementState } from "../notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../tasks/useSprintMilestoneManagement";
@@ -60,9 +61,10 @@ const textFromBlocks = (content: unknown): string => {
             const obj = node as Record<string, unknown>;
             const nodeType = obj.type;
             if (nodeType === "mention") {
-                const user = (obj.props as Record<string, unknown> | undefined)?.userName;
+                const mention = obj.props as Record<string, unknown> | undefined;
+                const user = mention?.userName;
                 if (typeof user === "string" && user) {
-                    parts.push(`@${user}`);
+                    parts.push(`@${storedMentionName(mention?.userId, user)}`);
                 }
             } else if (nodeType === "mentionGroup") {
                 const group = (obj.props as Record<string, unknown> | undefined)?.groupName;

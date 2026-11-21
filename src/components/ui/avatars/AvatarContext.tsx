@@ -4,6 +4,8 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
+import { deletedUserLabel } from "../../../utils/mentionName";
+import { isDeletedUser } from "../../../utils/teamRoster";
 import { rememberedPerson, useRememberedPerson } from "./userDirectory";
 
 // Single source of truth for everything an avatar needs to render itself
@@ -111,15 +113,23 @@ export const resolveDisplayName = (
     if (userId == null || userId === "") return fallbackName;
     const idStr = String(userId);
     if (myself && idStr === String(myself.userId)) return myself.userName || fallbackName;
-    return (
-        teamMemberProfiles?.[idStr]?.userName ||
-        // Somebody from another team, whom no roster here can name. Read
-        // without subscribing: this is a pure function so it can run in a
-        // `.map()`, and the stored `fallbackName` is already a real name in
-        // the cases where this matters.
-        rememberedPerson(idStr)?.userName ||
-        fallbackName
-    );
+    // The roster, then somebody from another team whom no roster here can
+    // name. The directory is read without subscribing: this is a pure
+    // function so it can run in a `.map()`.
+    //
+    // A profile we HOLD that carries the anonymised marks is a deleted
+    // account, and reads as the localised "Deleted user" (the stored `userName`
+    // inside a mention or message is the real name it had when typed, which
+    // account deletion must not leave on screen). An id we hold no profile for
+    // proves nothing (it may be someone who just left the team), so it keeps
+    // the stored name below, unless that stored name is itself the anonymised
+    // one.
+    for (const profile of [teamMemberProfiles?.[idStr], rememberedPerson(idStr)]) {
+        if (!profile) continue;
+        if (isDeletedUser(profile)) return deletedUserLabel();
+        if (profile.userName) return profile.userName;
+    }
+    return isDeletedUser({ userName: fallbackName }) ? deletedUserLabel() : fallbackName;
 };
 
 /**
@@ -133,6 +143,11 @@ export const useResolvedUserName = (
     fallbackName: string
 ): string => {
     const ctx = useOptionalAvatarContext();
+    // Subscribe to the directory for THIS id, so a chip that rendered before
+    // the payload naming the person landed (a deleted sender arriving
+    // anonymised) re-renders into "Deleted user". `resolveDisplayName` reads
+    // the directory without subscribing.
+    useRememberedPerson(userId);
     return resolveDisplayName(userId, fallbackName, ctx?.myself, ctx?.teamMemberProfiles);
 };
 

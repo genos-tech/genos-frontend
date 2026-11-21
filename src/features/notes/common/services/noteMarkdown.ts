@@ -18,6 +18,7 @@
 import { BlockNoteEditor, type PartialBlock } from "@blocknote/core";
 
 import { normalizeCodeBlockLanguages } from "../../../../components/editors/codeBlockLanguage";
+import { storedMentionName } from "../../../../utils/mentionName";
 
 // Headless schema holder, created lazily and reused (editor creation is
 // not free — it builds a ProseMirror schema).
@@ -245,7 +246,7 @@ const customInlineToText = (node: AnyRecord): string => {
     const props = (node.props ?? {}) as AnyRecord;
     switch (node.type) {
         case "mention":
-            return `@${props.userName ?? "user"}`;
+            return `@${props.userName == null ? "user" : storedMentionName(props.userId, String(props.userName))}`;
         case "mentionGroup":
             return `@${props.groupName ?? "group"}`;
         case "hashTask": {

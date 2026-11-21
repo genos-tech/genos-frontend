@@ -23,6 +23,7 @@
 import { useSyncExternalStore } from "react";
 
 import type { UserProps } from "../../../types/admin";
+import { isDeletedUser } from "../../../utils/teamRoster";
 
 /** What a denormalized user looks like across the payloads that carry one. */
 export type SeenPerson = {
@@ -75,6 +76,10 @@ export const rememberPeople = (seen: readonly SeenPerson[] | null | undefined): 
         if (!next.userName && !next.avatarImgPath && !next.userEmail) continue;
         const current = people.get(next.userId);
         if (current && same(current, next)) continue;
+        // A deleted account never comes back, so what says "deleted" sticks:
+        // a stale copy of the person (a message cached before the deletion,
+        // read back after the anonymised one) must not put the real name back.
+        if (current && isDeletedUser(current) && !isDeletedUser(next)) continue;
         people.set(next.userId, next);
         changed = true;
     }
