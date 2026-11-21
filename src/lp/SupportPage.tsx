@@ -18,8 +18,8 @@ import { useDocumentMeta } from "./useDocumentMeta";
  *
  * Deliberately short and bare. The only support channel that exists is the
  * email address below, so that is all the page offers: no response-time
- * promise, no phone number, no chat widget, no contact form (there is no
- * backend for one). Do not add any of those unless they really exist.
+ * promise, no phone number, no chat widget. Do not add any of those unless they really exist. The contact
+ * form at `/contact` (MIP-1261) is the one exception: it mails support and stores nothing.
  *
  * The "Connected AI apps" steps quote the app's own labels (`supportLabels.ts`). They are the
  * strings in `settings.tabs.developer` and `settings.connectedApps` (en/settings.ts
