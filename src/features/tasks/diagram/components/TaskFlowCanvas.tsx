@@ -1279,7 +1279,9 @@ const CanvasInner = ({
     const cardNodes = useMemo(
         () =>
             drawn.nodes.map((n) => {
-                const d = n.data as unknown as TaskNodeData;
+                // MIP-1925: band caption nodes carry no task; leave them as they are.
+                const d = n.data as unknown as TaskNodeData | undefined;
+                if (n.type === BAND_LABEL_NODE_TYPE || !d?.task) return n;
                 const status = d.task.status ?? "";
                 return {
                     ...n,
