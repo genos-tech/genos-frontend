@@ -21,12 +21,12 @@ const activityService = new ActivityService();
 
 export const activityHandlers: HandlerMap<ActivityRequests> = {
     addActivityMessage: async ({ activityMessage }) => {
-        const ok = await activityService.addActivityMessage(activityMessage);
+        await activityService.addActivityMessage(activityMessage);
         // Sanity check — read back immediately so we can confirm the row
         // actually landed. Diagnoses silent put() failures (e.g. schema
         // mismatch, IndexedDB constraint violation) that `BaseRepository.put`
         // currently swallows.
-        const all = await activityService.getAllActivityMessages();
+        await activityService.getAllActivityMessages();
     },
 
     loadActivityHistory: async ({ myself, accessToken, forceFull }) => {

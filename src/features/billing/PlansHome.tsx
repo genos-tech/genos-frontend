@@ -24,7 +24,6 @@ import {
     fetchTeamBillingConfig,
     openBillingPortal,
     openTeamBillingPortal,
-    PlanPrice,
     PlanTier,
     PurchasablePlan,
     startCheckout,
@@ -33,7 +32,6 @@ import {
     TeamBillingConfig,
 } from "../../services/billingApi";
 import { formatPrice } from "../../utils/currency";
-import { CurrencyPicker } from "./CurrencyPicker";
 import { planCta } from "./planCta";
 import { MatrixCell, planMatrixGroups } from "./planMatrix";
 import { TrialEndNote } from "./TrialEndNote";
@@ -159,7 +157,7 @@ export const PlansHome = () => {
     const { t, locale } = useTranslation();
     // Display currency. The subscription's REAL currency is read off
     // Stripe and is unaffected by this — see useCurrencyPreference.
-    const { currency, setCurrency } = useCurrencyPreference();
+    const { currency } = useCurrencyPreference();
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [config, setConfig] = useState<BillingConfig | null>(null);
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);

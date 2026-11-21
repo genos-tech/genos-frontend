@@ -30,7 +30,6 @@ import {
     nowOffsetPx,
     OverlapSlot,
     resolveOverlapColumns,
-    TIMELINE_END_HOUR,
     TIMELINE_HOURS,
     TIMELINE_START_HOUR,
     TIMELINE_TOTAL_PX,

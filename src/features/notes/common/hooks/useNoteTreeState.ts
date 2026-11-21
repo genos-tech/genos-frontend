@@ -7,7 +7,6 @@ export function useNoteTreeState<T extends BaseNoteTreeNode>({
     metaTree,
     currentChain,
     selectedTabIndex,
-    currentNote,
 }: UseNoteTreeStateProps<T>): NoteTreeState<T> {
     const [tmpCurrentChain, setTmpCurrentChain] = useState<T[]>();
     const [tmpMetaTree, setTmpMetaTree] = useState<T[]>(metaTree);
