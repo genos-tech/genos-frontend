@@ -330,6 +330,8 @@ const noticeRow = (meta: Record<string, unknown>) => {
                     selectedActivityId=""
                     setSelectedActivityId={vi.fn()}
                     useCM={{} as never}
+                    useTM={{} as never}
+                    setCurrentProject={vi.fn()}
                 />
             </MemoryRouter>
         </CssVarsProvider>
