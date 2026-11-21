@@ -890,13 +890,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
             {taskContent.id != null && taskContent.project?.projectId != null && (
                 <LazyTaskDiagram
+                    myself={myself}
                     open={openTaskDiagram}
                     projectId={Number(taskContent.project.projectId)}
-                    myself={myself}
-                    // Modal-hosted previews (UrlLinkModal) must lift the
-                    // graph above the host dialog or it opens invisibly
-                    // behind it — see diagramZIndex.ts.
-                    zIndex={hostZIndex != null ? hostZIndex + DIAGRAM_LIFT : undefined}
                     // Always anchor the diagram on the WHOLE hierarchy the
                     // task lives in: pass this task and let the graph
                     // loader walk up the parent chain. Opening the diagram
@@ -909,6 +905,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     usePM={usePM}
                     useSM={useSM}
                     useTM={useTM}
+                    // Modal-hosted previews (UrlLinkModal) must lift the
+                    // graph above the host dialog or it opens invisibly
+                    // behind it — see diagramZIndex.ts.
+                    zIndex={hostZIndex != null ? hostZIndex + DIAGRAM_LIFT : undefined}
                     rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${
                         taskContent.title || t.tasks.diagram.untitled
                     }`}

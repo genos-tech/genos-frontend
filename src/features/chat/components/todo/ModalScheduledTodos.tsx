@@ -224,6 +224,9 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
                 description={ts.description}
                 open={open}
                 size="md"
+                title={editing ? ts.editHeading : ts.heading}
+                // The page's own dialogs sit at Joy's modal layer; a host raises it.
+                zIndex={layer ?? theme.zIndex.modal}
                 icon={
                     editing ? (
                         <EditRoundedIcon sx={{ color: g.accent.text }} />
@@ -233,9 +236,6 @@ export const ModalScheduledTodos = (props: ModalScheduledTodosProps) => {
                 }
                 ownsListboxPopups
                 onClose={onClose}
-                title={editing ? ts.editHeading : ts.heading}
-                // The page's own dialogs sit at Joy's modal layer; a host raises it.
-                zIndex={layer ?? theme.zIndex.modal}
             >
                 {error && (
                     <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>

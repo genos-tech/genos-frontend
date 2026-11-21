@@ -119,11 +119,12 @@ export const es: DeepPartial<Messages> = {
             loading: "Cargando",
             preparingWorkspace: "Preparando tu espacio de trabajo",
             takingLonger: "¿Está tardando más de lo esperado?",
-            sessionExpired: "Es posible que tu sesión haya caducado",
-            signInAgain: "Iniciar sesión de nuevo",
             offlineTitle: "Estás sin conexión",
             offlineBody:
                 "No se puede conectar con el servidor ahora mismo. Se reanudará automáticamente en cuanto vuelva la conexión.",
+            stillConnecting:
+                "Seguimos conectando con el servidor. Con una conexión lenta puede tardar un momento.",
+            reload: "Recargar",
         },
         modalView: {
             chatUnavailable: "Este chat no está disponible.",
@@ -255,6 +256,32 @@ export const es: DeepPartial<Messages> = {
                 "Ya no verás los mensajes de este grupo. Puedes volver a unirte más tarde si es público.",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "Archivar proyecto",
+            unarchiveMenuProject: "Desarchivar proyecto",
+            archiveMenuChat: "Archivar grupo",
+            unarchiveMenuChat: "Desarchivar grupo",
+            archiveInstead: "Archivar en su lugar",
+            archiveInsteadHint:
+                "Lo conserva todo. Queda de solo lectura hasta que lo desarchives.",
+            ownerOnly: "Solo el propietario puede archivar o desarchivar.",
+            projectBannerTitle: "Este proyecto está archivado",
+            chatBannerTitle: "Este grupo está archivado",
+            projectBannerBody:
+                "Es de solo lectura: no se pueden crear tareas, editar ni comentar hasta desarchivarlo. No se ha eliminado nada.",
+            chatBannerBody:
+                "Es de solo lectura: no se pueden enviar mensajes hasta desarchivarlo. No se ha eliminado nada.",
+            unarchiveAction: "Desarchivar",
+            showArchived: "Mostrar archivados",
+            hideArchived: "Ocultar archivados",
+            archivedSection: "Archivados",
+            archivedBadge: "Archivado",
+            newTaskDisabled: "Desarchiva este proyecto para añadir tareas.",
+            composerDisabled: "Este grupo está archivado. Desarchívalo para enviar mensajes.",
+            archiveFailed: "No se pudo archivar. Inténtalo de nuevo.",
+            unarchiveFailed: "No se pudo desarchivar. Inténtalo de nuevo.",
+        },
         deleteChat: {
             button: "Eliminar grupo",
             title: "¿Eliminar este grupo?",
@@ -417,6 +444,8 @@ export const es: DeepPartial<Messages> = {
             serverError: "Error del servidor. Vuelve a intentarlo en unos momentos.",
             permissionDenied: "No tienes permiso para hacer eso.",
             requestFailed: "No se pudo completar la solicitud. Inténtalo de nuevo.",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived: "Está archivado y es de solo lectura. Desarchívalo para hacer cambios.",
             actionFailed: "No se pudo completar la acción. Inténtalo de nuevo.",
             limitReached:
                 "Has alcanzado un límite de tu plan. Consulta Configuración → Plan y uso.",
@@ -631,6 +660,7 @@ export const es: DeepPartial<Messages> = {
             planEnds: "El plan termina el",
             cancelScheduled:
                 "La cancelación está programada: tu plan sigue activo hasta esa fecha.",
+            pendingChange: "Cambio a {plan} el {date}",
             pastDue:
                 "Hay un problema con el pago: actualiza tu método de pago en el portal de facturación.",
             plansHeading: "Planes y precios",
@@ -3541,6 +3571,9 @@ export const es: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "Quedan {remaining} de {total} tareas",
+                cardAriaLabel: "{id} {title}, {status}",
+                cardAriaHint:
+                    "Pulsa Intro o Espacio para abrir la vista previa. Las flechas llevan a una tarea enlazada.",
                 healthSummary: "Cerrado {actualPct}% · Esperado {expectedPct}%",
                 expectedByToday: "Esperado para hoy: {expectedPct}%",
                 openBlockerOne: "{count} bloqueador abierto",

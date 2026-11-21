@@ -7,6 +7,7 @@ import { ViaAppIcon } from "../../../../../components/ui/misc/ViaAppIcon";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
@@ -34,8 +35,8 @@ interface AiAppActivityRowProps {
  * The rows are the member's own doing, so there is no person to show: the app's
  * name leads, the sentence follows (worded here from facts the API stored),
  * and a click opens what was made or changed and marks the row read. A task or a milestone
- * opens in the chat's preview, as a task-body mention does (MIP-1755); a note, or a notice
- * without the ids to open in place, goes to its page.
+ * opens in the chat's preview, as a task-body mention does (MIP-1755); a note opens in the note
+ * modal (MIP-1845); a notice without the ids to open in place goes to its page.
  */
 export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     activity,
@@ -49,6 +50,7 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
 }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const modal = useUrlLinkModal();
     const { accessToken } = useAuth();
     const { updateActivityReadStatus } = useActivityStatus({
         activity,
@@ -69,6 +71,13 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     // mention opens), not on its page. Falls back to the page when the ids are missing or the
     // task cannot be loaded.
     const openItem = async () => {
+        // MIP-1845: a note opens in the note modal, the same surface a note link in a chat message
+        // opens. The URL stays on the chat; "Open note" in the modal goes to the note page. The hook
+        // decides the outcome itself, so there is no second navigation here.
+        if (notice.kind === "note" && url && modal) {
+            modal.openModalByHref(url, { fullPageHref: url });
+            return;
+        }
         const item = notice.items[0];
         const projectId = item?.projectId ?? null;
         if (item && projectId != null && item.kind === "milestone" && item.id != null) {

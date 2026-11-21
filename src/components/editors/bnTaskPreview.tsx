@@ -321,11 +321,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     comments={false}
                     editor={editor as any}
                     emojiPicker={false}
+                    formattingToolbar={false}
                     // A custom "/" SuggestionMenuController is mounted below —
                     // the built-in menu must be off or BOTH render on "/",
                     // stacking duplicate group labels (the "Media x3" bug).
                     sideMenu={false}
-                    formattingToolbar={false}
                     // `false` so the custom `<SideMenuController>` below
                     // is the only side-menu controller attached. When
                     // this is `true`, BlockNote registers its own

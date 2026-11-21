@@ -121,10 +121,10 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     as="div"
                     expanded={hasChildren ? open : undefined}
                     icon={<DescriptionOutlinedIcon />}
+                    label={node.title || t.notes.defaults.untitled}
                     selected={isSelected}
                     trailing={hasUnread ? <NoteUnreadDot /> : undefined}
                     unread={hasUnread}
-                    label={node.title || t.notes.defaults.untitled}
                     // Keep the "..." trigger visible while its portal menu is
                     // open: otherwise the hover-reveal hides it the moment the
                     // pointer moves onto the menu itself.

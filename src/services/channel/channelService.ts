@@ -36,6 +36,7 @@ import { rememberPeople } from "../../components/ui/avatars/userDirectory";
 import { INDEX_NAMES, STORES } from "../../db/config/constants";
 import { initDB } from "../../db/config/schema";
 import { CheckpointRepository } from "../../db/repositories/checkpoints";
+import { markChannelArchived, setArchivedChannelIds } from "../../features/archive/archiveState";
 import { reminderSweepDelayMs } from "../../features/chat/utils/reminderSweep";
 import { requestInboxResync } from "../../features/inbox/inboxResyncEvent";
 import type {
@@ -830,6 +831,20 @@ export class ChannelService {
     }
 
     private async _doListChannels(): Promise<Channel[]> {
+        // The default list leaves archived group chats out (MIP-1693). The full list keeps them,
+        // so an archived chat can still be opened. What the default list lacks is the archived
+        // set, and it is recorded here for every pane and banner to read.
+        const [active, all] = await Promise.all([
+            this._fetchChannelPages(false),
+            this._fetchChannelPages(true),
+        ]);
+        const activeIds = new Set(active.map((c) => c.id));
+        setArchivedChannelIds(all.filter((c) => !activeIds.has(c.id)).map((c) => c.id));
+        return all;
+    }
+
+    /** Every page of the channel list. `includeArchived` adds the archived chats to it. */
+    private async _fetchChannelPages(includeArchived: boolean): Promise<Channel[]> {
         try {
             // `team_id` is REQUIRED for correctness, not an optimization.
             // Unnarrowed, this endpoint returns every team the caller
@@ -865,6 +880,7 @@ export class ChannelService {
                 }> = await this.api().get("/api/v3/channels/", {
                     params: {
                         ...(this.currentTeamId ? { team_id: this.currentTeamId } : {}),
+                        ...(includeArchived ? { include_archived: "true" } : {}),
                         limit: CHANNEL_LIST_PAGE_SIZE,
                         ...(cursor ? { cursor } : {}),
                     },
@@ -2179,6 +2195,29 @@ export class ChannelService {
      * server no longer lists it, and `reconcileChannelList` evicts what it does not list. Other
      * members learn the same way, through the membership notice the server pushes.
      */
+    /**
+     * The owner archives a group chat (MIP-1693): read-only, out of the default list, nothing
+     * removed. The local archived set moves at once; the next list refresh confirms it.
+     */
+    async archiveChannel(channelId: string): Promise<void> {
+        try {
+            await this.api().post(`/api/v3/channels/${channelId}/archive/`);
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+        markChannelArchived(channelId, true);
+    }
+
+    /** The owner restores an archived group chat to the default list. */
+    async unarchiveChannel(channelId: string): Promise<void> {
+        try {
+            await this.api().post(`/api/v3/channels/${channelId}/unarchive/`);
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+        markChannelArchived(channelId, false);
+    }
+
     async deleteChannel(channelId: string, mode: "soft" | "hard" = "soft"): Promise<void> {
         try {
             await this.api().delete(`/api/v3/channels/${channelId}/`, { params: { mode } });

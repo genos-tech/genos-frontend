@@ -14,7 +14,7 @@ import {
     overlayPendingMilestoneDeletes,
     taskDeleteKey,
 } from "../features/tasks/utils/pendingTaskDelete";
-import { __resetUndoables, flushUndoables, runUndoable } from "../hooks/common/useUndoableAction";
+import { __resetUndoables, runUndoable } from "../hooks/common/useUndoableAction";
 import { useSprintMilestoneManagement } from "../hooks/tasks/useSprintMilestoneManagement";
 
 const milestone = (milestoneId: number, taskId: number | null, status = "Open"): Milestone =>

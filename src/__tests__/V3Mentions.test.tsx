@@ -13,7 +13,7 @@
  *     viewer.
  */
 
-import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
+import { act, render, renderHook, screen } from "@testing-library/react";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MessageBody } from "../features/channel/components/MessageBody";

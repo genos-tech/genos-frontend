@@ -20,6 +20,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { useSyncFailure } from "../../../../services/syncStatus";
 import { UserProps } from "../../../../types/admin";
+import { useIsProjectArchived } from "../../../archive/archiveState";
 import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../../../notes/my-notes/components/MyNoteMain";
 import { TaskNoteMain } from "../../../notes/task-notes/components/TaskNoteMain";
@@ -98,6 +99,9 @@ export const TaskHomeLayout = ({
     const mainPanelSx = flushMainPanel
         ? { ...ls.mainPanel, px: 0, pt: 0, pb: 0, gap: 0 }
         : ls.mainPanel;
+    // An archived project is read-only (MIP-1693): its table, board, task panel and task note take
+    // no input, and the banner in the header says why. The header itself stays usable (Unarchive).
+    const archived = useIsProjectArchived(usePM.currentProject?.projectId);
     const underHeaderSx = {
         flex: 1,
         minHeight: 0,
@@ -141,7 +145,7 @@ export const TaskHomeLayout = ({
                         onDeleteProject={onDeleteProject}
                         onManageTags={onManageTags}
                     />
-                    <Box sx={underHeaderSx}>
+                    <Box inert={archived} sx={underHeaderSx}>
                         {useTM.isTaskTableVisible && (
                             <DraggableTaskTable
                                 myself={myself}
@@ -201,7 +205,7 @@ export const TaskHomeLayout = ({
         <>
             <ResizeHandle className="task-resize-handle" />
             <Panel defaultSize={50} id={"3"} maxSize={80} minSize={30} order={3}>
-                <Box sx={ls.mainPanel}>
+                <Box inert={archived} sx={ls.mainPanel}>
                     <TaskPreview
                         myself={myself}
                         setMyself={setMyself}
@@ -230,7 +234,7 @@ export const TaskHomeLayout = ({
         <>
             <ResizeHandle className="task-resize-handle" />
             <Panel defaultSize={50} id={"7"} maxSize={100} minSize={50} order={7}>
-                <Box sx={ls.mainPanel}>
+                <Box inert={archived && activeNoteType === 2} sx={ls.mainPanel}>
                     {activeNoteType === 1 && useNM.currentMyNote && (
                         <MyNoteMain
                             isInTaskPage={true}
@@ -373,7 +377,12 @@ export const TaskHomeLayout = ({
                             useTM.currentPreviewTaskId !== -1 ||
                             useTM.currentPreviewKind === "milestone") &&
                         renderTaskPreviewPanel()}
-                    {useTM.isCreatingTask.flag && isActiveRoute && renderCreateTaskPanel()}
+                    {/* No new task in an archived project (MIP-1693): the panel would open and
+                        could not be used, so it is not offered. */}
+                    {useTM.isCreatingTask.flag &&
+                        isActiveRoute &&
+                        !archived &&
+                        renderCreateTaskPanel()}
                     {/* `isTaskNotePaneVisible`, NOT `isTaskNoteVisible`:
                         closing every note tab leaves the flag set but each
                         branch inside `renderTaskNotePanel` gated off, which

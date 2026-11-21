@@ -623,7 +623,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     }}
                                 >
                                     <AvatarWithStatus
-                                        showPulseDot={false}
                                         // `assignee` is now nullable (a task can
                                         // be unassigned). When null, render the
                                         // empty placeholder avatar —
@@ -632,6 +631,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         isYou={!!assignee && myself.userId === assignee.userId}
                                         myself={myself}
                                         setMyself={setMyself}
+                                        showPulseDot={false}
                                         socket={socket}
                                         useCM={useCM}
                                         useUISM={useUISM}
@@ -698,8 +698,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                                         setMyself={setMyself}
                                         setTaskContent={setTaskContent}
-                                        socket={socket}
                                         setTaskUpdated={setTaskUpdated}
+                                        socket={socket}
                                         // Adapt the non-nullable reporter setter
                                         // to the wider `setUser: UserProps | null`
                                         // signature ACTeamUsers needs. The picker

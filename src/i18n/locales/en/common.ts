@@ -73,6 +73,31 @@ export const common = {
         gmDescription:
             "You'll no longer see this group's messages. You can re-join later if it's public.",
     },
+    // TODO(copy): MIP-1693 — every string of this block is a DRAFT for a native reader.
+    archive: {
+        archiveMenuProject: "Archive project",
+        unarchiveMenuProject: "Unarchive project",
+        archiveMenuChat: "Archive group",
+        unarchiveMenuChat: "Unarchive group",
+        archiveInstead: "Archive instead",
+        archiveInsteadHint: "Keeps everything. It becomes read-only until you unarchive it.",
+        ownerOnly: "Only the owner can archive or unarchive.",
+        projectBannerTitle: "This project is archived",
+        chatBannerTitle: "This group is archived",
+        projectBannerBody:
+            "It is read-only: no new tasks, edits or comments until it is unarchived. Nothing has been removed.",
+        chatBannerBody:
+            "It is read-only: no new messages until it is unarchived. Nothing has been removed.",
+        unarchiveAction: "Unarchive",
+        showArchived: "Show archived",
+        hideArchived: "Hide archived",
+        archivedSection: "Archived",
+        archivedBadge: "Archived",
+        newTaskDisabled: "Unarchive this project to add tasks.",
+        composerDisabled: "This group is archived. Unarchive it to send messages.",
+        archiveFailed: "Couldn't archive it. Please try again.",
+        unarchiveFailed: "Couldn't unarchive it. Please try again.",
+    },
     // Deleting a group chat as its owner (MIP-1705).
     deleteChat: {
         button: "Delete group",
@@ -283,8 +308,12 @@ export const common = {
         loading: "Loading",
         preparingWorkspace: "Preparing your workspace",
         takingLonger: "Taking longer than expected?",
-        sessionExpired: "Your session may have expired",
-        signInAgain: "Sign In Again",
+        // Shown after 5 s on the boot screen while the workspace is still
+        // loading. It must not claim the session expired: that is only
+        // true when AuthContext signs the user out, and that redirects.
+        stillConnecting:
+            "Still connecting to the server. On a slow connection this can take a moment.",
+        reload: "Reload",
         // Shown instead of the two lines above when the device is
         // offline — blaming the session there is wrong, and sign-in
         // can't submit without a network anyway.
