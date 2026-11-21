@@ -1784,6 +1784,14 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // TODO(copy): MIP-1956 — draft wording for a native reader.
+        liveRegion: {
+            newMessage: "{name}: {preview}",
+            more: "{count, plural, one {+# और संदेश} other {+# और संदेश}}",
+            attachment: "अटैचमेंट भेजा",
+            listLabel: "संदेश",
+            threadListLabel: "थ्रेड के जवाब",
+        },
         retentionBanner:
             "आपकी योजना में {days} दिनों से पुराने संदेश छिपे हुए हैं। पूरा इतिहास देखने के लिए अपग्रेड करें।",
         composer: {
