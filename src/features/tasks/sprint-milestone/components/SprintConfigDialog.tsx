@@ -20,6 +20,7 @@ import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
+import { todayCalendarIso } from "../../../../utils/calendarDate";
 import { Sprint } from "../types";
 
 type Props = {
@@ -46,7 +47,7 @@ const WEEKDAYS = [
     { labelKey: "saturday" as const, value: 6 },
 ];
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const todayIso = () => todayCalendarIso();
 
 const weekdayOf = (iso: string) => new Date(`${iso}T00:00:00Z`).getUTCDay();
 
