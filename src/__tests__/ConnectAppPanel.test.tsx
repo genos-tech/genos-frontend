@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { openConnectAppPanel } from "../components/layout/ConnectAppPanel";
 import { ConnectedAppsSection } from "../components/layout/ConnectedAppsSection";
 import { en } from "../i18n/locales/en";
+import { PLUGIN_COMMANDS, PLUGIN_REPO_URL, PLUGIN_ZIP_URL } from "../utils/mcpConnect";
 
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "tok" }),
@@ -206,6 +207,24 @@ describe("pointing at the panel from elsewhere", () => {
         expect(toggle().getAttribute("aria-expanded")).toBe("false");
         act(() => openConnectAppPanel());
         expect(toggle().getAttribute("aria-expanded")).toBe("true");
+    });
+
+    it("offers the Genos plugin: both commands in one copy box, and the zip and repo links", async () => {
+        render(<ConnectedAppsSection />);
+        await screen.findByTestId("mcp-plugin-command");
+        expect(screen.getByTestId("mcp-plugin-command").textContent).toBe(PLUGIN_COMMANDS);
+        expect(PLUGIN_COMMANDS.split("\n")).toEqual([
+            "/plugin marketplace add genos-tech/genos-claude-plugin",
+            "/plugin install genos@genos",
+        ]);
+        expect(screen.getByRole("button", { name: c.pluginCopyAria })).toBeTruthy();
+        const zip = screen.getByRole("link", { name: c.pluginZipLink });
+        expect(zip.getAttribute("href")).toBe(PLUGIN_ZIP_URL);
+        expect(zip.getAttribute("target")).toBe("_blank");
+        expect(zip.getAttribute("rel")).toContain("noopener");
+        expect(screen.getByRole("link", { name: c.pluginRepoLink }).getAttribute("href")).toBe(
+            PLUGIN_REPO_URL
+        );
     });
 
     it("does nothing, and does not throw, when the panel is not on screen", () => {

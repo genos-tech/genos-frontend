@@ -672,6 +672,17 @@ export const hi: DeepPartial<Messages> = {
                 plan: "कनेक्ट करने के लिए Core प्लान या उससे ऊपर चाहिए। Free पर अनुमोदन पेज बताता है कि यह आपके प्लान में नहीं है।",
                 revoke: "किसी ऐप को डिसकनेक्ट करने के लिए सेटिंग्स → डेवलपर → कनेक्टेड ऐप में उसे रद्द करें।",
                 trap: "पूरा पता चिपकाएँ, अंत के पाथ सहित। इसके बिना Claude बताता है कि साइन इन हो गया, फिर रिपोर्ट करता है कि Genos ने उसका अनुरोध अस्वीकार कर दिया।",
+                // TODO(copy): plugin wording (MIP-1870), English draft until it is translated.
+                pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+                pluginIntro:
+                    "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+                pluginCodeLabel: "Claude Code: run these two commands in the chat",
+                pluginCopyAria: "Copy the plugin commands",
+                pluginDesktopLabel:
+                    "claude.ai or Claude Desktop: download the zip, then upload it under Customize, Plugins.",
+                pluginRepoLink: "Plugin page on GitHub",
+                pluginZipLink: "Download the zip",
+                pluginNote: "The plugin needs the same plan as the connector: Core or above.",
                 menuNote:
                     "दूसरे ऐप में मेनू के नाम बदलते रहते हैं: कनेक्टर या कस्टम MCP सर्वर देखें।",
             },

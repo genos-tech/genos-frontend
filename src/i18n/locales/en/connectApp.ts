@@ -40,5 +40,16 @@ export const connectApp = {
     plan: "Connecting needs the Core plan or above. On Free, the approval page says it isn't on your plan.",
     revoke: "To disconnect an app, revoke it under Settings → Developer → Connected apps.",
     trap: "Paste the whole address, including the path at the end. Without it Claude says it signed in, then reports that Genos refused its request.",
+    // The optional Genos plugin (MIP-1870). Its address and commands live in utils/mcpConnect.ts, never here.
+    pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+    pluginIntro:
+        "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+    pluginCodeLabel: "Claude Code: run these two commands in the chat",
+    pluginCopyAria: "Copy the plugin commands",
+    pluginDesktopLabel:
+        "claude.ai or Claude Desktop: download the zip, then upload it under Customize, Plugins.",
+    pluginRepoLink: "Plugin page on GitHub",
+    pluginZipLink: "Download the zip",
+    pluginNote: "The plugin needs the same plan as the connector: Core or above.",
     menuNote: "Menu names in other apps change: look for connectors, or custom MCP servers.",
 };
