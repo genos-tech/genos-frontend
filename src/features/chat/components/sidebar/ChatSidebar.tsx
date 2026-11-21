@@ -419,7 +419,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         alignItems="center"
                         direction="row"
                         justifyContent="space-between"
-                        sx={{ mb: 1, flexWrap: "wrap", rowGap: 0.5 }}
+                        sx={{
+                            mb: 1,
+                            flexWrap: "wrap",
+                            rowGap: 0.5,
+                            // Wrapped, the actions stay at the row's end.
+                            "& > :last-child": { marginInlineStart: "auto" },
+                        }}
                     >
                         <Stack
                             direction="row"
@@ -545,7 +551,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             alignItems="center"
                             direction="row"
                             spacing={0.5}
-                            sx={[headerTouchTargetsSx, { marginInlineStart: "auto" }]}
+                            sx={headerTouchTargetsSx}
                         >
                             {/* Unread Filter Toggle */}
                             <Chip

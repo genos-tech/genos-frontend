@@ -23,6 +23,6 @@ describe("320px phone floor (MIP-1927)", () => {
     it("lets the chat sidebar's tab row wrap so its menu stays inside the sidebar", () => {
         const sidebar = read("features/chat/components/sidebar/ChatSidebar.tsx");
         expect(sidebar).toMatch(/flexWrap:\s*"wrap",\s*rowGap:\s*0\.5/);
-        expect(sidebar).toMatch(/marginInlineStart:\s*"auto"/);
+        expect(sidebar).toMatch(/"& > :last-child":\s*{\s*marginInlineStart:\s*"auto"/);
     });
 });
