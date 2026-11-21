@@ -266,7 +266,7 @@ export const sendUpdatedSpecificTask = async (
                         display_id: updatedTask.displayId,
                         ts_mentioned_at: res.data.task.ts_updated_at,
                         // `newly_*` drives the real-time per-user toast,
-                        // `all_*` is written to the ActivityFact row so
+                        // `all_*` is written to the v3 `Activity` row so
                         // prior recipients keep their feed entry, and
                         // `removed_*` triggers a DELETE when the body
                         // has zero mentions left.

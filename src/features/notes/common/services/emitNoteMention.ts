@@ -8,7 +8,7 @@ import { Socket } from "socket.io-client";
 // Shape mirrors the task-body `task_body_mention` event but adds note
 // coordinates. The Flask handler routes by `note_type` (1=Personal,
 // 2=Task, 3=Chat) into the chat-type namespace (6/7/8) used to
-// dedupe ActivityFact rows across surfaces.
+// dedupe v3 `Activity` rows across surfaces.
 type NoteMentionPayload = {
     noteType: 1 | 2 | 3;
     noteId: number;
