@@ -3119,6 +3119,23 @@ export const fr: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "Gérer les modèles…",
+                manageTitle: "Modèles de note",
+                manageHint:
+                    "Les modèles d'équipe apparaissent à côté des modèles intégrés dans chaque menu Nouvelle note. Mettez {date} dans le titre pour la date du jour.",
+                empty: "Aucun modèle d'équipe pour l'instant.",
+                newTemplate: "Nouveau modèle",
+                editTemplate: "Modifier le modèle",
+                name: "Nom du modèle",
+                noteTitle: "Titre de la note",
+                body: "Contenu (Markdown)",
+                defaultFolder: "Par défaut pour le dossier",
+                noDefault: "Aucun",
+                saveFailed: "Impossible d'enregistrer le modèle.",
+                deleteFailed: "Impossible de supprimer le modèle.",
+                defaultIn: "Par défaut dans {folder}",
+            },
             meeting: {
                 label: "Notes de réunion",
                 title: "Notes de réunion {date}",

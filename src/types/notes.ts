@@ -88,6 +88,9 @@ export type TeamNoteFolderProps = MyNoteFolderProps & {
     ownerName: string | null;
     memberCount: number;
     tags: NoteFolderTagProps[];
+    // MIP-1697: the team template a new note in this folder starts from. Absent on pre-feature
+    // cached rows and on folders another team shared.
+    defaultTemplateId?: number | null;
     // A folder another team shared with yours. It lives in THEIR tree and
     // is re-rooted into this list, so the row has to say so: the host can
     // end the share, and the folder's own rules are set over there.

@@ -2972,6 +2972,23 @@ export const zh: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "管理模板…",
+                manageTitle: "笔记模板",
+                manageHint:
+                    "团队模板会与内置模板一起显示在每个“新建笔记”菜单中。在标题中写 {date} 即为今天的日期。",
+                empty: "还没有团队模板。",
+                newTemplate: "新建模板",
+                editTemplate: "编辑模板",
+                name: "模板名称",
+                noteTitle: "笔记标题",
+                body: "内容（Markdown）",
+                defaultFolder: "设为文件夹默认",
+                noDefault: "无",
+                saveFailed: "无法保存模板。",
+                deleteFailed: "无法删除模板。",
+                defaultIn: "{folder} 的默认模板",
+            },
             meeting: {
                 label: "会议记录",
                 title: "会议记录 {date}",
