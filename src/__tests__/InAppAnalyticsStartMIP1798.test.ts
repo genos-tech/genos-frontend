@@ -23,6 +23,11 @@ const load = async () => {
 
 beforeEach(() => {
     localStorage.clear();
+    // The app starts analytics only after "Accept" (MIP-1781).
+    localStorage.setItem(
+        "genos-marketing-consent:v1",
+        JSON.stringify({ choice: "accepted", v: 1 })
+    );
     vi.clearAllMocks();
     vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
     vi.stubEnv("VITE_POSTHOG_HOST", "https://eu.i.posthog.com");
