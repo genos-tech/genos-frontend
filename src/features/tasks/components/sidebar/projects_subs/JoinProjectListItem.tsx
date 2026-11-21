@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import LoginIcon from "@mui/icons-material/Login";
-import { Input, List, ListItem, Typography } from "@mui/joy";
+import { Box, Input, List, ListItem, Typography } from "@mui/joy";
 
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../../components/ui/nav/navStyles";
@@ -115,12 +115,23 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                             key={`listitem-team-project-${projectId}`}
                             selected={projectId === usePM.currentProject?.projectId}
                             label={
-                                <ProjectIdentityRow
-                                    maxLabels={1}
-                                    nameColor="inherit"
-                                    nameWeight={400}
-                                    project={project}
-                                />
+                                // The joined list lays its identity row out in a flex box
+                                // (ProjectsListItem); without it the chip stacks above the name.
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        minWidth: 0,
+                                    }}
+                                >
+                                    <ProjectIdentityRow
+                                        maxLabels={1}
+                                        nameColor="inherit"
+                                        nameWeight={400}
+                                        project={project}
+                                    />
+                                </Box>
                             }
                             onClick={() => {
                                 setOpenJoinProject({
