@@ -2403,6 +2403,7 @@ export const es: DeepPartial<Messages> = {
             clearLabelFilter: "Limpiar filtro",
             noLabels: "Aún no hay etiquetas de proyecto",
             noProjectsMatchFilter: "Ningún proyecto coincide con este filtro",
+            filterProjectsPlaceholder: "Filtrar proyectos…",
             pastMilestones: "Hitos pasados",
         },
         header: {

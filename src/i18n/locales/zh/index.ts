@@ -4935,6 +4935,7 @@ export const zh: DeepPartial<Messages> = {
             clearLabelFilter: "清除过滤器",
             noLabels: "还没有项目标签",
             noProjectsMatchFilter: "没有项目符合此过滤器",
+            filterProjectsPlaceholder: "筛选项目…",
             addMilestone: "添加里程碑",
             pastMilestones: "过去的里程碑",
             moveToNoSprint: "移动到：无冲刺",

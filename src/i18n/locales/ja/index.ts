@@ -5120,6 +5120,7 @@ export const ja: DeepPartial<Messages> = {
             clearLabelFilter: "クリアフィルター",
             noLabels: "プロジェクトラベルはまだありません",
             noProjectsMatchFilter: "このフィルターに一致するプロジェクトはありません",
+            filterProjectsPlaceholder: "プロジェクトを絞り込む…",
             addMilestone: "マイルストーンを追加",
             pastMilestones: "過去のマイルストーン",
             moveToNoSprint: "移動先：スプリントなし",

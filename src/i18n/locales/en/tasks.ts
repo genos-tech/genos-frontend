@@ -113,6 +113,7 @@ export const tasks = {
         clearLabelFilter: "Clear filter",
         noLabels: "No project labels yet",
         noProjectsMatchFilter: "No projects match this filter",
+        filterProjectsPlaceholder: "Filter projects…",
         addMilestone: "Add milestone",
         pastMilestones: "Past milestones",
         moveToNoSprint: "Move to: No sprint",

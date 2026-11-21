@@ -1,6 +1,6 @@
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import { useMemo, useState } from "react";
 import LoginIcon from "@mui/icons-material/Login";
-import { List, ListItem, Typography } from "@mui/joy";
+import { Input, List, ListItem, Typography } from "@mui/joy";
 
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../../components/ui/nav/navStyles";
@@ -8,7 +8,10 @@ import type { ProjectManagementState } from "../../../../../hooks/common/useProj
 import { useTranslation } from "../../../../../i18n";
 import { useSyncFailure } from "../../../../../services/syncStatus";
 import { g } from "../../../../../theme/tokens";
+import { ProjectIdentityRow } from "../../ProjectIdentityRow";
 import { Toggler } from "../common";
+import { distinctProjectLabels, filterAndSortProjects } from "../projectSidebarOrder";
+import { ProjectLabelFilterMenu } from "./ProjectLabelFilterMenu";
 
 type JoinProjectListItemProps = {
     // Only the list and the open project (MIP-971): the sidebar's slice satisfies it.
@@ -25,7 +28,37 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
     const { usePM, setOpenJoinProject } = props;
     const { t } = useTranslation();
 
-    const unjoined = usePM.teamProjects.filter((project) => project.isJoined === false);
+    const unjoined = useMemo(
+        () => usePM.teamProjects.filter((project) => project.isJoined === false),
+        [usePM.teamProjects]
+    );
+
+    // Same grouping as the joined list (MIP-1700): the label filter and the
+    // label-then-name sort come from the shared helpers, and the rows carry
+    // their label chips. The name search narrows on top of that.
+    const [activeLabelIds, setActiveLabelIds] = useState<number[]>([]);
+    const [query, setQuery] = useState("");
+    const allLabels = useMemo(() => distinctProjectLabels(unjoined), [unjoined]);
+    // Drop a selected label that no longer exists on any unjoined project, so a
+    // stale id cannot hide every row.
+    const effectiveActiveIds = useMemo(
+        () => activeLabelIds.filter((id) => allLabels.some((l) => l.labelId === id)),
+        [activeLabelIds, allLabels]
+    );
+    const trimmedQuery = query.trim().toLocaleLowerCase();
+    const visibleProjects = useMemo(() => {
+        const grouped = filterAndSortProjects(unjoined, effectiveActiveIds);
+        if (trimmedQuery === "") return grouped;
+        return grouped.filter((p) =>
+            (p.projectName ?? "").toLocaleLowerCase().includes(trimmedQuery)
+        );
+    }, [unjoined, effectiveActiveIds, trimmedQuery]);
+    const filterActive = effectiveActiveIds.length > 0 || trimmedQuery !== "";
+    const toggleLabel = (labelId: number) =>
+        setActiveLabelIds((prev) =>
+            prev.includes(labelId) ? prev.filter((id) => id !== labelId) : [...prev, labelId]
+        );
+
     // The project list was never read: "No projects available" would be a claim nothing
     // checked. The Projects section above already says "Couldn't load your projects" with
     // Retry, so this one says nothing (MIP-1323).
@@ -49,28 +82,73 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
             )}
         >
             <List sx={navNestedListSx}>
-                {unjoined.map(({ projectId, projectName, isPrivate, systemUserId }, index) => (
-                    <NavItem
-                        key={`listitem-team-project-${projectId}-${index}`}
-                        icon={isPrivate ? <LockOutlineIcon /> : undefined}
-                        label={projectName}
-                        selected={projectId === usePM.currentProject?.projectId}
-                        onClick={() => {
-                            setOpenJoinProject({
-                                flag: true,
-                                projectId: projectId,
-                                projectName: projectName,
-                                isPrivate: isPrivate !== undefined ? isPrivate : true,
-                                systemUserId: systemUserId || "",
-                            });
-                        }}
-                    />
-                ))}
+                {unjoined.length > 0 && (
+                    <ListItem sx={{ px: 1, py: 0.5, gap: 0.5 }}>
+                        <Input
+                            size="sm"
+                            type="search"
+                            name="joinProjectFilter"
+                            autoComplete="off"
+                            spellCheck={false}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder={t.tasks.sidebar.filterProjectsPlaceholder}
+                            slotProps={{
+                                input: {
+                                    "aria-label": t.tasks.sidebar.filterProjectsPlaceholder,
+                                },
+                            }}
+                            sx={{ flex: 1, minWidth: 0 }}
+                        />
+                        <ProjectLabelFilterMenu
+                            labels={allLabels}
+                            activeIds={effectiveActiveIds}
+                            onToggle={toggleLabel}
+                            onClear={() => setActiveLabelIds([])}
+                        />
+                    </ListItem>
+                )}
+                {visibleProjects.map((project) => {
+                    const { projectId, projectName, isPrivate, systemUserId } = project;
+                    return (
+                        <NavItem
+                            key={`listitem-team-project-${projectId}`}
+                            label={
+                                <ProjectIdentityRow
+                                    project={project}
+                                    maxLabels={1}
+                                    nameColor="inherit"
+                                    nameWeight={400}
+                                />
+                            }
+                            selected={projectId === usePM.currentProject?.projectId}
+                            onClick={() => {
+                                setOpenJoinProject({
+                                    flag: true,
+                                    projectId: projectId,
+                                    projectName: projectName,
+                                    isPrivate: isPrivate !== undefined ? isPrivate : true,
+                                    systemUserId: systemUserId || "",
+                                });
+                            }}
+                        />
+                    );
+                })}
 
                 {unjoined.length === 0 && !listUnread && (
                     <ListItem sx={{ px: 1, py: 0.5 }}>
                         <Typography level="body-sm" sx={{ color: g.text.tertiary }} noWrap>
                             {t.tasks.sidebar.noProjectsAvailable}
+                        </Typography>
+                    </ListItem>
+                )}
+                {unjoined.length > 0 && filterActive && visibleProjects.length === 0 && (
+                    <ListItem sx={{ px: 1, py: 0.5 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{ fontStyle: "italic", color: g.text.tertiary }}
+                        >
+                            {t.tasks.sidebar.noProjectsMatchFilter}
                         </Typography>
                     </ListItem>
                 )}

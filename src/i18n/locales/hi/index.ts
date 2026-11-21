@@ -2388,6 +2388,7 @@ export const hi: DeepPartial<Messages> = {
             clearLabelFilter: "फ़िल्टर साफ़ करें",
             noLabels: "अभी तक कोई प्रोजेक्ट लेबल नहीं है",
             noProjectsMatchFilter: "कोई भी प्रोजेक्ट इस फ़िल्टर से मेल नहीं खाता",
+            filterProjectsPlaceholder: "प्रोजेक्ट फ़िल्टर करें…",
             addMilestone: "माइलस्टोन जोड़ें",
             pastMilestones: "पिछले माइलस्टोन",
             moveToNoSprint: "यहाँ ले जाएँ: कोई स्प्रिंट नहीं",
