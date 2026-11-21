@@ -4,7 +4,7 @@ import {
     PROJECT_DELETED_EVENT,
     type ProjectDeletedDetail,
 } from "../../features/agentQA/approvedProjectWrites";
-import { refreshArchivedProjects } from "../../features/archive/archiveApi";
+import { setArchivedProjects } from "../../features/archive/archiveState";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { isProjectGoneError } from "../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
@@ -111,10 +111,14 @@ export const useProjectManagement = (
 
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
-        const loadedTeamProjects: ProjectProps[] | undefined = await loadTeamProjects(
+        // One read for both sections (MIP-1853): the list with the archived rows, each of which says it
+        // is archived. The active list is the rows that are not; the archived section takes the rest.
+        const allTeamProjects: ProjectProps[] | undefined = await loadTeamProjects(
             myself,
-            accessToken
+            accessToken,
+            { includeArchived: true }
         );
+        const loadedTeamProjects = allTeamProjects?.filter((p) => !p.archived);
         // Only stamp the throttle timestamp on a real response. If
         // `loadTeamProjects` early-returned (missing teamId, auth
         // error, network failure), updating the timestamp would block
@@ -131,9 +135,8 @@ export const useProjectManagement = (
             return;
         }
         syncStatus.report("projects", true);
-        // The archived projects sit in their own section (MIP-1693). Read beside the active list,
-        // never awaited: a slow archive read must not hold the projects up.
-        void refreshArchivedProjects(myself, accessToken, loadedTeamProjects);
+        // The archived projects sit in their own section (MIP-1693), taken from the same read.
+        setArchivedProjects(allTeamProjects?.filter((p) => p.archived) ?? []);
         // A project the list no longer holds (deleted, left, access lost) has no
         // task load worth retrying: its failure must not hold the banner up for a
         // stale `lastProjectId` (MIP-1323).
