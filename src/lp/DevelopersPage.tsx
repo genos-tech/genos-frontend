@@ -108,8 +108,10 @@ const Pre = ({ children, label }: { children: string; label?: string }) => (
     <div className="lp-block">
         {label && <div className="lp-label">{label}</div>}
         {/* MIP-1851: a long line scrolls sideways. A keyboard user can only scroll a block
-            that can take focus, so the block is a Tab stop, named by its label when it has one. */}
-        <pre aria-label={label} tabIndex={0} translate="no">
+            that can take focus, so the block is a Tab stop, named by its label when it has one.
+            `aria-label` is not allowed on a bare `pre` (axe aria-prohibited-attr, MIP-1901), so a
+            labelled block is a `group` (a `region` would be a landmark, and several share a label). */}
+        <pre aria-label={label} role={label ? "group" : undefined} tabIndex={0} translate="no">
             {children}
         </pre>
     </div>
