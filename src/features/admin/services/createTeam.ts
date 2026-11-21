@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
+import { teamEmailFor } from "./teamEmail";
 
 export const createTeam = async (
     accessToken: string | null,
@@ -17,7 +18,7 @@ export const createTeam = async (
         if (api) {
             const res = await api.post("/team/create/", {
                 team_name: teamName,
-                team_email: `${teamName}@genos.tech`,
+                team_email: teamEmailFor(teamName),
                 owner_id: userId,
                 // Backend requires the literal boolean true to seed —
                 // omitted entirely when off.

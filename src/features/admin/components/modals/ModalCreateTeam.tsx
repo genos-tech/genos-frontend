@@ -6,6 +6,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { useTeamSetupFields } from "../../../../hooks/common/useTeamSetupFields";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
+import { teamEmailFor } from "../../services/teamEmail";
 import { TeamSetupFields } from "../TeamSetupFields";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -54,7 +55,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
                 },
                 body: JSON.stringify({
                     team_name: teamName,
-                    team_email: `${teamName}@genos.tech`,
+                    team_email: teamEmailFor(teamName),
                     owner_id: myself.userId,
                     // As `createTeam` sends them: the server wants the literal `true` to seed,
                     // and a department list only when some are named.

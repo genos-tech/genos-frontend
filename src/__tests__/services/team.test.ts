@@ -102,7 +102,7 @@ describe("createTeam", () => {
 
         expect(mockPost).toHaveBeenCalledWith("/team/create/", {
             team_name: "New Team",
-            team_email: "New Team@genos.tech",
+            team_email: expect.stringMatching(/^new-team-[a-z0-9]{6}@genos\.tech$/),
             owner_id: "user1",
         });
         expect(result).toEqual(mockData);
