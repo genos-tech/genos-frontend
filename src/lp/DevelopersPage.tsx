@@ -101,7 +101,11 @@ const Endpoint = ({
 const Pre = ({ children, label }: { children: string; label?: string }) => (
     <div className="lp-block">
         {label && <div className="lp-label">{label}</div>}
-        <pre translate="no">{children}</pre>
+        {/* MIP-1851: a long line scrolls sideways. A keyboard user can only scroll a block
+            that can take focus, so the block is a Tab stop, named by its label when it has one. */}
+        <pre aria-label={label} tabIndex={0} translate="no">
+            {children}
+        </pre>
     </div>
 );
 
@@ -112,7 +116,14 @@ const Params = ({ rows, title }: { rows: Row[]; title: string }) => {
             <div className="lp-label" id={labelId}>
                 {title}
             </div>
-            <div className="lp-params__scroll">
+            {/* MIP-1851: the table scrolls sideways on a narrow screen; keyboard users must be
+                able to focus the scroll region to reach the cells past the edge. */}
+            <div
+                aria-labelledby={labelId}
+                className="lp-params__scroll"
+                role="region"
+                tabIndex={0}
+            >
                 <table aria-labelledby={labelId} role="table">
                     <tbody role="rowgroup">
                         {rows.map((r) => (
