@@ -54,7 +54,6 @@ export const updataChatNoteChain = (props: updataChatNoteChainProps) => {
         chatNoteMetaTree,
         currentChatNoteChain,
         setCurrentChatNoteChain,
-        allNoteIdChains,
         setAllNoteIdChains,
         tabItems,
         selectedTabIndex,

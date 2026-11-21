@@ -54,7 +54,6 @@ export const updataMyNoteChain = (props: updataMyNoteChainProps) => {
         myNoteMetaTree,
         currentMyNoteChain,
         setCurrentMyNoteChain,
-        allNoteIdChains,
         setAllNoteIdChains,
         tabItems,
         selectedTabIndex,

@@ -54,7 +54,6 @@ export const updataTaskNoteChain = (props: updataTaskNoteChainProps) => {
         taskNoteMetaTree,
         currentTaskNoteChain,
         setCurrentTaskNoteChain,
-        allNoteIdChains,
         setAllNoteIdChains,
         tabItems,
         selectedTabIndex,

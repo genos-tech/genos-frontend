@@ -88,7 +88,7 @@ export default function useScript(src: string): UseScriptStatus {
             if (scriptNode) {
                 try {
                     scriptNode.remove();
-                } catch (error) {
+                } catch {
                     // ignore error
                 }
             }
