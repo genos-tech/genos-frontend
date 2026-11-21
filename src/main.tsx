@@ -55,6 +55,7 @@ const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
 const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
 const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
+const GenosAccessibilityPage = lazy(() => import("./lp/AccessibilityPage"));
 
 // Initialize PostHog once, before React mounts, unless this first page is a public
 // marketing page: those store nothing and send nothing until a visitor enters the app
@@ -167,6 +168,8 @@ const tree = (
                 own ja + en copy. (There is no /terms route: the terms are an
                 unpublished draft.) */}
             <Route element={publicPage(GenosSupportPage)} path="/support" />
+            {/* Accessibility statement and supported browsers (MIP-1265). */}
+            <Route element={publicPage(GenosAccessibilityPage)} path="/accessibility" />
 
             {/* Help hub (MIP-1259): getting started, connecting Claude, API keys, schedules,
                 export, shortcuts and the FAQ on one page. Public, like /support. */}
