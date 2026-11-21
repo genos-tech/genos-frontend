@@ -22,6 +22,10 @@ export type MilestoneRef = {
     taskId: number | null;
     status: string;
     dueDate: string | null;
+    /** The milestone's own newest-progress stamp, when the list endpoint carries it. */
+    lastProgressAt?: string | null;
+    /** When it was created: the stall clock for a milestone nothing has ever touched. */
+    tsCreatedAt?: string | null;
 };
 
 export type MilestoneProgressSummary = {
@@ -36,10 +40,12 @@ export type MilestoneProgressSummary = {
     attention: EffectiveTask[];
     /** Calendar days until the milestone's own due date (negative when past); null when unset. */
     dueInDays: number | null;
-    /** Whole days since the newest progress under the milestone; null when none is recorded. */
     /** The newest progress stamp (ISO), or null when none is recorded. */
     lastProgressAt: string | null;
+    /** Whole days since the newest progress under the milestone; null when none is recorded. */
     daysSinceProgress: number | null;
+    /** Whole days of silence the stall test uses: since the newest progress, else since creation. */
+    idleDays: number | null;
     /** The milestone is open and has seen no progress for `STALE_PROGRESS_DAYS` days. */
     stalled: boolean;
 };
@@ -92,7 +98,11 @@ export const summarizeMilestoneProgress = (
     // there; fall back to the newest child stamp when the backing row is not loaded.
     let lastProgressAt: string | null = null;
     let newest: number | null = null;
-    for (const stamp of [backing?.lastProgressAt, ...children.map((t) => t.lastProgressAt)]) {
+    for (const stamp of [
+        milestone.lastProgressAt,
+        backing?.lastProgressAt,
+        ...children.map((t) => t.lastProgressAt),
+    ]) {
         const ms = stamp ? new Date(stamp).getTime() : Number.NaN;
         if (Number.isFinite(ms) && (newest == null || ms > newest)) {
             newest = ms;
@@ -101,6 +111,14 @@ export const summarizeMilestoneProgress = (
     }
     const daysSinceProgress =
         newest == null ? null : Math.max(0, Math.floor((now.getTime() - newest) / DAY_MS));
+
+    // Never touched: the clock starts when the milestone was created.
+    const createdMs = milestone.tsCreatedAt
+        ? new Date(milestone.tsCreatedAt).getTime()
+        : Number.NaN;
+    const idleFrom = newest ?? (Number.isFinite(createdMs) ? createdMs : null);
+    const idleDays =
+        idleFrom == null ? null : Math.max(0, Math.floor((now.getTime() - idleFrom) / DAY_MS));
 
     const isOpenMilestone = milestone.status !== "Closed" && milestone.status !== "Deleted";
 
@@ -116,10 +134,8 @@ export const summarizeMilestoneProgress = (
         dueInDays: milestone.dueDate ? calendarDaysUntil(milestone.dueDate, now) : null,
         lastProgressAt,
         daysSinceProgress,
-        stalled:
-            isOpenMilestone &&
-            daysSinceProgress != null &&
-            daysSinceProgress >= STALE_PROGRESS_DAYS,
+        idleDays,
+        stalled: isOpenMilestone && idleDays != null && idleDays >= STALE_PROGRESS_DAYS,
     };
 };
 

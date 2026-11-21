@@ -36,6 +36,8 @@ const milestone = (
         taskId: number | null;
         status: string;
         dueDate: string | null;
+        lastProgressAt: string | null;
+        tsCreatedAt: string | null;
     }> = {}
 ) => ({
     milestoneId: 7,
@@ -119,6 +121,32 @@ describe("summarizeMilestoneProgress", () => {
         ];
         const s2 = summarizeMilestoneProgress(milestone(), old, NOW);
         expect(s2.stalled).toBe(true);
+    });
+
+    it("stalls a milestone nothing ever touched once it is old enough, from its created date", () => {
+        const only = [row({ id: "700", isMilestone: true })];
+        const s = summarizeMilestoneProgress(
+            milestone({ tsCreatedAt: isoDaysAgo(30) }),
+            only,
+            NOW
+        );
+        expect(s.daysSinceProgress).toBeNull();
+        expect(s.idleDays).toBe(30);
+        expect(s.stalled).toBe(true);
+        expect(
+            summarizeMilestoneProgress(milestone({ tsCreatedAt: isoDaysAgo(2) }), only, NOW)
+                .stalled
+        ).toBe(false);
+    });
+
+    it("reads the milestone's own lastProgressAt too", () => {
+        const s = summarizeMilestoneProgress(
+            milestone({ lastProgressAt: isoDaysAgo(1), tsCreatedAt: isoDaysAgo(30) }),
+            [],
+            NOW
+        );
+        expect(s.daysSinceProgress).toBe(1);
+        expect(s.stalled).toBe(false);
     });
 
     it("never stalls a Closed milestone and treats a missing progress stamp as unknown", () => {

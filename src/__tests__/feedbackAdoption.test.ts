@@ -203,8 +203,6 @@ describe("feedback adoption", () => {
                 "fallback of a value",
             "features/tasks/components/dashboard/agentActivity/AgentProjectGroups.tsx":
                 "the name of the group of work on no project (a label, not an empty state)",
-            "features/tasks/components/dashboard/milestoneProgress/MilestoneProgressTab.tsx":
-                "MIP-1187: the card's last-progress status line and an assignee fallback: value text, not an empty panel",
             "features/tasks/components/dashboard/TaskHomeContent.tsx":
                 "value labels and the tiny 'no overdue / none due this week / no members' lines inside dashboard cards",
             "features/tasks/components/modals/ModalCreateProject.tsx":

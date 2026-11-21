@@ -41,14 +41,17 @@ type Props = {
 
 // Which task a change happened to: the line above each entry. A live task links
 // into the project; a deleted one is only named.
-const SourceTaskLine = ({
+export const SourceTaskLine = ({
     source,
     projectId,
     deletedLabel,
+    dense = false,
 }: {
     source: TaskProgressSourceProps;
     projectId: number | null;
     deletedLabel: string;
+    /** No padding: for a row that already sits inside its own layout (MIP-1187). */
+    dense?: boolean;
 }) => {
     const label = (
         <>
@@ -60,8 +63,8 @@ const SourceTaskLine = ({
     );
     const sx = {
         display: "block",
-        px: 1,
-        pt: 1,
+        px: dense ? 0 : 1,
+        pt: dense ? 0 : 1,
         fontSize: "var(--g-type-body-xs-size)",
         color: g.text.secondary,
         overflow: "hidden",

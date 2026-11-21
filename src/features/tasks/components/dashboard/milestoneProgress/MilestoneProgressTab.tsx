@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/joy";
+import { Link } from "react-router-dom";
 
+import { DataState } from "../../../../../components/ui/feedback/DataState";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
+import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { g } from "../../../../../theme/tokens";
@@ -17,6 +20,7 @@ import {
     summarizeMilestoneProgressOverview,
 } from "../../../utils/milestoneProgressSummary";
 import { formatRelativeAge } from "../../../utils/relativeAge";
+import { SourceTaskLine } from "../../contents/base/sub/TaskProgressFeed";
 import { StatusLabel } from "../../meta/StatusLabel";
 
 type Msgs = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["milestoneProgress"];
@@ -33,16 +37,22 @@ const ATTENTION_LIMIT = 6;
 const PROGRESS_LIMIT = 5;
 
 type Props = {
+    /** False until the project's milestone list has loaded: a skeleton, never "no milestones". */
+    milestonesLoaded: boolean;
     milestones: Milestone[];
     sprints: Sprint[];
     effectiveTasks: EffectiveTask[];
 };
 
-type ProgressState =
-    | { status: "idle" }
-    | { status: "loading" }
-    | { status: "failed" }
-    | { status: "ready"; page: TaskProgressPage };
+type StatusLabels = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["statusLabels"];
+
+// The dashboard's own words for a status ("Completed", not the stored "Closed"); a status the
+// dashboard has no word for (or the "Other" bucket) falls back to the caller's text.
+const statusText = (status: string, labels: StatusLabels, other: string): string => {
+    if (status === "Other") return other;
+    const key = status.toLowerCase() as keyof StatusLabels;
+    return labels[key] ?? status;
+};
 
 // One segment per status in the stacked bar and one legend chip per status with tasks.
 const segmentColor = (key: string): string => {
@@ -50,7 +60,12 @@ const segmentColor = (key: string): string => {
     return toneSolid(STATUS_TONE[key as StatusName] ?? "muted").bg;
 };
 
-export const MilestoneProgressTab = ({ milestones, sprints, effectiveTasks }: Props) => {
+export const MilestoneProgressTab = ({
+    milestonesLoaded,
+    milestones,
+    sprints,
+    effectiveTasks,
+}: Props) => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const m = t.tasks.dashboard.milestoneProgress;
@@ -67,6 +82,9 @@ export const MilestoneProgressTab = ({ milestones, sprints, effectiveTasks }: Pr
     }, [milestones, effectiveTasks]);
     const overview = useMemo(() => summarizeMilestoneProgressOverview(summaries), [summaries]);
 
+    if (!milestonesLoaded) {
+        return <SkeletonLines lines={4} />;
+    }
     if (milestones.length === 0) {
         return <EmptyState body={m.empty} data-empty="milestone-progress" size="md" />;
     }
@@ -153,7 +171,7 @@ export const MilestoneProgressTab = ({ milestones, sprints, effectiveTasks }: Pr
                         <li key={ms.milestoneId}>
                             <MilestoneCard
                                 accessToken={accessToken}
-                                labels={{ m, age }}
+                                labels={{ m, age, status: t.tasks.dashboard.statusLabels }}
                                 locale={locale}
                                 milestone={ms}
                                 now={now}
@@ -179,7 +197,7 @@ type CardProps = {
     sprintName: string;
     accessToken: string | null;
     locale: Locale;
-    labels: { m: Msgs; age: AgeMsgs };
+    labels: { m: Msgs; age: AgeMsgs; status: StatusLabels };
     now: Date;
 };
 
@@ -192,9 +210,13 @@ const MilestoneCard = ({
     labels,
     now,
 }: CardProps) => {
-    const { m, age } = labels;
+    const { m, age, status: statusLabels } = labels;
     const [open, setOpen] = useState(false);
-    const [progress, setProgress] = useState<ProgressState>({ status: "idle" });
+    // The last page read, kept on screen while a refresh runs or fails (MIP-1187).
+    const [page, setPage] = useState<TaskProgressPage | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [failed, setFailed] = useState(false);
+    const detailsId = useId();
     // Bumped by Retry: a new key reads the feed again instead of a cached failure.
     const [attempt, setAttempt] = useState(0);
     const taskId = milestone.taskId;
@@ -203,16 +225,20 @@ const MilestoneCard = ({
     // Read the recent progress only once the card is opened; a change under the milestone
     // moves `version`, which re-reads it.
     useEffect(() => {
+        // A legacy milestone with no backing task has no feed to read.
         if (!open || taskId == null) return;
         let cancelled = false;
-        setProgress({ status: "loading" });
+        setLoading(true);
+        setFailed(false);
         loadTaskProgress(accessToken, taskId, {
             minDepth: 1,
             limit: PROGRESS_LIMIT,
             version,
-        }).then((page) => {
+        }).then((next) => {
             if (cancelled) return;
-            setProgress(page ? { status: "ready", page } : { status: "failed" });
+            setLoading(false);
+            if (next) setPage(next);
+            else setFailed(true);
         });
         return () => {
             cancelled = true;
@@ -250,6 +276,7 @@ const MilestoneCard = ({
         if (t.effectiveStatus === "Blocked") return { label: m.reasonBlocked, tone: "warning" };
         return { label: m.reasonDueSoon, tone: "warning" };
     };
+    const assigneeOf = (t: EffectiveTask): string => t.assigneeName || m.noAssignee;
     const shownAttention = summary.attention.slice(0, ATTENTION_LIMIT);
     const hiddenAttention = summary.attention.length - shownAttention.length;
 
@@ -287,7 +314,13 @@ const MilestoneCard = ({
                     </Typography>
                     <Typography
                         level="body-xs"
-                        sx={{ color: g.text.tertiary, whiteSpace: "nowrap" }}
+                        sx={{
+                            color: g.text.tertiary,
+                            minWidth: 0,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
                     >
                         {sprintName}
                     </Typography>
@@ -361,7 +394,7 @@ const MilestoneCard = ({
                                     fontVariantNumeric: "tabular-nums",
                                 }}
                             >
-                                {e.status === "Other" ? m.otherStatus : e.status} {e.count}
+                                {statusText(e.status, statusLabels, m.otherStatus)} {e.count}
                             </Typography>
                         </Stack>
                     ))}
@@ -377,7 +410,7 @@ const MilestoneCard = ({
                 }}
             >
                 {summary.stalled
-                    ? fmt(m.stalled, { count: summary.daysSinceProgress ?? 0 })
+                    ? fmt(m.stalled, { count: summary.idleDays ?? 0 })
                     : summary.lastProgressAt
                       ? fmt(m.lastProgress, {
                             age: formatRelativeAge(
@@ -391,11 +424,15 @@ const MilestoneCard = ({
             </Typography>
 
             <Button
+                aria-controls={detailsId}
                 aria-expanded={open}
                 color="neutral"
                 size="sm"
                 sx={{ mt: 1, px: 0, color: g.text.secondary }}
                 variant="plain"
+                aria-label={fmt(open ? m.detailsHideFor : m.detailsShowFor, {
+                    title: milestone.title,
+                })}
                 onClick={() => setOpen((v) => !v)}
             >
                 {open ? m.detailsHide : m.detailsShow}
@@ -403,6 +440,7 @@ const MilestoneCard = ({
 
             {open && (
                 <Stack
+                    id={detailsId}
                     spacing={2}
                     sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid", borderColor: g.border.subtle }}
                 >
@@ -458,7 +496,15 @@ const MilestoneCard = ({
                                                     flex: 1,
                                                 }}
                                             >
-                                                {t.title}
+                                                <Link
+                                                    to={`/workspace/tasks/project/${milestone.projectId}/task/${t.id}`}
+                                                    style={{
+                                                        color: "inherit",
+                                                        textDecoration: "none",
+                                                    }}
+                                                >
+                                                    {t.title}
+                                                </Link>
                                             </Typography>
                                             <Typography
                                                 level="body-xs"
@@ -467,7 +513,7 @@ const MilestoneCard = ({
                                                     whiteSpace: "nowrap",
                                                 }}
                                             >
-                                                {t.assigneeName ?? m.noAssignee}
+                                                {assigneeOf(t)}
                                             </Typography>
                                         </Stack>
                                     );
@@ -481,21 +527,40 @@ const MilestoneCard = ({
                         )}
                     </Box>
 
-                    <Box>
-                        <Typography
-                            level="title-sm"
-                            sx={{ color: g.text.primary, fontWeight: 600, mb: 0.5 }}
-                        >
-                            {m.recentHeading}
-                        </Typography>
-                        <RecentProgress
-                            labels={{ m, age }}
-                            locale={locale}
-                            now={now}
-                            progress={progress}
-                            onRetry={() => setAttempt((n) => n + 1)}
-                        />
-                    </Box>
+                    {taskId != null && (
+                        <Box>
+                            <Typography
+                                level="title-sm"
+                                sx={{ color: g.text.primary, fontWeight: 600, mb: 0.5 }}
+                            >
+                                {m.recentHeading}
+                            </Typography>
+                            <DataState
+                                error={failed}
+                                hasData={page != null && page.entries.length > 0}
+                                loading={loading}
+                                size="xs"
+                                skeleton={<SkeletonLines lines={3} />}
+                                empty={{
+                                    body: m.recentNone,
+                                    "data-empty": "milestone-recent-none",
+                                }}
+                                errorState={{
+                                    title: m.recentFailed,
+                                    onRetry: () => setAttempt((n) => n + 1),
+                                    "data-error": "milestone-recent",
+                                }}
+                            >
+                                <RecentProgress
+                                    entries={page?.entries ?? []}
+                                    labels={{ m, age }}
+                                    locale={locale}
+                                    now={now}
+                                    projectId={milestone.projectId}
+                                />
+                            </DataState>
+                        </Box>
+                    )}
                 </Stack>
             )}
         </Box>
@@ -503,42 +568,20 @@ const MilestoneCard = ({
 };
 
 const RecentProgress = ({
-    progress,
+    entries,
     labels,
     locale,
     now,
-    onRetry,
+    projectId,
 }: {
-    onRetry: () => void;
-    progress: ProgressState;
+    entries: TaskProgressPage["entries"];
     labels: { m: Msgs; age: AgeMsgs };
     locale: Locale;
     now: Date;
+    projectId: number;
 }) => {
     const { m, age } = labels;
-    if (progress.status === "loading" || progress.status === "idle") {
-        return (
-            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                {m.recentLoading}
-            </Typography>
-        );
-    }
-    if (progress.status === "failed") {
-        return (
-            <Stack alignItems="center" direction="row" spacing={1}>
-                <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                    {m.recentFailed}
-                </Typography>
-                <Button color="neutral" size="sm" variant="plain" onClick={onRetry}>
-                    {m.recentRetry}
-                </Button>
-            </Stack>
-        );
-    }
-    const entries = progress.page.entries;
-    if (entries.length === 0) {
-        return <EmptyState body={m.recentNone} data-empty="milestone-recent-none" size="xs" />;
-    }
+    const { t } = useTranslation();
     return (
         <Stack component="ul" spacing={0.75} sx={{ listStyle: "none", m: 0, p: 0 }}>
             {entries.map((e) => (
@@ -556,21 +599,16 @@ const RecentProgress = ({
                     >
                         {formatRelativeAge(e.tsCreatedAt, age, now.getTime(), locale)}
                     </Typography>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: g.text.primary,
-                            minWidth: 0,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            flex: 1,
-                        }}
-                    >
-                        {e.sourceTask
-                            ? `${e.sourceTask.displayId} ${e.sourceTask.title ?? ""}`
-                            : ""}
-                    </Typography>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        {e.sourceTask && (
+                            <SourceTaskLine
+                                deletedLabel={t.tasks.activity.progress.deleted}
+                                projectId={projectId}
+                                source={e.sourceTask}
+                                dense
+                            />
+                        )}
+                    </Box>
                     {e.actor?.userName && (
                         <Typography
                             level="body-xs"

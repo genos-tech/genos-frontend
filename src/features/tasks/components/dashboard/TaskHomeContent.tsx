@@ -1712,6 +1712,11 @@ export const TaskHomeContent = ({
                                     effectiveTasks={effectiveTasks}
                                     milestones={ongoingProjectMilestones}
                                     sprints={projectSprints}
+                                    milestonesLoaded={
+                                        usePM.currentProject?.projectId != null &&
+                                        useSM.projectMilestones[usePM.currentProject.projectId] !==
+                                            undefined
+                                    }
                                 />
                             )}
 
