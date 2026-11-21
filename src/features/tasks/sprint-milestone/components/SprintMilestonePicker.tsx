@@ -148,16 +148,20 @@ export const SprintMilestonePicker = ({
 
     // Milestone options use the same visibility selector as the sidebar
     // (`MilestonesListItem`) — hides soft-deleted / `Deleted` and any
-    // `Closed` whose sprint has ended. The currently-selected milestone
-    // is re-admitted if filtering would drop it, so we never silently
-    // flip a Closed-in-old-sprint linkage to "No milestone".
+    // `Closed` whose sprint has ended. On top of that, a `Closed` milestone
+    // is never offered as a target (MIP-1751): a finished milestone is not
+    // something to file a task under. The currently-selected milestone is
+    // re-admitted if filtering would drop it, so we never silently flip a
+    // Closed linkage to "No milestone".
     //
     // Sort comes from `selectVisibleMilestones` (three-level: due-date
     // asc → custom status order → title asc). The orphan/fallback row
     // (if any) is appended last so "this is the current value but no
     // longer in your active set" is visually distinct.
     const milestoneOptions: MilestoneOption[] = useMemo(() => {
-        const visible = selectVisibleMilestones(milestones, sprints);
+        const visible = selectVisibleMilestones(milestones, sprints).filter(
+            (m) => m.status !== "Closed"
+        );
         const list =
             milestoneId != null && !visible.some((m) => m.milestoneId === milestoneId)
                 ? [...visible, ...milestones.filter((m) => m.milestoneId === milestoneId)]
