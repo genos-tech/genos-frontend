@@ -50,6 +50,7 @@ const SHELL = {
             blog: "ブログ",
             support: "サポート",
             docs: "ドキュメント",
+            security: "セキュリティ",
             privacy: "プライバシー",
             legal: "利用規約・特商法",
             signup: "無料で始める",
@@ -98,6 +99,7 @@ const SHELL = {
             blog: "Blog",
             support: "Support",
             docs: "Docs",
+            security: "Security",
             privacy: "Privacy",
             legal: "Terms and legal",
             signup: "Start free",
@@ -132,7 +134,7 @@ const AnalyticsSettings = forwardRef<
             <span role="status">
                 {state === "none" ? "" : allowed ? t.analyticsIsOn : t.analyticsIsOff}
             </span>
-            <button ref={ref} className="lp-footer__switch" onClick={onOpen} type="button">
+            <button ref={ref} className="lp-footer__switch" type="button" onClick={onOpen}>
                 {t.analyticsSettings}
             </button>
         </span>
@@ -406,6 +408,9 @@ export function LpShell({
                                 </li>
                                 <li>
                                     <Link to="/docs">{t.links.docs}</Link>
+                                </li>
+                                <li>
+                                    <Link to="/security">{t.links.security}</Link>
                                 </li>
                                 <li>
                                     <Link to="/privacy">{t.links.privacy}</Link>
