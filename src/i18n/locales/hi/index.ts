@@ -79,6 +79,31 @@ export const hi: DeepPartial<Messages> = {
                 "अब आप इस समूह के संदेश नहीं देख पाएंगे. यदि यह सार्वजनिक है तो आप बाद में पुनः शामिल हो सकते हैं।",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "प्रोजेक्ट संग्रहित करें",
+            unarchiveMenuProject: "प्रोजेक्ट का संग्रह हटाएँ",
+            archiveMenuChat: "समूह संग्रहित करें",
+            unarchiveMenuChat: "समूह का संग्रह हटाएँ",
+            archiveInstead: "इसके बजाय संग्रहित करें",
+            archiveInsteadHint: "सब कुछ रखा जाता है। संग्रह हटाने तक यह केवल-पढ़ने योग्य रहता है।",
+            ownerOnly: "केवल मालिक संग्रहित या संग्रह-मुक्त कर सकता है।",
+            projectBannerTitle: "यह प्रोजेक्ट संग्रहित है",
+            chatBannerTitle: "यह समूह संग्रहित है",
+            projectBannerBody:
+                "यह केवल-पढ़ने योग्य है: संग्रह हटाने तक नए कार्य, संपादन या टिप्पणियाँ नहीं हो सकतीं। कुछ भी हटाया नहीं गया है।",
+            chatBannerBody:
+                "यह केवल-पढ़ने योग्य है: संग्रह हटाने तक नए संदेश नहीं भेजे जा सकते। कुछ भी हटाया नहीं गया है।",
+            unarchiveAction: "संग्रह हटाएँ",
+            showArchived: "संग्रहित दिखाएँ",
+            hideArchived: "संग्रहित छिपाएँ",
+            archivedSection: "संग्रहित",
+            archivedBadge: "संग्रहित",
+            newTaskDisabled: "कार्य जोड़ने के लिए इस प्रोजेक्ट का संग्रह हटाएँ।",
+            composerDisabled: "यह समूह संग्रहित है। संदेश भेजने के लिए इसका संग्रह हटाएँ।",
+            archiveFailed: "संग्रहित नहीं हो सका। फिर से कोशिश करें।",
+            unarchiveFailed: "संग्रह नहीं हटाया जा सका। फिर से कोशिश करें।",
+        },
         deleteChat: {
             button: "समूह हटाएँ",
             title: "यह समूह हटाएँ?",
@@ -434,6 +459,8 @@ export const hi: DeepPartial<Messages> = {
             serverError: "सर्वर त्रुटि। कृपया कुछ देर बाद पुनः प्रयास करें।",
             permissionDenied: "आपके पास ऐसा करने की अनुमति नहीं है।",
             requestFailed: "अनुरोध पूरा नहीं हो सका। कृपया पुनः प्रयास करें।",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived: "यह संग्रहित है और केवल-पढ़ने योग्य है। बदलाव के लिए इसका संग्रह हटाएँ।",
             limitReached:
                 "आप अपनी योजना की सीमा तक पहुँच गए हैं। विवरण के लिए सेटिंग्स → प्लान और उपयोग देखें।",
             actionFailed: "कार्य पूरा नहीं हो सका। कृपया पुनः प्रयास करें।",
@@ -871,6 +898,7 @@ export const hi: DeepPartial<Messages> = {
             planRenews: "नवीनीकरण तिथि",
             planEnds: "प्लान समाप्ति तिथि",
             cancelScheduled: "रद्दीकरण निर्धारित है — आपका प्लान इस तिथि तक सक्रिय रहेगा।",
+            pendingChange: "{date} को {plan} में बदलाव",
             pastDue: "भुगतान में समस्या है — कृपया बिलिंग पोर्टल में अपनी भुगतान विधि अपडेट करें।",
             plansHeading: "प्लान और मूल्य",
             plansSubheading:

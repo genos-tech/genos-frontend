@@ -95,6 +95,25 @@ describe("PlanUsageSection subscription row", () => {
         expect(screen.queryByText("Renews on")).toBeNull();
     });
 
+    it("a downgrade scheduled for the period end names the plan and the date", async () => {
+        // Stripe keeps Pro until the renewal; the row says what happens then.
+        billingApi.fetchBillingSubscription.mockResolvedValue(
+            sub({ plan: "pro", pending_plan: "core", pending_change_at: PERIOD_END })
+        );
+        renderSection();
+        expect(await screen.findByText("Renews on")).toBeTruthy();
+        expect(screen.getByText("Changes to Core on August 13, 2026")).toBeTruthy();
+    });
+
+    it("no pending change renders no pending line", async () => {
+        billingApi.fetchBillingSubscription.mockResolvedValue(
+            sub({ pending_plan: null, pending_change_at: null })
+        );
+        renderSection();
+        expect(await screen.findByText("Renews on")).toBeTruthy();
+        expect(screen.queryByText(/^Changes to/)).toBeNull();
+    });
+
     it("past_due surfaces the payment problem", async () => {
         billingApi.fetchBillingSubscription.mockResolvedValue(sub({ status: "past_due" }));
         renderSection();
