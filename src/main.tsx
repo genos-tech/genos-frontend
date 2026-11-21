@@ -45,6 +45,7 @@ import type { SegmentKey } from "./lp/segments";
 // so it stops downloading the app shell at all. See the PR for that.
 const GenosBlogArticlePage = lazy(() => import("./lp/BlogArticlePage"));
 const GenosBlogPage = lazy(() => import("./lp/BlogPage"));
+const GenosDocsPage = lazy(() => import("./lp/DocsPage"));
 const GenosDemoPage = lazy(() => import("./lp/DemoPage"));
 const GenosDevelopersPage = lazy(() => import("./lp/DevelopersPage"));
 const GenosFeaturesPage = lazy(() => import("./lp/FeaturesPage"));
@@ -166,6 +167,10 @@ const tree = (
                 own ja + en copy. (There is no /terms route: the terms are an
                 unpublished draft.) */}
             <Route element={publicPage(GenosSupportPage)} path="/support" />
+
+            {/* Help hub (MIP-1259): getting started, connecting Claude, API keys, schedules,
+                export, shortcuts and the FAQ on one page. Public, like /support. */}
+            <Route element={publicPage(GenosDocsPage)} path="/docs" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>
