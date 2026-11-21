@@ -7,10 +7,13 @@ import { ViaAppIcon } from "../../../../../components/ui/misc/ViaAppIcon";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
+import { ProjectProps } from "../../../../../types/tasks";
 import { extractYYYYMMDDHHMM } from "../../../../../utils/dateUtils";
+import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { aiAppSentence, inAppPath } from "../../../utils/aiAppNotice";
 
@@ -21,6 +24,8 @@ interface AiAppActivityRowProps {
     selectedActivityId: string;
     setSelectedActivityId: (value: string) => void;
     useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    setCurrentProject: (project: ProjectProps) => void;
 }
 
 /**
@@ -28,7 +33,9 @@ interface AiAppActivityRowProps {
  *
  * The rows are the member's own doing, so there is no person to show: the app's
  * name leads, the sentence follows (worded here from facts the API stored),
- * and a click opens what was made or changed and marks the row read.
+ * and a click opens what was made or changed and marks the row read. A task or a milestone
+ * opens in the chat's preview, as a task-body mention does (MIP-1755); a note, or a notice
+ * without the ids to open in place, goes to its page.
  */
 export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     activity,
@@ -37,6 +44,8 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     selectedActivityId,
     setSelectedActivityId,
     useCM,
+    useTM,
+    setCurrentProject,
 }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -56,10 +65,37 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     // Only an in-app path: the API hands us a path, never a full URL.
     const url = inAppPath(notice.url);
 
+    // MIP-1755: a task or milestone opens in the chat's preview (the same modal a task-body
+    // mention opens), not on its page. Falls back to the page when the ids are missing or the
+    // task cannot be loaded.
+    const openItem = async () => {
+        const item = notice.items[0];
+        const projectId = item?.projectId ?? null;
+        if (item && projectId != null && item.kind === "milestone" && item.id != null) {
+            setCurrentProject({ projectId, projectName: "", projectTags: [] });
+            useTM.setCurrentPreviewKind("milestone");
+            useTM.setCurrentPreviewMilestoneId(Number(item.id));
+            useTM.setIsTaskPreviewVisible(true);
+            return;
+        }
+        if (item && projectId != null && item.kind === "task" && item.taskId != null) {
+            const loaded = await loadSpecificTask(myself, projectId, item.taskId, accessToken);
+            if (loaded.length > 0) {
+                setCurrentProject({ projectId, projectName: "", projectTags: [] });
+                useTM.setCurrentPreviewKind("task");
+                useTM.setCurrentPreviewTask(loaded[0]);
+                useTM.setCurrentPreviewTaskId(item.taskId);
+                useTM.setIsTaskPreviewVisible(true);
+                return;
+            }
+        }
+        if (url) navigate(url);
+    };
+
     const onClick = () => {
         setSelectedActivityId(activity.activityId);
-        if (url) navigate(url);
         if (activity.isRead === false) updateActivityReadStatus();
+        void openItem();
     };
 
     return (
