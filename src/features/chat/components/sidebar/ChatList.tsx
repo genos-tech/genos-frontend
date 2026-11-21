@@ -506,10 +506,8 @@ const ActivityListRenderer = ({
                                 activityMessages={activityMessages}
                                 myself={data.myself}
                                 selectedActivityId={selectedActivityId}
-                                setCurrentProject={usePM.setCurrentProject}
                                 setSelectedActivityId={setSelectedActivityId}
                                 useCM={useCM}
-                                useTM={useTM}
                             />
                         ) : (
                             <ChatListItemForActivity
