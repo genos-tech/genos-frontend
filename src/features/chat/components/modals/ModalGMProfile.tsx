@@ -43,6 +43,7 @@ import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { PrivacySwitches } from "../../../../components/ui/PrivacySwitches";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -245,6 +246,22 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             );
             setNameEditMode(false);
         }
+    };
+
+    const [privacyBusy, setPrivacyBusy] = useState(false);
+    const [privacyError, setPrivacyError] = useState<string | null>(null);
+    const handlePrivacyChange = async (next: { isPrivate: boolean; isHidden: boolean }) => {
+        if (!gmProfile) return;
+        setPrivacyBusy(true);
+        setPrivacyError(null);
+        try {
+            await channelService.updateChannel(gmChat.chatId, ChannelKind.GM, next);
+            setGmProfile({ ...gmProfile, ...next });
+        } catch (e) {
+            console.error("[ModalGMProfile] privacy change failed:", e);
+            setPrivacyError(t.common.privacy.saveFailed);
+        }
+        setPrivacyBusy(false);
     };
 
     const handleTransferConfirm = async (newOwnerId: string) => {
@@ -487,6 +504,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 profileImagePath: channel.profileImageUrl || "",
                 gmMembers,
                 isPrivate: channel.isPrivate,
+                isHidden: channel.isHidden ?? false,
                 isExternal: channel.isExternal,
                 tsCreatedAt: channel.tsCreated || "",
             });
@@ -1034,51 +1052,6 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     mb: 0.5,
                                                 }}
                                             >
-                                                {t.chat.modals.gmProfile.isPrivate}
-                                            </FormLabel>
-                                            <Box
-                                                sx={{
-                                                    display: "inline-flex",
-                                                    px: 2,
-                                                    py: 0.5,
-                                                    borderRadius: g.radius.full,
-                                                    background: gmProfile?.isPrivate
-                                                        ? g.danger.subtle
-                                                        : g.accent.subtle,
-                                                    border: `1px solid ${
-                                                        gmProfile?.isPrivate
-                                                            ? g.danger.border
-                                                            : g.accent.border
-                                                    }`,
-                                                }}
-                                            >
-                                                <Typography
-                                                    fontWeight={600}
-                                                    sx={{
-                                                        userSelect: "text",
-                                                        color: gmProfile?.isPrivate
-                                                            ? g.danger.text
-                                                            : g.accent.text,
-                                                    }}
-                                                >
-                                                    {gmProfile?.isPrivate
-                                                        ? t.chat.modals.gmProfile.yes
-                                                        : t.chat.modals.gmProfile.no}
-                                                </Typography>
-                                            </Box>
-                                        </FormControl>
-
-                                        <FormControl>
-                                            <FormLabel
-                                                sx={{
-                                                    color: g.text.secondary,
-                                                    fontSize: "0.75rem",
-                                                    fontWeight: 600,
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    mb: 0.5,
-                                                }}
-                                            >
                                                 {t.chat.modals.gmProfile.createdDate}
                                             </FormLabel>
                                             <Box
@@ -1105,6 +1078,15 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             </Box>
                                         </FormControl>
                                     </Stack>
+
+                                    <PrivacySwitches
+                                        busy={privacyBusy}
+                                        canEdit={canManage && !gmArchived}
+                                        errorMessage={privacyError}
+                                        isHidden={!!gmProfile?.isHidden}
+                                        isPrivate={!!gmProfile?.isPrivate}
+                                        onChange={(next) => void handlePrivacyChange(next)}
+                                    />
 
                                     {gmProfile?.isExternal && (
                                         <ExternalSharesPanel

@@ -59,7 +59,9 @@ export const createChatGroup = async (
      *  teams to offer it to; each accepts once and then admits its own
      *  people. `selectedMemberIds` stays host-side either way — the host
      *  does not get to choose the other organization's participants. */
-    external?: { guestTeamIds: string[] }
+    external?: { guestTeamIds: string[] },
+    /** Private chats only: not listed or searchable by non-members (MIP-1699). */
+    isHidden = false
 ): Promise<Channel | undefined> => {
     const messages = getMessages().chat.errors;
     const trimmedName = chatName.trim();
@@ -72,6 +74,7 @@ export const createChatGroup = async (
         const channel = await channelService.createChannel({
             guestTeamIds: external?.guestTeamIds,
             isExternal: Boolean(external),
+            isHidden: isPrivate && isHidden,
             isPrivate,
             kind: ChannelKind.GM,
             memberUserIds: selectedMemberIds,

@@ -3,6 +3,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicIcon from "@mui/icons-material/Public";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
@@ -42,6 +43,7 @@ export const ModalCreateProject: React.FC<Props> = ({
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isPrivate, setIsPrivate] = useState(false);
+    const [isHidden, setIsHidden] = useState(false);
     // A create is a few requests in a row. Enter or a second click while they run made the
     // project twice (MIP-1184): the ref blocks the second call in the same tick, before a
     // re-render could disable the button.
@@ -131,6 +133,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                             project_name: projectName,
                             owner: myself.userId,
                             is_private: isPrivate,
+                            is_hidden: isPrivate && isHidden,
                         }),
                     });
 
@@ -215,6 +218,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     projectName: createProjectData.project_name,
                                     projectTags: [],
                                     isPrivate: isPrivate,
+                                    isHidden: isPrivate && isHidden,
                                     systemUserId: createProjectData.project_system_user,
                                     isJoined: true,
                                 };
@@ -325,14 +329,20 @@ export const ModalCreateProject: React.FC<Props> = ({
                     border: `1px solid ${isPrivate ? g.accent.border : g.success.border}`,
                     cursor: "pointer",
                 }}
-                onActivate={() => setIsPrivate(!isPrivate)}
+                onActivate={() => {
+                    setIsPrivate(!isPrivate);
+                    if (isPrivate) setIsHidden(false);
+                }}
             >
                 <Checkbox
                     checked={isPrivate}
                     color="neutral"
                     sx={{ pointerEvents: "none" }}
                     variant="outlined"
-                    onChange={(e) => setIsPrivate(e.target.checked)}
+                    onChange={(e) => {
+                        setIsPrivate(e.target.checked);
+                        if (!e.target.checked) setIsHidden(false);
+                    }}
                 />
                 {isPrivate ? (
                     <LockOutlinedIcon sx={{ color: g.accent.text, fontSize: 18 }} />
@@ -348,6 +358,37 @@ export const ModalCreateProject: React.FC<Props> = ({
                         : t.tasks.modals.createProject.publicProject}
                 </Typography>
             </Clickable>
+
+            {/* Hidden: only for a private project (MIP-1699). */}
+            {isPrivate && (
+                <Clickable
+                    aria-pressed={isHidden}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        p: 1.5,
+                        mb: 2,
+                        borderRadius: g.radius.md,
+                        backgroundColor: isHidden ? g.accent.subtle : "transparent",
+                        border: `1px solid ${isHidden ? g.accent.border : g.border.subtle}`,
+                        cursor: "pointer",
+                    }}
+                    onActivate={() => setIsHidden(!isHidden)}
+                >
+                    <Checkbox
+                        checked={isHidden}
+                        color="neutral"
+                        sx={{ pointerEvents: "none" }}
+                        variant="outlined"
+                        onChange={(e) => setIsHidden(e.target.checked)}
+                    />
+                    <VisibilityOffOutlinedIcon sx={{ color: g.accent.text, fontSize: 18 }} />
+                    <Typography level="body-sm" sx={{ color: g.accent.text }}>
+                        {t.tasks.modals.createProject.hiddenProject}
+                    </Typography>
+                </Clickable>
+            )}
 
             {/* Add members (optional) — same picker UX as GM creation */}
             <Typography level="body-xs" sx={{ mb: 1, color: g.text.secondary, fontWeight: 600 }}>

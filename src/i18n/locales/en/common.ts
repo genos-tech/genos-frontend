@@ -217,6 +217,16 @@ export const common = {
         confirm: "Remove",
         cancel: "Cancel",
     },
+    // Private and Hidden switches of a project or group chat (MIP-1699).
+    privacy: {
+        privateLabel: "Private",
+        privateHint: "People join by asking the owner. The name shows with a lock.",
+        hiddenLabel: "Hidden",
+        hiddenHint:
+            "Only members can see this exists. It is not listed or searchable, and people join by invitation only.",
+        hiddenNeedsPrivate: "Turn on Private to hide it.",
+        saveFailed: "Could not change this setting. Try again.",
+    },
     profileEdit: {
         rename: "Rename",
         save: "Save",

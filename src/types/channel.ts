@@ -129,6 +129,8 @@ export interface Channel {
     projectId: number | null;
     ownerId: string | null;
     isPrivate: boolean;
+    /** Private and not listed or searchable by non-members (MIP-1699). */
+    isHidden?: boolean;
     /** A cross-team chat: one host team owns it, and one or more guest
      *  teams hold a grant on it. Always private. Server-decided at
      *  creation and never editable, so treat it as a label, not a

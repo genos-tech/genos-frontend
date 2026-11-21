@@ -102,6 +102,7 @@ export type GMProfileProps = {
     profileImagePath: string;
     gmMembers: UserProps[];
     isPrivate: boolean;
+    isHidden?: boolean;
     /** A cross-team chat. Optional so cached pre-feature rows type-check. */
     isExternal?: boolean;
     tsCreatedAt: string;

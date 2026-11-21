@@ -3,6 +3,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicIcon from "@mui/icons-material/Public";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import { Alert, Box, Button, Checkbox, Chip, Input, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -45,6 +46,7 @@ export const ModalCreateGM: React.FC<Props> = ({
 }) => {
     const { t } = useTranslation();
     const [isPrivate, setIsPrivate] = useState(false);
+    const [isHidden, setIsHidden] = useState(false);
     const [CreateCGErrorMessage, setCreateCGErrorMessage] = useState<string | null>(null);
     const [chatName, setGroupName] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
@@ -141,7 +143,8 @@ export const ModalCreateGM: React.FC<Props> = ({
                 // value would let the UI imply a choice the server refuses.
                 isExternal ? true : isPrivate,
                 memberIds,
-                isExternal ? { guestTeamIds } : undefined
+                isExternal ? { guestTeamIds } : undefined,
+                isHidden
             );
             // Put the invitation in each guest team owner's open inbox.
             // Keyed by the CHANNEL because the offers are created inside
@@ -214,7 +217,10 @@ export const ModalCreateGM: React.FC<Props> = ({
                     cursor: isExternal ? "not-allowed" : "pointer",
                     opacity: isExternal ? 0.75 : 1,
                 }}
-                onActivate={() => setIsPrivate(!isPrivate)}
+                onActivate={() => {
+                    setIsPrivate(!isPrivate);
+                    if (isPrivate) setIsHidden(false);
+                }}
             >
                 <Checkbox
                     checked={isPrivate || isExternal}
@@ -222,7 +228,10 @@ export const ModalCreateGM: React.FC<Props> = ({
                     disabled={isExternal}
                     sx={{ pointerEvents: "none" }}
                     variant="outlined"
-                    onChange={(e) => setIsPrivate(e.target.checked)}
+                    onChange={(e) => {
+                        setIsPrivate(e.target.checked);
+                        if (!e.target.checked) setIsHidden(false);
+                    }}
                 />
                 {isPrivate || isExternal ? (
                     <LockOutlinedIcon sx={{ color: g.accent.text, fontSize: 18 }} />
@@ -238,6 +247,37 @@ export const ModalCreateGM: React.FC<Props> = ({
                         : t.chat.modals.createGM.publicGroup}
                 </Typography>
             </Clickable>
+
+            {/* Hidden: only for a private group (MIP-1699). */}
+            {(isPrivate || isExternal) && (
+                <Clickable
+                    aria-pressed={isHidden}
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                        p: 1.5,
+                        mb: 2,
+                        borderRadius: g.radius.md,
+                        backgroundColor: isHidden ? g.accent.subtle : "transparent",
+                        border: `1px solid ${isHidden ? g.accent.border : g.border.subtle}`,
+                        cursor: "pointer",
+                    }}
+                    onActivate={() => setIsHidden(!isHidden)}
+                >
+                    <Checkbox
+                        checked={isHidden}
+                        color="neutral"
+                        sx={{ pointerEvents: "none" }}
+                        variant="outlined"
+                        onChange={(e) => setIsHidden(e.target.checked)}
+                    />
+                    <VisibilityOffOutlinedIcon sx={{ color: g.accent.text, fontSize: 18 }} />
+                    <Typography level="body-sm" sx={{ color: g.accent.text }}>
+                        {t.chat.modals.createGM.hiddenGroup}
+                    </Typography>
+                </Clickable>
+            )}
 
             {connectedTeams.length > 0 && (
                 <Box

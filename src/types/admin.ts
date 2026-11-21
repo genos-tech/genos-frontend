@@ -179,6 +179,7 @@ export type ProjectProfileProps = {
     profileImagePath: string;
     projectMembers: UserProps[];
     isPrivate: boolean;
+    isHidden?: boolean;
     tsCreatedAt: string;
     // Short uppercase code shown as the prefix in human-readable task
     // display IDs (the "GEN" in "GEN-42"). Editable from the project

@@ -95,6 +95,7 @@ export type ProjectProps = {
     // See ProjectLabelProps — NOT the same thing as projectTags.
     projectLabels?: ProjectLabelProps[];
     isPrivate?: boolean;
+    isHidden?: boolean;
     isJoined?: boolean;
     systemUserId?: string;
     /**

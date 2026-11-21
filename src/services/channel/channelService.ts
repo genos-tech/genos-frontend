@@ -2071,6 +2071,8 @@ export class ChannelService {
         teamId: string;
         title?: string;
         isPrivate?: boolean;
+        /** GM only; needs `isPrivate`. */
+        isHidden?: boolean;
         memberUserIds?: string[];
         otherUserId?: string; // DM only
         /** GM only — make this a cross-team chat. Forces privacy on. */
@@ -2085,6 +2087,7 @@ export class ChannelService {
             team_id: payload.teamId,
             title: payload.title,
             is_private: payload.isPrivate,
+            is_hidden: payload.isHidden,
             member_user_ids: payload.memberUserIds,
             other_user_id: payload.otherUserId,
             is_external: payload.isExternal,
@@ -2113,6 +2116,7 @@ export class ChannelService {
             title?: string;
             profileImageUrl?: string;
             isPrivate?: boolean;
+            isHidden?: boolean;
             /** Transfer ownership to a current member. The backend
              *  validates that the target user is a current
              *  non-deleted member of this channel. */
@@ -2131,6 +2135,7 @@ export class ChannelService {
             payload.profile_image_url = patch.profileImageUrl;
         }
         if (patch.isPrivate !== undefined) payload.is_private = patch.isPrivate;
+        if (patch.isHidden !== undefined) payload.is_hidden = patch.isHidden;
         if (patch.ownerUserId !== undefined) payload.owner_user_id = patch.ownerUserId;
         return this.socketEmitOrThrow<Channel>("channel.update", payload);
     }

@@ -38,6 +38,7 @@ import { useMemberRemoval } from "../../../../components/ui/memberRoles/useMembe
 import { ModalLeaveConfirm } from "../../../../components/ui/misc/ModalLeaveConfirm";
 import { ModalTransferOwner } from "../../../../components/ui/misc/ModalTransferOwner";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { PrivacySwitches } from "../../../../components/ui/PrivacySwitches";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -279,6 +280,19 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             );
             setNameEditMode(false);
         }
+    };
+
+    const [privacyBusy, setPrivacyBusy] = useState(false);
+    const [privacyError, setPrivacyError] = useState<string | null>(null);
+    const handlePrivacyChange = async (next: { isPrivate: boolean; isHidden: boolean }) => {
+        if (!projectProfile) return;
+        setPrivacyBusy(true);
+        setPrivacyError(null);
+        const ok = await updateProjectProfile(accessToken, pmChatIdLegacy, next, setPrivacyError);
+        if (ok) {
+            setProjectProfile({ ...projectProfile, ...next });
+        }
+        setPrivacyBusy(false);
     };
 
     const handleTransferConfirm = async (newOwnerId: string) => {
@@ -1334,51 +1348,6 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     mb: 0.5,
                                                 }}
                                             >
-                                                {t.admin.projectProfile.isPrivate}
-                                            </FormLabel>
-                                            <Box
-                                                sx={{
-                                                    display: "inline-flex",
-                                                    px: 2,
-                                                    py: 0.5,
-                                                    borderRadius: "20px",
-                                                    background: projectProfile?.isPrivate
-                                                        ? g.danger.subtle
-                                                        : g.success.subtle,
-                                                    border: `1px solid ${
-                                                        projectProfile?.isPrivate
-                                                            ? g.danger.border
-                                                            : g.success.border
-                                                    }`,
-                                                }}
-                                            >
-                                                <Typography
-                                                    fontWeight={600}
-                                                    sx={{
-                                                        userSelect: "text",
-                                                        color: projectProfile?.isPrivate
-                                                            ? g.danger.text
-                                                            : g.success.text,
-                                                    }}
-                                                >
-                                                    {projectProfile?.isPrivate
-                                                        ? t.admin.projectProfile.yes
-                                                        : t.admin.projectProfile.no}
-                                                </Typography>
-                                            </Box>
-                                        </FormControl>
-
-                                        <FormControl>
-                                            <FormLabel
-                                                sx={{
-                                                    color: g.text.secondary,
-                                                    fontSize: "0.75rem",
-                                                    fontWeight: 600,
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    mb: 0.5,
-                                                }}
-                                            >
                                                 {t.admin.projectProfile.createdDate}
                                             </FormLabel>
                                             <Box
@@ -1407,6 +1376,15 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             </Box>
                                         </FormControl>
                                     </Stack>
+
+                                    <PrivacySwitches
+                                        busy={privacyBusy}
+                                        canEdit={isProjectOwner}
+                                        errorMessage={privacyError}
+                                        isHidden={!!projectProfile?.isHidden}
+                                        isPrivate={!!projectProfile?.isPrivate}
+                                        onChange={(next) => void handlePrivacyChange(next)}
+                                    />
 
                                     {canShowLeave && (
                                         <Box
