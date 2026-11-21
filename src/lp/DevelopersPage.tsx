@@ -108,8 +108,10 @@ const Pre = ({ children, label }: { children: string; label?: string }) => (
     <div className="lp-block">
         {label && <div className="lp-label">{label}</div>}
         {/* MIP-1851: a long line scrolls sideways. A keyboard user can only scroll a block
-            that can take focus, so the block is a Tab stop, named by its label when it has one. */}
-        <pre aria-label={label} tabIndex={0} translate="no">
+            that can take focus, so the block is a Tab stop. MIP-1928: ARIA allows a name only on an
+            element with a role, so the block is a named region; one with no visible label is
+            "Code example" (the page is English-only). */}
+        <pre aria-label={label ?? "Code example"} role="region" tabIndex={0} translate="no">
             {children}
         </pre>
     </div>
