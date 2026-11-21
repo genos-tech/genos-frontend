@@ -4,6 +4,7 @@ import { NoteService } from "../db/services/note.service";
 import { TaskService } from "../db/services/task.service";
 import { DatabaseUtils } from "../db/utils/database";
 import { analytics } from "../services/analytics";
+import { CONSENT_KEY } from "../services/consentStorage";
 import {
     clearPrivateProfile,
     ensurePrivateProfile,
@@ -77,6 +78,10 @@ export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
     "genos-locale",
     "genos-spotlight-preferences:v1",
     "genos-analytics-preferences:v1",
+    // The analytics consent choice (MIP-1781). Per browser like the preference above: a
+    // visitor who chose on a marketing page must not be asked again when they sign in, and
+    // someone signing in as another user on this device is not asked what the browser answered.
+    CONSENT_KEY,
     "genos-double-click-todo-preference:v1",
     "genos.sprintBoard.sortTiers.v2",
     "genos.taskTable.sortTiers.v2",

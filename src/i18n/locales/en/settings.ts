@@ -1098,7 +1098,17 @@ export const settings = {
             "Helps us understand which features get used so we can focus on the right things.",
         shareLabel: "Share usage data",
         shareHelper:
-            "On by default. Sends your user ID, team ID and role plus the pages you visit, linked to your account. No message content, no clicks tracked. Turn off to opt out completely.",
+            "Off until you accept. When on, sends your user ID, team ID and role plus the pages you visit, linked to your account. No message content, no clicks tracked. Turn off to stop sending and to delete what analytics stored in this browser.",
+        // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
+        // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
+        consent: {
+            region: "Analytics consent",
+            title: "Allow usage analytics?",
+            body: "If you accept, we use an analytics cookie and browser storage to record your user ID, team ID and role and the pages you visit in Genos, linked to your account, to learn which features get used. No message content is sent. If you reject, nothing is stored or sent for analytics; only your choice is remembered. You can change this any time in Settings, under Privacy & analytics.",
+            privacy: "Privacy policy",
+            accept: "Accept",
+            reject: "Reject",
+        },
     },
     shortcuts: {
         heading: "Keyboard shortcuts",

@@ -4492,7 +4492,17 @@ export const zh: DeepPartial<Messages> = {
             description: "帮助我们了解哪些功能被使用，以便专注于真正重要的部分。",
             shareLabel: "分享使用数据",
             shareHelper:
-                "默认开启。发送你的用户 ID、团队 ID 和角色，以及你访问的页面，并与你的账号关联。不会记录消息内容或点击行为。关闭可完全停止。",
+                "同意前保持关闭。开启后，会发送你的用户 ID、团队 ID 和角色，以及你访问的页面，并与你的账号关联。不会记录消息内容或点击行为。关闭后会停止发送，并删除分析在此浏览器中保存的内容。",
+            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
+            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
+            consent: {
+                region: "分析授权",
+                title: "允许使用情况分析吗？",
+                body: "如果你选择接受，我们会使用分析 Cookie 和浏览器存储，记录你在 Genos 中的用户 ID、团队 ID、角色和访问的页面，并与你的账号关联，以了解哪些功能被使用。不会发送消息内容。如果你选择拒绝，则不会为分析存储或发送任何内容，只会记住你的选择。你可以随时在“设置”的“隐私与分析”中更改。",
+                privacy: "隐私政策",
+                accept: "接受",
+                reject: "拒绝",
+            },
         },
         shortcuts: {
             heading: "键盘快捷键",

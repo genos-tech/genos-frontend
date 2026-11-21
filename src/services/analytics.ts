@@ -8,7 +8,10 @@
  *     yet),
  *   - `init()` has not been called (the public marketing pages call
  *     `startWithConsent()` instead, and only after the visitor pressed "Accept" in the
- *     consent banner; see `components/AnalyticsRouteGate` and `services/marketingConsent`), or
+ *     consent banner; see `components/AnalyticsRouteGate` and `services/marketingConsent`),
+ *   - nobody has pressed "Accept" yet: the app asks once, after sign-in (MIP-1781), and
+ *     `init()` starts nothing until the stored choice (`services/consentStorage`) says
+ *     "accepted", or
  *   - the user has switched analytics off (Settings, or the marketing banner / footer).
  *
  * `init()` reads the opt-out preference directly from localStorage so it
@@ -25,6 +28,7 @@
 import type { CaptureOptions } from "posthog-js";
 
 import { sanitizeCaptureResult, sanitizeMarketingCaptureResult } from "./analyticsSanitize";
+import { readConsent } from "./consentStorage";
 
 const PREFERENCES_STORAGE_KEY = "genos-analytics-preferences:v1";
 
@@ -96,6 +100,9 @@ const start = (enabled?: boolean, onMarketingPage = false): void => {
     const key = import.meta.env.VITE_POSTHOG_KEY;
     const host = import.meta.env.VITE_POSTHOG_HOST;
     if (!key || !host) return;
+    // The app starts the library only for someone who pressed "Accept" (MIP-1781); the
+    // marketing start is itself called only after "Accept" (`startWithConsent`).
+    if (!onMarketingPage && readConsent() !== "accepted") return;
 
     userEnabled = enabled ?? readUserEnabledFromStorage();
     if (!userEnabled) return;
@@ -274,9 +281,12 @@ export const analytics = {
         whenLoaded((posthog) => posthog.reset());
     },
 
-    /** Whether the user has left analytics on. Other telemetry honours the same opt-out. */
+    /**
+     * Whether the person has accepted analytics and not switched it off. Other telemetry (the
+     * performance recorder) honours the same choice: off until "Accept" (MIP-1781).
+     */
     isEnabled(): boolean {
-        return userEnabled;
+        return userEnabled && readConsent() === "accepted";
     },
 
     setEnabled(enabled: boolean): void {

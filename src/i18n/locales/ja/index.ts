@@ -4659,7 +4659,17 @@ export const ja: DeepPartial<Messages> = {
                 "どの機能が使われているかを把握し、重要なものに注力するために役立ちます。",
             shareLabel: "利用データを共有する",
             shareHelper:
-                "初期状態でオンです。ユーザーID、チームID、ロール、訪問ページを、アカウントに紐づけて送信します。メッセージ内容やクリックは追跡されません。オフにすると完全にオプトアウトできます。",
+                "同意するまではオフです。オンにすると、ユーザーID、チームID、ロール、訪問ページを、アカウントに紐づけて送信します。メッセージ内容やクリックは追跡されません。オフにすると、送信を止め、分析のためにこのブラウザへ保存されたものを削除します。",
+            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
+            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
+            consent: {
+                region: "分析の同意",
+                title: "利用状況の分析を許可しますか？",
+                body: "同意いただいた場合のみ、分析用の Cookie とブラウザのストレージを使い、Genos でのユーザーID、チームID、ロール、訪問ページを、アカウントに紐づけて記録し、どの機能が使われているかを調べます。メッセージ内容は送信されません。拒否した場合は、分析のための保存・送信は行わず、選択内容のみを保存します。この設定は、設定の「プライバシーと分析」でいつでも変更できます。",
+                privacy: "プライバシーポリシー",
+                accept: "同意する",
+                reject: "拒否する",
+            },
         },
         shortcuts: {
             heading: "キーボードショートカット",
