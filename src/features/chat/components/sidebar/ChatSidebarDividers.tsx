@@ -32,6 +32,7 @@ import { BoxSlotRoot } from "../../../../components/ui/slotRoot";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useTranslation, type Messages } from "../../../../i18n";
+import { compareText } from "../../../../i18n/collate";
 import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
 import {
@@ -261,7 +262,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
     // `useMentionGroups` already lowercases names on create/update, so
     // localeCompare gives us natural alphabetical ordering.
     const sortedMentionGroups = [...mentionGroups].sort((a, b) =>
-        a.groupName.localeCompare(b.groupName)
+        compareText(a.groupName, b.groupName)
     );
     const showMentionGroupFilter = hasMentionGatingChip(selectedChipIds);
     const hasMentionGroupSelection = selectedMentionGroupIds.size > 0;
@@ -300,7 +301,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
         }
     }
     for (const [, bucket] of chatsByType) {
-        bucket.sort((a, b) => resolveChatDisplayName(a).localeCompare(resolveChatDisplayName(b)));
+        bucket.sort((a, b) => compareText(resolveChatDisplayName(a), resolveChatDisplayName(b)));
     }
     const orderedGroups = GROUP_ORDER.filter((ct) => chatsByType.has(ct));
 

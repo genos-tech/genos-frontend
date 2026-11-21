@@ -1,3 +1,4 @@
+import { compareText } from "../i18n/collate";
 import {
     ChatNoteMetaProps,
     ChatNoteMetaTreeNode,
@@ -70,7 +71,7 @@ export function buildMyNoteFolderForest(
     });
 
     const byName = (a: MyNoteFolderTreeNode, b: MyNoteFolderTreeNode) =>
-        a.name.localeCompare(b.name);
+        compareText(a.name, b.name);
     rootFolders.sort(byName);
     Object.values(folderMap).forEach((f) => f.childFolders.sort(byName));
 

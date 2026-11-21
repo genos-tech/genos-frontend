@@ -8,6 +8,7 @@
 // alphabetically-first label; unlabelled projects sort LAST behind a
 // high sentinel so the labelled projects group at the top.
 
+import { compareText } from "../../../../i18n/collate";
 import { ProjectLabelProps, ProjectProps } from "../../../../types/tasks";
 
 // Sentinel that sorts after any real label name (U+FFFF is the last
@@ -28,7 +29,7 @@ export const distinctProjectLabels = (projects: ProjectProps[]): ProjectLabelPro
             if (!byId.has(l.labelId)) byId.set(l.labelId, l);
         }
     }
-    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return [...byId.values()].sort((a, b) => compareText(a.name, b.name));
 };
 
 // Filter by label (OR across the selected ids; empty = no filter) then
@@ -44,8 +45,8 @@ export const filterAndSortProjects = (
                   (p.projectLabels ?? []).some((l) => activeLabelIds.includes(l.labelId))
               );
     return [...filtered].sort((a, b) => {
-        const byLabel = projectLabelSortKey(a).localeCompare(projectLabelSortKey(b));
+        const byLabel = compareText(projectLabelSortKey(a), projectLabelSortKey(b));
         if (byLabel !== 0) return byLabel;
-        return (a.projectName ?? "").localeCompare(b.projectName ?? "");
+        return compareText(a.projectName ?? "", b.projectName ?? "");
     });
 };

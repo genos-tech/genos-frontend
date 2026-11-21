@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 
+import { compareText } from "../../../i18n/collate";
 import { TaskTableProps } from "../../../types/tasks";
 import { deriveDaysLeft } from "./daysLeft";
 import { computeTaskWeight } from "./taskWeight";
@@ -162,7 +163,7 @@ export const nullTier = (a: unknown, b: unknown): number => {
 const cmpValues = (a: number | string | null, b: number | string | null): number => {
     if (a == null || b == null) return 0; // null-tier already handled
     if (typeof a === "number" && typeof b === "number") return a - b;
-    return String(a).localeCompare(String(b));
+    return compareText(String(a), String(b));
 };
 
 /**

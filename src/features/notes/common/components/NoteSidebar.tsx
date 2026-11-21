@@ -30,6 +30,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, Messages, useTranslation } from "../../../../i18n";
+import { compareText } from "../../../../i18n/collate";
 import { useSyncBanner } from "../../../../services/syncStatus";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
@@ -826,7 +827,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         useNM.teamNoteFolders
             .filter((f) => f.isExternal !== true)
             .forEach((f) => f.tags.forEach((tg) => map.set(tg.tagId, tg)));
-        return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+        return Array.from(map.values()).sort((a, b) => compareText(a.name, b.name));
     }, [useNM.teamNoteFolders]);
 
     // Ours stay in Team Notes; the ones another team lent us move to

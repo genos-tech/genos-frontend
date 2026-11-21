@@ -4,6 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
+import { compareText } from "../../../i18n/collate";
 import { purplePalette } from "../../../theme/purplePalette";
 import { usePrResyncRequest } from "../hooks/usePrResyncRequest";
 import {
@@ -354,7 +355,7 @@ const SinglePrBadge = ({
 // Repo, then PR number: the same order on every load, whatever order the
 // server listed them in, so a chip never jumps when the list refreshes.
 const byRepoThenNumber = (a: LinkedPull, b: LinkedPull): number =>
-    `${a.owner}/${a.repo}`.localeCompare(`${b.owner}/${b.repo}`) || a.number - b.number;
+    compareText(`${a.owner}/${a.repo}`, `${b.owner}/${b.repo}`) || a.number - b.number;
 
 // Helper used by tests / future callers that want to use the CI badge
 // component standalone. Kept exported so it doesn't get marked dead.

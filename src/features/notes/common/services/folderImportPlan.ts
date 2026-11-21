@@ -13,6 +13,7 @@
  * which is what this exists for.
  */
 
+import { compareText } from "../../../../i18n/collate";
 import { titleFromFilename } from "./noteMarkdown";
 
 const MARKDOWN_RE = /\.(md|markdown|txt)$/i;
@@ -82,10 +83,10 @@ const newDir = (name: string, path: string): Dir => ({
 });
 
 const byName = (a: { name: string }, b: { name: string }) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    compareText(a.name, b.name, { sensitivity: "base" });
 
 const byTitle = (a: { title: string }, b: { title: string }) =>
-    a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    compareText(a.title, b.title, { sensitivity: "base" });
 
 /**
  * Path segments below the picked directory.

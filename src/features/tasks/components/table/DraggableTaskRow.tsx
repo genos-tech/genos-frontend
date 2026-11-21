@@ -25,6 +25,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { compareText } from "../../../../i18n/collate";
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import {
@@ -884,7 +885,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             </Typography>
                         ) : (
                             [...tags]
-                                .sort((a, b) => (a.tagName || "").localeCompare(b.tagName || ""))
+                                .sort((a, b) => compareText(a.tagName || "", b.tagName || ""))
                                 .map((tag, idx) => (
                                     <ProjectTagChip
                                         key={idx}

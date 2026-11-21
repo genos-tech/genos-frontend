@@ -1,3 +1,5 @@
+import { compareText } from "../../../../i18n/collate";
+
 /**
  * "Which notes match what I typed?" for the notes sidebar's filter field (MIP-1431).
  *
@@ -56,7 +58,7 @@ export const filterNotesByTitle = <N extends TitledNote>(
         (a, b) =>
             a.rank - b.rank ||
             (b.hit.note.tsUpdated ?? "").localeCompare(a.hit.note.tsUpdated ?? "") ||
-            a.title.localeCompare(b.title)
+            compareText(a.title, b.title)
     );
     return { hits: scored.slice(0, limit).map((s) => s.hit), total: scored.length };
 };

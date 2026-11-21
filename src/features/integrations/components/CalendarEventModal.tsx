@@ -27,6 +27,7 @@ import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarC
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { useTranslation } from "../../../i18n";
+import { compareText } from "../../../i18n/collate";
 import { g } from "../../../theme/tokens";
 import { RepeatPicker } from "../../calendar/components/RepeatPicker";
 import {
@@ -286,7 +287,7 @@ export const CalendarEventModal = ({
         // map to a team member (covers the edit-existing-event case
         // where `initial.attendees` arrives as bare email strings).
         return out.sort((a, b) =>
-            a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" })
+            compareText(a.displayName, b.displayName, { sensitivity: "base" })
         );
     }, [avatarCtx]);
 
