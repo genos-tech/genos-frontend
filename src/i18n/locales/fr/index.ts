@@ -6,6 +6,73 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const fr: DeepPartial<Messages> = {
     admin: {
+        slackImport: {
+            title: "Importer depuis Slack",
+            panelDescription:
+                "Importe les canaux, messages et fils d'une exportation Slack dans cette équipe sous forme de discussions de groupe.",
+            button: "Importer depuis Slack…",
+            description:
+                "Téléversez le ZIP de l'exportation de l'espace de travail Slack, vérifiez-le, puis importez.",
+            howTo: "Dans Slack, un propriétaire exporte les données de l'espace de travail (Paramètres, Importer/Exporter des données). Téléversez le ZIP ici. Rien n'est créé tant que vous n'appuyez pas sur Importer.",
+            limits: "Limites : {mb} Mo, {channels} canaux et {messages} messages par importation. Les messages privés ne sont pas importés.",
+            filesNote:
+                "Les fichiers ne sont pas copiés. Chacun devient un lien vers Slack, qui exige une connexion à Slack et peut expirer.",
+            chooseFile: "Choisir le ZIP d'exportation",
+            close: "Fermer",
+            back: "Retour",
+            import: "Importer {count} messages",
+            importing: "Importation…",
+            summary:
+                "{channels} canaux et {messages} messages à importer dans {threads} fils ({skipped} déjà importés).",
+            channelsHeading: "Canaux",
+            private: "Privé",
+            archived: "Archivé",
+            channelLine: "{messages} messages → discussion « {title} »",
+            existing: "ajouté à la discussion créée par une importation précédente",
+            targetArchived: "ignoré : cette discussion est archivée",
+            peopleHeading: "Personnes",
+            peopleHint:
+                "Les personnes sont associées aux membres de l'équipe par adresse e-mail. Personne n'est invité et aucun compte n'est créé : les messages des autres gardent leur nom Slack.",
+            colName: "Nom Slack",
+            colMatch: "Dans Genos",
+            colMessages: "Messages",
+            matchedTo: "Associé à {name}",
+            warnFiles:
+                "Les fichiers deviennent des liens vers Slack. Ils exigent une connexion à Slack et peuvent expirer.",
+            warnUnmatched:
+                "{count} messages viennent de personnes non associées : seul leur nom Slack s'affiche.",
+            warnOrphans:
+                "{count} réponses ont perdu leur premier message et sont importées comme messages normaux.",
+            warnDms:
+                "Les messages privés et les MP de groupe de l'exportation ne sont pas importés.",
+            resultSummary:
+                "{messages} messages importés dans {channels} nouvelles discussions. Discussions en échec : {failed}.",
+            undoHint:
+                "Ce n'est pas ce que vous vouliez ? Annuler supprime ce que cette importation a ajouté.",
+            undo: "Annuler cette importation…",
+            undoConfirm:
+                "Cela supprime {messages} messages et {channels} discussions. Les {kept} modifiés ou ayant reçu une réponse depuis sont conservés.",
+            undoConfirmButton: "Les supprimer",
+            undone: "{removed} messages supprimés. {kept} sont conservés.",
+            errFileTooLarge: "Ce fichier dépasse {limit} Mo.",
+            errNotExport:
+                "Cela ne ressemble pas à un ZIP d'exportation Slack (users.json et channels.json sont absents ou illisibles).",
+            errUnsafe: "Ce ZIP ne peut pas être lu en toute sécurité.",
+            errTooMany:
+                "L'exportation dépasse la limite de {limit}. Exportez une période plus courte.",
+            errNothing: "Il n'y a rien à importer dans cette exportation.",
+            errBusy:
+                "Une autre importation est en cours pour cette équipe. Réessayez dans quelques minutes.",
+            errForbidden: "Seul le propriétaire de l'équipe peut importer depuis Slack.",
+            errGeneric: "L'importation a échoué. Réessayez.",
+            status: {
+                matched: "Associé",
+                unmatched: "Pas membre de l'équipe",
+                no_email: "Pas d'e-mail dans l'exportation",
+                bot: "Bot",
+                deleted: "Désactivé dans Slack",
+            },
+        },
         sampleData: {
             title: "Données d'exemple",
             description:
