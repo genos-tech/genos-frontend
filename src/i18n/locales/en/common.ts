@@ -308,8 +308,12 @@ export const common = {
         loading: "Loading",
         preparingWorkspace: "Preparing your workspace",
         takingLonger: "Taking longer than expected?",
-        sessionExpired: "Your session may have expired",
-        signInAgain: "Sign In Again",
+        // Shown after 5 s on the boot screen while the workspace is still
+        // loading. It must not claim the session expired: that is only
+        // true when AuthContext signs the user out, and that redirects.
+        stillConnecting:
+            "Still connecting to the server. On a slow connection this can take a moment.",
+        reload: "Reload",
         // Shown instead of the two lines above when the device is
         // offline — blaming the session there is wrong, and sign-in
         // can't submit without a network anyway.

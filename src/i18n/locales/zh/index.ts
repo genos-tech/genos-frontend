@@ -1913,10 +1913,10 @@ export const zh: DeepPartial<Messages> = {
             loading: "加载中",
             preparingWorkspace: "正在准备你的工作空间",
             takingLonger: "加载时间比预期长？",
-            sessionExpired: "你的会话可能已过期",
-            signInAgain: "重新登录",
             offlineTitle: "你已离线",
             offlineBody: "目前无法连接服务器。网络恢复后会自动继续。",
+            stillConnecting: "仍在连接服务器。网络较慢时可能需要一点时间。",
+            reload: "重新加载",
         },
         modalView: {
             openFullPage: "打开完整页面",
