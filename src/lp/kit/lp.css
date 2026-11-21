@@ -1808,6 +1808,11 @@ a.lp-row:hover .lp-row__arrow {
     margin-top: 2em;
 }
 
+/* Article anchors (/terms): the fixed header must not cover the heading a contents link jumps to. */
+.lp-sections > section {
+    scroll-margin-top: 72px;
+}
+
 .lp-sec-body {
     max-width: var(--lp-measure);
 }

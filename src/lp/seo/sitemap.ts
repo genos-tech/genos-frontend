@@ -1,5 +1,5 @@
 import { pageUrl } from "./head";
-import { LP_ROUTES, SITE_ORIGIN } from "./routes";
+import { LP_ROUTES, SITE_ORIGIN, type LpRoute } from "./routes";
 
 export interface SitemapArticle {
     slug: string;
@@ -17,7 +17,10 @@ const escapeXml = (s: string): string =>
  * `lastmod` appears only where a real date exists (blog articles); a made-up
  * "today" on every build would teach crawlers to ignore it.
  */
-export const buildSitemapXml = (articles: readonly SitemapArticle[]): string => {
+export const buildSitemapXml = (
+    articles: readonly SitemapArticle[],
+    options: { includeTerms?: boolean } = {}
+): string => {
     const entries: string[] = [];
     const url = (loc: string, extra: string[] = [], lastmod?: string) => {
         const lines = [`    <loc>${escapeXml(loc)}</loc>`];
@@ -28,7 +31,11 @@ export const buildSitemapXml = (articles: readonly SitemapArticle[]): string => 
     const link = (hreflang: string, href: string) =>
         `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${escapeXml(href)}"/>`;
 
-    for (const route of LP_ROUTES) {
+    // /terms is listed only when its build flag is on (MIP-1843): with the flag off the URL is a 404.
+    const routes: readonly LpRoute[] = options.includeTerms
+        ? [...LP_ROUTES, { path: "/terms", langs: "bilingual" }]
+        : LP_ROUTES;
+    for (const route of routes) {
         // An alias (`/home`) is not a page of its own: its canonical (`/`) is listed instead.
         if (route.canonicalPath) continue;
         if (route.langs === "toggle") {

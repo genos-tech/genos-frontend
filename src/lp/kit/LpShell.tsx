@@ -8,6 +8,7 @@ import { analytics } from "../../services/analytics";
 import { chooseConsent, useMarketingConsent } from "../../services/marketingConsent";
 import { trackCtaClicked, trackMarketingPageview } from "../../services/marketingFunnel";
 import { useLpLang, type Lang } from "../lpLang";
+import { isTermsPageEnabled } from "../termsFlag";
 import { ConsentBanner } from "./ConsentBanner";
 import { APP_URL, CONTACT_EMAIL, DEMO_URL, SIGNUP_URL } from "./links";
 import { useLpMode } from "./lpTheme";
@@ -53,6 +54,8 @@ const SHELL = {
             security: "セキュリティ",
             privacy: "プライバシー",
             legal: "利用規約・特商法",
+            terms: "利用規約",
+            legalNotice: "特定商取引法に基づく表記",
             signup: "無料で始める",
             contact: "お問い合わせ",
         },
@@ -102,6 +105,8 @@ const SHELL = {
             security: "Security",
             privacy: "Privacy",
             legal: "Terms and legal",
+            terms: "Terms of Service",
+            legalNotice: "Legal notice",
             signup: "Start free",
             contact: "Contact",
         },
@@ -165,6 +170,8 @@ export function LpShell({
     const [menuOpen, setMenuOpen] = useState(false);
     const t = SHELL[lang];
     const year = new Date().getFullYear();
+    // Off by default: with `VITE_SHOW_TERMS_PAGE` unset the footer is exactly what it was.
+    const showTerms = isTermsPageEnabled();
 
     // Consent and the funnel (MIP-1778). Nothing below sends anything until the visitor has
     // accepted: `consent.allowed` is false before that, and `analytics` is not even started.
@@ -415,8 +422,15 @@ export function LpShell({
                                 <li>
                                     <Link to="/privacy">{t.links.privacy}</Link>
                                 </li>
+                                {showTerms && (
+                                    <li>
+                                        <Link to="/terms">{t.links.terms}</Link>
+                                    </li>
+                                )}
                                 <li>
-                                    <Link to="/legal">{t.links.legal}</Link>
+                                    <Link to="/legal">
+                                        {showTerms ? t.links.legalNotice : t.links.legal}
+                                    </Link>
                                 </li>
                             </ul>
                         </div>
