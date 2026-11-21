@@ -55,6 +55,8 @@ const GenosLandingPage = lazy(() => import("./lp/LandingPage"));
 const GenosLegalPage = lazy(() => import("./lp/LegalPage"));
 const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
 const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
+const GenosSubprocessorsPage = lazy(() => import("./lp/SubprocessorsPage"));
+const GenosCookiesPage = lazy(() => import("./lp/CookiesPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
 const GenosContactPage = lazy(() => import("./lp/ContactPage"));
 const GenosSupportPage = lazy(() => import("./lp/SupportPage"));
@@ -167,6 +169,8 @@ const tree = (
                 customer portal's privacy link and the landing footer. */}
             <Route element={publicPage(GenosDevelopersPage)} path="/developers" />
             <Route element={publicPage(GenosPrivacyPage)} path="/privacy" />
+            <Route element={publicPage(GenosSubprocessorsPage)} path="/subprocessors" />
+            <Route element={publicPage(GenosCookiesPage)} path="/cookies" />
 
             {/* 利用規約 — the public Terms of Service. DRAFT, behind the
                 build-time flag VITE_SHOW_TERMS_PAGE (default off): with the flag

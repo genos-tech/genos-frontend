@@ -18,6 +18,7 @@ import { PROCESSORS } from "../lp/privacyProcessors";
 
 const EXPECTED_PROCESSORS = [
     "Railway",
+    "Google Cloud Storage",
     "Google（Gemini）",
     "Anthropic（Claude）",
     "OpenAI",
@@ -79,8 +80,11 @@ describe("PrivacyPage", () => {
         const { container } = renderPage();
         const { ja, en } = splitText(container.textContent ?? "");
         // OpenAI embeddings of indexed content.
-        expect(ja).toMatch(/OpenAI：検索のための埋め込み/);
-        expect(en).toMatch(/OpenAI: Embeddings for search/);
+        expect(ja).toMatch(/OpenAI：設定により選択された場合のみ/);
+        expect(en).toMatch(/OpenAI: Used only when it is configured/);
+        // Production embeddings are on Google Cloud (Vertex AI), and the page says so.
+        expect(ja).toMatch(/Google（Gemini）.*検索用の索引（埋め込み）.*Vertex AI/);
+        expect(en).toMatch(/Google（Gemini）[^]*?embeddings[^]*?Vertex AI/);
         // Cohere only when configured.
         expect(ja).toMatch(/Cohere：検索結果の並べ替え.*設定した場合のみ/);
         expect(en).toMatch(/Cohere: Used only when it is configured/);
@@ -95,8 +99,11 @@ describe("PrivacyPage", () => {
     it("describes the analytics truthfully: team ID, not the team name, and not anonymous", () => {
         const { container } = renderPage();
         const { ja, en } = splitText(container.textContent ?? "");
-        expect(ja).toMatch(/PostHog：プロダクト分析。ユーザー ID、チーム ID、役割/);
-        expect(en).toMatch(/PostHog: Product analytics\. Your user ID, team ID, role/);
+        expect(ja).toMatch(/PostHog：プロダクト分析。同意していただいた場合にのみ送信します。/);
+        expect(en).toMatch(/PostHog: Product analytics, sent only with your consent\./);
+        // The device fields the in-app analytics sends are listed, not left out.
+        expect(ja).toMatch(/ユーザーエージェント、ページのタイトルも送信します/);
+        expect(en).toMatch(/user agent and page title are also sent/);
         expect(ja).toContain("チーム名は送信しません");
         expect(en).toContain("The team name is not sent");
         // The data is tied to the user id once signed in, so the page must not call it anonymous.
@@ -105,27 +112,31 @@ describe("PrivacyPage", () => {
         expect(en).toContain("Click auto-capture and session recording are not used");
     });
 
-    // The row below is the wording Ken's counsel approved on 2026-11-21 (note 178 of MIP-1266),
-    // applied as drafted: do not edit it here without counsel (and flag the change in the PR).
-    // It says the opt-out is "Settings > General > Privacy & analytics" (with ">", as approved)
-    // or the link at the bottom of the marketing pages, and it does not repeat "on by default".
-    it("carries the counsel-approved PostHog row (marketing funnel, MIP-1778)", () => {
+    // MIP-1792 (2026-11-21): the PostHog row now says what the in-app analytics sends
+    // (device fields), that the IP is not stored by PostHog, and that deletion does not
+    // reach PostHog. Counsel's wording is still pending (MIP-1800); pin the facts here.
+    it("pins the PostHog facts: consent first, device fields in the app, IP not stored", () => {
         const posthog = PROCESSORS.find((p) => p.name === "PostHog");
-        expect(posthog?.en).toBe(
-            'Product analytics. Your user ID, team ID, role, the path of the pages you view (without query strings), demo started / completed / failed events, which button you click on our marketing pages (for example "Try the demo"), the moment you sign up, the language of the page, and the marketing source of your visit (the utm_source, utm_medium, utm_campaign, utm_content and utm_term values in the link you arrived by, and the website you came from, domain only) are sent. Before you sign in, this is tied to a random browser ID, and once you sign in it is tied to your user ID (not anonymous). The team name is not sent. Click auto-capture and session recording are not used. You can stop it for that browser in Settings > General > Privacy & analytics, or from the link at the bottom of our marketing pages.'
+        expect(posthog?.ja).toContain("同意していただいた場合にのみ送信します");
+        expect(posthog?.ja).toContain("IP アドレスは、PostHog で保存しないよう設定しています");
+        expect(posthog?.ja).toContain(
+            "アカウントを削除しても、PostHog 上の情報は自動では削除されません"
         );
-        expect(posthog?.ja).toBe(
-            "プロダクト分析。ユーザー ID、チーム ID、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベント、マーケティングページでクリックしたボタン（例:「デモを試す」）、サインアップ、ページの言語、およびアクセス元（アクセスしたリンクに含まれる utm_source・utm_medium・utm_campaign・utm_content・utm_term の値と、参照元ウェブサイトのドメインのみ）が送信されます。サインイン前はランダムなブラウザ ID に、サインイン後はユーザー ID に紐づきます（匿名ではありません）。チーム名は送信しません。クリックの自動取得とセッション録画は行っていません。「設定 → 一般 → プライバシーと分析」またはマーケティングページ下部のリンクから、そのブラウザでの送信を停止できます。"
-        );
+        expect(posthog?.en).toContain("sent only with your consent");
+        expect(posthog?.en).toContain("IP addresses are set not to be stored by PostHog");
+        expect(posthog?.en).toContain("Deleting your account does not automatically delete");
+        expect(posthog?.en).toContain("Click auto-capture and session recording are not used");
     });
 
-    it("states the hosting as Railway only", () => {
+    it("states the hosting as Railway, and discloses the Google Cloud Storage cost reports", () => {
         const { container } = renderPage();
         const text = container.textContent ?? "";
-        expect(text).toContain("Railway 上でのみ稼働");
-        expect(text).toContain("Production runs on Railway only");
-        // Production is not on Google Cloud (paused); do not claim it.
-        expect(text).not.toMatch(/Google Cloud/);
+        expect(text).toContain("本番環境は Railway 上で稼働");
+        expect(text).toContain("Production runs on Railway");
+        // The AI cost reports are uploaded to a Cloud Storage bucket (MIP-1791 not yet done).
+        const { ja, en } = splitText(text);
+        expect(ja).toMatch(/Google Cloud Storage：AI 利用料の集計ページ/);
+        expect(en).toMatch(/Google Cloud Storage: Stores the daily AI cost reports/);
     });
 
     it("points deletion at the in-app flow and keeps a contact route", () => {
