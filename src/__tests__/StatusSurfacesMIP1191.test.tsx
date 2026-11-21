@@ -211,7 +211,7 @@ const OVERVIEW = {
     dueSoonCount: 2,
     blockedCount: 1,
     burndown: null,
-    health: { tone: "behind", label: "Behind", expectedPct: 60, actualPct: 20 },
+    health: { tone: "behind", expectedPct: 60, actualPct: 20 },
 } as unknown as ScheduleOverview;
 
 let overviewToPublish: ScheduleOverview = OVERVIEW;
