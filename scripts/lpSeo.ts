@@ -34,17 +34,20 @@ const readChangelog = (root: string): ChangelogEntry[] =>
 
 export const lpSeo = (): Plugin => {
     let root = process.cwd();
+    let includeTerms = false;
     return {
         name: "lp-seo",
         apply: "build",
         configResolved(config) {
             root = config.root;
+            // The same build flag the app reads (VITE_SHOW_TERMS_PAGE, MIP-1843), from Vite's loaded env.
+            includeTerms = config.env.VITE_SHOW_TERMS_PAGE === "true";
         },
         generateBundle() {
             this.emitFile({
                 type: "asset",
                 fileName: "sitemap.xml",
-                source: buildSitemapXml(readArticles(root)),
+                source: buildSitemapXml(readArticles(root), { includeTerms }),
             });
             // changelog.rss from the same entries the /changelog page shows (MIP-1257).
             this.emitFile({

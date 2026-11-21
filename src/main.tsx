@@ -31,6 +31,7 @@ import { startLabellingExternalLinks } from "./utils/labelExternalLinks";
 import { App } from "./App";
 import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
 import type { SegmentKey } from "./lp/segments";
+import { termsRoutes } from "./lp/termsRoute";
 
 // The public marketing pages are code-split away from the app entry.
 // They are the only consumers of framer-motion, and nobody who opens
@@ -167,12 +168,19 @@ const tree = (
             <Route element={publicPage(GenosDevelopersPage)} path="/developers" />
             <Route element={publicPage(GenosPrivacyPage)} path="/privacy" />
 
-            {/* Support — how to reach us and how to disconnect a connected AI
-                app. Public and auth-free like /legal and /privacy; holds its
-                own ja + en copy. (There is no /terms route: the terms are an
-                unpublished draft.) */}
+            {/* 利用規約 — the public Terms of Service. DRAFT, behind the
+                build-time flag VITE_SHOW_TERMS_PAGE (default off): with the flag
+                off nothing is registered, the URL renders the 404 page and the
+                page chunk is not even built. See lp/termsRoute.tsx. */}
+            {termsRoutes()}
+
             {/* Contact form (MIP-1261): mailed to support, not stored. ?topic=enterprise is the Enterprise variant. */}
             <Route element={publicPage(GenosContactPage)} path="/contact" />
+
+            {/* Support — how to reach us and how to disconnect a connected AI
+                app. Public and auth-free like /legal and /privacy; holds its
+                own ja + en copy. (/terms exists only behind VITE_SHOW_TERMS_PAGE;
+                the terms are an interim draft.) */}
             <Route element={publicPage(GenosSupportPage)} path="/support" />
 
             {/* Moving into Genos (MIP-1260): what imports today and what does not. Public, like /docs. */}
