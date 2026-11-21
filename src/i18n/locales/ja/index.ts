@@ -1138,6 +1138,14 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // TODO(copy): MIP-1956 — draft wording for a native reader.
+        liveRegion: {
+            newMessage: "{name}: {preview}",
+            more: "{count, plural, other {ほか#件のメッセージ}}",
+            attachment: "添付ファイルを送信しました",
+            listLabel: "メッセージ",
+            threadListLabel: "スレッドの返信",
+        },
         retentionBanner:
             "プランの制限により、{days} 日より前のメッセージは非表示になっています。アップグレードすると全履歴を表示できます。",
         composer: {

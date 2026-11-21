@@ -1730,6 +1730,14 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // TODO(copy): MIP-1956 — draft wording for a native reader.
+        liveRegion: {
+            newMessage: "{name}: {preview}",
+            more: "{count, plural, one {+# رسالة أخرى} other {+# رسائل أخرى}}",
+            attachment: "أرسل مرفقًا",
+            listLabel: "الرسائل",
+            threadListLabel: "ردود المحادثة الفرعية",
+        },
         retentionBanner:
             "الرسائل الأقدم من {days} يومًا مخفية في خطتك. قم بالترقية لعرض السجل الكامل.",
         composer: {
