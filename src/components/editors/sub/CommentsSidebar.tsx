@@ -8,6 +8,7 @@ import {
     useThreads,
 } from "@blocknote/react";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import { Box, Chip, IconButton, Sheet, Typography } from "@mui/joy";
 
@@ -18,6 +19,7 @@ import { BaseAvatar } from "../../ui/avatars/BaseAvatar";
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../ui/bubble";
 import { EmptyState } from "../../ui/feedback/EmptyState";
 import { ViaChip } from "../../ui/misc/ViaChip";
+import { TOUCH_TARGET } from "../../ui/touchTargets";
 import { commentFirstLine } from "./commentMentions";
 import { useNoteLink } from "./NoteLinkContext";
 import { useCommentAuthor } from "./useCommentAuthor";
@@ -48,6 +50,13 @@ import { useCommentAuthor } from "./useCommentAuthor";
 // Rendered as a sibling of `.bn-editor-section` inside `.bn-editor-with-sidebar`
 // (a flex row), so it sits INSIDE `<BlockNoteView>` and can use the comment
 // hooks. When `open` is false it renders nothing, so the editor is full-width.
+//
+// On a phone (`overlay`, MIP-1763) there is no room for a 340px column beside the note: it
+// squeezed the note to a sliver. There the panel is a sheet laid over the editor instead,
+// with its own Close in the header (the floating toggle is under it), Escape to leave, and
+// focus handed to the Close on open. Tapping a row closes the sheet and opens that thread's
+// card over the note: the note is hidden while the sheet is up, so a card pinned beside it
+// would point at text nobody can see. The desktop layout does not go through any of this.
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Panel width when open. The editors shift their top-right affordance cluster
@@ -55,8 +64,18 @@ import { useCommentAuthor } from "./useCommentAuthor";
  *  the one offset lives in one place. */
 export const COMMENTS_SIDEBAR_WIDTH = 340;
 
+/** Layer of the phone sheet: above the note's title row (100, GenosNoteEditor) and the
+ *  floating toggle (11) it covers, below BlockNote's own floating UI (App.css, 13300+),
+ *  so a thread's card and the menus still open over it. */
+const COMMENTS_OVERLAY_Z_INDEX = 110;
+
 type CommentsSidebarProps = {
     open: boolean;
+    /** Lay the panel over the editor instead of docking it beside it: a phone. */
+    overlay?: boolean;
+    /** Close the panel (the overlay's Close, Escape, a tapped row). The editor takes focus
+     *  back to its "Show comments" button here. Only used with `overlay`. */
+    onClose?: () => void;
 };
 
 /**
@@ -302,7 +321,7 @@ ThreadRow.displayName = "ThreadRow";
  * Must be rendered inside `<BlockNoteView>` (it uses the comment hooks). Renders
  * nothing when `open` is false.
  */
-export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
+export const CommentsSidebar = ({ open, overlay = false, onClose }: CommentsSidebarProps) => {
     const { t } = useTranslation();
     const copy = t.common.editor.commentsSidebar;
     const editor = useBlockNoteEditor();
@@ -421,15 +440,40 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
         }
     }, [open]);
 
-    const handleSelect = useCallback((threadId: string) => {
-        // Click toggles the pin: pin this thread (its card stays after the
-        // mouse leaves), or unpin if it was already the pinned one.
-        setPinnedThreadId((prev) => (prev === threadId ? null : threadId));
-    }, []);
+    const handleSelect = useCallback(
+        (threadId: string) => {
+            if (overlay) {
+                // The sheet hides the note, so open the card and leave: it opens next to its
+                // text, over the note. Driven here, not through the pin: closing resets the
+                // pin, and the effect that follows it would never run.
+                comments.selectThread(threadId, true);
+                onClose?.();
+                return;
+            }
+            // Click toggles the pin: pin this thread (its card stays after the
+            // mouse leaves), or unpin if it was already the pinned one.
+            setPinnedThreadId((prev) => (prev === threadId ? null : threadId));
+        },
+        [overlay, onClose, comments]
+    );
 
-    const handleHover = useCallback((threadId: string) => {
-        setHoveredThreadId(threadId);
-    }, []);
+    const handleHover = useCallback(
+        (threadId: string) => {
+            // A touch screen sends a mouseenter before the tap: no preview behind the sheet.
+            if (!overlay) {
+                setHoveredThreadId(threadId);
+            }
+        },
+        [overlay]
+    );
+
+    // Phone sheet: focus starts on its Close, so Escape works and a screen reader lands in it.
+    const closeRef = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        if (open && overlay) {
+            closeRef.current?.focus();
+        }
+    }, [open, overlay]);
 
     const clearHover = useCallback(() => {
         setHoveredThreadId(null);
@@ -439,22 +483,51 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
         return null;
     }
 
+    const title = rows.length > 0 ? fmt(copy.titleWithCount, { count: rows.length }) : copy.title;
+
     return (
         <Sheet
             aria-label={copy.title}
             className="bn-comments-sidebar"
+            data-layout={overlay ? "overlay" : "dock"}
             role="complementary"
-            sx={{
-                width: COMMENTS_SIDEBAR_WIDTH,
-                flexShrink: 0,
-                height: "100%",
-                minHeight: 0,
-                display: "flex",
-                flexDirection: "column",
-                borderInlineStart: "1px solid",
-                borderColor: "divider",
-                bgcolor: "background.surface",
-            }}
+            sx={
+                overlay
+                    ? {
+                          // Over the editor box (the nearest positioned ancestor), edge to edge.
+                          position: "absolute",
+                          inset: 0,
+                          zIndex: COMMENTS_OVERLAY_Z_INDEX,
+                          minWidth: 0,
+                          minHeight: 0,
+                          display: "flex",
+                          flexDirection: "column",
+                          bgcolor: "background.surface",
+                      }
+                    : {
+                          width: COMMENTS_SIDEBAR_WIDTH,
+                          flexShrink: 0,
+                          height: "100%",
+                          minHeight: 0,
+                          display: "flex",
+                          flexDirection: "column",
+                          borderInlineStart: "1px solid",
+                          borderColor: "divider",
+                          bgcolor: "background.surface",
+                      }
+            }
+            onKeyDown={
+                overlay
+                    ? (event) => {
+                          // A card that is open takes the first Escape (BlockNote closes it
+                          // on a document listener that runs after this one); the sheet the second.
+                          if (event.key === "Escape" && !selectedThreadIdRef.current) {
+                              event.stopPropagation();
+                              onClose?.();
+                          }
+                      }
+                    : undefined
+            }
         >
             {/* Header shows only the title. The open/close control is the
                 floating comment button pinned to the top-right corner
@@ -466,8 +539,9 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
                     display: "flex",
                     alignItems: "center",
                     gap: 1,
-                    pl: 1.5,
-                    pr: 6,
+                    ...(overlay
+                        ? { paddingInlineStart: 1.5, paddingInlineEnd: 0.5 }
+                        : { pl: 1.5, pr: 6 }),
                     py: 1,
                     minHeight: 40,
                     borderBottom: "1px solid",
@@ -475,11 +549,24 @@ export const CommentsSidebar = ({ open }: CommentsSidebarProps) => {
                     flexShrink: 0,
                 }}
             >
-                <Typography level="title-sm" sx={{ fontWeight: 600 }}>
-                    {rows.length > 0
-                        ? fmt(copy.titleWithCount, { count: rows.length })
-                        : copy.title}
+                <Typography level="title-sm" sx={{ fontWeight: 600, flex: 1, minWidth: 0 }}>
+                    {title}
                 </Typography>
+                {overlay && (
+                    // The way back: the floating toggle is under the sheet. Same name as
+                    // that toggle's "open" state, so the pair reads as one control.
+                    <IconButton
+                        ref={closeRef}
+                        aria-label={t.common.editor.hideComments}
+                        color="neutral"
+                        size="sm"
+                        sx={{ minWidth: TOUCH_TARGET, minHeight: TOUCH_TARGET, flexShrink: 0 }}
+                        variant="soft"
+                        onClick={onClose}
+                    >
+                        <CloseRoundedIcon />
+                    </IconButton>
+                )}
             </Box>
 
             <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 1 }}>

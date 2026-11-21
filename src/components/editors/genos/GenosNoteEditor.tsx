@@ -2,7 +2,15 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../../App.css";
 
-import { startTransition, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+    startTransition,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ReactNode,
+} from "react";
 import { PartialBlock } from "@blocknote/core";
 import { CommentsExtension } from "@blocknote/core/comments";
 import { BlockNoteView } from "@blocknote/mantine";
@@ -25,6 +33,7 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../../hooks/common/useAnchorClickIntercept";
 import { useDebouncedCallback } from "../../../hooks/common/useDebouncedCallback";
+import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../i18n";
@@ -173,6 +182,16 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     // Our custom comments sidebar (top-right button → docked list). Frontend
     // only: a read-only lens over the editor's existing threads.
     const [showComments, setShowComments] = useState<boolean>(false);
+    // On a phone the panel is a sheet over the editor, not a column beside it (MIP-1763): the
+    // title row then has no panel edge to clear. The same breakpoint as every other phone layout.
+    const isMobile = useIsMobile();
+    const commentsDocked = showComments && !isMobile;
+    const commentsToggleRef = useRef<HTMLDivElement>(null);
+    const closeComments = useCallback(() => {
+        setShowComments(false);
+        // Back to the button that opened the sheet, once it is out of the way.
+        requestAnimationFrame(() => commentsToggleRef.current?.querySelector("button")?.focus());
+    }, []);
     const bnBoxClassName: string = [
         `bn-note-body-box-${mode}`,
         unwrapAll && "bn-unwrap-all",
@@ -379,6 +398,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                     open/close affordance. */}
                 {threadStore && (
                     <Box
+                        ref={commentsToggleRef}
                         sx={{
                             position: "absolute",
                             top: 8,
@@ -409,7 +429,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                         // Open: the toggle sits over the sidebar header instead,
                         // so the cluster only needs to clear the panel's left
                         // edge — a snug 12px gap, not another 52.
-                        right: showComments ? COMMENTS_SIDEBAR_WIDTH + 12 : 52,
+                        right: commentsDocked ? COMMENTS_SIDEBAR_WIDTH + 12 : 52,
                         // Above the editor: the title used to sit at 100 on its own.
                         zIndex: 100,
                         // The buttons are 44px on a touch screen (MIP-1319): the row is 44px
@@ -419,7 +439,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                             ...headerTouchTargetsSx["@media (pointer: coarse)"],
                             top: 8,
                             minHeight: 44,
-                            right: showComments ? COMMENTS_SIDEBAR_WIDTH + 12 : 60,
+                            right: commentsDocked ? COMMENTS_SIDEBAR_WIDTH + 12 : 60,
                         },
                         display: "flex",
                         alignItems: "center",
@@ -608,7 +628,13 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                 )}
                             </BlockNoteViewEditor>
                         </div>
-                        {threadStore && <CommentsSidebar open={showComments} />}
+                        {threadStore && (
+                            <CommentsSidebar
+                                open={showComments}
+                                overlay={isMobile}
+                                onClose={closeComments}
+                            />
+                        )}
                     </div>
                 </BlockNoteView>
 

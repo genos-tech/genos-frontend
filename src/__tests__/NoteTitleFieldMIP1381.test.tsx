@@ -122,8 +122,9 @@ describe("the shell and the stylesheet agree on where the title starts", () => {
         const src = code("components/editors/genos/GenosNoteEditor.tsx");
         expect(src).toContain("{titleSlot}");
         expect(src).toMatch(/left:\s*"var\(--note-body-start, 50px\)"/);
-        // One row: the title takes what the controls leave (so the sidebar opening narrows it).
-        expect(src).toMatch(/right:\s*showComments \? COMMENTS_SIDEBAR_WIDTH \+ 12 : 52/);
+        // One row: the title takes what the controls leave (so a docked sidebar opening narrows
+        // it; on a phone the sidebar is a sheet over the editor and the row stays put, MIP-1763).
+        expect(src).toMatch(/right:\s*commentsDocked \? COMMENTS_SIDEBAR_WIDTH \+ 12 : 52/);
         // The empty stretch of the row must not swallow clicks meant for the editor under it.
         expect(src).toMatch(/pointerEvents:\s*"none"/);
         expect(src).toMatch(/"& > \*":\s*\{\s*pointerEvents:\s*"auto"/);
