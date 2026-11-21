@@ -325,20 +325,20 @@ export const ModalManageProjectLabels = ({
                     pencil/trash = edit the team-wide entry. */}
             <Stack spacing={0.5} sx={{ overflowY: "auto", maxHeight: "45vh", pr: 0.5 }}>
                 <DataState
+                    error={loadFailed}
+                    hasData={!loading && catalog.length > 0}
+                    loading={loading}
+                    size="sm"
+                    skeleton={<SkeletonRows count={3} />}
                     empty={{
                         body: t.admin.projectLabels.empty,
                         "data-empty": "project-labels",
                     }}
-                    error={loadFailed}
                     errorState={{
                         title: t.admin.projectLabels.loadFailed,
                         onRetry: () => void refreshCatalog(),
                         "data-error": "project-labels",
                     }}
-                    hasData={!loading && catalog.length > 0}
-                    loading={loading}
-                    size="sm"
-                    skeleton={<SkeletonRows count={3} />}
                 />
 
                 {!loading &&

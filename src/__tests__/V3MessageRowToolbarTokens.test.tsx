@@ -10,9 +10,9 @@ describe("the v3 row toolbar buttons", () => {
         render(
             <MessageRowHoverToolbar
                 isFlagged={false}
-                isMine
                 messageId="m1"
                 replyCount={0}
+                isMine
                 visible
                 onCopyLink={vi.fn()}
                 onDelete={vi.fn()}

@@ -272,14 +272,14 @@ export const ScheduleFormPanel = ({
                 >
                     <FormLabel>{s.name}</FormLabel>
                     <Input
+                        autoFocus={!isMobile}
                         placeholder={s.namePlaceholder}
-                        value={form.name}
                         slotProps={{
                             input: { autoComplete: "off", maxLength: NAME_MAX + 20, name: "name" },
                         }}
                         // Opened by the member's own click; on a phone the keyboard would
                         // cover the form, so only a fine pointer gets the focus.
-                        autoFocus={!isMobile}
+                        value={form.name}
                         onChange={(e) => set("name", e.target.value)}
                     />
                     {show && problems.name && (
@@ -553,14 +553,14 @@ export const ScheduleFormPanel = ({
                                         aria-pressed={on}
                                         color={on ? "primary" : "neutral"}
                                         size="sm"
-                                        variant={on ? "solid" : "outlined"}
+                                        sx={{ minWidth: 44, px: 1 }}
                                         data-invalid-group={
                                             d === WEEKDAY_NUMBERS[0] && show && problems.weekdays
                                                 ? ""
                                                 : undefined
                                         }
                                         // Seven chips wrap (the row is flexWrap), they never push the dialog wider.
-                                        sx={{ minWidth: 44, px: 1 }}
+                                        variant={on ? "solid" : "outlined"}
                                         onClick={() => toggleDay(d)}
                                     >
                                         {weekdayName(d, locale, "short")}

@@ -68,9 +68,9 @@ export const SessionSupersededOverlay = ({ teamName }: SessionSupersededOverlayP
                         {fmt(t.common.sessionSuperseded.body, { team: displayTeam })}
                     </Typography>
                     <Button
-                        fullWidth
                         size="lg"
                         startDecorator={<RefreshRoundedIcon />}
+                        fullWidth
                         onClick={() => window.location.reload()}
                     >
                         {t.common.sessionSuperseded.reload}

@@ -144,6 +144,8 @@ const CopyBox = ({
                     aria-label={block ? c.copyCommandAria : c.copyAria}
                     color="neutral"
                     size="sm"
+                    sx={{ flexShrink: 0, minHeight: g.control.md }}
+                    variant="outlined"
                     startDecorator={
                         state === "copied" ? (
                             <CheckRoundedIcon sx={{ fontSize: 16 }} />
@@ -151,8 +153,6 @@ const CopyBox = ({
                             <ContentCopyRoundedIcon sx={{ fontSize: 16 }} />
                         )
                     }
-                    sx={{ flexShrink: 0, minHeight: g.control.md }}
-                    variant="outlined"
                     onClick={() => void copy()}
                 >
                     {state === "copied" ? c.copied : c.copy}
@@ -235,6 +235,8 @@ export const ConnectAppPanel = ({
                 aria-controls={bodyId}
                 aria-expanded={open}
                 color="neutral"
+                startDecorator={<AddLinkRoundedIcon sx={{ fontSize: 18 }} />}
+                variant="plain"
                 endDecorator={
                     <ExpandMoreRoundedIcon
                         sx={{
@@ -244,7 +246,6 @@ export const ConnectAppPanel = ({
                         }}
                     />
                 }
-                startDecorator={<AddLinkRoundedIcon sx={{ fontSize: 18 }} />}
                 sx={{
                     width: "100%",
                     justifyContent: "flex-start",
@@ -252,7 +253,6 @@ export const ConnectAppPanel = ({
                     px: 1.25,
                     textAlign: "start",
                 }}
-                variant="plain"
                 onClick={() => setChosen(!open)}
             >
                 <Typography id={titleId} level="title-sm" sx={{ flex: 1, textAlign: "start" }}>
@@ -260,8 +260,8 @@ export const ConnectAppPanel = ({
                 </Typography>
             </Button>
             <Box
-                id={bodyId}
                 aria-labelledby={open ? titleId : undefined}
+                id={bodyId}
                 role={open ? "region" : undefined}
             >
                 {open && (
@@ -282,17 +282,17 @@ export const ConnectAppPanel = ({
                         <Stack spacing={0.75}>
                             <Typography level="title-sm">{c.claudeCodeTitle}</Typography>
                             <Steps
+                                items={c.claudeCodeSteps}
                                 afterFirst={
                                     address && (
                                         <CopyBox
-                                            block
                                             label={c.codeLabel}
                                             testId="mcp-command"
                                             text={claudeCodeAddCommand(address)}
+                                            block
                                         />
                                     )
                                 }
-                                items={c.claudeCodeSteps}
                             />
                         </Stack>
 

@@ -52,12 +52,12 @@ export const InboxSyncButton = () => {
     return (
         <AppTooltip title={t.inbox.sync.label}>
             <IconButton
+                aria-busy={syncing}
                 aria-label={t.inbox.sync.label}
-                color="neutral"
                 data-testid="inbox-sync"
                 // Busy, not disabled: a disabled button drops keyboard focus, and the
                 // press that started this would lose its place in the header.
-                aria-busy={syncing}
+                color="neutral"
                 size="sm"
                 sx={{ "&:focus-visible": focusRing }}
                 variant="plain"

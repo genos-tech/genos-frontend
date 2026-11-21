@@ -83,13 +83,13 @@ describe("ModalCreateGM", () => {
             <CssVarsProvider>
                 <ModalCreateGM
                     myself={myself}
-                    open
+                    setMyself={vi.fn()}
                     setOpen={setOpen}
                     socket={null}
                     useCM={{} as never}
                     useTEM={{ teamMembers: [] } as never}
                     useUISM={{} as never}
-                    setMyself={vi.fn()}
+                    open
                 />
             </CssVarsProvider>
         );
@@ -122,10 +122,10 @@ describe("ModalCreateTeam", () => {
             <CssVarsProvider>
                 <ModalCreateTeam
                     myself={myself}
-                    openCreateTeam
                     setIsNewTeamCreated={vi.fn()}
                     setMyself={vi.fn()}
                     setOpenCreateTeam={setOpen}
+                    openCreateTeam
                 />
             </CssVarsProvider>
         );

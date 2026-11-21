@@ -113,6 +113,7 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                         <BaseAvatar
                             size={miniSize}
                             src={imgSrc}
+                            tone={MEMBER_TONES[index % MEMBER_TONES.length]}
                             sx={{
                                 fontSize: 10,
                                 fontWeight: 600,
@@ -121,7 +122,6 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                                 border: "1.5px solid",
                                 borderColor: g.surface.default,
                             }}
-                            tone={MEMBER_TONES[index % MEMBER_TONES.length]}
                         >
                             <Box
                                 component="span"

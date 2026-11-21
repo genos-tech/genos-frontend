@@ -188,9 +188,9 @@ describe("the table's status cell", () => {
                                             useTEM={{} as never}
                                             useTM={useTM}
                                             useUISM={{} as never}
+                                            onDeleteTask={onDeleteTask}
                                             onOpenDiagram={vi.fn()}
                                             onQuickAddChild={vi.fn()}
-                                            onDeleteTask={onDeleteTask}
                                             onRequestPreview={vi.fn()}
                                             onRowUpdate={onRowUpdate}
                                         />

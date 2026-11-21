@@ -278,12 +278,12 @@ export const NoteBreadcrumbs = ({
                     >
                         <Typography
                             aria-expanded={false}
+                            component="button"
+                            level="body-sm"
                             aria-label={t.notes.header.showHiddenCrumbs.replace(
                                 "{count}",
                                 String(hidden.length)
                             )}
-                            component="button"
-                            level="body-sm"
                             sx={{
                                 display: "inline-flex",
                                 alignItems: "center",

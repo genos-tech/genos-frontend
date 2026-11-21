@@ -215,7 +215,7 @@ export const ResetPasswordForm = () => {
                             >
                                 {t.admin.auth.passwordReset.credentialsEnded}
                             </Alert>
-                            <Button fullWidth size="lg" onClick={() => navigate("/signin")}>
+                            <Button size="lg" fullWidth onClick={() => navigate("/signin")}>
                                 {t.admin.auth.passwordReset.signInNow}
                             </Button>
                         </Stack>

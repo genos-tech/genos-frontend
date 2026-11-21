@@ -45,8 +45,8 @@ export const TeamConnectedAppsSection = ({ teamId }: { teamId: string }) => {
     const person = (c: TeamMcpConnection) => c.userName || c.userEmail || a.unknownMember;
 
     return (
-        <Stack spacing={1.5} data-testid="team-connected-apps">
-            <Stack direction="row" spacing={1} alignItems="center">
+        <Stack data-testid="team-connected-apps" spacing={1.5}>
+            <Stack alignItems="center" direction="row" spacing={1}>
                 <SmartToyOutlinedIcon sx={{ fontSize: 18 }} />
                 <Typography level="title-md">{a.title}</Typography>
             </Stack>
@@ -58,10 +58,10 @@ export const TeamConnectedAppsSection = ({ teamId }: { teamId: string }) => {
                 <Sheet
                     key={c.id}
                     data-testid={`team-app-${c.id}`}
-                    variant="soft"
                     sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+                    variant="soft"
                 >
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+                    <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                             <Typography level="title-sm" noWrap>
                                 {appName(c)}
@@ -96,14 +96,14 @@ export const TeamConnectedAppsSection = ({ teamId }: { teamId: string }) => {
                         {c.revocable && (
                             <AppTooltip title={a.end}>
                                 <IconButton
-                                    aria-label={fmt(a.endNamed, {
-                                        app: appName(c),
-                                        name: person(c),
-                                    })}
                                     color="danger"
                                     size="sm"
                                     sx={{ color: g.danger.text }}
                                     variant="plain"
+                                    aria-label={fmt(a.endNamed, {
+                                        app: appName(c),
+                                        name: person(c),
+                                    })}
                                     onClick={() => setPending(c)}
                                 >
                                     <LinkOffRoundedIcon sx={{ fontSize: 16 }} />
@@ -114,21 +114,21 @@ export const TeamConnectedAppsSection = ({ teamId }: { teamId: string }) => {
                 </Sheet>
             ))}
             <ConfirmDialog
-                open={pending != null}
                 cancelLabel={a.cancel}
-                closeOnConfirm
                 confirmLabel={a.confirm}
-                destructive
-                title={
-                    pending
-                        ? fmt(a.confirmTitle, { app: appName(pending), name: person(pending) })
-                        : ""
-                }
+                open={pending != null}
                 description={
                     pending
                         ? fmt(a.confirmBody, { app: appName(pending), name: person(pending) })
                         : undefined
                 }
+                title={
+                    pending
+                        ? fmt(a.confirmTitle, { app: appName(pending), name: person(pending) })
+                        : ""
+                }
+                closeOnConfirm
+                destructive
                 onClose={() => setPending(null)}
                 onConfirm={async () => {
                     if (!pending) return;

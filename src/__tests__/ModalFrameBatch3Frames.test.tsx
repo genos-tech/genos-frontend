@@ -66,10 +66,10 @@ describe("small dialogs", () => {
         wrap(
             <ModalCreateTeam
                 myself={myself}
-                openCreateTeam
                 setIsNewTeamCreated={vi.fn()}
                 setMyself={vi.fn()}
                 setOpenCreateTeam={vi.fn()}
+                openCreateTeam
             />
         );
         expect(facts()).toMatchObject({ layer: "10010", ...FLAT });
@@ -89,10 +89,10 @@ describe("small dialogs", () => {
         wrap(
             <ModalCreateTeam
                 myself={myself}
-                openCreateTeam
                 setIsNewTeamCreated={vi.fn()}
                 setMyself={vi.fn()}
                 setOpenCreateTeam={setOpen}
+                openCreateTeam
             />
         );
         fireEvent.click(screen.getByRole("button", { name: "Close" }));
@@ -102,9 +102,9 @@ describe("small dialogs", () => {
     it("Request ownership: a flat frame at 10010 whose warning note keeps its tint", () => {
         wrap(
             <ModalRequestOwnership
-                open
                 responseDays={30}
                 teamName="Acme"
+                open
                 onCancel={vi.fn()}
                 onConfirm={vi.fn(async () => true)}
             />
@@ -140,8 +140,8 @@ describe("small dialogs", () => {
         view.unmount();
         wrap(
             <ModalRemindMe
-                open
                 remindAt={new Date(Date.now() + 3600000).toISOString()}
+                open
                 onClose={vi.fn()}
                 onCommit={vi.fn()}
                 onRemove={vi.fn()}

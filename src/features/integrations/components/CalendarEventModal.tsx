@@ -660,11 +660,11 @@ export const CalendarEventModal = ({
                 <FormControl>
                     <FormLabel>{t.calendar.attendees.label}</FormLabel>
                     <Autocomplete
-                        slotProps={{ listbox: { sx: { zIndex: popupZIndex } } }}
                         getOptionLabel={(o) => o.displayName}
                         isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
                         noOptionsText={t.calendar.attendees.noResults}
                         options={teamOptions}
+                        slotProps={{ listbox: { sx: { zIndex: popupZIndex } } }}
                         value={form.attendees}
                         // Equality by email so options the user
                         // already picked render with the "selected"

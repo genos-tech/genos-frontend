@@ -287,9 +287,9 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 channel). */}
             <input
                 ref={composer.attachInputRef}
+                style={{ display: "none" }}
                 type="file"
                 multiple
-                style={{ display: "none" }}
                 onChange={composer.onAttachInputChange}
             />
             <EmojiPicker
@@ -322,9 +322,9 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             >
                 <FileUploadStatusBadge count={composer.editorUploadCount} />
                 <FileUploadOverlay
+                    detail={composer.overlay.detail}
                     label={t.common.ui.fileUpload.uploadingDroppedFiles}
                     open={composer.overlay.open}
-                    detail={composer.overlay.detail}
                 />
                 <BlockNoteView
                     className="bn-box"
@@ -333,18 +333,18 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     // A custom "/" SuggestionMenuController is mounted below —
                     // the built-in menu must be off or BOTH render on "/",
                     // stacking duplicate group labels (the "Media x3" bug).
-                    slashMenu={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
+                    slashMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo // custom font
+                    onChange={composer.viewProps.onChange}
+                    onKeyDown={composer.viewProps.onKeyDown}
                     onBlur={() => {
                         if (setTaskUpdated) {
                             setTaskUpdated(true);
                         }
                     }}
-                    onChange={composer.viewProps.onChange}
-                    onKeyDown={composer.viewProps.onKeyDown}
                 >
                     <EditorSendButton disabled={composer.sendDisabled} onSend={composer.send} />
 
@@ -370,20 +370,20 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             isMobile={isMobile}
                             setShowEmojiPicker={setShowEmojiPicker}
                             setShowGifPicker={setShowGifPicker}
-                            onAttach={composer.openAttach}
                             wrapToggles={{ unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode }}
+                            onAttach={composer.openAttach}
                         />
                     </Box>
 
                     <GenosSuggestionMenus
                         editor={editor}
+                        slash={{ preset: "chat", setShowGifPicker }}
                         getMentionSources={() => ({
                             teamMemberProfiles: useTEM.teamMemberProfiles,
                             teamMembers: useTEM.teamMembers,
                             myselfUserId: myself.userId,
                             mentionGroups,
                         })}
-                        slash={{ preset: "chat", setShowGifPicker }}
                     />
                 </BlockNoteView>
             </Box>

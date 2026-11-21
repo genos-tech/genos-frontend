@@ -625,6 +625,12 @@ describe("AiUsageFooter", () => {
 const bubble = (item: Partial<InboxItemProps> & { itemId: number; itemType: number }) =>
     tree(
         <InboxBubble
+            myself={{ userId: "u1", teamId: "t1" } as never}
+            setMyself={vi.fn()}
+            socket={null}
+            useCM={{ allChats: [] } as never}
+            useTEM={{ teamMemberProfiles: {} } as never}
+            useUISM={{} as never}
             inboxItem={
                 {
                     itemBody: { title: "t", text: "body text" },
@@ -634,12 +640,6 @@ const bubble = (item: Partial<InboxItemProps> & { itemId: number; itemType: numb
                     ...item,
                 } as InboxItemProps
             }
-            myself={{ userId: "u1", teamId: "t1" } as never}
-            setMyself={vi.fn()}
-            socket={null}
-            useCM={{ allChats: [] } as never}
-            useTEM={{ teamMemberProfiles: {} } as never}
-            useUISM={{} as never}
         />
     );
 

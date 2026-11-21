@@ -186,7 +186,6 @@ export const MentionHighlightOverlay = ({
     return (
         <div
             ref={overlayRef}
-            aria-hidden
             data-testid="mention-highlight-overlay"
             style={{
                 position: "absolute",
@@ -203,6 +202,7 @@ export const MentionHighlightOverlay = ({
                 ...box,
                 ...typo,
             }}
+            aria-hidden
         >
             {/* One un-shrinkable child so the flex row above can't compress
                 the text away from the input's own metrics, and so

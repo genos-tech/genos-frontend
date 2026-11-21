@@ -143,7 +143,7 @@ describe("one status icon and color per status, on every surface", () => {
         expect(expected.split("|")[1]).toBe(toneCss(statusTone(s)).text);
 
         const surfaces: Record<string, React.ReactNode> = {
-            card: <TaskCard showStatus task={task({ status: s })} />,
+            card: <TaskCard task={task({ status: s })} showStatus />,
             row: <TaskListItem task={task({ status: s })} onOpen={() => {}} />,
             compact: (
                 <TaskListItem task={task({ status: s })} variant="compact" onOpen={() => {}} />

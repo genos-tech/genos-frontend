@@ -267,7 +267,7 @@ export const TimelineView = ({
                                     )
                                 }
                             >
-                                <AddRoundedIcon aria-hidden sx={{ fontSize: 16 }} />
+                                <AddRoundedIcon sx={{ fontSize: 16 }} aria-hidden />
                             </Clickable>
                             <Typography
                                 level="body-xs"
@@ -544,13 +544,13 @@ export const TimelineView = ({
                         return (
                             <Box
                                 key={d.toString()}
+                                role="group"
                                 aria-label={formatCalendarDate(d, locale, {
                                     weekday: "long",
                                     month: "long",
                                     day: "numeric",
                                     year: "numeric",
                                 })}
-                                role="group"
                                 sx={{
                                     position: "relative",
                                     borderLeft: `1px solid ${gridLine}`,

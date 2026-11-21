@@ -94,12 +94,12 @@ const Page = () => {
     useEffect(() => setMode(mode), [mode, setMode]);
     return (
         <ModalManageDependencies
-            open
             myself={{ teamId: "t" } as never}
             taskContent={HOST}
             useCM={undefined}
             usePM={usePM}
             useTM={useTM}
+            open
             onClose={() => {}}
         />
     );

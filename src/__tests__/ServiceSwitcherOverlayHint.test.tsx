@@ -20,8 +20,8 @@ const view = () =>
         <CssVarsProvider>
             <I18nProvider>
                 <ServiceSwitcherOverlay
-                    previewIndex={1}
                     mruOrder={[2, 0, 1, 3, 4, 5]}
+                    previewIndex={1}
                     onHighlight={() => {}}
                     onSelect={() => {}}
                 />

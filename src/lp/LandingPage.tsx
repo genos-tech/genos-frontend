@@ -82,27 +82,27 @@ function HeroProof({ t, lang }: { t: HomeCopy; lang: Lang }) {
                 alt={t.hero.alt}
                 lang={lang}
                 name="record"
-                priority
                 variants={{
                     dark: "record-dark",
                     narrow: "record-phone",
                     narrowDark: "record-phone-dark",
                 }}
+                priority
             />
             <ul className="lp-proof__tags">
                 <li className="lp-proof__tag lp-proof__tag--claude" style={at("claude")}>
                     <img
                         alt=""
-                        aria-hidden
                         className="lp-proof__icon"
                         height={20}
                         src={claudeMark}
                         width={20}
+                        aria-hidden
                     />
                     <span>{t.hero.callouts.claude}</span>
                 </li>
                 <li className="lp-proof__tag lp-proof__tag--you" style={at("you")}>
-                    <span aria-hidden className="lp-proof__icon lp-proof__icon--you">
+                    <span className="lp-proof__icon lp-proof__icon--you" aria-hidden>
                         <User size={14} />
                     </span>
                     <span>{t.hero.callouts.you}</span>

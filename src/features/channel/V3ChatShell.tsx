@@ -181,7 +181,7 @@ export function V3ChatShell({ myself, useNM }: V3ChatShellProps = {}) {
                 }}
             >
                 {!selected ? (
-                    <ChannelListV3 fullWidth selectedChannelId={null} onSelect={setSelected} />
+                    <ChannelListV3 selectedChannelId={null} fullWidth onSelect={setSelected} />
                 ) : openThread ? (
                     <ThreadPanelV3
                         channelId={selected}

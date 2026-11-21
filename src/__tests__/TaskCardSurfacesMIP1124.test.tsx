@@ -185,6 +185,8 @@ describe("agent plan rows", () => {
             withContext(
                 <ApprovalCard
                     approveLabel="Approve"
+                    rejectLabel="Reject"
+                    titleText="Approval"
                     pending={{
                         step: 1,
                         tool_name: "create_task_plan",
@@ -192,8 +194,6 @@ describe("agent plan rows", () => {
                         approval_token: "t",
                         run_id: "r",
                     }}
-                    rejectLabel="Reject"
-                    titleText="Approval"
                     onApprove={vi.fn()}
                     onReject={vi.fn()}
                 />
@@ -400,10 +400,10 @@ describe("identity row", () => {
         rerender(
             withContext(
                 <TaskIdentityRow
-                    isMilestone
                     status={statusMeta("Open")}
                     task={{ displayId: "TP-3" }}
                     title="Pick me"
+                    isMilestone
                 />
             )
         );

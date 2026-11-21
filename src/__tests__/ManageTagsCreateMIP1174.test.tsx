@@ -27,11 +27,11 @@ const mount = () => {
         <CssVarsProvider>
             <ModalManageTags
                 myself={{ teamId: "team-1" } as never}
-                open
                 projectTags={tags}
                 setProjectTags={setProjectTags}
                 usePM={usePM as never}
                 useTM={useTM as never}
+                open
                 onClose={vi.fn()}
             />
         </CssVarsProvider>

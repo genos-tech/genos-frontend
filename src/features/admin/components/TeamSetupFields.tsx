@@ -38,8 +38,8 @@ export const TeamSetupFields = ({
                     minRows={2}
                     name="departments"
                     placeholder={t.admin.joinTeam.departmentsPlaceholder}
-                    value={fields.departmentsText}
                     sx={textareaSx}
+                    value={fields.departmentsText}
                     onChange={(event) => fields.setDepartmentsText(event.target.value)}
                 />
                 <FormHelperText sx={{ color: problem ? undefined : hintColor, mt: 0.5 }}>

@@ -101,6 +101,7 @@ export const ProjectParamSelect = ({
 
     return (
         <Autocomplete<ProjectProps, false, boolean, false>
+            disableClearable={!required}
             getOptionLabel={(option) => projectOptionLabel(option)}
             isOptionEqualToValue={(option, value) => isSameProject(option, value)}
             noOptionsText={projects.length === 0 ? s.projectNone : t.common.empty.noResults}
@@ -109,7 +110,6 @@ export const ProjectParamSelect = ({
             renderOption={renderProjectOption(avatars)}
             slotProps={projectListboxSlotProps(popupZIndex)}
             sx={{ minWidth: 0 }}
-            value={selected}
             startDecorator={
                 // The closed field is a text input, so only the name fits in it: the
                 // avatar rides beside it, as in the task pickers.
@@ -122,7 +122,7 @@ export const ProjectParamSelect = ({
             }
             // "All projects" is how the optional picker says "none", so it cannot be cleared;
             // the required one can be emptied again, like the milestone picker.
-            disableClearable={!required}
+            value={selected}
             onChange={(_, option) => {
                 if (!option) {
                     onChange("");
@@ -237,7 +237,6 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
                     <ListItem key={key} nested>
                         {project && (
                             <ListSubheader
-                                sticky
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
@@ -248,6 +247,7 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
                                     textTransform: "none",
                                     letterSpacing: 0,
                                 }}
+                                sticky
                             >
                                 <ProjectIdentityRow
                                     avatarSrc={avatars.get(project.projectId)}
@@ -262,7 +262,7 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
             }}
             renderOption={(optionProps, option) => (
                 <AutocompleteOption {...optionProps} key={option.id}>
-                    <Typography level="body-sm" noWrap sx={{ color: "inherit", minWidth: 0 }}>
+                    <Typography level="body-sm" sx={{ color: "inherit", minWidth: 0 }} noWrap>
                         {option.title}
                     </Typography>
                 </AutocompleteOption>

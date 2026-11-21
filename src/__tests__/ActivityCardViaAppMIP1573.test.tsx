@@ -328,10 +328,10 @@ const noticeRow = (meta: Record<string, unknown>) => {
                     activityMessages={[activity]}
                     myself={myself}
                     selectedActivityId=""
+                    setCurrentProject={vi.fn()}
                     setSelectedActivityId={vi.fn()}
                     useCM={{} as never}
                     useTM={{} as never}
-                    setCurrentProject={vi.fn()}
                 />
             </MemoryRouter>
         </CssVarsProvider>

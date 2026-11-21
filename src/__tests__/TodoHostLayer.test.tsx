@@ -72,8 +72,8 @@ describe("each dialog of the to-do pane", () => {
     const scheduleModal = () => (
         <ModalScheduledTodos
             categories={[]}
-            open
             schedules={[]}
+            open
             onAdd={vi.fn()}
             onClose={vi.fn()}
             onRemove={vi.fn()}
@@ -83,9 +83,9 @@ describe("each dialog of the to-do pane", () => {
     const createTaskModal = () => (
         <ModalCreateTaskFromTodo
             myself={{ teamId: "t", userId: "u" } as UserProps}
-            open
             todoNotes={null}
             todoTitle="x"
+            open
             onClose={vi.fn()}
         />
     );

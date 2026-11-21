@@ -407,8 +407,8 @@ const renderAt = (url: string, ui: React.ReactElement) =>
             <ThemeProvider theme={{ [THEME_ID]: createTheme({ cssVariables: true }) }}>
                 <MemoryRouter initialEntries={[url]}>
                     <Routes>
-                        <Route path="/workspace/tasks" element={ui} />
-                        <Route path="*" element={<div>elsewhere</div>} />
+                        <Route element={ui} path="/workspace/tasks" />
+                        <Route element={<div>elsewhere</div>} path="*" />
                     </Routes>
                 </MemoryRouter>
             </ThemeProvider>
@@ -587,8 +587,8 @@ describe("AgentActivityTab (rendered)", () => {
                         <Probe />
                         <Routes>
                             <Route
-                                path="/workspace/tasks"
                                 element={<AgentActivityTab projects={projects} teamId={TEAM} />}
+                                path="/workspace/tasks"
                             />
                         </Routes>
                     </MemoryRouter>
@@ -646,7 +646,6 @@ describe("TaskDashboard tab strip", () => {
                 <ThemeProvider theme={{ [THEME_ID]: createTheme({ cssVariables: true }) }}>
                     <AvatarContextProvider
                         value={
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             {
                                 myself,
                                 setMyself: vi.fn(),
@@ -661,8 +660,8 @@ describe("TaskDashboard tab strip", () => {
                         <MemoryRouter initialEntries={["/workspace/tasks"]}>
                             <Routes>
                                 <Route
-                                    path="/workspace/tasks"
                                     element={<TaskDashboard {...baseProps} />}
+                                    path="/workspace/tasks"
                                 />
                             </Routes>
                         </MemoryRouter>

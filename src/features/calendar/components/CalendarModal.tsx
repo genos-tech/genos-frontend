@@ -846,8 +846,8 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                         {popoverDayKey && (
                             <Button
                                 size="sm"
-                                variant="plain"
                                 sx={{ alignSelf: "flex-start" }}
+                                variant="plain"
                                 onClick={() => {
                                     const day = dayjs(popoverDayKey);
                                     setPopoverDayKey(null);
@@ -867,14 +867,14 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                         editingEventId={editingEventId}
                         initial={eventModalInitial}
                         open={eventModalOpen}
-                        onClose={() => setEventModalOpen(false)}
-                        onError={setError}
                         closeForAsk={() => {
                             // "Ask Genos about this event": the event dialog and the calendar close, so the
                             // ask (which opens above them) gets the focus (MIP-1059).
                             setEventModalOpen(false);
                             onClose();
                         }}
+                        onClose={() => setEventModalOpen(false)}
+                        onError={setError}
                         onDeleted={() => {
                             refreshCurrent();
                         }}

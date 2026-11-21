@@ -195,12 +195,12 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <ErrorState
                             data-error="linked-pr"
+                            size="xs"
+                            title={t.integrations.pullRequest.linkedCard.loadFailed}
                             secondary={{
                                 label: t.integrations.github.openOnGithub,
                                 href: url,
                             }}
-                            size="xs"
-                            title={t.integrations.pullRequest.linkedCard.loadFailed}
                             onRetry={() => setAttempt((n) => n + 1)}
                         />
                     </Box>

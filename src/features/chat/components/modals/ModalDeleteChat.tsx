@@ -43,7 +43,6 @@ export const ModalDeleteChat = ({ open, chatName, onConfirm, onCancel, zIndex }:
     return (
         <ConfirmDialog
             cancelLabel={copy.cancel}
-            closeOnConfirm
             confirmLabel={hard ? copy.confirmHard : copy.confirmSoft}
             confirmPhrase={hard && phrase ? phrase : undefined}
             confirmPhraseLabel={copy.typeNameLabel}
@@ -53,6 +52,7 @@ export const ModalDeleteChat = ({ open, chatName, onConfirm, onCancel, zIndex }:
             open={open}
             title={copy.title}
             zIndex={zIndex}
+            closeOnConfirm
             destructive
             onClose={onCancel}
             onConfirm={async () => {
@@ -62,8 +62,8 @@ export const ModalDeleteChat = ({ open, chatName, onConfirm, onCancel, zIndex }:
             <RadioGroup
                 aria-label={copy.title}
                 name="delete-chat-mode"
-                value={mode}
                 sx={{ gap: 1.5, mt: 1.5 }}
+                value={mode}
                 onChange={(event) => setMode(event.target.value as DeleteChatMode)}
             >
                 <Box>

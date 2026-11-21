@@ -189,15 +189,15 @@ export const ConnectedTeamsPanel = ({
             <DataState
                 empty={{ body: strings.empty, "data-empty": "connected-teams" }}
                 error={connections.loadFailed}
+                hasData={hasRows}
+                loading={connections.loading}
+                size="xs"
+                skeleton={<SkeletonRows count={2} />}
                 errorState={{
                     title: strings.loadFailed,
                     onRetry: connections.reload,
                     "data-error": "connected-teams",
                 }}
-                hasData={hasRows}
-                loading={connections.loading}
-                size="xs"
-                skeleton={<SkeletonRows count={2} />}
             >
                 <Stack spacing={1}>
                     {/* Incoming first: it is the only bucket with a decision

@@ -49,6 +49,7 @@ function ShotPicture({
             sizes={phone ? "320px" : "(max-width: 1240px) 100vw, 1200px"}
             src={`${base}.webp`}
             srcSet={`${base}.webp ${shot.width}w, ${base}@2x.webp ${shot.width * 2}w`}
+            width={shot.width}
             style={
                 narrowShot
                     ? ({
@@ -56,7 +57,6 @@ function ShotPicture({
                       } as CSSProperties)
                     : undefined
             }
-            width={shot.width}
         />
     );
     if (!narrowShot) return className ? <span className={className}>{img}</span> : img;

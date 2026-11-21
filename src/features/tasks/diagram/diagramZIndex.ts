@@ -33,5 +33,4 @@ const DiagramZIndexContext = createContext<number>(DIAGRAM_DEFAULT_Z_INDEX);
 
 export const DiagramZIndexProvider = DiagramZIndexContext.Provider;
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useDiagramZIndex = (): number => useContext(DiagramZIndexContext);

@@ -307,15 +307,15 @@ export const TaskHomeLayout = ({
                 <ResizeHandle className="task-resize-handle" />
                 <Panel id={"6"} maxSize={100} minSize={70} order={6}>
                     <EmptyState
+                        body={t.tasks.layout.noProjectBody}
+                        data-empty="no-project"
+                        icon={<WorkspacesRoundedIcon />}
+                        title={t.tasks.layout.noProjectTitle}
                         action={{
                             label: t.tasks.layout.createProject,
                             icon: <AddRoundedIcon />,
                             onClick: () => usePM.setOpenCreateProject(true),
                         }}
-                        body={t.tasks.layout.noProjectBody}
-                        data-empty="no-project"
-                        icon={<WorkspacesRoundedIcon />}
-                        title={t.tasks.layout.noProjectTitle}
                         fill
                     />
                 </Panel>

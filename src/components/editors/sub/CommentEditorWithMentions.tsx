@@ -208,6 +208,8 @@ const CommentEditorWithMentions = (props: CommentEditorProps) => {
                 Needs the member data the editor provided via context. */}
             {editable && mentionData && (
                 <SuggestionMenuController
+                    suggestionMenuComponent={MentionSuggestionMenu}
+                    triggerCharacter={"@"}
                     getItems={async (query) =>
                         filterAndRankSuggestionItems(
                             MentionMenuItems(
@@ -220,8 +222,6 @@ const CommentEditorWithMentions = (props: CommentEditorProps) => {
                             query
                         )
                     }
-                    suggestionMenuComponent={MentionSuggestionMenu}
-                    triggerCharacter={"@"}
                 />
             )}
             {/* `#` hash mentions — self-sufficient (reads its own context). */}

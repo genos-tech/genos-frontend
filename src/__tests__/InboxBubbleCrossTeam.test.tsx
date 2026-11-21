@@ -57,6 +57,12 @@ const renderBubble = (item: Partial<InboxItemProps>, onItemChanged = vi.fn()) =>
     render(
         <CssVarsProvider>
             <InboxBubble
+                myself={{ userId: "u", teamId: "t" } as never}
+                setMyself={vi.fn()}
+                socket={null}
+                useCM={{ allChats: [] } as never}
+                useTEM={{ currentTeam: {}, teamMemberProfiles: {} } as never}
+                useUISM={{} as never}
                 inboxItem={
                     {
                         itemId: 9,
@@ -67,12 +73,6 @@ const renderBubble = (item: Partial<InboxItemProps>, onItemChanged = vi.fn()) =>
                         ...item,
                     } as InboxItemProps
                 }
-                myself={{ userId: "u", teamId: "t" } as never}
-                setMyself={vi.fn()}
-                socket={null}
-                useCM={{ allChats: [] } as never}
-                useTEM={{ currentTeam: {}, teamMemberProfiles: {} } as never}
-                useUISM={{} as never}
                 onItemChanged={onItemChanged}
             />
         </CssVarsProvider>

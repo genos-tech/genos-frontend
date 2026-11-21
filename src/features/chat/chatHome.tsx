@@ -308,12 +308,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                     {isMobile ? (
                         <MobileChatHome
                             chatRouting={chatRouting}
-                            isActiveRoute={isActiveRoute}
-                            isTaskPreviewVisibleHere={initialTaskPreviewVisible}
                             currentMainChatId={currentMainChatId}
                             currentThreadChatId={currentThreadChatId}
                             currentWindowHeight={height}
                             incompleteTodoCount={incompleteCount}
+                            isActiveRoute={isActiveRoute}
+                            isTaskPreviewVisibleHere={initialTaskPreviewVisible}
                             isToDoVisible={isToDoVisible}
                             mainChatPanelSize={mainChatPanelSize}
                             myself={myself}
@@ -509,7 +509,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 <>
                                     <ResizeHandle key="task-preview-resize-handle" />
                                     <TaskPreviewPanel
-                                        guardStaleTaskId
                                         myself={myself}
                                         setMyself={setMyself}
                                         setTodoFromMessageBubble={setTodoFromMessageBubble}
@@ -521,6 +520,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         useTEM={useTEM}
                                         useTM={useTM}
                                         useUISM={useUISM}
+                                        guardStaleTaskId
                                     />
                                 </>
                             )}

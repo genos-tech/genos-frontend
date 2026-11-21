@@ -215,7 +215,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     if (useNM.tabItems.length === 0) {
         // The route named a note and it would not open: say so (MIP-1307).
         if (useNM.noteOpenFailure) {
-            return <NoteOpenFailure useNM={useNM} onMobileBack={onMobileBack} socket={socket} />;
+            return <NoteOpenFailure socket={socket} useNM={useNM} onMobileBack={onMobileBack} />;
         }
         // A note is being fetched and has no tab yet: "No Note Selected" would be untrue (MIP-1675).
         if (useNM.openingNote) return <NoteOpeningState />;

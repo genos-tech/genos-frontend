@@ -61,9 +61,9 @@ export const NoteFilterResults = ({
             {result.total === 0 && (
                 <Box sx={{ px: 1.5 }}>
                     <EmptyState
+                        body={fmt(t.notes.sidebar.filterNoMatch, { query: query.trim() })}
                         data-empty="note-filter"
                         size="xs"
-                        body={fmt(t.notes.sidebar.filterNoMatch, { query: query.trim() })}
                     />
                 </Box>
             )}

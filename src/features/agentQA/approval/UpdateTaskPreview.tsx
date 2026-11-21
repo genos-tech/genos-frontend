@@ -161,7 +161,7 @@ export const UpdateTaskPreview = ({ args }: ApprovalPreviewProps) => {
             ) : null}
 
             {proposedLinks?.length ? (
-                <LinkLines links={proposedLinks} label={t.agentApproval.fieldLabels.links} />
+                <LinkLines label={t.agentApproval.fieldLabels.links} links={proposedLinks} />
             ) : null}
 
             {added.map(({ label, text }) => (

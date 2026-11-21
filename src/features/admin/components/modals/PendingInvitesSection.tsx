@@ -89,14 +89,14 @@ export const PendingInvitesSection = ({
                 ))}
             </Stack>
             <ConfirmDialog
-                open={pending != null}
                 cancelLabel={p.keep}
-                closeOnConfirm
                 confirmLabel={p.confirm}
-                destructive
-                hostZIndex={zIndex}
-                title={pending ? fmt(p.confirmTitle, { email: pending.email }) : ""}
                 description={p.confirmBody}
+                hostZIndex={zIndex}
+                open={pending != null}
+                title={pending ? fmt(p.confirmTitle, { email: pending.email }) : ""}
+                closeOnConfirm
+                destructive
                 onClose={() => setPending(null)}
                 onConfirm={async () => {
                     if (!pending) return;

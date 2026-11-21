@@ -120,7 +120,7 @@ function loadWorker(fetchImpl: ReturnType<typeof vi.fn>) {
         navigator: { setAppBadge: vi.fn(async () => undefined) },
     };
     const src = readFileSync(SW_PATH, "utf-8");
-    // eslint-disable-next-line no-new-func
+
     new Function("self", "caches", "fetch", src)(self, harness.api, fetchImpl);
     return { listeners, self };
 }

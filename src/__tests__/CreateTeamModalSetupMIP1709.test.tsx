@@ -24,10 +24,10 @@ const mount = () => {
         <CssVarsProvider>
             <ModalCreateTeam
                 myself={myself}
-                openCreateTeam
                 setIsNewTeamCreated={setIsNewTeamCreated}
                 setMyself={vi.fn()}
                 setOpenCreateTeam={vi.fn()}
+                openCreateTeam
             />
         </CssVarsProvider>
     );

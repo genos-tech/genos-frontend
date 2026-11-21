@@ -451,7 +451,6 @@ export const NotificationSettingsPanel = ({
                                 key={`${m.chatType}:${m.chatId}`}
                                 alignItems="center"
                                 direction="row"
-                                filled
                                 justifyContent="space-between"
                                 spacing={1}
                                 sx={{
@@ -460,6 +459,7 @@ export const NotificationSettingsPanel = ({
                                     borderRadius: "md",
                                     bgcolor: "background.level1",
                                 }}
+                                filled
                             >
                                 <Stack
                                     alignItems="center"
@@ -524,7 +524,6 @@ export const NotificationSettingsPanel = ({
                                 key={`${target.targetType}:${target.targetId}:${target.noteType ?? ""}`}
                                 alignItems="center"
                                 direction="row"
-                                filled
                                 justifyContent="space-between"
                                 spacing={1}
                                 sx={{
@@ -533,6 +532,7 @@ export const NotificationSettingsPanel = ({
                                     borderRadius: "md",
                                     bgcolor: "background.level1",
                                 }}
+                                filled
                             >
                                 <Stack
                                     alignItems="center"

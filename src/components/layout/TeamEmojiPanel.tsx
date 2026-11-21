@@ -174,20 +174,20 @@ export const TeamEmojiPanel = ({ myself, teamMemberProfiles }: Props) => {
 
             {/* Emoji grid */}
             <DataState
+                error={loadFailed}
+                hasData={ownTeamEmoji.length > 0}
+                loading={loading}
+                size="sm"
+                skeleton={<SkeletonRows count={2} />}
                 empty={{
                     body: t.settings.customEmoji.empty,
                     "data-empty": "custom-emoji",
                 }}
-                error={loadFailed}
                 errorState={{
                     title: t.settings.customEmoji.loadFailed,
                     onRetry: () => void refresh(),
                     "data-error": "custom-emoji",
                 }}
-                hasData={ownTeamEmoji.length > 0}
-                loading={loading}
-                size="sm"
-                skeleton={<SkeletonRows count={2} />}
             >
                 <Box
                     sx={{

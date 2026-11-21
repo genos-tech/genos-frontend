@@ -124,13 +124,13 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
 
                 <GenosSuggestionMenus
                     editor={editor}
+                    slash={{ preset: "todo", setShowGifPicker: NO_GIF_PICKER }}
                     getMentionSources={() => ({
                         teamMemberProfiles: useTEM.teamMemberProfiles,
                         teamMembers: useTEM.teamMembers,
                         myselfUserId: myself.userId,
                         mentionGroups,
                     })}
-                    slash={{ preset: "todo", setShowGifPicker: NO_GIF_PICKER }}
                 />
             </BlockNoteView>
         </Box>

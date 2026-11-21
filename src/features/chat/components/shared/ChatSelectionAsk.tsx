@@ -168,6 +168,7 @@ export const ChatSelectionAsk = ({
             data-testid="chat-selection-ask"
             size="sm"
             startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
+            type="button"
             sx={{
                 position: "fixed",
                 top: above ? anchor.top - GAP : anchor.bottom + GAP,
@@ -179,11 +180,10 @@ export const ChatSelectionAsk = ({
                 boxShadow: g.shadow.md,
                 whiteSpace: "nowrap",
             }}
-            type="button"
+            onClick={ask}
             variant="outlined"
             // Keep the selection: a press on a button would otherwise collapse it before the click.
             onMouseDown={(e) => e.preventDefault()}
-            onClick={ask}
         >
             {t.chat.messageActions.askGenosShort}
         </Button>,

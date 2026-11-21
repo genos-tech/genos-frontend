@@ -73,15 +73,15 @@ export const MySecurityActivity = () => {
             </Typography>
             <DataState
                 error={failed}
+                hasData={events !== null}
+                loading={events === null && !failed}
+                size="sm"
+                skeleton={<SkeletonRows count={3} twoLines />}
                 errorState={{
                     title: m.activityLoadFailed,
                     onRetry: () => void load(null),
                     "data-error": "security-activity",
                 }}
-                hasData={events !== null}
-                loading={events === null && !failed}
-                size="sm"
-                skeleton={<SkeletonRows count={3} twoLines />}
             >
                 <Stack spacing={1}>
                     {events?.length === 0 && (
@@ -90,7 +90,7 @@ export const MySecurityActivity = () => {
                         </Typography>
                     )}
                     {events?.map((e) => (
-                        <SecurityEventRow event={e} key={e.id} />
+                        <SecurityEventRow key={e.id} event={e} />
                     ))}
                 </Stack>
             </DataState>

@@ -1729,8 +1729,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             column in a row than in the header (MIP-1239). Named, not marked as a
                             grid column: there is nothing to sort or to stop on. */}
                         <div
-                            role="columnheader"
                             aria-label={t.tasks.table.rowActionsHeader}
+                            role="columnheader"
                             style={headerDragHandlePlaceholderStyles}
                         />
 

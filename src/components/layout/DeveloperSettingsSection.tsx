@@ -233,7 +233,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
         <Stack spacing={3}>
             {/* ── API keys ─────────────────────────────────────────── */}
             <Stack spacing={1.5}>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack alignItems="center" direction="row" spacing={1}>
                     <KeyRoundedIcon sx={{ fontSize: 18 }} />
                     <Typography level="title-md">{d.keys.title}</Typography>
                 </Stack>
@@ -242,7 +242,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     {/* Someone who already has a key looks HERE for the
                         reference, not on the marketing site. Opens in a
                         new tab so it never costs them an unsaved form. */}
-                    <Link href="/developers" target="_blank" rel="noreferrer">
+                    <Link href="/developers" rel="noreferrer" target="_blank">
                         {d.docsLink}
                     </Link>
                 </Typography>
@@ -259,19 +259,19 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 {freshKey && (
                     <Alert
                         color="warning"
-                        variant="soft"
                         startDecorator={<WarningAmberRoundedIcon />}
                         sx={{ alignItems: "flex-start" }}
+                        variant="soft"
                     >
                         <Stack spacing={1} sx={{ minWidth: 0, width: "100%" }}>
                             <Typography level="title-sm">{d.oneShot.title}</Typography>
                             <Typography level="body-xs">{d.oneShot.body}</Typography>
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack alignItems="center" direction="row" spacing={1}>
                                 <Input
-                                    readOnly
-                                    value={freshKey}
                                     size="sm"
                                     sx={{ flex: 1, fontFamily: "monospace", minWidth: 0 }}
+                                    value={freshKey}
+                                    readOnly
                                 />
                                 <AppTooltip title={d.oneShot.copy}>
                                     <IconButton
@@ -284,11 +284,11 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                 </AppTooltip>
                             </Stack>
                             <Button
-                                size="sm"
-                                variant="soft"
                                 color="neutral"
-                                onClick={() => setFreshKey(null)}
+                                size="sm"
                                 sx={{ alignSelf: "flex-start" }}
+                                variant="soft"
+                                onClick={() => setFreshKey(null)}
                             >
                                 {d.oneShot.dismiss}
                             </Button>
@@ -298,14 +298,15 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
 
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                     <Input
-                        size="sm"
                         placeholder={d.keys.namePlaceholder}
+                        size="sm"
+                        sx={{ flex: 1, minWidth: 0 }}
                         value={keyName}
                         onChange={(e) => setKeyName(e.target.value)}
-                        sx={{ flex: 1, minWidth: 0 }}
                     />
                     <Select
                         size="sm"
+                        sx={{ minWidth: 120 }}
                         value={keyScope}
                         onChange={(_, v) => {
                             const scope = (v as "read" | "write") ?? "read";
@@ -313,17 +314,16 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                             // The server refuses it on a read key.
                             if (scope !== "write") setKeyAllowDestructive(false);
                         }}
-                        sx={{ minWidth: 120 }}
                     >
                         <Option value="read">{d.keys.scopeRead}</Option>
                         <Option value="write">{d.keys.scopeWrite}</Option>
                     </Select>
                     <Select
-                        size="sm"
                         aria-label={d.keys.expiryLabel}
+                        size="sm"
+                        sx={{ minWidth: 120 }}
                         value={keyExpiryDays}
                         onChange={(_, v) => setKeyExpiryDays(v ?? DEFAULT_API_KEY_EXPIRY_DAYS)}
-                        sx={{ minWidth: 120 }}
                     >
                         {API_KEY_EXPIRY_DAYS.map((days) => (
                             <Option key={days} value={days}>
@@ -332,10 +332,10 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                         ))}
                     </Select>
                     <Button
+                        disabled={!keyName.trim()}
+                        loading={keyBusy}
                         size="sm"
                         startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
-                        loading={keyBusy}
-                        disabled={!keyName.trim()}
                         onClick={onCreateKey}
                     >
                         {d.keys.create}
@@ -358,13 +358,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 {keys.map((k) => (
                     <Sheet
                         key={k.id}
-                        variant="soft"
                         sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+                        variant="soft"
                     >
                         <Stack
+                            alignItems="center"
                             direction="row"
                             spacing={1}
-                            alignItems="center"
                             sx={{ minWidth: 0 }}
                         >
                             <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -415,7 +415,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 without this the owner could neither see nor stop it. */}
             {teamId && teamKeys && (
                 <Stack spacing={1.5}>
-                    <Stack direction="row" spacing={1} alignItems="center">
+                    <Stack alignItems="center" direction="row" spacing={1}>
                         <GroupsRoundedIcon sx={{ fontSize: 18 }} />
                         <Typography level="title-md">{d.teamKeys.title}</Typography>
                     </Stack>
@@ -428,13 +428,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     {teamKeys.map((k) => (
                         <Sheet
                             key={k.id}
-                            variant="soft"
                             sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+                            variant="soft"
                         >
                             <Stack
+                                alignItems="center"
                                 direction="row"
                                 spacing={1}
-                                alignItems="center"
                                 sx={{ minWidth: 0 }}
                             >
                                 <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -469,9 +469,9 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                 {k.revocable !== false && (
                                     <AppTooltip title={d.keys.revoke}>
                                         <IconButton
+                                            color="danger"
                                             size="sm"
                                             variant="plain"
-                                            color="danger"
                                             aria-label={fmt(d.teamKeys.revokeNamed, {
                                                 name: k.name,
                                             })}
@@ -502,7 +502,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
 
             {/* ── Webhooks ─────────────────────────────────────────── */}
             <Stack spacing={1.5}>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack alignItems="center" direction="row" spacing={1}>
                     <WebhookRoundedIcon sx={{ fontSize: 18 }} />
                     <Typography level="title-md">{d.webhooks.title}</Typography>
                 </Stack>
@@ -513,19 +513,19 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 {freshSecret && (
                     <Alert
                         color="warning"
-                        variant="soft"
                         startDecorator={<WarningAmberRoundedIcon />}
                         sx={{ alignItems: "flex-start" }}
+                        variant="soft"
                     >
                         <Stack spacing={1} sx={{ minWidth: 0, width: "100%" }}>
                             <Typography level="title-sm">{d.oneShot.secretTitle}</Typography>
                             <Typography level="body-xs">{d.oneShot.secretBody}</Typography>
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack alignItems="center" direction="row" spacing={1}>
                                 <Input
-                                    readOnly
-                                    value={freshSecret}
                                     size="sm"
                                     sx={{ flex: 1, fontFamily: "monospace", minWidth: 0 }}
+                                    value={freshSecret}
+                                    readOnly
                                 />
                                 <AppTooltip title={d.oneShot.copy}>
                                     <IconButton
@@ -538,11 +538,11 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                 </AppTooltip>
                             </Stack>
                             <Button
-                                size="sm"
-                                variant="soft"
                                 color="neutral"
-                                onClick={() => setFreshSecret(null)}
+                                size="sm"
                                 sx={{ alignSelf: "flex-start" }}
+                                variant="soft"
+                                onClick={() => setFreshSecret(null)}
                             >
                                 {d.oneShot.dismiss}
                             </Button>
@@ -551,23 +551,23 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 )}
 
                 <Input
-                    size="sm"
+                    error={!!hookError}
                     placeholder={d.webhooks.urlPlaceholder}
+                    size="sm"
+                    sx={{ minWidth: 0 }}
                     value={hookUrl}
                     onChange={(e) => {
                         setHookUrl(e.target.value);
                         setHookError(null);
                     }}
-                    error={!!hookError}
-                    sx={{ minWidth: 0 }}
                 />
-                <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                <Stack direction="row" flexWrap="wrap" spacing={1.5} useFlexGap>
                     {WEBHOOK_EVENTS.map((ev) => (
                         <Checkbox
                             key={ev}
-                            size="sm"
-                            label={ev}
                             checked={hookEvents.includes(ev)}
+                            label={ev}
+                            size="sm"
                             onChange={(e) =>
                                 setHookEvents((prev) =>
                                     e.target.checked ? [...prev, ev] : prev.filter((x) => x !== ev)
@@ -587,13 +587,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                 ? d.webhooks.projectScopeAll
                                 : d.webhooks.projectScopeSome}
                         </Typography>
-                        <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                        <Stack direction="row" flexWrap="wrap" spacing={1.5} useFlexGap>
                             {scopeOptions.projects.map((p) => (
                                 <Checkbox
                                     key={p.id}
-                                    size="sm"
-                                    label={p.name}
                                     checked={hookProjectIds.includes(p.id)}
+                                    label={p.name}
+                                    size="sm"
                                     onChange={(e) =>
                                         setHookProjectIds((prev) =>
                                             e.target.checked
@@ -619,17 +619,17 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                             {d.webhooks.channelScopeRequired}
                         </Typography>
                         {scopeOptions.channels.length === 0 ? (
-                            <Typography level="body-xs" color="warning">
+                            <Typography color="warning" level="body-xs">
                                 {d.webhooks.noEligibleChannels}
                             </Typography>
                         ) : (
-                            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                            <Stack direction="row" flexWrap="wrap" spacing={1.5} useFlexGap>
                                 {scopeOptions.channels.map((c) => (
                                     <Checkbox
                                         key={c.id}
-                                        size="sm"
-                                        label={c.title}
                                         checked={hookChannelIds.includes(c.id)}
+                                        label={c.title}
+                                        size="sm"
                                         onChange={(e) =>
                                             setHookChannelIds((prev) =>
                                                 e.target.checked
@@ -645,14 +645,15 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 )}
 
                 {hookError && (
-                    <Typography level="body-xs" color="danger">
+                    <Typography color="danger" level="body-xs">
                         {hookError}
                     </Typography>
                 )}
                 <Button
+                    loading={hookBusy}
                     size="sm"
                     startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
-                    loading={hookBusy}
+                    sx={{ alignSelf: "flex-start" }}
                     disabled={
                         !teamId ||
                         !hookUrl.trim() ||
@@ -660,7 +661,6 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                         (wantsChat && hookChannelIds.length === 0)
                     }
                     onClick={onCreateHook}
-                    sx={{ alignSelf: "flex-start" }}
                 >
                     {d.webhooks.create}
                 </Button>
@@ -671,13 +671,13 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                 {hooks.map((h) => (
                     <Sheet
                         key={h.id}
-                        variant="soft"
                         sx={{ borderRadius: 8, p: 1.25, minWidth: 0 }}
+                        variant="soft"
                     >
                         <Stack
+                            alignItems="center"
                             direction="row"
                             spacing={1}
-                            alignItems="center"
                             sx={{ minWidth: 0 }}
                         >
                             <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -693,7 +693,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                                 difference between "our webhooks stopped"
                                 and a support ticket. */}
                             {!h.isActive && (
-                                <Chip size="sm" color="danger" variant="soft">
+                                <Chip color="danger" size="sm" variant="soft">
                                     {d.webhooks.disabled}
                                 </Chip>
                             )}

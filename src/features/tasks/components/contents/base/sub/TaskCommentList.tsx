@@ -329,14 +329,14 @@ export const TaskCommentList = ({
                     initialTopMostItemIndex={taskComments.length - 1}
                     isScrolling={handleIsScrolling}
                     itemContent={itemContent}
+                    style={{ flex: 1, minHeight: 0 }}
+                    totalCount={taskComments.length}
                     scrollerRef={(el) => {
                         // `el` is the scroll container (HTMLElement); it's
                         // only `Window` when `useWindowScroll` is set, which
                         // we don't.
                         scrollerElRef.current = el as HTMLElement | null;
                     }}
-                    style={{ flex: 1, minHeight: 0 }}
-                    totalCount={taskComments.length}
                 />
             </Box>
         );
@@ -354,12 +354,12 @@ export const TaskCommentList = ({
                 initialTopMostItemIndex={taskComments.length - 1}
                 isScrolling={handleIsScrolling}
                 itemContent={itemContent}
-                scrollerRef={(el) => {
-                    scrollerElRef.current = el as HTMLElement | null;
-                }}
                 style={{ height: Math.min(contentHeight, maxHeight) }}
                 totalCount={taskComments.length}
                 totalListHeightChanged={setContentHeight}
+                scrollerRef={(el) => {
+                    scrollerElRef.current = el as HTMLElement | null;
+                }}
             />
         </Box>
     );

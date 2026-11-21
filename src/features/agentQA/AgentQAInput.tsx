@@ -90,8 +90,8 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
                 mention is visibly different from identical typed text. */}
             <MentionHighlightOverlay
                 containerRef={wrapperRef}
-                ranges={mention.highlightRanges}
                 elementRef={textareaRef}
+                ranges={mention.highlightRanges}
                 value={state.query}
             />
             <Stack alignItems="flex-end" direction="row" spacing={1}>
@@ -103,12 +103,12 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
                     slotProps={{ textarea: { ref: textareaRef } }}
                     sx={{ flex: 1 }}
                     value={state.query}
+                    onClick={syncCaret}
+                    onKeyUp={syncCaret}
                     onChange={(e) => {
                         state.setQuery(e.target.value);
                         mention.setCaret(e.target.selectionStart ?? e.target.value.length);
                     }}
-                    onClick={syncCaret}
-                    onKeyUp={syncCaret}
                     onKeyDown={(e) => {
                         // IME guard: while an input-method composition is
                         // active (typing Japanese / Chinese / Korean, or
