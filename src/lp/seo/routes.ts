@@ -56,6 +56,7 @@ export const LP_ROUTES: readonly LpRoute[] = [
     { path: "/blog", langs: "en-only" },
     { path: "/developers", langs: "en-only" },
     { path: "/support", langs: "toggle" },
+    { path: "/migrate", langs: "toggle" },
     { path: "/accessibility", langs: "toggle" },
     { path: "/changelog", langs: "toggle" },
     { path: "/privacy", langs: "bilingual" },
