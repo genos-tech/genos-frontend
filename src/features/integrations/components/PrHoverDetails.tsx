@@ -38,9 +38,11 @@ const relativeAgo = (iso: string, t: ReturnType<typeof useTranslation>["t"]): st
     const rounded = Math.max(1, Math.floor(value));
     const unitKey =
         `${label}${rounded === 1 ? "" : "s"}` as keyof typeof t.integrations.pullRequest.hover.units;
+    // The unit word may carry its own plural (Arabic: dual for 2, singular noun for 11+),
+    // so it is formatted with the count first.
     return fmt(t.integrations.pullRequest.hover.ago, {
         count: rounded,
-        unit: t.integrations.pullRequest.hover.units[unitKey],
+        unit: fmt(t.integrations.pullRequest.hover.units[unitKey], { count: rounded }),
     });
 };
 

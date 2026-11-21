@@ -18,10 +18,11 @@
  * دقائق", "5 मिनट पहले"), no line break in a one-line label, no Latin unit
  * letters inside Arabic or Devanagari text, and the exact feed wording.
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { formatRelativeAge } from "../features/tasks/utils/relativeAge";
 import { fmt } from "../i18n";
+import { setPluralLocale } from "../i18n/interpolate";
 import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";
 import { es } from "../i18n/locales/es";
@@ -81,17 +82,30 @@ const COUNTS = [1, 2, 3, 5, 7, 11, 12, 24, 30, 45, 59];
 
 const stripPlaceholders = (template: string) =>
     template
-        .replace(/\{\w+,\s*plural,\s*one\s*\{([^{}]*)\}\s*other\s*\{([^{}]*)\}\}/g, "$1 $2")
+        .replace(/\{\w+,\s*plural,\s*((?:\w+\s*\{[^{}]*\}\s*)+)\}/g, (_, bodies: string) =>
+            [...bodies.matchAll(/\w+\s*\{([^{}]*)\}/g)].map((m) => m[1]).join(" ")
+        )
         .replace(/\{\w+\}/g, "")
         .replace(/#/g, "");
 
-const render = (template: string, count: number) => fmt(template, { count, n: count, unit: "" });
+// Plurals beyond one/other (Arabic, MIP-1806) read the active locale, so a test that renders a
+// locale's template says which locale it is.
+afterEach(() => setPluralLocale("en"));
+const render = (template: string, count: number, locale = "en") =>
+    fmt(template, { count, n: count, unit: "" }, locale);
+// The PR hover card: the unit word is formatted with the count first (it may carry its own plural).
+const hoverText = (ago: string, word: string, count: number, locale = "en") =>
+    fmt(ago, { count, unit: fmt(word, { count }, locale) }, locale);
 
 // The digits a rendered line may carry: the count's own, or none for a count of
 // 1 said as a word.
-const onlyTheCount = (out: string, count: number) => {
+// Arabic also says 2 as a dual word with no digit ("دقيقتين"; MIP-1806).
+const onlyTheCount = (out: string, count: number, locale = "en") => {
     const digits = out.replace(/\D/g, "");
-    return digits === String(count) || (count === 1 && digits === "");
+    return (
+        digits === String(count) ||
+        (digits === "" && (count === 1 || (locale === "ar" && count === 2)))
+    );
 };
 
 describe("relative-time templates, every locale", () => {
@@ -103,8 +117,10 @@ describe("relative-time templates, every locale", () => {
                         const template = read(catalog, `${family}.${key}`);
                         expect(template, "template is missing").toBeTruthy();
                         for (const count of COUNTS) {
-                            const out = render(template as string, count);
-                            expect(onlyTheCount(out, count), `"${out}" for ${count}`).toBe(true);
+                            const out = render(template as string, count, locale);
+                            expect(onlyTheCount(out, count, locale), `"${out}" for ${count}`).toBe(
+                                true
+                            );
                         }
                     });
                 }
@@ -126,8 +142,13 @@ describe("relative-time templates, every locale", () => {
                     expect(word, unit).toBeTruthy();
                     expect((word as string).replace(/\d/g, ""), `${unit} unit word`).toBe(word);
                     for (const count of [1, 2, 12]) {
-                        const out = fmt(ago as string, { count, unit: word as string });
-                        expect(onlyTheCount(out, count), `"${out}"`).toBe(true);
+                        const out = hoverText(ago as string, word as string, count, locale);
+                        // Arabic's unit word may be the singular or dual alone ("منذ دقيقة"): no digit.
+                        const ok =
+                            locale === "ar"
+                                ? out.replace(/\D/g, "") === "" || onlyTheCount(out, count, locale)
+                                : onlyTheCount(out, count);
+                        expect(ok, `"${out}"`).toBe(true);
                     }
                 }
             });
@@ -269,14 +290,16 @@ describe("the count sits inside the phrase", () => {
                     const template = read(catalogs[locale], path) as string;
                     const out =
                         path === "integrations.pullRequest.hover.ago"
-                            ? fmt(template, {
-                                  count: 5,
-                                  unit: read(
+                            ? hoverText(
+                                  template,
+                                  read(
                                       catalogs[locale],
                                       "integrations.pullRequest.hover.units.minutes"
                                   ) as string,
-                              })
-                            : render(template, 5);
+                                  5,
+                                  locale
+                              )
+                            : render(template, 5, locale);
                     expect(out, path).toMatch(PLACEMENT[locale]);
                 });
             }
@@ -293,10 +316,12 @@ describe("the count sits inside the phrase", () => {
     });
 
     const hover = (locale: string, count: number, unit: string) =>
-        fmt(read(catalogs[locale], "integrations.pullRequest.hover.ago") as string, {
+        hoverText(
+            read(catalogs[locale], "integrations.pullRequest.hover.ago") as string,
+            read(catalogs[locale], `integrations.pullRequest.hover.units.${unit}`) as string,
             count,
-            unit: read(catalogs[locale], `integrations.pullRequest.hover.units.${unit}`) as string,
-        });
+            locale
+        );
     it("the PR hover card reads as a sentence", () => {
         expect(hover("es", 5, "minutes")).toBe("hace 5 minutos");
         expect(hover("fr", 5, "minutes")).toBe("il y a 5 minutes");
@@ -310,7 +335,7 @@ describe("the count sits inside the phrase", () => {
 
 describe("the History modal's labels are one line in es, fr, ar and hi", () => {
     const rel = (locale: string, key: string, count: number) =>
-        render(read(catalogs[locale], `history.relative.${key}`) as string, count);
+        render(read(catalogs[locale], `history.relative.${key}`) as string, count, locale);
     it("fr", () => {
         expect(read(fr, "history.relative.justNow")).toBe("À l'instant");
         expect(rel("fr", "minutes", 5)).toBe("Il y a 5 min");
@@ -387,6 +412,7 @@ describe("the activity feed reads as a native sentence (es, fr, ar, hi)", () => 
     const spans = [MIN, 5 * MIN, HOUR, 3 * HOUR, DAY, 3 * DAY];
     for (const [locale, lines] of Object.entries(expected)) {
         it(locale, () => {
+            setPluralLocale(locale);
             expect(spans.map((ms) => formatRelativeAge(ago(ms), messages(locale), NOW))).toEqual(
                 lines
             );

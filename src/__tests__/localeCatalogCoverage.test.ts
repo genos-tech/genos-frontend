@@ -41,15 +41,20 @@ const leaves = (node: unknown, prefix = "", out: Record<string, string> = {}) =>
  * translation that would render as raw ICU text fails here: a plural is exactly
  * `{name, plural, one {..} other {..}}` with no nesting inside a branch.
  */
-const PLURAL = /\{(\w+),\s*plural,\s*one\s*\{([^{}]*)\}\s*other\s*\{([^{}]*)\}\}/g;
+const PLURAL = /\{(\w+),\s*plural,\s*((?:\w+\s*\{[^{}]*\}\s*)+)\}/g;
+const BRANCH = /(\w+)\s*\{([^{}]*)\}/g;
+/** CLDR categories `fmt` resolves (MIP-1806: Arabic needs two/few/many). */
+const CATEGORIES = new Set(["zero", "one", "two", "few", "many", "other"]);
+const branches = (body: string): Record<string, string> =>
+    Object.fromEntries([...body.matchAll(BRANCH)].map((m) => [m[1], m[2]]));
 
 /** The arguments of a message: plural counts and plain `{name}`s (a set: a translation may repeat or drop a repeat). */
 /** What is left of a message once its readable plurals are cut out (`split` with the three
- *  capture groups returns text, key, one, other, text, ...: every fourth piece is text). */
+ *  capture groups returns text, key, bodies, text, ...: every third piece is text). */
 const outsidePlurals = (s: string): string =>
     s
         .split(PLURAL)
-        .filter((_, i) => i % 4 === 0)
+        .filter((_, i) => i % 3 === 0)
         .join("");
 
 const placeholders = (s: string): string[] => {
@@ -60,18 +65,33 @@ const placeholders = (s: string): string[] => {
 };
 
 /** Plurals the formatter cannot read (zero/two/few/many forms, nesting, a stray brace). */
-const unreadablePlural = (s: string): boolean => /plural\s*,/.test(outsidePlurals(s));
+const unreadablePlural = (s: string): boolean =>
+    /plural\s*,/.test(outsidePlurals(s)) ||
+    [...s.matchAll(PLURAL)].some((m) => {
+        const b = branches(m[2]);
+        return !("other" in b) || Object.keys(b).some((c) => !CATEGORIES.has(c));
+    });
 
 /** Plural keys whose branches carry `#` (the number) in English: a translation must keep it in `other` (`one` may spell the singular out, as Arabic does). */
 const hashKeys = (s: string): string[] =>
     [...s.matchAll(PLURAL)]
-        .filter((m) => m[2].includes("#") || m[3].includes("#"))
+        .filter((m) => Object.values(branches(m[2])).some((b) => b.includes("#")))
         .map((m) => m[1]);
 const dropsHash = (en: string, tr: string): string[] => {
     const keep = new Set(hashKeys(en));
     return [...tr.matchAll(PLURAL)]
-        .filter((m) => keep.has(m[1]) && !m[3].includes("#"))
+        .filter((m) => keep.has(m[1]) && !(branches(m[2]).other ?? "").includes("#"))
         .map((m) => m[1]);
+};
+
+/** Arabic PR hover card (MIP-1806): the unit word carries the count (dual, singular noun after 11), so `ago` has no {count} and each plural unit has one English lacks. */
+const AR_COUNT_IN_UNIT: Record<string, true> = {
+    "integrations.pullRequest.hover.ago": true,
+    ...Object.fromEntries(
+        ["seconds", "minutes", "hours", "days", "weeks", "months", "years"].map(
+            (u) => [`integrations.pullRequest.hover.units.${u}`, true] as const
+        )
+    ),
 };
 
 const EN = leaves(en);
@@ -131,12 +151,15 @@ describe("whole catalog: every locale has every English key", () => {
 
         it(`${name} keeps the same {placeholders} as English`, () => {
             const bad = TRANSLATABLE.filter(
-                (k) => k in L && placeholders(L[k]).join() !== placeholders(EN[k]).join()
+                (k) =>
+                    k in L &&
+                    !(name === "ar" && k in AR_COUNT_IN_UNIT) &&
+                    placeholders(L[k]).join() !== placeholders(EN[k]).join()
             ).map((k) => `${k}: en {${placeholders(EN[k])}} vs ${name} {${placeholders(L[k])}}`);
             expect(bad, `${name} changed placeholders`).toEqual([]);
         });
 
-        it(`${name}: every plural is one/other, and keeps its # where English has one`, () => {
+        it(`${name}: every plural is readable (CLDR categories + other), and keeps its # where English has one`, () => {
             const bad = TRANSLATABLE.filter(
                 (k) => k in L && (unreadablePlural(L[k]) || dropsHash(EN[k], L[k]).length > 0)
             );
