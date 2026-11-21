@@ -174,8 +174,7 @@ const mentionWhere = (m: BriefingMention, a: TodayCopy): string => {
     return [m.displayId, m.title].filter(Boolean).join(" ");
 };
 
-const clip = <T,>(rows: T[], limit: number | null): T[] =>
-    limit == null ? rows : rows.slice(0, limit);
+const dueCountOf = (d: BriefingToday): number => d.overdueCount + d.dueTodayCount;
 
 const total = (d: BriefingToday): number =>
     d.overdueCount +
@@ -190,7 +189,6 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.today;
     const card = variant === "card";
-    const limit = card ? CARD_ROWS : null;
     const open = (href: string) => requestAppNavigate(href);
 
     const header = (
@@ -238,29 +236,69 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
         );
     } else {
         const d = view.data;
+        if (card) {
+            // One short list across the sections, most pressing first: it sits above the Genos
+            // page's input, so it must stay small on a phone.
+            const secs = a.sections;
+            const rows: RowProps[] = [
+                ...[...d.overdue, ...d.dueToday].map((task) => ({
+                    href: taskHref(task),
+                    primary: `${task.displayId} ${task.title}`,
+                    secondary: `${secs.due} · ${taskMeta(task, a)}`,
+                    onOpen: open,
+                    noLink: a.noLink,
+                })),
+                ...d.mentions.map((m) => ({
+                    href: mentionHref(m),
+                    primary: fmt(a.mentionIn, { where: mentionWhere(m, a) }),
+                    secondary: `${secs.waiting} · ${m.from ?? m.by ?? ""}`,
+                    onOpen: open,
+                    noLink: a.noLink,
+                })),
+                ...d.changed.items.map((c) => ({
+                    href: changeHref(c),
+                    primary: [c.displayId, c.title].filter(Boolean).join(" "),
+                    secondary: `${secs.changed} · ${changeLine(c)}`,
+                    onOpen: open,
+                    noLink: a.noLink,
+                })),
+            ];
+            const all = dueCountOf(d) + d.requests.length + d.mentions.length + d.changed.total;
+            const shown = rows.slice(0, CARD_ROWS);
+            return (
+                <Box
+                    data-testid="today-card"
+                    sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}
+                >
+                    {header}
+                    <Box component="ul" sx={{ m: 0, p: 0 }}>
+                        {shown.map((r, i) => (
+                            <Row key={i} {...r} />
+                        ))}
+                    </Box>
+                    {all > shown.length ? (
+                        <Typography level="body-xs" sx={{ px: 1.25, color: g.text.secondary }}>
+                            {fmt(a.moreCount, { n: all - shown.length })}
+                        </Typography>
+                    ) : null}
+                    {onOpenToday ? (
+                        <Box>
+                            <Button size="sm" variant="plain" onClick={onOpenToday}>
+                                {a.openToday}
+                            </Button>
+                        </Box>
+                    ) : null}
+                </Box>
+            );
+        }
         const due = [...d.overdue, ...d.dueToday];
         const dueCount = d.overdueCount + d.dueTodayCount;
         const waitingCount = d.requests.length + d.mentions.length;
-        const more = (shown: number, all: number) =>
-            all > shown && card ? (
-                <Typography level="body-xs" sx={{ px: 1.25, color: g.text.secondary }}>
-                    {fmt(a.moreCount, { n: all - shown })}
-                </Typography>
-            ) : null;
-        const shownDue = clip(due, limit);
-        const shownWaiting = {
-            requests: clip(d.requests, limit),
-            mentions: clip(
-                d.mentions,
-                limit == null ? null : Math.max(limit - d.requests.length, 0)
-            ),
-        };
-        const shownChanged = clip(d.changed.items, limit);
         const sections: ReactNode[] = [];
         if (dueCount > 0) {
             sections.push(
                 <Section key="due" count={dueCount} title={a.sections.due}>
-                    {shownDue.map((task) => (
+                    {due.map((task) => (
                         <Row
                             key={task.taskId}
                             href={taskHref(task)}
@@ -271,14 +309,13 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                             onOpen={open}
                         />
                     ))}
-                    {more(shownDue.length, dueCount)}
                 </Section>
             );
         }
         if (waitingCount > 0) {
             sections.push(
                 <Section key="waiting" count={waitingCount} title={a.sections.waiting}>
-                    {shownWaiting.requests.map((r) => (
+                    {d.requests.map((r) => (
                         <Row
                             key={`r${r.itemId}`}
                             href={null}
@@ -289,7 +326,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                             onOpen={open}
                         />
                     ))}
-                    {shownWaiting.mentions.map((m, i) => (
+                    {d.mentions.map((m, i) => (
                         <Row
                             key={`m${i}${m.at}`}
                             href={mentionHref(m)}
@@ -300,17 +337,13 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                             onOpen={open}
                         />
                     ))}
-                    {more(
-                        shownWaiting.requests.length + shownWaiting.mentions.length,
-                        waitingCount
-                    )}
                 </Section>
             );
         }
         if (d.changed.total > 0) {
             sections.push(
                 <Section key="changed" count={d.changed.total} title={a.sections.changed}>
-                    {shownChanged.map((c, i) => (
+                    {d.changed.items.map((c, i) => (
                         <Row
                             key={`c${i}${c.latestAt}`}
                             href={changeHref(c)}
@@ -321,11 +354,10 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                             onOpen={open}
                         />
                     ))}
-                    {more(shownChanged.length, d.changed.total)}
                 </Section>
             );
         }
-        if (!card && d.suggestedNext.length > 0) {
+        if (d.suggestedNext.length > 0) {
             sections.push(
                 <Section key="next" count={d.suggestedNext.length} title={a.sections.next}>
                     {d.suggestedNext.map((task) => (
@@ -341,7 +373,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                 </Section>
             );
         }
-        if (!card && d.blocked.length > 0) {
+        if (d.blocked.length > 0) {
             sections.push(
                 <Section key="blocked" count={d.blocked.length} title={a.sections.blocked}>
                     {d.blocked.map((b) => (
@@ -359,7 +391,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                 </Section>
             );
         }
-        if (!card && d.delegatedTotal > 0) {
+        if (d.delegatedTotal > 0) {
             sections.push(
                 <Section key="delegated" count={d.delegatedTotal} title={a.sections.delegated}>
                     {d.delegated.map((task) => (
@@ -385,7 +417,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                         gap: 1.5,
                         gridTemplateColumns: {
                             xs: "minmax(0, 1fr)",
-                            md: card ? "minmax(0, 1fr)" : "repeat(2, minmax(0, 1fr))",
+                            md: "repeat(2, minmax(0, 1fr))",
                         },
                     }}
                 >

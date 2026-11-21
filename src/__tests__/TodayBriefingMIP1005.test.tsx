@@ -13,6 +13,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
     BriefingToday,
     changeHref,
+    hasBriefingNews,
     loadBriefingToday,
     markLooked,
     mentionHref,
@@ -31,7 +32,6 @@ import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 import { authApi } from "../services/api";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../services/api", () => ({ authApi: vi.fn() }));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("../services/appNavigate", () => ({ requestAppNavigate: navigate }));
@@ -209,7 +209,7 @@ describe("useBriefingToday", () => {
     it("loads once, becomes ready, and marks the view as looked when it goes away", async () => {
         const get = vi.fn().mockResolvedValue({ data: answer() });
         vi.mocked(authApi).mockReturnValue({ get } as never);
-        const { result, unmount } = renderHook(() => useBriefingToday("t", "u"));
+        const { result, unmount } = renderHook(() => useBriefingToday("tok", "t", "u"));
         expect(result.current.status).toBe("loading");
         await waitFor(() => expect(result.current.status).toBe("ready"));
         expect(get).toHaveBeenCalledTimes(1);
@@ -220,7 +220,7 @@ describe("useBriefingToday", () => {
     it("does not call the API while disabled", () => {
         const get = vi.fn();
         vi.mocked(authApi).mockReturnValue({ get } as never);
-        renderHook(() => useBriefingToday("t", "u", false));
+        renderHook(() => useBriefingToday("tok", "t", "u", false));
         expect(get).not.toHaveBeenCalled();
     });
 });
@@ -273,7 +273,7 @@ describe("TodayBriefing", () => {
         expect(failed.refresh).toHaveBeenCalled();
     });
 
-    it("the card shows the top three of a section, the rest as a count, and a way in", () => {
+    it("the card is one short list across the sections, the rest as a count, and a way in", () => {
         const many = Array.from({ length: 5 }, (_, i) => ({
             taskId: 100 + i,
             projectId: 1,
@@ -283,9 +283,29 @@ describe("TodayBriefing", () => {
         }));
         renderToday(view(answer({ overdue: many, overdueCount: 5 })), "card");
         expect(screen.getByTestId("today-card")).toBeInTheDocument();
+        expect(screen.getByText("P-0 T0")).toBeInTheDocument();
         expect(screen.queryByText("P-3 T3")).toBeNull();
-        expect(screen.getByText("+3 more")).toBeInTheDocument(); // 6 due in all, 3 shown
+        expect(screen.getByText("+5 more")).toBeInTheDocument(); // 8 things in all, 3 shown
         expect(screen.getByRole("button", { name: "Open Today" })).toBeInTheDocument();
+        fireEvent.click(screen.getByText("P-1 T1"));
+        expect(navigate).toHaveBeenCalledWith("/workspace/tasks/project/1/task/101");
+    });
+
+    it("hasBriefingNews is false for an empty answer, so the Genos page shows no card", () => {
+        expect(hasBriefingNews(null)).toBe(false);
+        expect(
+            hasBriefingNews(
+                answer({
+                    overdue: [],
+                    overdueCount: 0,
+                    dueToday: [],
+                    dueTodayCount: 0,
+                    mentions: [],
+                    changed: { items: [], total: 0, truncated: false },
+                })
+            )
+        ).toBe(false);
+        expect(hasBriefingNews(answer())).toBe(true);
     });
 });
 
