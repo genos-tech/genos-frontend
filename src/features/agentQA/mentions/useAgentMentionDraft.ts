@@ -22,6 +22,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { groupsBeforePeopleRank } from "../../../utils/mentionOrder";
 import {
     displayIdEquals,
     displayIdMatches,
@@ -256,13 +257,24 @@ export function useAgentMentionDraft({
             if (label.startsWith(q)) return 1;
             return 2;
         };
-        return pool
-            .filter(
-                (c) =>
-                    c.ref.label.toLowerCase().includes(q) || displayIdMatches(q, taskDisplayId(c))
-            )
-            .sort((a, b) => rank(a) - rank(b))
-            .slice(0, MAX_SUGGESTIONS);
+        return (
+            pool
+                .filter(
+                    (c) =>
+                        c.ref.label.toLowerCase().includes(q) ||
+                        displayIdMatches(q, taskDisplayId(c))
+                )
+                // The `@` pool lists groups before people (MIP-1701), so the
+                // 8-row cap keeps the best group; `#` (tasks) keeps the match rank.
+                .sort(
+                    (a, b) =>
+                        (trigger.char === "@"
+                            ? groupsBeforePeopleRank(a.ref.label, a.ref.kind === "group", q) -
+                              groupsBeforePeopleRank(b.ref.label, b.ref.kind === "group", q)
+                            : 0) || rank(a) - rank(b)
+                )
+                .slice(0, MAX_SUGGESTIONS)
+        );
     }, [trigger, dismissedStart, members, entities, lookedUp]);
 
     // Keep the highlight inside the list as it refilters, and reset it
