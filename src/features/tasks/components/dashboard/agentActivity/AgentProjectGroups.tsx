@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
-import { AgentWorkGroup, AgentWorkItem } from "../../../services/loadAgentWork";
-import { agentTargetPath, formatAgentWhen } from "./agentActivityLinks";
+import { agentGroupKey, AgentWorkGroup, AgentWorkItem } from "../../../services/loadAgentWork";
+import { agentKindOf, agentTargetPath, formatAgentWhen } from "./agentActivityLinks";
 import { AgentChip, FencedText } from "./agentActivityParts";
 
 const TARGET_MARK = "{target}";
@@ -32,52 +32,62 @@ export const AgentProjectGroups = ({
 }: Props) => {
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.agentActivity;
+    // A group with no rows on this page is left out: its rows are on a later page, and
+    // "Load more" folds them in. Its count is still in the totals.
+    const shown = groups.filter((group) => group.items.length > 0);
     return (
         <Stack spacing={2} sx={{ minWidth: 0 }}>
-            {groups.map((group) => (
-                <Box
-                    key={group.project.id}
-                    aria-labelledby={`agent-group-${group.project.id}`}
-                    component="section"
-                    sx={{ minWidth: 0 }}
-                >
-                    <Stack
-                        alignItems="baseline"
-                        direction="row"
-                        justifyContent="space-between"
-                        spacing={1}
-                        sx={{ minWidth: 0, pb: 0.5, borderBottom: `1px solid ${g.border.subtle}` }}
+            {shown.map((group) => {
+                const key = agentGroupKey(group);
+                return (
+                    <Box
+                        key={key}
+                        aria-labelledby={`agent-group-${key}`}
+                        component="section"
+                        sx={{ minWidth: 0 }}
                     >
-                        <Typography
-                            component="h3"
-                            id={`agent-group-${group.project.id}`}
-                            level="title-md"
-                            sx={{ minWidth: 0 }}
-                            noWrap
+                        <Stack
+                            alignItems="baseline"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1}
+                            sx={{
+                                minWidth: 0,
+                                pb: 0.5,
+                                borderBottom: `1px solid ${g.border.subtle}`,
+                            }}
                         >
-                            {group.project.name}
-                        </Typography>
-                        <Typography
-                            level="body-xs"
-                            sx={{ color: g.text.secondary, flex: "0 0 auto" }}
-                        >
-                            {fmt(a.groups.changes, {
-                                count: group.counts?.changes ?? group.items.length,
-                            })}
-                        </Typography>
-                    </Stack>
-                    <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-                        {group.items.map((item) => (
-                            <AgentRow
-                                key={item.id}
-                                item={item}
-                                locale={locale}
-                                projectId={group.project.id}
-                            />
-                        ))}
+                            <Typography
+                                component="h3"
+                                id={`agent-group-${key}`}
+                                level="title-md"
+                                sx={{ minWidth: 0 }}
+                                noWrap
+                            >
+                                {group.project ? group.project.name : a.groups.noProject}
+                            </Typography>
+                            <Typography
+                                level="body-xs"
+                                sx={{ color: g.text.secondary, flex: "0 0 auto" }}
+                            >
+                                {fmt(a.groups.changes, {
+                                    count: group.counts?.total ?? group.items.length,
+                                })}
+                            </Typography>
+                        </Stack>
+                        <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                            {group.items.map((item) => (
+                                <AgentRow
+                                    key={item.id}
+                                    item={item}
+                                    locale={locale}
+                                    projectId={group.project?.id ?? null}
+                                />
+                            ))}
+                        </Box>
                     </Box>
-                </Box>
-            ))}
+                );
+            })}
             {hasMore && (
                 <Stack alignItems="flex-start" spacing={1}>
                     <Button
@@ -107,7 +117,7 @@ const AgentRow = ({
     locale,
 }: {
     item: AgentWorkItem;
-    projectId: number;
+    projectId: number | null;
     locale: string;
 }) => {
     const { t } = useTranslation();
@@ -150,10 +160,7 @@ const AgentRow = ({
                     sx={{ flexWrap: "wrap", minWidth: 0 }}
                     useFlexGap
                 >
-                    <AgentChip
-                        agent={item.agent}
-                        label={a.agents[item.agent.kind] ?? a.agents.other_app}
-                    />
+                    <AgentChip agent={item.agent} label={a.agents[agentKindOf(item.agent)]} />
                     {item.user && (
                         <Typography
                             level="body-sm"

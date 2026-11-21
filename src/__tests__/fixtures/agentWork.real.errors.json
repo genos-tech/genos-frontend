@@ -1,0 +1,23 @@
+{
+    "statuses": {
+        "full": 200,
+        "page1": 200,
+        "page2": 200,
+        "person": 200,
+        "bad_days": 400,
+        "bad_user": 400,
+        "missing_team": 400,
+        "outsider": 404
+    },
+    "bodies": {
+        "bad_days": {
+            "error": "Invalid query: days, project_id, agent, kind, user_id, limit or cursor."
+        },
+        "missing_team": {
+            "error": "team_id is required."
+        },
+        "outsider": {
+            "error": "Team not found."
+        }
+    }
+}

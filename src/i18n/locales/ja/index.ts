@@ -6149,6 +6149,7 @@ export const ja: DeepPartial<Messages> = {
                     loadMore: "さらに読み込む",
                     loadingMore: "読み込み中…",
                     loadMoreFailed: "読み込めませんでした。もう一度お試しください。",
+                    noProject: "プロジェクトなし",
                 },
                 actions: {
                     task_created: "{target} を作成しました",
@@ -6173,6 +6174,9 @@ export const ja: DeepPartial<Messages> = {
                 },
                 states: {
                     loading: "エージェントの活動を読み込んでいます…",
+                    errorTitle: "エージェントの活動を読み込めませんでした",
+                    errorBody:
+                        "この画面の読み込み中に問題が起きました。もう一度お試しください。タスクとノートには影響ありません。",
                     unavailableTitle: "エージェントの活動はまだ利用できません",
                     unavailableBody:
                         "この表示はまだ、あなたのワークスペースで有効になっていません。タスクとノートには影響ありません。",

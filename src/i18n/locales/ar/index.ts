@@ -3125,6 +3125,7 @@ export const ar: DeepPartial<Messages> = {
                     loadMore: "تحميل المزيد",
                     loadingMore: "جارٍ التحميل…",
                     loadMoreFailed: "تعذّر تحميل المزيد. حاول مرة أخرى.",
+                    noProject: "بدون مشروع",
                 },
                 actions: {
                     task_created: "أنشأ {target}",
@@ -3149,6 +3150,9 @@ export const ar: DeepPartial<Messages> = {
                 },
                 states: {
                     loading: "جارٍ تحميل نشاط الوكلاء…",
+                    errorTitle: "تعذّر تحميل نشاط الوكلاء",
+                    errorBody:
+                        "حدث خطأ أثناء تحميل هذا العرض. حاول مرة أخرى. مهامك وملاحظاتك لم تتأثر.",
                     unavailableTitle: "نشاط الوكلاء غير متاح بعد",
                     unavailableBody:
                         "هذا العرض غير مفعّل لمساحة عملك بعد. مهامك وملاحظاتك لم تتأثر.",

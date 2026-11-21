@@ -67,13 +67,13 @@ export const AgentWhoTable = ({ rows }: { rows: AgentWorkUserAgentRow[] }) => {
                         {sorted.map((row) => {
                             const extra = row.projects.length - SHOWN_PROJECTS;
                             return (
-                                <tr key={`${row.user.id}-${row.agent}`}>
+                                <tr key={`${row.user?.id ?? "none"}-${row.agent}`}>
                                     <td>
                                         <Typography
                                             level="body-sm"
                                             sx={{ color: g.text.primary, fontWeight: 500 }}
                                         >
-                                            {row.user.name}
+                                            {row.user?.name || "—"}
                                         </Typography>
                                     </td>
                                     <td>

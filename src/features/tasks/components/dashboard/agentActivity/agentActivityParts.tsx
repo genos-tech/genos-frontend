@@ -2,6 +2,7 @@ import { Box, Chip } from "@mui/joy";
 
 import { g, type } from "../../../../../theme/tokens";
 import { AgentKind, AgentWorkAgent } from "../../../services/loadAgentWork";
+import { agentKindOf } from "./agentActivityLinks";
 
 /** Chip colours by agent kind, all from the role tokens (no literals, no isDark branch). */
 const AGENT_TONE: Record<AgentKind, { bg: string; fg: string; border: string }> = {
@@ -17,13 +18,14 @@ export const AgentChip = ({
     agent,
     label,
 }: {
-    agent: AgentWorkAgent | { kind: AgentKind };
+    agent: AgentWorkAgent | { kind: AgentKind } | null | undefined;
     label: string;
 }) => {
-    const tone = AGENT_TONE[agent.kind] ?? AGENT_TONE.person;
+    const kind = agentKindOf(agent);
+    const tone = AGENT_TONE[kind] ?? AGENT_TONE.person;
     return (
         <Chip
-            data-agent-kind={agent.kind}
+            data-agent-kind={kind}
             size="sm"
             variant="soft"
             sx={{
