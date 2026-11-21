@@ -1,0 +1,134 @@
+[
+    {
+        "id": "2026-11-21-due-today",
+        "date": "2026-11-21",
+        "prs": ["genos-frontend#1073"],
+        "en": {
+            "title": "A task due today is no longer shown as overdue",
+            "body": "For people west of UTC, such as in the Americas, a task due today was counted as overdue or expired. It now counts as due today."
+        },
+        "ja": {
+            "title": "今日が期限のタスクを、期限切れと表示しないように",
+            "body": "UTC より西の地域（南北アメリカなど）では、今日が期限のタスクが期限切れとして数えられていました。今日が期限のタスクとして扱われるようになりました。"
+        }
+    },
+    {
+        "id": "2026-11-21-dates-and-names",
+        "date": "2026-11-21",
+        "prs": ["genos-frontend#1062", "genos-frontend#1072"],
+        "en": {
+            "title": "Dates and name sorting follow the app's language",
+            "body": "Dates used your browser's language rather than the one you chose in Settings, and names were sorted by the browser's language. Both now follow the app's language."
+        },
+        "ja": {
+            "title": "日付と名前の並び順が、アプリの言語に従うように",
+            "body": "日付がブラウザーの言語で表示され、名前の並び順もブラウザーの言語で決まっていました。どちらも、設定で選んだアプリの言語に従うようになりました。"
+        }
+    },
+    {
+        "id": "2026-11-21-phone-comments",
+        "date": "2026-11-21",
+        "prs": ["genos-frontend#1063"],
+        "en": {
+            "title": "Note comments open as a sheet on phones",
+            "body": "On a phone, Show comments in a note now opens the comments over the note, instead of squeezing the note into a narrow strip. The desktop layout does not change."
+        },
+        "ja": {
+            "title": "スマートフォンでは、ノートのコメントをシートで開くように",
+            "body": "スマートフォンでノートの「コメントを表示」を開くと、ノートの幅を狭めず、ノートの上にコメントが開きます。パソコンの表示は変わりません。"
+        }
+    },
+    {
+        "id": "2026-11-21-data-export",
+        "date": "2026-11-21",
+        "prs": ["genos-api#1004"],
+        "todo": "TODO(copy): MIP-1257 — confirm the list against the privacy page before this goes live.",
+        "en": {
+            "title": "The data export includes more of what you created",
+            "body": "The export now also includes your AI questions and answers, your reactions, task history, security events and the connected apps. Some items are not in the export yet."
+        },
+        "ja": {
+            "title": "データのエクスポートに、作成したデータがさらに含まれるように",
+            "body": "AI への質問と回答、リアクション、タスクの履歴、セキュリティイベント、接続したアプリが、エクスポートに加わりました。まだ含まれていない項目もあります。"
+        }
+    },
+    {
+        "id": "2026-11-21-account-deletion",
+        "date": "2026-11-21",
+        "prs": ["genos-api#982", "genos-api#984"],
+        "todo": "TODO(copy): MIP-1257 — counsel or Ken must confirm the Team Notes sentence matches the privacy page.",
+        "en": {
+            "title": "Deleting an account removes more of the data tied to it",
+            "body": "Deleting an account now removes the rest of the data that belongs to that person, not only the items listed by hand. Team Notes that the person wrote stay, so your team's notes are not broken."
+        },
+        "ja": {
+            "title": "アカウントを削除すると、紐づくデータがより多く削除されるように",
+            "body": "アカウントを削除すると、そのユーザーに紐づく残りのデータも削除されるようになりました。ユーザーが書いたチームのノートは残るため、チームのノートが壊れることはありません。"
+        }
+    },
+    {
+        "id": "2026-11-20-group-chat-delete",
+        "date": "2026-11-20",
+        "prs": ["genos-frontend#1036", "genos-frontend#1038", "genos-api#955", "genos-api#958"],
+        "en": {
+            "title": "Group chat owners can delete a group, and restore it",
+            "body": "The owner of a group chat can now delete it, either softly, so it can be restored from Recently deleted groups, or for good. The owner can restore a soft-deleted group from the chat list menu."
+        },
+        "ja": {
+            "title": "グループチャットのオーナーが、グループを削除・復元できるように",
+            "body": "グループチャットのオーナーは、グループを削除できるようになりました。「最近削除したグループ」から復元できるソフト削除と、完全な削除を選べます。ソフト削除したグループは、チャット一覧のメニューから復元できます。"
+        }
+    },
+    {
+        "id": "2026-11-20-sample-data",
+        "date": "2026-11-20",
+        "prs": ["genos-frontend#1043", "genos-api#967"],
+        "en": {
+            "title": "Team owners can remove the sample data in one step",
+            "body": "The sample data made when a team is created can now be removed by the team owner in one action. Only what the sample data made is removed, and the dialog lists what will go before you confirm."
+        },
+        "ja": {
+            "title": "チームのオーナーが、サンプルデータを一度に削除できるように",
+            "body": "チーム作成時に作られたサンプルデータを、チームのオーナーが一度の操作で削除できるようになりました。削除の対象はサンプルデータだけで、確認の前に削除される内容が一覧で表示されます。"
+        }
+    },
+    {
+        "id": "2026-11-18-phone-todo-tab",
+        "date": "2026-11-18",
+        "prs": ["genos-frontend#1027"],
+        "en": {
+            "title": "A To-Do tab in the phone's bottom bar",
+            "body": "On a phone, To-Do is now a tab in the bottom bar, next to Notes. It follows the To-Do switch in Settings, so you can hide it there."
+        },
+        "ja": {
+            "title": "スマートフォン下部のバーに「To-Do」タブ",
+            "body": "スマートフォンでは、下部のバーにノートの隣で「To-Do」タブを使えるようになりました。設定の「To-Do」のスイッチで、表示・非表示を切り替えられます。"
+        }
+    },
+    {
+        "id": "2026-11-18-general-chat",
+        "date": "2026-11-18",
+        "prs": ["genos-api#952", "genos-frontend#1032"],
+        "en": {
+            "title": "New teams get a general chat, and departments",
+            "body": "Every new team now gets a general chat. When you create a team, you can name its departments. People who join a team join the general chat and their department's chat."
+        },
+        "ja": {
+            "title": "新しいチームには全体チャットが。部署も設定できるように",
+            "body": "新しく作られるチームには、全体チャットが用意されるようになりました。チームを作るときに部署の名前を入れられます。メンバーは、全体チャットと所属する部署のチャットに参加します。"
+        }
+    },
+    {
+        "id": "2026-11-17-iphone-status-bar",
+        "date": "2026-11-17",
+        "prs": ["genos-frontend#1021"],
+        "en": {
+            "title": "The top of the app is no longer hidden under the iPhone status bar",
+            "body": "When Genos is added to the home screen of an iPhone, the top of each page was drawn under the clock and the Dynamic Island. The header and its buttons now start below that strip."
+        },
+        "ja": {
+            "title": "iPhone のホーム画面に追加したアプリで、上部が時計の下に隠れないように",
+            "body": "iPhone のホーム画面に追加した Genos で、ページの上部が時計や Dynamic Island の下に描かれていました。ヘッダーとボタンが、その部分より下から表示されるようになりました。"
+        }
+    }
+]
