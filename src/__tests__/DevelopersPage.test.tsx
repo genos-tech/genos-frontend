@@ -28,6 +28,18 @@ const renderPage = () =>
         </MemoryRouter>
     );
 
+describe("DevelopersPage code blocks (MIP-1928)", () => {
+    it("every focusable code block is a named group", () => {
+        const { container } = renderPage();
+        const blocks = container.querySelectorAll('pre[tabindex="0"]');
+        expect(blocks.length).toBeGreaterThan(0);
+        blocks.forEach((pre) => {
+            expect(pre.getAttribute("role")).toBe("group");
+            expect((pre.getAttribute("aria-label") ?? "").trim()).not.toBe("");
+        });
+    });
+});
+
 describe("DevelopersPage", () => {
     it("documents the ApiKey scheme rather than Bearer", () => {
         renderPage();
