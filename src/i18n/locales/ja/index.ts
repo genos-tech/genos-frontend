@@ -5393,6 +5393,9 @@ export const ja: DeepPartial<Messages> = {
             // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
             startMilestone: "マイルストーンを開始",
             completeMilestone: "マイルストーンを完了",
+            // TODO(copy): MIP-1809 draft wording, to be read by a native speaker. The task header's Start / Complete buttons (the milestone twins are above).
+            startTask: "タスクを開始",
+            completeTask: "タスクを完了",
             totalCount: "合計 {count} 件",
             dueDateTbd: "未定",
             taskButton: "タスク",

@@ -5467,6 +5467,9 @@ export const fr: DeepPartial<Messages> = {
             // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
             startMilestone: "Démarrer le jalon",
             completeMilestone: "Terminer le jalon",
+            // TODO(copy): MIP-1809 draft wording, to be read by a native speaker. The task header's Start / Complete buttons (the milestone twins are above).
+            startTask: "Démarrer la tâche",
+            completeTask: "Terminer la tâche",
             totalCount: "{count} au total",
             dueDateTbd: "À définir",
             taskButton: "Tâche",

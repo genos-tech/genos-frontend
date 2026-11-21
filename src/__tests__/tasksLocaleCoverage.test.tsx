@@ -166,9 +166,6 @@ const NOT_YET = new Set([
     "table/DraggableTaskRow.tsx",
     "table/QuickAddTaskRow.tsx",
     "table/cellEditors.tsx",
-    // The task panel's own words (MIP-1777 moved the milestone panel's; these two are MIP-1809).
-    "contents/base/TaskTitleBlock.tsx",
-    "contents/base/TaskCreateAttachmentBlock.tsx",
 ]);
 
 const jsxTextLiterals = (file: string): string[] => {

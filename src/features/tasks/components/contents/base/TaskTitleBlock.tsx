@@ -413,7 +413,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         handleStatusChange("WIP", statusSolid("WIP").color)
                                     }
                                 >
-                                    Start Task
+                                    {t.tasks.preview.startTask}
                                 </Button>
                             )}
 
@@ -428,7 +428,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     handleStatusChange("Closed", statusSolid("Closed").color)
                                 }
                             >
-                                Complete Task
+                                {t.tasks.preview.completeTask}
                             </Button>
                         )}
                         <PreviewTaskIdChip
