@@ -192,7 +192,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
     }
 
     return (
-        <Box>
+        <Box role="none">
             <ListItem component="li" sx={{ p: 0 }} nested>
                 {/* Passive markers, in the row's end: whose folder, its tags,
                    and its visibility.

@@ -163,7 +163,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
     );
 
     return (
-        <Box>
+        <Box role="none">
             <ListItem component="li" sx={{ p: 0 }} nested>
                 {/* Folder header — always a drop target so notes can be
                     filed into a COLLAPSED folder too. */}

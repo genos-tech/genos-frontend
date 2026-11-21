@@ -218,8 +218,9 @@ export const DraggableNoteRow = ({ kind, noteId, index, children }: DraggableNot
                     {...provided.draggableProps}
                     {...(isMobile ? {} : provided.dragHandleProps)}
                     // The handle's `role="button"` made the list's child a button, not an item
-                    // (MIP-1955). The row inside has its own button; the lift keys still work.
-                    role="none"
+                    // (MIP-1955). It is the item now; the row inside has its own button, and the
+                    // lift keys still work.
+                    role="listitem"
                     sx={{
                         opacity: snapshot.isDragging ? 0.85 : 1,
                         borderRadius: "8px",

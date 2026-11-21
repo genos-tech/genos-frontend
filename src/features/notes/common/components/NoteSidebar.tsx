@@ -639,7 +639,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     here but the empty state, which has to say where to start because the
                     "+" only shows on hover. */}
                 {myNotesIsEmpty && (
-                    <Box sx={{ px: 1.5 }}>
+                    <Box component="li" sx={{ px: 1.5, listStyle: "none" }}>
                         <EmptyState
                             body={t.notes.list.empty}
                             data-empty="my-notes"
@@ -892,7 +892,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderTeamNotesSection = () => (
         <Box role="none">
             {teamFolderTags.length > 0 && (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, px: 1, py: 0.5 }}>
+                <Box
+                    component="li"
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        px: 1,
+                        py: 0.5,
+                        listStyle: "none",
+                    }}
+                >
                     {teamFolderTags.map((tag) => {
                         const isOn = teamTagFilter.has(tag.tagId);
                         return (
