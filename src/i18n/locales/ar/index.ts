@@ -120,11 +120,12 @@ export const ar: DeepPartial<Messages> = {
             loading: "جارٍ التحميل",
             preparingWorkspace: "جارٍ تجهيز مساحة العمل الخاصة بك",
             takingLonger: "هل يستغرق الأمر وقتًا أطول من المتوقع؟",
-            sessionExpired: "قد تكون جلستك قد انتهت",
-            signInAgain: "تسجيل الدخول مرة أخرى",
             offlineTitle: "أنت غير متصل بالإنترنت",
             offlineBody:
                 "يتعذر الوصول إلى الخادم حاليًا. سيستأنف Genos تلقائيًا فور عودة الاتصال.",
+            stillConnecting:
+                "يُعيد الاتصال بالخادم ويحمّل مساحة العمل. قد يستغرق ذلك لحظة على اتصال بطيء.",
+            reload: "إعادة التحميل",
         },
         modalView: {
             chatUnavailable: "هذه المحادثة غير متاحة.",
