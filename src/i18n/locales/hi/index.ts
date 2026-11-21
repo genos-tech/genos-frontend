@@ -26,6 +26,8 @@ export const hi: DeepPartial<Messages> = {
             },
             toast: {
                 region: "सूचनाएँ",
+                // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+                bannerRegion: "स्थिति अलर्ट",
                 undo: "पूर्ववत करें",
             },
         },

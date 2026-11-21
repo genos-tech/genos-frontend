@@ -1754,6 +1754,8 @@ export const fr: DeepPartial<Messages> = {
             },
             toast: {
                 region: "Notifications",
+                // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+                bannerRegion: "Alertes d'état",
                 undo: "Annuler",
             },
         },

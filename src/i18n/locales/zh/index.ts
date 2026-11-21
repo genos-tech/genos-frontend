@@ -1666,6 +1666,8 @@ export const zh: DeepPartial<Messages> = {
             },
             toast: {
                 region: "通知",
+                // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+                bannerRegion: "状态提醒",
                 undo: "撤销",
             },
         },

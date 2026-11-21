@@ -1734,6 +1734,8 @@ export const ja: DeepPartial<Messages> = {
             },
             toast: {
                 region: "通知",
+                // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+                bannerRegion: "ステータス通知",
                 undo: "元に戻す",
             },
         },
