@@ -10,7 +10,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
 import { fmt, useTranslation } from "../../i18n";
 import type { Messages } from "../../i18n/types";
-import { SUPPORT_EMAIL } from "../../lp/supportLabels";
 import { CreditsBlock, fetchAgentFeatures, SubscriptionTier } from "../../services/agentApi";
 import {
     BillingConfig,
@@ -54,9 +53,8 @@ import { TrialEndNote } from "./TrialEndNote";
 
 type PlanStrings = Messages["settings"]["planUsage"];
 
-// MIP-1839: the one support address every other page uses. Switch to `/contact?topic=enterprise`
-// when the contact form (MIP-1261, genos-frontend #1086) is on main.
-const CONTACT_SALES_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=Genos%20Enterprise`;
+// MIP-1902: the Enterprise button opens the contact form's Enterprise variant (MIP-1261).
+const CONTACT_SALES_HREF = "/contact?topic=enterprise";
 
 // Self-serve plans, cheapest first — mirrors `PURCHASABLE_PLANS` in
 // genos-api `origin/services/stripe_billing.py`. Used for the team
@@ -338,7 +336,7 @@ export const PlansHome = () => {
                 return (
                     <Button
                         component="a"
-                        href={CONTACT_SALES_MAILTO}
+                        href={CONTACT_SALES_HREF}
                         size="sm"
                         variant="outlined"
                         fullWidth
