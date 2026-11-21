@@ -10,14 +10,13 @@ import {
     ensurePrivateProfile,
     purgeStoredPrivateProfile,
 } from "../services/privateProfileStore";
+import { refreshSession } from "../services/refreshSession";
 import { clearAllEditorDrafts } from "../utils/editorDraftStorage";
 
 interface AuthContextType {
     accessToken: string | null;
     setAccessToken: (token: string | null) => void;
 }
-
-const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -147,13 +146,6 @@ type RefreshOutcome = "ok" | "unauthenticated" | "transient";
 // matters; the last value is also the steady-state cap.
 const REFRESH_BACKOFF_SCHEDULE_MS = [2_000, 5_000, 10_000, 20_000, 60_000];
 
-// Abort a refresh that hasn't responded in this window. A hung request (dead
-// backend, stalled connection) would otherwise never resolve, and since every
-// data loader waits on `accessToken` — which this call sets — it would block
-// the entire app boot indefinitely. Aborting turns it into a retryable
-// `transient` failure that the backoff schedule above re-arms.
-const REFRESH_TIMEOUT_MS = 10_000;
-
 // Delays between attempts to load the private profile after a reload.
 const PRIVATE_PROFILE_RETRY_MS = [2_000, 10_000];
 
@@ -173,36 +165,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // failures (401/403) from transient errors so the caller can
     // decide whether to keep retrying.
     const refreshAccessToken = async (): Promise<RefreshOutcome> => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), REFRESH_TIMEOUT_MS);
-        try {
-            const response = await fetch(`${base_url}/user/signin/refresh/`, {
-                method: "GET",
-                credentials: "include",
-                signal: controller.signal,
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setAccessToken(data.access);
-                return "ok";
-            }
-
-            if (response.status === 401 || response.status === 403) {
-                return "unauthenticated";
-            }
-
-            console.error(`[AUTH] Token refresh failed with status ${response.status}`);
-            return "transient";
-        } catch (error) {
-            // Network/CORS failure OR the abort timeout — treat as transient
-            // and keep retrying per the backoff schedule.
-            console.error("[AUTH] Token refresh failed (network or timeout)");
-            console.error(error);
-            return "transient";
-        } finally {
-            clearTimeout(timeoutId);
+        // The request, the cross-tab lock and the one retry on 401/403 live in refreshSession
+        // (MIP-1878). Here a 401/403 that survived the retry means the session really is gone.
+        const result = await refreshSession();
+        if (result.kind === "ok") {
+            setAccessToken(result.access);
+            return "ok";
         }
+        return result.kind;
     };
 
     // Force a sign-out: clear the localStorage flags AuthGuard reads,
