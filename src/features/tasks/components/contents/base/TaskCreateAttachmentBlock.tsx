@@ -174,7 +174,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 fontWeight: 500,
                             }}
                         >
-                            Drag & Drop files here
+                            {t.tasks.tabs.dropFilesHere}
                         </Typography>
                         <Typography
                             level="body-xs"
@@ -182,7 +182,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)",
                             }}
                         >
-                            or use the button below to browse
+                            {t.tasks.tabs.dropFilesBrowse}
                         </Typography>
                     </Box>
                 )}

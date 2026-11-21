@@ -448,6 +448,8 @@ export const tasks = {
         taskProgressOther: "Other",
         startMilestone: "Start Milestone",
         completeMilestone: "Complete Milestone",
+        startTask: "Start Task",
+        completeTask: "Complete Task",
         totalCount: "{count} total",
         dueDateTbd: "TBD",
         taskButton: "Task",

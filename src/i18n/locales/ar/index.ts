@@ -2652,6 +2652,9 @@ export const ar: DeepPartial<Messages> = {
             // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
             startMilestone: "بدء المعلم",
             completeMilestone: "إكمال المعلم",
+            // TODO(copy): MIP-1809 draft wording, to be read by a native speaker. The task header's Start / Complete buttons (the milestone twins are above).
+            startTask: "بدء المهمة",
+            completeTask: "إكمال المهمة",
             totalCount: "{count} في المجموع",
             dueDateTbd: "غير محدد",
         },

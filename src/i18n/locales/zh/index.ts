@@ -5211,6 +5211,9 @@ export const zh: DeepPartial<Messages> = {
             // TODO(copy): MIP-1777 draft wording, to be read by a native speaker. The milestone panel's Start / Complete buttons, the "N total" line and the due-date "TBD" button.
             startMilestone: "开始里程碑",
             completeMilestone: "完成里程碑",
+            // TODO(copy): MIP-1809 draft wording, to be read by a native speaker. The task header's Start / Complete buttons (the milestone twins are above).
+            startTask: "开始任务",
+            completeTask: "完成任务",
             totalCount: "共 {count} 项",
             dueDateTbd: "待定",
             taskButton: "任务",
