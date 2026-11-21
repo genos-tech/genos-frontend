@@ -282,6 +282,34 @@ export const es: DeepPartial<Messages> = {
             archiveFailed: "No se pudo archivar. Inténtalo de nuevo.",
             unarchiveFailed: "No se pudo desarchivar. Inténtalo de nuevo.",
         },
+        forceDelete: {
+            menu: "Eliminar definitivamente",
+            phrase: "DELETE",
+            typeLabel: "Escribe DELETE para confirmar",
+            confirm: "Eliminar definitivamente",
+            cancel: "Cancelar",
+            failed: "No se pudo eliminar. No se quitó nada. Inténtalo de nuevo.",
+            notAllowed:
+                "Solo su creador o el propietario del proyecto puede eliminarlo definitivamente.",
+            hasSubtasks: "Elimina o mueve antes sus subtareas.",
+            isMilestone: "La tarea de un hito se elimina con el hito.",
+            taskLinked: "Este mensaje pertenece a una tarea. Elimina la tarea o el comentario.",
+            done: "Eliminado definitivamente.",
+            messageTitle: "¿Eliminar este mensaje definitivamente?",
+            messageDescription:
+                "El texto, los archivos, las reacciones y los marcadores de este mensaje se borran ahora y no se pueden recuperar. Quien lo vio pudo haberlo copiado.",
+            commentTitle: "¿Eliminar este comentario definitivamente?",
+            commentDescription:
+                "El comentario, sus reacciones y su copia en el chat del proyecto se borran ahora y no se pueden recuperar.",
+            taskTitle: "¿Eliminar esta tarea definitivamente?",
+            taskDescription:
+                "La tarea, sus comentarios, archivos, notas, historial y entradas de búsqueda se borran ahora, sin los 30 días que se conserva una tarea eliminada. No se puede deshacer.",
+            myMessagesMenu: "Eliminar todos mis mensajes",
+            myMessagesTitle: "¿Eliminar todos tus mensajes de este chat?",
+            myMessagesDescription:
+                "Todos los mensajes que escribiste aquí, con sus archivos y reacciones, se borran ahora y no se pueden recuperar. Los mensajes de la otra persona no se tocan y el chat se mantiene.",
+            myMessagesDone: "Se eliminaron tus mensajes.",
+        },
         deleteChat: {
             button: "Eliminar grupo",
             title: "¿Eliminar este grupo?",
@@ -1584,6 +1612,7 @@ export const es: DeepPartial<Messages> = {
                     "member.added": "Miembro añadido",
                     "member.removed": "Miembro que se fue",
                     "channel.deleted": "Chat grupal eliminado",
+                    "data.force_deleted": "Datos eliminados definitivamente",
                     "role.changed": "Rol cambiado",
                     "owner.transferred": "Propiedad transferida",
                     "invite.sent": "Invitación enviada",

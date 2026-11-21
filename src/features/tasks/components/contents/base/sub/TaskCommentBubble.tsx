@@ -3,6 +3,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
@@ -20,6 +21,7 @@ import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { TaskCommentEmojiReaction } from "../../../../../../components/ui/emoji/TaskCommentEmojiReaction";
 import { ViaChip } from "../../../../../../components/ui/misc/ViaChip";
+import { ForceDeleteDialog } from "../../../../../../components/ui/modal/ForceDeleteDialog";
 import { MoreMenu, MoreMenuItem } from "../../../../../../components/ui/MoreMenu";
 import { useAuth } from "../../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
@@ -34,6 +36,7 @@ import { UIStateManagementState } from "../../../../../../hooks/common/useUIStat
 import { useUndoableAction } from "../../../../../../hooks/common/useUndoableAction";
 import { fmt, useTranslation } from "../../../../../../i18n";
 import { channelService } from "../../../../../../services/channel/channelService";
+import { forceDeleteComment } from "../../../../../../services/forceDelete";
 import { g } from "../../../../../../theme/tokens";
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
@@ -66,6 +69,7 @@ import {
     deleteTaskCommentOnExit,
     taskCommentKey,
 } from "../../../../services/deleteTaskComment";
+import { emitTaskTouched } from "../../../../services/taskEvents";
 import type { ViaApp, ViaKind } from "../../../../utils/viaSource";
 
 type TaskCommentBubbleProps = {
@@ -166,6 +170,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // "Remind me" is the flag with a time on it, and a message reminder on the mirror (MIP-1437).
     const reminder = useMessageReminder(messageId);
     const [openRemindMe, setOpenRemindMe] = useState(false);
+    const [openForceDelete, setOpenForceDelete] = useState(false);
     const handleFlagClick = () => {
         if (!messageId) return;
         const action = isFlagged ? "unflag" : "flag";
@@ -521,6 +526,16 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
             onClick: handleDeleteComment,
             visible: isSent,
         },
+        {
+            // The real delete (MIP-1584): the author's own comment, no Undo.
+            danger: true,
+            icon: <DeleteForeverRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "forceDelete",
+            kind: "delete",
+            label: t.common.forceDelete.menu,
+            onClick: () => setOpenForceDelete(true),
+            visible: isSent,
+        },
     ];
 
     // The dropdown portals to document.body at zIndex 9999 — fine on
@@ -662,6 +677,36 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                             setShowEmojiPicker={setShowEmojiPicker}
                             showEmojiPicker={showEmojiPicker}
                             useFixedPosition={true}
+                        />
+                    )}
+                    {isSent && (
+                        <ForceDeleteDialog
+                            description={t.common.forceDelete.commentDescription}
+                            hostZIndex={hostZIndex}
+                            open={openForceDelete}
+                            title={t.common.forceDelete.commentTitle}
+                            onClose={() => setOpenForceDelete(false)}
+                            onConfirm={async () => {
+                                const taskId = Number(comment.taskId);
+                                const commentId = Number(comment.commentId);
+                                await forceDeleteComment(accessToken, taskId, commentId);
+                                // The server's delete is idempotent: the socket one tells the other
+                                // viewers, and the touch re-reads every list on this page.
+                                try {
+                                    await deleteTaskComment({
+                                        socket,
+                                        myself,
+                                        accessToken,
+                                        taskId,
+                                        commentId,
+                                        projectId: currentProjectId,
+                                        projectName: currentProjectName,
+                                        displayId: currentTaskDisplayId,
+                                    });
+                                } catch {
+                                    emitTaskTouched(taskId, "comment");
+                                }
+                            }}
                         />
                     )}
                     {messageId && (

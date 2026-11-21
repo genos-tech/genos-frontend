@@ -5,6 +5,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
@@ -22,6 +23,7 @@ import { useLocation } from "react-router-dom";
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { Toast } from "../../../../../components/ui/feedback/Toast";
 import { InlineTitleEdit } from "../../../../../components/ui/fields/InlineTitleEdit";
+import { ForceDeleteDialog } from "../../../../../components/ui/modal/ForceDeleteDialog";
 import { MODAL_CHROME_CLEARANCE } from "../../../../../components/ui/modal/modalChrome";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
@@ -36,6 +38,7 @@ import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagemen
 import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
+import { forceDeleteTask } from "../../../../../services/forceDelete";
 import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
 import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
@@ -48,6 +51,8 @@ import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone";
 import { statusSolid } from "../../../meta/taskTone";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
+import { afterTaskDeleted } from "../../../services/deleteTaskCommit";
+import { emitTasksBulkChanged } from "../../../services/taskEvents";
 import { shouldFallBackToTable } from "../../../utils/mainPanelVisibility";
 import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
 import { StatusLabel } from "../../meta/StatusLabel";
@@ -123,6 +128,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     } = props;
 
     const { accessToken } = useAuth();
+    const [openForceDelete, setOpenForceDelete] = useState(false);
     // Task -> milestone (MIP-1042). Hidden when the store isn't passed in.
     const convert = useConvertTaskMilestone({ accessToken, useTM, useSM });
     const { mode } = useColorScheme();
@@ -762,6 +768,18 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     danger: true,
                                     onClick: () => onDeleteTask?.(),
                                 },
+                                {
+                                    id: "forceDeleteTask",
+                                    kind: "delete",
+                                    label: t.common.forceDelete.menu,
+                                    icon: <DeleteForeverRoundedIcon sx={{ fontSize: 18 }} />,
+                                    // The real delete (MIP-1584): a saved task only. The server
+                                    // decides who may (its creator or the project owner) and the
+                                    // dialog says so when it refuses.
+                                    visible: !isMilestone && taskContent.id != null,
+                                    danger: true,
+                                    onClick: () => setOpenForceDelete(true),
+                                },
                             ];
                             return (
                                 <MoreMenu
@@ -857,6 +875,23 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             >
                 {t.tasks.createForm.closeDraftBody}
             </ModalFrame>
+
+            <ForceDeleteDialog
+                description={t.common.forceDelete.taskDescription}
+                entityName={taskContent.title}
+                hostZIndex={hostZIndex}
+                open={openForceDelete}
+                title={t.common.forceDelete.taskTitle}
+                onClose={() => setOpenForceDelete(false)}
+                onConfirm={async () => {
+                    const taskId = Number(taskContent.id);
+                    await forceDeleteTask(accessToken, taskId);
+                    // Every cache and list drops it; the preview closes (nothing is left to show).
+                    afterTaskDeleted(taskId, null);
+                    emitTasksBulkChanged(taskContent.project?.projectId);
+                    performClose();
+                }}
+            />
 
             {/* Title: the shared inline editor, always an input here. Live text goes to
                 the host as before (the create form reads it on Create); a change that

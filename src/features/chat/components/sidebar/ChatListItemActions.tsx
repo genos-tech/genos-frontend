@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import CircleIcon from "@mui/icons-material/Circle";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -10,13 +11,17 @@ import SplitscreenIcon from "@mui/icons-material/Splitscreen";
 import { Badge, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { toast } from "../../../../components/ui/feedback/toastStore";
+import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDialog";
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import {
     NAV_HIDE_ON_ACTIONS_CLASS,
     NAV_KEEP_CLASS,
 } from "../../../../components/ui/nav/navStyles";
 import { anchoredTallHitAreaSx } from "../../../../components/ui/touchTargets";
+import { useAuth } from "../../../../context/AuthContext";
 import { useTranslation } from "../../../../i18n";
+import { forceDeleteAllMyMessages } from "../../../../services/forceDelete";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -52,6 +57,11 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     isToDoVisible,
 }) => {
     const { t } = useTranslation();
+    const { accessToken } = useAuth();
+    const [openForceDelete, setOpenForceDelete] = useState(false);
+    // "Delete all my messages" (MIP-1584): a DM or a multi-person DM only. Each person deletes
+    // their own side; the other person's messages and the chat stay.
+    const showDeleteMine = chat.chatType === 1 || chat.chatType === 4;
 
     // Show add members option for DM and MDM chats (chatType 1 and 4)
     const showAddMembers = (chat.chatType === 1 || chat.chatType === 4) && onAddMembersClick;
@@ -155,6 +165,18 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         </MenuRow>
                     )}
 
+                    {showDeleteMine && (
+                        <MenuRow
+                            icon={<DeleteForeverRoundedIcon />}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenForceDelete(true);
+                            }}
+                        >
+                            {t.common.forceDelete.myMessagesMenu}
+                        </MenuRow>
+                    )}
+
                     {/* Personal Tags Option (GM chats only) */}
                     {showManageTags && (
                         <MenuRow
@@ -166,6 +188,19 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     )}
                 </MenuSurface>
             </Dropdown>
+            {showDeleteMine && (
+                <ForceDeleteDialog
+                    description={t.common.forceDelete.myMessagesDescription}
+                    open={openForceDelete}
+                    title={t.common.forceDelete.myMessagesTitle}
+                    zIndex={10020}
+                    onClose={() => setOpenForceDelete(false)}
+                    onConfirm={async () => {
+                        await forceDeleteAllMyMessages(accessToken, String(chat.chatId));
+                        toast.success(t.common.forceDelete.myMessagesDone);
+                    }}
+                />
+            )}
         </>
     );
 };

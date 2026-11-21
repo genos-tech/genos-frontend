@@ -1815,6 +1815,34 @@ export const ja: DeepPartial<Messages> = {
             archiveFailed: "アーカイブできませんでした。もう一度お試しください。",
             unarchiveFailed: "アーカイブを解除できませんでした。もう一度お試しください。",
         },
+        forceDelete: {
+            menu: "完全に削除",
+            phrase: "DELETE",
+            typeLabel: "確認のため DELETE と入力してください",
+            confirm: "完全に削除",
+            cancel: "キャンセル",
+            failed: "削除できませんでした。何も削除されていません。もう一度お試しください。",
+            notAllowed: "完全に削除できるのは、作成者またはプロジェクトのオーナーのみです。",
+            hasSubtasks: "先にサブタスクを削除または移動してください。",
+            isMilestone: "マイルストーンのタスクは、マイルストーンと一緒に削除されます。",
+            taskLinked:
+                "このメッセージはタスクに属しています。代わりにタスクまたはコメントを削除してください。",
+            done: "完全に削除しました。",
+            messageTitle: "このメッセージを完全に削除しますか？",
+            messageDescription:
+                "このメッセージの本文、ファイル、リアクション、フラグを今すぐ消去します。元に戻せません。閲覧した人がコピーしている可能性があります。",
+            commentTitle: "このコメントを完全に削除しますか？",
+            commentDescription:
+                "コメント、そのリアクション、プロジェクトチャット内のコピーを今すぐ消去します。元に戻せません。",
+            taskTitle: "このタスクを完全に削除しますか？",
+            taskDescription:
+                "タスク、コメント、ファイル、ノート、履歴、検索エントリを、通常の30日間の保持なしで今すぐ消去します。元に戻せません。",
+            myMessagesMenu: "自分のメッセージをすべて削除",
+            myMessagesTitle: "このチャットの自分のメッセージをすべて削除しますか？",
+            myMessagesDescription:
+                "ここで書いたすべてのメッセージを、ファイルやリアクションとともに今すぐ消去します。元に戻せません。相手のメッセージには影響せず、チャットは残ります。",
+            myMessagesDone: "自分のメッセージを削除しました。",
+        },
         deleteChat: {
             button: "グループを削除",
             title: "このグループを削除しますか？",
@@ -3890,6 +3918,7 @@ export const ja: DeepPartial<Messages> = {
                     "member.added": "メンバーの追加",
                     "member.removed": "メンバーの退出",
                     "channel.deleted": "グループメッセージの削除",
+                    "data.force_deleted": "データの完全削除",
                     "role.changed": "ロールの変更",
                     "owner.transferred": "オーナーの移譲",
                     "invite.sent": "招待の送信",
