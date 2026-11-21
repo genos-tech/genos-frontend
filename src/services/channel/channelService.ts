@@ -84,6 +84,22 @@ function v3BaseURL(): string {
 }
 
 /** A soft-deleted group the caller may restore (`GET /api/v3/channels/deleted/`, MIP-1715). */
+export type ChannelDirectoryRow = {
+    id: string;
+    title: string;
+    description: string;
+    profileImageUrl: string | null;
+    memberCount: number;
+    isJoined: boolean;
+    tsCreated: string;
+};
+
+export type ChannelDirectoryPage = {
+    results: ChannelDirectoryRow[];
+    total: number;
+    hasMore: boolean;
+};
+
 export type DeletedChannel = {
     id: string;
     title: string;
@@ -2111,6 +2127,8 @@ export class ChannelService {
         channelKind: ChannelKind,
         patch: {
             title?: string;
+            /** The group chat's one-line topic (MIP-1694); "" clears it. */
+            description?: string;
             profileImageUrl?: string;
             isPrivate?: boolean;
             /** Transfer ownership to a current member. The backend
@@ -2127,6 +2145,7 @@ export class ChannelService {
             channel_kind: channelKind,
         };
         if (patch.title !== undefined) payload.title = patch.title;
+        if (patch.description !== undefined) payload.description = patch.description;
         if (patch.profileImageUrl !== undefined) {
             payload.profile_image_url = patch.profileImageUrl;
         }
@@ -2228,6 +2247,30 @@ export class ChannelService {
         // what evicts what the server no longer lists. Best-effort and never throws: the chat is
         // gone either way, and a failed refresh is reconciled by the next sync.
         await this.refreshChannels();
+    }
+
+    /**
+     * The team's public group chats, a page at a time (MIP-1694). The server decides what is
+     * listed (never private, external, archived or deleted chats); this is a read, not part of
+     * the chat store. Joining goes through `joinChannel`.
+     */
+    async listChannelDirectory(
+        teamId: string,
+        opts: { q?: string; offset?: number; limit?: number } = {}
+    ): Promise<ChannelDirectoryPage> {
+        try {
+            const res = await this.api().get<ChannelDirectoryPage>("/api/v3/channels/directory/", {
+                params: {
+                    team_id: teamId,
+                    q: opts.q || undefined,
+                    offset: opts.offset,
+                    limit: opts.limit,
+                },
+            });
+            return res.data;
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
     }
 
     /**

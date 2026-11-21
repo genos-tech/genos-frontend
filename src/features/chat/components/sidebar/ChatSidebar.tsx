@@ -10,6 +10,7 @@ import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsAct
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestoreFromTrashRoundedIcon from "@mui/icons-material/RestoreFromTrashRounded";
+import TravelExploreRoundedIcon from "@mui/icons-material/TravelExploreRounded";
 import { Badge, Box, Chip, Divider, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -48,6 +49,7 @@ import {
 import { EMPTY_TAG_ID_SET, makeTagFilter, pruneSelection } from "../../utils/gmTagFilters";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalCreateMDM } from "../modals/ModalCreateMDM";
+import { ModalGroupDirectory } from "../modals/ModalGroupDirectory";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
 import { ModalRecentlyDeletedChats } from "../modals/ModalRecentlyDeletedChats";
 import { ChatList } from "./ChatList";
@@ -182,6 +184,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [openCreateMDM, setOpenCreateMDM] = useState(false);
     // The owner's soft-deleted groups, with Restore (MIP-1715).
     const [openRecentlyDeleted, setOpenRecentlyDeleted] = useState(false);
+    const [openGroupDirectory, setOpenGroupDirectory] = useState(false);
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
     // Flagged pane: false = active flags, true = past/completed flags.
     const [showPastFlagged, setShowPastFlagged] = useState(false);
@@ -599,6 +602,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         onClick: () => setOpenCreateGM(true),
                                     },
                                     {
+                                        id: "browse-groups",
+                                        label: t.chat.groupDirectory.menu,
+                                        icon: <TravelExploreRoundedIcon />,
+                                        onClick: () => setOpenGroupDirectory(true),
+                                    },
+                                    {
                                         id: "new-dm-friends",
                                         label: t.chat.sidebar.newDmWithFriendsMenu,
                                         icon: <PeopleRoundedIcon />,
@@ -937,6 +946,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
+            />
+            <ModalGroupDirectory
+                myself={myself}
+                open={openGroupDirectory}
+                useCM={useCM}
+                onClose={() => setOpenGroupDirectory(false)}
             />
             <ModalRecentlyDeletedChats
                 open={openRecentlyDeleted}
