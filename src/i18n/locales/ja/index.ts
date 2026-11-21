@@ -62,14 +62,15 @@ export const ja: DeepPartial<Messages> = {
         },
         auth: {
             signIn: {
-                title: "Welcome Back",
+                // TODO(copy): MIP-1817 draft wording for a native reader.
+                title: "おかえりなさい",
                 newMemberPrompt: "初めての方は",
                 createAccountLink: "アカウントを作成",
                 emailLabel: "メールアドレス",
                 emailPlaceholder: "メールアドレスを入力",
                 passwordLabel: "パスワード",
                 passwordPlaceholder: "パスワードを入力",
-                rememberMe: "Remember me",
+                rememberMe: "ログイン状態を保持",
                 forgotPassword: "パスワードをお忘れですか？",
                 submit: "サインイン",
                 orDivider: "または",
