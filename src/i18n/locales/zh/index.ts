@@ -3655,6 +3655,17 @@ export const zh: DeepPartial<Messages> = {
                 plan: "连接需要 Core 及以上套餐。在 Free 套餐下，批准页面会提示当前套餐不支持。",
                 revoke: "要断开某个应用，请在“设置 → 开发者 → 已连接的应用”中撤销。",
                 trap: "请粘贴完整的地址，包括末尾的路径。缺少路径时，Claude 会显示已登录成功，随后报告 Genos 拒绝了它的请求。",
+                // TODO(copy): plugin wording (MIP-1870), English draft until it is translated.
+                pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+                pluginIntro:
+                    "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+                pluginCodeLabel: "Claude Code: run these two commands in the chat",
+                pluginCopyAria: "Copy the plugin commands",
+                pluginDesktopLabel:
+                    "claude.ai or Claude Desktop: download the zip, then upload it under Customize, Plugins.",
+                pluginRepoLink: "Plugin page on GitHub",
+                pluginZipLink: "Download the zip",
+                pluginNote: "The plugin needs the same plan as the connector: Core or above.",
                 menuNote: "其他应用的菜单名称会变化：请找“连接器”或自定义 MCP 服务器。",
             },
         },

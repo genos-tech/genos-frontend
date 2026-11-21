@@ -3,7 +3,13 @@ import { ExternalLink } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 import { connectApp } from "../i18n/locales/en/connectApp";
-import { claudeCodeAddCommand, mcpServerUrl } from "../utils/mcpConnect";
+import {
+    claudeCodeAddCommand,
+    mcpServerUrl,
+    PLUGIN_COMMANDS,
+    PLUGIN_REPO_URL,
+    PLUGIN_ZIP_URL,
+} from "../utils/mcpConnect";
 import { Code } from "./Code";
 import { LpShell } from "./kit/LpShell";
 import {
@@ -363,6 +369,30 @@ export default function DevelopersPage() {
                                         <li key={step}>{step}</li>
                                     ))}
                                 </ol>
+
+                                <h4>{connectApp.pluginTitle}</h4>
+                                <p>{connectApp.pluginIntro}</p>
+                                <p>{connectApp.pluginCodeLabel}</p>
+                                <Pre label="the plugin, Claude Code">{PLUGIN_COMMANDS}</Pre>
+                                <p>{connectApp.pluginDesktopLabel}</p>
+                                <p>
+                                    <a
+                                        href={PLUGIN_ZIP_URL}
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                    >
+                                        {connectApp.pluginZipLink}
+                                    </a>
+                                    {" · "}
+                                    <a
+                                        href={PLUGIN_REPO_URL}
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                    >
+                                        {connectApp.pluginRepoLink}
+                                    </a>
+                                </p>
+                                <p className="lp-small">{connectApp.pluginNote}</p>
 
                                 <h4>{connectApp.chatgptTitle}</h4>
                                 <p>{connectApp.chatgptBody}</p>
