@@ -58,6 +58,7 @@ import type {
     UserLite,
 } from "../../types/channel";
 import { isV3Uuid } from "../../utils/legacyId";
+import { attachArchivedToast } from "../api";
 import { syncStatus } from "../syncStatus";
 
 // A page of the chat list. The server pages at the size it is asked for (capped
@@ -732,6 +733,9 @@ export class ChannelService {
             headers: { Authorization: `Bearer ${this.accessToken}` },
             withCredentials: true,
         });
+        // A v3 write refused because the chat or its project is archived gets the archived toast,
+        // like the v2 instances (MIP-1933).
+        attachArchivedToast(this._axios);
         this._axiosToken = this.accessToken;
         return this._axios;
     }
@@ -2187,15 +2191,6 @@ export class ChannelService {
     }
 
     /**
-     * Delete a group chat as its owner (MIP-1705).
-     *
-     * `soft` hides it from everyone and keeps every row; `hard` erases the messages, files and
-     * the chat. The server refuses anyone but the owner (403) and anything but a group chat
-     * (400). Afterwards the chat list is refreshed, which drops the chat from this device: the
-     * server no longer lists it, and `reconcileChannelList` evicts what it does not list. Other
-     * members learn the same way, through the membership notice the server pushes.
-     */
-    /**
      * The owner archives a group chat (MIP-1693): read-only, out of the default list, nothing
      * removed. The local archived set moves at once; the next list refresh confirms it.
      */
@@ -2218,6 +2213,15 @@ export class ChannelService {
         markChannelArchived(channelId, false);
     }
 
+    /**
+     * Delete a group chat as its owner (MIP-1705).
+     *
+     * `soft` hides it from everyone and keeps every row; `hard` erases the messages, files and
+     * the chat. The server refuses anyone but the owner (403) and anything but a group chat
+     * (400). Afterwards the chat list is refreshed, which drops the chat from this device: the
+     * server no longer lists it, and `reconcileChannelList` evicts what it does not list. Other
+     * members learn the same way, through the membership notice the server pushes.
+     */
     async deleteChannel(channelId: string, mode: "soft" | "hard" = "soft"): Promise<void> {
         try {
             await this.api().delete(`/api/v3/channels/${channelId}/`, { params: { mode } });

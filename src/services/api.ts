@@ -48,6 +48,26 @@ export const unregisterApiHealthListener = () => {
     _onApiHealthChange = null;
 };
 
+/**
+ * Only the archived toast, for an instance that keeps its own error handling (the v3 channel
+ * service, MIP-1933). A 409 with `code: "archived"` shows the archived sentence; every other
+ * error passes through untouched.
+ */
+export const attachArchivedToast = (instance: AxiosInstance): AxiosInstance => {
+    instance.interceptors.response.use(undefined, (error) => {
+        if (
+            !axios.isCancel(error) &&
+            error?.response?.status === 409 &&
+            error.response.data?.code === "archived" &&
+            !error.config?.suppressErrorToast
+        ) {
+            emitRequestError("archived");
+        }
+        return Promise.reject(error);
+    });
+    return instance;
+};
+
 const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
     instance.interceptors.response.use(
         (response) => {
