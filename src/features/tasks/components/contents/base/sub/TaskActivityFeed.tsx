@@ -28,7 +28,7 @@ import { ViaChip } from "../../../../../../components/ui/misc/ViaChip";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
-import { fmt, useTranslation } from "../../../../../../i18n";
+import { fmt, useTranslation, type Locale } from "../../../../../../i18n";
 import { UserProps } from "../../../../../../types/admin";
 import {
     keepsPreviousBody,
@@ -200,7 +200,7 @@ const PrCommentActivityRow = ({
     activity: TaskActivityProps;
     isDark: boolean;
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const metadata = activity.metadata ?? {};
     const githubUsername =
         typeof metadata.github_username === "string"
@@ -304,7 +304,7 @@ const PrCommentActivityRow = ({
                             whiteSpace: "nowrap",
                         }}
                     >
-                        {formatRelative(activity.tsCreatedAt, t.tasks.activity)}
+                        {formatRelative(activity.tsCreatedAt, t.tasks.activity, locale)}
                     </Typography>
                 </Stack>
                 {commentExcerpt && (
@@ -351,7 +351,7 @@ const PrMergeCloseActivityRow = ({
     activity: TaskActivityProps;
     isDark: boolean;
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const metadata = activity.metadata ?? {};
     const prUrl = typeof metadata.prUrl === "string" ? (metadata.prUrl as string) : undefined;
     const prRef = formatPrRefFromUrl(prUrl);
@@ -440,7 +440,7 @@ const PrMergeCloseActivityRow = ({
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {formatRelative(activity.tsCreatedAt, t.tasks.activity)}
+                    {formatRelative(activity.tsCreatedAt, t.tasks.activity, locale)}
                 </Typography>
             </Box>
         </Stack>
@@ -459,7 +459,7 @@ const PrLinkActivityRow = ({
     activity: TaskActivityProps;
     isDark: boolean;
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const metadata = activity.metadata ?? {};
     const prUrl = typeof metadata.pr_url === "string" ? (metadata.pr_url as string) : undefined;
     const prRef = formatPrRefFromUrl(prUrl);
@@ -544,7 +544,7 @@ const PrLinkActivityRow = ({
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {formatRelative(activity.tsCreatedAt, t.tasks.activity)}
+                    {formatRelative(activity.tsCreatedAt, t.tasks.activity, locale)}
                 </Typography>
             </Box>
         </Stack>
@@ -596,9 +596,10 @@ const PrUnlinkedRef = ({
 };
 
 // "just now" / "5 minutes ago" / "2 hours ago" / "May 1, 2026" - the shared formatter
-// (also the Last Progress column's), kept under the name this file already uses.
-const formatRelative = (iso: string, messages: ActivityMessages): string =>
-    formatRelativeAge(iso, messages);
+// (also the Last Progress column's), kept under the name this file already uses. The date
+// is in the app's language, not the browser's (MIP-1807).
+const formatRelative = (iso: string, messages: ActivityMessages, locale: Locale): string =>
+    formatRelativeAge(iso, messages, Date.now(), locale);
 
 // Best-effort label formatter for old/new value chips. Numbers that
 // look like user ids get resolved against `teamMemberProfiles`;
@@ -892,7 +893,7 @@ export const TaskActivityFeed = ({
     useCM,
     useUISM,
 }: TaskActivityFeedProps) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -1143,7 +1144,7 @@ export const TaskActivityFeed = ({
                                         whiteSpace: "nowrap",
                                     }}
                                 >
-                                    {formatRelative(row.tsCreatedAt, t.tasks.activity)}
+                                    {formatRelative(row.tsCreatedAt, t.tasks.activity, locale)}
                                 </Typography>
                             </Box>
                         </Stack>
