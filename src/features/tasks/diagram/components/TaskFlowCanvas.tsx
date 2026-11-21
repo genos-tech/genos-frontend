@@ -64,7 +64,7 @@ import {
     selectAncestorVerdicts,
 } from "../../utils/closedByAncestor";
 import { overlayGraphDeletes, pendingDeleteSignature } from "../../utils/pendingTaskDelete";
-import { statuses } from "../../utils/taskMeta";
+import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { loadMilestoneBurndown } from "../services/loadMilestoneBurndown";
@@ -1274,18 +1274,20 @@ const CanvasInner = ({
     );
     // MIP-1830: each card's accessible name and role, and React Flow's description of a
     // card (its default text talks about moving the card with arrows, which no longer
-    // happens from the keyboard).
+    // happens from the keyboard). The status is the word the card shows (MIP-1856: the same
+    // label source as StatusLabel, not the raw enum).
     const cardNodes = useMemo(
         () =>
             drawn.nodes.map((n) => {
                 const d = n.data as unknown as TaskNodeData;
+                const status = d.task.status ?? "";
                 return {
                     ...n,
                     ariaRole: "button",
                     ariaLabel: fmt(t.tasks.diagram.tooltips.cardAriaLabel, {
                         id: d.task.displayId ?? String(d.task.id),
                         title: d.task.title ?? "",
-                        status: d.task.status ?? "",
+                        status: taskMetaLabel(status, t.tasks.filters) || status,
                     }),
                 };
             }),

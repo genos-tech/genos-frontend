@@ -38,8 +38,8 @@
     "features/chat:brandVars": 156,
     "features/chat:gradients": 52,
     "features/chat:heavyFontWeights": 10,
-    "features/chat:isDarkTernaries": 166,
-    "features/chat:literalColors": 209,
+    "features/chat:isDarkTernaries": 165,
+    "features/chat:literalColors": 207,
     "features/genos:gradients": 1,
     "features/genos:heavyFontWeights": 1,
     "features/genos:isDarkTernaries": 4,
@@ -63,8 +63,8 @@
     "features/tasks:brandVars": 154,
     "features/tasks:gradients": 30,
     "features/tasks:heavyFontWeights": 56,
-    "features/tasks:isDarkTernaries": 406,
-    "features/tasks:literalColors": 757,
+    "features/tasks:isDarkTernaries": 405,
+    "features/tasks:literalColors": 755,
     "other:literalColors": 37,
     "other:muiMaterial": 1
 }
