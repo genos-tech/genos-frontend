@@ -6,7 +6,7 @@ import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
 import { AgentWorkDecision } from "../../../services/loadAgentWork";
-import { agentDecisionPath, formatAgentWhen } from "./agentActivityLinks";
+import { agentDecisionPath, agentKindOf, formatAgentWhen } from "./agentActivityLinks";
 import { AgentChip } from "./agentActivityParts";
 
 /** Notes titled "Decision: …" in the window, the viewer's own or shared with them. */
@@ -74,7 +74,7 @@ export const AgentDecisionsList = ({ decisions }: { decisions: AgentWorkDecision
                                     {d.user && <span>{d.user.name}</span>}
                                     <AgentChip
                                         agent={d.agent}
-                                        label={a.agents[d.agent.kind] ?? a.agents.other_app}
+                                        label={a.agents[agentKindOf(d.agent)]}
                                     />
                                 </Typography>
                             </Box>

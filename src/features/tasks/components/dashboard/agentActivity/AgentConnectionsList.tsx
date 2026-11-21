@@ -5,8 +5,8 @@ import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
-import { AGENT_KINDS, AgentKind, AgentWorkConnection } from "../../../services/loadAgentWork";
-import { formatAgentWhen } from "./agentActivityLinks";
+import { AgentWorkConnection } from "../../../services/loadAgentWork";
+import { familyKind, formatAgentWhen } from "./agentActivityLinks";
 import { AgentChip } from "./agentActivityParts";
 
 /** The AI apps the viewer has connected, and when each last wrote or was used. */
@@ -26,8 +26,7 @@ export const AgentConnectionsList = ({ connections }: { connections: AgentWorkCo
                     sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 0.75 }}
                 >
                     {connections.map((c, i) => {
-                        const known = (AGENT_KINDS as readonly string[]).includes(c.family);
-                        const label = known ? a.agents[c.family as AgentKind] : c.family;
+                        const kind = familyKind(c.family);
                         return (
                             <Box
                                 key={`${c.family}-${i}`}
@@ -40,10 +39,7 @@ export const AgentConnectionsList = ({ connections }: { connections: AgentWorkCo
                                     minWidth: 0,
                                 }}
                             >
-                                <AgentChip
-                                    agent={{ kind: known ? (c.family as AgentKind) : "other_app" }}
-                                    label={label}
-                                />
+                                <AgentChip agent={{ kind }} label={a.agents[kind]} />
                                 <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                                     {c.last_used_at
                                         ? fmt(a.connections.lastUsed, {

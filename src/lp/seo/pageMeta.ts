@@ -52,6 +52,20 @@ export const SUPPORT_META: Record<SeoLang, Meta> = {
     },
 };
 
+/** The help hub (MIP-1259). Says what the page holds, not what the product promises. */
+export const DOCS_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "ドキュメント | Genos",
+        description:
+            "Genosのはじめ方、Claudeの接続、APIキー、スケジュール、データのエクスポート、キーボードショートカット、よくある質問。",
+    },
+    en: {
+        title: "Docs | Genos",
+        description:
+            "Getting started with Genos, connecting Claude, API keys, schedules, exporting your data, keyboard shortcuts and the FAQ.",
+    },
+};
+
 /** MIP-1257: dated updates, the public roadmap and the RSS feed. */
 export const CHANGELOG_META: Record<SeoLang, Meta> = {
     ja: {
@@ -77,6 +91,20 @@ export const ACCESSIBILITY_META: Record<SeoLang, Meta> = {
         title: "Accessibility | Genos",
         description:
             "What Genos does for accessibility, what is not done yet, and which browsers and devices Genos supports.",
+    },
+};
+
+/** Moving into Genos (MIP-1260): says what can be imported and what cannot, nothing more. */
+export const MIGRATE_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "Genosへの移行 | Genos",
+        description:
+            "Markdown のノートの取り込み、タスクの作り方、今は取り込めないもの（Slack、Notion、Jira、Google ドキュメント）。",
+    },
+    en: {
+        title: "Moving to Genos | Genos",
+        description:
+            "Importing Markdown notes into Genos, creating tasks, and what has no import yet: Slack, Notion, Jira and Google Docs.",
     },
 };
 

@@ -49,6 +49,7 @@ const SHELL = {
             students: "学生・ゼミ",
             blog: "ブログ",
             support: "サポート",
+            docs: "ドキュメント",
             security: "セキュリティ",
             privacy: "プライバシー",
             legal: "利用規約・特商法",
@@ -97,6 +98,7 @@ const SHELL = {
             students: "Students",
             blog: "Blog",
             support: "Support",
+            docs: "Docs",
             security: "Security",
             privacy: "Privacy",
             legal: "Terms and legal",
@@ -403,6 +405,9 @@ export function LpShell({
                                 </li>
                                 <li>
                                     <Link to="/support">{t.links.support}</Link>
+                                </li>
+                                <li>
+                                    <Link to="/docs">{t.links.docs}</Link>
                                 </li>
                                 <li>
                                     <Link to="/security">{t.links.security}</Link>

@@ -3408,6 +3408,7 @@ export const hi: DeepPartial<Messages> = {
                     loadMore: "और लोड करें",
                     loadingMore: "लोड हो रहा है…",
                     loadMoreFailed: "और लोड नहीं हो सका। फिर से कोशिश करें।",
+                    noProject: "कोई प्रोजेक्ट नहीं",
                 },
                 actions: {
                     task_created: "{target} बनाया",
@@ -3432,6 +3433,9 @@ export const hi: DeepPartial<Messages> = {
                 },
                 states: {
                     loading: "एजेंट गतिविधि लोड हो रही है…",
+                    errorTitle: "एजेंट गतिविधि लोड नहीं हो सकी",
+                    errorBody:
+                        "इस व्यू को लोड करने में कोई समस्या हुई। फिर से कोशिश करें। आपके टास्क और नोट प्रभावित नहीं हुए हैं।",
                     unavailableTitle: "एजेंट गतिविधि अभी उपलब्ध नहीं है",
                     unavailableBody:
                         "यह दृश्य अभी आपके वर्कस्पेस के लिए चालू नहीं है। आपके टास्क और नोट प्रभावित नहीं हैं।",

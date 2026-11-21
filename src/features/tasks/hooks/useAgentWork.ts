@@ -3,6 +3,7 @@ import axios from "axios";
 
 import { useAuth } from "../../../context/AuthContext";
 import {
+    agentGroupKey,
     AgentWorkGroup,
     AgentWorkPage,
     AgentWorkQuery,
@@ -29,20 +30,21 @@ export type AgentWorkView = {
  * describe the whole window and come from the first page only.
  */
 export const mergeAgentWorkPages = (first: AgentWorkPage, next: AgentWorkPage): AgentWorkPage => {
-    const byProject = new Map<number, AgentWorkGroup>();
+    // A group is keyed by its project; the work on no project is its own group (`null`).
+    const byProject = new Map<string, AgentWorkGroup>();
     const groups: AgentWorkGroup[] = [];
     for (const group of first.groups) {
         const copy = { ...group, items: [...group.items] };
-        byProject.set(group.project.id, copy);
+        byProject.set(agentGroupKey(group), copy);
         groups.push(copy);
     }
     for (const group of next.groups) {
-        const hit = byProject.get(group.project.id);
+        const hit = byProject.get(agentGroupKey(group));
         if (hit) {
             hit.items.push(...group.items);
         } else {
             const copy = { ...group, items: [...group.items] };
-            byProject.set(group.project.id, copy);
+            byProject.set(agentGroupKey(copy), copy);
             groups.push(copy);
         }
     }
@@ -50,7 +52,8 @@ export const mergeAgentWorkPages = (first: AgentWorkPage, next: AgentWorkPage): 
 };
 
 /**
- * Data for the Agent Activity tab. Loads the first page for `query` when `enabled`,
+ * Data for the Agent Activity tab. Loads the first page for `query` (its team included)
+ * when `enabled`,
  * reloads when the query changes (a stale response is dropped), and exposes "Load more"
  * on the server's cursor. Failures become a status, never an exception.
  */
@@ -66,6 +69,7 @@ export const useAgentWork = (query: AgentWorkQuery, enabled: boolean): AgentWork
     const generation = useRef(0);
 
     const queryKey = [
+        query.teamId,
         query.days,
         query.projectId ?? "",
         query.agent ?? "",

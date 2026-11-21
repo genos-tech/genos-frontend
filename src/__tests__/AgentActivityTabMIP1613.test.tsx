@@ -30,6 +30,11 @@ import {
     parseAgentFilters,
     writeAgentFilters,
 } from "../features/tasks/agentActivity/agentActivityFilters";
+import {
+    agentDecisionPath,
+    agentTargetPath,
+    isPersonalNoteType,
+} from "../features/tasks/components/dashboard/agentActivity/agentActivityLinks";
 import { AgentChip } from "../features/tasks/components/dashboard/agentActivity/agentActivityParts";
 import { AgentActivityTab } from "../features/tasks/components/dashboard/agentActivity/AgentActivityTab";
 import { TaskDashboard } from "../features/tasks/components/dashboard/TaskDashboard";
@@ -40,6 +45,17 @@ import {
     loadAgentWork,
 } from "../features/tasks/services/loadAgentWork";
 import { authApi } from "../services/api";
+import realErrorsFixture from "./fixtures/agentWork.real.errors.json";
+import realPageFixture from "./fixtures/agentWork.real.json";
+import realPage2Fixture from "./fixtures/agentWork.real.page2.json";
+
+/** The API's real responses (captured from genos-api PR #1008 by its own test fixtures). */
+const realPage = realPageFixture as unknown as AgentWorkPage;
+const realPage2 = realPage2Fixture as unknown as AgentWorkPage;
+
+const TEAM = "team-1";
+const TEAM_2 = "team-2";
+const UUID_ANA = "3f2c9a1e-5b7d-4c8e-9f10-112233445566";
 
 const { mobileFlag } = vi.hoisted(() => ({ mobileFlag: { value: false } }));
 
@@ -66,7 +82,7 @@ const httpError = (status: number) =>
     });
 
 const makePage = (overrides: Partial<AgentWorkPage> = {}): AgentWorkPage => ({
-    window: { days: 7, start: "2026-11-14", end: "2026-11-21" },
+    window: { days: 7, since: "2026-11-14T00:00:00Z", until: "2026-11-21T00:00:00Z" },
     totals: {
         by_agent: { claude: 31, chatgpt: 2, api_key: 1, other_app: 0, person: 12 },
         decisions: 1,
@@ -94,7 +110,7 @@ const makePage = (overrides: Partial<AgentWorkPage> = {}): AgentWorkPage => ({
     groups: [
         {
             project: { id: 1, name: "Launch", code: "LAU" },
-            counts: { changes: 19 },
+            counts: { total: 19 },
             items: [
                 {
                     id: "i-1",
@@ -109,7 +125,7 @@ const makePage = (overrides: Partial<AgentWorkPage> = {}): AgentWorkPage => ({
                     id: "i-2",
                     at: "2026-11-21T09:10:00Z",
                     user: null,
-                    agent: { kind: "person" },
+                    agent: null,
                     action: "task_status",
                     target: { type: "task", id: 78, title: "Waitlist form", project_id: 1 },
                     text: null,
@@ -120,7 +136,7 @@ const makePage = (overrides: Partial<AgentWorkPage> = {}): AgentWorkPage => ({
     decisions: [
         {
             note_id: 9,
-            note_type: "personal",
+            note_type: 1,
             title: "Decision: refund window is 30 days",
             at: "2026-11-19T08:00:00Z",
             user: { id: "u-ken", name: "Ken" },
@@ -163,18 +179,18 @@ describe("loadAgentWork (typed client)", () => {
     it("maps a 404 to unavailable and any other failure to error", async () => {
         get.mockRejectedValueOnce(httpError(404));
         await expect(
-            loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS))
+            loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM))
         ).resolves.toEqual({ status: "unavailable" });
 
         get.mockRejectedValueOnce(httpError(500));
         await expect(
-            loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS))
+            loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM))
         ).resolves.toEqual({ status: "error" });
     });
 
     it("fills the parts a response leaves out, so the UI never reads undefined", async () => {
         get.mockResolvedValueOnce({ data: { totals: { changes: 2 } } });
-        const result = await loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS));
+        const result = await loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM));
         expect(result.status).toBe("ok");
         if (result.status !== "ok") return;
         expect(result.page.groups).toEqual([]);
@@ -186,10 +202,18 @@ describe("loadAgentWork (typed client)", () => {
 
     it("sends only the filters that are set, with the API's parameter names", () => {
         const params = agentWorkParams(
-            { days: 14, projectId: 3, agent: "chatgpt", userId: "u-1", kind: "decision" },
+            {
+                teamId: TEAM,
+                days: 14,
+                projectId: 3,
+                agent: "chatgpt",
+                userId: "u-1",
+                kind: "decision",
+            },
             "c-9"
         );
         expect(Object.fromEntries(params)).toEqual({
+            team_id: TEAM,
             days: "14",
             project_id: "3",
             agent: "chatgpt",
@@ -198,8 +222,8 @@ describe("loadAgentWork (typed client)", () => {
             limit: "50",
             cursor: "c-9",
         });
-        const bare = agentWorkParams(agentFiltersToQuery(DEFAULT_AGENT_FILTERS), null);
-        expect(Object.fromEntries(bare)).toEqual({ days: "7", limit: "50" });
+        const bare = agentWorkParams(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), null);
+        expect(Object.fromEntries(bare)).toEqual({ team_id: TEAM, days: "7", limit: "50" });
     });
 });
 
@@ -207,7 +231,7 @@ describe("useAgentWork (hook states)", () => {
     it("is loading first, then ready with data", async () => {
         get.mockResolvedValueOnce(okWith(makePage()));
         const { result } = renderHook(() =>
-            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS), true)
+            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), true)
         );
         expect(result.current.status).toBe("loading");
         await waitFor(() => expect(result.current.status).toBe("ready"));
@@ -218,7 +242,7 @@ describe("useAgentWork (hook states)", () => {
     it("is ready with an empty page when nothing happened", async () => {
         get.mockResolvedValueOnce(okWith(emptyPage()));
         const { result } = renderHook(() =>
-            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS), true)
+            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), true)
         );
         await waitFor(() => expect(result.current.status).toBe("ready"));
         expect(result.current.page?.totals.changes).toBe(0);
@@ -228,7 +252,7 @@ describe("useAgentWork (hook states)", () => {
     it("reports unavailable on 404 and error on 500, and retries", async () => {
         get.mockRejectedValueOnce(httpError(404));
         const { result } = renderHook(() =>
-            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS), true)
+            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), true)
         );
         await waitFor(() => expect(result.current.status).toBe("unavailable"));
         expect(result.current.page).toBeNull();
@@ -243,7 +267,7 @@ describe("useAgentWork (hook states)", () => {
     });
 
     it("does not fetch while disabled (the Tasks home is kept mounted elsewhere)", () => {
-        renderHook(() => useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS), false));
+        renderHook(() => useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), false));
         expect(get).not.toHaveBeenCalled();
     });
 
@@ -251,7 +275,7 @@ describe("useAgentWork (hook states)", () => {
         get.mockResolvedValue(okWith(makePage()));
         const { result, rerender } = renderHook(
             ({ filters }: { filters: AgentFilters }) =>
-                useAgentWork(agentFiltersToQuery(filters), true),
+                useAgentWork(agentFiltersToQuery(filters, TEAM), true),
             { initialProps: { filters: DEFAULT_AGENT_FILTERS } }
         );
         await waitFor(() => expect(result.current.status).toBe("ready"));
@@ -265,7 +289,7 @@ describe("useAgentWork (hook states)", () => {
     it("loads more on the server cursor and folds the rows into their project", async () => {
         get.mockResolvedValueOnce(okWith(makePage({ next_cursor: "c-2" })));
         const { result } = renderHook(() =>
-            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS), true)
+            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), true)
         );
         await waitFor(() => expect(result.current.status).toBe("ready"));
         expect(result.current.hasMore).toBe(true);
@@ -277,7 +301,7 @@ describe("useAgentWork (hook states)", () => {
                     groups: [
                         {
                             project: { id: 1, name: "Launch" },
-                            counts: { changes: 1 },
+                            counts: { total: 1 },
                             items: [
                                 {
                                     id: "i-3",
@@ -313,7 +337,7 @@ describe("useAgentWork (hook states)", () => {
     it("keeps the rows on screen when Load more fails", async () => {
         get.mockResolvedValueOnce(okWith(makePage({ next_cursor: "c-2" })));
         const { result } = renderHook(() =>
-            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS), true)
+            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), true)
         );
         await waitFor(() => expect(result.current.status).toBe("ready"));
         get.mockRejectedValueOnce(httpError(500));
@@ -344,7 +368,7 @@ describe("agent filters in the URL", () => {
             days: 31,
             projectId: 12,
             agent: "api_key",
-            userId: "u-ana",
+            userId: UUID_ANA,
             kind: "task_comment",
         };
         const written = writeAgentFilters(new URLSearchParams("view=agent&other=1"), filters);
@@ -417,7 +441,10 @@ describe("AgentChip", () => {
 describe("AgentActivityTab (rendered)", () => {
     it("shows the summary, who-uses-which-agent table, project groups and decisions", async () => {
         get.mockResolvedValueOnce(okWith(makePage()));
-        renderAt("/workspace/tasks?view=agent", <AgentActivityTab projects={projects} />);
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
         expect(await screen.findByText("Pricing page copy")).toBeTruthy();
 
         expect(screen.getByTestId("agent-total-claude").textContent).toBe("31");
@@ -439,7 +466,10 @@ describe("AgentActivityTab (rendered)", () => {
 
     it("sorts the who table by change count only, and says so with aria-sort", async () => {
         get.mockResolvedValueOnce(okWith(makePage()));
-        renderAt("/workspace/tasks?view=agent", <AgentActivityTab projects={projects} />);
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
         await screen.findByText("Pricing page copy");
         const table = screen.getByRole("table", { name: "Who uses which agent" });
         const countHeader = within(table).getByRole("columnheader", { name: /Changes/ });
@@ -453,7 +483,10 @@ describe("AgentActivityTab (rendered)", () => {
 
     it("shows the calm unavailable state on 404, with a retry", async () => {
         get.mockRejectedValueOnce(httpError(404));
-        renderAt("/workspace/tasks?view=agent", <AgentActivityTab projects={projects} />);
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
         expect(await screen.findByText("Agent activity is not available yet")).toBeTruthy();
         get.mockResolvedValueOnce(okWith(makePage()));
         fireEvent.click(screen.getByRole("button", { name: "Try again" }));
@@ -467,7 +500,10 @@ describe("AgentActivityTab (rendered)", () => {
             requested.push((event as CustomEvent<{ tab?: string }>).detail?.tab ?? "");
         window.addEventListener(OPEN_SETTINGS_EVENT, listener);
         try {
-            renderAt("/workspace/tasks?view=agent", <AgentActivityTab projects={projects} />);
+            renderAt(
+                "/workspace/tasks?view=agent",
+                <AgentActivityTab projects={projects} teamId={TEAM} />
+            );
             expect(
                 await screen.findByText("No AI app has written to Genos in the last 7 days.")
             ).toBeTruthy();
@@ -482,7 +518,10 @@ describe("AgentActivityTab (rendered)", () => {
         get.mockResolvedValueOnce(
             okWith(emptyPage({ connections: [{ family: "claude", last_used_at: null }] }))
         );
-        renderAt("/workspace/tasks?view=agent", <AgentActivityTab projects={projects} />);
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
         expect(await screen.findByText(/Claude connected .*No writes yet\./)).toBeTruthy();
         expect(screen.getByText("No writes yet")).toBeTruthy();
     });
@@ -497,7 +536,7 @@ describe("AgentActivityTab (rendered)", () => {
         );
         renderAt(
             "/workspace/tasks?view=agent&agent=chatgpt",
-            <AgentActivityTab projects={projects} />
+            <AgentActivityTab projects={projects} teamId={TEAM} />
         );
         expect(await screen.findByText("Nothing matches these filters.")).toBeTruthy();
         const empty = screen
@@ -511,7 +550,7 @@ describe("AgentActivityTab (rendered)", () => {
         get.mockResolvedValueOnce(okWith(makePage()));
         renderAt(
             "/workspace/tasks?view=agent&period=31&project=2",
-            <AgentActivityTab projects={projects} />
+            <AgentActivityTab projects={projects} teamId={TEAM} />
         );
         await screen.findByText("Pricing page copy");
         expect(sent(0)).toMatchObject({ days: "31", project_id: "2" });
@@ -520,7 +559,10 @@ describe("AgentActivityTab (rendered)", () => {
     it("on a phone the filters sit behind a Filters button that opens a sheet", async () => {
         mobileFlag.value = true;
         get.mockResolvedValueOnce(okWith(makePage()));
-        renderAt("/workspace/tasks?view=agent", <AgentActivityTab projects={projects} />);
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
         await screen.findByText("Pricing page copy");
         const button = screen.getByRole("button", { name: "Filters" });
         expect(screen.queryByRole("group", { name: "Filters" })).toBeNull();
@@ -546,7 +588,7 @@ describe("AgentActivityTab (rendered)", () => {
                         <Routes>
                             <Route
                                 path="/workspace/tasks"
-                                element={<AgentActivityTab projects={projects} />}
+                                element={<AgentActivityTab projects={projects} teamId={TEAM} />}
                             />
                         </Routes>
                     </MemoryRouter>
@@ -632,5 +674,162 @@ describe("TaskDashboard tab strip", () => {
         fireEvent.click(tab);
         expect(await screen.findByTestId("agent-activity-tab")).toBeTruthy();
         expect(await screen.findByText("Agent activity is not available yet")).toBeTruthy();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The real API response (genos-api PR #1008), pinned by the fixtures
+// ---------------------------------------------------------------------------
+
+describe("the real API response (fixtures from genos-api PR #1008)", () => {
+    it("parses the first page into the client's types, field by field", async () => {
+        get.mockResolvedValueOnce(okWith(realPage));
+        const result = await loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM));
+        expect(result.status).toBe("ok");
+        if (result.status !== "ok") return;
+        const page = result.page;
+        expect(page.window).toEqual(realPage.window);
+        expect(page.totals).toEqual({
+            by_agent: { claude: 6, chatgpt: 1, api_key: 2, other_app: 1, person: 2 },
+            decisions: 1,
+            changes: 12,
+        });
+        // A group with no project keeps its null; the others carry their code.
+        expect(page.groups.map((g) => g.project?.name ?? null)).toEqual([
+            "Launch",
+            "Website",
+            null,
+        ]);
+        expect(page.groups[0].project).toEqual({ id: 1, name: "Launch", code: "LAU" });
+        expect(page.groups[0].counts.total).toBe(8);
+        expect(page.by_user_agent[0]).toMatchObject({ agent: "claude", count: 6 });
+        expect(page.by_user_agent[0].projects[0]).toMatchObject({ id: 1, code: "LAU" });
+        // A person's own write has no agent: null on the row, and on a decision.
+        const rows = page.groups.flatMap((g) => g.items);
+        expect(rows.some((row) => row.agent === null)).toBe(true);
+        expect(page.decisions[0].agent).toEqual({ kind: "claude", app: "claude" });
+        expect(page.decisions[0].note_type).toBe(2);
+        expect(page.connections.map((c) => c.family)).toEqual(["other", "claude"]);
+        expect(page.next_cursor).toBeNull();
+    });
+
+    it("hands the real next_cursor back as the cursor of the next page", async () => {
+        get.mockResolvedValueOnce(okWith(realPage2));
+        const { result } = renderHook(() =>
+            useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM), true)
+        );
+        await waitFor(() => expect(result.current.status).toBe("ready"));
+        expect(result.current.hasMore).toBe(true);
+        get.mockResolvedValueOnce(okWith(realPage));
+        act(() => result.current.loadMore());
+        await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+        expect(sent(1).cursor).toBe(realPage2.next_cursor);
+    });
+
+    it("maps each real error status to its tab state (400 and 500 error, 404 unavailable)", async () => {
+        const { statuses } = realErrorsFixture;
+        get.mockRejectedValueOnce(httpError(statuses.bad_days));
+        await expect(
+            loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM))
+        ).resolves.toEqual({ status: "error" });
+        get.mockRejectedValueOnce(httpError(statuses.outsider));
+        await expect(
+            loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS, TEAM))
+        ).resolves.toEqual({ status: "unavailable" });
+    });
+
+    it("sends the team on every request and refetches when the team changes", async () => {
+        get.mockResolvedValue(okWith(makePage()));
+        const { result, rerender } = renderHook(
+            ({ team }: { team: string }) =>
+                useAgentWork(agentFiltersToQuery(DEFAULT_AGENT_FILTERS, team), true),
+            { initialProps: { team: TEAM } }
+        );
+        await waitFor(() => expect(result.current.status).toBe("ready"));
+        expect(sent(0).team_id).toBe(TEAM);
+        rerender({ team: TEAM_2 });
+        await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+        expect(sent(1).team_id).toBe(TEAM_2);
+    });
+
+    it("sends no request at all without a team (the API would answer 400)", async () => {
+        await expect(
+            loadAgentWork("t", agentFiltersToQuery(DEFAULT_AGENT_FILTERS, ""))
+        ).resolves.toEqual({ status: "error" });
+        expect(get).not.toHaveBeenCalled();
+    });
+
+    it("shows the error state, not 'not available yet', on a 400, and retries", async () => {
+        get.mockRejectedValueOnce(httpError(400));
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
+        expect(await screen.findByText("Agent activity could not load")).toBeTruthy();
+        expect(screen.queryByText("Agent activity is not available yet")).toBeNull();
+        get.mockResolvedValueOnce(okWith(makePage()));
+        fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+        expect(await screen.findByText("Pricing page copy")).toBeTruthy();
+    });
+
+    it("renders the real page: people's writes read as people, the no-project group is named", async () => {
+        get.mockResolvedValueOnce(okWith(realPage));
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
+        expect(await screen.findByRole("heading", { name: "Launch" })).toBeTruthy();
+        expect(screen.getByRole("heading", { name: "Website" })).toBeTruthy();
+        expect(screen.getByRole("heading", { name: "No project" })).toBeTruthy();
+        expect(screen.getByTestId("agent-total-person").textContent).toBe("2");
+        expect(screen.getAllByText("by people in the app").length).toBeGreaterThan(0);
+        // Other apps show as "Other app", never as the family's raw word.
+        expect(screen.getAllByText("Other app").length).toBeGreaterThan(0);
+        expect(screen.queryByText("other")).toBeNull();
+    });
+
+    it("hides a project with no rows on this page (its rows come with Load more)", async () => {
+        get.mockResolvedValueOnce(okWith(realPage2));
+        renderAt(
+            "/workspace/tasks?view=agent",
+            <AgentActivityTab projects={projects} teamId={TEAM} />
+        );
+        expect(await screen.findByRole("heading", { name: "Launch" })).toBeTruthy();
+        expect(screen.queryByRole("heading", { name: "Website" })).toBeNull();
+        expect(screen.queryByRole("heading", { name: "No project" })).toBeNull();
+        expect(screen.getByRole("button", { name: "Load more" })).toBeTruthy();
+    });
+
+    it("reads a null agent as a person in the chip and its kind marker", () => {
+        render(
+            <CssVarsProvider>
+                <AgentChip agent={null} label="by people in the app" />
+            </CssVarsProvider>
+        );
+        const chip = screen.getByText("by people in the app");
+        expect(chip.closest("[data-agent-kind]")?.getAttribute("data-agent-kind")).toBe("person");
+    });
+
+    it("a person id that is not a UUID is dropped, not sent (the API would answer 400)", () => {
+        expect(parseAgentFilters(new URLSearchParams("person=u-ana")).userId).toBeNull();
+        expect(parseAgentFilters(new URLSearchParams(`person=${UUID_ANA}`)).userId).toBe(UUID_ANA);
+    });
+
+    it("a personal note (the API's type 1) opens in My notes; a task note with no ids is text", () => {
+        expect(isPersonalNoteType(1)).toBe(true);
+        expect(isPersonalNoteType(2)).toBe(false);
+        expect(agentTargetPath({ type: "note", id: 9, note_type: 1 }, 1)).toBe(
+            "/workspace/notes/my/9"
+        );
+        expect(agentTargetPath({ type: "note", id: 9, note_type: 2 }, 1)).toBeNull();
+        expect(agentDecisionPath({ note_id: 9, note_type: 1 })).toBe("/workspace/notes/my/9");
+        expect(agentDecisionPath({ note_id: 9, note_type: 2 })).toBeNull();
+    });
+
+    it("a task opens in its project; a task on no project is text", () => {
+        expect(agentTargetPath({ type: "task", id: 77 }, 1)).toBe(
+            "/workspace/tasks/project/1/task/77"
+        );
+        expect(agentTargetPath({ type: "task", id: 77 }, null)).toBeNull();
     });
 });

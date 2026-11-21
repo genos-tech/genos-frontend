@@ -5926,6 +5926,7 @@ export const zh: DeepPartial<Messages> = {
                     loadMore: "加载更多",
                     loadingMore: "正在加载…",
                     loadMoreFailed: "无法加载更多，请重试。",
+                    noProject: "无项目",
                 },
                 actions: {
                     task_created: "创建了{target}",
@@ -5950,6 +5951,8 @@ export const zh: DeepPartial<Messages> = {
                 },
                 states: {
                     loading: "正在加载智能体活动…",
+                    errorTitle: "无法加载智能体活动",
+                    errorBody: "加载此视图时出错。请重试。你的任务和笔记不受影响。",
                     unavailableTitle: "智能体活动暂不可用",
                     unavailableBody: "此视图尚未在你的工作区启用。你的任务和笔记不受影响。",
                     retry: "重试",

@@ -2592,6 +2592,7 @@ export const TaskHomeContent = ({
                             {/* Agent Activity tab (MIP-1613): who uses which AI agent, for what. */}
                             {!tasksUnread && activeTab === "agent" && (
                                 <AgentActivityTab
+                                    teamId={myself.teamId}
                                     projects={usePM.teamProjects.map((p) => ({
                                         id: p.projectId,
                                         name: p.projectName,

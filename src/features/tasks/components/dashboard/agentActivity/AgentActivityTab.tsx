@@ -18,8 +18,8 @@ import {
     writeAgentFilters,
 } from "../../../agentActivity/agentActivityFilters";
 import { useAgentWork } from "../../../hooks/useAgentWork";
-import { AgentKind, AgentWorkUserAgentRow } from "../../../services/loadAgentWork";
-import { formatAgentWhen } from "./agentActivityLinks";
+import { AgentWorkUserAgentRow } from "../../../services/loadAgentWork";
+import { familyKind, formatAgentWhen } from "./agentActivityLinks";
 import { AgentConnectionsList } from "./AgentConnectionsList";
 import { AgentDecisionsList } from "./AgentDecisionsList";
 import { AgentFilterBar } from "./AgentFilterBar";
@@ -31,13 +31,15 @@ const TASKS_PATH = "/workspace/tasks";
 
 type Props = {
     projects: { id: number; name: string }[];
+    /** The team the tab shows. The API needs it on every request; a change refetches. */
+    teamId: string;
 };
 
 /** The unique people in the window, for the Person filter (from the response, no extra request). */
 const peopleFrom = (rows: AgentWorkUserAgentRow[]): { id: string; name: string }[] => {
     const seen = new Map<string, string>();
     for (const row of rows) {
-        if (!seen.has(row.user.id)) seen.set(row.user.id, row.user.name);
+        if (row.user && !seen.has(row.user.id)) seen.set(row.user.id, row.user.name);
     }
     return [...seen].map(([id, name]) => ({ id, name }));
 };
@@ -47,7 +49,7 @@ const peopleFrom = (rows: AgentWorkUserAgentRow[]): { id: string; name: string }
  * Genos, and for what. Filters live in the URL query so a view can be shared. Every
  * failure is a calm state here; nothing in this tab throws into the dashboard.
  */
-export const AgentActivityTab = ({ projects }: Props) => {
+export const AgentActivityTab = ({ projects, teamId }: Props) => {
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.agentActivity;
     const location = useLocation();
@@ -60,7 +62,7 @@ export const AgentActivityTab = ({ projects }: Props) => {
     pathRef.current = location.pathname;
 
     const filters = useMemo(() => parseAgentFilters(search), [search]);
-    const view = useAgentWork(agentFiltersToQuery(filters), onTasks);
+    const view = useAgentWork(agentFiltersToQuery(filters, teamId), onTasks);
 
     // Mark the URL with `view=agent` while this tab is open, so the view can be shared.
     useEffect(() => {
@@ -114,7 +116,8 @@ export const AgentActivityTab = ({ projects }: Props) => {
                 {a.states.loading}
             </Typography>
         );
-    } else if (view.status === "unavailable" || view.status === "error") {
+    } else if (view.status === "unavailable") {
+        // 404: the API is not switched on for this workspace (or the viewer is outside the team).
         body = (
             <EmptyState
                 action={{ label: a.states.retry, onClick: view.retry }}
@@ -124,18 +127,22 @@ export const AgentActivityTab = ({ projects }: Props) => {
                 title={a.states.unavailableTitle}
             />
         );
+    } else if (view.status === "error") {
+        // 400 (a request the client got wrong) or 5xx or a network failure: say so, offer a retry.
+        body = (
+            <EmptyState
+                action={{ label: a.states.retry, onClick: view.retry }}
+                body={a.states.errorBody}
+                data-empty="agent-activity-error"
+                size="md"
+                title={a.states.errorTitle}
+            />
+        );
     } else if (page) {
         const nothingInWindow = page.totals.changes === 0 && page.decisions.length === 0;
         const latestConnection = [...page.connections].sort((x, y) =>
             (y.last_used_at ?? "").localeCompare(x.last_used_at ?? "")
         )[0];
-        const familyLabel = (family: string) =>
-            (["claude", "chatgpt", "api_key", "other_app", "person"] as const).includes(
-                family as AgentKind
-            )
-                ? a.agents[family as AgentKind]
-                : family;
-
         let empty: ReactNode = null;
         if (nothingInWindow && filtered) {
             empty = (
@@ -153,7 +160,7 @@ export const AgentActivityTab = ({ projects }: Props) => {
                     data-empty="agent-activity-no-writes"
                     size="sm"
                     title={fmt(a.states.connectedNoWrites, {
-                        family: familyLabel(latestConnection.family),
+                        family: a.agents[familyKind(latestConnection.family)],
                         when: formatAgentWhen(latestConnection.last_used_at, locale) || "—",
                     })}
                 />

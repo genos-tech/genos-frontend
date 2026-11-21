@@ -1257,6 +1257,7 @@ export const tasks = {
                 loadMore: "Load more",
                 loadingMore: "Loading…",
                 loadMoreFailed: "Could not load more. Try again.",
+                noProject: "No project",
             },
             actions: {
                 task_created: "Created {target}",
@@ -1281,6 +1282,9 @@ export const tasks = {
             },
             states: {
                 loading: "Loading agent activity…",
+                errorTitle: "Agent activity could not load",
+                errorBody:
+                    "Something went wrong loading this view. Try again. Your tasks and notes are not affected.",
                 unavailableTitle: "Agent activity is not available yet",
                 unavailableBody:
                     "This view is not switched on for your workspace yet. Your tasks and notes are not affected.",

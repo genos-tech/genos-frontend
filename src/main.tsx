@@ -45,7 +45,9 @@ import type { SegmentKey } from "./lp/segments";
 // so it stops downloading the app shell at all. See the PR for that.
 const GenosBlogArticlePage = lazy(() => import("./lp/BlogArticlePage"));
 const GenosBlogPage = lazy(() => import("./lp/BlogPage"));
+const GenosDocsPage = lazy(() => import("./lp/DocsPage"));
 const GenosDemoPage = lazy(() => import("./lp/DemoPage"));
+const GenosMigratePage = lazy(() => import("./lp/MigratePage"));
 const GenosDevelopersPage = lazy(() => import("./lp/DevelopersPage"));
 const GenosFeaturesPage = lazy(() => import("./lp/FeaturesPage"));
 const GenosLandingPage = lazy(() => import("./lp/LandingPage"));
@@ -172,11 +174,18 @@ const tree = (
             {/* Contact form (MIP-1261): mailed to support, not stored. ?topic=enterprise is the Enterprise variant. */}
             <Route element={publicPage(GenosContactPage)} path="/contact" />
             <Route element={publicPage(GenosSupportPage)} path="/support" />
+
+            {/* Moving into Genos (MIP-1260): what imports today and what does not. Public, like /docs. */}
+            <Route element={publicPage(GenosMigratePage)} path="/migrate" />
             <Route element={publicPage(GenosSecurityPage)} path="/security" />
             {/* Accessibility statement and supported browsers (MIP-1265). */}
             <Route element={publicPage(GenosAccessibilityPage)} path="/accessibility" />
             {/* Changelog, public roadmap and RSS (MIP-1257). changelog.rss is a build asset. */}
             <Route element={publicPage(GenosChangelogPage)} path="/changelog" />
+
+            {/* Help hub (MIP-1259): getting started, connecting Claude, API keys, schedules,
+                export, shortcuts and the FAQ on one page. Public, like /support. */}
+            <Route element={publicPage(GenosDocsPage)} path="/docs" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>
