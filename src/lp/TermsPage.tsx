@@ -32,7 +32,7 @@ import {
  * the header and footer only.
  *
  * Every word lives in `termsContent.ts`; this file only lays it out. The route
- * exists only when `VITE_SHOW_TERMS_PAGE=true` (termsRoute.tsx).
+ * is mounted at `/terms` from main.tsx.
  */
 export default function TermsPage() {
     return (
