@@ -3187,6 +3187,17 @@ export const es: DeepPartial<Messages> = {
                 noProgress: "Aún no hay avances registrados",
                 stalled: "Sin avances desde hace {count} días",
                 noSprint: "Sin sprint",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "Activo",
+                sprintRollup:
+                    "Cerradas {closed}/{tasks} · Bloqueadas {blocked} · Vencidas {overdue}",
+                askProject: "Preguntar a Genos por el progreso",
+                askSprint: "Preguntar a Genos por este sprint",
+                thisProject: "este proyecto",
+                askProjectQuestion:
+                    "¿Cómo avanzan los hitos en curso de {project}? ¿Qué está vencido, bloqueado o estancado y qué se movió recientemente?",
+                askSprintQuestion:
+                    "¿Cómo avanza {sprint} en {project}? ¿Qué hitos están vencidos, bloqueados o estancados y qué se movió recientemente?",
                 attentionHeading: "Requiere atención",
                 attentionNone: "Nada vencido, bloqueado ni con vencimiento esta semana.",
                 attentionMore: "{count} más",

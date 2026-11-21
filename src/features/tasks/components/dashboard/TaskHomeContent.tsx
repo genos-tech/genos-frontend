@@ -1711,6 +1711,7 @@ export const TaskHomeContent = ({
                                 <MilestoneProgressTab
                                     effectiveTasks={effectiveTasks}
                                     milestones={ongoingProjectMilestones}
+                                    projectName={usePM.currentProject?.projectName}
                                     sprints={projectSprints}
                                     milestonesLoaded={
                                         usePM.currentProject?.projectId != null &&

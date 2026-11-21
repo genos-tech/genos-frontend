@@ -3423,6 +3423,16 @@ export const hi: DeepPartial<Messages> = {
                 noProgress: "अभी तक कोई प्रगति दर्ज नहीं",
                 stalled: "{count} दिनों से कोई प्रगति नहीं",
                 noSprint: "कोई स्प्रिंट नहीं",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "सक्रिय",
+                sprintRollup: "पूरे {closed}/{tasks} · ब्लॉक {blocked} · देर से {overdue}",
+                askProject: "प्रगति के बारे में Genos से पूछें",
+                askSprint: "इस स्प्रिंट के बारे में Genos से पूछें",
+                thisProject: "यह प्रोजेक्ट",
+                askProjectQuestion:
+                    "{project} के चालू माइलस्टोन की प्रगति कैसी है? क्या देर से, ब्लॉक या रुका हुआ है, और हाल में क्या आगे बढ़ा?",
+                askSprintQuestion:
+                    "{project} में {sprint} की प्रगति कैसी है? इसके कौन-से माइलस्टोन देर से, ब्लॉक या रुके हुए हैं, और हाल में क्या आगे बढ़ा?",
                 attentionHeading: "ध्यान देने की ज़रूरत",
                 attentionNone: "कुछ भी देर से, अटका हुआ या इस हफ़्ते नियत नहीं है।",
                 attentionMore: "और {count}",

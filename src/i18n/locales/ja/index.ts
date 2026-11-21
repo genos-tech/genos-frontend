@@ -6175,6 +6175,16 @@ export const ja: DeepPartial<Messages> = {
                 noProgress: "まだ進捗はありません",
                 stalled: "{count}日間進捗なし",
                 noSprint: "スプリントなし",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "進行中",
+                sprintRollup: "完了 {closed}/{tasks} · ブロック {blocked} · 期限超過 {overdue}",
+                askProject: "進捗についてGenosに質問",
+                askSprint: "このスプリントについてGenosに質問",
+                thisProject: "このプロジェクト",
+                askProjectQuestion:
+                    "{project} で進行中のマイルストーンの進捗はどうですか？ 期限超過・ブロック・停滞しているものと、最近動いたものを教えてください。",
+                askSprintQuestion:
+                    "{project} の {sprint} の進捗はどうですか？ そのマイルストーンのうち期限超過・ブロック・停滞しているものと、最近動いたものを教えてください。",
                 attentionHeading: "要確認",
                 attentionNone: "期限超過・ブロック中・今週期限のタスクはありません。",
                 attentionMore: "ほか{count}件",
