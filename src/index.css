@@ -273,7 +273,10 @@
 
     @media (max-width: 480px) {
         :root {
-            --min-width: 280px;
+            /* Was 280px. At 280 px the chat list cut off its "More options" button (MIP-1855):
+               the floor is the layout width, so 320 px keeps every control on screen and
+               anything narrower scrolls sideways instead. */
+            --min-width: 320px;
         }
 
         h1 {
