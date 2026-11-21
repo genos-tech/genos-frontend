@@ -10,7 +10,7 @@ import FolderZipRoundedIcon from "@mui/icons-material/FolderZipRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import { Box, List, ListItem, Typography } from "@mui/joy";
 
-import { MoreMenu } from "../../../../components/ui/MoreMenu";
+import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -33,6 +33,8 @@ import { folderFavoriteMenuItem } from "../../common/utils/folderFavoriteMenuIte
 // modal instance serves every folder row.
 export type FolderActionHandlers = {
     onCreateNoteHere: (folderId: number) => void;
+    // MIP-1697: the "new note from a template" rows that follow "New note here".
+    templateMenuItems?: (folderId: number) => MoreMenuItem[];
     onImportNoteHere: (folderId: number) => void;
     onExportFolder: (folder: MyNoteFolderTreeNode) => void;
     onCreateSubfolder: (folderId: number) => void;
@@ -100,6 +102,7 @@ function MyNoteFolderTreeComponent(props: MyNoteFolderTreeProps) {
                                     icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
                                     onClick: () => actions.onCreateNoteHere(folder.folderId),
                                 },
+                                ...(actions.templateMenuItems?.(folder.folderId) ?? []),
                                 {
                                     id: "import-note-here",
                                     kind: "import",
