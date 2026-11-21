@@ -70,7 +70,7 @@ export const ja: DeepPartial<Messages> = {
                 emailPlaceholder: "メールアドレスを入力",
                 passwordLabel: "パスワード",
                 passwordPlaceholder: "パスワードを入力",
-                rememberMe: "ログイン状態を保持",
+                rememberMe: "ログインを保持",
                 forgotPassword: "パスワードをお忘れですか？",
                 submit: "サインイン",
                 orDivider: "または",
