@@ -50,18 +50,16 @@ let client: PostHogClient | null = null;
 let loading: Promise<void> | null = null;
 let failed = false;
 let queue: Array<(posthog: PostHogClient) => void> = [];
-// Started from a marketing page after "Accept" (`startWithConsent`): the library is kept to the
-// minimum the visitor agreed to, see `scrubSessionProps`.
-let marketingStart = false;
 
 // posthog-js 1.445.4 keeps the session's entry data in its persistence under `$client_session_props`:
 // the FULL landing address (query string and all) and the full referrer. It has no option to stop
 // that. What leaves the browser is already cut down by the sanitizer (`$session_entry_url` is a
-// path, the referrer a domain), but the stored copy would stay in localStorage, so on a marketing
-// start it is deleted right after each capture. The next capture of the same session reads nothing
-// and adds no `$session_entry_*`; PostHog derives a session's entry from its first event anyway.
+// path, the referrer a domain), but the stored copy would stay in localStorage, so it is deleted
+// right after each capture, on every start, marketing page or app (MIP-1778, MIP-1798). The next
+// capture of the same session reads nothing and adds no `$session_entry_*`; PostHog derives a
+// session's entry from its first event anyway.
 const scrubSessionProps = (posthog: PostHogClient): void => {
-    if (marketingStart) posthog.unregister("$client_session_props");
+    posthog.unregister("$client_session_props");
 };
 
 // What posthog-js leaves in the browser, by name: `ph_<key>_posthog` (cookie, localStorage,
@@ -116,6 +114,19 @@ const start = (enabled?: boolean, onMarketingPage = false): void => {
                 before_send: onMarketingPage
                     ? sanitizeMarketingCaptureResult
                     : sanitizeCaptureResult,
+                // Do not keep the landing address and referrer in the browser, on any start
+                // (MIP-1778, MIP-1798): probed with 1.445.4, the cookie and localStorage hold
+                // `$initial_person_info` = the FULL landing URL (query string and all) and the
+                // full referrer, and sessionStorage the raw `utm_*` and `$referrer`. After a
+                // marketing button the app's referrer is the whole marketing URL with its
+                // `?utm_...`. Nothing the privacy page lists needs them: the path, the campaign
+                // values and the referrer's domain are sent from the event itself. Cost: the
+                // person-level `$initial_referrer` / `$initial_current_url` are no longer set.
+                save_referrer: false,
+                save_campaign_params: false,
+                // The wrapper uses no feature flag, and the `/flags/` request carries the
+                // browser's timezone and device ID in a body `before_send` never sees.
+                advanced_disable_flags: true,
                 // Started from a marketing page, after "Accept" (MIP-1778): the visitor agreed to
                 // page views, button clicks and sign-ups, so everything else the library can switch
                 // on from its remote config stays off. Each of these only reduces collection.
@@ -125,21 +136,10 @@ const start = (enabled?: boolean, onMarketingPage = false): void => {
                           capture_dead_clicks: false,
                           capture_exceptions: false,
                           capture_performance: false,
-                          // Do not keep the landing address and referrer in the browser: probed
-                          // with 1.445.4, the cookie and localStorage hold `$initial_person_info`
-                          // = the FULL landing URL (query string and all) and the full referrer,
-                          // and sessionStorage the raw `utm_*` and `$referrer`. Nothing the
-                          // privacy page lists needs them: the path, the campaign values and the
-                          // referrer's domain are sent from the event itself.
-                          save_referrer: false,
-                          save_campaign_params: false,
                           disable_surveys: true,
                           disable_conversations: true,
                           disable_product_tours: true,
                           disable_web_experiments: true,
-                          // The wrapper uses no feature flag, and the `/flags/` request carries the
-                          // browser's timezone and device ID in a body `before_send` never sees.
-                          advanced_disable_flags: true,
                       }
                     : {}),
             });
@@ -251,7 +251,6 @@ export const analytics = {
      */
     startWithConsent(): void {
         entered = true;
-        if (!initialized) marketingStart = true;
         start(true, true);
     },
 
