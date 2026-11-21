@@ -35,8 +35,11 @@ const keysText = (id: ShortcutId): string => {
 const TOKEN = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\{key:[a-zA-Z.]+\})/;
 
 /** Renders the copy's inline markup as React nodes. */
+/** The `TODO(copy)` markers are for Ken's review in the copy file; a visitor never sees them. */
+const stripTodo = (text: string): string => text.replace(/\s*TODO\(copy\):[^\n]*$/u, "");
+
 function Inline({ text }: { text: string }) {
-    const parts = text.split(TOKEN);
+    const parts = stripTodo(text).split(TOKEN);
     return (
         <>
             {parts.map((part, i) => {
@@ -119,7 +122,7 @@ function DocsBody({ lang }: { lang: Lang }) {
             <header className="lp-pagehead">
                 <div className="lp-container lp-container--narrow lp-stack-s">
                     <h1 className="lp-title">{c.title}</h1>
-                    <p className="lp-body">{c.lead}</p>
+                    <p className="lp-body">{stripTodo(c.lead)}</p>
                     <label className="lp-docs-search">
                         <span className="lp-small">{c.searchLabel}</span>
                         <input
