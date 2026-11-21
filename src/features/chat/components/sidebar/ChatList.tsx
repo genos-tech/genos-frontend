@@ -501,7 +501,9 @@ const ActivityListRenderer = ({
                     <Stack>
                         {activityMessage.aiApp ? (
                             <AiAppActivityRow
-                                key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                // No isRead in the key: marking the row read on click would remount it and
+                                // drop the focus the modal returns to on Escape (MIP-1755).
+                                key={activityMessage.activityId}
                                 activity={activityMessage}
                                 activityMessages={activityMessages}
                                 myself={data.myself}
