@@ -478,17 +478,20 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             />
                         )}
                         {activeNoteType === 2 && useNM.currentTaskNote && (
-                            <TaskNoteMain
-                                isInTaskPage={true}
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useNM={useNM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
+                            // Read-only like the desktop note panel (MIP-1693): the server has no archive check on notes.
+                            <Box inert={archived}>
+                                <TaskNoteMain
+                                    isInTaskPage={true}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useNM={useNM}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                />
+                            </Box>
                         )}
                         {activeNoteType === 3 && useNM.currentChatNote && (
                             <ChatNoteMain
