@@ -642,6 +642,9 @@ export const HistoryModal = ({
             icon={<HistoryRoundedIcon />}
             open={open}
             size="lg"
+            title={t.history.title}
+            // Where Joy's own modals sit (this dialog never set a layer).
+            zIndex={theme.zIndex.modal}
             actions={
                 <Button color="neutral" size="sm" variant="plain" onClick={clear}>
                     {t.history.clear}
@@ -649,9 +652,6 @@ export const HistoryModal = ({
             }
             headerDivider
             onClose={onClose}
-            title={t.history.title}
-            // Where Joy's own modals sit (this dialog never set a layer).
-            zIndex={theme.zIndex.modal}
         >
             <Tabs
                 sx={{ bgcolor: "transparent" }}

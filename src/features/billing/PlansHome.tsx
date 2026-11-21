@@ -336,8 +336,8 @@ export const PlansHome = () => {
                 return (
                     <Button
                         disabled={busy}
-                        variant={cta.plan === "pro" ? "solid" : "soft"}
                         size="sm"
+                        variant={cta.plan === "pro" ? "solid" : "soft"}
                         // Pro is the tier we expect most people to buy,
                         // so it carries the solid (primary) treatment;
                         // core and max flank it as soft.

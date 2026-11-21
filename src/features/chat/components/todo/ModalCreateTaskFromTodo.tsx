@@ -269,6 +269,9 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
             icon={<TaskAltRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
             size="md"
+            title={tc.heading}
+            // The page's own dialogs sit at Joy's modal layer; a host raises it.
+            zIndex={layer ?? theme.zIndex.modal}
             actions={
                 <>
                     <Button
@@ -290,9 +293,6 @@ export const ModalCreateTaskFromTodo = (props: ModalCreateTaskFromTodoProps) => 
             }
             ownsListboxPopups
             onClose={onClose}
-            title={tc.heading}
-            // The page's own dialogs sit at Joy's modal layer; a host raises it.
-            zIndex={layer ?? theme.zIndex.modal}
         >
             {error && (
                 <Alert color="danger" size="sm" sx={{ mb: 1.5 }}>

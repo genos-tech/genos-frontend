@@ -144,13 +144,13 @@ export const ServiceSwitcherOverlay = ({
                                         transition: "none",
                                     },
                                 }}
-                                onActivate={() => onSelect?.(position)}
                                 // `mousemove`, not `mouseenter`: the overlay appears under a
                                 // pointer that is not moving, and the browser then reports
                                 // that pointer as entering a tile, which must not steal the
                                 // highlight from the tap that raised it. Only real movement
                                 // counts.
                                 data-service-tile
+                                onActivate={() => onSelect?.(position)}
                                 onMouseMove={(e) => {
                                     if ((e.movementX !== 0 || e.movementY !== 0) && !isActive) {
                                         onHighlight?.(position);

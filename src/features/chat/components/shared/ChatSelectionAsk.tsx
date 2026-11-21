@@ -169,6 +169,7 @@ export const ChatSelectionAsk = ({
             size="sm"
             startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
             type="button"
+            variant="outlined"
             sx={{
                 position: "fixed",
                 top: above ? anchor.top - GAP : anchor.bottom + GAP,
@@ -181,7 +182,6 @@ export const ChatSelectionAsk = ({
                 whiteSpace: "nowrap",
             }}
             onClick={ask}
-            variant="outlined"
             // Keep the selection: a press on a button would otherwise collapse it before the click.
             onMouseDown={(e) => e.preventDefault()}
         >

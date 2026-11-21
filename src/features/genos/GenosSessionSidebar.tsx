@@ -86,12 +86,12 @@ export const GenosSessionSidebar = ({
             <NavItem
                 key={s.session_id}
                 as="div"
+                label={s.first_query || t.spotlight.states.untitled}
                 // Title (two-line clamp) over time and turn count: a documented
                 // multiple of a density row.
                 lines={2}
                 selected={isActive}
                 sx={{ flexShrink: 0, height: "auto", py: 0.5 }}
-                label={s.first_query || t.spotlight.states.untitled}
                 // Two-line clamp keeps rows compact when the first query runs
                 // long (server truncates at ~140 chars regardless).
                 actions={
@@ -130,18 +130,6 @@ export const GenosSessionSidebar = ({
                         </IconButton>
                     </AppTooltip>
                 }
-                secondary={
-                    <>
-                        {relativeTimeLabel(s.last_active_at, t.spotlight, locale)}
-                        {" · "}
-                        {fmt(t.spotlight.history.turnCount, { count: s.turn_count })}
-                        {pinError === s.session_id && (
-                            <Box component="span" sx={{ display: "block", color: g.danger.text }}>
-                                {t.genos.sidebar.pinFailed}
-                            </Box>
-                        )}
-                    </>
-                }
                 // The pin is a SIBLING of the row button, not a child: a button
                 // inside a button is invalid HTML and browsers do not reliably
                 // deliver the inner click. A pinned row keeps its pin showing
@@ -154,6 +142,18 @@ export const GenosSessionSidebar = ({
                     WebkitBoxOrient: "vertical",
                     fontWeight: 500,
                 }}
+                secondary={
+                    <>
+                        {relativeTimeLabel(s.last_active_at, t.spotlight, locale)}
+                        {" · "}
+                        {fmt(t.spotlight.history.turnCount, { count: s.turn_count })}
+                        {pinError === s.session_id && (
+                            <Box component="span" sx={{ display: "block", color: g.danger.text }}>
+                                {t.genos.sidebar.pinFailed}
+                            </Box>
+                        )}
+                    </>
+                }
                 onClick={() => onSelectSession(s.session_id)}
             />
         );
