@@ -3,7 +3,7 @@ import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt
 import { Box, Button, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { useQuickReactionsPreference } from "../../../hooks/common/useQuickReactionsPreference";
+import { useQuickReactionsPreference } from "../../../hooks/common/quickReactionsState";
 import { useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { notifyActionError } from "../../../services/requestErrorNotifier";
