@@ -87,7 +87,7 @@ describe("onAsk with a selection", () => {
 });
 
 describe("the finished turn and Retry", () => {
-    const finish = (result: { current: ReturnType<typeof useAgentQA> }) => {
+    const finish = (_result: { current: ReturnType<typeof useAgentQA> }) => {
         act(() => {
             lastAsk().onDelta("an answer");
             lastAsk().onDone("sess-1", "run-1");

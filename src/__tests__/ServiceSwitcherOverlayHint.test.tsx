@@ -8,9 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ServiceSwitcherOverlay } from "../components/layout/ServiceSwitcherOverlay";
 import { I18nProvider } from "../i18n";
-import { ar } from "../i18n/locales/ar";
-import { en } from "../i18n/locales/en";
-import { ja } from "../i18n/locales/ja";
 
 let mac = true;
 vi.mock("../utils/platform", () => ({ isMac: () => mac }));
