@@ -611,6 +611,7 @@ describe("analytics", () => {
                 capture: vi.fn(),
                 identify: vi.fn(),
                 reset: vi.fn(),
+                unregister: vi.fn(),
                 opt_in_capturing: vi.fn(),
                 opt_out_capturing: vi.fn(),
             },
