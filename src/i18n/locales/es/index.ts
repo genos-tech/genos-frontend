@@ -3286,7 +3286,7 @@ export const es: DeepPartial<Messages> = {
                     sortByCount: "Ordenar por cambios",
                 },
                 groups: {
-                    changes: "{count} cambios",
+                    changes: "{count, plural, one {# cambio} other {# cambios}}",
                     loadMore: "Cargar más",
                     loadingMore: "Cargando…",
                     loadMoreFailed: "No se pudo cargar más. Inténtalo de nuevo.",

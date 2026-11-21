@@ -6343,7 +6343,7 @@ export const fr: DeepPartial<Messages> = {
                     sortByCount: "Trier par modifications",
                 },
                 groups: {
-                    changes: "{count} modifications",
+                    changes: "{count, plural, one {# modification} other {# modifications}}",
                     loadMore: "Charger la suite",
                     loadingMore: "Chargement…",
                     loadMoreFailed: "Impossible de charger la suite. Réessayez.",

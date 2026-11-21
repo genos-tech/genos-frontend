@@ -3238,7 +3238,8 @@ export const ar: DeepPartial<Messages> = {
                     sortByCount: "ترتيب حسب عدد التغييرات",
                 },
                 groups: {
-                    changes: "{count} تغييرًا",
+                    changes:
+                        "{count, plural, zero {# تغيير} one {تغيير واحد} two {تغييران} few {# تغييرات} many {# تغييرًا} other {# تغيير}}",
                     loadMore: "تحميل المزيد",
                     loadingMore: "جارٍ التحميل…",
                     loadMoreFailed: "تعذّر تحميل المزيد. حاول مرة أخرى.",
