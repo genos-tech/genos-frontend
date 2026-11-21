@@ -411,11 +411,15 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
                     }}
                 >
+                    {/* MIP-1927: on a touch screen the five tabs are 44px each, so the tabs plus the
+                        Unread chip and the "..." menu need about 357px: more than a 320px phone
+                        has. The row wraps and the actions drop to a second line, right-aligned,
+                        instead of the menu being cut off by the sidebar's edge. */}
                     <Stack
                         alignItems="center"
                         direction="row"
                         justifyContent="space-between"
-                        sx={{ mb: 1 }}
+                        sx={{ mb: 1, flexWrap: "wrap", rowGap: 0.5 }}
                     >
                         <Stack
                             direction="row"
@@ -541,7 +545,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             alignItems="center"
                             direction="row"
                             spacing={0.5}
-                            sx={headerTouchTargetsSx}
+                            sx={[headerTouchTargetsSx, { marginInlineStart: "auto" }]}
                         >
                             {/* Unread Filter Toggle */}
                             <Chip

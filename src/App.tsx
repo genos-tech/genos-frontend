@@ -1868,6 +1868,12 @@ const AppBody = () => {
                                                                                                             "flex",
                                                                                                         minHeight:
                                                                                                             "var(--app-vh)",
+                                                                                                        // The same floor as the body
+                                                                                                        // (--min-width): a 100vw shell in
+                                                                                                        // a window narrower than the body
+                                                                                                        // left a blank strip (MIP-1927).
+                                                                                                        minWidth:
+                                                                                                            "var(--min-width)",
                                                                                                         width: "100vw",
                                                                                                     }}
                                                                                                 >
