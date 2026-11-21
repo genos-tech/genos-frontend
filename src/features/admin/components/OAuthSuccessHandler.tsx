@@ -53,6 +53,10 @@ const isNewAccount = (createdAt: string | null | undefined): boolean => {
 // instead of leaving the user to guess.
 const REMEDY_IS_ANOTHER_METHOD = new Set(["email_in_use", "not_a_login_account"]);
 
+// Reasons whose message points at signing up with email and password, so the
+// page offers the sign-up page itself, without preselecting any provider.
+const OFFERS_PLAIN_SIGN_UP = new Set(["email_not_verified"]);
+
 export const OAuthSuccessHandler = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -65,6 +69,9 @@ export const OAuthSuccessHandler = () => {
     // Set when the refusal is "agree to the Terms first": the way forward is the
     // sign-up page, where the checkbox is, not the sign-in page.
     const [needsTerms, setNeedsTerms] = useState(false);
+    // Set when the message itself says "sign up with email and password": a
+    // second button next to "Back to sign in" (MIP-1773).
+    const [offersSignUp, setOffersSignUp] = useState(false);
     // The provider button the person pressed on the sign-in page (the redirect
     // does not name it), so sign-up can highlight the same one. Read, not
     // taken: the click handler clears it, so a re-run reads the same value.
@@ -94,6 +101,7 @@ export const OAuthSuccessHandler = () => {
         if (failureFromQuery) {
             setError(failureMessage(failureFromQuery, query.get("primary")));
             setNeedsTerms(failureFromQuery === "terms_required");
+            setOffersSignUp(OFFERS_PLAIN_SIGN_UP.has(failureFromQuery));
             // Any other refusal is a dead end for the hint; forget it.
             if (failureFromQuery !== "terms_required") {
                 forgetRememberedOAuthProvider();
@@ -237,12 +245,24 @@ export const OAuthSuccessHandler = () => {
                                 {oauth.goToSignUp}
                             </Button>
                         ) : (
-                            <Button
-                                size="lg"
-                                onClick={() => navigate("/signin", { replace: true })}
-                            >
-                                {oauth.backToSignIn}
-                            </Button>
+                            <>
+                                {offersSignUp && (
+                                    <Button
+                                        size="lg"
+                                        onClick={() => navigate("/signup", { replace: true })}
+                                    >
+                                        {oauth.goToSignUp}
+                                    </Button>
+                                )}
+                                <Button
+                                    color={offersSignUp ? "neutral" : "primary"}
+                                    size="lg"
+                                    variant={offersSignUp ? "outlined" : "solid"}
+                                    onClick={() => navigate("/signin", { replace: true })}
+                                >
+                                    {oauth.backToSignIn}
+                                </Button>
+                            </>
                         )}
                     </Stack>
                 ) : (
