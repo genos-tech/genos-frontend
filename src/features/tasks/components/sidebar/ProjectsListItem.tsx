@@ -11,6 +11,7 @@ import { MenuDivider, MenuRow, MenuSurface } from "../../../../components/ui/Mor
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
+import { useFavoriteProjects } from "../../../../hooks/common/useFavoriteProjects";
 import { useTranslation } from "../../../../i18n";
 import { useSyncFailure } from "../../../../services/syncStatus";
 import { g } from "../../../../theme/tokens";
@@ -21,7 +22,12 @@ import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
-import { distinctProjectLabels, filterAndSortProjects } from "./projectSidebarOrder";
+import { ProjectFavoriteMark, ProjectFavoriteStar } from "./projects_subs/ProjectFavoriteStar";
+import {
+    distinctProjectLabels,
+    filterAndSortProjects,
+    partitionFavoriteProjects,
+} from "./projectSidebarOrder";
 import type {
     SidebarTreeCM,
     SidebarTreePM,
@@ -75,8 +81,18 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
         [usePM.teamProjects]
     );
 
-    // Distinct labels across the joined projects — the filter menu's options.
-    const allLabels = useMemo(() => distinctProjectLabels(joinedProjects), [joinedProjects]);
+    // Starred projects (MIP-1695) are pinned above the groups: sorted by name,
+    // never hidden by the label filter, and not part of the label grouping.
+    // Only joined projects appear, so a starred project the person has left
+    // stays inert until they rejoin.
+    const favorites = useFavoriteProjects();
+    const { favorites: favoriteProjects, rest: groupableProjects } = useMemo(
+        () => partitionFavoriteProjects(joinedProjects, favorites.idSet),
+        [joinedProjects, favorites.idSet]
+    );
+
+    // Distinct labels across the grouped projects — the filter menu's options.
+    const allLabels = useMemo(() => distinctProjectLabels(groupableProjects), [groupableProjects]);
 
     // Drop any selected id whose label no longer exists (label deleted, or
     // the last project carrying it left) so the active count stays honest
@@ -88,8 +104,8 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
 
     // Filter (OR across selected labels) then sort by label(asc), name(asc).
     const visibleProjects = useMemo(
-        () => filterAndSortProjects(joinedProjects, effectiveActiveIds),
-        [joinedProjects, effectiveActiveIds]
+        () => filterAndSortProjects(groupableProjects, effectiveActiveIds),
+        [groupableProjects, effectiveActiveIds]
     );
 
     const filterActive = effectiveActiveIds.length > 0;
@@ -251,7 +267,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                             </Typography>
                         </ListItem>
                     )}
-                    {visibleProjects.map(
+                    {[...favoriteProjects, ...visibleProjects].map(
                         ({
                             projectId,
                             projectName,
@@ -263,6 +279,18 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                             hostTeamName,
                         }) => {
                             const isSelected = projectId === usePM.currentProject?.projectId;
+                            const isFavorited = favorites.idSet.has(projectId);
+                            // The star button lives in the row's actions slot and overlays the
+                            // row's end (like the milestone rows), so it takes no width and the
+                            // project name does not move. A starred project also shows a small
+                            // inline star after its name, so the pin reads at rest.
+                            const favoriteStar = (
+                                <ProjectFavoriteStar
+                                    isFavorited={isFavorited}
+                                    projectName={projectName}
+                                    onToggle={() => favorites.setFavorite(projectId, !isFavorited)}
+                                />
+                            );
                             // Resolve this project's PM chat (chatType 3) so we
                             // can show its uploaded avatar image. Same canonical
                             // lookup TaskHeader / HistoryModal use. When the PM
@@ -281,13 +309,12 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                     storageKey={`project:${projectId}`}
                                     renderToggle={({ open, setOpen }) => (
                                         <NavItem
+                                            actions={favoriteStar}
+                                            actionsOverlay={true}
                                             expanded={open}
                                             selected={isSelected}
-                                            // Avatar + labels + lock + name. Shared with
-                                            // the project pickers via `ProjectIdentityRow`
-                                            // so the dropdown and this row can't drift
-                                            // apart.
                                             label={
+                                                // Avatar + labels + lock + name. Shared with the project pickers via `ProjectIdentityRow` so the dropdown and this row can't drift apart.
                                                 // The identity row is a fragment laid out by its parent
                                                 <Box
                                                     sx={{
@@ -314,6 +341,9 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                                             hostTeamName,
                                                         }}
                                                     />
+                                                    {isFavorited && (
+                                                        <ProjectFavoriteMark className="ProjectFavoriteMark" />
+                                                    )}
                                                 </Box>
                                             }
                                             onClick={() => {
