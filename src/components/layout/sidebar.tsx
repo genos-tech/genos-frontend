@@ -32,7 +32,8 @@ import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
 import { NAV_HOVER_MEDIA, navButtonPlateOffSx, navFocusSx, navToneSx } from "../ui/nav/navStyles";
-import { SettingsModal } from "./SettingsModal";
+import { useOpenSettingsRequest } from "./settingsEvents";
+import { SettingsModal, SettingsTabKey } from "./SettingsModal";
 
 /**
  * Side padding of every rail button. The rail is 68px wide and its labels
@@ -261,6 +262,12 @@ export const Sidebar = (props: SidebarProps) => {
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
     const [openSettings, setOpenSettings] = useState<boolean>(false);
+    const [settingsTab, setSettingsTab] = useState<SettingsTabKey | undefined>(undefined);
+    // A request to open Settings on a tab (MIP-1613: Connect Claude → Developer).
+    useOpenSettingsRequest((tab) => {
+        setSettingsTab(tab as SettingsTabKey | undefined);
+        setOpenSettings(true);
+    });
     // Sign-out is destructive (clears localStorage, drafts, history) and
     // visually adjacent to the settings icon — easy to misclick. The
     // confirmation modal is the safety net.
@@ -535,6 +542,7 @@ export const Sidebar = (props: SidebarProps) => {
             )}
 
             <SettingsModal
+                initialTab={settingsTab}
                 myself={myself}
                 open={openSettings}
                 setMyself={setMyself}
@@ -542,7 +550,10 @@ export const Sidebar = (props: SidebarProps) => {
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
-                onClose={() => setOpenSettings(false)}
+                onClose={() => {
+                    setOpenSettings(false);
+                    setSettingsTab(undefined);
+                }}
             />
 
             <ConfirmDialog

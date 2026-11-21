@@ -121,6 +121,8 @@ import { TeamEmojiPanel } from "./TeamEmojiPanel";
 type Props = {
     open: boolean;
     onClose: () => void;
+    // The tab to show when the modal opens (MIP-1613: Connect Claude opens Developer).
+    initialTab?: SettingsTabKey;
     // The following are consumed by the Mention groups tab — the panel
     // reads team members from `useTEM` for the add-member picker, and
     // forwards `myself` / `setMyself` / `socket` / `useCM` / `useUISM`
@@ -1643,19 +1645,21 @@ const AutoSyncCalendarSection = () => {
 // Tab keys mirror the i18n keys under `settings.tabs.*` and are kept
 // as a plain string union (rather than numeric indices) so reordering
 // or inserting a new tab doesn't silently shift selection.
-type SettingsTabKey =
-    | "general"
-    | "planUsage"
-    | "chat"
-    | "tasks"
-    | "spotlight"
-    | "notifications"
-    | "mentionGroups"
-    | "customEmoji"
-    | "shortcuts"
-    | "integrations"
-    | "developer"
-    | "account";
+const SETTINGS_TAB_KEYS = [
+    "general",
+    "planUsage",
+    "chat",
+    "tasks",
+    "spotlight",
+    "notifications",
+    "mentionGroups",
+    "customEmoji",
+    "shortcuts",
+    "integrations",
+    "developer",
+    "account",
+] as const;
+export type SettingsTabKey = (typeof SETTINGS_TAB_KEYS)[number];
 
 /**
  * Settings → Integrations panel. Renders the same Connections UI
@@ -1699,6 +1703,7 @@ const IntegrationsSection = () => {
 export const SettingsModal = ({
     open,
     onClose,
+    initialTab,
     useTEM,
     myself,
     setMyself,
@@ -1721,6 +1726,10 @@ export const SettingsModal = ({
     // sessions. Default to "general" because it holds the broadest
     // app-wide preferences (appearance, language, privacy).
     const [tab, setTab] = useState<SettingsTabKey>("general");
+    // A requested tab (`initialTab`) is applied each time the modal opens.
+    useEffect(() => {
+        if (open && initialTab) setTab(initialTab);
+    }, [open, initialTab]);
     // The team the Genos tab works in (its memory page and its schedules).
     const genosTeamId =
         useTEM?.currentTeamId || myself?.teamId || localStorage.getItem("teamId") || "";
