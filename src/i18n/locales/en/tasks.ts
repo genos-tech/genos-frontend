@@ -132,9 +132,13 @@ export const tasks = {
         stepMap: "Columns",
         stepPreview: "Preview",
         stepResult: "Result",
-        chooseFile: "Choose a CSV file",
+        chooseFile: "Choose a CSV or Jira JSON file",
         fileHint:
-            "Up to {rows} rows and {mb} MB. A Jira or Notion export is recognised and its columns are filled in for you.",
+            "Up to {rows} rows and {mb} MB. A Jira or Notion export is recognised and its columns are filled in for you. A Jira JSON file also brings comments, sub-task links and attachment links.",
+        jiraJsonHelp:
+            "To export a Jira project as JSON, open its search API address in your browser while signed in to Jira, then save the page: /rest/api/3/search/jql?jql=project%3DKEY&fields=summary,description,status,priority,assignee,duedate,labels,parent,comment,attachment&expand=changelog&maxResults=100. Genos never asks for your Jira password or token.",
+        detectedJiraJson: "Jira JSON export detected",
+        colComments: "Comments",
         reading: "Reading the file…",
         detectedJira: "Jira export detected",
         detectedNotion: "Notion database export detected",
@@ -213,6 +217,7 @@ export const tasks = {
         errEmptyFile: "The file is empty.",
         errBadEncoding: "The file could not be read. Save it as a UTF-8 CSV and try again.",
         errBadCsv: "This does not look like a CSV file.",
+        errBadJson: "This JSON file is not a Jira search export.",
         errArchived: "This project is archived. Restore it before importing.",
         errForbidden: "Only an editor or the owner of this project can import tasks.",
         errQuota: "You have reached this month's task limit.",

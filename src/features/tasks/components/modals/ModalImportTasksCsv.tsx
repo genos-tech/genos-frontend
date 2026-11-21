@@ -128,6 +128,8 @@ export const ModalImportTasksCsv = ({
                 return c.errBadEncoding;
             case "bad_csv":
                 return c.errBadCsv;
+            case "bad_json":
+                return c.errBadJson;
             case "archived":
                 return c.errArchived;
             case "forbidden":
@@ -305,11 +307,15 @@ export const ModalImportTasksCsv = ({
     };
 
     const detected =
-        preview?.profile === "jira"
-            ? c.detectedJira
-            : preview?.profile === "notion"
-              ? c.detectedNotion
-              : c.detectedGeneric;
+        preview?.profile === "jira_json"
+            ? c.detectedJiraJson
+            : preview?.profile === "jira"
+              ? c.detectedJira
+              : preview?.profile === "notion"
+                ? c.detectedNotion
+                : c.detectedGeneric;
+
+    const hasComments = !!preview?.rows.some((r) => r.comment_count !== undefined);
 
     const columnSelect = (field: ImportField) => {
         const current = mapping[field]?.[0];
@@ -490,7 +496,7 @@ export const ModalImportTasksCsv = ({
                     <Stack alignItems="flex-start" gap={1.5}>
                         <input
                             ref={fileInputRef}
-                            accept=".csv,text/csv"
+                            accept=".csv,text/csv,.json,application/json"
                             data-testid="import-tasks-file"
                             type="file"
                             hidden
@@ -508,6 +514,12 @@ export const ModalImportTasksCsv = ({
                                 rows: preview?.limits.max_rows ?? 1000,
                                 mb: MAX_MB,
                             })}
+                        </Typography>
+                        <Typography
+                            level="body-xs"
+                            sx={{ color: g.text.tertiary, overflowWrap: "anywhere" }}
+                        >
+                            {c.jiraJsonHelp}
                         </Typography>
                     </Stack>
                 )}
@@ -621,6 +633,7 @@ export const ModalImportTasksCsv = ({
                                         <th>{c.colStatus}</th>
                                         <th>{c.colAssignee}</th>
                                         <th>{c.colDue}</th>
+                                        {hasComments && <th>{c.colComments}</th>}
                                         <th>{c.colNotes}</th>
                                     </tr>
                                 </thead>
@@ -634,6 +647,7 @@ export const ModalImportTasksCsv = ({
                                                 {r.assignee_email}
                                             </td>
                                             <td>{r.due_date ?? ""}</td>
+                                            {hasComments && <td>{r.comment_count ?? 0}</td>}
                                             <td>
                                                 {r.errors.map((i) => (
                                                     <Typography

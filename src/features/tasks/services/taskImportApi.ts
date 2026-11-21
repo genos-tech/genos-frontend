@@ -6,7 +6,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
-export type ImportProfile = "jira" | "notion" | "generic";
+export type ImportProfile = "jira" | "jira_json" | "notion" | "generic";
 
 export type ImportField =
     | "title"
@@ -41,6 +41,8 @@ export interface ImportPreviewRow {
     errors: ImportIssue[];
     warnings: ImportIssue[];
     already_imported: boolean;
+    /** Jira JSON only (MIP-1837): how many comments the issue brings. */
+    comment_count?: number;
 }
 
 export interface ImportValueCount {

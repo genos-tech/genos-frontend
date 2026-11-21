@@ -161,6 +161,27 @@ const chooseFile = async () => {
     return file;
 };
 
+describe("a Jira JSON file (MIP-1837)", () => {
+    it("is sent as it is, is named as a Jira JSON export and shows the comments per issue", async () => {
+        api.previewTaskImport.mockResolvedValue({
+            ...PREVIEW,
+            profile: "jira_json",
+            rows: PREVIEW.rows.map((r, n) => ({ ...r, comment_count: n === 0 ? 3 : 0 })),
+        });
+        renderModal(vi.fn());
+        const input = screen.getByTestId("import-tasks-file") as HTMLInputElement;
+        expect(input.accept).toContain(".json");
+        const file = new File(['{"issues":[]}'], "jira.json", { type: "application/json" });
+        fireEvent.change(input, { target: { files: [file] } });
+        await screen.findByText("Jira JSON export detected");
+        expect(api.previewTaskImport).toHaveBeenCalledWith("tok", { projectId: 7, file });
+        fireEvent.click(screen.getByRole("button", { name: "Next" }));
+        await screen.findByTestId("import-summary");
+        expect(screen.getByText("Comments")).toBeTruthy();
+        expect(screen.getByTestId("import-row-2").textContent).toContain("3");
+    });
+});
+
 describe("the import dialog", () => {
     it("walks file, columns, preview, import and result, and creates only on Import", async () => {
         const onChanged = vi.fn();
@@ -225,7 +246,7 @@ describe("the import dialog", () => {
     });
 
     it("will not go past the columns step without a title column", async () => {
-        api.previewTaskImport.mockResolvedValueOnce({ ...PREVIEW, mapping: {} });
+        api.previewTaskImport.mockResolvedValue({ ...PREVIEW, mapping: {} });
         renderModal();
         await chooseFile();
         fireEvent.click(screen.getByRole("button", { name: "Next" }));
