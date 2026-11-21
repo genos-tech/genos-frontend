@@ -1559,6 +1559,7 @@ export const ja: DeepPartial<Messages> = {
                 title: "新規グループメッセージを作成",
                 groupNamePlaceholder: "グループ名を入力…",
                 privateGroup: "プライベートグループ",
+                hiddenGroup: "非表示: メンバーだけが存在を確認できます",
                 publicGroup: "パブリックグループ",
                 searchPlaceholder: "チームメンバーを検索…",
                 noMembersMatchingSearch: "検索条件に一致するメンバーが見つかりません。",
@@ -1912,6 +1913,15 @@ export const ja: DeepPartial<Messages> = {
             sectionLabel: "ロール",
             changeFailed: "そのメンバーの役割を変更できませんでした。",
             guestHint: "外部コラボレーター — このプロジェクトのみを参照します。",
+        },
+        privacy: {
+            privateLabel: "プライベート",
+            privateHint: "オーナーに申請して参加します。名前は鍵アイコン付きで表示されます。",
+            hiddenLabel: "非表示",
+            hiddenHint:
+                "メンバーだけが存在を確認できます。一覧や検索に表示されず、招待でのみ参加できます。",
+            hiddenNeedsPrivate: "非表示にするにはプライベートをオンにしてください。",
+            saveFailed: "この設定を変更できませんでした。もう一度お試しください。",
         },
         profileEdit: {
             rename: "名前の変更",
@@ -5233,6 +5243,7 @@ export const ja: DeepPartial<Messages> = {
                 namePlaceholder: "プロジェクト名を入力…",
                 privateProject: "プライベートプロジェクト",
                 publicProject: "パブリックプロジェクト",
+                hiddenProject: "非表示: メンバーだけが存在を確認できます",
                 cancelButton: "キャンセル",
                 createButton: "プロジェクトを作成",
                 creationFailed: "プロジェクトの作成に失敗しました",

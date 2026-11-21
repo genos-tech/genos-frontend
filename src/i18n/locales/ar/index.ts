@@ -375,6 +375,15 @@ export const ar: DeepPartial<Messages> = {
             changeFailed: "لا يمكن تغيير دور هذا العضو.",
             guestHint: "المتعاون الخارجي — يرى هذا المشروع فقط.",
         },
+        privacy: {
+            privateLabel: "خاص",
+            privateHint: "ينضم الناس بطلب من المالك. يظهر الاسم مع قفل.",
+            hiddenLabel: "مخفي",
+            hiddenHint:
+                "يرى الأعضاء فقط أن هذا موجود. لا يظهر في القوائم أو البحث، ولا ينضم أحد إلا بدعوة.",
+            hiddenNeedsPrivate: "فعّل «خاص» لإخفائه.",
+            saveFailed: "تعذّر تغيير هذا الإعداد. حاول مرة أخرى.",
+        },
         profileEdit: {
             rename: "إعادة تسمية",
             save: "يحفظ",
@@ -2122,6 +2131,7 @@ export const ar: DeepPartial<Messages> = {
                 title: "إنشاء رسالة مجموعة جديدة",
                 groupNamePlaceholder: "أدخل اسم المجموعة...",
                 privateGroup: "مجموعة خاصة",
+                hiddenGroup: "مخفي: يرى الأعضاء فقط أنه موجود",
                 publicGroup: "مجموعة عامة",
                 searchPlaceholder: "ابحث عن أعضاء الفريق...",
                 noMembersMatchingSearch: "لم يتم العثور على أعضاء يطابقون بحثك.",
@@ -2462,6 +2472,7 @@ export const ar: DeepPartial<Messages> = {
                 namePlaceholder: "أدخل اسم المشروع...",
                 privateProject: "مشروع خاص",
                 publicProject: "مشروع عام",
+                hiddenProject: "مخفي: يرى الأعضاء فقط أنه موجود",
                 cancelButton: "إلغاء",
                 createButton: "إنشاء المشروع",
                 creationFailed: "فشل إنشاء المشروع",
