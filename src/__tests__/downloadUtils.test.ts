@@ -5,8 +5,6 @@ import { setMediaAccessToken } from "../utils/mediaAuth";
 
 describe("downloadFile", () => {
     let createElementSpy: ReturnType<typeof vi.spyOn>;
-    let appendChildSpy: ReturnType<typeof vi.spyOn>;
-    let removeChildSpy: ReturnType<typeof vi.spyOn>;
     let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
     let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>;
 
@@ -21,12 +19,8 @@ describe("downloadFile", () => {
         createElementSpy = vi
             .spyOn(document, "createElement")
             .mockReturnValue(mockLink as unknown as HTMLElement);
-        appendChildSpy = vi
-            .spyOn(document.body, "appendChild")
-            .mockReturnValue(mockLink as unknown as HTMLElement);
-        removeChildSpy = vi
-            .spyOn(document.body, "removeChild")
-            .mockReturnValue(mockLink as unknown as HTMLElement);
+        vi.spyOn(document.body, "appendChild").mockReturnValue(mockLink as unknown as HTMLElement);
+        vi.spyOn(document.body, "removeChild").mockReturnValue(mockLink as unknown as HTMLElement);
         createObjectURLSpy = vi
             .spyOn(window.URL, "createObjectURL")
             .mockReturnValue("blob:http://localhost/fake");

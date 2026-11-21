@@ -24,7 +24,7 @@ import { withGifSlashItem } from "../components/editors/GifToolbarButton";
 // Mirrors the editable editors' wiring (custom "/" controller + built-in
 // slash menu off).
 const Harness = () => {
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
+    const { audio: _audio, video: _video, ...remainingBlockSpecs } = defaultBlockSpecs;
     const schema = BlockNoteSchema.create({ blockSpecs: { ...remainingBlockSpecs } });
     const editor = useCreateBlockNote({ schema });
     (window as unknown as { __editor: unknown }).__editor = editor;

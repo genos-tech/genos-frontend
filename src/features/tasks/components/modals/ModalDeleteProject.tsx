@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import FolderDeleteIcon from "@mui/icons-material/FolderDelete";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { Box, Typography } from "@mui/joy";
+import { Box, Button, Typography } from "@mui/joy";
 import axios from "axios";
 
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
@@ -12,6 +12,7 @@ import { authApi } from "../../../../services/api";
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { errorMessageFrom } from "../../../../utils/errorMessage";
+import { archiveProject } from "../../../archive/archiveApi";
 
 const disableOpenDeleteModalParams = {
     flag: false,
@@ -28,6 +29,8 @@ type Props = {
         projectName: string;
     }) => void;
     usePM: ProjectManagementState;
+    /** The signed-in person owns the project: only then is "Archive instead" offered (MIP-1693). */
+    canArchive?: boolean;
 };
 
 export const ModalDeleteProject: React.FC<Props> = ({
@@ -35,6 +38,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
     openDeleteProject,
     setOpenDeleteProject,
     usePM,
+    canArchive = false,
 }) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
@@ -86,6 +90,30 @@ export const ModalDeleteProject: React.FC<Props> = ({
     const close = () => {
         setOpenDeleteProject(disableOpenDeleteModalParams);
         setErrorMessage(null);
+    };
+
+    // Archive instead of deleting (MIP-1693): everything is kept, and the project leaves the
+    // lists until its owner restores it. The dialog closes the same way a delete does.
+    const archiveInstead = async (): Promise<void> => {
+        const project = usePM.teamProjects.find(
+            (p) => p.projectId === openDeleteProject.projectId
+        ) ?? {
+            projectId: openDeleteProject.projectId,
+            projectName: openDeleteProject.projectName,
+            projectTags: [],
+        };
+        try {
+            await archiveProject(accessToken, myself.teamId, project);
+        } catch {
+            setErrorMessage(t.common.archive.archiveFailed);
+            return;
+        }
+        usePM.setCurrentProject(null);
+        setOpenDeleteProject(disableOpenDeleteModalParams);
+        setErrorMessage(null);
+        usePM.setTeamProjects(
+            usePM.teamProjects.filter((p) => p.projectId !== openDeleteProject.projectId)
+        );
     };
 
     // `body` stays the lead line: it's already translated into every locale,
@@ -154,6 +182,34 @@ export const ModalDeleteProject: React.FC<Props> = ({
                     {t.tasks.modals.deleteProject.chatNote}
                 </Typography>
             </Box>
+
+            {canArchive && (
+                <Box
+                    sx={{
+                        mt: 1.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1.5,
+                        flexWrap: "wrap",
+                    }}
+                >
+                    <Typography
+                        level="body-xs"
+                        sx={{ color: g.text.secondary, flex: 1, minWidth: 180 }}
+                    >
+                        {t.common.archive.archiveInsteadHint}
+                    </Typography>
+                    <Button
+                        size="sm"
+                        sx={{ borderRadius: g.radius.sm }}
+                        variant="outlined"
+                        onClick={() => void archiveInstead()}
+                    >
+                        {t.common.archive.archiveInstead}
+                    </Button>
+                </Box>
+            )}
         </ConfirmDialog>
     );
 };

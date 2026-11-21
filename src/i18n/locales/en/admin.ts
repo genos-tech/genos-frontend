@@ -139,6 +139,11 @@ export const admin = {
             teamNotFoundShort: "Team not found.",
             duplicateTeamName: "Please try with different team name.",
             invalidDepartments: "Please check the department names.",
+            // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+            teamNameInvalid: "Please check the team name.",
+            teamEmailFailed: "We could not set up this team's address. Please try again.",
+            rateLimited: "Too many attempts. Please wait a minute and try again.",
+            serverError: "The server could not create the team. Please try again in a moment.",
         },
         oauth: {
             failureReasons: {

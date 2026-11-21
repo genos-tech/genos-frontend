@@ -19,12 +19,12 @@ const renderAt = () =>
         <MemoryRouter initialEntries={["/"]}>
             <Routes>
                 <Route
+                    path="/"
                     element={
                         <RootGate>
                             <div>the home page</div>
                         </RootGate>
                     }
-                    path="/"
                 />
                 <Route element={<div>the app</div>} path="/workspace/genos" />
             </Routes>

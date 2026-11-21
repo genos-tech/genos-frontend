@@ -5,10 +5,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
-import { Box, List, Stack } from "@mui/joy";
+import { Box, Button, List, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -26,8 +27,17 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation, type Messages } from "../../../../i18n";
 import { useSyncFailure, type SyncScope } from "../../../../services/syncStatus";
 import { useShortcut } from "../../../../shortcuts";
+import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
+import { smoothScrollBehavior } from "../../../../utils/motion";
+import {
+    chatArchiveKey,
+    isChatArchived,
+    isChatArchivedIn,
+    useArchiveState,
+    type ArchiveSnapshot,
+} from "../../../archive/archiveState";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { ChatListItemLive } from "../../hooks/useChatListItem";
 import { useChatRouting } from "../../hooks/useChatRouting";
@@ -166,8 +176,12 @@ const useFilteredChats = (
     allChats: AllChatProps[],
     targetChatType: number,
     showOnlyUnreadItems: boolean,
-    includeMDM: boolean = false,
-    chatTagFilter?: (chat: AllChatProps) => boolean
+    includeMDM: boolean,
+    chatTagFilter: ((chat: AllChatProps) => boolean) | undefined,
+    // Archived chats (MIP-1693) leave the pane unless it shows them. The archive snapshot is a
+    // dependency, so an archive or restore re-filters at once.
+    showArchived: boolean,
+    archiveSnapshot: ArchiveSnapshot
 ) => {
     return useMemo(() => {
         const chatTypeFilter = (chat: AllChatProps) => {
@@ -178,6 +192,11 @@ const useFilteredChats = (
         };
 
         let filtered = allChats.filter(chatTypeFilter);
+        if (!showArchived) {
+            filtered = filtered.filter(
+                (chat) => !isChatArchivedIn(archiveSnapshot, chatArchiveKey(chat))
+            );
+        }
         if (chatTagFilter) {
             filtered = filtered.filter(chatTagFilter);
         }
@@ -197,7 +216,15 @@ const useFilteredChats = (
             });
         }
         return sortAllChatByPinned([...filtered]);
-    }, [allChats, targetChatType, showOnlyUnreadItems, includeMDM, chatTagFilter]);
+    }, [
+        allChats,
+        targetChatType,
+        showOnlyUnreadItems,
+        includeMDM,
+        chatTagFilter,
+        showArchived,
+        archiveSnapshot,
+    ]);
 };
 
 // Custom hook for managing filtered activity messages
@@ -614,6 +641,7 @@ export const ChatList = (props: ChatListProps) => {
         chatRouting,
     } = props;
 
+    const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -634,13 +662,26 @@ export const ChatList = (props: ChatListProps) => {
     };
 
     // Custom hooks for filtered data
+    const archiveSnapshot = useArchiveState();
+    const [showArchivedChats, setShowArchivedChats] = useState(false);
     const targetChats = useFilteredChats(
         useCM.allChats,
         targetChatType,
         state.showOnlyUnreadItems,
         includeMDM,
-        chatTagFilter
+        chatTagFilter,
+        showArchivedChats,
+        archiveSnapshot
     );
+    // How many archived chats this pane holds: the "Show archived" row appears only when there
+    // is one, so an empty archive costs the sidebar nothing.
+    const archivedInPane = useCM.allChats.filter(
+        (chat) =>
+            (chat.chatType === targetChatType ||
+                (includeMDM && targetChatType === 1 && chat.chatType === 4)) &&
+            isChatArchived(chatArchiveKey(chat)) &&
+            (!chatTagFilter || chatTagFilter(chat))
+    ).length;
     const tmpActivityMessages = useFilteredActivityMessages(
         useCM.activityMessages,
         currentActivityMessageType,
@@ -669,7 +710,7 @@ export const ChatList = (props: ChatListProps) => {
         if (prevFirstNonPinnedKeyRef.current && prevFirstNonPinnedKeyRef.current !== key) {
             const ref = chatTypeLookup[targetChatType];
             requestAnimationFrame(() => {
-                ref?.current?.scrollTo({ top: 0, behavior: "smooth" });
+                ref?.current?.scrollTo({ top: 0, behavior: smoothScrollBehavior() });
             });
         }
         prevFirstNonPinnedKeyRef.current = key;
@@ -742,7 +783,7 @@ export const ChatList = (props: ChatListProps) => {
     ) => {
         virtuosoRef.current?.scrollToIndex({
             index: nextIdx,
-            behavior: "smooth",
+            behavior: smoothScrollBehavior(),
             align: "center",
         });
         // Wait for Virtuoso to mount the row before synthesising the
@@ -806,7 +847,7 @@ export const ChatList = (props: ChatListProps) => {
             chatRouting.navigateToChat(next.chatType, next.chatId as unknown as number);
             chatTypeLookup[targetChatType]?.current?.scrollToIndex({
                 index: nextIdx,
-                behavior: "smooth",
+                behavior: smoothScrollBehavior(),
                 align: "center",
             });
             return;
@@ -892,6 +933,28 @@ export const ChatList = (props: ChatListProps) => {
             );
         }
         return null;
+    };
+
+    // The archived chats of this pane, shown or hidden in place (MIP-1693).
+    const renderArchivedToggle = () => {
+        if (targetChatType >= CHAT_TYPES.ACTIVITY || archivedInPane === 0) return null;
+        const label = showArchivedChats
+            ? t.common.archive.hideArchived
+            : `${t.common.archive.showArchived} (${archivedInPane})`;
+        return (
+            <Box sx={{ px: 1.5, py: 0.75, flexShrink: 0 }}>
+                <Button
+                    aria-expanded={showArchivedChats}
+                    size="sm"
+                    startDecorator={<ArchiveOutlinedIcon fontSize="small" />}
+                    sx={{ color: g.text.secondary, fontWeight: 500 }}
+                    variant="plain"
+                    onClick={() => setShowArchivedChats((open) => !open)}
+                >
+                    {label}
+                </Button>
+            </Box>
+        );
     };
 
     const renderActivityList = () => {
@@ -981,6 +1044,7 @@ export const ChatList = (props: ChatListProps) => {
             }}
         >
             {renderChatList()}
+            {renderArchivedToggle()}
             {renderActivityList()}
             {renderFlaggedList()}
         </List>

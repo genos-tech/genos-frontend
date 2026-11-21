@@ -203,7 +203,7 @@ describe("useSurfaceTaskPreviewVisible", () => {
     });
 
     it("persists per surface so a reload restores the same layout", () => {
-        const { result, rerender } = renderHook(
+        const { rerender } = renderHook(
             ({ visible }: { visible: boolean }) =>
                 useSurfaceTaskPreviewVisible("chat", true, useTMWith(visible, 1)),
             { initialProps: { visible: false } }

@@ -80,6 +80,8 @@ describe("MessageBody customEmoji branch (v3 pane)", () => {
     it("renders the baked URL as an inline image — no catalog needed", () => {
         render(
             <MessageBody
+                bodyText="ship it :party-blob:"
+                currentUserId={null}
                 body={[
                     {
                         type: "paragraph",
@@ -92,8 +94,6 @@ describe("MessageBody customEmoji branch (v3 pane)", () => {
                         ],
                     },
                 ]}
-                bodyText="ship it :party-blob:"
-                currentUserId={null}
             />
         );
         const img = screen.getByTestId("message-body-custom-emoji-party-blob");
@@ -103,14 +103,14 @@ describe("MessageBody customEmoji branch (v3 pane)", () => {
     it("degrades to the shortcode text when props carry no URL", () => {
         render(
             <MessageBody
+                bodyText=""
+                currentUserId={null}
                 body={[
                     {
                         type: "paragraph",
                         content: [{ type: "customEmoji", props: { name: "party-blob", url: "" } }],
                     },
                 ]}
-                bodyText=""
-                currentUserId={null}
             />
         );
         expect(screen.getByText(":party-blob:")).toBeInTheDocument();

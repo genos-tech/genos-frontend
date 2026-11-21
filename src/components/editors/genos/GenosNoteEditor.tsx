@@ -505,10 +505,10 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                     // A custom "/" SuggestionMenuController is mounted below —
                     // the built-in menu must be off or BOTH render on "/",
                     // stacking duplicate group labels (the "Media x3" bug).
-                    slashMenu={false}
                     formattingToolbar={false}
                     renderEditor={false}
                     sideMenu={false}
+                    slashMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
                     onChange={() => {
@@ -589,8 +589,8 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                     formattingToolbar={() => (
                                         <GenosDocumentToolbar
                                             editor={editor}
-                                            isEditable={isEditable}
                                             hasComments={!!threadStore}
+                                            isEditable={isEditable}
                                             setShowGifPicker={setShowGifPicker}
                                             askSource={
                                                 askGenosAvailable
@@ -609,13 +609,13 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                 {isEditable && (
                                     <GenosSuggestionMenus
                                         editor={editor}
+                                        slash={{ preset: "document", setShowGifPicker }}
                                         getMentionSources={() => ({
                                             teamMemberProfiles: useTEM.teamMemberProfiles,
                                             teamMembers: mentionableUsers,
                                             myselfUserId: myself.userId,
                                             mentionGroups,
                                         })}
-                                        slash={{ preset: "document", setShowGifPicker }}
                                     />
                                 )}
 

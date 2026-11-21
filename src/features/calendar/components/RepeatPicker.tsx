@@ -99,10 +99,10 @@ export const RepeatPicker = ({
                         <FormLabel>{t.calendar.repeat.every}</FormLabel>
                         <Input
                             disabled={disabled}
+                            endDecorator={t.calendar.repeat.unit[value.frequency]}
                             slotProps={{ input: { min: 1, max: 999 } }}
                             type="number"
                             value={value.interval}
-                            endDecorator={t.calendar.repeat.unit[value.frequency]}
                             onChange={(e) => {
                                 const parsed = parseInt(e.target.value, 10);
                                 set({
@@ -124,8 +124,8 @@ export const RepeatPicker = ({
                                             color={selected ? "primary" : "neutral"}
                                             disabled={disabled}
                                             size="sm"
-                                            variant={selected ? "solid" : "outlined"}
                                             sx={{ minWidth: 34, justifyContent: "center" }}
+                                            variant={selected ? "solid" : "outlined"}
                                             onClick={() => toggleWeekday(day)}
                                         >
                                             {dayjs().day(day).format("dd")}
@@ -175,12 +175,12 @@ export const RepeatPicker = ({
                         <FormControl>
                             <Input
                                 disabled={disabled}
-                                type="date"
-                                value={value.end.date}
+                                slotProps={{ input: { min: startDate } }}
                                 // Floored at the start date: an earlier
                                 // UNTIL yields a series with no occurrences
                                 // at all, which looks like the save failed.
-                                slotProps={{ input: { min: startDate } }}
+                                type="date"
+                                value={value.end.date}
                                 onChange={(e) =>
                                     set({ end: { kind: "onDate", date: e.target.value } })
                                 }

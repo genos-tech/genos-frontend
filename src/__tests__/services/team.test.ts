@@ -115,7 +115,10 @@ describe("createTeam", () => {
         const result = await createTeam(null, "Team", "user1", setError);
 
         expect(result).toBeUndefined();
-        expect(setError).toHaveBeenCalledWith("Unauthorized. Authentication token was not found.");
+        expect(setError).toHaveBeenCalledWith({
+            field: "form",
+            message: "Unauthorized. Authentication token was not found.",
+        });
     });
 
     it("sends the departments, and only when some are named", async () => {
@@ -146,10 +149,13 @@ describe("createTeam", () => {
         const setError = vi.fn();
         await createTeam("token123", "Acme", "user1", setError, true, ["###"]);
 
-        expect(setError).toHaveBeenCalledWith("Please check the department names.");
+        expect(setError).toHaveBeenCalledWith({
+            field: "departments",
+            message: "Please check the department names.",
+        });
     });
 
-    it("should call setErrorMessage on 400 error", async () => {
+    it("a 400 with no field named is not blamed on the team name (MIP-1841)", async () => {
         const mockPost = vi.fn().mockRejectedValue({
             isAxiosError: true,
             response: { status: 400, data: { error: "duplicate" } },
@@ -162,7 +168,35 @@ describe("createTeam", () => {
         const setError = vi.fn();
         await createTeam("token123", "Dup Team", "user1", setError);
 
-        expect(setError).toHaveBeenCalledWith("Please try with different team name.");
+        expect(setError).toHaveBeenCalledWith({
+            field: "form",
+            message: "Something went wrong. Please try again later.",
+        });
+    });
+
+    it("a taken name is reported on the team-name field (MIP-1841)", async () => {
+        const mockPost = vi.fn().mockRejectedValue({
+            isAxiosError: true,
+            response: {
+                status: 400,
+                data: {
+                    team_name: ["team master with this team name already exists."],
+                    hint: "Try with different team_name",
+                },
+            },
+        });
+        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
+
+        const axios = await import("axios");
+        vi.spyOn(axios.default, "isAxiosError").mockReturnValue(true);
+
+        const setError = vi.fn();
+        await createTeam("token123", "Dup Team", "user1", setError);
+
+        expect(setError).toHaveBeenCalledWith({
+            field: "teamName",
+            message: "Please try with different team name.",
+        });
     });
 });
 

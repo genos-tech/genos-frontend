@@ -199,6 +199,13 @@ export const ja: DeepPartial<Messages> = {
                 teamNotFoundShort: "チームが見つかりません。",
                 duplicateTeamName: "別のチーム名でお試しください。",
                 invalidDepartments: "部署名を確認してください。",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "チーム名を確認してください。",
+                teamEmailFailed:
+                    "チームのアドレスを設定できませんでした。もう一度お試しください。",
+                rateLimited: "試行回数が多すぎます。1分ほど待ってからもう一度お試しください。",
+                serverError:
+                    "サーバーでチームを作成できませんでした。しばらくしてからもう一度お試しください。",
             },
             oauth: {
                 failureReasons: {
@@ -984,6 +991,9 @@ export const ja: DeepPartial<Messages> = {
             serverError: "サーバーエラーが発生しました。しばらくしてからもう一度お試しください。",
             permissionDenied: "この操作を行う権限がありません。",
             requestFailed: "リクエストを完了できませんでした。もう一度お試しください。",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived:
+                "アーカイブされているため読み取り専用です。変更するにはアーカイブを解除してください。",
             limitReached:
                 "プランの上限に達しました。詳細は 設定 → プランと使用状況 をご確認ください。",
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
@@ -1704,6 +1714,7 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     common: {
+        skipToContent: "本文へスキップ",
         searchField: {
             clear: "検索をクリア",
         },
@@ -1776,6 +1787,34 @@ export const ja: DeepPartial<Messages> = {
                 "このグループのメッセージは表示されなくなります。公開されている場合は、後で再参加できます。",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "プロジェクトをアーカイブ",
+            unarchiveMenuProject: "プロジェクトのアーカイブを解除",
+            archiveMenuChat: "グループをアーカイブ",
+            unarchiveMenuChat: "グループのアーカイブを解除",
+            archiveInstead: "代わりにアーカイブ",
+            archiveInsteadHint:
+                "すべてを残します。アーカイブを解除するまで読み取り専用になります。",
+            ownerOnly: "アーカイブとアーカイブ解除はオーナーだけができます。",
+            projectBannerTitle: "このプロジェクトはアーカイブされています",
+            chatBannerTitle: "このグループはアーカイブされています",
+            projectBannerBody:
+                "読み取り専用です。アーカイブを解除するまで、新しいタスク、編集、コメントはできません。何も削除されていません。",
+            chatBannerBody:
+                "読み取り専用です。アーカイブを解除するまで、新しいメッセージは送れません。何も削除されていません。",
+            unarchiveAction: "アーカイブを解除",
+            showArchived: "アーカイブを表示",
+            hideArchived: "アーカイブを隠す",
+            archivedSection: "アーカイブ済み",
+            archivedBadge: "アーカイブ済み",
+            newTaskDisabled:
+                "タスクを追加するには、このプロジェクトのアーカイブを解除してください。",
+            composerDisabled:
+                "このグループはアーカイブされています。メッセージを送るにはアーカイブを解除してください。",
+            archiveFailed: "アーカイブできませんでした。もう一度お試しください。",
+            unarchiveFailed: "アーカイブを解除できませんでした。もう一度お試しください。",
+        },
         deleteChat: {
             button: "グループを削除",
             title: "このグループを削除しますか？",
@@ -1959,8 +1998,9 @@ export const ja: DeepPartial<Messages> = {
             loading: "読み込み中",
             preparingWorkspace: "ワークスペースを準備しています",
             takingLonger: "時間がかかっていますか？",
-            sessionExpired: "セッションの有効期限が切れている可能性があります",
-            signInAgain: "再度サインイン",
+            stillConnecting:
+                "サーバーへの接続を待っています。回線が遅い場合は少し時間がかかることがあります。",
+            reload: "再読み込み",
             offlineTitle: "オフラインです",
             offlineBody: "現在サーバーに接続できません。接続が回復すると自動的に再開します。",
         },
@@ -3979,6 +4019,7 @@ export const ja: DeepPartial<Messages> = {
             planRenews: "次回更新日",
             planEnds: "プラン終了日",
             cancelScheduled: "解約が予約されています。プランはこの日まで有効です。",
+            pendingChange: "{date} に {plan} へ変更",
             pastDue: "お支払いに問題があります。ポータルからお支払い方法を更新してください。",
             plansHeading: "プランと料金",
             plansSubheading:
@@ -6266,6 +6307,9 @@ export const ja: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "残りのタスクは {remaining}/{total} 個です",
+                cardAriaLabel: "{id} {title}、{status}",
+                cardAriaHint:
+                    "Enter キーまたはスペースキーでプレビューを開きます。矢印キーでリンクされたタスクへ移動します。",
                 healthSummary: "Close済み {actualPct}% · 予想 {expectedPct}%",
                 expectedByToday: "今日までの予想: {expectedPct}%",
                 openBlockerOne: "{count} Openブロッカー",

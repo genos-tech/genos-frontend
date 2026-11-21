@@ -28,12 +28,12 @@ export const SchedulesModal = ({ open, onClose, teamId }: Props) => {
     const theme = useTheme();
     return (
         <ModalFrame
-            clearBottomBar
             icon={<EventRepeatRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
             size="lg"
             title={t.settings.schedules.title}
             zIndex={theme.zIndex.modal}
+            clearBottomBar
             headerDivider
             onClose={onClose}
         >

@@ -272,14 +272,14 @@ export const ScheduleFormPanel = ({
                 >
                     <FormLabel>{s.name}</FormLabel>
                     <Input
+                        autoFocus={!isMobile}
                         placeholder={s.namePlaceholder}
+                        // Opened by the member's own click; on a phone the keyboard would
+                        // cover the form, so only a fine pointer gets the focus.
                         value={form.name}
                         slotProps={{
                             input: { autoComplete: "off", maxLength: NAME_MAX + 20, name: "name" },
                         }}
-                        // Opened by the member's own click; on a phone the keyboard would
-                        // cover the form, so only a fine pointer gets the focus.
-                        autoFocus={!isMobile}
                         onChange={(e) => set("name", e.target.value)}
                     />
                     {show && problems.name && (
@@ -553,14 +553,14 @@ export const ScheduleFormPanel = ({
                                         aria-pressed={on}
                                         color={on ? "primary" : "neutral"}
                                         size="sm"
+                                        sx={{ minWidth: 44, px: 1 }}
+                                        // Seven chips wrap (the row is flexWrap), they never push the dialog wider.
                                         variant={on ? "solid" : "outlined"}
                                         data-invalid-group={
                                             d === WEEKDAY_NUMBERS[0] && show && problems.weekdays
                                                 ? ""
                                                 : undefined
                                         }
-                                        // Seven chips wrap (the row is flexWrap), they never push the dialog wider.
-                                        sx={{ minWidth: 44, px: 1 }}
                                         onClick={() => toggleDay(d)}
                                     >
                                         {weekdayName(d, locale, "short")}

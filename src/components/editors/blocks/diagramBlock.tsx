@@ -95,8 +95,8 @@ const DiagramBlockView = (props: ReactCustomBlockRenderProps<typeof diagramBlock
                 svg ? (
                     <div
                         aria-label={dictionary.preview_label}
-                        role="img"
                         dangerouslySetInnerHTML={{ __html: svg }}
+                        role="img"
                         style={{ display: "flex", justifyContent: "center" }}
                     />
                 ) : source ? (

@@ -89,14 +89,14 @@ const renderHeader = ({
             <ThreadChatPaneHeader
                 hostZIndex={hosted ? 10020 : undefined}
                 myself={{ userId: "me" } as never}
+                useCM={useCM as never}
+                useNM={{ chatPanelApi: { openOrCreate: vi.fn() } } as never}
+                useTM={useTM as never}
                 threadTaskMeta={
                     thread.taskId === -1
                         ? null
                         : ({ id: "42", project: { projectId: "p9" } } as never)
                 }
-                useCM={useCM as never}
-                useNM={{ chatPanelApi: { openOrCreate: vi.fn() } } as never}
-                useTM={useTM as never}
             />
         </CssVarsProvider>
     );

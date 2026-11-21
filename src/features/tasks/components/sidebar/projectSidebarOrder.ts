@@ -50,3 +50,21 @@ export const filterAndSortProjects = (
         return compareText(a.projectName ?? "", b.projectName ?? "");
     });
 };
+
+// Split the joined projects into the starred ones (shown pinned above the
+// groups, sorted by name, and never hidden by the label filter) and the rest
+// (grouped and filtered as above). A starred id that is not in `projects` (a
+// project the person has left) is simply not returned. MIP-1695.
+export const partitionFavoriteProjects = (
+    projects: ProjectProps[],
+    favoriteIds: ReadonlySet<number>
+): { favorites: ProjectProps[]; rest: ProjectProps[] } => {
+    const favorites: ProjectProps[] = [];
+    const rest: ProjectProps[] = [];
+    for (const p of projects) {
+        if (favoriteIds.has(p.projectId)) favorites.push(p);
+        else rest.push(p);
+    }
+    favorites.sort((a, b) => compareText(a.projectName ?? "", b.projectName ?? ""));
+    return { favorites, rest };
+};

@@ -58,8 +58,8 @@ const renderChatRow = () =>
                 setReactions={vi.fn()}
                 setShowEmojiPicker={vi.fn()}
                 setUniqueReactionEmojiCount={vi.fn()}
-                showUnderBarOption
                 socket={null}
+                showUnderBarOption
             />
         </CssVarsProvider>
     );
@@ -73,8 +73,8 @@ const renderTaskCommentRow = () =>
                 reactions={[]}
                 setReactions={vi.fn()}
                 setShowEmojiPicker={vi.fn()}
-                showUnderBarOption
                 socket={null}
+                showUnderBarOption
             />
         </CssVarsProvider>
     );

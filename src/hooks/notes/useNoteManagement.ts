@@ -95,6 +95,7 @@ import {
     TeamNoteMetaProps,
 } from "../../types/notes";
 import { keepIfEqual } from "../../utils/keepIfEqual";
+import { smoothScrollBehavior } from "../../utils/motion";
 import {
     buildChatNoteTree,
     buildMyNoteFolderForest,
@@ -619,13 +620,6 @@ export const useNoteManagement = (
             return next;
         });
     }, []);
-
-    const chatTypeLabels: Record<number, string> = {
-        1: "DM",
-        2: "GM",
-        3: "PM",
-        4: "DM",
-    };
 
     // Chat Note related
     const handleCreateNewChatNote = async (
@@ -1701,7 +1695,7 @@ export const useNoteManagement = (
         setTimeout(() => {
             document
                 .querySelector(`[data-note-folder-id="${folderId}"]`)
-                ?.scrollIntoView({ block: "center", behavior: "smooth" });
+                ?.scrollIntoView({ block: "center", behavior: smoothScrollBehavior() });
         }, 200);
     };
 

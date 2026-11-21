@@ -116,6 +116,7 @@ export const ContentLengthSection = () => {
                                 </Box>
                                 <Radio
                                     disabled={status === "loading"}
+                                    value={level}
                                     slotProps={{
                                         input: {
                                             id: inputId,
@@ -123,7 +124,6 @@ export const ContentLengthSection = () => {
                                             "aria-describedby": `${inputId}-helper`,
                                         },
                                     }}
-                                    value={level}
                                 />
                             </SettingRow>
                         );

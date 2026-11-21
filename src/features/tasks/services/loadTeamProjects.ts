@@ -5,7 +5,10 @@ import { UserProps } from "../../../types/admin";
 
 export const loadTeamProjects = async (
     myself: Pick<UserProps, "teamId" | "userId">,
-    accessToken: string | null
+    accessToken: string | null,
+    // `includeArchived` asks for the archived projects as well (MIP-1693). The default list leaves
+    // them out, so the difference between the two is what is archived.
+    options: { includeArchived?: boolean } = {}
 ) => {
     // Skip when the user hasn't joined / been hydrated with a team
     // yet. Otherwise template-literal interpolation turns a
@@ -19,7 +22,9 @@ export const loadTeamProjects = async (
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${myself.teamId}&attendee_id=${myself.userId}`;
+            const query: string =
+                `team_id=${myself.teamId}&attendee_id=${myself.userId}` +
+                (options.includeArchived ? "&include_archived=true" : "");
             const res = await api.get(`/project/projects/?${query}`);
             return res.data;
         } else {

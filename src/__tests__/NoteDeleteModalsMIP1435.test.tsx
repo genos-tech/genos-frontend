@@ -48,9 +48,9 @@ const CASES = [
         modal: (useNM: NoteManagementState, setOpen = vi.fn()) => (
             <ModalDeleteMyNote
                 currentMyNote={{ noteId: 7, title: "Note 7" } as never}
-                openDeleteNote
                 setOpenDeleteNote={setOpen}
                 useNM={useNM}
+                openDeleteNote
             />
         ),
     },
@@ -59,7 +59,7 @@ const CASES = [
         by: "deleteTaskNoteById",
         children: "taskNoteMeta",
         modal: (useNM: NoteManagementState, setOpen = vi.fn()) => (
-            <ModalDeleteTaskNote openDeleteNote setOpenDeleteNote={setOpen} useNM={useNM} />
+            <ModalDeleteTaskNote setOpenDeleteNote={setOpen} useNM={useNM} openDeleteNote />
         ),
     },
     {
@@ -67,7 +67,7 @@ const CASES = [
         by: "deleteChatNoteById",
         children: "chatNoteMeta",
         modal: (useNM: NoteManagementState, setOpen = vi.fn()) => (
-            <ModalDeleteChatNote openDeleteNote setOpenDeleteNote={setOpen} useNM={useNM} />
+            <ModalDeleteChatNote setOpenDeleteNote={setOpen} useNM={useNM} openDeleteNote />
         ),
     },
 ] as const;

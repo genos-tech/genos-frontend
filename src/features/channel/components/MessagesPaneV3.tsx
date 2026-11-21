@@ -487,7 +487,6 @@ function MessageRow({
                     )}
                     {!editing && !message.deletedAt && (
                         <MessageRowHoverToolbar
-                            messageId={message.id}
                             // The popover stays open after the reaction is
                             // toggled (handleToggleReaction closes it), so
                             // keep the toolbar visible while it's open even
@@ -495,6 +494,7 @@ function MessageRow({
                             // can't see what they're clicking on.
                             isFlagged={isFlagged}
                             isMine={!!isMine}
+                            messageId={message.id}
                             replyCount={message.replyCount}
                             visible={hovered || showEmoji || touchOpen}
                             onCopyLink={copyLink}

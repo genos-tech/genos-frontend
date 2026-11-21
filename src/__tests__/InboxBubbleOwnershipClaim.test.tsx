@@ -58,13 +58,13 @@ const renderBubble = (item: InboxItemProps, socket: unknown = null, onItemChange
         <CssVarsProvider>
             <InboxBubble
                 inboxItem={item}
-                onItemChanged={onItemChanged}
                 myself={{ userId: "u1", teamId: "t1" } as never}
                 setMyself={vi.fn()}
                 socket={socket as never}
                 useCM={{ allChats: [] } as never}
                 useTEM={{ teamMemberProfiles: {} } as never}
                 useUISM={{} as never}
+                onItemChanged={onItemChanged}
             />
         </CssVarsProvider>
     );

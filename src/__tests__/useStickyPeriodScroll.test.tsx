@@ -31,7 +31,7 @@ const Harness = ({ onPrev, onNext, enabled = true, mounted = true }: HarnessProp
     const ref = useStickyPeriodScroll<HTMLDivElement>({ onPrev, onNext, enabled });
     // `mounted` models Joy's Modal, which renders NO children while
     // closed — the grid node appears only once the user opens it.
-    return mounted ? <div data-testid="grid" ref={ref} /> : null;
+    return mounted ? <div ref={ref} data-testid="grid" /> : null;
 };
 
 /** Dispatches a real WheelEvent so `passive` and `preventDefault`

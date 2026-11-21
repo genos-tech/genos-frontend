@@ -53,7 +53,6 @@ describe("task preview menu", () => {
                         useNM={{ taskNoteMeta: [] } as never}
                         usePM={{} as never}
                         useTM={{ isCreatingTask: { flag: false } } as never}
-                        onDeleteTask={vi.fn()}
                         useUISM={{} as never}
                         taskContent={
                             {
@@ -67,6 +66,7 @@ describe("task preview menu", () => {
                                 status: { status: "Open" },
                             } as never
                         }
+                        onDeleteTask={vi.fn()}
                     />
                 </CssVarsProvider>
             </MemoryRouter>
@@ -104,12 +104,8 @@ describe("task preview menu: convert to milestone", () => {
                         useCM={{} as never}
                         useNM={{ taskNoteMeta: [] } as never}
                         usePM={{} as never}
-                        useSM={
-                            { applyMilestoneToState: vi.fn(), forgetMilestone: vi.fn() } as never
-                        }
                         useTM={{ isCreatingTask: { flag: false } } as never}
                         useUISM={{} as never}
-                        onDeleteTask={vi.fn()}
                         taskContent={
                             {
                                 id: 42,
@@ -122,6 +118,10 @@ describe("task preview menu: convert to milestone", () => {
                                 ...taskOverrides,
                             } as never
                         }
+                        useSM={
+                            { applyMilestoneToState: vi.fn(), forgetMilestone: vi.fn() } as never
+                        }
+                        onDeleteTask={vi.fn()}
                         {...(props as object)}
                     />
                 </CssVarsProvider>
@@ -188,8 +188,8 @@ describe("project header menu", () => {
                         }
                         onCloseTaskHome={vi.fn()}
                         onCreateProject={vi.fn()}
-                        onManageTags={vi.fn()}
                         onDeleteProject={vi.fn()}
+                        onManageTags={vi.fn()}
                     />
                 </CssVarsProvider>
             </MemoryRouter>
@@ -199,6 +199,8 @@ describe("project header menu", () => {
             h.newMilestoneMenuItem,
             h.manageTagsMenuItem,
             h.customizeFieldsMenuItem,
+            // The owner's archive item (MIP-1693) sits before Delete, which is always last.
+            "Archive project",
             h.deleteProjectMenuItem,
         ]);
     });

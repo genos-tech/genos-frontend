@@ -89,12 +89,15 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
             options={sortedMembers}
-            sx={{ width: "100%" }}
             // Pass `null` through so an unassigned task renders an empty
             // picker (built-in placeholder), not a silent fallback to
             // `myself` that would mislead the user into thinking they
             // were the assignee.
             // A reporter field with nobody in it is a reporter whose account is gone.
+            size="sm"
+            slotProps={{ input: { dir: "auto" } }}
+            sx={{ width: "100%" }}
+            value={resolvedValue}
             placeholder={
                 isAssignee
                     ? t.tasks.messageTemplate.unassigned
@@ -102,9 +105,6 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                       ? undefined
                       : t.tasks.messageTemplate.deletedUser
             }
-            size="sm"
-            slotProps={{ input: { dir: "auto" } }}
-            value={resolvedValue}
             renderOption={(props, option) => {
                 return (
                     <AutocompleteOption
@@ -114,14 +114,14 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                         <ListItemContent sx={{ fontSize: "sm" }}>
                             <Stack direction="row" spacing={1}>
                                 <AvatarWithStatus
-                                    showPulseDot={false}
                                     key={`ac-render-option-user-search-avatar-${option.userName}-${option.userId}`}
                                     avatarUser={useTEM.teamMemberProfiles[option.userId]}
-                                    useCM={useCM}
                                     isYou={option.userId === myself.userId}
                                     myself={myself}
                                     setMyself={setMyself}
+                                    showPulseDot={false}
                                     socket={socket}
+                                    useCM={useCM}
                                     useUISM={useUISM}
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>

@@ -112,7 +112,13 @@ export const RecentProjectGroup = ({
                             const isSelected = task.taskId === selectedTaskId;
                             return (
                                 <NavItem
+                                    key={`recent-task-${task.taskId}`}
                                     selected={isSelected}
+                                    icon={
+                                        task.isMilestone === true ? (
+                                            <FlagRoundedIcon sx={{ color: g.warning.solid }} />
+                                        ) : undefined
+                                    }
                                     label={
                                         <Box
                                             sx={{
@@ -123,7 +129,7 @@ export const RecentProjectGroup = ({
                                             }}
                                         >
                                             <TaskIdText task={task} />
-                                            <StatusLabel iconOnly status={task.status.status} />
+                                            <StatusLabel status={task.status.status} iconOnly />
                                             <Box
                                                 component="span"
                                                 sx={{
@@ -136,14 +142,8 @@ export const RecentProjectGroup = ({
                                             </Box>
                                         </Box>
                                     }
-                                    onClick={() => onOpenTask(group, task)}
-                                    key={`recent-task-${task.taskId}`}
                                     // Milestone rows get the flag glyph on the far left.
-                                    icon={
-                                        task.isMilestone === true ? (
-                                            <FlagRoundedIcon sx={{ color: g.warning.solid }} />
-                                        ) : undefined
-                                    }
+                                    onClick={() => onOpenTask(group, task)}
                                 />
                             );
                         })}

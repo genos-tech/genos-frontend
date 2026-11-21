@@ -215,7 +215,7 @@ describe("components render their dates in the app's language", () => {
         ]);
         await withLocale(
             locale,
-            <ModalRecentlyDeletedChats open teamId="team-1" onClose={vi.fn()} />
+            <ModalRecentlyDeletedChats teamId="team-1" open onClose={vi.fn()} />
         );
         const when = intl(
             locale,
@@ -269,12 +269,12 @@ describe("components render their dates in the app's language", () => {
                     myself={me}
                     noteId={1}
                     noteType={1}
-                    open
                     setMyself={vi.fn()}
                     socket={null}
                     useCM={{} as never}
                     useNM={nm}
                     useUISM={{} as never}
+                    open
                     onClose={vi.fn()}
                 />
             )
@@ -384,12 +384,12 @@ describe("components render their dates in the app's language", () => {
             locale,
             <ModalTaskDiagram
                 myself={me}
-                open
                 projectId={1}
                 rootLabel="KDS-5 · Five"
                 rootTaskId={5}
                 usePM={{} as never}
                 useTM={{} as never}
+                open
                 onClose={vi.fn()}
             />
         );

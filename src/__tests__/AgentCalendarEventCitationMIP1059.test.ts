@@ -139,7 +139,7 @@ describe("the chips of a turn", () => {
 describe("saving an answer as a note", () => {
     it("keeps a cited event as text: a note has no URL to open it with, so no dead link", () => {
         const sources = buildSourcesById([event(TOKEN)]);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const content = (
             markdownToBlocks(`Your [standup](${TOKEN}) and ${`[${TOKEN}]`}.`, sources)[0] as any
         ).content as Array<{ type: string; text?: string }>;

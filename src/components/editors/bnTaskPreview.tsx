@@ -321,11 +321,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     comments={false}
                     editor={editor as any}
                     emojiPicker={false}
+                    formattingToolbar={false}
                     // A custom "/" SuggestionMenuController is mounted below —
                     // the built-in menu must be off or BOTH render on "/",
                     // stacking duplicate group labels (the "Media x3" bug).
-                    slashMenu={false}
-                    formattingToolbar={false}
+                    sideMenu={false}
                     // `false` so the custom `<SideMenuController>` below
                     // is the only side-menu controller attached. When
                     // this is `true`, BlockNote registers its own
@@ -334,7 +334,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     // hovering a line shows nothing. Mirrors the
                     // bnMyNoteEditor / bnTaskNoteEditor / bnChatNoteEditor
                     // setup.
-                    sideMenu={false}
+                    slashMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
                     onBlur={() => syncBodyToParent.flush()}
@@ -415,13 +415,13 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
                     <GenosSuggestionMenus
                         editor={editor}
+                        slash={{ preset: "document", setShowGifPicker }}
                         getMentionSources={() => ({
                             teamMemberProfiles: useTEM.teamMemberProfiles,
                             teamMembers: useTEM.teamMembers,
                             myselfUserId: myself.userId,
                             mentionGroups,
                         })}
-                        slash={{ preset: "document", setShowGifPicker }}
                     />
 
                     {threadStore && (

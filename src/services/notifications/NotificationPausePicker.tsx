@@ -109,7 +109,7 @@ export const NotificationPausePresetItems = ({
             {isPausedNow && (
                 <>
                     <MenuDivider />
-                    <MenuRow danger icon={<PlayArrowRoundedIcon />} onClick={resume}>
+                    <MenuRow icon={<PlayArrowRoundedIcon />} danger onClick={resume}>
                         {p.resumeShort}
                     </MenuRow>
                 </>
@@ -220,10 +220,10 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 <Box sx={{ flex: 1 }} />
                 <Dropdown>
                     <MenuButton
-                        size="sm"
-                        variant={isPausedNow ? "soft" : "outlined"}
                         color={isPausedNow ? "warning" : "neutral"}
+                        size="sm"
                         startDecorator={<NotificationsPausedRoundedIcon />}
+                        variant={isPausedNow ? "soft" : "outlined"}
                     >
                         {p.durationMenuLabel}
                     </MenuButton>
@@ -231,8 +231,8 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                         <NotificationPausePresetItems
                             isPausedNow={isPausedNow}
                             pauseFor={pauseFor}
-                            pauseUntilTomorrow={pauseUntilTomorrow}
                             pauseUntilNextWeek={pauseUntilNextWeek}
+                            pauseUntilTomorrow={pauseUntilTomorrow}
                             resume={resume}
                             onCustom={openCustom}
                         />
@@ -240,10 +240,10 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 </Dropdown>
                 {untilActive && (
                     <Button
-                        size="sm"
                         color="danger"
-                        variant="plain"
+                        size="sm"
                         startDecorator={<PlayArrowRoundedIcon />}
+                        variant="plain"
                         onClick={resume}
                     >
                         {p.resumeShort}
@@ -285,13 +285,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 spacing={1.5}
                 sx={{ opacity: schedEnabled ? 1 : 0.5 }}
             >
-                <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Typography level="body-sm">{p.scheduleStart}</Typography>
                     <Input
-                        type="time"
-                        size="sm"
-                        value={schedStart}
                         disabled={!schedEnabled}
+                        size="sm"
+                        type="time"
+                        value={schedStart}
                         onChange={(e) =>
                             commitSchedule({
                                 enabled: schedEnabled,
@@ -301,13 +301,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                         }
                     />
                 </Stack>
-                <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Typography level="body-sm">{p.scheduleEnd}</Typography>
                     <Input
-                        type="time"
-                        size="sm"
-                        value={schedEnd}
                         disabled={!schedEnabled}
+                        size="sm"
+                        type="time"
+                        value={schedEnd}
                         onChange={(e) =>
                             commitSchedule({
                                 enabled: schedEnabled,
@@ -341,9 +341,9 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                 onClose={() => setCustomOpen(false)}
             >
                 <Input
+                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                     type="datetime-local"
                     value={customValue}
-                    slotProps={{ input: { min: toLocalInputValue(new Date()) } }}
                     onChange={(e) => setCustomValue(e.target.value)}
                 />
             </ModalFrame>

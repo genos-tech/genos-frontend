@@ -21,8 +21,8 @@ const renderTurn = (over: Partial<AgentTurnProps> = {}, locale = "en") =>
             <AgentTurn
                 answer="She meant Friday."
                 answerSources={[]}
-                askError={null}
                 askedQuery="What did she mean?"
+                askError={null}
                 isCurrent={false}
                 labels={buildAgentTurnLabels(getMessages(locale as "en"), "spotlight")}
                 toolEvents={[]}

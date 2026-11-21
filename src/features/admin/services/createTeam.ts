@@ -2,17 +2,22 @@ import axios from "axios";
 
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
+import {
+    classifyTeamCreateFailure,
+    teamCreateCopy,
+    type TeamCreateFailure,
+} from "./teamCreateFailure";
 import { teamEmailFor } from "./teamEmail";
 
 export const createTeam = async (
     accessToken: string | null,
     teamName: string,
     userId: string,
-    setErrorMessage?: (value: string) => void,
+    onFailure?: (failure: TeamCreateFailure) => void,
     withStarter?: boolean,
     departments?: string[]
 ) => {
-    const m = getMessages().admin.auth.errors;
+    const messages = getMessages();
     try {
         const api = authApi(accessToken);
         if (api) {
@@ -30,33 +35,23 @@ export const createTeam = async (
             return res.data;
         } else {
             console.error("Unauthorized. Authentication token was not found.");
-            if (setErrorMessage) {
-                setErrorMessage(m.tokenMissing);
-            }
+            onFailure?.({ field: "form", message: messages.admin.auth.errors.tokenMissing });
         }
     } catch (error: unknown) {
-        if (axios.isAxiosError(error)) {
-            if (error.response?.status === 400) {
-                console.error("HTTP 400 error:", error.response?.data);
-                if (setErrorMessage) {
-                    // The department list was refused (the form checks first, so this is a
-                    // backstop); every other 400 here is a taken team name.
-                    setErrorMessage(
-                        error.response?.data?.code === "invalid_departments"
-                            ? m.invalidDepartments
-                            : m.duplicateTeamName
-                    );
-                }
-            } else if (error.response?.status === 401) {
-                console.error("HTTP 401 error:", error.response?.data);
-                if (setErrorMessage) {
-                    setErrorMessage(m.unauthorized);
-                }
-            } else {
-                console.error("API error:", error.response?.status, error.response?.data);
-            }
-        } else {
+        // Which field a refusal belongs to, and its words, are decided in one place
+        // (`teamCreateFailure.ts`, MIP-1841). An axios error with no response is a network failure;
+        // anything else that was not an HTTP answer is unknown, so it gets the generic line.
+        if (!axios.isAxiosError(error)) {
             console.error("Unexpected error:", error);
+            onFailure?.({ field: "form", message: messages.admin.auth.errors.generic });
+            return;
         }
+        console.error("Team create failed:", error.response?.status, error.response?.data);
+        onFailure?.(
+            classifyTeamCreateFailure(
+                { status: error.response?.status ?? null, data: error.response?.data },
+                teamCreateCopy(messages)
+            )
+        );
     }
 };

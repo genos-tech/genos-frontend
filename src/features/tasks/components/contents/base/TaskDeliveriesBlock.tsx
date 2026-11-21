@@ -54,7 +54,7 @@ const DeliveryPrLink = ({
             surface={detail ? "none" : "chip"}
             title={
                 detail ? (
-                    <PrHoverDetails includeHeader isDark={isDark} payload={detail} />
+                    <PrHoverDetails isDark={isDark} payload={detail} includeHeader />
                 ) : (
                     (delivery.pr_title ?? delivery.pr_url)
                 )

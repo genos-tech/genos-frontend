@@ -73,9 +73,10 @@ export const SpotlightProjectFilter = ({
             limitTags={1}
             options={projects}
             placeholder={selected.length === 0 ? placeholder : ""}
-            size="sm"
-            value={selected}
             renderOption={renderProjectOption(projectAvatars)}
+            size="sm"
+            slotProps={projectListboxSlotProps(LISTBOX_Z_INDEX)}
+            value={selected}
             renderTags={(value, getTagProps) =>
                 value.map((option, index) => (
                     <Chip
@@ -98,7 +99,6 @@ export const SpotlightProjectFilter = ({
                     </Chip>
                 ))
             }
-            slotProps={projectListboxSlotProps(LISTBOX_Z_INDEX)}
             sx={{
                 // Mobile: take the whole width so the picker wraps onto a
                 // deliberate line of its own BELOW the service chips,

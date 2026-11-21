@@ -189,6 +189,11 @@ export const zh: DeepPartial<Messages> = {
                 teamNotFoundShort: "未找到团队。",
                 duplicateTeamName: "请尝试使用其他团队名称。",
                 invalidDepartments: "请检查部门名称。",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "请检查团队名称。",
+                teamEmailFailed: "无法为该团队设置地址，请重试。",
+                rateLimited: "尝试次数过多，请等待一分钟后再试。",
+                serverError: "服务器无法创建团队，请稍后再试。",
             },
             oauth: {
                 failureReasons: {
@@ -939,6 +944,8 @@ export const zh: DeepPartial<Messages> = {
             serverError: "服务器错误，请稍后重试。",
             permissionDenied: "你没有执行此操作的权限。",
             requestFailed: "请求无法完成，请重试。",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived: "此内容已归档，为只读状态。取消归档后才能修改。",
             limitReached: "你已达到套餐限制。请前往“设置 → 套餐与用量”查看详情。",
             actionFailed: "操作无法完成，请重试。",
             messageSendFailed: "消息发送失败，请重试。",
@@ -1639,6 +1646,7 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     common: {
+        skipToContent: "跳到内容",
         searchField: {
             clear: "清除搜索",
         },
@@ -1708,6 +1716,30 @@ export const zh: DeepPartial<Messages> = {
             gmDescription: "你将不再看到该群组的消息。如果是公开的，你可以稍后重新加入。",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "归档项目",
+            unarchiveMenuProject: "取消归档项目",
+            archiveMenuChat: "归档群组",
+            unarchiveMenuChat: "取消归档群组",
+            archiveInstead: "改为归档",
+            archiveInsteadHint: "保留所有内容。取消归档前为只读。",
+            ownerOnly: "只有所有者可以归档或取消归档。",
+            projectBannerTitle: "此项目已归档",
+            chatBannerTitle: "此群组已归档",
+            projectBannerBody:
+                "为只读状态：取消归档前无法新建任务、编辑或评论。没有任何内容被删除。",
+            chatBannerBody: "为只读状态：取消归档前无法发送新消息。没有任何内容被删除。",
+            unarchiveAction: "取消归档",
+            showArchived: "显示已归档",
+            hideArchived: "隐藏已归档",
+            archivedSection: "已归档",
+            archivedBadge: "已归档",
+            newTaskDisabled: "取消归档此项目后才能添加任务。",
+            composerDisabled: "此群组已归档。取消归档后才能发送消息。",
+            archiveFailed: "归档失败，请重试。",
+            unarchiveFailed: "取消归档失败，请重试。",
+        },
         deleteChat: {
             button: "删除群组",
             title: "删除此群组？",
@@ -1881,10 +1913,10 @@ export const zh: DeepPartial<Messages> = {
             loading: "加载中",
             preparingWorkspace: "正在准备你的工作空间",
             takingLonger: "加载时间比预期长？",
-            sessionExpired: "你的会话可能已过期",
-            signInAgain: "重新登录",
             offlineTitle: "你已离线",
             offlineBody: "目前无法连接服务器。网络恢复后会自动继续。",
+            stillConnecting: "仍在连接服务器。网络较慢时可能需要一点时间。",
+            reload: "重新加载",
         },
         modalView: {
             openFullPage: "打开完整页面",
@@ -3842,6 +3874,7 @@ export const zh: DeepPartial<Messages> = {
             planRenews: "续订日期",
             planEnds: "套餐结束日期",
             cancelScheduled: "已安排取消——你的套餐在此日期前保持有效。",
+            pendingChange: "{date} 变更为{plan}",
             pastDue: "付款出现问题——请在账单门户中更新你的付款方式。",
             plansHeading: "套餐与定价",
             plansSubheading: "所有套餐都包含全部功能——区别仅在于使用上限和历史记录。",
@@ -6037,6 +6070,8 @@ export const zh: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "剩余任务 {remaining}（共 {total}）",
+                cardAriaLabel: "{id} {title}，{status}",
+                cardAriaHint: "按 Enter 或空格键打开预览。方向键可移动到相关联的任务。",
                 healthSummary: "已关闭 {actualPct}% · 预期 {expectedPct}%",
                 expectedByToday: "今天预计：{expectedPct}%",
                 openBlockerOne: "{count} 个未解决的阻塞项",

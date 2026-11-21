@@ -34,6 +34,7 @@ import {
     TagListProps,
     TaskTableProps,
 } from "../../../../types/tasks";
+import { smoothScrollBehavior } from "../../../../utils/motion";
 import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import type { TaskGraphScope } from "../../diagram/types";
 import { toneSolid } from "../../meta/taskTone";
@@ -299,7 +300,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         const node = rowRef.current;
         if (!node) return;
         const id = window.requestAnimationFrame(() => {
-            node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            node.scrollIntoView({ behavior: smoothScrollBehavior(), block: "nearest" });
         });
         return () => window.cancelAnimationFrame(id);
     }, [isSelected]);
@@ -767,7 +768,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     </IconButton>
                 );
 
-            case "status":
+            case "status": {
                 const statusOption = statusOptions.find((opt) => opt.value === value);
                 if (editingField === "status") {
                     return (
@@ -797,6 +798,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         </CellButton>
                     </>
                 ) : null;
+            }
 
             case "pr": {
                 // Auto-linked PRs: PRs whose head branch contains the
@@ -1056,7 +1058,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                     </Clickable>
                 );
 
-            case "priority":
+            case "priority": {
                 const priorityOption = priorities.find((p) => p.priority === value);
                 if (editingField === "priority") {
                     return (
@@ -1092,8 +1094,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         )}
                     </CellButton>
                 );
+            }
 
-            case "effortLevel":
+            case "effortLevel": {
                 const effortOption = effortLevels.find((e) => e.level === value);
                 if (editingField === "effortLevel") {
                     return (
@@ -1128,6 +1131,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         )}
                     </CellButton>
                 );
+            }
 
             case "weight": {
                 // Derived Task Weight (priority × urgency). Read-only; it

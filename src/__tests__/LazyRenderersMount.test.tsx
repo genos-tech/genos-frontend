@@ -51,7 +51,7 @@ type Blocks = PartialBlock<typeof schema.blockSchema>[];
 
 const Harness = ({ content }: { content: Blocks }) => {
     const editor = useCreateBlockNote({ schema, initialContent: content as never });
-    return <BlockNoteView editor={editor} editable={false} />;
+    return <BlockNoteView editable={false} editor={editor} />;
 };
 
 beforeAll(() => {

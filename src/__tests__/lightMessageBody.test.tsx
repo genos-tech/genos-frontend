@@ -75,7 +75,7 @@ const ctx = {
 };
 
 const BnReference = ({ content }: { content: any[] }) => {
-    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
+    const { audio: _audio, video: _video, ...remainingBlockSpecs } = defaultBlockSpecs;
     const schema = BlockNoteSchema.create({
         inlineContentSpecs: { ...defaultInlineContentSpecs },
         blockSpecs: { ...remainingBlockSpecs, codeBlock: createCodeBlockSpec(codeBlockOptions) },

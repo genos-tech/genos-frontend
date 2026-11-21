@@ -21,6 +21,7 @@ describe("names in input values keep their reading order", () => {
         render(
             <CssVarsProvider>
                 <MemberAutocomplete
+                    value={null}
                     members={[
                         {
                             userId: "1",
@@ -28,7 +29,6 @@ describe("names in input values keep their reading order", () => {
                             userEmail: "k@x.dev",
                         } as never,
                     ]}
-                    value={null}
                     onChange={() => {}}
                 />
             </CssVarsProvider>

@@ -46,14 +46,14 @@ export const RecentNotesList = ({
             {hidden > 0 && (
                 <NavItem
                     key="recents-toggle"
+                    as="div"
+                    label={expanded ? t.notes.sidebar.recentsLess : t.notes.sidebar.recentsMore}
+                    labelSx={{ fontWeight: 500 }}
                     aria-label={
                         expanded
                             ? t.notes.sidebar.recentsLess
                             : fmt(t.notes.sidebar.recentsMoreAria, { count: hidden })
                     }
-                    as="div"
-                    label={expanded ? t.notes.sidebar.recentsLess : t.notes.sidebar.recentsMore}
-                    labelSx={{ fontWeight: 500 }}
                     onClick={() => setExpanded((open) => !open)}
                 />
             )}

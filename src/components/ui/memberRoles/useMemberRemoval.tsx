@@ -104,8 +104,8 @@ export const useMemberRemoval = (opts: Options) => {
                     color="neutral"
                     data-testid={`remove-member-${member.userId}`}
                     size="sm"
-                    variant="plain"
                     sx={{ color: g.text.tertiary, "&:hover": { color: g.danger.text } }}
+                    variant="plain"
                     // The row is itself a button that opens the profile.
                     onClick={(e) => {
                         e.stopPropagation();
@@ -119,16 +119,16 @@ export const useMemberRemoval = (opts: Options) => {
 
     const dialog = (
         <ConfirmDialog
-            open={target != null}
             cancelLabel={m.cancel}
-            closeOnConfirm
             confirmLabel={m.confirm}
+            hostZIndex={opts.zIndex}
+            open={target != null}
+            title={target ? fmt(title, { name: target.name, scope: opts.scopeName }) : ""}
             description={
                 target ? fmt(body, { name: target.name, scope: opts.scopeName }) : undefined
             }
+            closeOnConfirm
             destructive
-            hostZIndex={opts.zIndex}
-            title={target ? fmt(title, { name: target.name, scope: opts.scopeName }) : ""}
             onClose={() => setTarget(null)}
             onConfirm={async () => {
                 if (!target) return;

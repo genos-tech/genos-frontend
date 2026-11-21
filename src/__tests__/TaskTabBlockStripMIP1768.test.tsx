@@ -68,11 +68,6 @@ const content = (id: number) =>
 const row = (id: number, over: Partial<TaskTableProps> = {}) =>
     ({ id: String(id), parentTaskId: null, lastProgressAt: null, ...over }) as TaskTableProps;
 
-const tree = (over: Partial<TaskTableProps> = {}) => [
-    row(42, over),
-    row(43, { parentTaskId: 42 as never }),
-];
-
 const tabs = (taskId: number, allTasks: TaskTableProps[]) => (
     <CssVarsProvider>
         <MemoryRouter>
@@ -100,6 +95,8 @@ const tabs = (taskId: number, allTasks: TaskTableProps[]) => (
                     taskNotes={[]}
                     tmpCurrentTaskContent={content(taskId)}
                     useCM={{ allChats: [] } as unknown as ChatManagementState}
+                    useTEM={{} as unknown as TeamManagementState}
+                    useUISM={{} as unknown as UIStateManagementState}
                     useNM={
                         {
                             tabsApi: { openTab: vi.fn() },
@@ -109,14 +106,12 @@ const tabs = (taskId: number, allTasks: TaskTableProps[]) => (
                             teamNoteFolders: [],
                         } as unknown as NoteManagementState
                     }
-                    useTEM={{} as unknown as TeamManagementState}
                     useTM={
                         {
                             allTasks,
                             setIsTaskTableVisible: vi.fn(),
                         } as unknown as TaskManagementState
                     }
-                    useUISM={{} as unknown as UIStateManagementState}
                     onAttachmentDeleted={vi.fn()}
                     onRetryTaskActivities={vi.fn()}
                 />

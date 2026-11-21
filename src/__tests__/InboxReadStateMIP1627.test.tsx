@@ -19,11 +19,7 @@ import { InboxMarkAllReadButton } from "../features/inbox/components/InboxMarkAl
 import { ReadToggleButton, UnreadDot } from "../features/inbox/components/InboxReadControls";
 import { InboxTabHeader } from "../features/inbox/components/InboxTabHeader";
 import { holdUnread, isHeldUnread, readKey, resetReadHold } from "../features/inbox/readHold";
-import {
-    markAllActivitiesRead,
-    markInboxRead,
-    markInboxUnread,
-} from "../features/inbox/services/markInboxRead";
+import { markAllActivitiesRead, markInboxUnread } from "../features/inbox/services/markInboxRead";
 import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
 import type { InboxItemProps } from "../types/common";
 

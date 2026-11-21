@@ -2731,8 +2731,8 @@ const MilestonePreviewInner = ({
                             setMyself={setMyself}
                             setTaskBodyEdited={setBodyEdited}
                             setTaskBodySaved={setBodySaved}
-                            taskId={milestone.taskId ?? milestone.milestoneId}
                             socket={socket}
+                            taskId={milestone.taskId ?? milestone.milestoneId}
                             // Body-attachment uploads (`POST /task/body/attachment/`)
                             // resolve through `TaskBodyAttachmentFact.task` →
                             // `TaskMaster.task_id`. Milestones don't have their

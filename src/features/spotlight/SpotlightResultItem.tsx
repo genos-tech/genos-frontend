@@ -444,6 +444,7 @@ const SpotlightResultItemInner = ({
                     </Typography>
                     <Typography
                         level="body-sm"
+                        title={contextPathLabel(result) || undefined}
                         sx={{
                             color: g.text.tertiary,
                             // A deep folder path must not push the title out.
@@ -458,7 +459,6 @@ const SpotlightResultItemInner = ({
                                   }
                                 : { flexShrink: 0 }),
                         }}
-                        title={contextPathLabel(result) || undefined}
                     >
                         {rowSubtitle(result, t.spotlight, noteScopes)}
                     </Typography>

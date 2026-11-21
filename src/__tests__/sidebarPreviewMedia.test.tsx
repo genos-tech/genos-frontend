@@ -110,7 +110,6 @@ describe("v3ActivityToLegacy media kind", () => {
 
     it("carries the media kind when the message has no preview text", () => {
         const out = v3ActivityToLegacy(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             activityWire({
                 bodyText: "",
                 body: [

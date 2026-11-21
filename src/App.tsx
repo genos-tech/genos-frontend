@@ -41,6 +41,7 @@ import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverl
 import { ServiceSwitchLoader } from "./components/layout/ServiceSwitchLoader";
 import { ServiceSwitchReady } from "./components/layout/ServiceSwitchReady";
 import { Sidebar } from "./components/layout/sidebar";
+import { APP_MAIN_ID, SkipToContent } from "./components/layout/SkipToContent";
 import { SyncStatusBanner } from "./components/layout/SyncStatusBanner";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
@@ -1498,10 +1499,10 @@ const AppBody = () => {
                                                             previewIndex={
                                                                 serviceSwitcherPreviewIndex
                                                             }
+                                                            onSelect={selectServiceSwitcherTile}
                                                             onHighlight={
                                                                 highlightServiceSwitcherTile
                                                             }
-                                                            onSelect={selectServiceSwitcherTile}
                                                         />
                                                         {/* Second HashMentionDataProvider: the overlay
                                                 mounts above the main provider tree (line
@@ -1512,10 +1513,21 @@ const AppBody = () => {
                                                             value={hashMentionData}
                                                         >
                                                             <SpotlightOverlay
+                                                                ask={spotlight.ask}
+                                                                error={spotlight.error}
+                                                                historyMode={spotlight.historyMode}
+                                                                isLoading={spotlight.isLoading}
+                                                                isOpen={spotlight.isOpen}
+                                                                noteScopes={noteScopes}
+                                                                openHistory={spotlight.openHistory}
+                                                                projectAvatars={projectAvatars}
+                                                                projects={spotlightFilterProjects}
+                                                                query={spotlight.query}
+                                                                results={spotlight.results}
+                                                                turns={spotlight.turns}
                                                                 aiAnswersEnabled={
                                                                     spotlight.aiAnswersEnabled
                                                                 }
-                                                                ask={spotlight.ask}
                                                                 attachedSelection={
                                                                     spotlight.attachedSelection
                                                                 }
@@ -1525,7 +1537,6 @@ const AppBody = () => {
                                                                 closeHistory={
                                                                     spotlight.closeHistory
                                                                 }
-                                                                error={spotlight.error}
                                                                 filterProjectIds={
                                                                     spotlight.filterProjectIds
                                                                 }
@@ -1541,38 +1552,33 @@ const AppBody = () => {
                                                                 historyLoadFailed={
                                                                     spotlight.historyLoadFailed
                                                                 }
-                                                                historyMode={spotlight.historyMode}
                                                                 historySessions={
                                                                     spotlight.historySessions
                                                                 }
-                                                                isLoading={spotlight.isLoading}
-                                                                isOpen={spotlight.isOpen}
                                                                 mentionGroups={
                                                                     useMGM.mentionGroups
                                                                 }
                                                                 mentionMembers={
                                                                     spotlightMentionMembers
                                                                 }
-                                                                noteScopes={noteScopes}
-                                                                openHistory={spotlight.openHistory}
-                                                                projectAvatars={projectAvatars}
-                                                                projects={spotlightFilterProjects}
-                                                                query={spotlight.query}
-                                                                results={spotlight.results}
-                                                                turns={spotlight.turns}
                                                                 viewHistorySession={
                                                                     spotlight.viewHistorySession
                                                                 }
                                                                 onApprove={spotlight.onApprove}
                                                                 onAsk={spotlight.onAsk}
                                                                 onCancel={spotlight.onCancel}
+                                                                onClose={spotlight.close}
+                                                                onPreview={handleSpotlightPreview}
+                                                                onQueryChange={spotlight.setQuery}
+                                                                onReject={spotlight.onReject}
+                                                                onSelect={handleSpotlightSelect}
+                                                                onUndo={spotlight.undoStep}
                                                                 onChangeFilterProjects={
                                                                     spotlight.onChangeFilterProjects
                                                                 }
                                                                 onClearAttachedSelection={
                                                                     spotlight.clearAttachedSelection
                                                                 }
-                                                                onClose={spotlight.close}
                                                                 onFeedback={
                                                                     spotlight.submitFeedback
                                                                 }
@@ -1582,11 +1588,6 @@ const AppBody = () => {
                                                                 onOpenSettings={() =>
                                                                     setSpotlightSettingsOpen(true)
                                                                 }
-                                                                onPreview={handleSpotlightPreview}
-                                                                onQueryChange={spotlight.setQuery}
-                                                                onReject={spotlight.onReject}
-                                                                onSelect={handleSpotlightSelect}
-                                                                onUndo={spotlight.undoStep}
                                                                 onToggleFilterService={
                                                                     spotlight.onToggleFilterService
                                                                 }
@@ -1628,22 +1629,23 @@ const AppBody = () => {
                                                         />
                                                         {useUISM.isLoading ? (
                                                             <InitialLoad
+                                                                firstRefreshDone={firstRefreshDone}
                                                                 myself={myself}
+                                                                setIsLoading={useUISM.setIsLoading}
                                                                 setCurrentMainChat={
                                                                     useCM.setCurrentMainChat
                                                                 }
-                                                                setIsLoading={useUISM.setIsLoading}
-                                                                firstRefreshDone={firstRefreshDone}
                                                             />
                                                         ) : (
                                                             <div className="main-container">
+                                                                <SkipToContent />
                                                                 <PermissionBanner
-                                                                    permission={
-                                                                        useNotif.permission
-                                                                    }
                                                                     masterEnabled={
                                                                         useNotif.preferences
                                                                             .masterEnabled
+                                                                    }
+                                                                    permission={
+                                                                        useNotif.permission
                                                                     }
                                                                     requestPermission={
                                                                         useNotif.requestPermission
@@ -1698,8 +1700,20 @@ const AppBody = () => {
                                                                                                 }
                                                                                             >
                                                                                                 <UrlLinkModal
+                                                                                                    accessToken={
+                                                                                                        accessToken
+                                                                                                    }
                                                                                                     myself={
                                                                                                         myself
+                                                                                                    }
+                                                                                                    setMyself={
+                                                                                                        setMyself
+                                                                                                    }
+                                                                                                    socket={
+                                                                                                        socketInstance
+                                                                                                    }
+                                                                                                    target={
+                                                                                                        urlLinkModal.target
                                                                                                     }
                                                                                                     useCM={
                                                                                                         useCM
@@ -1721,18 +1735,6 @@ const AppBody = () => {
                                                                                                     }
                                                                                                     useTM={
                                                                                                         useTM
-                                                                                                    }
-                                                                                                    accessToken={
-                                                                                                        accessToken
-                                                                                                    }
-                                                                                                    setMyself={
-                                                                                                        setMyself
-                                                                                                    }
-                                                                                                    socket={
-                                                                                                        socketInstance
-                                                                                                    }
-                                                                                                    target={
-                                                                                                        urlLinkModal.target
                                                                                                     }
                                                                                                     useUISM={
                                                                                                         useUISM
@@ -1775,23 +1777,26 @@ const AppBody = () => {
                                                                                                     myself={
                                                                                                         myself
                                                                                                     }
-                                                                                                    useCM={
-                                                                                                        useCM
-                                                                                                    }
-                                                                                                    useTEM={
-                                                                                                        useTEM
-                                                                                                    }
                                                                                                     setMyself={
                                                                                                         setMyself
                                                                                                     }
                                                                                                     socket={
                                                                                                         socketInstance
                                                                                                     }
+                                                                                                    useCM={
+                                                                                                        useCM
+                                                                                                    }
+                                                                                                    useTEM={
+                                                                                                        useTEM
+                                                                                                    }
                                                                                                     useUISM={
                                                                                                         useUISM
                                                                                                     }
                                                                                                 />
                                                                                                 <HistoryShell
+                                                                                                    open={
+                                                                                                        historyOpen
+                                                                                                    }
                                                                                                     useCM={
                                                                                                         useCM
                                                                                                     }
@@ -1806,9 +1811,6 @@ const AppBody = () => {
                                                                                                     }
                                                                                                     useTM={
                                                                                                         useTM
-                                                                                                    }
-                                                                                                    open={
-                                                                                                        historyOpen
                                                                                                     }
                                                                                                     onClose={
                                                                                                         closeHistory
@@ -1891,14 +1893,23 @@ const AppBody = () => {
                                                                                                         useUISM={
                                                                                                             useUISM
                                                                                                         }
-                                                                                                        onOpenHistory={
-                                                                                                            openHistory
-                                                                                                        }
                                                                                                         onOpenGenos={
                                                                                                             openGenosPage
                                                                                                         }
+                                                                                                        onOpenHistory={
+                                                                                                            openHistory
+                                                                                                        }
                                                                                                         onOpenTodo={
                                                                                                             showTodoModal
+                                                                                                        }
+                                                                                                    />
+                                                                                                    {/* The skip link's target: focus lands at the start of the routed content, after the sidebar. */}
+                                                                                                    <div
+                                                                                                        id={
+                                                                                                            APP_MAIN_ID
+                                                                                                        }
+                                                                                                        tabIndex={
+                                                                                                            -1
                                                                                                         }
                                                                                                     />
                                                                                                     <Routes>
@@ -2351,9 +2362,6 @@ const AppBody = () => {
                                                                                                         open={
                                                                                                             accountSheetOpen
                                                                                                         }
-                                                                                                        onOpenHistory={
-                                                                                                            openHistory
-                                                                                                        }
                                                                                                         setMyself={
                                                                                                             setMyself
                                                                                                         }
@@ -2373,6 +2381,9 @@ const AppBody = () => {
                                                                                                             setAccountSheetOpen(
                                                                                                                 false
                                                                                                             )
+                                                                                                        }
+                                                                                                        onOpenHistory={
+                                                                                                            openHistory
                                                                                                         }
                                                                                                     />
                                                                                                     {/* Hidden on the Genos page itself — a

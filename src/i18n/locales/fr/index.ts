@@ -209,6 +209,13 @@ export const fr: DeepPartial<Messages> = {
                 teamNotFoundShort: "Équipe introuvable.",
                 duplicateTeamName: "Veuillez essayer avec un autre nom d'équipe.",
                 invalidDepartments: "Vérifiez les noms des départements.",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "Vérifiez le nom de l'équipe.",
+                teamEmailFailed:
+                    "Nous n'avons pas pu créer l'adresse de cette équipe. Veuillez réessayer.",
+                rateLimited: "Trop de tentatives. Patientez une minute puis réessayez.",
+                serverError:
+                    "Le serveur n'a pas pu créer l'équipe. Veuillez réessayer dans un instant.",
             },
             oauth: {
                 failureReasons: {
@@ -996,6 +1003,8 @@ export const fr: DeepPartial<Messages> = {
             serverError: "Erreur du serveur. Veuillez réessayer dans un instant.",
             permissionDenied: "Vous n'avez pas la permission de faire cela.",
             requestFailed: "Impossible de traiter la requête. Veuillez réessayer.",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived: "Ceci est archivé et en lecture seule. Désarchivez-le pour le modifier.",
             limitReached:
                 "Vous avez atteint une limite de votre forfait. Voir Paramètres → Forfait et utilisation.",
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
@@ -1725,6 +1734,7 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     common: {
+        skipToContent: "Aller au contenu",
         searchField: {
             clear: "Effacer la recherche",
         },
@@ -1797,6 +1807,31 @@ export const fr: DeepPartial<Messages> = {
                 "Vous ne verrez plus les messages de ce groupe. Vous pourrez vous réinscrire plus tard si c'est public.",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "Archiver le projet",
+            unarchiveMenuProject: "Désarchiver le projet",
+            archiveMenuChat: "Archiver le groupe",
+            unarchiveMenuChat: "Désarchiver le groupe",
+            archiveInstead: "Archiver à la place",
+            archiveInsteadHint: "Tout est conservé. Lecture seule jusqu'à désarchivage.",
+            ownerOnly: "Seul le propriétaire peut archiver ou désarchiver.",
+            projectBannerTitle: "Ce projet est archivé",
+            chatBannerTitle: "Ce groupe est archivé",
+            projectBannerBody:
+                "Lecture seule : aucune nouvelle tâche, modification ni commentaire tant qu'il n'est pas désarchivé. Rien n'a été supprimé.",
+            chatBannerBody:
+                "Lecture seule : aucun nouveau message tant qu'il n'est pas désarchivé. Rien n'a été supprimé.",
+            unarchiveAction: "Désarchiver",
+            showArchived: "Afficher les archivés",
+            hideArchived: "Masquer les archivés",
+            archivedSection: "Archivés",
+            archivedBadge: "Archivé",
+            newTaskDisabled: "Désarchivez ce projet pour ajouter des tâches.",
+            composerDisabled: "Ce groupe est archivé. Désarchivez-le pour envoyer des messages.",
+            archiveFailed: "Impossible d'archiver. Veuillez réessayer.",
+            unarchiveFailed: "Impossible de désarchiver. Veuillez réessayer.",
+        },
         deleteChat: {
             button: "Supprimer le groupe",
             title: "Supprimer ce groupe ?",
@@ -1982,11 +2017,12 @@ export const fr: DeepPartial<Messages> = {
             loading: "Chargement",
             preparingWorkspace: "Préparation de votre espace de travail",
             takingLonger: "Cela prend plus de temps que prévu ?",
-            sessionExpired: "Votre session a peut-être expiré",
-            signInAgain: "Se reconnecter",
             offlineTitle: "Vous êtes hors ligne",
             offlineBody:
                 "Genos ne peut pas joindre le serveur pour le moment. Tout reprendra automatiquement dès le retour de la connexion.",
+            stillConnecting:
+                "Connexion au serveur en cours. Sur une connexion lente, cela peut prendre un moment.",
+            reload: "Recharger",
         },
         modalView: {
             openFullPage: "Aller à la page",
@@ -4031,6 +4067,7 @@ export const fr: DeepPartial<Messages> = {
             planEnds: "Fin du forfait le",
             cancelScheduled:
                 "L'annulation est programmée — votre forfait reste actif jusqu'à cette date.",
+            pendingChange: "Changement vers {plan} le {date}",
             pastDue:
                 "Problème de paiement — mettez à jour votre moyen de paiement dans le portail de facturation.",
             plansHeading: "Forfaits et tarifs",
@@ -6338,6 +6375,9 @@ export const fr: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "{remaining} tâches restantes sur {total}",
+                cardAriaLabel: "{id} {title}, {status}",
+                cardAriaHint:
+                    "Appuyez sur Entrée ou Espace pour ouvrir l'aperçu. Les flèches mènent à une tâche liée.",
                 healthSummary: "{actualPct}% fermé · {expectedPct}% attendu",
                 expectedByToday: "Attendu d'ici aujourd'hui : {expectedPct}%",
                 openBlockerOne: "{count} bloqueur ouvert",

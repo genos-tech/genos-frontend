@@ -124,9 +124,9 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
                 className="bn-box"
                 editor={editor as any}
                 emojiPicker={false}
-                slashMenu={false}
                 formattingToolbar={false}
                 sideMenu={false}
+                slashMenu={false}
                 theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo
                 onChange={emitChange}
@@ -146,13 +146,13 @@ export const BnLocalBodyEditor = (props: BnLocalBodyEditorProps) => {
                 />
                 <GenosSuggestionMenus
                     editor={editor}
+                    slash={{ preset: "document", setShowGifPicker }}
                     getMentionSources={() => ({
                         teamMemberProfiles: useTEM.teamMemberProfiles,
                         teamMembers: useTEM.teamMembers,
                         myselfUserId: myself.userId,
                         mentionGroups,
                     })}
-                    slash={{ preset: "document", setShowGifPicker }}
                 />
             </BlockNoteView>
         </Box>

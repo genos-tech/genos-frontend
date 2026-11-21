@@ -7,6 +7,7 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const ar: DeepPartial<Messages> = {
     common: {
+        skipToContent: "تخطي إلى المحتوى",
         searchField: {
             clear: "مسح البحث",
         },
@@ -119,11 +120,12 @@ export const ar: DeepPartial<Messages> = {
             loading: "جارٍ التحميل",
             preparingWorkspace: "جارٍ تجهيز مساحة العمل الخاصة بك",
             takingLonger: "هل يستغرق الأمر وقتًا أطول من المتوقع؟",
-            sessionExpired: "قد تكون جلستك قد انتهت",
-            signInAgain: "تسجيل الدخول مرة أخرى",
             offlineTitle: "أنت غير متصل بالإنترنت",
             offlineBody:
                 "يتعذر الوصول إلى الخادم حاليًا. سيستأنف Genos تلقائيًا فور عودة الاتصال.",
+            stillConnecting:
+                "يُعيد الاتصال بالخادم ويحمّل مساحة العمل. قد يستغرق ذلك لحظة على اتصال بطيء.",
+            reload: "إعادة التحميل",
         },
         modalView: {
             chatUnavailable: "هذه المحادثة غير متاحة.",
@@ -256,6 +258,30 @@ export const ar: DeepPartial<Messages> = {
                 "لن تتمكن بعد الآن من رؤية رسائل هذه المجموعة. يمكنك إعادة الانضمام لاحقًا إذا كان عامًا.",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "أرشفة المشروع",
+            unarchiveMenuProject: "إلغاء أرشفة المشروع",
+            archiveMenuChat: "أرشفة المجموعة",
+            unarchiveMenuChat: "إلغاء أرشفة المجموعة",
+            archiveInstead: "أرشفته بدلاً من ذلك",
+            archiveInsteadHint: "يحتفظ بكل شيء. يصبح للقراءة فقط حتى تلغي أرشفته.",
+            ownerOnly: "المالك وحده يمكنه الأرشفة أو إلغاء الأرشفة.",
+            projectBannerTitle: "هذا المشروع مؤرشف",
+            chatBannerTitle: "هذه المجموعة مؤرشفة",
+            projectBannerBody:
+                "هو للقراءة فقط: لا مهام جديدة ولا تعديلات ولا تعليقات حتى يُلغى أرشفته. لم يُحذف شيء.",
+            chatBannerBody: "هي للقراءة فقط: لا رسائل جديدة حتى يُلغى أرشفتها. لم يُحذف شيء.",
+            unarchiveAction: "إلغاء الأرشفة",
+            showArchived: "عرض المؤرشفة",
+            hideArchived: "إخفاء المؤرشفة",
+            archivedSection: "مؤرشف",
+            archivedBadge: "مؤرشف",
+            newTaskDisabled: "ألغِ أرشفة هذا المشروع لإضافة مهام.",
+            composerDisabled: "هذه المجموعة مؤرشفة. ألغِ أرشفتها لإرسال الرسائل.",
+            archiveFailed: "تعذّرت الأرشفة. حاول مرة أخرى.",
+            unarchiveFailed: "تعذّر إلغاء الأرشفة. حاول مرة أخرى.",
+        },
         deleteChat: {
             button: "حذف المجموعة",
             title: "هل تريد حذف هذه المجموعة؟",
@@ -412,6 +438,8 @@ export const ar: DeepPartial<Messages> = {
             serverError: "خطأ في الخادم. يرجى المحاولة مرة أخرى بعد قليل.",
             permissionDenied: "ليس لديك إذن للقيام بذلك.",
             requestFailed: "تعذّر إكمال الطلب. يرجى المحاولة مرة أخرى.",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived: "هذا مؤرشف وللقراءة فقط. ألغِ أرشفته لإجراء تغييرات.",
             actionFailed: "تعذّر إكمال الإجراء. يرجى المحاولة مرة أخرى.",
             limitReached: "لقد وصلت إلى حد خطتك. راجع الإعدادات ← الخطة والاستخدام.",
             messageSendFailed: "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى.",
@@ -619,6 +647,7 @@ export const ar: DeepPartial<Messages> = {
             planRenews: "يتجدد في",
             planEnds: "تنتهي الخطة في",
             cancelScheduled: "تم جدولة الإلغاء — تظل خطتك فعّالة حتى هذا التاريخ.",
+            pendingChange: "تغيير إلى {plan} في {date}",
             pastDue: "هناك مشكلة في الدفع — يرجى تحديث طريقة الدفع في بوابة الفوترة.",
             plansHeading: "الخطط والأسعار",
             plansSubheading:
@@ -3494,6 +3523,9 @@ export const ar: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "متبقٍ {remaining} من أصل {total} مهمة",
+                cardAriaLabel: "{id} {title}، {status}",
+                cardAriaHint:
+                    "اضغط Enter أو المسافة لفتح المعاينة. مفاتيح الأسهم تنقل إلى مهمة مرتبطة.",
                 healthSummary: "مغلق {actualPct}% · المتوقع {expectedPct}%",
                 expectedByToday: "المتوقع اليوم: {expectedPct}%",
                 openBlockerOne: "{count} مانع مفتوح",
@@ -4698,6 +4730,11 @@ export const ar: DeepPartial<Messages> = {
                 teamNotFoundShort: "لم يتم العثور على الفريق.",
                 duplicateTeamName: "يُرجى المحاولة باسم فريق مختلف.",
                 invalidDepartments: "يرجى التحقق من أسماء الأقسام.",
+                // TODO(copy): MIP-1841 draft wording for a native reader (team-create errors).
+                teamNameInvalid: "يرجى التحقق من اسم الفريق.",
+                teamEmailFailed: "تعذّر إنشاء عنوان بريد لهذا الفريق. يُرجى المحاولة مرة أخرى.",
+                rateLimited: "محاولات كثيرة. يُرجى الانتظار دقيقة ثم المحاولة مرة أخرى.",
+                serverError: "تعذّر على الخادم إنشاء الفريق. يُرجى المحاولة بعد قليل.",
             },
             passwordReset: {
                 title: "قم بتعيين كلمة مرور جديدة",

@@ -155,6 +155,12 @@ describe("InboxBubble Genos report", () => {
             <CssVarsProvider>
                 <MemoryRouter>
                     <InboxBubble
+                        myself={{ userId: "u1", teamId: "t1" } as never}
+                        setMyself={vi.fn()}
+                        socket={null}
+                        useCM={{ allChats: [] } as never}
+                        useTEM={{ teamMemberProfiles: {} } as never}
+                        useUISM={{} as never}
                         inboxItem={reportItem({
                             title: "<b>bold</b>",
                             text: "[a link](https://evil.example)",
@@ -165,12 +171,6 @@ describe("InboxBubble Genos report", () => {
                                 },
                             ],
                         })}
-                        myself={{ userId: "u1", teamId: "t1" } as never}
-                        setMyself={vi.fn()}
-                        socket={null}
-                        useCM={{ allChats: [] } as never}
-                        useTEM={{ teamMemberProfiles: {} } as never}
-                        useUISM={{} as never}
                     />
                 </MemoryRouter>
             </CssVarsProvider>

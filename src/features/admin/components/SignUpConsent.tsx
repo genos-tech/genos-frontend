@@ -85,11 +85,11 @@ export const SignUpConsent = forwardRef<HTMLInputElement, SignUpConsentProps>(
                     label={label}
                     name="accepted_terms"
                     size="md"
+                    sx={{ alignItems: "flex-start", gap: 1 }}
                     slotProps={{
                         input: { ref, "aria-required": true },
                         label: { sx: { color: textColor, lineHeight: 1.5 } },
                     }}
-                    sx={{ alignItems: "flex-start", gap: 1 }}
                     onChange={(event) => onChange(event.target.checked)}
                 />
                 {showError && (

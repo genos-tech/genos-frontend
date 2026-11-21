@@ -204,11 +204,7 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
     return (
         <Box sx={{ height: "100%", overflow: "hidden", width: "100%" }}>
             <ToDoPane
-                focusTarget={
-                    target.localDate === undefined
-                        ? undefined
-                        : { itemId: target.itemId, localDate: target.localDate }
-                }
+                hostZIndex={hostZIndex}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}
@@ -216,8 +212,12 @@ export const ModalTodoView = (props: ModalTodoViewProps) => {
                 useTEM={useTEM}
                 useTG={useTG}
                 useUISM={useUISM}
+                focusTarget={
+                    target.localDate === undefined
+                        ? undefined
+                        : { itemId: target.itemId, localDate: target.localDate }
+                }
                 hostedInModal
-                hostZIndex={hostZIndex}
             />
         </Box>
     );

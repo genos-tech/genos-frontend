@@ -177,7 +177,7 @@ describe("toast host", () => {
         render(
             wrap(
                 <>
-                    <Toast duration={null} open placement="top" tone="danger">
+                    <Toast duration={null} placement="top" tone="danger" open>
                         Connection lost
                     </Toast>
                     <Toast open>Saved</Toast>
@@ -200,7 +200,7 @@ describe("toast host", () => {
         render(
             wrap(
                 <>
-                    <Toast duration={null} open placement="top" tone="danger">
+                    <Toast duration={null} placement="top" tone="danger" open>
                         Connection lost
                     </Toast>
                     <Toast open>Saved</Toast>
@@ -229,15 +229,15 @@ describe("toast host", () => {
         render(
             wrap(
                 <>
-                    <Toast duration={null} open placement="top" tone="danger" dismissible={false}>
+                    <Toast dismissible={false} duration={null} placement="top" tone="danger" open>
                         Connection lost
                     </Toast>
                     <Toast
                         action={{ label: "Retry", onClick: () => {} }}
                         duration={null}
-                        open
                         placement="top"
                         tone="warning"
+                        open
                     >
                         Could not sync
                     </Toast>
