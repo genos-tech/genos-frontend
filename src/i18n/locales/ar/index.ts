@@ -257,6 +257,30 @@ export const ar: DeepPartial<Messages> = {
                 "لن تتمكن بعد الآن من رؤية رسائل هذه المجموعة. يمكنك إعادة الانضمام لاحقًا إذا كان عامًا.",
         },
         // Deleting a group chat as its owner (MIP-1705).
+        // TODO(copy): MIP-1693 — draft wording for a native reader.
+        archive: {
+            archiveMenuProject: "أرشفة المشروع",
+            unarchiveMenuProject: "إلغاء أرشفة المشروع",
+            archiveMenuChat: "أرشفة المجموعة",
+            unarchiveMenuChat: "إلغاء أرشفة المجموعة",
+            archiveInstead: "أرشفته بدلاً من ذلك",
+            archiveInsteadHint: "يحتفظ بكل شيء. يصبح للقراءة فقط حتى تلغي أرشفته.",
+            ownerOnly: "المالك وحده يمكنه الأرشفة أو إلغاء الأرشفة.",
+            projectBannerTitle: "هذا المشروع مؤرشف",
+            chatBannerTitle: "هذه المجموعة مؤرشفة",
+            projectBannerBody:
+                "هو للقراءة فقط: لا مهام جديدة ولا تعديلات ولا تعليقات حتى يُلغى أرشفته. لم يُحذف شيء.",
+            chatBannerBody: "هي للقراءة فقط: لا رسائل جديدة حتى يُلغى أرشفتها. لم يُحذف شيء.",
+            unarchiveAction: "إلغاء الأرشفة",
+            showArchived: "عرض المؤرشفة",
+            hideArchived: "إخفاء المؤرشفة",
+            archivedSection: "مؤرشف",
+            archivedBadge: "مؤرشف",
+            newTaskDisabled: "ألغِ أرشفة هذا المشروع لإضافة مهام.",
+            composerDisabled: "هذه المجموعة مؤرشفة. ألغِ أرشفتها لإرسال الرسائل.",
+            archiveFailed: "تعذّرت الأرشفة. حاول مرة أخرى.",
+            unarchiveFailed: "تعذّر إلغاء الأرشفة. حاول مرة أخرى.",
+        },
         deleteChat: {
             button: "حذف المجموعة",
             title: "هل تريد حذف هذه المجموعة؟",
@@ -413,6 +437,8 @@ export const ar: DeepPartial<Messages> = {
             serverError: "خطأ في الخادم. يرجى المحاولة مرة أخرى بعد قليل.",
             permissionDenied: "ليس لديك إذن للقيام بذلك.",
             requestFailed: "تعذّر إكمال الطلب. يرجى المحاولة مرة أخرى.",
+            // TODO(copy): MIP-1693 — draft wording for a native reader.
+            archived: "هذا مؤرشف وللقراءة فقط. ألغِ أرشفته لإجراء تغييرات.",
             actionFailed: "تعذّر إكمال الإجراء. يرجى المحاولة مرة أخرى.",
             limitReached: "لقد وصلت إلى حد خطتك. راجع الإعدادات ← الخطة والاستخدام.",
             messageSendFailed: "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى.",

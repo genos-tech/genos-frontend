@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { Box, Radio, RadioGroup, Typography } from "@mui/joy";
+import { Box, Button, Radio, RadioGroup, Typography } from "@mui/joy";
 
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { useTranslation } from "../../../../i18n";
@@ -15,6 +15,9 @@ type Props = {
      *  error. */
     onConfirm: (mode: DeleteChatMode) => Promise<boolean>;
     onCancel: () => void;
+    /** "Archive instead" (MIP-1693): keeps the whole group, read-only, until its owner restores it.
+     *  Set only for the owner. `true` on success closes the dialog. */
+    onArchive?: () => Promise<boolean>;
     zIndex?: number;
 };
 
@@ -27,7 +30,14 @@ type Props = {
  * reading a dialog quickly. Each choice says what it does, and the notes line says what neither
  * touches.
  */
-export const ModalDeleteChat = ({ open, chatName, onConfirm, onCancel, zIndex }: Props) => {
+export const ModalDeleteChat = ({
+    open,
+    chatName,
+    onConfirm,
+    onCancel,
+    onArchive,
+    zIndex,
+}: Props) => {
     const { t } = useTranslation();
     const copy = t.common.deleteChat;
     const [mode, setMode] = useState<DeleteChatMode>("soft");
@@ -79,6 +89,33 @@ export const ModalDeleteChat = ({ open, chatName, onConfirm, onCancel, zIndex }:
                     </Typography>
                 </Box>
             </RadioGroup>
+            {onArchive && (
+                <Box
+                    sx={{
+                        mt: 2,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1.5,
+                        flexWrap: "wrap",
+                    }}
+                >
+                    <Typography
+                        level="body-xs"
+                        sx={{ color: g.text.secondary, flex: 1, minWidth: 180 }}
+                    >
+                        {t.common.archive.archiveInsteadHint}
+                    </Typography>
+                    <Button
+                        size="sm"
+                        sx={{ borderRadius: g.radius.sm }}
+                        variant="outlined"
+                        onClick={() => void onArchive()}
+                    >
+                        {t.common.archive.archiveInstead}
+                    </Button>
+                </Box>
+            )}
         </ConfirmDialog>
     );
 };

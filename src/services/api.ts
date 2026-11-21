@@ -89,6 +89,10 @@ const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
                     emitRequestError("serverError");
                 } else if (status === 403) {
                     emitRequestError("permissionDenied");
+                } else if (status === 409 && error.response.data?.code === "archived") {
+                    // A write refused because the project or group chat is archived (MIP-1693).
+                    // Its own sentence, not the generic conflict line.
+                    emitRequestError("archived");
                 } else if (status === 429 || status === 413) {
                     // Plan limits: 429 = monthly creation caps / AI quotas,
                     // 413 = per-file upload size. Both carry

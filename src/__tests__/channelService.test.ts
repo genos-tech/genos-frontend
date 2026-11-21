@@ -616,7 +616,8 @@ describe("channelService.listChannels in-flight dedup", () => {
         // Token arrives. The next call must actually hit the network.
         svc.setAccessToken("tok-1");
         await expect(svc.listChannels()).resolves.toHaveLength(1);
-        expect(get).toHaveBeenCalledTimes(1);
+        // One list call is two pages-walks: the default list and the one with archived chats (MIP-1693).
+        expect(get).toHaveBeenCalledTimes(2);
     });
 
     it("still coalesces concurrent callers into one request", async () => {
@@ -627,7 +628,9 @@ describe("channelService.listChannels in-flight dedup", () => {
 
         const [a, b] = await Promise.all([svc.listChannels(), svc.listChannels()]);
 
-        expect(get).toHaveBeenCalledTimes(1);
+        // Coalesced: one default list and one with archived chats, however many callers.
+        expect(get).toHaveBeenCalledTimes(2);
+        expect(get.mock.calls[1][1].params.include_archived).toBe("true");
         expect(a).toEqual(b);
     });
 
@@ -641,9 +644,9 @@ describe("channelService.listChannels in-flight dedup", () => {
         svc.setAccessToken("tok-1");
 
         await expect(svc.listChannels()).rejects.toThrow();
-        // A retry must re-issue rather than replay the cached failure.
+        // A retry must re-issue rather than replay the cached failure: two requests per attempt.
         await expect(svc.listChannels()).resolves.toHaveLength(1);
-        expect(get).toHaveBeenCalledTimes(2);
+        expect(get).toHaveBeenCalledTimes(4);
     });
 });
 

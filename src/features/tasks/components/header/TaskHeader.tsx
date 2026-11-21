@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import { Button, IconButton, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -20,10 +22,15 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
+import { emitRequestError } from "../../../../services/requestErrorNotifier";
 import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { archiveProject, unarchiveProject } from "../../../archive/archiveApi";
+import { ArchivedBanner } from "../../../archive/ArchivedBanner";
+import { useArchiveState } from "../../../archive/archiveState";
+import { isOwnerOfProject } from "../../../archive/projectOwner";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
 import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
@@ -69,13 +76,48 @@ export const TaskHeader = ({
     // task-field-rules cache (fetched per project by taskHome) — the item
     // simply stays hidden until that fetch resolves for THIS project.
     const fieldRules = useTM.taskFieldRules;
-    const isProjectOwner =
-        fieldRules != null &&
-        usePM.currentProject != null &&
-        fieldRules.projectId === usePM.currentProject.projectId &&
-        fieldRules.ownerUserId != null &&
-        fieldRules.ownerUserId === myself.userId;
+    const isProjectOwner = isOwnerOfProject(
+        fieldRules,
+        usePM.currentProject?.projectId,
+        myself.userId
+    );
     const [openCustomizeFields, setOpenCustomizeFields] = useState(false);
+
+    // Archive state (MIP-1693). The open project is archived when the archived set lists it.
+    const archiveState = useArchiveState();
+    const openProjectId = usePM.currentProject?.projectId;
+    const archivedRecord =
+        openProjectId == null
+            ? undefined
+            : archiveState.archivedProjects.find((p) => p.projectId === openProjectId);
+    const archived = archivedRecord !== undefined;
+    const [archiveBusy, setArchiveBusy] = useState(false);
+
+    // Archive the open project, or put an archived one back. The list moves at once; a refusal
+    // says so in one line, and the project stays as it was.
+    const toggleArchive = async () => {
+        const current = usePM.currentProject;
+        if (!current || archiveBusy) return;
+        setArchiveBusy(true);
+        try {
+            if (archived) {
+                await unarchiveProject(accessToken, myself.teamId, archivedRecord ?? current);
+                usePM.setTeamProjects([...usePM.teamProjects, archivedRecord ?? current]);
+            } else {
+                await archiveProject(accessToken, myself.teamId, current);
+                usePM.setTeamProjects(
+                    usePM.teamProjects.filter((p) => p.projectId !== current.projectId)
+                );
+            }
+        } catch {
+            emitRequestError(
+                "serverMessage",
+                archived ? t.common.archive.unarchiveFailed : t.common.archive.archiveFailed
+            );
+        } finally {
+            setArchiveBusy(false);
+        }
+    };
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -181,6 +223,20 @@ export const TaskHeader = ({
             onClick: onCreateProject,
         },
         {
+            id: "archiveProject",
+            kind: "archive",
+            label: archived
+                ? t.common.archive.unarchiveMenuProject
+                : t.common.archive.archiveMenuProject,
+            icon: archived ? (
+                <UnarchiveOutlinedIcon sx={{ fontSize: 18 }} />
+            ) : (
+                <ArchiveOutlinedIcon sx={{ fontSize: 18 }} />
+            ),
+            visible: isProjectOwner,
+            onClick: toggleArchive,
+        },
+        {
             id: "deleteProject",
             kind: "delete",
             label: t.tasks.header.deleteProjectMenuItem,
@@ -211,6 +267,7 @@ export const TaskHeader = ({
                             }
                         >
                             <Button
+                                disabled={archived}
                                 size="sm"
                                 startDecorator={<AddIcon />}
                                 onClick={useTM.handleCreateTask}
@@ -293,6 +350,13 @@ export const TaskHeader = ({
                     useTM={useTM}
                 />
             </PageHeader>
+            {archived && (
+                <ArchivedBanner
+                    busy={archiveBusy}
+                    kind="project"
+                    onRestore={isProjectOwner ? toggleArchive : undefined}
+                />
+            )}
             <ModalCustomizeTaskFields
                 myself={myself}
                 open={openCustomizeFields}
