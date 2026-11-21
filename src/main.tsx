@@ -47,6 +47,7 @@ const GenosBlogArticlePage = lazy(() => import("./lp/BlogArticlePage"));
 const GenosBlogPage = lazy(() => import("./lp/BlogPage"));
 const GenosDocsPage = lazy(() => import("./lp/DocsPage"));
 const GenosDemoPage = lazy(() => import("./lp/DemoPage"));
+const GenosMigratePage = lazy(() => import("./lp/MigratePage"));
 const GenosDevelopersPage = lazy(() => import("./lp/DevelopersPage"));
 const GenosFeaturesPage = lazy(() => import("./lp/FeaturesPage"));
 const GenosLandingPage = lazy(() => import("./lp/LandingPage"));
@@ -170,6 +171,9 @@ const tree = (
                 own ja + en copy. (There is no /terms route: the terms are an
                 unpublished draft.) */}
             <Route element={publicPage(GenosSupportPage)} path="/support" />
+
+            {/* Moving into Genos (MIP-1260): what imports today and what does not. Public, like /docs. */}
+            <Route element={publicPage(GenosMigratePage)} path="/migrate" />
             <Route element={publicPage(GenosSecurityPage)} path="/security" />
             {/* Accessibility statement and supported browsers (MIP-1265). */}
             <Route element={publicPage(GenosAccessibilityPage)} path="/accessibility" />

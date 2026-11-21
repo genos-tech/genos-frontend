@@ -80,6 +80,20 @@ export const ACCESSIBILITY_META: Record<SeoLang, Meta> = {
     },
 };
 
+/** Moving into Genos (MIP-1260): says what can be imported and what cannot, nothing more. */
+export const MIGRATE_META: Record<SeoLang, Meta> = {
+    ja: {
+        title: "Genosへの移行 | Genos",
+        description:
+            "Markdown のノートの取り込み、タスクの作り方、今は取り込めないもの（Slack、Notion、Jira、Google ドキュメント）。",
+    },
+    en: {
+        title: "Moving to Genos | Genos",
+        description:
+            "Importing Markdown notes into Genos, creating tasks, and what has no import yet: Slack, Notion, Jira and Google Docs.",
+    },
+};
+
 /** English-only reference. */
 export const DEVELOPERS_META: Meta = {
     title: "Developers | Genos",
