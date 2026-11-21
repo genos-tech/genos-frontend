@@ -292,6 +292,37 @@ jobs:
                   # Same heap headroom as the build: tsc on the whole of src/ plus the tests.
                   NODE_OPTIONS: --max-old-space-size=4096
 
+    # Automated accessibility scan (MIP-1827): axe-core over the rendered public
+    # pages and the sign-in form, in jsdom. REPORT-ONLY: the test never fails on a
+    # violation, and this job is not in branch protection's required list. It writes
+    # a per-page count to a JSON artifact. Blocking for critical violations is a
+    # later step, after a clean week of reports.
+    frontend-a11y:
+        name: frontend-a11y (report-only)
+        needs: changes
+        if: needs.changes.outputs.code == 'true'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+              with:
+                  node-version: 22
+                  cache: npm
+                  cache-dependency-path: package-lock.json
+            - run: npm ci
+            - name: axe scan of the public pages (report only)
+              run: npx vitest run src/__tests__/a11yReport.test.tsx
+              env:
+                  A11Y_REPORT: "1"
+                  A11Y_REPORT_FILE: ${{ github.workspace }}/a11y-report.json
+            - name: Upload the axe report
+              if: always()
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: a11y-report
+                  path: a11y-report.json
+                  if-no-files-found: warn
+
     # Deliberately NOT gated on `changes`: prettier checks `.` — including
     # markdown/yaml/json (.prettierrc's tabWidth applies to them) — so a
     # docs-only PR is exactly the kind of change this job exists to check.
