@@ -18,8 +18,9 @@ import { HashMentionData } from "../context/HashMentionDataContext";
 import { SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
 
 // Server search rows (what `getItems` merges in) ride along in `teamTasks` here.
-const menuItems = (editor: any, data: HashMentionData) =>
-    HashMentionMenuItems(editor, data, serverTaskItems(editor, data.teamTasks, data));
+type TestData = HashMentionData & { teamTasks?: SearchTeamTasksResponse[] };
+const menuItems = (editor: any, data: TestData) =>
+    HashMentionMenuItems(editor, data, serverTaskItems(editor, data.teamTasks ?? [], data));
 
 const openProjectTask = (over: Partial<TaskTableProps>): TaskTableProps =>
     ({
@@ -40,10 +41,8 @@ const teamTask = (over: Partial<SearchTeamTasksResponse>): SearchTeamTasksRespon
         ...over,
     }) as unknown as SearchTeamTasksResponse;
 
-const dataWith = (over: Partial<HashMentionData>): HashMentionData => ({
+const dataWith = (over: Partial<TestData>): TestData => ({
     tasks: [],
-    teamTasks: [],
-    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],

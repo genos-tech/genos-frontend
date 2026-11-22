@@ -40,8 +40,6 @@ const render = (ui: React.ReactElement) =>
             <HashMentionDataProvider
                 value={{
                     tasks: [],
-                    teamTasks: [],
-                    ensureTeamTasks: () => {},
                     notes: [],
                     chats: [],
                     allChats: [],

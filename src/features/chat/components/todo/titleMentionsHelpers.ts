@@ -7,11 +7,13 @@ import {
     type KeyboardEvent,
 } from "react";
 
+import type { TodoGroupProps } from "../../../../types/chat";
 import { mentionKey, type AgentMentionCandidate } from "../../../agentQA/mentions/types";
 import {
     matchMentionTokens,
     useAgentMentionDraft,
 } from "../../../agentQA/mentions/useAgentMentionDraft";
+import { fullDisplayIdIn } from "../../../tasks/utils/taskDisplayId";
 import type {
     ResolvedTitleMention,
     TodoMentionPool,
@@ -170,4 +172,20 @@ export const EMPTY_POOL: TodoMentionPool = {
     hrefByKey: new Map(),
     taskCardByKey: new Map(),
     refreshEntities: () => {},
+};
+
+const SAVED_ID_TOKEN = /(?:^|\s)(#[A-Za-z][A-Za-z0-9]{1,5}-\d{1,9})(?![\w-])/g;
+
+/** Display ids ("MIP-12") named by `#MIP-12` tokens in the to-do titles; a stable list. */
+export const savedTaskIds = (groups: TodoGroupProps[]): string[] => {
+    const ids = new Set<string>();
+    for (const g of groups) {
+        for (const item of g.items ?? []) {
+            for (const m of (item.title ?? "").matchAll(SAVED_ID_TOKEN)) {
+                const id = fullDisplayIdIn(m[1]);
+                if (id) ids.add(id.toUpperCase());
+            }
+        }
+    }
+    return [...ids].sort();
 };

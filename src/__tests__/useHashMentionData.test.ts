@@ -27,8 +27,6 @@ const base = (): UseHashMentionDataInputs => ({
     tasks: [],
     taskNoteMeta: [],
     teamNoteMeta: [],
-    teamTasks: [],
-    ensureTeamTasks: noop,
     todoGroups: [],
 });
 
@@ -69,7 +67,6 @@ describe("useHashMentionData", () => {
     // Each input, changed on its own, must produce a new value.
     const changes: Array<[string, Partial<UseHashMentionDataInputs>]> = [
         ["tasks", { tasks: [row({ id: "1" })] }],
-        ["teamTasks", { teamTasks: [row({ id: "2" })] }],
         ["myNoteMeta", { myNoteMeta: [row({ noteId: 1 })] }],
         ["taskNoteMeta", { taskNoteMeta: [row({ noteId: 2 })] }],
         ["chatNoteMeta", { chatNoteMeta: [row({ noteId: 3 })] }],

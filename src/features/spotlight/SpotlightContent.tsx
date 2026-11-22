@@ -488,7 +488,6 @@ export const SpotlightContent = ({
     const mentionSources = useAgentMentionSources({
         membersOverride: mentionMembers,
         groupsOverride: mentionGroups,
-        includeTeamTasks: true,
     });
     const mention = useAgentMentionDraft({
         value: localInput,
@@ -496,7 +495,7 @@ export const SpotlightContent = ({
         members: mentionSources.members,
         entities: mentionSources.entities,
         lookupTask: mentionSources.lookupTask,
-        onHashOpen: mentionSources.ensureTeamTasks,
+        searchTasks: mentionSources.searchTasks,
     });
     // "Ask Genos about this task": `useSpotlight` already put `#PRJ-12 ` in the
     // draft; the ref waits in a queue for the input that mounts (the overlay is

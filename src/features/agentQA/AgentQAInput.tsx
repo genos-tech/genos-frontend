@@ -40,15 +40,15 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
     // Both host modals (ThreadAsk / NoteAsk) mount inside
     // HashMentionDataProvider + AvatarContext, so the sources hook
     // needs no props here.
-    // Every project's tasks, not only the open one's (MIP-788).
-    const sources = useAgentMentionSources({ includeTeamTasks: true });
+    // Tasks of every project, not only the open one (MIP-788): `#` asks the server search (MIP-2002).
+    const sources = useAgentMentionSources();
     const mention = useAgentMentionDraft({
         value: state.query,
         onChange: state.setQuery,
         members: sources.members,
         entities: sources.entities,
         lookupTask: sources.lookupTask,
-        onHashOpen: sources.ensureTeamTasks,
+        searchTasks: sources.searchTasks,
     });
 
     const syncCaret = useCallback(() => {
