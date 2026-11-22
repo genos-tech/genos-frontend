@@ -64,6 +64,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         setMoreAnalyticsOpen,
         teamLoadOpen,
         setTeamLoadOpen,
+        teamTasksReady,
         assigneeWorkload,
         tagStats,
         recentTasks,
@@ -303,6 +304,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     sprintNameFor={sprintNameFor}
                                     teamCapacity={teamCapacity}
                                     teamLoadOpen={teamLoadOpen}
+                                    teamTasksReady={teamTasksReady}
                                     textMuted={textMuted}
                                     textPrimary={textPrimary}
                                     textSecondary={textSecondary}

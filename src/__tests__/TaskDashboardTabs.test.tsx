@@ -240,7 +240,10 @@ describe("People tab (MIP-1963)", () => {
         fireEvent.click(screen.getByRole("button", { name: "Show team load" }));
         expect(screen.getByRole("button", { name: "Hide team load" })).toBeInTheDocument();
         fireEvent.click(screen.getByRole("button", { name: "Show status breakdown" }));
-        expect(screen.getByRole("columnheader", { name: "Total" })).toBeInTheDocument();
+        const table = screen.getByRole("table", { name: /Assignee Workload/i });
+        expect(within(table).getByRole("columnheader", { name: "Total" })).toBeInTheDocument();
+        // My row: my task count is in the table (the fixture gives people their own rows).
+        expect(within(table).getAllByRole("row").length).toBeGreaterThan(1);
     });
 });
 

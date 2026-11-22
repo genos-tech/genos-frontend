@@ -5,6 +5,7 @@ import { Box, Button, Stack, Typography } from "@mui/joy";
 import { UserAvatar } from "../../../../../components/ui/avatars/UserAvatar";
 import { DashboardCard, MeterRow, useNumberFormat } from "../../../../../components/ui/dashboard";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
+import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { focusRing, g, type } from "../../../../../theme/tokens";
 import { toneSolid, type Tone } from "../../../meta/taskTone";
@@ -12,6 +13,8 @@ import type { DueBucket } from "../../../utils/taskWeight";
 import type { TaskHomeData } from "../useTaskHomeData";
 
 type Props = Pick<TaskHomeData, "teamCapacity" | "maxCapacityTotal" | "assigneeWorkload"> & {
+    /** The team-wide read is in flight: the bars would still be this project's numbers. */
+    loading: boolean;
     open: boolean;
     onToggle: (open: boolean) => void;
 };
@@ -37,6 +40,7 @@ export const TeamLoadCard = ({
     teamCapacity,
     maxCapacityTotal,
     assigneeWorkload,
+    loading,
     open,
     onToggle,
 }: Props) => {
@@ -81,83 +85,114 @@ export const TeamLoadCard = ({
             }
         >
             <Box hidden={!open} id={regionId}>
-                {open && teamCapacity.length === 0 && (
-                    <EmptyState data-empty="home-capacity" size="xs" title={c.empty} />
-                )}
-                {open && teamCapacity.length > 0 && (
+                {open && (
                     <Stack spacing={1.5}>
-                        <Stack
-                            direction="row"
-                            sx={{ flexWrap: "wrap", columnGap: 2, rowGap: 0.5 }}
-                            aria-hidden
-                        >
-                            {BUCKETS.map((b) => (
-                                <Stack key={b} alignItems="center" direction="row" spacing={0.75}>
-                                    <Box
-                                        sx={{
-                                            width: 8,
-                                            height: 8,
-                                            borderRadius: g.radius.full,
-                                            background: toneSolid(BUCKET_TONE[b]).bg,
-                                        }}
-                                    />
-                                    <Typography
-                                        sx={{ ...type("body-xs"), color: g.text.secondary }}
-                                    >
-                                        {labelOf[b]}
-                                    </Typography>
-                                </Stack>
-                            ))}
-                        </Stack>
-                        <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-                            {teamCapacity.map((m) => (
-                                <li key={m.id}>
-                                    <MeterRow
-                                        name={m.name}
-                                        total={maxCapacityTotal}
-                                        value={fmt(c.tasksCount, { count: nf.number(m.count) })}
-                                        ariaLabel={`${m.name}: ${BUCKETS.map(
-                                            (b) => `${labelOf[b]} ${nf.number(m.buckets[b] ?? 0)}`
-                                        ).join(", ")}; ${c.nearTerm} ${nf.number(m.nearTerm)}`}
-                                        avatar={
-                                            <UserAvatar
-                                                clickable={m.id !== "__unassigned__"}
-                                                fallbackInitial={m.name.charAt(0).toUpperCase()}
-                                                showPulseDot={false}
-                                                size="sm"
-                                                userId={m.id === "__unassigned__" ? null : m.id}
+                        {loading && <SkeletonLines lines={3} />}
+                        {!loading && teamCapacity.length === 0 && (
+                            <EmptyState data-empty="home-capacity" size="xs" title={c.empty} />
+                        )}
+                        {!loading && teamCapacity.length > 0 && (
+                            <>
+                                <Stack
+                                    direction="row"
+                                    sx={{ flexWrap: "wrap", columnGap: 2, rowGap: 0.5 }}
+                                    aria-hidden
+                                >
+                                    {BUCKETS.map((b) => (
+                                        <Stack
+                                            key={b}
+                                            alignItems="center"
+                                            direction="row"
+                                            spacing={0.75}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: g.radius.full,
+                                                    background: toneSolid(BUCKET_TONE[b]).bg,
+                                                }}
                                             />
+                                            <Typography
+                                                sx={{
+                                                    ...type("body-xs"),
+                                                    color: g.text.secondary,
+                                                }}
+                                            >
+                                                {labelOf[b]}
+                                            </Typography>
+                                        </Stack>
+                                    ))}
+                                </Stack>
+                                <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                                    {teamCapacity.map((m) => (
+                                        <li key={m.id}>
+                                            <MeterRow
+                                                name={m.name}
+                                                total={maxCapacityTotal}
+                                                ariaLabel={`${m.name}: ${BUCKETS.map((b) =>
+                                                    fmt(c.effortTooltip, {
+                                                        label: labelOf[b],
+                                                        points: nf.number(m.buckets[b] ?? 0),
+                                                    })
+                                                ).join(", ")}; ${fmt(c.effortTooltip, {
+                                                    label: c.nearTerm,
+                                                    points: nf.number(m.nearTerm),
+                                                })}`}
+                                                avatar={
+                                                    <UserAvatar
+                                                        clickable={m.id !== "__unassigned__"}
+                                                        showPulseDot={false}
+                                                        size="sm"
+                                                        fallbackInitial={m.name
+                                                            .charAt(0)
+                                                            .toUpperCase()}
+                                                        userId={
+                                                            m.id === "__unassigned__" ? null : m.id
+                                                        }
+                                                    />
+                                                }
+                                                segments={BUCKETS.map((b) => ({
+                                                    key: b,
+                                                    // The tooltip reads "{label}: {n} effort pts".
+                                                    label: fmt(c.effortTooltip, {
+                                                        label: labelOf[b],
+                                                        points: nf.number(m.buckets[b] ?? 0),
+                                                    }),
+                                                    value: m.buckets[b] ?? 0,
+                                                    tone: BUCKET_TONE[b],
+                                                    display: "",
+                                                }))}
+                                                value={fmt(c.tasksCount, {
+                                                    count: nf.number(m.count),
+                                                })}
+                                            />
+                                        </li>
+                                    ))}
+                                </Box>
+                            </>
+                        )}
+                        {assigneeWorkload.length > 0 && (
+                            <Box>
+                                <Button
+                                    aria-expanded={breakdown}
+                                    size="sm"
+                                    sx={{ px: 0, "&:focus-visible": focusRing }}
+                                    variant="plain"
+                                    onClick={() => setBreakdown(!breakdown)}
+                                >
+                                    {breakdown ? p.statusBreakdownHide : p.statusBreakdownShow}
+                                </Button>
+                                {breakdown && (
+                                    <WorkloadTable
+                                        assigneeWorkload={assigneeWorkload}
+                                        nearTermById={
+                                            new Map(teamCapacity.map((m) => [m.id, m.nearTerm]))
                                         }
-                                        segments={BUCKETS.map((b) => ({
-                                            key: b,
-                                            label: labelOf[b],
-                                            value: m.buckets[b] ?? 0,
-                                            tone: BUCKET_TONE[b],
-                                            display: nf.number(m.buckets[b] ?? 0),
-                                        }))}
                                     />
-                                </li>
-                            ))}
-                        </Box>
-                        <Box>
-                            <Button
-                                aria-expanded={breakdown}
-                                size="sm"
-                                sx={{ px: 0, "&:focus-visible": focusRing }}
-                                variant="plain"
-                                onClick={() => setBreakdown(!breakdown)}
-                            >
-                                {breakdown ? p.statusBreakdownHide : p.statusBreakdownShow}
-                            </Button>
-                            {breakdown && (
-                                <WorkloadTable
-                                    assigneeWorkload={assigneeWorkload}
-                                    nearTermById={
-                                        new Map(teamCapacity.map((m) => [m.id, m.nearTerm]))
-                                    }
-                                />
-                            )}
-                        </Box>
+                                )}
+                            </Box>
+                        )}
                     </Stack>
                 )}
             </Box>
@@ -200,6 +235,7 @@ const WorkloadTable = ({
     return (
         <Box sx={{ overflowX: "auto", mt: 1 }}>
             <Box
+                aria-label={d.assigneeWorkload}
                 component="table"
                 sx={{
                     ...type("body-sm"),

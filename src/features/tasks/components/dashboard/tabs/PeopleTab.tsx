@@ -52,6 +52,7 @@ type PeopleTabProps = Pick<
     | "maxCapacityTotal"
     | "assigneeWorkload"
     | "teamLoadOpen"
+    | "teamTasksReady"
     | "setTeamLoadOpen"
 > &
     Pick<TaskHomeContentProps, "myself" | "usePM">;
@@ -85,6 +86,7 @@ export const PeopleTab = ({
     assigneeWorkload,
     teamLoadOpen,
     setTeamLoadOpen,
+    teamTasksReady,
     myself,
     usePM,
 }: PeopleTabProps) => {
@@ -106,6 +108,7 @@ export const PeopleTab = ({
         <>
             <TeamLoadCard
                 assigneeWorkload={assigneeWorkload}
+                loading={teamLoadOpen && !teamTasksReady}
                 maxCapacityTotal={maxCapacityTotal}
                 open={teamLoadOpen}
                 teamCapacity={teamCapacity}

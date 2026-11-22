@@ -367,7 +367,8 @@ describe("the files stay on the shared pieces", () => {
     it("the dashboard status bars read the tone source, with no literal color", () => {
         const text = strip(
             source("features/tasks/components/dashboard/taskHomeHelpers.ts") +
-                source("features/tasks/components/dashboard/tabs/OverallTab.tsx")
+                source("features/tasks/components/dashboard/tabs/OverallTab.tsx") +
+                source("features/tasks/components/dashboard/tabs/TeamLoadCard.tsx")
         ).replace(/\s+/g, "");
         expect(text).toContain("toneSolid(STATUS_TONE[status])");
         expect(text).toContain("tone:STATUS_TONE[");

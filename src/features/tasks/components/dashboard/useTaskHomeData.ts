@@ -146,6 +146,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // 500 row) read waits for it: opening the dashboard, or the tab, no longer fetches it. Read
     // once per team, then kept.
     const teamTasksLoadedFor = useRef<string | null>(null);
+    const [teamTasksReady, setTeamTasksReady] = useState(false);
     const needsTeamTasks = activeTab === "people" && teamLoadOpen;
     useEffect(() => {
         if (!needsTeamTasks || !myself.teamId || !accessToken) return;
@@ -156,6 +157,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
             if (cancelled) return;
             teamTasksLoadedFor.current = myself.teamId;
             setTeamWideTasks(Array.isArray(rows) ? rows : []);
+            setTeamTasksReady(true);
         })();
         return () => {
             cancelled = true;
@@ -543,13 +545,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     }, [usePM.currentProject?.projectId, useSM.projectMilestones, useSM.projectSprints]);
 
     // ── My Tasks (badge) + Focus user (shared tasks body) ──
-    // `myTasks`/`myStats` stay pinned to the logged-in user so the "My Tasks"
-    // TAB BADGE always shows my own count, no matter which tab is open.
-    const myTasks = useMemo(
-        () => effectiveTasks.filter((t) => t.assigneeId === myself.userId),
-        [effectiveTasks, myself.userId]
-    );
-    const myStats = useMemo(() => computeAssigneeStats(myTasks), [myTasks]);
 
     // Distinct assignees WITH tasks in the current project (excluding me),
     // busiest-first — the picker options for the "Member's Tasks" tab.
@@ -579,11 +574,18 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     }, [effectiveTasks, myself.userId]);
     // Resolve the picked id to a member object. `null` when nothing is picked
     // OR the picked member isn't in THIS project's list (e.g. after a project
-    // switch). Every render gate keys off this RESOLVED object, so a stale id
-    // self-heals back to the "pick a member" prompt instead of a ghost body.
+    // switch). Every render gate keys off this RESOLVED object, so a stale id falls back to me
+    // instead of a ghost body; the id is also cleared on a project switch (below).
     const selectedMember = selectedMemberId
         ? (projectMembers.find((m) => m.id === selectedMemberId) ?? null)
         : null;
+
+    // A project switch starts People on me again: a person picked in another project must not
+    // come back on their own when this one is opened later.
+    const currentProjectId = usePM.currentProject?.projectId;
+    useEffect(() => {
+        setSelectedMemberId(null);
+    }, [currentProjectId]);
 
     // The People tab's body (hidden while the rows are unread).
     const showFocusBody = !tasksUnread && activeTab === "people";
@@ -763,6 +765,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         setMoreAnalyticsOpen,
         teamLoadOpen,
         setTeamLoadOpen,
+        teamTasksReady,
         assigneeWorkload,
         tagStats,
         recentTasks,
@@ -778,7 +781,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         overdueAndUpcoming,
         ongoingProjectMilestones,
         sprintMilestones,
-        myStats,
         selectedMemberId,
         setSelectedMemberId,
         projectMembers,
