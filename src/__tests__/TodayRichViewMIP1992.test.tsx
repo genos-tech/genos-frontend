@@ -17,9 +17,6 @@ import { ja } from "../i18n/locales/ja";
 
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("../services/appNavigate", () => ({ requestAppNavigate: navigate }));
-vi.mock("../features/tasks/components/TaskMentionHoverCard", () => ({
-    TaskMentionHoverCard: () => <div data-testid="hover-card" />,
-}));
 
 const copy = en.tasks.dashboard.today as unknown as TodayCopy;
 const jaCopy = ja.tasks?.dashboard?.today as unknown as TodayCopy;
@@ -146,9 +143,13 @@ describe("TodayTaskRow", () => {
         expect(screen.queryByRole("button")).toBeNull();
     });
 
-    it("does not build the hover card until the row is hovered", () => {
+    it("has no hover preview: hovering the row opens nothing", () => {
+        vi.useFakeTimers();
         row();
-        expect(screen.queryByTestId("hover-card")).toBeNull();
+        fireEvent.mouseOver(screen.getByRole("button"));
+        vi.advanceTimersByTime(1000);
+        expect(screen.queryByRole("tooltip")).toBeNull();
+        vi.useRealTimers();
     });
 });
 
@@ -199,6 +200,11 @@ describe("the page", () => {
             })
         );
         expect(screen.getByRole("region", { name: "You are waiting on" })).toBeInTheDocument();
-        expect(screen.getByRole("region", { name: "Handed to others" })).toBeInTheDocument();
+        const waiting = screen.getByRole("region", { name: "You are waiting on" });
+        const handed = screen.getByRole("region", { name: "Handed to others" });
+        // Same row component as every other section: a task row with its project line.
+        expect(waiting.querySelector('li[data-kind="Task"]')).not.toBeNull();
+        expect(handed.querySelector('li[data-kind="Task"]')).not.toBeNull();
+        expect(waiting).toHaveTextContent("Dep");
     });
 });
