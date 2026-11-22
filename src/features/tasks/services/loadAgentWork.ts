@@ -142,6 +142,29 @@ export type AgentWorkConnection = {
     last_used_at: string | null;
 };
 
+/** One agent session of the viewer's own (the call log's `run_id`): counts and ids, never text. */
+export type AgentWorkSession = {
+    run_id: string;
+    /** The same labels as a feed row's agent kind (never `person`: the log holds agent calls). */
+    agent: Exclude<AgentKind, "person">;
+    started_at: string | null;
+    ended_at: string | null;
+    calls: number;
+    opened: number;
+    searched: number;
+    changed: number;
+    decided: number;
+    refused: number;
+    failed: number;
+    commented: number;
+    /** Items were changed and the run left no completion comment. */
+    no_completion_comment: boolean;
+    items_touched: number;
+    items_changed: number;
+};
+
+export type AgentWorkSessions = { items: AgentWorkSession[]; total: number };
+
 export type AgentWorkPage = {
     window: { days: number; since: string; until: string };
     totals: AgentWorkTotals;
@@ -149,6 +172,8 @@ export type AgentWorkPage = {
     groups: AgentWorkGroup[];
     decisions: AgentWorkDecision[];
     connections: AgentWorkConnection[];
+    /** The viewer's own sessions (MIP-2008); empty while the call log is off. */
+    sessions: AgentWorkSessions;
     /** Opaque: pass it back as `cursor`. `null` on the last page. */
     next_cursor: string | null;
 };
@@ -190,6 +215,7 @@ const emptyPage = (): AgentWorkPage => ({
     groups: [],
     decisions: [],
     connections: [],
+    sessions: { items: [], total: 0 },
     next_cursor: null,
 });
 
@@ -214,6 +240,10 @@ const normalise = (raw: Partial<AgentWorkPage> | null): AgentWorkPage => {
             : [],
         decisions: Array.isArray(raw.decisions) ? raw.decisions : [],
         connections: Array.isArray(raw.connections) ? raw.connections : [],
+        // An older API has no block: the view then simply has no sessions.
+        sessions: Array.isArray(raw.sessions?.items)
+            ? { items: raw.sessions.items, total: raw.sessions.total ?? raw.sessions.items.length }
+            : base.sessions,
         next_cursor: raw.next_cursor ?? null,
     };
 };

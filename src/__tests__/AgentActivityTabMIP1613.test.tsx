@@ -150,6 +150,7 @@ const makePage = (overrides: Partial<AgentWorkPage> = {}): AgentWorkPage => ({
         },
     ],
     connections: [{ family: "claude", last_used_at: "2026-11-21T10:44:00Z" }],
+    sessions: { items: [], total: 0 },
     next_cursor: null,
     ...overrides,
 });
