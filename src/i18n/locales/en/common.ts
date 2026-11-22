@@ -151,11 +151,11 @@ export const common = {
         taskTitle: "Delete this task permanently?",
         taskDescription:
             "The task, its comments, files, notes, history and search entries are erased now, without the 30 days a deleted task normally keeps. This cannot be undone.",
-        myMessagesMenu: "Delete all my messages",
-        myMessagesTitle: "Delete all your messages in this chat?",
+        myMessagesMenu: "Delete all my messages and remove",
+        myMessagesTitle: "Delete all your messages and remove this chat?",
         myMessagesDescription:
-            "Every message you wrote here, with its files and reactions, is erased now and cannot be recovered. The other person's messages are not touched, and the chat stays.",
-        myMessagesDone: "Your messages were deleted.",
+            "Every message you wrote here, with its files and reactions, is erased now and cannot be undone or recovered. Only YOUR messages are deleted: the other person's messages stay. The chat is then removed from your sidebar; a new message from them brings it back.",
+        myMessagesDone: "Your messages were deleted and the chat was removed from the sidebar.",
         noteTitle: "Delete this note permanently?",
         noteDescription:
             "The note, its history, comments, files and search entries are erased now, and its collaborative copy with them. This cannot be undone. People who saw it may have copied it.",

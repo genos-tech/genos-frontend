@@ -17,6 +17,7 @@ import { DEMO_URL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import { useSyncAppLocale } from "./kit/useSyncAppLocale";
 import type { Lang } from "./lpLang";
+import { DEMO_META } from "./seo/pageHeads";
 import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
@@ -39,19 +40,6 @@ const GROUP_ICONS: ReadonlyArray<React.ComponentType> = [
     Sparkles,
     Bot,
 ];
-
-const META: Record<Lang, { title: string; description: string }> = {
-    ja: {
-        title: "デモの見方 | Genos",
-        description:
-            "サンプルチームのワークスペースで、Genosの検索とAIを試すためのガイド。そのまま貼って使える質問つき。",
-    },
-    en: {
-        title: "Demo guide | Genos",
-        description:
-            "A guide to the sample-team workspace: what is inside, and prompts you can paste to see Genos search and AI work.",
-    },
-};
 
 function PromptButton({
     text,
@@ -99,10 +87,10 @@ function DemoBody({ lang, appHref }: { lang: Lang; appHref: (url: string) => str
     const copy = t.demoPage;
     useSyncAppLocale(lang);
     useDocumentMeta({
-        title: META[lang].title,
-        description: META[lang].description,
-        ogTitle: META[lang].title,
-        ogDescription: META[lang].description,
+        title: DEMO_META[lang].title,
+        description: DEMO_META[lang].description,
+        ogTitle: DEMO_META[lang].title,
+        ogDescription: DEMO_META[lang].description,
         lang,
     });
 

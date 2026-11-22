@@ -1479,6 +1479,12 @@ export const ja: DeepPartial<Messages> = {
             openTodo: "To-Do を開く",
             pinChat: "チャットをピン留め",
             unpinChat: "ピン留めを解除",
+            removeFromSidebar: "サイドバーから外す",
+            removeFromSidebarHint: "自分だけ非表示になります。新しいメッセージが届くと戻ります。",
+            removedFromSidebar: "サイドバーから外しました。新しいメッセージが届くと戻ります。",
+            removeFromSidebarFailed: "チャットを外せませんでした。サイドバーに戻しました。",
+            deletedButNotRemoved:
+                "メッセージは削除しましたが、チャットをサイドバーから外せませんでした。",
             unflag: "フラグを外す",
             completeFlag: "完了にする",
             reopenFlag: "再開する",
@@ -1949,11 +1955,11 @@ export const ja: DeepPartial<Messages> = {
             taskTitle: "このタスクを完全に削除しますか？",
             taskDescription:
                 "タスク、コメント、ファイル、ノート、履歴、検索エントリを、通常の30日間の保持なしで今すぐ消去します。元に戻せません。",
-            myMessagesMenu: "自分のメッセージをすべて削除",
-            myMessagesTitle: "このチャットの自分のメッセージをすべて削除しますか？",
+            myMessagesMenu: "自分のメッセージをすべて削除して非表示",
+            myMessagesTitle: "自分のメッセージをすべて削除し、このチャットを削除しますか？",
             myMessagesDescription:
-                "ここで書いたすべてのメッセージを、ファイルやリアクションとともに今すぐ消去します。元に戻せません。相手のメッセージには影響せず、チャットは残ります。",
-            myMessagesDone: "自分のメッセージを削除しました。",
+                "ここで書いたすべてのメッセージを、ファイルやリアクションとともに今すぐ消去します。元に戻せず、復元もできません。削除されるのは自分のメッセージだけで、相手のメッセージは残ります。その後このチャットはサイドバーから外れ、相手から新しいメッセージが届くと再び表示されます。",
+            myMessagesDone: "自分のメッセージを削除し、チャットをサイドバーから外しました。",
             noteTitle: "このノートを完全に削除しますか?",
             noteDescription:
                 "ノート、その履歴、コメント、ファイル、検索エントリがすぐに消去され、共同編集用のコピーも削除されます。元に戻すことはできません。閲覧した人がコピーしている可能性があります。",
@@ -5727,9 +5733,6 @@ export const ja: DeepPartial<Messages> = {
             tasksSuffix: " 件のタスク",
         },
         milestones: {
-            sectionInSprint: "{name} のマイルストーン",
-            sectionNoSprint: "マイルストーン（スプリントなし）",
-            noMilestones: "このスプリントにはまだマイルストーンがありません。",
             untitled: "無題のマイルストーン",
         },
         deleteSprint: {
@@ -6399,13 +6402,6 @@ export const ja: DeepPartial<Messages> = {
                 lastProgress: "最終進捗 {when}",
             },
             memberTasks: {
-                pickLabel: "メンバー",
-                pickPlaceholder: "メンバーを検索…",
-                viewing: "表示中",
-                pickHint: "メンバーを選択して、タスクの統計情報を確認します。",
-                noMembers: "このプロジェクトには他のメンバーがタスクを持っていません。",
-                promptTitle: "メンバーを選ぶ",
-                promptBody: "上でメンバーを選択すると、タスクの統計情報が表示されます。",
                 nothingAssignedTitle: "このメンバーには何も割り当てられていません",
                 nothingAssignedBody:
                     "このプロジェクトのタスクをこのメンバーに割り当てると、ここに表示されます。",
@@ -6435,7 +6431,6 @@ export const ja: DeepPartial<Messages> = {
             topWeight: {
                 title: "重要度の高いタスク",
                 subtitle: "着手を優先すべきタスク",
-                sortFlip: "もう一度クリックすると順序が逆になります",
                 help: {
                     title: "タスクの重要度とは？",
                     body: "今すぐ着手すべき度合いを 1〜25 で表したスコアです。優先度、締切までの余裕、Effortレベルから算出されます。Effortレベルの大きいタスクほど早い段階からスコアが上がり、対応時間を確保しやすくなります。数値が大きいほど、早めの着手が必要です。",
@@ -6471,9 +6466,6 @@ export const ja: DeepPartial<Messages> = {
             pickASprint: "スプリントを選択",
             sprintSettingsTooltip: "スプリント設定",
             manageSprintsTooltip: "スプリントを管理",
-            burndownTooltip: "スプリント内Close件数 / スプリント内作成件数",
-            milestoneTooltip: "マイルストーン",
-            projectsCount: "{count} 件のプロジェクト",
             statusLabels: {
                 open: "Open",
                 wip: "WIP",
@@ -6536,8 +6528,15 @@ export const ja: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "リスクのあるマイルストーンはありません。",
                 openMilestoneFor: "{title}を開く",
             },
-            tabMyTasks: "自分のタスク",
-            tabMemberTasks: "メンバーのタスク",
+            tabPeople: "メンバー",
+            people: {
+                person: "メンバー",
+                me: "自分",
+                statusBreakdownShow: "ステータスの内訳を表示",
+                statusBreakdownHide: "ステータスの内訳を隠す",
+                teamLoadShow: "チームの負荷を表示",
+                teamLoadHide: "チームの負荷を隠す",
+            },
             tabAgentActivity: "エージェントの活動",
             tabToday: "今日",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

@@ -55,4 +55,4 @@ RUN NODE_OPTIONS=--max-old-space-size=4096 npx vite build \
 
 EXPOSE 3000
 # `serve` is a project dependency; serve the static build on $PORT (Cloud Run injects 8080).
-CMD ["sh", "-c", "npx serve -s dist -l ${PORT:-3000}"]
+CMD ["sh", "-c", "node scripts/serve-spa.mjs dist"]

@@ -29,6 +29,7 @@ import { startLabellingExternalLinks } from "./utils/labelExternalLinks";
 import { App } from "./App";
 import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
 import type { SegmentKey } from "./lp/segments";
+import { PRERENDER_ATTR } from "./lp/seo/injectHead";
 
 // The public marketing pages are code-split away from the app entry.
 // They are the only consumers of framer-motion, and nobody who opens
@@ -263,7 +264,24 @@ const tree = (
     </Router>
 );
 
+/**
+ * The served HTML already carries the page's own head (MIP-1988, written by
+ * scripts/lpSeo.ts). `useDocumentMeta` puts a head back to what it found when a
+ * page unmounts, which would be THAT page's head: leaving /plans for the sign-in
+ * form would keep /plans' canonical. So the tags written for crawlers are removed
+ * before the app renders and the hook sets (and removes) its own, as it always has.
+ */
+const dropPrerenderedHead = () => {
+    document.head.querySelectorAll(`[${PRERENDER_ATTR}]`).forEach((node) => {
+        if (node.tagName === "TITLE") {
+            node.textContent = "Genos";
+            node.removeAttribute(PRERENDER_ATTR);
+        } else node.remove();
+    });
+};
+
 const mount = () => {
+    dropPrerenderedHead();
     createRoot(document.getElementById("root")!).render(tree);
     // Print the host after every external link in an editor, wherever BlockNote
     // renders one (MIP-737). Started once, with the tree, and never stopped: it

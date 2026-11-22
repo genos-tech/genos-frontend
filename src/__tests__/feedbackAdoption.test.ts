@@ -201,10 +201,6 @@ describe("feedback adoption", () => {
                 "the comments tab's own icon-plus-hint empty state, literal English until MIP-1777 moved it to a key (the scan only sees keys)",
             "features/tasks/components/contents/base/TaskDeliveriesBlock.tsx":
                 "fallback of a value",
-            "features/tasks/components/dashboard/agentActivity/AgentProjectGroups.tsx":
-                "the name of the group of work on no project (a label, not an empty state)",
-            "features/tasks/components/dashboard/tabs/MemberTasksTab.tsx":
-                "the tiny 'no members' line inside the member picker card",
             "features/chat/components/modals/ModalGMProfile.tsx":
                 "the group description field's 'No description' value (MIP-1694), not an empty panel",
             "features/chat/components/modals/ModalGroupDirectory.tsx":

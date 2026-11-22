@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import TodayRoundedIcon from "@mui/icons-material/TodayRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
@@ -11,7 +10,7 @@ import { useTranslation } from "../../../../i18n";
 import type { TaskDashboardTab } from "./taskHomeTypes";
 import type { TaskHomeData } from "./useTaskHomeData";
 
-type TaskHomeTabBarProps = Pick<TaskHomeData, "activeTab" | "setActiveTab" | "myStats">;
+type TaskHomeTabBarProps = Pick<TaskHomeData, "activeTab" | "setActiveTab">;
 
 /**
  * The dashboard's section tabs on the shared TabStrip (the same one Inbox and the notes use):
@@ -19,7 +18,7 @@ type TaskHomeTabBarProps = Pick<TaskHomeData, "activeTab" | "setActiveTab" | "my
  * the open tab is kept in the address by `useDashboardTab`. The quick actions that used to sit
  * beside them live in the page header.
  */
-export const TaskHomeTabBar = ({ activeTab, setActiveTab, myStats }: TaskHomeTabBarProps) => {
+export const TaskHomeTabBar = ({ activeTab, setActiveTab }: TaskHomeTabBarProps) => {
     const { t } = useTranslation();
     const tabs = useMemo<TabItem[]>(
         () => [
@@ -35,14 +34,8 @@ export const TaskHomeTabBar = ({ activeTab, setActiveTab, myStats }: TaskHomeTab
                 icon: <FlagRoundedIcon />,
             },
             {
-                id: "mytasks",
-                label: t.tasks.dashboard.tabMyTasks,
-                icon: <PersonRoundedIcon />,
-                count: myStats.totalCount,
-            },
-            {
-                id: "members",
-                label: t.tasks.dashboard.tabMemberTasks,
+                id: "people",
+                label: t.tasks.dashboard.tabPeople,
                 icon: <GroupsRoundedIcon />,
             },
             {
@@ -51,7 +44,7 @@ export const TaskHomeTabBar = ({ activeTab, setActiveTab, myStats }: TaskHomeTab
                 icon: <SmartToyRoundedIcon />,
             },
         ],
-        [t, myStats.totalCount]
+        [t]
     );
 
     return (

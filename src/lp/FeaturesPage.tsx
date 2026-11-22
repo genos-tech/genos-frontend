@@ -23,6 +23,7 @@ import { Shot } from "./kit/Shot";
 import { SHOT_ALT } from "./kit/shotAlts";
 import { useSyncAppLocale } from "./kit/useSyncAppLocale";
 import type { Lang } from "./lpLang";
+import { FEATURES_META } from "./seo/pageHeads";
 import { shortcutRows } from "./shortcutRows";
 import { useDocumentMeta } from "./useDocumentMeta";
 
@@ -65,19 +66,6 @@ const FEATURE_ICONS: Record<(typeof FEATURE_ORDER)[number], React.ComponentType>
     mcp: Wand2,
 };
 
-const META: Record<Lang, { title: string; description: string }> = {
-    ja: {
-        title: "機能 | Genos",
-        description:
-            "チャット・タスク・ノート・受信箱・カレンダー、そしてGenos AIとMCP。Genosでできることを一覧で。",
-    },
-    en: {
-        title: "Features | Genos",
-        description:
-            "Chat, tasks, notes, Inbox and calendar, plus Genos AI and MCP: everything Genos does, in one list.",
-    },
-};
-
 function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) => string }) {
     const { t } = useTranslation();
     const copy = t.featuresPage;
@@ -85,10 +73,10 @@ function FeaturesBody({ lang, appHref }: { lang: Lang; appHref: (url: string) =>
     const shortcuts = shortcutRows(copy.shortcuts.items, t.settings.shortcuts.global.cycleCombo);
     useSyncAppLocale(lang);
     useDocumentMeta({
-        title: META[lang].title,
-        description: META[lang].description,
-        ogTitle: META[lang].title,
-        ogDescription: META[lang].description,
+        title: FEATURES_META[lang].title,
+        description: FEATURES_META[lang].description,
+        ogTitle: FEATURES_META[lang].title,
+        ogDescription: FEATURES_META[lang].description,
         lang,
     });
 

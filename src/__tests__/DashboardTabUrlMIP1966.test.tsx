@@ -48,6 +48,10 @@ describe("the dashboard tab in the address (MIP-1966, MIP-1963)", () => {
         expect(isDashboardTab("overall")).toBe(false);
         expect(parseDashboardTab("overall")).toBe("project");
         expect(parseDashboardTab("sprint")).toBe("project");
+        // My Tasks and Member's Tasks became People.
+        expect(isDashboardTab("mytasks")).toBe(false);
+        expect(parseDashboardTab("mytasks")).toBe("people");
+        expect(parseDashboardTab("members")).toBe("people");
         expect(parseDashboardTab("constructor")).toBeNull();
     });
 
@@ -65,6 +69,16 @@ describe("the dashboard tab in the address (MIP-1966, MIP-1963)", () => {
         mount("/workspace/tasks?view=overall");
         expect(currentTab).toBe("project");
         expect(seenSearch).toBe("?view=project");
+    });
+
+    it("an old ?view=mytasks or ?view=members link opens People and rewrites the address", () => {
+        mount("/workspace/tasks?view=mytasks");
+        expect(currentTab).toBe("people");
+        expect(seenSearch).toBe("?view=people");
+        cleanup();
+        mount("/workspace/tasks?view=members");
+        expect(currentTab).toBe("people");
+        expect(seenSearch).toBe("?view=people");
     });
 
     it("a tab saved before the merge (overall, sprint) comes back as Project", () => {

@@ -148,7 +148,9 @@ export const TaskVelocityChart = ({
     // (~34px each). Always label the first + last bucket.
     const labelStep = Math.max(1, Math.ceil(34 / bucketW));
 
-    if (n === 0) {
+    // No activity in the window (or no window at all) is the shared empty state, not an empty axis.
+    const hasActivity = data.some((d) => d.created + d.started + d.closed + d.updated > 0);
+    if (n === 0 || !hasActivity) {
         return <EmptyState data-empty="task-velocity" size="sm" title={v.empty} />;
     }
 

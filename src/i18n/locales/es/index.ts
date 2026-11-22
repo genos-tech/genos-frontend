@@ -318,11 +318,11 @@ export const es: DeepPartial<Messages> = {
             taskTitle: "¿Eliminar esta tarea definitivamente?",
             taskDescription:
                 "La tarea, sus comentarios, archivos, notas, historial y entradas de búsqueda se borran ahora, sin los 30 días que se conserva una tarea eliminada. No se puede deshacer.",
-            myMessagesMenu: "Eliminar todos mis mensajes",
-            myMessagesTitle: "¿Eliminar todos tus mensajes de este chat?",
+            myMessagesMenu: "Eliminar todos mis mensajes y quitar",
+            myMessagesTitle: "¿Eliminar todos tus mensajes y quitar este chat?",
             myMessagesDescription:
-                "Todos los mensajes que escribiste aquí, con sus archivos y reacciones, se borran ahora y no se pueden recuperar. Los mensajes de la otra persona no se tocan y el chat se mantiene.",
-            myMessagesDone: "Se eliminaron tus mensajes.",
+                "Cada mensaje que escribiste aquí, con sus archivos y reacciones, se borra ahora y no se puede deshacer ni recuperar. Solo se eliminan TUS mensajes: los de la otra persona se quedan. Después el chat se quita de tu barra lateral; un mensaje nuevo suyo lo hace volver.",
+            myMessagesDone: "Se eliminaron tus mensajes y se quitó el chat de la barra lateral.",
             noteTitle: "¿Eliminar esta nota definitivamente?",
             noteDescription:
                 "La nota, su historial, sus comentarios, archivos y entradas de búsqueda se borran ahora, junto con su copia colaborativa. No se puede deshacer. Quienes la vieron pueden haberla copiado.",
@@ -2135,6 +2135,13 @@ export const es: DeepPartial<Messages> = {
             openTodo: "Abrir pendientes",
             pinChat: "Fijar chat",
             unpinChat: "Quitar chat fijado",
+            removeFromSidebar: "Quitar de la barra lateral",
+            removeFromSidebarHint:
+                "Solo se oculta para ti. Vuelve cuando llegue un mensaje nuevo.",
+            removedFromSidebar: "Quitado de tu barra lateral. Un mensaje nuevo lo hará volver.",
+            removeFromSidebarFailed: "No se pudo quitar el chat. Ha vuelto a tu barra lateral.",
+            deletedButNotRemoved:
+                "Tus mensajes se eliminaron, pero no se pudo quitar el chat de la barra lateral.",
             unflag: "Quitar destacado",
             chatRemoved: "Chat eliminado",
             messageDeleted: "Mensaje eliminado",
@@ -2857,9 +2864,6 @@ export const es: DeepPartial<Messages> = {
                 "No hay nadie a quien agregar. Los colaboradores deben ser miembros de este proyecto.",
         },
         milestones: {
-            sectionInSprint: "Hitos en {name}",
-            sectionNoSprint: "Hitos (sin sprint)",
-            noMilestones: "Aún no hay hitos en este sprint.",
             untitled: "Hito sin título",
         },
         deleteSprint: {
@@ -3269,9 +3273,6 @@ export const es: DeepPartial<Messages> = {
             pickASprint: "Elige un sprint",
             sprintSettingsTooltip: "Ajustes del sprint",
             manageSprintsTooltip: "Gestionar sprints",
-            burndownTooltip: "Cerradas en el sprint / Creadas en el sprint",
-            milestoneTooltip: "Hito",
-            projectsCount: "{count} proyectos",
             statusLabels: {
                 open: "Abierta",
                 wip: "En progreso",
@@ -3312,13 +3313,6 @@ export const es: DeepPartial<Messages> = {
                 lastProgress: "Último avance {when}",
             },
             memberTasks: {
-                pickLabel: "Miembro",
-                pickPlaceholder: "Buscar un miembro…",
-                viewing: "Visita",
-                pickHint: "Elige un miembro para ver las estadísticas de sus tareas.",
-                noMembers: "Ningún otro miembro tiene tareas en este proyecto.",
-                promptTitle: "Elige un miembro",
-                promptBody: "Elige un miembro arriba para ver las estadísticas de sus tareas.",
                 nothingAssignedTitle: "No hay nada asignado a este miembro.",
                 nothingAssignedBody:
                     "Asigna una tarea de este proyecto a este miembro para verla aquí.",
@@ -3348,7 +3342,6 @@ export const es: DeepPartial<Messages> = {
             topWeight: {
                 title: "Arriba por peso",
                 subtitle: "Empieza por estas",
-                sortFlip: "Haz clic nuevamente para invertir el orden.",
                 help: {
                     title: "¿Qué es el peso de la tarea?",
                     body: "Una puntuación de 1 a 25 de cuánto se debe iniciar una tarea ahora. Peso = prioridad × presión de tiempo para empezar. Los niveles de esfuerzo más intensos comienzan a generar esa presión antes (una tarea extensa comienza a aumentar aproximadamente una semana antes de su fecha de entrega, una rápida solo en los últimos días), por lo que los trabajos grandes surgen mientras todavía hay espacio para trabajar en ellos. Cuanto mayor sea el número, antes se deberá recoger.",
@@ -3414,8 +3407,15 @@ export const es: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "Ningún hito está en riesgo.",
                 openMilestoneFor: "Abrir {title}",
             },
-            tabMyTasks: "Mis tareas",
-            tabMemberTasks: "Tareas de miembros",
+            tabPeople: "Personas",
+            people: {
+                person: "Persona",
+                me: "Yo",
+                statusBreakdownShow: "Ver desglose por estado",
+                statusBreakdownHide: "Ocultar desglose por estado",
+                teamLoadShow: "Ver carga del equipo",
+                teamLoadHide: "Ocultar carga del equipo",
+            },
             tabAgentActivity: "Actividad de agentes",
             tabToday: "Hoy",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
