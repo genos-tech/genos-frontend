@@ -19,8 +19,8 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
+import { MENTION_ICONS } from "./mentionIcons";
 import {
-    MENTION_ICONS,
     MentionCountChip,
     MentionCustomStatus,
     MentionIconDisc,
@@ -34,17 +34,6 @@ import {
     type MentionPalette,
 } from "./mentionPalettes";
 import { MENTION_SPEC_CONFIG, mentionGroupSpecConfig } from "./schemaSpecConfigs";
-
-// Palettes now live in the BlockNote-free `mentionPalettes` module (so
-// the Spotlight bundle can read them without importing this file's
-// `@blocknote/react` runtime). Re-exported here for existing consumers
-// (HashMention, LightMessageBody) that import them from `./Mention`.
-export {
-    GROUP_PALETTE,
-    USER_OTHER_PALETTE,
-    USER_SELF_PALETTE,
-    type MentionPalette,
-} from "./mentionPalettes";
 
 // Shared visual treatment for every mention chip (user OR group). The
 // only difference between variants is the colour palette; the pill

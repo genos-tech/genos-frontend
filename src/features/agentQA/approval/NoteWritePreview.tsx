@@ -14,7 +14,8 @@ import ReactMarkdown from "react-markdown";
 
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
-import { agentMarkdownComponents, ExternalLink } from "../agentMarkdown";
+import { ExternalLink } from "../agentMarkdown";
+import { agentMarkdownComponents } from "../agentMarkdownComponents";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { MetaChip } from "./previewHelpers";
 

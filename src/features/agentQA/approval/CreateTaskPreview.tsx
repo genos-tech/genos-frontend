@@ -18,7 +18,8 @@ import { Box, Typography } from "@mui/joy";
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { linkEntries, LinkLines, MetaChip, placeValue } from "./previewHelpers";
+import { LinkLines, MetaChip } from "./previewHelpers";
+import { linkEntries, placeValue } from "./previewValues";
 
 const asString = (v: unknown): string | undefined =>
     typeof v === "string" || typeof v === "number" ? String(v) : undefined;

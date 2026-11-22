@@ -18,7 +18,7 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation, type Messages } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString } from "./previewHelpers";
+import { asString } from "./previewValues";
 
 /** "join request: Sam → Website Redesign", "join request #12", or "join request". */
 const requestPhrase = (raw: unknown, t: Messages): string => {

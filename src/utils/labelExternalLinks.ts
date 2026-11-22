@@ -32,7 +32,7 @@
  * Read-only editors are not watched by ProseMirror and are labelled from here.
  */
 
-import { externalHost } from "../features/agentQA/agentMarkdown";
+import { externalHost } from "../features/agentQA/externalHost";
 
 export const LINK_HOST_ATTRIBUTE = "data-link-host";
 

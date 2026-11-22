@@ -92,7 +92,7 @@ import { g } from "../../theme/tokens";
 import { CREDIT_PACKS_PATH, PLANS_PATH } from "../billing/billingPaths";
 import { entitySubtitle } from "../spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../spotlight/types";
-import { agentMarkdownComponents } from "./agentMarkdown";
+import { agentMarkdownComponents } from "./agentMarkdownComponents";
 import type { AgentTurnLabels } from "./agentTurnLabels";
 import { SourceChipRow } from "./AgentTurnSources";
 import { ApprovalCard } from "./ApprovalCard";

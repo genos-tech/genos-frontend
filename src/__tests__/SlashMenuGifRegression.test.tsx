@@ -19,7 +19,7 @@ import {
 import { render, waitFor } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
-import { withGifSlashItem } from "../components/editors/GifToolbarButton";
+import { withGifSlashItem } from "../components/editors/gifSlashItems";
 
 // Mirrors the editable editors' wiring (custom "/" controller + built-in
 // slash menu off).

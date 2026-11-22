@@ -1,7 +1,7 @@
 import { DefaultReactSuggestionItem, getDefaultReactSlashMenuItems } from "@blocknote/react";
 
 import { withGenosBlockSlashItems } from "../genosBlockSpecs";
-import { withGifSlashItem } from "../GifToolbarButton";
+import { withGifSlashItem } from "../gifSlashItems";
 
 // The editors hand this the editor they built, whose type depends on the schema; the helpers it
 // calls take it loosely.

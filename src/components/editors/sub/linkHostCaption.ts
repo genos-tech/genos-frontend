@@ -1,7 +1,7 @@
 import { createExtension } from "@blocknote/core";
 import { Plugin, PluginKey } from "prosemirror-state";
 
-import { externalHost } from "../../../features/agentQA/agentMarkdown";
+import { externalHost } from "../../../features/agentQA/externalHost";
 import { LINK_HOST_ATTRIBUTE } from "../../../utils/labelExternalLinks";
 
 /**

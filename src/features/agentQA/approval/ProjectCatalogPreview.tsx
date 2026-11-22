@@ -30,7 +30,8 @@ import { ProjectLabelChips } from "../../admin/components/projectLabels/ProjectL
 import { ProjectTagChip } from "../../tasks/components/ProjectTagChip";
 import { getContrastTextColor } from "../../tasks/utils/contrastTextColor";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString, MetaChip } from "./previewHelpers";
+import { MetaChip } from "./previewHelpers";
+import { asString } from "./previewValues";
 
 // What the API applies when the model sends no color (`DEFAULT_TAG_COLOR`,
 // `DEFAULT_LABEL_COLOR` in genos-api `services/project_catalog.py`).

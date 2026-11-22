@@ -22,7 +22,8 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString, MetaChip, placeValue } from "./previewHelpers";
+import { MetaChip } from "./previewHelpers";
+import { asString, placeValue } from "./previewValues";
 
 const DATE_FIELDS = ["start_date", "end_date"] as const;
 

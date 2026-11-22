@@ -36,8 +36,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObje
 import { Box, Sheet } from "@mui/joy";
 import { createPortal } from "react-dom";
 
+import { MENTION_ICONS } from "../../../components/editors/mentionIcons";
 import {
-    MENTION_ICONS,
     MentionCountChip,
     MentionCustomStatus,
     MentionIconDisc,

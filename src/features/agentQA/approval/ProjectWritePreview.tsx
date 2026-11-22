@@ -25,7 +25,8 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString, MetaChip, placeValue } from "./previewHelpers";
+import { MetaChip } from "./previewHelpers";
+import { asString, placeValue } from "./previewValues";
 
 const UPDATE_FIELDS = ["name", "code"] as const;
 

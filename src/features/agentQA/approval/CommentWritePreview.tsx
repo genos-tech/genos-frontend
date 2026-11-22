@@ -26,7 +26,8 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString, MetaChip } from "./previewHelpers";
+import { MetaChip } from "./previewHelpers";
+import { asString } from "./previewValues";
 
 type QuotedComment = { author?: string | null; excerpt?: string };
 

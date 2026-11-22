@@ -23,22 +23,8 @@
 import type { ReactNode } from "react";
 import ImageNotSupportedRoundedIcon from "@mui/icons-material/ImageNotSupportedRounded";
 import { Box } from "@mui/joy";
-import type { Components } from "react-markdown";
 
-/** The host a URL points at, or `null` when it isn't an absolute
- *  http(s) URL on another origin. */
-export const externalHost = (href: string | undefined): string | null => {
-    if (!href) return null;
-    let url: URL;
-    try {
-        url = new URL(href, window.location.href);
-    } catch {
-        return null;
-    }
-    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-    if (url.origin === window.location.origin) return null;
-    return url.host;
-};
+import { externalHost } from "./externalHost";
 
 const hostSx = {
     ml: 0.5,
@@ -101,13 +87,4 @@ export const BlockedImage = ({ src }: { src?: string }) => {
             {host}
         </Box>
     );
-};
-
-/** Spread into every model-authored `ReactMarkdown`'s `components`, ahead
- *  of the surface's own overrides. `a` is supplied too, for surfaces that
- *  have no link handling of their own; one that does (citations) keeps its
- *  own and sends plain hrefs to `ExternalLink`. */
-export const agentMarkdownComponents: Components = {
-    img: ({ src }) => <BlockedImage src={typeof src === "string" ? src : undefined} />,
-    a: ({ href, children }) => <ExternalLink href={href}>{children}</ExternalLink>,
 };

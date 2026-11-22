@@ -26,12 +26,6 @@ import {
     type CiState,
     type PrState,
 } from "../utils/prState";
-import {
-    CheckFailingIcon,
-    CheckNoneIcon,
-    CheckPassingIcon,
-    CheckPendingIcon,
-} from "./icons/Octicons";
 import { PrHoverDetails } from "./PrHoverDetails";
 import { PrStateIcon } from "./PrStateIcon";
 
@@ -61,22 +55,6 @@ type Props = {
     /** Task ID to look up auto-linked PRs for. */
     taskId: number | string;
     accessToken: string | null;
-};
-
-const CiBadge = ({ state, size = 10 }: { state: CiState; size?: number }) => {
-    const color = ciStateColor(state);
-    const common = { width: size, height: size, style: { color } };
-    switch (state) {
-        case "passing":
-            return <CheckPassingIcon {...common} />;
-        case "failing":
-            return <CheckFailingIcon {...common} />;
-        case "pending":
-            return <CheckPendingIcon {...common} />;
-        case "none":
-        default:
-            return <CheckNoneIcon {...common} />;
-    }
 };
 
 const prStateLabel = (state: PrState, t: ReturnType<typeof useTranslation>["t"]): string => {
@@ -356,10 +334,6 @@ const SinglePrBadge = ({
 // server listed them in, so a chip never jumps when the list refreshes.
 const byRepoThenNumber = (a: LinkedPull, b: LinkedPull): number =>
     compareText(`${a.owner}/${a.repo}`, `${b.owner}/${b.repo}`) || a.number - b.number;
-
-// Helper used by tests / future callers that want to use the CI badge
-// component standalone. Kept exported so it doesn't get marked dead.
-export const _CiBadgeForTests = CiBadge;
 
 // The same list, row for row: a re-sync that found nothing new must not re-render the cell.
 const samePulls = (a: LinkedPull[] | null, b: LinkedPull[]): boolean =>
