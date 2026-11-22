@@ -323,6 +323,11 @@ export const es: DeepPartial<Messages> = {
             myMessagesDescription:
                 "Todos los mensajes que escribiste aquí, con sus archivos y reacciones, se borran ahora y no se pueden recuperar. Los mensajes de la otra persona no se tocan y el chat se mantiene.",
             myMessagesDone: "Se eliminaron tus mensajes.",
+            noteTitle: "¿Eliminar esta nota definitivamente?",
+            noteDescription:
+                "La nota, su historial, sus comentarios, archivos y entradas de búsqueda se borran ahora, junto con su copia colaborativa. No se puede deshacer. Quienes la vieron pueden haberla copiado.",
+            notAllowedNote: "Solo el propietario de la nota puede eliminarla definitivamente.",
+            hasChildren: "Elimina o mueve primero sus subpáginas.",
         },
         deleteChat: {
             button: "Eliminar grupo",
@@ -4251,6 +4256,23 @@ export const es: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "Gestionar plantillas…",
+                manageTitle: "Plantillas de nota",
+                manageHint:
+                    "Las plantillas del equipo aparecen junto a las integradas en cada menú Nueva nota. Usa {date} en el título para la fecha de hoy.",
+                empty: "Aún no hay plantillas del equipo.",
+                newTemplate: "Nueva plantilla",
+                editTemplate: "Editar plantilla",
+                name: "Nombre de la plantilla",
+                noteTitle: "Título de la nota",
+                body: "Contenido (Markdown)",
+                defaultFolder: "Predeterminada para la carpeta",
+                noDefault: "Ninguna",
+                saveFailed: "No se pudo guardar la plantilla.",
+                deleteFailed: "No se pudo eliminar la plantilla.",
+                defaultIn: "Predeterminada en {folder}",
+            },
             meeting: {
                 label: "Notas de reunión",
                 title: "Notas de reunión {date}",

@@ -320,6 +320,11 @@ export const ar: DeepPartial<Messages> = {
             myMessagesDescription:
                 "ستُمحى كل الرسائل التي كتبتها هنا مع ملفاتها وتفاعلاتها الآن ولا يمكن استرجاعها. رسائل الطرف الآخر لا تُمس وتبقى الدردشة.",
             myMessagesDone: "تم حذف رسائلك.",
+            noteTitle: "هل تريد حذف هذه الملاحظة نهائيًا؟",
+            noteDescription:
+                "تُمحى الملاحظة وسجلّها وتعليقاتها وملفاتها وإدخالات البحث الخاصة بها الآن، مع نسختها التعاونية. لا يمكن التراجع عن ذلك. قد يكون من رآها قد نسخها.",
+            notAllowedNote: "يمكن لمالك الملاحظة فقط حذفها نهائيًا.",
+            hasChildren: "احذف صفحاتها الفرعية أو انقلها أولًا.",
         },
         deleteChat: {
             button: "حذف المجموعة",
@@ -4199,6 +4204,23 @@ export const ar: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "إدارة القوالب…",
+                manageTitle: "قوالب الملاحظات",
+                manageHint:
+                    "تظهر قوالب الفريق بجانب القوالب المدمجة في كل قائمة «ملاحظة جديدة». اكتب {date} في العنوان لتاريخ اليوم.",
+                empty: "لا توجد قوالب للفريق بعد.",
+                newTemplate: "قالب جديد",
+                editTemplate: "تحرير القالب",
+                name: "اسم القالب",
+                noteTitle: "عنوان الملاحظة",
+                body: "المحتوى (Markdown)",
+                defaultFolder: "افتراضي للمجلد",
+                noDefault: "لا شيء",
+                saveFailed: "تعذّر حفظ القالب.",
+                deleteFailed: "تعذّر حذف القالب.",
+                defaultIn: "الافتراضي في {folder}",
+            },
             meeting: {
                 label: "ملاحظات الاجتماع",
                 title: "ملاحظات الاجتماع {date}",

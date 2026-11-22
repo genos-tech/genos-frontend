@@ -1869,6 +1869,11 @@ export const zh: DeepPartial<Messages> = {
             myMessagesDescription:
                 "你在此处发送的所有消息及其文件和回应将立即清除，无法恢复。对方的消息不受影响，聊天会保留。",
             myMessagesDone: "已删除你的消息。",
+            noteTitle: "永久删除此笔记?",
+            noteDescription:
+                "笔记及其历史记录、评论、文件和搜索条目将立即被清除,协作副本也一并删除。此操作无法撤销。看过它的人可能已经复制了内容。",
+            notAllowedNote: "只有笔记的所有者可以永久删除。",
+            hasChildren: "请先删除或移动它的子页面。",
         },
         deleteChat: {
             button: "删除群组",
@@ -3110,6 +3115,23 @@ export const zh: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "管理模板…",
+                manageTitle: "笔记模板",
+                manageHint:
+                    "团队模板会与内置模板一起显示在每个“新建笔记”菜单中。在标题中写 {date} 即为今天的日期。",
+                empty: "还没有团队模板。",
+                newTemplate: "新建模板",
+                editTemplate: "编辑模板",
+                name: "模板名称",
+                noteTitle: "笔记标题",
+                body: "内容（Markdown）",
+                defaultFolder: "设为文件夹默认",
+                noDefault: "无",
+                saveFailed: "无法保存模板。",
+                deleteFailed: "无法删除模板。",
+                defaultIn: "{folder} 的默认模板",
+            },
             meeting: {
                 label: "会议记录",
                 title: "会议记录 {date}",

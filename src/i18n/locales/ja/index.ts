@@ -1954,6 +1954,11 @@ export const ja: DeepPartial<Messages> = {
             myMessagesDescription:
                 "ここで書いたすべてのメッセージを、ファイルやリアクションとともに今すぐ消去します。元に戻せません。相手のメッセージには影響せず、チャットは残ります。",
             myMessagesDone: "自分のメッセージを削除しました。",
+            noteTitle: "このノートを完全に削除しますか?",
+            noteDescription:
+                "ノート、その履歴、コメント、ファイル、検索エントリがすぐに消去され、共同編集用のコピーも削除されます。元に戻すことはできません。閲覧した人がコピーしている可能性があります。",
+            notAllowedNote: "完全に削除できるのは、ノートのオーナーのみです。",
+            hasChildren: "先にサブページを削除するか移動してください。",
         },
         deleteChat: {
             button: "グループを削除",
@@ -3239,6 +3244,23 @@ export const ja: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "テンプレートを管理…",
+                manageTitle: "ノートテンプレート",
+                manageHint:
+                    "チームのテンプレートは、すべての「新規ノート」メニューに組み込みテンプレートと並んで表示されます。タイトルに {date} と書くと今日の日付になります。",
+                empty: "チームのテンプレートはまだありません。",
+                newTemplate: "新規テンプレート",
+                editTemplate: "テンプレートを編集",
+                name: "テンプレート名",
+                noteTitle: "ノートのタイトル",
+                body: "内容（Markdown）",
+                defaultFolder: "既定にするフォルダ",
+                noDefault: "なし",
+                saveFailed: "テンプレートを保存できませんでした。",
+                deleteFailed: "テンプレートを削除できませんでした。",
+                defaultIn: "{folder} の既定",
+            },
             meeting: {
                 label: "会議メモ",
                 title: "会議メモ {date}",

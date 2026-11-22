@@ -29,7 +29,7 @@
 
 import { Fragment, useMemo, useRef, useState } from "react";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import { Box, Stack, Typography } from "@mui/joy";
+import { Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";

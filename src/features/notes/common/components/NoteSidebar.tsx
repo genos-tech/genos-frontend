@@ -1,7 +1,8 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
@@ -21,6 +22,7 @@ import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { toast } from "../../../../components/ui/feedback/toastStore";
+import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDialog";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
@@ -64,8 +66,15 @@ import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderM
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
 import { folderTagChipSx, ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
 import { isInGuestFolder, splitFoldersByOwnership } from "../../team-notes/utils/guestFolders";
+import { ModalNoteTemplates } from "../../templates/ModalNoteTemplates";
+import {
+    loadTeamNoteTemplate,
+    loadTeamNoteTemplates,
+    type TeamNoteTemplate,
+} from "../../templates/teamNoteTemplates";
 import {
     buildTemplateMenuItems,
+    defaultTemplatePick,
     resolveTemplate,
     type ResolvedTemplate,
     type TemplatePick,
@@ -401,6 +410,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         hasChildren: boolean;
     } | null>(null);
 
+    const [forceDeleteNoteModal, setForceDeleteNoteModal] = useState<{
+        noteId: number;
+        title: string;
+    } | null>(null);
+
     // "Import Markdown…" opened from a sidebar folder row: the folder IS
     // the destination, so the dialog gets a fixed context and shows no
     // destination picker (unlike the note-header path).
@@ -439,13 +453,37 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     // MIP-1697: build the template (blocks come from the built-ins) and hand title + body to the
     // creator of the surface the menu belongs to.
+    const [teamTemplates, setTeamTemplates] = useState<TeamNoteTemplate[]>([]);
+    const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
+    // Read through a ref so a new `myself` object (same team) never re-fetches the list.
+    const myselfRef = useRef(myself);
+    myselfRef.current = myself;
+    const reloadTeamTemplates = useCallback(async () => {
+        const teamId = myselfRef.current.teamId;
+        const loaded = await loadTeamNoteTemplates(myselfRef.current, accessToken);
+        // A slow answer for the team the person just left must not replace the new team's list.
+        if (myselfRef.current.teamId === teamId) setTeamTemplates(loaded);
+    }, [accessToken]);
+    useEffect(() => {
+        if (accessToken) void reloadTeamTemplates();
+    }, [reloadTeamTemplates, accessToken, myself.teamId]);
+
     type ResolvedNoteOverrides = { title: string; body: ResolvedTemplate["blocks"] };
     const createFromTemplate = async (
         pick: TemplatePick,
-        create: (o: ResolvedNoteOverrides) => unknown
+        create: (o: ResolvedNoteOverrides | undefined) => unknown
     ) => {
-        const tpl = await resolveTemplate(pick, t.notes.noteTemplates);
-        if (tpl) void create({ title: tpl.title, body: tpl.blocks });
+        const tpl = await resolveTemplate(pick, t.notes.noteTemplates, (id) =>
+            loadTeamNoteTemplate(myself, id, accessToken)
+        );
+        if (tpl) {
+            void create({ title: tpl.title, body: tpl.blocks });
+            return;
+        }
+        // The template is gone (deleted by someone else) or could not be read: still make the
+        // note, blank, and refresh the list so the dead row disappears.
+        void reloadTeamTemplates();
+        void create(undefined);
     };
 
     // Folder-row menu shared by the task and chat sections: create a note
@@ -455,7 +493,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const buildFolderMenuItems = (
         onCreate: () => void,
         importContext: ImportMarkdownContext,
-        onCreateFromTemplate?: (o: ResolvedNoteOverrides) => unknown
+        onCreateFromTemplate?: (o: ResolvedNoteOverrides | undefined) => unknown
     ): MoreMenuItem[] => [
         {
             id: "new-note-here",
@@ -468,6 +506,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             ? buildTemplateMenuItems({
                   copy: t.notes.noteTemplates,
                   idPrefix: "new-note-here",
+                  teamTemplates,
                   onPick: (pick) => createFromTemplate(pick, onCreateFromTemplate),
               })
             : []),
@@ -530,6 +569,21 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             }),
     });
 
+    // "Delete permanently" (MIP-1937) for my own notes (bucket 1); task, chat and team notes use
+    // their header menu, where the owner role is known. The server decides again (403 / 409).
+    const buildForceDeleteMenuItem = (node: { noteId: number; title: string }): MoreMenuItem => ({
+        id: "force-delete-note",
+        kind: "delete",
+        label: t.common.forceDelete.menu,
+        icon: <DeleteForeverRoundedIcon sx={{ fontSize: 16 }} />,
+        danger: true,
+        onClick: () =>
+            setForceDeleteNoteModal({
+                noteId: node.noteId,
+                title: node.title || t.notes.defaults.untitled,
+            }),
+    });
+
     const folderActions: FolderActionHandlers = {
         onCreateNoteHere: (folderId) => {
             void useNM.handleCreateNewMyNote(null, folderId);
@@ -538,6 +592,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             buildTemplateMenuItems({
                 copy: t.notes.noteTemplates,
                 idPrefix: "new-note-here",
+                teamTemplates,
                 onPick: (pick) =>
                     createFromTemplate(pick, (o) =>
                         useNM.handleCreateNewMyNote(null, folderId, o)
@@ -597,6 +652,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 },
                 buildExportMenuItem(1, node),
                 buildDeleteMenuItem(1, node),
+                buildForceDeleteMenuItem(node),
             ]}
         />
     );
@@ -640,6 +696,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         copy: t.notes.noteTemplates,
                         idPrefix: "new-note",
                         divider: true,
+                        teamTemplates,
+                        onManage: () => setTemplatesModalOpen(true),
                         onPick: (pick) =>
                             createFromTemplate(pick, (o) =>
                                 useNM.handleCreateNewMyNote(null, null, o)
@@ -830,12 +888,22 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     const teamFolderActions: TeamFolderActionHandlers = {
         onCreateNoteHere: (folderId) => {
+            // MIP-1697: a folder with a default template starts its new notes from it.
+            const folder = useNM.teamNoteFolders.find((f) => f.folderId === folderId);
+            const pick = folder ? defaultTemplatePick(folder, teamTemplates) : null;
+            if (pick) {
+                void createFromTemplate(pick, (o) =>
+                    useNM.handleCreateNewMyNote(null, folderId, o)
+                );
+                return;
+            }
             void useNM.handleCreateNewMyNote(null, folderId);
         },
         templateMenuItems: (folderId) =>
             buildTemplateMenuItems({
                 copy: t.notes.noteTemplates,
                 idPrefix: "new-note-here",
+                teamTemplates,
                 onPick: (pick) =>
                     createFromTemplate(pick, (o) =>
                         useNM.handleCreateNewMyNote(null, folderId, o)
@@ -1925,6 +1993,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 }}
             />
 
+            <ForceDeleteDialog
+                description={t.common.forceDelete.noteDescription}
+                entityName={forceDeleteNoteModal?.title}
+                kind="note"
+                open={forceDeleteNoteModal !== null}
+                title={t.common.forceDelete.noteTitle}
+                onClose={() => setForceDeleteNoteModal(null)}
+                onConfirm={() => {
+                    if (!forceDeleteNoteModal) return Promise.resolve();
+                    return useNM.forceDeleteNoteById("personal", forceDeleteNoteModal.noteId);
+                }}
+            />
+
             {/* Team-folder dialogs — one instance each, driven by the
                 state the folder rows set. */}
             <ModalTeamFolderName
@@ -1988,6 +2069,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     // notes this user resolves, so refetch both.
                     void useNM.getTeamNoteFolders();
                     void useNM.getTeamNoteMeta();
+                }}
+            />
+            <ModalNoteTemplates
+                folders={useNM.teamNoteFolders}
+                myself={myself}
+                open={templatesModalOpen}
+                templates={teamTemplates}
+                onClose={() => setTemplatesModalOpen(false)}
+                onChanged={() => {
+                    void reloadTeamTemplates();
+                    // The folder rows carry each folder's default template.
+                    void useNM.getTeamNoteFolders();
                 }}
             />
             <ModalTeamFolderTags

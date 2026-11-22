@@ -1975,6 +1975,11 @@ export const fr: DeepPartial<Messages> = {
             myMessagesDescription:
                 "Tous les messages que vous avez écrits ici, avec leurs fichiers et réactions, sont effacés maintenant et ne peuvent pas être récupérés. Les messages de l’autre personne ne sont pas touchés et le chat reste.",
             myMessagesDone: "Vos messages ont été supprimés.",
+            noteTitle: "Supprimer définitivement cette note ?",
+            noteDescription:
+                "La note, son historique, ses commentaires, ses fichiers et ses entrées de recherche sont effacés maintenant, ainsi que sa copie collaborative. Cette action est irréversible. Les personnes qui l'ont vue ont pu la copier.",
+            notAllowedNote: "Seul le propriétaire de la note peut la supprimer définitivement.",
+            hasChildren: "Supprimez ou déplacez d'abord ses sous-pages.",
         },
         deleteChat: {
             button: "Supprimer le groupe",
@@ -3273,6 +3278,23 @@ export const fr: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "Gérer les modèles…",
+                manageTitle: "Modèles de note",
+                manageHint:
+                    "Les modèles d'équipe apparaissent à côté des modèles intégrés dans chaque menu Nouvelle note. Mettez {date} dans le titre pour la date du jour.",
+                empty: "Aucun modèle d'équipe pour l'instant.",
+                newTemplate: "Nouveau modèle",
+                editTemplate: "Modifier le modèle",
+                name: "Nom du modèle",
+                noteTitle: "Titre de la note",
+                body: "Contenu (Markdown)",
+                defaultFolder: "Par défaut pour le dossier",
+                noDefault: "Aucun",
+                saveFailed: "Impossible d'enregistrer le modèle.",
+                deleteFailed: "Impossible de supprimer le modèle.",
+                defaultIn: "Par défaut dans {folder}",
+            },
             meeting: {
                 label: "Notes de réunion",
                 title: "Notes de réunion {date}",

@@ -37,6 +37,7 @@ export const MORE_MENU_GROUPS = [
             "newProject",
             "newMilestone",
             "newSubfolder",
+            "manageTemplates",
         ],
     },
     {
