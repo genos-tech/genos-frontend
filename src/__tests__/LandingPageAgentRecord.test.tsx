@@ -282,3 +282,29 @@ describe("the agent-record top of /home", () => {
         ]);
     });
 });
+
+describe("the lines the first wording pass left (MIP-1753 follow-up)", () => {
+    const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8");
+
+    it("the Japanese students card no longer says 'one place'", () => {
+        const text = JSON.stringify(HOME_COPY.ja);
+        expect(text).not.toContain("講義・ノート・課題を、ひとつの場所に");
+        expect(text).toContain("講義・ノート・課題が、つながる。");
+    });
+
+    it.each(LANGS)("%s: the reply-drafts line does not promise 'always'", (lang) => {
+        const text = JSON.stringify(HOME_COPY[lang].secretary);
+        expect(text).not.toMatch(/always press send|送信するのはいつもあなた/);
+        expect(text).toMatch(/you press send|送信するのはあなた/);
+    });
+
+    it("the developer and features pages name Claude, not any MCP client", () => {
+        for (const file of ["src/lp/DevelopersPage.tsx", "src/i18n/locales/en/featuresPage.ts"]) {
+            expect(read(file)).not.toMatch(/any MCP client|or any MCP client/i);
+        }
+        expect(read("src/lp/DevelopersPage.tsx")).toContain("Connect Claude to it and it can");
+        expect(read("src/i18n/locales/en/featuresPage.ts")).toContain(
+            "Connect Claude Code with one address and a key"
+        );
+    });
+});

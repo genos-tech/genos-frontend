@@ -102,7 +102,7 @@ export const research: SegmentConfig = {
         coming: [
             "AIへの質問にPDFや画像を直接添付する",
             "ルーティン：よく使う指示を保存して、スケジュールで実行する",
-            "チャットの返信下書き（送信するのはいつもあなた）",
+            "チャットの返信下書き（送信するのはあなた）",
         ],
         audience: {
             title: "研究の経緯を、個人の記憶だけに置きたくない人へ。",
@@ -245,7 +245,7 @@ export const research: SegmentConfig = {
         coming: [
             "Attach a PDF or image directly to an AI question",
             "Routines: save an instruction and run it on a schedule",
-            "Reply drafts in chat (you always press send)",
+            "Reply drafts in chat (you press send)",
         ],
         audience: {
             title: "For researchers who do not want the history of a project to live only in someone's memory.",

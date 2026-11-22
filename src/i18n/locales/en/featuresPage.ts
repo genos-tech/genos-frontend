@@ -143,7 +143,7 @@ export const featuresPage = {
                 title: "MCP for AI agents",
                 desc: "Point an AI coding agent at Genos and it works your tasks directly.",
                 bullets: [
-                    "Connect Claude Code, or any MCP client, with one address and a key",
+                    "Connect Claude Code with one address and a key",
                     "It reads the task itself — no more pasting the description in",
                     "It can set status and comment the result back when you allow writes",
                     "It sees exactly what you see: the key carries your own permissions",

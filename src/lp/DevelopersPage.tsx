@@ -327,10 +327,9 @@ export default function DevelopersPage() {
                                 <p>
                                     With this endpoint an agent works the task itself, instead of
                                     you pasting the description into it and pasting the result
-                                    back. Connect Claude — or any MCP client — to it and it can
-                                    find a task, read its description and its blockers, search the
-                                    workspace, and, if you let it write, update the task or leave a
-                                    comment.
+                                    back. Connect Claude to it and it can find a task, read its
+                                    description and its blockers, search the workspace, and, if you
+                                    let it write, update the task or leave a comment.
                                 </p>
                                 <p>
                                     There is no model on this side of the connection. The endpoint

@@ -102,7 +102,7 @@ export const students: SegmentConfig = {
         coming: [
             "AIへの質問にPDFや画像を直接添付する",
             "ルーティン：よく使う指示を保存して、スケジュールで実行する",
-            "チャットの返信下書き（送信するのはいつもあなた）",
+            "チャットの返信下書き（送信するのはあなた）",
         ],
         audience: {
             title: "ノートは取っているのに、学期全体の学びがつながらない人へ。",
@@ -244,7 +244,7 @@ export const students: SegmentConfig = {
         coming: [
             "Attach a PDF or image directly to an AI question",
             "Routines: save an instruction and run it on a schedule",
-            "Reply drafts in chat (you always press send)",
+            "Reply drafts in chat (you press send)",
         ],
         audience: {
             title: "For students who take notes but still cannot see how the semester fits together.",
