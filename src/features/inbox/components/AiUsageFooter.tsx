@@ -136,7 +136,9 @@ const Footer = ({
             >
                 {costText(usage.cost, c)}
             </Typography>
-            {usage.source && (
+            {/* A report has a switch for the schedule that made it. The Genos digest was
+                decommissioned (MIP-1968): its old items keep the cost line and have no switch. */}
+            {usage.source?.kind === "schedule" && (
                 <Switch
                     itemId={itemId}
                     source={usage.source}
@@ -226,8 +228,7 @@ const Switch = ({
 
     let message: string | null = null;
     if (notice?.kind === "off") {
-        const sentence =
-            source.kind === "digest" ? c.offDigest : usedAi ? c.offSchedule : c.offScheduleNoAi;
+        const sentence = usedAi ? c.offSchedule : c.offScheduleNoAi;
         message = fmt(sentence, { name });
     } else if (notice?.kind === "already-off") message = fmt(c.alreadyOff, { name });
     else if (notice?.kind === "on") message = fmt(c.onAgain, { name });

@@ -2840,8 +2840,6 @@ export const fr: DeepPartial<Messages> = {
             turnBackOnNamed: "Réactiver : {name}",
             undo: "Annuler",
             undoNamed: "Annuler : réactiver {name}",
-            offDigest:
-                "{name} est désactivé. Plus rien ne sera rédigé, ni plus de crédits IA dépensés, jusqu'à la réactivation.",
             offSchedule:
                 "{name} : désactivé. Rien ne s'exécutera ni ne consommera de crédits IA jusqu'à la réactivation.",
             offScheduleNoAi:
@@ -3842,9 +3840,6 @@ export const fr: DeepPartial<Messages> = {
                     default: "Pas encore autorisé",
                     unsupported: "Non pris en charge",
                 },
-                digestHeading: "Résumé Genos",
-                digestDescription:
-                    "Un court résumé personnel de Genos, livré dans votre boîte de réception (hebdomadairement sur Pro, quotidiennement sur Max).",
                 emailHeading: "Notifications par e-mail",
                 emailDescription:
                     "En votre absence, Genos vous envoie un e-mail récapitulatif de ce que vous avez manqué — groupé, jamais un e-mail par événement.",
@@ -4402,7 +4397,6 @@ export const fr: DeepPartial<Messages> = {
             matrixRowMemory: "Ce sur quoi il s'appuie",
             matrixRowGenosHistory: "Historique des conversations Genos",
             matrixRowPremiumModels: "Modèles IA premium",
-            matrixRowDigest: "Prorésumé actif",
             matrixRowMcp: "Connectez un agent de codage AI (MCP)",
             matrixRowHistory: "Historique des messages",
             matrixRowTasks: "Tâches par mois",
@@ -4421,8 +4415,6 @@ export const fr: DeepPartial<Messages> = {
             matrixMemoryNone: "Cette conversation",
             matrixMemoryOwn: "Votre historique",
             matrixMemoryTeam: "Les connaissances de votre équipe",
-            matrixDigestWeekly: "Hebdomadaire",
-            matrixDigestDaily: "Alertes quotidiennes +",
             billingReturnCancelled: "Paiement annulé — votre forfait est inchangé.",
         },
         appearance: {

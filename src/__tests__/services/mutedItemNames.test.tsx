@@ -30,8 +30,6 @@ vi.mock("../../services/notifications/NotificationPausePicker", () => ({
 }));
 vi.mock("../../hooks/common/useDigestPreference", () => ({
     useDigestPreference: () => ({
-        digestEnabled: false,
-        setDigestEnabled: () => undefined,
         emailDigestEnabled: false,
         setEmailDigestEnabled: () => undefined,
     }),

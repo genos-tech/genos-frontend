@@ -178,12 +178,9 @@ export const NotificationSettingsPanel = ({
     const ctx = useNotificationsContext();
     const { t } = useTranslation();
     const nameLookup: NameLookup = { allChats, myself, teamMemberProfiles };
-    // Proactive digest opt-out — server-backed, independent of the
-    // browser-push preferences (the digest also lands in the Inbox, so
-    // it is NOT gated by masterEnabled). Above the early return: hooks
-    // must run unconditionally.
-    const { digestEnabled, setDigestEnabled, emailDigestEnabled, setEmailDigestEnabled } =
-        useDigestPreference();
+    // Email digest opt-out — server-backed, independent of the browser-push
+    // preferences. Above the early return: hooks must run unconditionally.
+    const { emailDigestEnabled, setEmailDigestEnabled } = useDigestPreference();
     if (!ctx) return null;
 
     const {
@@ -583,33 +580,8 @@ export const NotificationSettingsPanel = ({
 
             <Divider sx={{ mt: 1.5 }} />
 
-            {/* Proactive digest (UX tier model §8). Disabled while the
-                server value is unknown — flashing a default that then
-                snaps reads like the setting changed itself. */}
-            <SettingRow
-                alignItems="center"
-                direction="row"
-                disabled={digestEnabled === null}
-                justifyContent="space-between"
-                spacing={2}
-                sx={{ mt: 1.5 }}
-            >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">{settingsMessages.digestHeading}</Typography>
-                    <Typography level="body-xs">{settingsMessages.digestDescription}</Typography>
-                </Box>
-                <Switch
-                    checked={digestEnabled ?? true}
-                    disabled={digestEnabled === null}
-                    slotProps={{ input: { "aria-label": settingsMessages.digestHeading } }}
-                    onChange={(e) => setDigestEnabled(e.target.checked)}
-                />
-            </SettingRow>
-
-            {/* Email digest — the plain unread-summary email (all tiers),
-                a separate opt-out from the agent digest above. Disabled
-                while unknown, including against a backend that doesn't
-                support it yet. */}
+            {/* Email digest — the plain unread-summary email (all tiers).
+                Disabled while the server value is unknown. */}
             <SettingRow
                 alignItems="center"
                 direction="row"

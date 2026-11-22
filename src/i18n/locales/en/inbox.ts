@@ -98,8 +98,6 @@ export const inbox = {
         turnBackOnNamed: "Turn back on: {name}",
         undo: "Undo",
         undoNamed: "Undo: turn {name} back on",
-        offDigest:
-            "{name} is off. No more will be written, and no more AI credits spent on it, until you turn it back on.",
         offSchedule: "{name} is off. It won't run or use AI credits until you turn it back on.",
         offScheduleNoAi: "{name} is off. It won't run until you turn it back on.",
         alreadyOff: "{name} is already off.",

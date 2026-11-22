@@ -38,7 +38,6 @@ const FREE = tier("free", {
     agent_memory: "none",
     agent_history_retention_days: 30,
     integrations: [],
-    digest_cadence: null,
     task_create_monthly: 50,
     note_create_monthly: 50,
     upload_max_mb: 5,
@@ -54,7 +53,6 @@ const PRO = tier("pro", {
     agent_memory: "team",
     agent_history_retention_days: 365,
     integrations: ["web", "google_calendar", "github"],
-    digest_cadence: "weekly",
     task_create_monthly: 500,
     note_create_monthly: 500,
     upload_max_mb: 50,
@@ -115,12 +113,12 @@ describe("planMatrixGroups", () => {
     });
 
     it("omits a row the server has no opinion about, rather than crossing it", () => {
-        // A server predating the digest sends the key for nobody. A row
-        // of crosses would advertise the absence of a feature that does
-        // not exist yet.
+        // A server predating MCP sends the key for nobody. A row of
+        // crosses would advertise the absence of a feature that does not
+        // exist yet.
         const old = tier("old", { monthly_ai_credits: 5, message_retention_days: 30 });
-        expect(flat([old]).some(([, r]) => r.key === "digest")).toBe(false);
-        expect(flat([FREE, PRO]).some(([, r]) => r.key === "digest")).toBe(true);
+        expect(flat([old]).some(([, r]) => r.key === "mcp")).toBe(false);
+        expect(flat([FREE, PRO]).some(([, r]) => r.key === "mcp")).toBe(true);
     });
 
     it("follows the server between the credits and daily-ask eras", () => {

@@ -784,7 +784,6 @@ export const ar: DeepPartial<Messages> = {
             matrixRowMemory: "ما يعتمد عليه",
             matrixRowGenosHistory: "سجل محادثات Genos",
             matrixRowPremiumModels: "نماذج ذكاء اصطناعي متقدمة",
-            matrixRowDigest: "ملخص استباقي",
             matrixRowMcp: "ربط وكيل برمجة بالذكاء الاصطناعي (MCP)",
             matrixRowHistory: "سجل الرسائل",
             matrixRowTasks: "المهام شهريًا",
@@ -803,8 +802,6 @@ export const ar: DeepPartial<Messages> = {
             matrixMemoryNone: "هذه المحادثة",
             matrixMemoryOwn: "تاريخك",
             matrixMemoryTeam: "معرفة فريقك",
-            matrixDigestWeekly: "أسبوعي",
-            matrixDigestDaily: "يوميا + التنبيهات",
         },
         appearance: {
             heading: "المظهر",
@@ -4514,8 +4511,6 @@ export const ar: DeepPartial<Messages> = {
             turnBackOnNamed: "إعادة التشغيل: {name}",
             undo: "تراجع",
             undoNamed: "تراجع: إعادة تشغيل {name}",
-            offDigest:
-                "تم إيقاف {name}. لن يُكتب المزيد ولن يُنفق عليه المزيد من رصيد الذكاء الاصطناعي حتى تعيد تشغيله.",
             offSchedule:
                 "تم إيقاف {name}. لن يعمل ولن يستخدم رصيد الذكاء الاصطناعي حتى تعيد تشغيله.",
             offScheduleNoAi: "{name} متوقف. لن يعمل حتى تُعيد تشغيله.",
@@ -4928,9 +4923,6 @@ export const ar: DeepPartial<Messages> = {
                     default: "غير مسموح به بعد",
                     unsupported: "غير مدعوم",
                 },
-                digestHeading: "Genos هضم",
-                digestDescription:
-                    "ملخص شخصي قصير من Genos، يتم تسليمه إلى صندوق الوارد الخاص بك (أسبوعيًا على Pro، يوميًا على Max).",
                 mutedTargetsHeading: "العناصر المكتومة ({count})",
                 noMutedTargets:
                     "لا توجد عناصر تم كتم صوتها. كتم صوت موضوع أو مهمة أو ملاحظة معينة من رأسها أو القائمة ⋮.",

@@ -1,16 +1,13 @@
 /**
- * Server-backed proactive-digest opt-out (UX tier model §8).
+ * Server-backed email-digest opt-out (GET/PATCH `/user/preferences/digest/`).
  *
- * Server-backed (GET/PATCH `/user/preferences/digest/`) rather than
- * localStorage for the same reason the web-search toggle is: the
- * DIGEST CRON reads the stored field — a client-only preference would
- * be invisible to it. Whether a digest fires at all, and how often,
- * comes from the plan (`digest_cadence`), deliberately not from user
- * config; this toggle is only the opt-out.
+ * Server-backed rather than localStorage because the digest cron reads
+ * the stored field. (The proactive AI digest this endpoint used to carry
+ * was decommissioned, MIP-1968.)
  *
- * `digestEnabled` is `null` while the initial GET is in flight (render
- * the switch disabled, not defaulted — flashing "on" and snapping off
- * reads like the setting changed itself).
+ * `emailDigestEnabled` is `null` while the initial GET is in flight
+ * (render the switch disabled, not defaulted: flashing "on" and snapping
+ * off reads like the setting changed itself).
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -22,11 +19,7 @@ const DIGEST_PREF_URL = "/user/preferences/digest/";
 
 export const useDigestPreference = () => {
     const { accessToken } = useAuth();
-    const [digestEnabled, setDigestEnabledState] = useState<boolean | null>(null);
-    // The EMAIL digest (all tiers, plain unread summary) — a separate
-    // opt-out from the agent digest above, through the same endpoint.
-    // Stays null (switch disabled) against an older backend that doesn't
-    // return the key yet.
+    // Stays null (switch disabled) until the server confirms a value.
     const [emailDigestEnabled, setEmailDigestEnabledState] = useState<boolean | null>(null);
 
     useEffect(() => {
@@ -34,10 +27,9 @@ export const useDigestPreference = () => {
         if (!api) return;
         let cancelled = false;
         void api
-            .get<{ digest_enabled: boolean; email_digest_enabled?: boolean }>(DIGEST_PREF_URL)
+            .get<{ email_digest_enabled?: boolean }>(DIGEST_PREF_URL)
             .then((res) => {
                 if (cancelled) return;
-                setDigestEnabledState(!!res.data.digest_enabled);
                 if (typeof res.data.email_digest_enabled === "boolean") {
                     setEmailDigestEnabledState(res.data.email_digest_enabled);
                 }
@@ -51,18 +43,6 @@ export const useDigestPreference = () => {
         };
     }, [accessToken]);
 
-    const setDigestEnabled = useCallback(
-        (value: boolean) => {
-            // Optimistic: the switch reflects the tap immediately; a
-            // failed PATCH is caught silently and the next GET corrects.
-            setDigestEnabledState(value);
-            const api = authApi(accessToken);
-            if (!api) return;
-            void api.patch(DIGEST_PREF_URL, { digest_enabled: value }).catch(() => {});
-        },
-        [accessToken]
-    );
-
     const setEmailDigestEnabled = useCallback(
         (value: boolean) => {
             setEmailDigestEnabledState(value);
@@ -73,5 +53,5 @@ export const useDigestPreference = () => {
         [accessToken]
     );
 
-    return { digestEnabled, setDigestEnabled, emailDigestEnabled, setEmailDigestEnabled };
+    return { emailDigestEnabled, setEmailDigestEnabled };
 };

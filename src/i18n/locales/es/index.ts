@@ -801,7 +801,6 @@ export const es: DeepPartial<Messages> = {
             matrixRowMemory: "en qué se basa",
             matrixRowGenosHistory: "Historial de conversaciones de Genos",
             matrixRowPremiumModels: "Modelos de IA premium",
-            matrixRowDigest: "Resumen proactivo",
             matrixRowMcp: "Conecta un agente de codificación de IA (MCP)",
             matrixRowHistory: "Historial de mensajes",
             matrixRowTasks: "Tareas por mes",
@@ -820,8 +819,6 @@ export const es: DeepPartial<Messages> = {
             matrixMemoryNone: "esta conversación",
             matrixMemoryOwn: "tu historia",
             matrixMemoryTeam: "El conocimiento de tu equipo",
-            matrixDigestWeekly: "Semanalmente",
-            matrixDigestDaily: "Alertas diarias +",
         },
         appearance: {
             heading: "Apariencia",
@@ -4574,8 +4571,6 @@ export const es: DeepPartial<Messages> = {
             turnBackOnNamed: "Volver a activar: {name}",
             undo: "Deshacer",
             undoNamed: "Deshacer: volver a activar {name}",
-            offDigest:
-                "Se desactivó {name}. No se escribirán más resúmenes ni se gastarán más créditos de IA hasta que lo vuelvas a activar.",
             offSchedule:
                 "Se desactivó {name}. No se ejecutará ni usará créditos de IA hasta que lo vuelvas a activar.",
             offScheduleNoAi:
@@ -4995,9 +4990,6 @@ export const es: DeepPartial<Messages> = {
                     default: "Aún no permitido",
                     unsupported: "No compatible",
                 },
-                digestHeading: "Resumen Genos",
-                digestDescription:
-                    "Un breve resumen personal de Genos, enviado a su bandeja de entrada (semanalmente en Pro, diariamente en Max).",
                 mutedTargetsHeading: "Elementos silenciados ({count})",
                 noMutedTargets:
                     "No hay elementos silenciados. Silencia un hilo, tarea o nota específica desde su encabezado o menú ⋮.",

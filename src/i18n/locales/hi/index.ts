@@ -1046,7 +1046,6 @@ export const hi: DeepPartial<Messages> = {
             matrixRowMemory: "यह किस पर आधारित है",
             matrixRowGenosHistory: "Genos वार्तालाप इतिहास",
             matrixRowPremiumModels: "प्रीमियम एआई मॉडल",
-            matrixRowDigest: "प्रोएक्टिव डाइजेस्ट",
             matrixRowMcp: "AI कोडिंग एजेंट कनेक्ट करें (MCP)",
             matrixRowHistory: "संदेश इतिहास",
             matrixRowTasks: "प्रति माह कार्य",
@@ -1065,8 +1064,6 @@ export const hi: DeepPartial<Messages> = {
             matrixMemoryNone: "यह बातचीत",
             matrixMemoryOwn: "आपका इतिहास",
             matrixMemoryTeam: "आपकी टीम का ज्ञान",
-            matrixDigestWeekly: "साप्ताहिक",
-            matrixDigestDaily: "दैनिक + अलर्ट",
             billingReturnCancelled: "चेकआउट रद्द — आपका प्लान अपरिवर्तित है।",
         },
         appearance: {
@@ -4546,8 +4543,6 @@ export const hi: DeepPartial<Messages> = {
             turnBackOnNamed: "फिर से चालू करें: {name}",
             undo: "पूर्ववत करें",
             undoNamed: "पूर्ववत करें: {name} फिर से चालू करें",
-            offDigest:
-                "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, न नया लिखा जाएगा और न इस पर AI क्रेडिट खर्च होंगे।",
             offSchedule:
                 "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, यह नहीं चलेगा और AI क्रेडिट खर्च नहीं करेगा।",
             offScheduleNoAi: "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, यह नहीं चलेगा।",
@@ -5357,9 +5352,6 @@ export const hi: DeepPartial<Messages> = {
                     default: "अभी तक अनुमति नहीं है",
                     unsupported: "असमर्थित",
                 },
-                digestHeading: "Genos डाइजेस्ट",
-                digestDescription:
-                    "Genos से एक संक्षिप्त व्यक्तिगत डाइजेस्ट, आपके इनबॉक्स में भेजा गया (प्रो पर साप्ताहिक, मैक्स पर दैनिक)।",
                 emailHeading: "ईमेल सूचनाएँ",
                 emailDescription:
                     "जब आप दूर हों, Genos छूटी हुई सूचनाएँ एक ईमेल में समेटकर भेजता है — हर घटना के लिए अलग ईमेल नहीं।",
