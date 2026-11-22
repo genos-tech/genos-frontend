@@ -10,6 +10,7 @@
  *      were added when their write failed, and a partial failure still
  *      notifies the people who did get in.
  */
+import type { Socket } from "socket.io-client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -17,10 +18,11 @@ import {
     addMembersToProjectWithNotice,
 } from "../services/addMembersWithNotice";
 import { channelService } from "../services/channel/channelService";
+import type { UserProps } from "../types/admin";
 
-const MYSELF = { userId: "actor", teamId: "t1", userName: "Me" } as any;
+const MYSELF = { userId: "actor", teamId: "t1", userName: "Me" } as unknown as UserProps;
 
-const makeSocket = () => ({ emit: vi.fn() }) as any;
+const makeSocket = () => ({ emit: vi.fn() }) as unknown as Socket;
 
 const projectArgs = (over = {}) => ({
     accessToken: "token",
@@ -153,7 +155,7 @@ describe("addMembersToGMWithNotice", () => {
     afterEach(() => vi.restoreAllMocks());
 
     it("adds through the v3 channel primitive and notifies", async () => {
-        addMembersSpy.mockResolvedValue({ members: [] } as any);
+        addMembersSpy.mockResolvedValue({ members: [] } as never);
         const socket = makeSocket();
 
         const res = await addMembersToGMWithNotice({

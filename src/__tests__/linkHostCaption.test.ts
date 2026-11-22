@@ -29,7 +29,7 @@ const frames = async (n: number) => {
 const link = (href: string, text: string) => ({ type: "link", href, content: text });
 const paragraph = (...content: unknown[]) => ({ id: "p", type: "paragraph", content });
 
-const mounted: { el: HTMLElement; editor: BlockNoteEditor<any, any, any> }[] = [];
+const mounted: { el: HTMLElement; editor: BlockNoteEditor }[] = [];
 let stopLabelling: () => void = () => {};
 
 const make = (
@@ -39,7 +39,7 @@ const make = (
     const editor = BlockNoteEditor.create({
         initialContent: [paragraph(...content)] as never,
         ...(extension ? { extensions: [linkHostCaption] } : {}),
-    } as never);
+    } as never) as unknown as BlockNoteEditor;
     const el = document.createElement("div");
     document.body.appendChild(el);
     editor.mount(el);

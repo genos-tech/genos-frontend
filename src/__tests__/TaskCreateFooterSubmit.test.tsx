@@ -27,14 +27,14 @@ vi.mock("../db/utils/yjsPersistenceRegistry", () => ({
 const uploadNewTaskMock = vi.mocked(uploadNewTask);
 const consumeYjsPersistenceFailureMock = vi.mocked(consumeYjsPersistenceFailure);
 
-const myself = { userId: "u1", userName: "Me", teamId: "t1" } as any;
+const myself = { userId: "u1", userName: "Me", teamId: "t1" } as never;
 
 const taskContent = {
     id: 101,
     title: "New task",
     project: { projectId: 7, projectName: "Proj", systemUserId: "sys-1" },
     attachments: [],
-} as any;
+} as never;
 
 const renderFooter = (extraProps: { missingRequiredFields?: string[] } = {}) => {
     const setIsSubmitted = vi.fn();
@@ -48,8 +48,8 @@ const renderFooter = (extraProps: { missingRequiredFields?: string[] } = {}) => 
         setIsCreatingTask: vi.fn(),
         setInitialEmptyTaskId: vi.fn(),
         currentPreviewTask: null,
-    } as any;
-    const usePM = { setCurrentProject: vi.fn() } as any;
+    };
+    const usePM = { setCurrentProject: vi.fn() };
 
     const utils = render(
         <CssVarsProvider>
@@ -62,9 +62,9 @@ const renderFooter = (extraProps: { missingRequiredFields?: string[] } = {}) => 
                 socket={null}
                 taskContent={taskContent}
                 taskTitle="New task"
-                useCM={{} as any}
-                usePM={usePM}
-                useTM={useTM}
+                useCM={{} as never}
+                usePM={usePM as never}
+                useTM={useTM as never}
                 {...extraProps}
             />
         </CssVarsProvider>
@@ -112,7 +112,9 @@ describe("TaskCreateFooter submit", () => {
         // The guard on the guard: a footer that never submits would pass the
         // failure test above while breaking task creation outright.
         await waitFor(() => expect(setIsSubmitted).toHaveBeenCalledWith(true));
-        expect(usePM.setCurrentProject).toHaveBeenCalledWith(taskContent.project);
+        expect(usePM.setCurrentProject).toHaveBeenCalledWith(
+            (taskContent as unknown as { project: unknown }).project
+        );
         expect(localStorage.getItem("lastProjectId")).toBe("7");
     });
 

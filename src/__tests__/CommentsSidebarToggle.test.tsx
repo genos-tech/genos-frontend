@@ -18,7 +18,7 @@ const makeStore = (threads: any[]) =>
     ({
         getThreads: () => new Map(threads.map((t) => [t.id, t])),
         subscribe: () => () => {},
-    }) as any;
+    }) as never;
 
 const thread = (id: string, opts: Partial<any> = {}) => ({
     id,

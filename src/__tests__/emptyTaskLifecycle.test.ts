@@ -12,8 +12,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createEmptyTask } from "../features/tasks/services/createEmptyTask";
 import { deleteEmptyTask } from "../features/tasks/services/deleteEmptyTask";
+import type { UserProps } from "../types/admin";
 
-const MYSELF = { userId: "u1", teamId: "t1", userName: "Me" } as any;
+const MYSELF = { userId: "u1", teamId: "t1", userName: "Me" } as unknown as UserProps;
 
 const okCreate = (taskId: unknown) => ({
     ok: true,

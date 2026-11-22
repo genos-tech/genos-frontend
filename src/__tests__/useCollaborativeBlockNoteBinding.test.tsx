@@ -18,7 +18,12 @@
  * the real ones.
  */
 
-import { BlockNoteEditor } from "@blocknote/core";
+import {
+    BlockNoteEditor,
+    type BlockSchema,
+    type InlineContentSchema,
+    type StyleSchema,
+} from "@blocknote/core";
 import { CommentsExtension } from "@blocknote/core/comments";
 import { en } from "@blocknote/core/locales";
 import { blocksToYXmlFragment } from "@blocknote/core/yjs";
@@ -82,7 +87,7 @@ vi.mock("@blocknote/react", async (importOriginal) => {
             passed.push(options);
             // One editor per options object, as the real hook keeps one per dependency set.
             if (!built.has(options)) {
-                const editor = Real.create(options as never);
+                const editor = Real.create(options as never) as unknown as BlockNoteEditor;
                 editor.mount(document.body.appendChild(document.createElement("div")));
                 built.set(options, editor);
                 created.push(editor);
@@ -114,7 +119,8 @@ const mountHook = (extra: Record<string, unknown> = {}) =>
     );
 
 /** The editor the hook built (real, mounted, bound to the provider's document). */
-const realEditor = () => created.at(-1) as BlockNoteEditor<any, any, any>;
+const realEditor = () =>
+    created.at(-1) as BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema>;
 
 const textIn = (fragment: Y.XmlFragment) => fragment.toString();
 

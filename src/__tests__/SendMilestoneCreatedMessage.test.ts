@@ -32,10 +32,10 @@ const makeProject = (over = {}) =>
         systemUserId: "sys-1",
         projectTags: [],
         ...over,
-    }) as any;
+    }) as never;
 const makeMilestone = (over = {}) =>
-    ({ taskId: 42, status: "Open", title: "M1", milestoneId: 1, ...over }) as any;
-const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as any;
+    ({ taskId: 42, status: "Open", title: "M1", milestoneId: 1, ...over }) as never;
+const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as never;
 
 const baseInput = () => ({
     myself: USER,
@@ -54,10 +54,10 @@ describe("sendMilestoneCreatedMessage", () => {
         vi.restoreAllMocks();
         vi.spyOn(channelService, "getSnapshot").mockReturnValue({
             channels: new Map([[PM.id, PM]]),
-        } as any);
-        vi.spyOn(channelService, "listChannels").mockResolvedValue([] as any);
+        } as never);
+        vi.spyOn(channelService, "listChannels").mockResolvedValue([] as never);
         vi.spyOn(channelService, "handleChannelCreated").mockImplementation(() => undefined);
-        vi.spyOn(channelService, "send").mockResolvedValue({ id: "msg-1" } as any);
+        vi.spyOn(channelService, "send").mockResolvedValue({ id: "msg-1" } as never);
     });
 
     it("posts the milestone card to the project's PM channel", async () => {
@@ -87,8 +87,8 @@ describe("sendMilestoneCreatedMessage", () => {
     });
 
     it("falls back to a REST channel refresh when the snapshot lacks the PM channel", async () => {
-        vi.spyOn(channelService, "getSnapshot").mockReturnValue({ channels: new Map() } as any);
-        vi.spyOn(channelService, "listChannels").mockResolvedValue([PM] as any);
+        vi.spyOn(channelService, "getSnapshot").mockReturnValue({ channels: new Map() } as never);
+        vi.spyOn(channelService, "listChannels").mockResolvedValue([PM] as never);
 
         await sendMilestoneCreatedMessage(baseInput());
 
@@ -98,8 +98,8 @@ describe("sendMilestoneCreatedMessage", () => {
     });
 
     it("does NOT send when no PM channel can be resolved", async () => {
-        vi.spyOn(channelService, "getSnapshot").mockReturnValue({ channels: new Map() } as any);
-        vi.spyOn(channelService, "listChannels").mockResolvedValue([] as any);
+        vi.spyOn(channelService, "getSnapshot").mockReturnValue({ channels: new Map() } as never);
+        vi.spyOn(channelService, "listChannels").mockResolvedValue([] as never);
 
         await sendMilestoneCreatedMessage(baseInput());
 

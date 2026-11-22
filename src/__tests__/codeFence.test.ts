@@ -14,6 +14,9 @@ import {
     createCodeBlockSpec,
     defaultBlockSpecs,
     defaultInlineContentSpecs,
+    type BlockSchema,
+    type InlineContentSchema,
+    type StyleSchema,
 } from "@blocknote/core";
 import { describe, expect, it } from "vitest";
 
@@ -24,7 +27,7 @@ import {
 import { genosStyleSpecs } from "../components/editors/genosStyleSpecs";
 import { codeFenceInputRule } from "../components/editors/sub/codeBlockExtras";
 
-type AnyEditor = BlockNoteEditor<any, any, any>;
+type AnyEditor = BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema>;
 
 const make = (withRule: boolean): AnyEditor => {
     const schema = BlockNoteSchema.create({
@@ -52,12 +55,14 @@ const make = (withRule: boolean): AnyEditor => {
 /** Type `text` into the empty second paragraph, then press a key; what the document is after. */
 const typeFence = (withRule: boolean, text: string, key: "Enter" | "Space", mod = false) => {
     const editor = make(withRule);
-    editor.updateBlock(editor.document[1], { type: "paragraph", content: text });
+    editor.updateBlock(editor.document[1], { type: "paragraph", content: text } as never);
     editor.setTextCursorPosition(editor.document[1].id, "end");
     const view = editor.prosemirrorView!;
     if (key === "Space") {
         const { from, to } = view.state.selection;
-        view.someProp("handleTextInput", (f: any) => f(view, from, to, " "));
+        view.someProp("handleTextInput", (f) =>
+            (f as (...a: unknown[]) => unknown)(view, from, to, " ")
+        );
     } else {
         const event = new KeyboardEvent("keydown", {
             key: "Enter",
@@ -66,12 +71,16 @@ const typeFence = (withRule: boolean, text: string, key: "Enter" | "Space", mod 
             bubbles: true,
             cancelable: true,
         });
-        view.someProp("handleKeyDown", (f: any) => f(view, event));
+        view.someProp("handleKeyDown", (f) => (f as (...a: unknown[]) => unknown)(view, event));
     }
     const cursor = editor.getTextCursorPosition().block;
     return {
         blocks: editor.document.map(
-            (b) => b.type + ((b.props as any)?.language ? `:${(b.props as any).language}` : "")
+            (b) =>
+                b.type +
+                ((b.props as { language?: string })?.language
+                    ? `:${(b.props as { language?: string }).language}`
+                    : "")
         ),
         cursorIsIn: editor.document.findIndex((b) => b.id === cursor.id),
     };

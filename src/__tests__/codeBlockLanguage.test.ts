@@ -7,7 +7,14 @@
  * Yjs writer and real mounted editors.
  */
 import { codeBlockOptions } from "@blocknote/code-block";
-import { BlockNoteEditor, BlockNoteSchema, defaultInlineContentSpecs } from "@blocknote/core";
+import {
+    BlockNoteEditor,
+    BlockNoteSchema,
+    defaultInlineContentSpecs,
+    type BlockSchema,
+    type InlineContentSchema,
+    type StyleSchema,
+} from "@blocknote/core";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
 
@@ -22,7 +29,7 @@ import { genosStyleSpecs } from "../components/editors/genosStyleSpecs";
 import { applyBlocksToFragment } from "../features/notes/common/services/applyNoteBodyToYjs";
 import { markdownToNoteBlocks } from "../features/notes/common/services/noteMarkdown";
 
-type AnyEditor = BlockNoteEditor<any, any, any>;
+type AnyEditor = BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema>;
 
 const mount = (initialContent: unknown): AnyEditor => {
     const schema = BlockNoteSchema.create({
@@ -35,7 +42,12 @@ const mount = (initialContent: unknown): AnyEditor => {
     return editor;
 };
 
-const code = (b: any): string => (b.content ?? []).map((c: any) => c.text).join("");
+type LooseBlock = {
+    content?: Array<{ text?: string }>;
+    children?: LooseBlock[];
+    props?: Record<string, unknown>;
+};
+const code = (b: LooseBlock): string => (b.content ?? []).map((c) => c.text).join("");
 
 describe("resolveCodeLanguage", () => {
     it("maps aliases to the ids the editor has", () => {
@@ -98,9 +110,9 @@ describe("normalizeCodeBlockLanguages", () => {
                 ],
             },
         ];
-        const out = normalizeCodeBlockLanguages(blocks) as any[];
-        expect(out[0].children[0].props.language).toBe("typescript");
-        expect(code(out[0].children[0])).toBe("let a = 1;");
+        const out = normalizeCodeBlockLanguages(blocks) as unknown as LooseBlock[];
+        expect(out[0].children![0].props?.language).toBe("typescript");
+        expect(code(out[0].children![0])).toBe("let a = 1;");
         expect(blocks[0].children[0].props.language).toBe("ts");
     });
 });
@@ -140,7 +152,7 @@ describe("markdown import", () => {
     it("keeps every fenced body, maps the language and falls back to plain text", async () => {
         const blocks = await markdownToNoteBlocks(MD);
         const fences = blocks.filter((b) => b.type === "codeBlock");
-        expect(fences.map((b) => (b.props as any).language)).toEqual([
+        expect(fences.map((b) => (b.props as { language?: string }).language)).toEqual([
             "typescript",
             "javascript",
             "shellscript",
@@ -148,7 +160,7 @@ describe("markdown import", () => {
             "text",
             "text",
         ]);
-        expect(fences.map(code)).toEqual([
+        expect(fences.map((b) => code(b as LooseBlock))).toEqual([
             "const a: number = 1;",
             "console.log('x');",
             "echo $HOME",
@@ -169,8 +181,8 @@ describe("markdown import", () => {
 
     it("imported blocks mount in a real editor with every body intact", async () => {
         const editor = mount(await markdownToNoteBlocks(MD));
-        expect(editor.document.filter((b: any) => b.type === "codeBlock")).toHaveLength(6);
-        expect(editor.document.map((b: any) => b.type)).toContain("heading");
+        expect(editor.document.filter((b) => b.type === "codeBlock")).toHaveLength(6);
+        expect(editor.document.map((b) => b.type)).toContain("heading");
     });
 });
 
@@ -207,8 +219,11 @@ describe("pasting HTML code", () => {
             '<pre><code class="language-ts">let a = 1;</code></pre>' +
                 '<pre><code class="language-klingon">Qapla</code></pre>'
         );
-        const fences = blocks.filter((b: any) => b.type === "codeBlock");
-        expect(fences.map((b: any) => b.props.language)).toEqual(["typescript", "text"]);
+        const fences = blocks.filter((b) => b.type === "codeBlock");
+        expect(fences.map((b) => (b.props as { language?: string }).language)).toEqual([
+            "typescript",
+            "text",
+        ]);
         expect(fences.map(code)).toEqual(["let a = 1;", "Qapla"]);
     });
 });

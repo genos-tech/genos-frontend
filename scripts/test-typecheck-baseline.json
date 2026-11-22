@@ -87,7 +87,6 @@
     "src/__tests__/genosStyleSpecs.test.ts": 4,
     "src/__tests__/hooks/useChatListItem.test.ts": 2,
     "src/__tests__/hooks/useSelfEchoReconcile.test.ts": 5,
-    "src/__tests__/linkHostCaption.test.ts": 3,
     "src/__tests__/messageItemMetas.test.ts": 12,
     "src/__tests__/noteRouting.test.tsx": 1,
     "src/__tests__/refreshKeepsStateIdentity.test.tsx": 1,
@@ -101,7 +100,6 @@
     "src/__tests__/taskNotePanelEmptyState.test.tsx": 1,
     "src/__tests__/taskSaveRefusalPreview.test.ts": 1,
     "src/__tests__/uptimeProbe.test.ts": 8,
-    "src/__tests__/useCollaborativeBlockNoteBinding.test.tsx": 1,
     "src/__tests__/useWarmRecentChannels.test.ts": 1,
     "src/__tests__/v3FlagsFilter.test.ts": 2,
     "src/components/editors/blocks/parity.test.ts": 8

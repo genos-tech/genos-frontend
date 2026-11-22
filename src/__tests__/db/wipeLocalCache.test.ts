@@ -188,15 +188,15 @@ describe("DatabaseUtils.wipeLocalCache", () => {
 
     it("degrades quietly where indexedDB.databases() is missing", async () => {
         await putRow(STORES.INBOX, { itemId: 1 });
-        const original = (indexedDB as any).databases;
-        (indexedDB as any).databases = undefined;
+        const original = (indexedDB as unknown as { databases?: unknown }).databases;
+        (indexedDB as unknown as { databases?: unknown }).databases = undefined;
         try {
             const result = await DatabaseUtils.wipeLocalCache();
             expect(result.ok).toBe(true);
             expect(result.yjsDeleted).toBe(0);
             expect(await count(STORES.INBOX)).toBe(0);
         } finally {
-            (indexedDB as any).databases = original;
+            (indexedDB as unknown as { databases?: unknown }).databases = original;
         }
     });
 });

@@ -14,7 +14,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const selectThread = vi.fn();
-let threads = new Map<string, any>();
+let threads = new Map<string, Record<string, unknown>>();
 let selectedThreadId: string | undefined;
 
 vi.mock("@blocknote/react", () => ({

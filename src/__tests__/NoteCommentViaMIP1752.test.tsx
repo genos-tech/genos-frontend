@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { viaSourceOfNoteComment } from "../features/tasks/utils/viaSource";
 
 // ── The same hook mocks as CommentsSidebar.test.tsx ───────────────────────────
-let threads = new Map<string, any>();
+let threads = new Map<string, Record<string, unknown>>();
 const users = new Map<string, { id: string; username: string; avatarUrl: string }>();
 
 vi.mock("@blocknote/react", () => ({

@@ -30,7 +30,7 @@ vi.mock("../features/tasks/services/addTask", () => ({
 
 const PM = { id: "pm-uuid", kind: ChannelKind.PM, projectId: 7 };
 
-const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as any;
+const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as never;
 
 const makeTaskContent = (over = {}) =>
     ({
@@ -51,14 +51,14 @@ const makeTaskContent = (over = {}) =>
         rootTaskId: null,
         attachments: [],
         ...over,
-    }) as any;
+    }) as never;
 
 const useCM = {
     isThreadVisible: false,
     currentMainChat: null,
     currentThreadChat: null,
     setCurrentThreadChat: vi.fn(),
-} as any;
+} as never;
 
 const baseInput = () => ({
     socket: null,
@@ -77,10 +77,10 @@ describe("uploadNewTask failure reporting", () => {
         vi.spyOn(console, "error").mockImplementation(() => undefined);
         vi.spyOn(channelService, "getSnapshot").mockReturnValue({
             channels: new Map([[PM.id, PM]]),
-        } as any);
-        vi.spyOn(channelService, "listChannels").mockResolvedValue([PM] as any);
+        } as never);
+        vi.spyOn(channelService, "listChannels").mockResolvedValue([PM] as never);
         vi.spyOn(channelService, "handleChannelCreated").mockImplementation(() => undefined);
-        vi.spyOn(channelService, "send").mockResolvedValue({ id: "msg-1" } as any);
+        vi.spyOn(channelService, "send").mockResolvedValue({ id: "msg-1" } as never);
     });
 
     it("reports a rejected task PUT instead of returning as if it worked", async () => {
