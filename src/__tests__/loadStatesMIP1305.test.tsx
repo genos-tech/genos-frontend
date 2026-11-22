@@ -23,10 +23,8 @@ import { CalendarModal } from "../features/calendar/components/CalendarModal";
 import { useCalendarSources } from "../features/calendar/hooks/useCalendarSources";
 import { ModalManageGMTags } from "../features/chat/components/modals/ModalManageGMTags";
 import { ModalNoteHistory } from "../features/notes/common/components/ModalNoteHistory";
-import {
-    _resetPersonalGMTagsStoreForTests,
-    PersonalGMTagsBootstrap,
-} from "../hooks/common/usePersonalGMTags";
+import { _resetPersonalGMTagsStoreForTests } from "../hooks/common/personalGMTagsState";
+import { PersonalGMTagsBootstrap } from "../hooks/common/usePersonalGMTags";
 import { useTeamEmoji } from "../hooks/common/useTeamEmoji";
 import { en } from "../i18n/locales/en";
 import type { UserProps } from "../types/admin";

@@ -22,7 +22,7 @@ import {
     TaskHistoryEntry,
     ThreadHistoryEntry,
     useHistory,
-} from "../../hooks/common/useHistory";
+} from "../../hooks/common/historyState";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";

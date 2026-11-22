@@ -44,7 +44,7 @@ import { useUndoHidden } from "../../../../hooks/common/useUndoableAction";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
-import { useColorTheme } from "../../../../theme/ColorThemeProvider";
+import { useColorTheme } from "../../../../theme/colorThemeState";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";

@@ -4,7 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { useChatContext } from "./context/ChatContext";
+import { useChatContext } from "./context/chatContextState";
 import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";

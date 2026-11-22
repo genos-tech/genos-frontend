@@ -13,7 +13,7 @@ import { ChatManagementState } from "../chats/useChatManagement";
 import { NoteManagementState } from "../notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../tasks/useTaskManagement";
-import { HistoryEntry, useHistory } from "./useHistory";
+import { HistoryEntry, useHistory } from "./historyState";
 import { ProjectManagementState } from "./useProjectManagement";
 
 // Effect-based observer mounted at App level. Watches the canonical

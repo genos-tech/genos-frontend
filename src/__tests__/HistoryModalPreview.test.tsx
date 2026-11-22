@@ -27,7 +27,7 @@ const partyBlob: TeamEmoji = {
 
 const chatsEntries: unknown[] = [];
 
-vi.mock("../hooks/common/useHistory", () => ({
+vi.mock("../hooks/common/historyState", () => ({
     useHistory: () => ({
         chatsEntries,
         tasksEntries: [],

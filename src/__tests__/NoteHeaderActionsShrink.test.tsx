@@ -8,7 +8,7 @@ import { NoteHeaderActions } from "../features/notes/common/components/NoteHeade
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "t" }),
 }));
-vi.mock("../services/notifications/NotificationsContext", () => ({
+vi.mock("../services/notifications/notificationsContextState", () => ({
     useNotificationsContext: () => ({
         isTargetMutedByKey: () => false,
         setTargetMutedByKey: vi.fn(),

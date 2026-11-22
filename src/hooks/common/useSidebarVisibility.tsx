@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import { useUiSettings } from "./useUiSettings";
+import { useUiSettings } from "./uiSettingsState";
 
 /**
  * Which sidebar entries the user has chosen to show. Backed by the

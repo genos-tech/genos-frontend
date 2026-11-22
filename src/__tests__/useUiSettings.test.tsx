@@ -18,7 +18,8 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useAuth } from "../context/AuthContext";
-import { UiSettingsProvider, useUiSettings } from "../hooks/common/useUiSettings";
+import { useUiSettings } from "../hooks/common/uiSettingsState";
+import { UiSettingsProvider } from "../hooks/common/useUiSettings";
 import { authApi } from "../services/api";
 
 vi.mock("../services/api", () => ({

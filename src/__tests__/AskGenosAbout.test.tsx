@@ -46,14 +46,14 @@ vi.mock("../services/agentApi", async (importOriginal) => {
     const actual = await importOriginal<typeof import("../services/agentApi")>();
     return { ...actual, askAgentStream: vi.fn(), fetchAgentSessions: vi.fn(async () => []) };
 });
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "t" }),
     useOptionalAccessToken: () => "t",
 }));
-vi.mock("../services/notifications/NotificationsContext", () => ({
+vi.mock("../services/notifications/notificationsContextState", () => ({
     useNotificationsContext: () => ({
         isTargetMutedByKey: () => false,
         muteTarget: vi.fn(),

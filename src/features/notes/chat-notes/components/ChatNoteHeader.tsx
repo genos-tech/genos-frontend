@@ -37,7 +37,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
-import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
+import { useNotificationsContext } from "../../../../services/notifications/notificationsContextState";
 import { UserProps } from "../../../../types/admin";
 import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";

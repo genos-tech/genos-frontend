@@ -184,7 +184,7 @@ vi.mock("../services/agentApi", async (importOriginal) => {
 vi.mock("../services/searchApi", () => ({
     searchSpotlight: vi.fn(async () => ({ results: [] })),
 }));
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 

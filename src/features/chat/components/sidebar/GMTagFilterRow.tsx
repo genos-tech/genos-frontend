@@ -10,7 +10,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { MenuDivider, MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { BoxSlotRoot } from "../../../../components/ui/slotRoot";
-import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
+import { usePersonalGMTags } from "../../../../hooks/common/personalGMTagsState";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { PersonalTag } from "../../../../types/personalTags";

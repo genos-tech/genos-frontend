@@ -23,7 +23,7 @@ import type { AllChatProps } from "../types/chat";
 import type { TeamNoteFolderTreeNode } from "../types/notes";
 import type { ProjectProps } from "../types/tasks";
 
-vi.mock("../hooks/common/usePersonalGMTags", () => ({
+vi.mock("../hooks/common/personalGMTagsState", () => ({
     usePersonalGMTags: () => ({ loaded: false, tags: [], assignmentsByChannelId: {} }),
 }));
 

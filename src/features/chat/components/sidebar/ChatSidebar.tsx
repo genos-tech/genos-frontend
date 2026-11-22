@@ -24,7 +24,7 @@ import {
     touchTargetSx,
 } from "../../../../components/ui/touchTargets";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
+import { usePersonalGMTags } from "../../../../hooks/common/personalGMTagsState";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

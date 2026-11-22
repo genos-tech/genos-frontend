@@ -44,7 +44,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
 
-import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
+import { useSpotlightPreferences } from "../../hooks/common/spotlightPreferencesState";
 import { useTranslation } from "../../i18n";
 import {
     fetchAgentSessionDetail,

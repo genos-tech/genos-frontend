@@ -39,7 +39,7 @@ import { CHAT_TYPE_CODE, SpotlightResult } from "../../../spotlight/types";
 import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
 import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
-import { useChatContext } from "../../context/ChatContext";
+import { useChatContext } from "../../context/chatContextState";
 import { forgetThread } from "../../utils/threadMemory";
 import { ExternalChatChip } from "../shared/ExternalChatChip";
 

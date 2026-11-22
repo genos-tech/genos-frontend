@@ -30,7 +30,7 @@ import {
     formatPauseStatusText,
     NotificationPausePresetItems,
 } from "../../../../../services/notifications/NotificationPausePicker";
-import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
+import { useNotificationsContext } from "../../../../../services/notifications/notificationsContextState";
 import {
     formatStatusExpiry,
     isStatusExpired,

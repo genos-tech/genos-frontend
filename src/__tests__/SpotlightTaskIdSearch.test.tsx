@@ -29,7 +29,7 @@ vi.mock("../services/agentApi", async (importOriginal) => {
     return { ...actual, askAgentStream: vi.fn(), fetchAgentSessions: vi.fn(async () => []) };
 });
 vi.mock("../services/searchApi", () => ({ searchSpotlight: vi.fn() }));
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 vi.mock("../features/tasks/services/lookupTaskByDisplayId", () => ({

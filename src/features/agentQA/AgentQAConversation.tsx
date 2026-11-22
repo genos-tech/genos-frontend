@@ -17,8 +17,8 @@ import { useCallback, useMemo, useRef } from "react";
 import { Stack } from "@mui/joy";
 
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { useBubbleStylePreference } from "../../hooks/common/bubbleStylePreferenceState";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
-import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
 import {
     calendarEventRefFromSource,
     requestOpenCalendarEvent,

@@ -33,7 +33,7 @@ vi.mock("../services/searchApi", () => ({
     searchSpotlight: vi.fn(() => new Promise(() => {})), // never lands: no result renders
 }));
 
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 

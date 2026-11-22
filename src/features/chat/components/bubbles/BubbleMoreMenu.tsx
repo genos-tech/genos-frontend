@@ -23,7 +23,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import {
     PinnableBubbleAction,
     useBubbleActionsPreference,
-} from "../../../../hooks/common/useBubbleActionsPreference";
+} from "../../../../hooks/common/bubbleActionsPreferenceState";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";

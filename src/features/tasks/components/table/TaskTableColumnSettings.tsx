@@ -17,7 +17,10 @@ import { createPortal } from "react-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { SortTier, useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
+import {
+    SortTier,
+    useTaskSortPreferences,
+} from "../../../../hooks/common/taskSortPreferencesState";
 import { useTaskTableColumnPreferences } from "../../../../hooks/common/useTaskTableColumnPreferences";
 import { useTranslation } from "../../../../i18n";
 import { isSortDirection, isSortField, SORT_FIELD_OPTIONS } from "../../utils/sortTask";

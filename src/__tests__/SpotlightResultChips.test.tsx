@@ -25,7 +25,7 @@ import { SpotlightOverlay } from "../features/spotlight/SpotlightOverlay";
 import type { SpotlightResult } from "../features/spotlight/types";
 import type { ProjectProps } from "../types/tasks";
 
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 

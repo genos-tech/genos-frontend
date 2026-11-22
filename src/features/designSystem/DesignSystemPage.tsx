@@ -35,7 +35,7 @@ import { TabStrip } from "../../components/ui/feedback/TabStrip";
 import { toast } from "../../components/ui/feedback/toastStore";
 import { NavItem } from "../../components/ui/nav/NavItem";
 import { SectionHeader } from "../../components/ui/nav/SectionHeader";
-import { useColorTheme } from "../../theme/ColorThemeProvider";
+import { useColorTheme } from "../../theme/colorThemeState";
 import { DENSITIES } from "../../theme/density";
 import { THEME_IDS, ThemeId } from "../../theme/themePalettes";
 import { focusRing, g, type, TYPE_SCALE, TypeLevel } from "../../theme/tokens";

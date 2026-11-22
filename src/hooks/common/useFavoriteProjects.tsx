@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 
-import { useUiSettings } from "./useUiSettings";
+import { useUiSettings } from "./uiSettingsState";
 
 /**
  * Starred ("favourite") projects for the Tasks sidebar (MIP-1695). Stored in

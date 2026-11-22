@@ -23,7 +23,7 @@ import { AllChatProps } from "../../types/chat";
 import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
 import { EMAIL_CATEGORIES, isEmailCategoryEnabled } from "./emailCategories";
 import { NotificationPauseSection } from "./NotificationPausePicker";
-import { useNotificationsContext } from "./NotificationsContext";
+import { useNotificationsContext } from "./notificationsContextState";
 import { MutedChatRef, MutedTargetRef, MutedTargetType } from "./types";
 
 // Group heading label — reuse the coarse category labels as the umbrella.

@@ -4,7 +4,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, Button, IconButton, Input, Option, Select, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/useQuickAddRequiredFieldsPreference";
+import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/quickAddRequiredFieldsPreferenceState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { TagListProps } from "../../../../types/tasks";

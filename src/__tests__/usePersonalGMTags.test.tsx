@@ -12,9 +12,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 
 import {
     _resetPersonalGMTagsStoreForTests,
-    PersonalGMTagsBootstrap,
     usePersonalGMTags,
-} from "../hooks/common/usePersonalGMTags";
+} from "../hooks/common/personalGMTagsState";
+import { PersonalGMTagsBootstrap } from "../hooks/common/usePersonalGMTags";
 import { server } from "./msw/server";
 
 vi.mock("../context/AuthContext", () => ({

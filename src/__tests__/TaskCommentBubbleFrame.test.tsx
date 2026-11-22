@@ -15,7 +15,7 @@ import { UserProps } from "../types/admin";
 import { TaskCommentProps } from "../types/tasks";
 
 let style: "compact" | "bubble" = "compact";
-vi.mock("../hooks/common/useBubbleStylePreference", () => ({
+vi.mock("../hooks/common/bubbleStylePreferenceState", () => ({
     useBubbleStylePreference: () => ({ setStyle: () => {}, style }),
 }));
 

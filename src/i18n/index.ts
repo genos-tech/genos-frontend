@@ -1,5 +1,6 @@
 export { getMessages } from "./getMessages";
-export { I18nProvider, useTranslation } from "./I18nProvider";
+export { I18nProvider } from "./I18nProvider";
+export { useTranslation } from "./i18nContext";
 export { fmt } from "./interpolate";
 export { bootI18n, isLocaleLoaded, loadLocale } from "./localeLoaders";
 export { resolveInitialLocale } from "./localeSource";
