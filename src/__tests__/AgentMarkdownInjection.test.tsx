@@ -23,12 +23,12 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { agentMarkdownComponents } from "../features/agentQA/agentMarkdownComponents";
-import { externalHost } from "../features/agentQA/externalHost";
 import { AgentTurn } from "../features/agentQA/AgentTurn";
 import { buildAgentTurnLabels } from "../features/agentQA/agentTurnLabels";
 import { ApprovalCard } from "../features/agentQA/ApprovalCard";
 import { CitationLink } from "../features/agentQA/CitationLink";
 import { agentQAUrlTransform } from "../features/agentQA/citationUtils";
+import { externalHost } from "../features/agentQA/externalHost";
 import DigestBody from "../features/inbox/components/DigestBody";
 import { getMessages } from "../i18n";
 import type { PendingApprovalPayload } from "../services/agentApi";
