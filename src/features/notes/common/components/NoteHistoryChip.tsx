@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import type { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -18,7 +19,7 @@ interface NoteHistoryChipProps {
     noteId: number;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    socket: any;
+    socket: Socket | null;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
 }

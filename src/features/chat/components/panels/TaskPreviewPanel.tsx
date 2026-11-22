@@ -1,6 +1,7 @@
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
+import type { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -21,7 +22,7 @@ interface TaskPreviewPanelProps {
     useTEM: TeamManagementState;
     useNM: NoteManagementState;
     myself: UserProps;
-    socket: any;
+    socket: Socket | null;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
     // Threaded through so TaskPreview's milestone reroute (which gates

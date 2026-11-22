@@ -13,7 +13,7 @@ type EmojiPickerProps = {
     editorPos?: any;
     showEmojiPicker: boolean;
     setShowEmojiPicker: (value: boolean) => void;
-    setSelectedEmoji: (emoji: any) => void;
+    setSelectedEmoji: (emoji: string | null) => void;
     pickerBottomPosition?: number | string;
     pickerRightPosition?: number | string;
     pickerLeftPosition?: number | string;
@@ -37,7 +37,7 @@ export const EmojiPicker = ({
     const { mode } = useColorScheme();
     const emojiPickerRef = useRef<HTMLDivElement>(null);
 
-    const handleEmojiSelect = (emoji: any) => {
+    const handleEmojiSelect = (emoji: { native?: string; id?: string }) => {
         // Standard emoji carry `native` (the unicode glyph). Team custom
         // emoji carry `id` + `src` instead — flatten to the ":name:"
         // shortcode so every consumer keeps receiving a plain string

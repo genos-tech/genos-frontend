@@ -323,6 +323,8 @@ export type TaskProps = {
     // inside the milestone.
     milestoneId?: number | null;
     sprintId?: number | null;
+    // Project folder picked in the create form (MIP-847); not a persisted TaskProps field.
+    folderId?: number | null;
     // Values for the project's custom fields, keyed by String(fieldId).
     // `undefined` means "not loaded" (e.g. a pre-deploy cache entry) —
     // save paths must OMIT the key in that case rather than sending {}

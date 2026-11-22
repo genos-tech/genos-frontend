@@ -88,7 +88,7 @@ export const UserProfile = (props: UserProfileProps) => {
     const { rejection, dismissRejection, filterFiles } = useFileSizeGuard();
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
-    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
 
     const [profileUser, setProfileUser] = useState<UserProps | undefined>(
         isYou === true ? myself : user

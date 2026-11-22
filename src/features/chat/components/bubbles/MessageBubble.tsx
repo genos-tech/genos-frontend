@@ -276,7 +276,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const longPress = useLongPress(() => setMobileToolbarOpen(true), { threshold: 500 });
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
-    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
     // Per-bubble wrap toggles. Toggling from the More menu adds
     // `bn-unwrap-all` / `bn-unwrap-code` to the preview wrapper Box

@@ -97,7 +97,7 @@ export class HelperUtils {
     }
 
     // Debounce function
-    static debounce<T extends (...args: any[]) => any>(
+    static debounce<T extends (...args: never[]) => unknown>(
         func: T,
         wait: number
     ): (...args: Parameters<T>) => void {
@@ -109,7 +109,7 @@ export class HelperUtils {
     }
 
     // Throttle function
-    static throttle<T extends (...args: any[]) => any>(
+    static throttle<T extends (...args: never[]) => unknown>(
         func: T,
         limit: number
     ): (...args: Parameters<T>) => void {
@@ -129,8 +129,8 @@ export class HelperUtils {
     }
 
     // Check if object is empty
-    static isEmpty(obj: any): boolean {
-        return Object.keys(obj).length === 0;
+    static isEmpty(obj: object | null): boolean {
+        return Object.keys(obj as object).length === 0;
     }
 
     // Generate random ID

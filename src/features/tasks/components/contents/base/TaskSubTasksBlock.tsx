@@ -264,8 +264,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         // sub-task under a milestone backing row inherits that milestone's
         // id; a sub-task under a regular task in a milestone chain inherits
         // the chain's milestoneId (null when outside a milestone).
-        const inheritedMilestoneId: number | null =
-            (currentTaskContent as any).milestoneId ?? null;
+        const inheritedMilestoneId: number | null = currentTaskContent.milestoneId ?? null;
 
         setIsSubmittingQuick(true);
         setQuickError(null);
@@ -330,9 +329,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                             // uses this to hide the Milestone toggle and
                             // pre-select the milestone in the picker.
                             const inheritedMilestoneId: number | null =
-                                (currentTaskContent as any).isMilestone === true
-                                    ? ((currentTaskContent as any).milestoneId ?? null)
-                                    : ((currentTaskContent as any).milestoneId ?? null);
+                                currentTaskContent.isMilestone === true
+                                    ? (currentTaskContent.milestoneId ?? null)
+                                    : (currentTaskContent.milestoneId ?? null);
                             useTM.setIsCreatingTask({
                                 flag: true,
                                 parentTaskId: currentTaskContent.id,

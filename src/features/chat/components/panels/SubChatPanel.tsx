@@ -1,5 +1,6 @@
 import { Box, useColorScheme } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
+import type { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -24,7 +25,7 @@ interface SubChatPanelProps {
     incompleteTodoCount: number;
     isToDoVisible: boolean;
     useTG: UseTodoGroupsState;
-    socket: any;
+    socket: Socket | null;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
     todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps | null;
