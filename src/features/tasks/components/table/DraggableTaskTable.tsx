@@ -34,12 +34,14 @@ import { TagListProps, TaskProps, TaskTableProps } from "../../../../types/tasks
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import type { TaskGraphScope } from "../../diagram/types";
+import { useAppliedMilestoneScope } from "../../hooks/useAppliedMilestoneScope";
 import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { statusSolid } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
 import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
+import { endMilestoneSwitch, getPendingMilestoneSwitch } from "../../state/milestoneSwitchStore";
 import { FilterProps } from "../../types/TaskTableTypes";
 import {
     applyTreePositionToDescendants,
@@ -62,6 +64,7 @@ import { nextHeaderTiers, sortTableTasks } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
+import { MilestoneSwitchGate } from "./MilestoneSwitchGate";
 import { QuickAddDraft } from "./QuickAddTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
@@ -74,6 +77,9 @@ import {
     GridNavContext,
     useGridNavController,
 } from "./useGridNav";
+
+// Stable empty list: the rows shown while the table waits for its milestone scope to apply.
+const NO_DISPLAY_ROWS: TaskTableProps[] = [];
 
 // Shared empty fallback so a project without tags doesn't mint a new array
 // identity on every render (see `quickAddProjectTags`).
@@ -453,6 +459,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
 
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>([]);
+    // False while the rows still belong to the previous milestone scope (MIP-1972).
+    const { settled: scopeSettled, apply: applyScopedRows } = useAppliedMilestoneScope(
+        useTM.tableMilestoneFilterId
+    );
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     // Column-settings modal — opened via the gear icon next to the
     // filter menu. The modal itself manages its own form state; we
@@ -1113,9 +1123,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // so manual reordering isn't immediately re-sorted.
     const setCurrentDisplayingTasksSorted = useCallback(
         (tasks: TaskTableProps[]) => {
-            setCurrentDisplayingTasks(sortTasks(tasks));
+            const sorted = sortTasks(tasks);
+            applyScopedRows(() => setCurrentDisplayingTasks(sorted));
         },
-        [sortTasks]
+        [sortTasks, applyScopedRows]
     );
 
     // What `handleRowUpdate` reads AFTER its `await`. A row is memoised and its
@@ -1626,7 +1637,23 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // `isLoadingTasks`' 8 s safety timeout), but only while nothing is cached.
     const isFirstRead =
         (syncFailure.loading && useTM.allTasks.length === 0) || syncFailure.retrying;
-    const showTaskSkeleton = displayRows.length === 0 && (useTM.isLoadingTasks || isFirstRead);
+    // The skeleton the gate shows from the click until this table's rows are the picked
+    // milestone's (MIP-1972): the same one the first read of a project uses.
+    const shownRows = scopeSettled ? displayRows : NO_DISPLAY_ROWS;
+    const switchSkeleton = (
+        <TaskTableSkeleton
+            columns={columnsWithWidths}
+            gutterWidth={LEADING_GUTTER_WIDTH}
+            label={t.tasks.table.loadingTasks}
+        />
+    );
+    // The click's switch is over once the rows are filtered for the scope it picked.
+    const tableScopeId = useTM.tableMilestoneFilterId;
+    useEffect(() => {
+        if (scopeSettled && tableScopeId === getPendingMilestoneSwitch()) endMilestoneSwitch();
+    }, [scopeSettled, tableScopeId]);
+    const showTaskSkeleton =
+        !scopeSettled || (displayRows.length === 0 && (useTM.isLoadingTasks || isFirstRead));
 
     return (
         <>
@@ -1852,96 +1879,98 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     </div>
 
                     {/* Draggable Table Body */}
-                    <DragDropContext
-                        onDragEnd={handleDragEnd}
-                        onDragStart={() => {
-                            // A pristine quick-add row is dismissed before dnd
-                            // measures the list (a non-Draggable row between
-                            // Draggables makes the gap animation read wrong);
-                            // a dirty one is preserved — typed input is never
-                            // destroyed by starting a drag.
-                            if (!quickAddDirtyRef.current) closeQuickAdd();
-                            setIsDragActive(true);
-                        }}
-                    >
-                        <Droppable
-                            direction="vertical"
-                            droppableId="task-table"
-                            ignoreContainerClipping={false}
-                            isCombineEnabled={true}
-                            isDropDisabled={false}
+                    <MilestoneSwitchGate skeleton={switchSkeleton}>
+                        <DragDropContext
+                            onDragEnd={handleDragEnd}
+                            onDragStart={() => {
+                                // A pristine quick-add row is dismissed before dnd
+                                // measures the list (a non-Draggable row between
+                                // Draggables makes the gap animation read wrong);
+                                // a dirty one is preserved — typed input is never
+                                // destroyed by starting a drag.
+                                if (!quickAddDirtyRef.current) closeQuickAdd();
+                                setIsDragActive(true);
+                            }}
                         >
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    // Scope for the hover family-focus rules and the
-                                    // element their pointer handlers read rows
-                                    // from, so the class must sit on the rows'
-                                    // common parent. The drag attribute disables
-                                    // the rules wholesale while a row is in flight.
-                                    className={TASK_BODY_CLASS}
-                                    role="rowgroup"
-                                    {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
-                                    style={{
-                                        // The empty drop zone is 100px so a row can be dropped in;
-                                        // while the skeleton stands in for the rows it is 0, or the
-                                        // skeleton would start 100px below the header.
-                                        minHeight: showTaskSkeleton ? 0 : 100,
-                                        minWidth: totalTableWidth,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        backgroundColor: snapshot.isDraggingOver
-                                            ? mode === "dark"
-                                                ? "rgba(59, 130, 246, 0.08)"
-                                                : "rgba(59, 130, 246, 0.04)"
-                                            : "transparent",
-                                        transition: "background-color 0.25s ease",
-                                    }}
-                                    onPointerLeave={onFamilyFocusPointerLeave}
-                                    onPointerOver={onFamilyFocusPointerOver}
-                                >
-                                    <GridNavContext.Provider value={gridNav}>
-                                        <TaskTableRows
-                                            childrenByParent={childrenByParentEffective}
-                                            columns={columnsWithWidths}
-                                            customFieldDefs={customFieldDefs}
-                                            depthMap={depthMap}
-                                            displayRows={displayRows}
-                                            expandedRows={expandedRows}
-                                            familyKeyByRow={familyKeyByRow}
-                                            ghostIds={ghostInfo.ghostIds}
-                                            mode={mode}
-                                            myself={myself}
-                                            projectTags={quickAddProjectTags}
-                                            quickAddFieldRules={quickAddFieldRules}
-                                            quickAddParentId={quickAddParentId}
-                                            quickAddProjectTags={quickAddProjectTags}
-                                            resolveIsSelected={resolveIsSelected}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            sprintNamesById={sprintNamesById}
-                                            teamMembers={teamMembers}
-                                            toggleExpand={toggleExpand}
-                                            useCM={useCM}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            useUISM={useUISM}
-                                            onDeleteTask={handleDeleteRow}
-                                            onOpenDiagram={openDiagram}
-                                            onQuickAddChild={openQuickAdd}
-                                            onQuickAddClose={closeQuickAdd}
-                                            onQuickAddDirtyChange={handleQuickAddDirtyChange}
-                                            onQuickAddSubmit={handleQuickAddSubmit}
-                                            onRequestPreview={requestPreview}
-                                            onRowUpdate={handleRowUpdate}
-                                        />
-                                    </GridNavContext.Provider>
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
+                            <Droppable
+                                direction="vertical"
+                                droppableId="task-table"
+                                ignoreContainerClipping={false}
+                                isCombineEnabled={true}
+                                isDropDisabled={false}
+                            >
+                                {(provided, snapshot) => (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        // Scope for the hover family-focus rules and the
+                                        // element their pointer handlers read rows
+                                        // from, so the class must sit on the rows'
+                                        // common parent. The drag attribute disables
+                                        // the rules wholesale while a row is in flight.
+                                        className={TASK_BODY_CLASS}
+                                        role="rowgroup"
+                                        {...(isDragActive ? { [DND_ACTIVE_ATTR]: "" } : {})}
+                                        style={{
+                                            // The empty drop zone is 100px so a row can be dropped in;
+                                            // while the skeleton stands in for the rows it is 0, or the
+                                            // skeleton would start 100px below the header.
+                                            minHeight: showTaskSkeleton ? 0 : 100,
+                                            minWidth: totalTableWidth,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            backgroundColor: snapshot.isDraggingOver
+                                                ? mode === "dark"
+                                                    ? "rgba(59, 130, 246, 0.08)"
+                                                    : "rgba(59, 130, 246, 0.04)"
+                                                : "transparent",
+                                            transition: "background-color 0.25s ease",
+                                        }}
+                                        onPointerLeave={onFamilyFocusPointerLeave}
+                                        onPointerOver={onFamilyFocusPointerOver}
+                                    >
+                                        <GridNavContext.Provider value={gridNav}>
+                                            <TaskTableRows
+                                                childrenByParent={childrenByParentEffective}
+                                                columns={columnsWithWidths}
+                                                customFieldDefs={customFieldDefs}
+                                                depthMap={depthMap}
+                                                displayRows={shownRows}
+                                                expandedRows={expandedRows}
+                                                familyKeyByRow={familyKeyByRow}
+                                                ghostIds={ghostInfo.ghostIds}
+                                                mode={mode}
+                                                myself={myself}
+                                                projectTags={quickAddProjectTags}
+                                                quickAddFieldRules={quickAddFieldRules}
+                                                quickAddParentId={quickAddParentId}
+                                                quickAddProjectTags={quickAddProjectTags}
+                                                resolveIsSelected={resolveIsSelected}
+                                                setMyself={setMyself}
+                                                socket={socket}
+                                                sprintNamesById={sprintNamesById}
+                                                teamMembers={teamMembers}
+                                                toggleExpand={toggleExpand}
+                                                useCM={useCM}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
+                                                useUISM={useUISM}
+                                                onDeleteTask={handleDeleteRow}
+                                                onOpenDiagram={openDiagram}
+                                                onQuickAddChild={openQuickAdd}
+                                                onQuickAddClose={closeQuickAdd}
+                                                onQuickAddDirtyChange={handleQuickAddDirtyChange}
+                                                onQuickAddSubmit={handleQuickAddSubmit}
+                                                onRequestPreview={requestPreview}
+                                                onRowUpdate={handleRowUpdate}
+                                            />
+                                        </GridNavContext.Provider>
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    </MilestoneSwitchGate>
 
                     {/* Empty state: show a spinner while we are still fetching tasks
                         (initial mount, team switch, or project switch). Once the load
@@ -1950,11 +1979,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         FAILED: then it is the error with Retry, because "No tasks to
                         display" would be a claim nothing checked (MIP-1298). Rows that are
                         cached but all filtered out stay an empty FILTER, not a failure. */}
-                    {displayRows.length === 0 && (
+                    {(displayRows.length === 0 || !scopeSettled) && (
                         <DataState
                             error={syncFailure.failed && useTM.allTasks.length === 0}
                             hasData={false}
-                            loading={useTM.isLoadingTasks || isFirstRead}
+                            loading={!scopeSettled || useTM.isLoadingTasks || isFirstRead}
                             empty={{
                                 body: t.tasks.table.emptyHint,
                                 "data-empty": "task-table",
