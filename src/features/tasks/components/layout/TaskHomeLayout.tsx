@@ -207,6 +207,7 @@ export const TaskHomeLayout = ({
             <ResizeHandle className="task-resize-handle" />
             <Panel defaultSize={50} id={"3"} maxSize={80} minSize={30} order={3}>
                 <Box sx={ls.mainPanel}>
+                    {/* TaskPreview decides read-only from the task's own project. */}
                     <TaskPreview
                         myself={myself}
                         setMyself={setMyself}
