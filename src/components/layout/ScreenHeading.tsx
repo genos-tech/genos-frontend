@@ -3,23 +3,13 @@ import { useLocation } from "react-router-dom";
 
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { useTranslation } from "../../i18n";
+import { visuallyHidden } from "../ui/a11y/visuallyHidden";
 
 const SECTION_KEYS = ["genos", "chat", "tasks", "notes", "plans", "integrations"] as const;
 type SectionKey = (typeof SECTION_KEYS)[number];
 
 const isSectionKey = (value: string | undefined): value is SectionKey =>
     SECTION_KEYS.includes(value as SectionKey);
-
-// Screen-reader-only: the name of the screen is for the heading list and the page title, the
-// sidebar already shows it to everyone else.
-const visuallyHidden = {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    overflow: "hidden",
-    clip: "rect(0 0 0 0)",
-    whiteSpace: "nowrap",
-} as const;
 
 /**
  * The first heading of the signed-in app's `<main>` and the document title (MIP-1826). Most

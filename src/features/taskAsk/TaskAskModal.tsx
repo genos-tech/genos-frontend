@@ -20,6 +20,7 @@ import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
 import { Box, Button } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
+import { visuallyHidden } from "../../components/ui/a11y/visuallyHidden";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../components/ui/feedback/Skeleton";
@@ -43,16 +44,6 @@ interface TaskAskModalProps {
      *  was refused, when there is one) as its draft. The window closes itself first. */
     onAskInGeneral?: (draft?: string) => void;
 }
-
-// Read by a screen reader with the New conversation button, never drawn.
-const visuallyHidden = {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    overflow: "hidden",
-    clip: "rect(0 0 0 0)",
-    whiteSpace: "nowrap",
-} as const;
 
 export const TaskAskModal = ({ state, onSelectSource, onAskInGeneral }: TaskAskModalProps) => {
     const theme = useTheme();

@@ -1,6 +1,7 @@
 import { forwardRef, Fragment } from "react";
 import { Checkbox, FormControl, FormHelperText, Link } from "@mui/joy";
 
+import { visuallyHidden } from "../../../components/ui/a11y/visuallyHidden";
 import { useTranslation } from "../../../i18n";
 import { PRIVACY_PATH, TERMS_PATH } from "../legalPaths";
 
@@ -15,16 +16,6 @@ interface SignUpConsentProps {
     /** Colour of the error message; legible on the card in both modes. */
     errorColor: string;
 }
-
-// Read by screen readers only: says the link leaves the form.
-const VISUALLY_HIDDEN = {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    overflow: "hidden",
-    clip: "rect(0 0 0 0)",
-    whiteSpace: "nowrap",
-} as const;
 
 /**
  * Splits the translated sentence around its two link slots, so each locale
@@ -66,7 +57,7 @@ export const SignUpConsent = forwardRef<HTMLInputElement, SignUpConsentProps>(
                 }}
             >
                 {label}
-                <span style={VISUALLY_HIDDEN}> {c.opensInNewTab}</span>
+                <span style={visuallyHidden}> {c.opensInNewTab}</span>
             </Link>
         );
 
