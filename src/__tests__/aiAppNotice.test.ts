@@ -150,6 +150,57 @@ describe("aiAppNotice wording", () => {
         expect(headline(meta({ verb: "status" }))).toBe("Claude Code made a change");
     });
 
+    it("words the risky kinds that are not a write of an item (MIP-2063)", () => {
+        const project = item({
+            kind: "project",
+            displayId: "WRD",
+            title: "Website Redesign",
+            url: "/workspace/tasks/project/1",
+        });
+        const note = item({ kind: "note", displayId: null, title: "" });
+        const cases: Array<[Record<string, unknown>, string]> = [
+            [
+                { verb: "sharing", kind: "note", action: "share", items: [note] },
+                "Claude Code shared a note with someone",
+            ],
+            [
+                { verb: "sharing", kind: "note", action: "unshare", items: [note] },
+                "Claude Code stopped sharing a note with someone",
+            ],
+            [
+                { verb: "members", kind: "project", action: "add", items: [project] },
+                "Claude Code added someone to project WRD Website Redesign",
+            ],
+            [
+                { verb: "members", kind: "project", action: "set_role", items: [project] },
+                "Claude Code changed a member's role in project WRD Website Redesign",
+            ],
+            [
+                { verb: "members", kind: "project", action: "remove", items: [project] },
+                "Claude Code removed someone from project WRD Website Redesign",
+            ],
+            [
+                { verb: "refused", kind: "burst", refused: 20, windowSeconds: 60, items: [] },
+                "Claude Code was refused many requests in a minute",
+            ],
+            [
+                { verb: "connected", kind: "app", action: "oauth", items: [] },
+                "Claude Code was connected to your account",
+            ],
+            [
+                { verb: "connected", kind: "app", action: "api_key", app: "CI bot", items: [] },
+                "CI bot API key was created",
+            ],
+        ];
+        for (const [over, want] of cases) {
+            expect(headline(meta(over)), want).toBe(want);
+        }
+        // A verb with a kind it does not know falls back, as every unknown does.
+        expect(headline(meta({ verb: "sharing", kind: "task" }))).toBe(
+            "Claude Code made a change"
+        );
+    });
+
     it("survives a malformed meta: no items, no count, no app", () => {
         const n = parseAiAppNotice({ aiApp: true, items: "nope", count: -2 });
         expect(n.items).toEqual([]);
@@ -264,17 +315,26 @@ describe("notification", () => {
             "ai_app_note_deleted",
             "ai_app_todo_created",
             "ai_app_todo_deleted",
+            "ai_app_note_sharing",
+            "ai_app_project_members",
+            "ai_app_refusal_burst",
+            "ai_app_app_connected",
         ]);
-        // Only the risky actions (deletes) start on (MIP-2009); the rest show in the Today card.
+        // Only the risky actions start on (MIP-2009, MIP-2063): the deletes, sharing and member
+        // changes, a refusal burst and a new app or key. The rest show in the Today card.
         expect(entries.filter((e) => e.defaultEnabled).map((e) => e.key)).toEqual([
             "ai_apps",
             "ai_app_comment_deleted",
             "ai_app_milestone_deleted",
             "ai_app_note_deleted",
             "ai_app_todo_deleted",
+            "ai_app_note_sharing",
+            "ai_app_project_members",
+            "ai_app_refusal_burst",
+            "ai_app_app_connected",
         ]);
-        // The lead only titles the group; the thirteen below it are the switches.
-        expect(entries.filter((e) => !("hideSubToggle" in e && e.hideSubToggle))).toHaveLength(13);
+        // The lead only titles the group; the seventeen below it are the switches.
+        expect(entries.filter((e) => !("hideSubToggle" in e && e.hideSubToggle))).toHaveLength(17);
         // And the old single and per-kind keys are gone.
         const keys = new Set<string>(NOTIFICATION_CATEGORIES.map((c) => c.key));
         for (const gone of ["ai_app", "ai_app_tasks", "ai_app_notes", "ai_app_todos"]) {
@@ -297,6 +357,10 @@ describe("notification", () => {
             ["deleted", "note", "ai_app_note_deleted"],
             ["created", "todo", "ai_app_todo_created"],
             ["deleted", "todo", "ai_app_todo_deleted"],
+            ["sharing", "note", "ai_app_note_sharing"],
+            ["members", "project", "ai_app_project_members"],
+            ["refused", "burst", "ai_app_refusal_burst"],
+            ["connected", "app", "ai_app_app_connected"],
         ];
         for (const [verb, kind, want] of cases) {
             expect(aiAppCategory(verb, kind), `${verb} ${kind}`).toBe(want);

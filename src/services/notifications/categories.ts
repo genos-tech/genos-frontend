@@ -192,9 +192,9 @@ export const NOTIFICATION_CATEGORIES = [
         // What the member's own AI apps did over MCP (MIP-1432, MIP-1452): the API files
         // a notice for the key's owner, because an MCP write runs AS them and so raises
         // none of the notifications another member's write would. Their own group (the
-        // `enable_ai_apps` column), whose master hard-gates a switch per ACTION (13; the table is genos-api's
+        // `enable_ai_apps` column), whose master hard-gates a switch per ACTION (17; the table is genos-api's
         // `services/ai_app_switches.py`, mirrored by `aiAppCategory`).
-        // Since MIP-2009 only the RISKY actions start on (the four deletes; the API also
+        // Since MIP-2009 only the RISKY actions start on (the four deletes, and since MIP-2063 note sharing, project members, a refusal burst and a new app or key; the API also
         // alerts for any call that changes 10+ items at once): the rest start off and show
         // in the Today card. Off stops the notice being made at all (feed row, toast and push): the API reads
         // the same keys (`mcp_notice._enabled`, `webpush_gating`). This lead entry only
@@ -297,6 +297,36 @@ export const NOTIFICATION_CATEGORIES = [
         group: "ai_apps",
         labelKey: "aiAppTodoDeleted",
         descriptionKey: "aiAppTodoDeleted",
+        defaultEnabled: true,
+    },
+    {
+        // The risky kinds that are not a write of an item (MIP-2063), on until turned off: who can
+        // open a note, who is in a project, a burst of refused requests, a new app or API key.
+        key: "ai_app_note_sharing",
+        group: "ai_apps",
+        labelKey: "aiAppNoteSharing",
+        descriptionKey: "aiAppNoteSharing",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_project_members",
+        group: "ai_apps",
+        labelKey: "aiAppProjectMembers",
+        descriptionKey: "aiAppProjectMembers",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_refusal_burst",
+        group: "ai_apps",
+        labelKey: "aiAppRefusalBurst",
+        descriptionKey: "aiAppRefusalBurst",
+        defaultEnabled: true,
+    },
+    {
+        key: "ai_app_app_connected",
+        group: "ai_apps",
+        labelKey: "aiAppAppConnected",
+        descriptionKey: "aiAppAppConnected",
         defaultEnabled: true,
     },
 ] as const satisfies readonly CategoryEntry[];

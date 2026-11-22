@@ -134,6 +134,10 @@ export const services = {
             aiAppNoteDeleted: "Note deleted",
             aiAppTodoCreated: "To-do added",
             aiAppTodoDeleted: "To-do deleted",
+            aiAppNoteSharing: "Note sharing changed",
+            aiAppProjectMembers: "Project members changed",
+            aiAppRefusalBurst: "Burst of refused requests",
+            aiAppAppConnected: "New app or API key connected",
         },
         // Email-channel category labels (emailCategories.ts). These use
         // the SERVER's coarser vocabulary — one "mention_task" where the
@@ -218,7 +222,7 @@ export const services = {
                     "When a reminder you set on a message comes due. Turning this off keeps the reminder in your inbox without a notification.",
                 todoReminder:
                     "When a reminder you set on a to-do comes due. Turning this off keeps the reminder in your inbox without a notification.",
-                aiApps: "What AI apps connected over MCP (Claude Code, Claude Desktop…) do for you. You are alerted by default only for risky actions: deletes and changes to 10 or more items at once. Turn on any other action to be alerted about it too; everything they do is also on your Today card.",
+                aiApps: "What AI apps connected over MCP (Claude Code, Claude Desktop…) do for you. You are alerted by default only for risky actions: deletes, changes to who can open a note or who is in a project, bursts of refused requests, a new app or API key connected, and changes to 10 or more items at once. Turn on any other action to be alerted about it too; everything they do is also on your Today card.",
                 aiAppNoteEdited:
                     "Off by default: an AI app can edit the same note many times in a row, and each edit is a notice.",
             },

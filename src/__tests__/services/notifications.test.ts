@@ -391,13 +391,18 @@ describe("NotificationManager", () => {
 
         it("every registry category is enabled by default, bar the named exceptions", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
-            // AI-app actions (MIP-2009): only the risky ones (deletes) start on; the rest show in the
+            // AI-app actions (MIP-2009, MIP-2063): only the risky ones (the deletes, sharing and
+            // member changes, a refusal burst, a new app or key) start on; the rest show in the
             // Today card. Mirrors genos-api `ai_app_switches.ON_BY_DEFAULT`.
             const aiAppOn = new Set([
                 "ai_app_comment_deleted",
                 "ai_app_milestone_deleted",
                 "ai_app_note_deleted",
                 "ai_app_todo_deleted",
+                "ai_app_note_sharing",
+                "ai_app_project_members",
+                "ai_app_refusal_burst",
+                "ai_app_app_connected",
             ]);
             for (const c of NOTIFICATION_CATEGORIES) {
                 const expected = c.key.startsWith("ai_app_") ? aiAppOn.has(c.key) : true;
