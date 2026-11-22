@@ -4,14 +4,12 @@
  *
  * To-do groups are keyed by the date the CLIENT says it is, and the server
  * takes that string verbatim, so this function's only job is to be exactly
- * one day after `getLocalCurrentDate`. The reason it exists at all is that
- * the pre-existing `getFormattedNDaysAfterDateStr(1)` formats through
- * `toISOString()` — UTC — which disagrees with `getLocalCurrentDate`'s local
- * fields for most of the day in most timezones. Those two are compared
- * directly here, since a regression would be silent: the to-do just lands on
- * the wrong day.
+ * one day after `getLocalCurrentDate`. `getFormattedNDaysAfterDateStr(1)`
+ * used to format in UTC and disagree with it; it is local now, and the two
+ * are compared here in forced zones, since a regression would be silent: the
+ * to-do just lands on the wrong day.
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
     getFormattedNDaysAfterDateStr,
@@ -72,22 +70,34 @@ describe("getLocalTomorrowDate", () => {
         }
     });
 
-    it("does not inherit the UTC skew of getFormattedNDaysAfterDateStr", () => {
-        // The trap this function was written to avoid, pinned at the hour
-        // where it actually bites. `getTimezoneOffset()` is (UTC - local) in
-        // minutes, so it's POSITIVE for zones behind UTC — there, late local
-        // evening is already the next day in UTC and the UTC-formatted helper
-        // returns today+2. For zones ahead of UTC it's the small hours, where
-        // UTC is still on yesterday and the helper returns today. The hour is
-        // chosen from the offset rather than hardcoded so this asserts the
-        // real divergence wherever CI runs; at UTC+0 there is none to find,
-        // and the case has nothing to say.
-        const offsetMinutes = new Date(2026, 5, 15).getTimezoneOffset();
-        if (offsetMinutes === 0) return;
-        freezeLocal(2026, 6, 15, offsetMinutes > 0 ? 23 : 0, 30);
+    // `getFormattedNDaysAfterDateStr` used to format through `toISOString()` (UTC) and
+    // disagreed with this function for most of the day outside UTC. It now formats through
+    // `localCalendarIso`, so the two must agree in every zone at every hour. The zone is
+    // forced per case with `process.env.TZ` (Node re-reads it on assignment), so this runs
+    // the same on a UTC CI box and on a Tokyo laptop instead of silently skipping at UTC+0.
+    describe.each(["UTC", "Asia/Tokyo", "America/Los_Angeles", "Pacific/Kiritimati"])(
+        "in %s",
+        (zone) => {
+            const originalTz = process.env.TZ;
+            beforeEach(() => {
+                process.env.TZ = zone;
+            });
+            afterEach(() => {
+                if (originalTz === undefined) delete process.env.TZ;
+                else process.env.TZ = originalTz;
+            });
 
-        expect(getLocalCurrentDate()).toBe("2026-06-15");
-        expect(getLocalTomorrowDate()).toBe("2026-06-16");
-        expect(getFormattedNDaysAfterDateStr(1)).not.toBe(getLocalTomorrowDate());
-    });
+            it("agrees with getFormattedNDaysAfterDateStr(1) at every hour", () => {
+                for (const hour of [0, 1, 9, 13, 22, 23]) {
+                    freezeLocal(2026, 6, 15, hour, 30);
+                    expect(getLocalCurrentDate(), `hour ${hour}`).toBe("2026-06-15");
+                    expect(getLocalTomorrowDate(), `hour ${hour}`).toBe("2026-06-16");
+                    expect(getFormattedNDaysAfterDateStr(1), `hour ${hour}`).toBe(
+                        getLocalTomorrowDate()
+                    );
+                    vi.useRealTimers();
+                }
+            });
+        }
+    );
 });
