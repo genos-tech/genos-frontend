@@ -3,6 +3,7 @@ import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
 import MarkEmailUnreadRoundedIcon from "@mui/icons-material/MarkEmailUnreadRounded";
 import { Box, IconButton } from "@mui/joy";
 
+import { visuallyHidden } from "../../../components/ui/a11y/visuallyHidden";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { toast } from "../../../components/ui/feedback/toastStore";
 import { useAuth } from "../../../context/authState";
@@ -11,16 +12,6 @@ import { focusRing, g } from "../../../theme/tokens";
 import type { InboxItemProps } from "../../../types/common";
 import { holdUnread, readKey, releaseHold } from "../readHold";
 import { markInboxRead, markInboxUnread } from "../services/markInboxRead";
-
-// Screen-reader-only text: the dot is the visual cue, this is the same cue for everyone else.
-const visuallyHidden = {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    overflow: "hidden",
-    clip: "rect(0 0 0 0)",
-    whiteSpace: "nowrap",
-} as const;
 
 /** The small accent dot that says "you haven't looked at this yet". */
 export const UnreadDot = () => {

@@ -4,6 +4,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import { Box, IconButton } from "@mui/joy";
 
+import { visuallyHidden } from "../../components/ui/a11y/visuallyHidden";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../i18n";
 import { focusRing, g, type } from "../../theme/tokens";
@@ -35,15 +36,6 @@ import { dueOf } from "./todaySummary";
  * dead link). There is no hover preview (the maintainer found it too much): everything that
  * matters is on the row itself. Rows are separated by a hairline divider, visible at rest.
  */
-
-const visuallyHidden = {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    overflow: "hidden",
-    clip: "rect(0 0 0 0)",
-    whiteSpace: "nowrap",
-} as const;
 
 export type TodayTaskRowProps = {
     task: BriefingTask;
