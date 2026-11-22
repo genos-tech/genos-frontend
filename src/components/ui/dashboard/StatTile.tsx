@@ -61,19 +61,24 @@ export const StatTile = ({
                     </Typography>
                 )}
             </Typography>
-            <Typography
-                component="span"
-                sx={{
-                    ...type("body-xs"),
-                    color: g.text.secondary,
-                    display: "-webkit-box",
-                    WebkitBoxOrient: "vertical",
-                    WebkitLineClamp: 2,
-                    overflow: "hidden",
-                }}
-            >
-                {label}
-            </Typography>
+            {typeof label === "string" ? (
+                <Typography
+                    component="span"
+                    sx={{
+                        ...type("body-xs"),
+                        color: g.text.secondary,
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        WebkitLineClamp: 2,
+                        overflow: "hidden",
+                    }}
+                >
+                    {label}
+                </Typography>
+            ) : (
+                // A node label (an agent chip) brings its own look and is not clamped.
+                <Box sx={{ mt: 0.25 }}>{label}</Box>
+            )}
         </>
     );
     const sx = {
@@ -109,9 +114,20 @@ export const StatTile = ({
     return <Box sx={sx}>{content}</Box>;
 };
 
-/** At most 5 tiles; a strip never holds two tiles that say the same thing. 2 columns on phone. */
-export const StatStrip = ({ children }: { children: ReactNode }) => (
+/**
+ * At most 5 tiles, except Agent activity's 6 (five agents and decisions); a strip never holds two
+ * tiles that say the same thing. 2 columns on phone. `ariaLabel` names the group for assistive tech.
+ */
+export const StatStrip = ({
+    children,
+    ariaLabel,
+}: {
+    children: ReactNode;
+    ariaLabel?: string;
+}) => (
     <Box
+        aria-label={ariaLabel}
+        role={ariaLabel ? "group" : undefined}
         sx={{
             display: "grid",
             gap: 1.5,

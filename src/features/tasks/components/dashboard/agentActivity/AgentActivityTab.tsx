@@ -101,11 +101,7 @@ export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, tea
 
     let body: ReactNode;
     if (view.status === "loading") {
-        body = (
-            <Box aria-label={a.states.loading} role="status">
-                <SkeletonLines lines={4} />
-            </Box>
-        );
+        body = <SkeletonLines label={a.states.loading} lines={4} />;
     } else if (view.status === "unavailable") {
         // 404: the API is not switched on for this workspace (or the viewer is outside the team).
         body = (

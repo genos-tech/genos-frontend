@@ -9,7 +9,7 @@ export const AgentSummaryRow = ({ totals }: { totals: AgentWorkTotals }) => {
     const nf = useNumberFormat();
     const a = t.tasks.dashboard.agentActivity;
     return (
-        <StatStrip>
+        <StatStrip ariaLabel={a.summary.changes}>
             {AGENT_KINDS.map((kind) => (
                 <StatTile
                     key={kind}

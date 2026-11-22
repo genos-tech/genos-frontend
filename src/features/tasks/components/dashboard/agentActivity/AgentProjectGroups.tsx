@@ -115,6 +115,8 @@ const AgentRow = ({
                 py: 1,
                 borderBottom: `1px solid ${g.border.subtle}`,
                 minWidth: 0,
+                // The card's own border closes the list.
+                "&:last-child": { borderBottom: "none" },
             }}
         >
             <Typography
