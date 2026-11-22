@@ -45,6 +45,12 @@ export const useRenderOnScroll = (total: number) => {
         if (nearEnd(el)) grow("chunk");
     }, [limit, total, grow]);
 
+    // Make sure the item at `index` is drawn (a row the preview opened, a row to focus).
+    const ensure = useCallback(
+        (index: number) => setChunks((c) => Math.max(c, Math.floor(index / RENDER_STEP))),
+        []
+    );
+
     const onScroll = useCallback(
         (event: React.UIEvent<HTMLElement>) => {
             if (limit < total && nearEnd(event.currentTarget)) grow("chunk");
@@ -52,5 +58,27 @@ export const useRenderOnScroll = (total: number) => {
         [limit, total, grow]
     );
 
-    return { limit, grow, onScroll, scroller };
+    return { limit, grow, ensure, onScroll, scroller };
+};
+
+/** Rows drawn below the focused row within which a key that moves down asks for more rows. */
+export const KEY_LOOKAHEAD_ROWS = 25;
+
+/**
+ * What a key in a grid whose rows are drawn in chunks must do BEFORE the grid moves the focus:
+ * `"all"` to draw every row (Ctrl/Cmd+End, Ctrl/Cmd+Down reach the last row), `"chunk"` when a
+ * key that moves down is pressed within KEY_LOOKAHEAD_ROWS of the last drawn row, else null.
+ * `rowIndex` is the focused row's place among the drawn rows (-1: not in a row).
+ */
+export const keyGrowth = (
+    key: string,
+    modified: boolean,
+    rowIndex: number,
+    drawnRows: number
+): "all" | "chunk" | null => {
+    if (modified && (key === "End" || key === "ArrowDown")) return "all";
+    if ((key === "ArrowDown" || key === "PageDown") && rowIndex >= 0) {
+        return rowIndex >= drawnRows - KEY_LOOKAHEAD_ROWS ? "chunk" : null;
+    }
+    return null;
 };

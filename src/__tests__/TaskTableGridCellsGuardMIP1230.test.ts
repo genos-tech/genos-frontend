@@ -144,7 +144,9 @@ describe("the task table's controls are grid cells", () => {
         expect(table).toContain('role="treegrid"');
         expect(table).toContain('role="columnheader"');
         expect(table).toContain('role="rowgroup"');
-        expect(table).toContain("ref={gridRef}");
+        // The grid controller's ref, merged with the render-on-scroll scroller ref (MIP-1985).
+        expect(table).toContain("ref={treegridRef}");
+        expect(table).toContain("gridRef(element);");
         expect(table).toContain("<GridNavContext.Provider");
     });
 
