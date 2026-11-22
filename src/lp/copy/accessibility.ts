@@ -34,7 +34,6 @@ export interface AccessibilityCopy {
 export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
     en: {
         title: "Accessibility",
-        // TODO(copy): MIP-1265 — Ken reads this whole statement before it goes live.
         lead: "This page says what Genos does for accessibility today, what we have not done yet, and which browsers and devices we support. It is written from what the code tests, not from what we intend.",
         lastReviewed: "Last checked against the code: 2026-11-22.",
         sections: {
@@ -44,7 +43,7 @@ export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
                     "Colour contrast in the app. Our design tokens are tested automatically in every colour theme, in light and dark mode. Primary and secondary text are held to 4.5:1, the WCAG 2.2 AA level. Tertiary text and focus rings are held to 3:1, a lower bar.",
                     "Keyboard focus. Buttons show a visible focus ring when you move through them with the keyboard. The ring does not appear when you click with a mouse.",
                     "Keyboard use of menus. Several menus and dialogs in the app are covered by tests that use the keyboard (for example, moving through a team menu and the keyboard shortcut list). This is not yet true of every menu.",
-                    "Page structure on the public pages. Each page has a header, a navigation region, a main region and a footer, and a link at the top of the page skips straight to the content.",
+                    "Page structure and skip link. Each public page has a header, a navigation region, a main region and a footer. A link at the top of each public page and in the app skips straight to the main content.",
                     "Narrow screens in the app. On the main screens (home, tasks, notes, inbox, chat and plans) no control is cut off down to a 320 px wide window. Narrower than that, the app scrolls sideways.",
                     "Pinch zoom. We do not disable zoom on phones.",
                     "Phone layout. Layouts are checked at a 390 px width and at a 1440 px desktop width.",
@@ -60,9 +59,8 @@ export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
                     "Tertiary text is held to 3:1, which is below the 4.5:1 that WCAG 2.2 AA needs for small text. A separate colour test covers the public pages and lists known failures: some caption text on the public pages is below 4.5:1.",
                     "Keyboard tests check that a key handler exists, not every path through every screen. Parts of the task graph and the drag-and-drop boards have not been checked with a keyboard.",
                     "Reduced motion is not applied everywhere. On the public pages only some animations respect it.",
-                    "The skip link is on the public pages only, not in the app.",
                     "We have not measured the app at 200% text size or with a large system font.",
-                    "We have not written a formal conformance report.",
+                    "We have not finished a conformance check against WCAG 2.2 AA. The screen reader pass is not done, and the narrow-screen checks cover some screens and the public header only. We will not claim conformance until these are done.",
                 ],
             },
             browsers: {
@@ -80,6 +78,8 @@ export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
                 body: [
                     "If something in Genos is hard for you to use, tell us by email. Say which page or screen, which browser or device, what you tried to do, and what happened. A screenshot helps. Please do not send passwords or API keys.",
                     "We read these emails. We do not promise a reply time on this page.",
+                    // TODO(copy): MIP-1831 — the report-on-request sentence is new.
+                    "We can send you our accessibility conformance report on request, by email.",
                 ],
             },
         },
@@ -91,7 +91,6 @@ export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
     },
     ja: {
         title: "アクセシビリティ",
-        // TODO(copy): MIP-1265 — Ken reads this whole statement before it goes live.
         lead: "このページでは、Genos が現在行っているアクセシビリティの取り組み、まだできていないこと、対応しているブラウザーと端末をご案内します。記述は、目標ではなく、コードでテストしている内容にもとづいています。",
         lastReviewed: "コードとの照合日：2026-11-22。",
         sections: {
@@ -101,7 +100,7 @@ export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
                     "アプリの色のコントラスト。デザインのトークンは、すべてのカラーテーマでライトとダークの両方を、自動テストで確認しています。主要な文字と補助的な文字は 4.5:1 で、WCAG 2.2 AA の水準です。第三の文字とフォーカスリングは、それより低い 3:1 です。",
                     "キーボードのフォーカス。キーボードで移動すると、ボタンに見えるフォーカスリングが出ます。マウスでクリックしたときには出ません。",
                     "メニューのキーボード操作。アプリの一部のメニューとダイアログは、キーボードを使うテストで確認しています（例：チームのメニューとキーボードショートカットの一覧での移動）。まだすべてのメニューが対象ではありません。",
-                    "公開ページの構造。各ページにはヘッダー、ナビゲーション、メインの領域、フッターがあります。ページ上部のリンクで、本文へ直接移動できます。",
+                    "ページの構造とスキップリンク。公開ページの各ページにはヘッダー、ナビゲーション、メインの領域、フッターがあります。公開ページとアプリの上部にあるリンクで、本文へ直接移動できます。",
                     "アプリの狭い画面での表示。主な画面（ホーム、タスク、ノート、インボックス、チャット、プラン）は、幅 320 px まで、操作する部分が切れずに表示されます。それより狭い場合は、アプリが横にスクロールします。",
                     "ピンチズーム。スマートフォンでも、ズームを無効にしていません。",
                     "スマートフォンでの表示。幅 390 px と、デスクトップ幅 1440 px で表示を確認しています。",
@@ -117,9 +116,8 @@ export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
                     "第三の文字は 3:1 を基準にしていますが、これは WCAG 2.2 AA が小さな文字に求める 4.5:1 より低い値です。公開ページの色には別のテストがあり、既知の不合格を一覧にしています。公開ページの一部の小さな注記文字は 4.5:1 に届いていません。",
                     "キーボードのテストは、キーの処理があるかを確認するもので、すべての画面のすべての操作経路を確認するものではありません。タスクのグラフや、ドラッグで並べ替える画面の一部は、キーボードでの確認がまだです。",
                     "視覚効果の軽減は、すべての場所には適用されていません。公開ページでは、一部のアニメーションだけが対応しています。",
-                    "スキップリンクは公開ページにだけあり、アプリにはありません。",
                     "文字サイズ 200%、または大きなシステムフォントでの確認は、まだ行っていません。",
-                    "正式な適合性レポートはまだ作成していません。",
+                    "WCAG 2.2 AA に対する適合性の確認は、まだ終えていません。スクリーンリーダーでの確認は行っておらず、狭い画面の確認は一部の画面と公開ページのヘッダーだけです。確認が終わるまで、適合しているとは主張しません。",
                 ],
             },
             browsers: {
@@ -137,6 +135,8 @@ export const ACCESSIBILITY_COPY: Record<Lang, AccessibilityCopy> = {
                 body: [
                     "Genos で使いにくいところがあれば、メールでお知らせください。どのページや画面か、どのブラウザーや端末か、何をしようとして、何が起きたかを書いてください。スクリーンショットがあると助かります。パスワードや API キーは送らないでください。",
                     "いただいたメールは読んでいます。このページでは、返信までの時間はお約束しません。",
+                    // TODO(copy): MIP-1831 — the report-on-request sentence is new.
+                    "適合性レポートは、メールでご依頼いただければお送りします。",
                 ],
             },
         },

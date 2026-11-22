@@ -32,6 +32,7 @@ export const MORE_MENU_GROUPS = [
             "newTask",
             "newSubTask",
             "newNote",
+            "newNoteFromTemplate",
             "newChildNote",
             "newProject",
             "newMilestone",

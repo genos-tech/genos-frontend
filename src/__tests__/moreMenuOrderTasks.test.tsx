@@ -82,6 +82,8 @@ describe("task preview menu", () => {
             m.manageTags,
             en.services.notifications.muteButton.mute,
             m.deleteTask,
+            // MIP-1584: the real delete sits last, after the soft one.
+            en.common.forceDelete.menu,
         ]);
     });
 });
@@ -137,7 +139,7 @@ describe("task preview menu: convert to milestone", () => {
         expect(labels.indexOf(m.convertToMilestone)).toBeLessThan(
             labels.indexOf(en.services.notifications.muteButton.mute)
         );
-        expect(labels[labels.length - 1]).toBe(m.deleteTask);
+        expect(labels.slice(-2)).toEqual([m.deleteTask, en.common.forceDelete.menu]);
     });
 
     it("is not offered for a sub-task", () => {

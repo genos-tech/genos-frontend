@@ -34,6 +34,8 @@ import { folderTagChipSx } from "../modals/ModalTeamFolderTags";
 // modal instance serves every folder row, same as My Notes.
 export type TeamFolderActionHandlers = {
     onCreateNoteHere: (folderId: number) => void;
+    // MIP-1697: the "new note from a template" rows that follow "New note here".
+    templateMenuItems?: (folderId: number) => MoreMenuItem[];
     onImportNoteHere: (folderId: number) => void;
     onExportFolder: (folder: TeamNoteFolderTreeNode) => void;
     onCreateSubfolder: (folder: TeamNoteFolderTreeNode) => void;
@@ -106,6 +108,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                 icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
                 onClick: () => actions.onCreateNoteHere(folder.folderId),
             },
+            ...(actions.templateMenuItems?.(folder.folderId) ?? []),
             {
                 id: "import-note-here",
                 kind: "import",
@@ -192,8 +195,8 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
     }
 
     return (
-        <Box>
-            <ListItem sx={{ p: 0 }} nested>
+        <Box role="none">
+            <ListItem component="li" sx={{ p: 0 }} nested>
                 {/* Passive markers, in the row's end: whose folder, its tags,
                    and its visibility.
                    Keep the "..." trigger visible while its portal menu is open. */}
@@ -304,7 +307,7 @@ function TeamNoteFolderTreeComponent(props: TeamNoteFolderTreeProps) {
                 />
 
                 {isExpanded && (
-                    <List sx={navNestedListSx}>
+                    <List component="div" role="list" sx={navNestedListSx}>
                         {folder.childFolders
                             .filter((c) => !visibleFolderIds || visibleFolderIds.has(c.folderId))
                             .map((child) => (

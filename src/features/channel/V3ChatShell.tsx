@@ -212,7 +212,7 @@ export function V3ChatShell({ myself, useNM }: V3ChatShellProps = {}) {
             }}
         >
             <ChannelListV3 selectedChannelId={selected} onSelect={setSelected} />
-            <main style={{ flex: 1, display: "flex", minWidth: 0 }}>
+            <div style={{ flex: 1, display: "flex", minWidth: 0 }}>
                 {selected ? (
                     <>
                         <div
@@ -252,7 +252,7 @@ export function V3ChatShell({ myself, useNM }: V3ChatShellProps = {}) {
                         Select a channel from the left.
                     </div>
                 )}
-            </main>
+            </div>
             {importDialog}
         </div>
     );

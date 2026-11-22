@@ -9,6 +9,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { cssOf } from "./utils/cssOf";
+
 import { FavoritesListItem } from "../features/tasks/components/sidebar/FavoritesListItem";
 import { MilestonesListItem } from "../features/tasks/components/sidebar/projects_subs/MilestonesListItem";
 import type { Milestone, MilestoneFavorite } from "../features/tasks/sprint-milestone/types";
@@ -116,6 +118,19 @@ const order = () =>
         .map((li) => Number(li.getAttribute("data-testid")?.replace("favorite-milestone-", "")));
 const rowButton = (title: string) =>
     screen.getByText(title).closest(".MuiListItemButton-root") as HTMLElement;
+
+describe("a favorite row's remove star (MIP-1915)", () => {
+    it("overlays the row's end instead of reserving room there, so the title uses the full width", () => {
+        mountFavorites({ favorites: [fav(1, 1, "Alpha launch")] });
+        const star = screen.getByRole("button", { name: /Remove from favorites/i });
+        const css = cssOf(star.parentElement as Element).replace(/\s+/g, " ");
+        // Out of flow: no width spent on the star while it is hidden.
+        expect(css).toContain("position: absolute");
+        expect(cssOf(rowButton("Alpha launch")).replace(/\s+/g, " ")).toMatch(
+            /padding-inline-end: calc\(var\(--nav-pad-end, 8px\) \+ var\(--nav-actions-reserve, 0px\)\)/
+        );
+    });
+});
 
 describe("the Favorites folder", () => {
     it("is not there when there are no favorites", () => {

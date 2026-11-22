@@ -5,6 +5,7 @@ import {
     type ProjectDeletedDetail,
 } from "../../features/agentQA/approvedProjectWrites";
 import { refreshArchivedProjects } from "../../features/archive/archiveApi";
+import { getArchiveSnapshot } from "../../features/archive/archiveState";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { isProjectGoneError } from "../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
@@ -133,7 +134,11 @@ export const useProjectManagement = (
         syncStatus.report("projects", true);
         // The archived projects sit in their own section (MIP-1693). Read beside the active list,
         // never awaited: a slow archive read must not hold the projects up.
-        void refreshArchivedProjects(myself, accessToken, loadedTeamProjects);
+        const archivedRead = refreshArchivedProjects(
+            myself,
+            accessToken,
+            loadedTeamProjects
+        ).catch((error: unknown) => console.error("Failed to read the archived projects", error));
         // A project the list no longer holds (deleted, left, access lost) has no
         // task load worth retrying: its failure must not hold the banner up for a
         // stale `lastProjectId` (MIP-1323).
@@ -158,6 +163,18 @@ export const useProjectManagement = (
             targetProjectId !== -1 &&
             !loadedTeamProjects.some((p) => p.projectId === targetProjectId)
         ) {
+            // The active list never holds an archived project, which stays openable for
+            // reading (MIP-1920): only once the archived read has answered is the id stale.
+            await archivedRead;
+            const archived = getArchiveSnapshot().archivedProjects.find(
+                (p) => p.projectId === targetProjectId
+            );
+            if (archived) {
+                setTeamProjects([...loadedTeamProjects]);
+                setCurrentProject(toCurrentProject(archived));
+                await loadPickedProjectTasks(archived.projectId);
+                return;
+            }
             forgetLastProject(targetProjectId);
             targetProjectId = -1;
         }
