@@ -342,8 +342,8 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             const persistedAttachments: AttachmentFileProps[] =
                 uploadAttachments && uploadAttachments.length > 0
                     ? uploadAttachments
-                          .filter((a: any) => a.attachment_id)
-                          .map((a: any) => ({
+                          .filter((a) => a.attachment_id)
+                          .map((a) => ({
                               attachment_id: a.attachment_id,
                               file: a.attached_file,
                               file_base64: a.file_base64,

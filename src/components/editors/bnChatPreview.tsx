@@ -127,7 +127,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             const blockContainer = fileWrapper.closest("[data-id]");
             const blockId = blockContainer?.getAttribute("data-id");
             if (blockId) {
-                const block = editor.document.find((b: any) => b.id === blockId);
+                const block = editor.document.find((b: { id: string }) => b.id === blockId);
                 if (block && block.type === "file" && block.props?.url) {
                     downloadFile(block.props.url, block.props.name || undefined);
                 }

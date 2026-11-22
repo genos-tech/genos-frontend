@@ -19,12 +19,22 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
  * Throws on the first non-2xx response so the caller can decide how to
  * surface the failure.
  */
+/** Row the attachment endpoint returns (fields we read). */
+export type UploadedTaskAttachment = {
+    attachment_id: number;
+    // Typed File to match AttachmentFileProps.file (a stored path string at runtime).
+    attached_file: File;
+    file_base64?: string;
+    name: string;
+    attached_type: string;
+};
+
 export const uploadTaskAttachments = async (
     taskId: number,
     attachments: AttachmentFileProps[],
     accessToken: string | null
-): Promise<any[]> => {
-    const uploaded: any[] = [];
+): Promise<UploadedTaskAttachment[]> => {
+    const uploaded: UploadedTaskAttachment[] = [];
     // The tier ceiling, resolved once for the whole batch (shared cache,
     // so this is usually a cache read). This path had NO size check at
     // all: an oversize attachment was uploaded in full, 413'd by the

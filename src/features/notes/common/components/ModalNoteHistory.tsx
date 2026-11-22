@@ -59,10 +59,16 @@ const relTime = (iso: string, t: Messages, locale: Locale): string => {
 // Walk a BlockNote document and pull plain text out. Used for the
 // modal preview — we don't render the rich editor here, just enough
 // content so the user can identify what they're about to restore.
-const extractPlainText = (body: any): string => {
+type HistoryNode =
+    | HistoryNode[]
+    | { content?: string | ({ text?: unknown } | string | null)[]; children?: HistoryNode[] }
+    | null
+    | undefined;
+
+const extractPlainText = (body: unknown): string => {
     if (!Array.isArray(body)) return "";
     const lines: string[] = [];
-    const visit = (node: any) => {
+    const visit = (node: HistoryNode): void => {
         if (!node) return;
         if (Array.isArray(node)) {
             node.forEach(visit);
@@ -81,7 +87,7 @@ const extractPlainText = (body: any): string => {
             node.children.forEach(visit);
         }
     };
-    visit(body);
+    visit(body as HistoryNode);
     return lines.filter((l) => l.trim().length > 0).join("\n");
 };
 

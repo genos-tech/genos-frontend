@@ -45,7 +45,12 @@ const django_url = import.meta.env.VITE_DJANGO_URL;
 // height can grow with content. Pure + module-level so it can seed the
 // initial height synchronously from the `body` prop (see BnTaskPreview) —
 // the collaborative `editor.document` is empty until Yjs hydrates.
-const countLines = (nodes: any[]): number => {
+type CountableNode = {
+    type?: string;
+    children?: CountableNode[];
+    content?: { text?: string }[];
+};
+const countLines = (nodes: CountableNode[]): number => {
     let count = 0;
     for (const node of nodes) {
         count += 1; // count the current node itself

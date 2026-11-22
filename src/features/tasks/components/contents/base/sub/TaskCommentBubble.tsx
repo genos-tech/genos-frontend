@@ -72,6 +72,12 @@ import {
 import { emitTaskTouched } from "../../../../services/taskEvents";
 import type { ViaApp, ViaKind } from "../../../../utils/viaSource";
 
+type BodyBlock = {
+    type?: string;
+    content?: unknown;
+    children?: BodyBlock[];
+};
+
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
     socket: Socket | null;
@@ -351,9 +357,9 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     // comment is empty only when NO block carries anything: media
     // blocks ARE content, table blocks carry object content, nested
     // children are walked.
-    const blockHasContent = (block: any): boolean => {
+    const blockHasContent = (block: BodyBlock | null | undefined): boolean => {
         if (!block) return false;
-        if (["image", "file", "video", "audio"].includes(block.type)) return true;
+        if (["image", "file", "video", "audio"].includes(block.type as string)) return true;
         if (Array.isArray(block.content) ? block.content.length > 0 : block.content != null) {
             return true;
         }

@@ -56,7 +56,7 @@ export const useScrollToBottomOnChatChange = (
     currentMainChatId: number,
     visibleRangeRef: React.RefObject<{ startIndex: number; endIndex: number }>,
     maxIndex: number,
-    indexMap?: { [k: string]: any },
+    indexMap?: Record<string, number>,
     moveToSpecificIndex?: string,
     notMove?: boolean,
     firstUnreadIndex?: number | null
