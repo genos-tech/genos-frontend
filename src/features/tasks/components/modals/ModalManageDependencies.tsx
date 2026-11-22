@@ -179,10 +179,8 @@ export const ModalManageDependencies = ({
     const depsT = t.tasks.dependencies;
 
     const taskId = taskContent.id ?? null;
-    const deps = (taskId != null && useTM.taskDependencies[taskId]) || {
-        blocking: [],
-        blockedBy: [],
-    };
+    const taskDeps = taskId != null ? useTM.taskDependencies[taskId] : undefined;
+    const deps = useMemo(() => taskDeps || { blocking: [], blockedBy: [] }, [taskDeps]);
 
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);

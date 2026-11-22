@@ -63,7 +63,8 @@ export function useChannel(channelId: string): UseChannelResult {
     );
 
     const channel = snapshot.channels.get(channelId) ?? null;
-    const allMessages = snapshot.messagesByChannel.get(channelId) ?? [];
+    const channelMessages = snapshot.messagesByChannel.get(channelId);
+    const allMessages = useMemo(() => channelMessages ?? [], [channelMessages]);
     const readCursor = snapshot.cursorsByChannel.get(channelId) ?? null;
     const retention = snapshot.retentionByChannel.get(channelId) ?? null;
     const retentionCutoff = retention?.cutoff;

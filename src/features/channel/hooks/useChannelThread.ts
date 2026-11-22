@@ -62,7 +62,8 @@ export function useChannelThread(
         channelService.getSnapshot
     );
 
-    const allMessages = snapshot.messagesByChannel.get(channelId) ?? [];
+    const channelMessages = snapshot.messagesByChannel.get(channelId);
+    const allMessages = useMemo(() => channelMessages ?? [], [channelMessages]);
 
     const { root, replies } = useMemo(() => {
         let foundRoot: Message | null = null;

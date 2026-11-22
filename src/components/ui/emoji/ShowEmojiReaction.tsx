@@ -55,13 +55,8 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);
         setUniqueReactionEmojiCount(_groupedReactions.length);
-    }, []);
-
-    useEffect(() => {
-        const _groupedReactions = groupEmojis(reactions);
-        setUniqueReactionEmojiCount(_groupedReactions.length);
         setGroupedReactions(_groupedReactions);
-    }, [reactions]);
+    }, [reactions, setUniqueReactionEmojiCount]);
 
     const handleAddReaction = (selectedEmoji: string) => {
         // v3 cutover. The legacy multi-emit `message_reaction` path (one

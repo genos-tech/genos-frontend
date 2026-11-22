@@ -97,7 +97,7 @@ export const GifPicker = ({
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [showGifPicker]);
+    }, [showGifPicker, setShowGifPicker]);
 
     const pickerContent = showGifPicker && (
         <div

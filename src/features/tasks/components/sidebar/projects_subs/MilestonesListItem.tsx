@@ -227,7 +227,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
 }: Props) {
     const { t } = useTranslation();
 
-    const sprints = useSM.projectSprints[currentProjectId] ?? [];
+    const projectSprints = useSM.projectSprints[currentProjectId];
+    const sprints = useMemo(() => projectSprints ?? [], [projectSprints]);
 
     const milestones: Milestone[] = useMemo(
         () =>
@@ -264,7 +265,8 @@ export const MilestonesListItem = memo(function MilestonesListItem({
         void loadFoldersForProject(currentProjectId);
     }, [loadFoldersForProject, currentProjectId, tsLastMilestonesLoaded]);
 
-    const folders: MilestoneFolder[] = useSM.projectFolders[currentProjectId] ?? [];
+    const projectFolders = useSM.projectFolders[currentProjectId];
+    const folders: MilestoneFolder[] = useMemo(() => projectFolders ?? [], [projectFolders]);
     // Plain grouping of the VISIBLE milestones. A Closed milestone whose sprint
     // ended is not in `milestones`, so it appears only under Past milestones
     // (and keeps its folder for if it comes back).

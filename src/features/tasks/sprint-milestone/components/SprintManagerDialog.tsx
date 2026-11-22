@@ -245,7 +245,8 @@ export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) 
     const [creating, setCreating] = useState(false);
 
     const today = todayIso();
-    const sprints = useSM.projectSprints[projectId] ?? [];
+    const projectSprints = useSM.projectSprints[projectId];
+    const sprints = useMemo(() => projectSprints ?? [], [projectSprints]);
 
     const grouped = useMemo(() => {
         const out: Record<"past" | "current" | "upcoming", Sprint[]> = {
