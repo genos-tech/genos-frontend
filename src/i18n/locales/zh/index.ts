@@ -6429,7 +6429,6 @@ export const zh: DeepPartial<Messages> = {
                 sinceFirst: "今天以来的变化",
                 since: "自 {time} 以来的变化",
                 refresh: "刷新",
-                openToday: "打开“今天”",
                 agents: {
                     title: "你的智能体今天",
                     sessions: "会话",
@@ -6453,7 +6452,6 @@ export const zh: DeepPartial<Messages> = {
                 mentionIn: "你在{where}中被提及",
                 mentionChat: "聊天",
                 mentionNote: "笔记",
-                moreCount: "还有 {n} 项",
                 noLink: "无法从此处打开",
                 // TODO(copy): MIP-1936 draft wording for a native reader (the briefing's own sentences).
                 change: {

@@ -143,11 +143,12 @@ describe("the dashboard tab in the address (MIP-1966, MIP-1963)", () => {
 });
 
 describe("Open Today (MIP-1966)", () => {
-    it("the Genos page links to the Today tab, not the bare Tasks route", async () => {
+    it("the Genos page shows no Today card (MIP-2094)", async () => {
         const { readFileSync } = await import("node:fs");
         const { join } = await import("node:path");
         const src = readFileSync(join(__dirname, "../features/genos/GenosHome.tsx"), "utf8");
-        expect(src).toContain('requestAppNavigate("/workspace/tasks?view=today")');
+        expect(src).not.toContain("TodayBriefing");
+        expect(src).not.toContain("useBriefingToday");
     });
 
     it("the Tasks home opens the dashboard for a view link", async () => {

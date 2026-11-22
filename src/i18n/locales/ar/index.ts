@@ -3486,7 +3486,6 @@ export const ar: DeepPartial<Messages> = {
                 sinceFirst: "تغييرات اليوم حتى الآن",
                 since: "تغييرات منذ {time}",
                 refresh: "تحديث",
-                openToday: "فتح اليوم",
                 agents: {
                     title: "وكلاؤك اليوم",
                     sessions: "جلسات",
@@ -3510,7 +3509,6 @@ export const ar: DeepPartial<Messages> = {
                 mentionIn: "تمت الإشارة إليك في {where}",
                 mentionChat: "محادثة",
                 mentionNote: "ملاحظة",
-                moreCount: "+{n} أخرى",
                 noLink: "لا يمكن فتحه من هنا",
                 // TODO(copy): MIP-1936 draft wording for a native reader (the briefing's own sentences).
                 change: {

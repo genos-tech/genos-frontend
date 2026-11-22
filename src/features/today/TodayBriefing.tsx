@@ -1,7 +1,7 @@
 import { ReactNode, useMemo } from "react";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
-import { Box, Button, IconButton, Typography } from "@mui/joy";
+import { Box, IconButton, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
@@ -26,21 +26,13 @@ import { TodaySummary } from "./TodaySummary";
 import { TodayTaskRow } from "./TodayTaskRow";
 import { BriefingTodayView } from "./useBriefingToday";
 
-/** `page` is the Tasks dashboard tab; `card` is the compact block on the Genos page. */
-type Variant = "page" | "card";
-
 type Props = {
     /** Page only: "Mark done" / "Move to tomorrow" on the member's own rows (MIP-1992). */
     onAction?: (task: BriefingTask, action: TodayAction) => void;
     view: BriefingTodayView;
-    variant?: Variant;
-    /** Card only: where "Open Today" goes (the dashboard tab). */
-    onOpenToday?: () => void;
     /** Page only: one more block under the day's summary (the "Your agents today" card, MIP-2004). */
     extra?: ReactNode;
 };
-
-const CARD_ROWS = 3;
 
 type RowProps = {
     href: string | null;
@@ -179,14 +171,6 @@ const withProjectName = (
                   projects.find((p) => p.projectId === task.projectId)?.projectName ?? null,
           };
 
-const taskMeta = (task: BriefingTask, a: TodayCopy): string => {
-    const days = task.daysUntilDue;
-    if (days == null) return "";
-    if (days === 0) return a.dueToday;
-    if (days < 0) return days === -1 ? a.overdueByOne : fmt(a.overdueBy, { n: -days });
-    return "";
-};
-
 type TodayCopy = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["today"];
 
 const mentionWhere = (m: BriefingMention, a: TodayCopy): string => {
@@ -194,8 +178,6 @@ const mentionWhere = (m: BriefingMention, a: TodayCopy): string => {
     if (m.source === "note") return m.title || a.mentionNote;
     return [m.displayId, m.title].filter(Boolean).join(" ");
 };
-
-const dueCountOf = (d: BriefingToday): number => d.overdueCount + d.dueTodayCount;
 
 const total = (d: BriefingToday): number =>
     d.overdueCount +
@@ -206,10 +188,9 @@ const total = (d: BriefingToday): number =>
     d.blocked.length +
     d.delegatedTotal;
 
-export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction, extra }: Props) => {
+export const TodayBriefing = ({ view, onAction, extra }: Props) => {
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.today;
-    const card = variant === "card";
     const open = (href: string) => requestAppNavigate(href);
     const { allChats, projects } = useHashMentionData();
     const avatars = useMemo(() => projectAvatarSrcMap(allChats), [allChats]);
@@ -217,7 +198,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction, e
     const header = (
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, minWidth: 0 }}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography component="h2" level={card ? "title-md" : "h4"} sx={{ m: 0 }}>
+                <Typography component="h2" level="h4" sx={{ m: 0 }}>
                     {a.heading}
                 </Typography>
                 <Typography level="body-sm" sx={{ color: g.text.secondary }}>
@@ -259,61 +240,6 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction, e
         );
     } else {
         const d = view.data;
-        if (card) {
-            // One short list across the sections, most pressing first: it sits above the Genos
-            // page's input, so it must stay small on a phone.
-            const secs = a.sections;
-            const rows: RowProps[] = [
-                ...[...d.overdue, ...d.dueToday].map((task) => ({
-                    href: taskHref(task),
-                    primary: `${task.displayId} ${task.title}`,
-                    secondary: `${secs.due} · ${taskMeta(task, a)}`,
-                    onOpen: open,
-                    noLink: a.noLink,
-                })),
-                ...d.mentions.map((m) => ({
-                    href: mentionHref(m),
-                    primary: fmt(a.mentionIn, { where: mentionWhere(m, a) }),
-                    secondary: `${secs.waiting} · ${m.from ?? m.by ?? ""}`,
-                    onOpen: open,
-                    noLink: a.noLink,
-                })),
-                ...d.changed.items.map((c) => ({
-                    href: changeHref(c),
-                    primary: [c.displayId, c.title].filter(Boolean).join(" "),
-                    secondary: `${secs.changed} · ${changeLine(c, a)}`,
-                    onOpen: open,
-                    noLink: a.noLink,
-                })),
-            ];
-            const all = dueCountOf(d) + d.requests.length + d.mentions.length + d.changed.total;
-            const shown = rows.slice(0, CARD_ROWS);
-            return (
-                <Box
-                    data-testid="today-card"
-                    sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}
-                >
-                    {header}
-                    <Box component="ul" sx={{ m: 0, p: 0 }}>
-                        {shown.map((r, i) => (
-                            <Row key={i} {...r} />
-                        ))}
-                    </Box>
-                    {all > shown.length ? (
-                        <Typography level="body-xs" sx={{ px: 1.25, color: g.text.secondary }}>
-                            {fmt(a.moreCount, { n: all - shown.length })}
-                        </Typography>
-                    ) : null}
-                    {onOpenToday ? (
-                        <Box>
-                            <Button size="sm" variant="plain" onClick={onOpenToday}>
-                                {a.openToday}
-                            </Button>
-                        </Box>
-                    ) : null}
-                </Box>
-            );
-        }
         const waitingCount = d.requests.length + d.mentions.length;
         const blockedBy = new Map(d.blocked.map((b) => [b.taskId, b.waitingFor]));
         // Actions only where the task is the member's own to finish: due and "look at these
@@ -524,18 +450,11 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction, e
 
     return (
         <Box
-            data-testid={card ? "today-card" : "today-page"}
+            data-testid="today-page"
             sx={{ display: "flex", flexDirection: "column", gap: 1.5, minWidth: 0 }}
         >
             {header}
             {body}
-            {card && onOpenToday ? (
-                <Box>
-                    <Button size="sm" variant="plain" onClick={onOpenToday}>
-                        {a.openToday}
-                    </Button>
-                </Box>
-            ) : null}
         </Box>
     );
 };

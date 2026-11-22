@@ -30,18 +30,13 @@ import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useIsDemoUser } from "../../hooks/common/useIsDemoUser";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useTranslation } from "../../i18n";
-import { requestAppNavigate } from "../../services/appNavigate";
 import type { MentionGroup } from "../../services/mentionGroupsApi";
 import { purplePalette } from "../../theme/purplePalette";
-import { g } from "../../theme/tokens";
 import type { UserProps } from "../../types/admin";
 import type { ProjectProps } from "../../types/tasks";
 import { hasAskContent, SpotlightContent } from "../spotlight/SpotlightContent";
 import type { SpotlightResult } from "../spotlight/types";
 import type { UseSpotlightReturn } from "../spotlight/useSpotlight";
-import { hasBriefingNews } from "../today/briefingToday";
-import { TodayBriefing } from "../today/TodayBriefing";
-import { useBriefingToday } from "../today/useBriefingToday";
 import { GenosSessionSidebar } from "./GenosSessionSidebar";
 import { useGenosSessions } from "./useGenosSessions";
 
@@ -129,11 +124,6 @@ export const GenosHome = ({
         },
         [spotlight]
     );
-
-    // "What changed, what waits on me" across projects (MIP-1696): one request on arrival, shown
-    // only when there is something, and only before a conversation starts.
-    const todayView = useBriefingToday(accessToken, teamId, userId, true, false);
-    const openToday = useCallback(() => requestAppNavigate("/workspace/tasks?view=today"), []);
 
     // "Your AI app hasn't recorded anything in N days" (MIP-2022): one quiet line, never for the
     // demo account and only before a conversation starts.
@@ -361,28 +351,6 @@ export const GenosHome = ({
                             </Typography>
                         </Box>
                     )}
-                    {!conversationActive &&
-                        todayView.status === "ready" &&
-                        hasBriefingNews(todayView.data) && (
-                            <Box
-                                sx={{
-                                    alignSelf: "center",
-                                    width: "100%",
-                                    maxWidth: 640,
-                                    mb: 2,
-                                    p: 1.5,
-                                    borderRadius: g.radius.md,
-                                    border: `1px solid ${g.border.subtle}`,
-                                    bgcolor: g.surface.default,
-                                }}
-                            >
-                                <TodayBriefing
-                                    variant="card"
-                                    view={todayView}
-                                    onOpenToday={openToday}
-                                />
-                            </Box>
-                        )}
                     {!conversationActive && quiet?.quiet && (
                         <Box sx={{ alignSelf: "center", width: "100%", maxWidth: 640, mb: 2 }}>
                             <AgentQuietNotice

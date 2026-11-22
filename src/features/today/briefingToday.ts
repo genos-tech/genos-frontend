@@ -292,8 +292,3 @@ export const sinceForView = (userId: string, teamId: string, now = Date.now()): 
 export const markLooked = (userId: string, teamId: string, now = Date.now()): void => {
     write(() => window.localStorage, lastLookedKey(userId, teamId), new Date(now).toISOString());
 };
-
-/** Whether the answer has anything to show (the Genos page shows its card only then). */
-export const hasBriefingNews = (d: BriefingToday | null): boolean =>
-    d != null &&
-    d.overdueCount + d.dueTodayCount + d.requests.length + d.mentions.length + d.changed.total > 0;
