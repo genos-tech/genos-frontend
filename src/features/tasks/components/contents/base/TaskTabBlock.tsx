@@ -1186,6 +1186,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             <TaskActivityFeed
                                 activities={taskActivities}
                                 allTasks={useTM.allTasks}
+                                comments={taskComments}
                                 isLoading={isLoadingTaskActivities}
                                 loadFailed={taskActivitiesFailed}
                                 myself={myself}

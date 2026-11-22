@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useId, useMemo, useState, type ReactElement } from "react";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import AssignmentIndRoundedIcon from "@mui/icons-material/AssignmentIndRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
@@ -11,6 +11,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
@@ -29,13 +30,20 @@ import { ChatManagementState } from "../../../../../../hooks/chats/useChatManage
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation, type Locale } from "../../../../../../i18n";
+import { focusRing, g } from "../../../../../../theme/tokens";
 import { UserProps } from "../../../../../../types/admin";
 import {
     keepsPreviousBody,
     TaskActivityProps,
+    TaskCommentProps,
     TaskTableProps,
 } from "../../../../../../types/tasks";
 import { isPriorityName, isStatusName } from "../../../../meta/taskTone";
+import {
+    groupAgentSessions,
+    statusReasonOf,
+    type ActivityEntry,
+} from "../../../../utils/agentSessionGroups";
 import { formatRelativeAge } from "../../../../utils/relativeAge";
 import { formatTaskDisplayId } from "../../../../utils/taskDisplayId";
 import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../utils/taskMeta";
@@ -72,6 +80,9 @@ type TaskActivityFeedProps = {
      *  agent or API key rewrote (MIP-738): without it that button is not
      *  offered, never offered against a guessed task. */
     taskId?: number | null;
+    /** The task's comments. Only read to show a status change's reason inline: the
+     *  connector posts it as a "Status: A → B: why" comment (MIP-1997). Optional. */
+    comments?: TaskCommentProps[];
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -866,6 +877,129 @@ const ValueChip = ({
     );
 };
 
+// "10:02–10:14" (one time when both ends fall in the same minute; each end carries its
+// date when the session crosses midnight), in the app's language.
+const formatSessionRange = (from: number | null, to: number | null, locale: Locale): string => {
+    if (from == null || to == null) return "";
+    try {
+        const time = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" });
+        const withDay = new Intl.DateTimeFormat(locale, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+        const sameDay = new Date(from).toDateString() === new Date(to).toDateString();
+        const fmtOne = (ms: number) => (sameDay ? time : withDay).format(new Date(ms));
+        const a = fmtOne(from);
+        const b = fmtOne(to);
+        return a === b ? a : `${a}–${b}`;
+    } catch {
+        return "";
+    }
+};
+
+/**
+ * One agent session's consecutive rows, folded (MIP-2005): "Claude · 6 changes ·
+ * 10:02–10:14". A real button (Enter / Space, `aria-expanded`, focus ring) that opens
+ * the rows underneath, each drawn by the same `renderRow` as any other row. Collapsed
+ * by default: the point is to keep a person's own changes in view.
+ */
+const AgentSessionBlock = ({
+    entry,
+    renderRow,
+}: {
+    entry: Extract<ActivityEntry, { kind: "session" }>;
+    renderRow: (row: TaskActivityProps) => ReactElement;
+}) => {
+    const { t, locale } = useTranslation();
+    const [open, setOpen] = useState(false);
+    const panelId = useId();
+    const { via, rows } = entry;
+    const messages = t.tasks.activity;
+    const appLabel = via.app
+        ? messages.via.apps[via.app]
+        : (via.name ??
+          (via.kind === "mcp" ? messages.session.appMcp : messages.session.appApiKey));
+    const label = fmt(messages.session.summary, {
+        app: appLabel,
+        count: rows.length,
+        range: formatSessionRange(entry.from, entry.to, locale),
+    })
+        .replace(/\s·\s*$/, "")
+        .trim();
+    const action = fmt(open ? messages.session.collapse : messages.session.expand, {
+        count: rows.length,
+    });
+
+    return (
+        <Box data-agent-session="" sx={{ borderRadius: "8px" }}>
+            <Box
+                aria-controls={panelId}
+                aria-expanded={open}
+                aria-label={`${label}. ${action}`}
+                component="button"
+                type="button"
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    width: "100%",
+                    minHeight: 44,
+                    px: 1,
+                    py: 0.75,
+                    border: 0,
+                    borderRadius: "8px",
+                    background: "transparent",
+                    color: g.text.secondary,
+                    font: "inherit",
+                    textAlign: "start",
+                    cursor: "pointer",
+                    touchAction: "manipulation",
+                    "&:hover": {
+                        background: g.hover,
+                    },
+                    "&:focus-visible": { ...focusRing, outlineOffset: "-2px" },
+                }}
+                onClick={() => setOpen((v) => !v)}
+            >
+                <KeyboardArrowDownRoundedIcon
+                    sx={{
+                        fontSize: 20,
+                        flexShrink: 0,
+                        transition: "transform 0.15s",
+                        transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+                        "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+                        "[dir=rtl] &": {
+                            transform: open ? "rotate(0deg)" : "rotate(90deg)",
+                        },
+                    }}
+                />
+                <Typography
+                    level="body-sm"
+                    sx={{ color: "inherit", fontWeight: 600, overflowWrap: "anywhere" }}
+                >
+                    {label}
+                </Typography>
+                <ViaChip source={via} />
+            </Box>
+            {open && (
+                <Box
+                    id={panelId}
+                    sx={{
+                        ml: 2.5,
+                        pl: 0.5,
+                        borderInlineStart: "2px solid",
+                        borderColor: g.border.default,
+                    }}
+                >
+                    {rows.map((row) => renderRow(row))}
+                </Box>
+            )}
+        </Box>
+    );
+};
+
 /**
  * Audit-log feed for the "Activity" tab. The data is owned + fetched by
  * `TaskPreview` (alongside `taskComments` / `taskNotes`) and passed in
@@ -886,6 +1020,7 @@ export const TaskActivityFeed = ({
     onRetry,
     allTasks,
     taskId,
+    comments,
     myself,
     setMyself,
     socket,
@@ -900,6 +1035,12 @@ export const TaskActivityFeed = ({
     const teamMemberProfiles = useTEM.teamMemberProfiles ?? {};
 
     const empty = useMemo(() => activities.length === 0, [activities]);
+
+    // A session's consecutive agent rows fold into one block (MIP-2005).
+    const entries = useMemo(
+        () => groupAgentSessions(activities, myself.userId),
+        [activities, myself.userId]
+    );
 
     // Best-effort raw-task-id → display-id ("PRF-123") map for parent
     // references on rows recorded before the backend snapshotted the
@@ -918,6 +1059,211 @@ export const TaskActivityFeed = ({
         const numeric = Number(id);
         if (!Number.isFinite(numeric)) return null;
         return taskDisplayIdById.get(numeric) ?? null;
+    };
+
+    const renderRow = (row: TaskActivityProps) => {
+        // PR-comment rows render in a custom layout (GitHub
+        // identity, expandable excerpt). Branch out early so we
+        // don't fall through the generic actor/verb/chip path.
+        if (row.actionType === "pr_comment_added") {
+            return <PrCommentActivityRow key={row.activityId} activity={row} isDark={isDark} />;
+        }
+        // A PR auto-linked to this task (branch name carries the
+        // task's display id) gets a GitHub-styled link row.
+        if (row.actionType === "pr_linked") {
+            return <PrLinkActivityRow key={row.activityId} activity={row} isDark={isDark} />;
+        }
+        // A status change tagged as an automatic PR-merge close
+        // gets its own attribution row (the underlying actor is
+        // null because the webhook is unauthenticated).
+        if (row.actionType === "status_changed" && row.metadata?.closedByPrMerge === true) {
+            return <PrMergeCloseActivityRow key={row.activityId} activity={row} isDark={isDark} />;
+        }
+        const actorName = row.actor?.userName ?? t.tasks.activity.someone;
+        const oldFmt = formatValue(
+            row.oldValue,
+            row.fieldName,
+            teamMemberProfiles,
+            row.metadata,
+            "old",
+            resolveTaskDisplayId,
+            t.tasks.meta.none
+        );
+        const newFmt = formatValue(
+            row.newValue,
+            row.fieldName,
+            teamMemberProfiles,
+            row.metadata,
+            "new",
+            resolveTaskDisplayId,
+            t.tasks.meta.none
+        );
+        // Diff-style verbs ("changed X from … →") always need
+        // both sides so the sentence stays coherent even when
+        // the prior value was unset (e.g. priority None → High).
+        const isDiffAction = DIFF_ACTIONS.has(row.actionType);
+        const showOldChip = isDiffAction || (row.oldValue != null && row.oldValue !== "");
+        // The "created" row of a task carries its starting state as an
+        // object (MIP-947): one status chip, plus a "Milestone" word
+        // when that is what was created. No status, no chip.
+        const created = row.actionType === "created" ? readCreatedValue(row.newValue) : null;
+        const showNewChip = created
+            ? created.status != null
+            : isDiffAction || (row.newValue != null && row.newValue !== "");
+
+        // Prefer the team-member profile (richer presence /
+        // online status) over `row.actor`, which carries only
+        // the basics needed for the audit log payload. Fall
+        // back to `row.actor` when the actor isn't a current
+        // team member (e.g. ex-member, system actor).
+        const actorId = row.actor?.userId;
+        // Made through a connected AI app or an API key (MIP-1376): a chip,
+        // beside the avatar and name, which stay as they were.
+        const via = viaSourceOfRow(row, myself.userId);
+        // Why a status changed, when the caller said (MIP-1997).
+        const reason = statusReasonOf(row, comments);
+        const avatarUser =
+            (actorId != null
+                ? (teamMemberProfiles[String(actorId)] as UserProps | undefined)
+                : undefined) ?? (row.actor as UserProps | undefined);
+
+        return (
+            <Box
+                key={row.activityId}
+                sx={{
+                    borderRadius: "8px",
+                    "&:hover": {
+                        background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                    },
+                }}
+            >
+                <Stack
+                    alignItems="flex-start"
+                    direction="row"
+                    spacing={1.25}
+                    sx={{ py: 1, px: 1 }}
+                >
+                    <AvatarWithStatus
+                        avatarSize={30}
+                        avatarUser={avatarUser}
+                        isYou={actorId != null && String(myself.userId) === String(actorId)}
+                        myself={myself}
+                        setMyself={setMyself}
+                        showPulseDot={false}
+                        socket={socket}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                    />
+                    <Box
+                        sx={{
+                            flex: 1,
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 0.75,
+                            flexWrap: "wrap",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                                display: "flex",
+                                alignItems: "center",
+                            }}
+                        >
+                            {actionIcon(row.actionType)}
+                        </Box>
+                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                            {actorName}
+                        </Typography>
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                            }}
+                        >
+                            {verbFor(row.actionType, t.tasks.activity, row.metadata)}
+                        </Typography>
+                        {row.actionType === "pr_unlinked" && (
+                            <PrUnlinkedRef isDark={isDark} metadata={row.metadata} />
+                        )}
+                        {showOldChip && (
+                            <ValueChip
+                                fieldName={row.fieldName}
+                                isDark={isDark}
+                                label={oldFmt.label}
+                            />
+                        )}
+                        {showOldChip && showNewChip && (
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+                                }}
+                            >
+                                →
+                            </Typography>
+                        )}
+                        {created?.isMilestone && (
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+                                }}
+                            >
+                                {t.tasks.fields.milestone}
+                            </Typography>
+                        )}
+                        {showNewChip && (
+                            <ValueChip
+                                // The row has no field_name, but this
+                                // chip IS a status: name it so it gets
+                                // the status colours and translation.
+                                fieldName={created ? "status" : row.fieldName}
+                                isDark={isDark}
+                                label={created?.status ?? newFmt.label}
+                            />
+                        )}
+                        {via && <ViaChip source={via} />}
+                        <Box sx={{ flexGrow: 1 }} />
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {formatRelative(row.tsCreatedAt, t.tasks.activity, locale)}
+                        </Typography>
+                    </Box>
+                </Stack>
+                {reason && (
+                    <Typography
+                        data-status-reason=""
+                        level="body-xs"
+                        sx={{
+                            pb: 1,
+                            pl: 6.5,
+                            pr: 1,
+                            fontStyle: "italic",
+                            overflowWrap: "anywhere",
+                            color: g.text.secondary,
+                        }}
+                    >
+                        {fmt(t.tasks.activity.session.reason, { reason })}
+                    </Typography>
+                )}
+                {taskId != null && keepsPreviousBody(row) && (
+                    <Box sx={{ pb: 1, px: 1 }}>
+                        <RestoreBodyControl
+                            activity={row}
+                            taskId={taskId}
+                            viewerId={myself.userId}
+                        />
+                    </Box>
+                )}
+            </Box>
+        );
     };
 
     return (
@@ -944,222 +1290,13 @@ export const TaskActivityFeed = ({
                 />
             )}
 
-            {activities.map((row) => {
-                // PR-comment rows render in a custom layout (GitHub
-                // identity, expandable excerpt). Branch out early so we
-                // don't fall through the generic actor/verb/chip path.
-                if (row.actionType === "pr_comment_added") {
-                    return (
-                        <PrCommentActivityRow
-                            key={row.activityId}
-                            activity={row}
-                            isDark={isDark}
-                        />
-                    );
-                }
-                // A PR auto-linked to this task (branch name carries the
-                // task's display id) gets a GitHub-styled link row.
-                if (row.actionType === "pr_linked") {
-                    return (
-                        <PrLinkActivityRow key={row.activityId} activity={row} isDark={isDark} />
-                    );
-                }
-                // A status change tagged as an automatic PR-merge close
-                // gets its own attribution row (the underlying actor is
-                // null because the webhook is unauthenticated).
-                if (
-                    row.actionType === "status_changed" &&
-                    row.metadata?.closedByPrMerge === true
-                ) {
-                    return (
-                        <PrMergeCloseActivityRow
-                            key={row.activityId}
-                            activity={row}
-                            isDark={isDark}
-                        />
-                    );
-                }
-                const actorName = row.actor?.userName ?? t.tasks.activity.someone;
-                const oldFmt = formatValue(
-                    row.oldValue,
-                    row.fieldName,
-                    teamMemberProfiles,
-                    row.metadata,
-                    "old",
-                    resolveTaskDisplayId,
-                    t.tasks.meta.none
-                );
-                const newFmt = formatValue(
-                    row.newValue,
-                    row.fieldName,
-                    teamMemberProfiles,
-                    row.metadata,
-                    "new",
-                    resolveTaskDisplayId,
-                    t.tasks.meta.none
-                );
-                // Diff-style verbs ("changed X from … →") always need
-                // both sides so the sentence stays coherent even when
-                // the prior value was unset (e.g. priority None → High).
-                const isDiffAction = DIFF_ACTIONS.has(row.actionType);
-                const showOldChip = isDiffAction || (row.oldValue != null && row.oldValue !== "");
-                // The "created" row of a task carries its starting state as an
-                // object (MIP-947): one status chip, plus a "Milestone" word
-                // when that is what was created. No status, no chip.
-                const created =
-                    row.actionType === "created" ? readCreatedValue(row.newValue) : null;
-                const showNewChip = created
-                    ? created.status != null
-                    : isDiffAction || (row.newValue != null && row.newValue !== "");
-
-                // Prefer the team-member profile (richer presence /
-                // online status) over `row.actor`, which carries only
-                // the basics needed for the audit log payload. Fall
-                // back to `row.actor` when the actor isn't a current
-                // team member (e.g. ex-member, system actor).
-                const actorId = row.actor?.userId;
-                // Made through a connected AI app or an API key (MIP-1376): a chip,
-                // beside the avatar and name, which stay as they were.
-                const via = viaSourceOfRow(row, myself.userId);
-                const avatarUser =
-                    (actorId != null
-                        ? (teamMemberProfiles[String(actorId)] as UserProps | undefined)
-                        : undefined) ?? (row.actor as UserProps | undefined);
-
-                return (
-                    <Box
-                        key={row.activityId}
-                        sx={{
-                            borderRadius: "8px",
-                            "&:hover": {
-                                background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-                            },
-                        }}
-                    >
-                        <Stack
-                            alignItems="flex-start"
-                            direction="row"
-                            spacing={1.25}
-                            sx={{ py: 1, px: 1 }}
-                        >
-                            <AvatarWithStatus
-                                avatarSize={30}
-                                avatarUser={avatarUser}
-                                myself={myself}
-                                setMyself={setMyself}
-                                showPulseDot={false}
-                                socket={socket}
-                                useCM={useCM}
-                                useUISM={useUISM}
-                                isYou={
-                                    actorId != null && String(myself.userId) === String(actorId)
-                                }
-                            />
-                            <Box
-                                sx={{
-                                    flex: 1,
-                                    display: "flex",
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 0.75,
-                                    flexWrap: "wrap",
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.55)"
-                                            : "rgba(0,0,0,0.5)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    {actionIcon(row.actionType)}
-                                </Box>
-                                <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                    {actorName}
-                                </Typography>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.7)"
-                                            : "rgba(0,0,0,0.65)",
-                                    }}
-                                >
-                                    {verbFor(row.actionType, t.tasks.activity, row.metadata)}
-                                </Typography>
-                                {row.actionType === "pr_unlinked" && (
-                                    <PrUnlinkedRef isDark={isDark} metadata={row.metadata} />
-                                )}
-                                {showOldChip && (
-                                    <ValueChip
-                                        fieldName={row.fieldName}
-                                        isDark={isDark}
-                                        label={oldFmt.label}
-                                    />
-                                )}
-                                {showOldChip && showNewChip && (
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.5)"
-                                                : "rgba(0,0,0,0.45)",
-                                        }}
-                                    >
-                                        →
-                                    </Typography>
-                                )}
-                                {created?.isMilestone && (
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.5)"
-                                                : "rgba(0,0,0,0.45)",
-                                        }}
-                                    >
-                                        {t.tasks.fields.milestone}
-                                    </Typography>
-                                )}
-                                {showNewChip && (
-                                    <ValueChip
-                                        // The row has no field_name, but this
-                                        // chip IS a status: name it so it gets
-                                        // the status colours and translation.
-                                        fieldName={created ? "status" : row.fieldName}
-                                        isDark={isDark}
-                                        label={created?.status ?? newFmt.label}
-                                    />
-                                )}
-                                {via && <ViaChip source={via} />}
-                                <Box sx={{ flexGrow: 1 }} />
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.4)"
-                                            : "rgba(0,0,0,0.4)",
-                                        whiteSpace: "nowrap",
-                                    }}
-                                >
-                                    {formatRelative(row.tsCreatedAt, t.tasks.activity, locale)}
-                                </Typography>
-                            </Box>
-                        </Stack>
-                        {taskId != null && keepsPreviousBody(row) && (
-                            <Box sx={{ pb: 1, px: 1 }}>
-                                <RestoreBodyControl
-                                    activity={row}
-                                    taskId={taskId}
-                                    viewerId={myself.userId}
-                                />
-                            </Box>
-                        )}
-                    </Box>
-                );
-            })}
+            {entries.map((entry) =>
+                entry.kind === "row" ? (
+                    renderRow(entry.row)
+                ) : (
+                    <AgentSessionBlock key={entry.key} entry={entry} renderRow={renderRow} />
+                )
+            )}
         </Stack>
     );
 };

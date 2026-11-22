@@ -5972,6 +5972,15 @@ export const zh: DeepPartial<Messages> = {
                 appHint: "通过已连接的 AI 应用（{app}）完成，并非在 Genos 中直接输入",
                 appHintNamed: "通过你已连接的应用“{name}”（{app}）完成，并非在 Genos 中直接输入",
             },
+            // One agent session's consecutive rows collapsed into one block (MIP-2005).
+            session: {
+                appMcp: "已连接的应用",
+                appApiKey: "API 密钥",
+                summary: "{app} · {count} 项更改 · {range}",
+                expand: "显示这 {count} 项更改",
+                collapse: "隐藏这 {count} 项更改",
+                reason: "原因：{reason}",
+            },
             restore: {
                 button: "恢复之前的描述",
                 viaAgent: "由 Genos AI 重写",

@@ -6151,6 +6151,15 @@ export const ja: DeepPartial<Messages> = {
                 appHintNamed:
                     "あなたの接続アプリ「{name}」（{app}）から行われた操作です。Genos 上で入力されたものではありません",
             },
+            // One agent session's consecutive rows collapsed into one block (MIP-2005).
+            session: {
+                appMcp: "接続アプリ",
+                appApiKey: "API キー",
+                summary: "{app} · {count} 件の変更 · {range}",
+                expand: "{count} 件の変更を表示",
+                collapse: "{count} 件の変更を隠す",
+                reason: "理由: {reason}",
+            },
             restore: {
                 button: "以前の説明に戻す",
                 viaAgent: "Genos AI が書き換えました",

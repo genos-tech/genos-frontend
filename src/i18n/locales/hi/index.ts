@@ -3321,6 +3321,15 @@ export const hi: DeepPartial<Messages> = {
                 appHintNamed:
                     "आपके कनेक्टेड ऐप “{name}” ({app}) से किया गया, Genos में टाइप नहीं किया गया",
             },
+            // One agent session's consecutive rows collapsed into one block (MIP-2005).
+            session: {
+                appMcp: "कनेक्टेड ऐप",
+                appApiKey: "API कुंजी",
+                summary: "{app} · {count} बदलाव · {range}",
+                expand: "{count} बदलाव दिखाएँ",
+                collapse: "{count} बदलाव छिपाएँ",
+                reason: "कारण: {reason}",
+            },
             restore: {
                 button: "पिछला विवरण वापस लाएँ",
                 viaAgent: "Genos AI ने दोबारा लिखा",

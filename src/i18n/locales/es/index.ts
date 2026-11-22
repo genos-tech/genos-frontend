@@ -3946,6 +3946,15 @@ export const es: DeepPartial<Messages> = {
                 appHint: "Hecho desde una app de IA conectada ({app}), no escrito en Genos",
                 appHintNamed: "Hecho desde tu app conectada «{name}» ({app}), no escrito en Genos",
             },
+            // One agent session's consecutive rows collapsed into one block (MIP-2005).
+            session: {
+                appMcp: "App conectada",
+                appApiKey: "Clave de API",
+                summary: "{app} · {count} cambios · {range}",
+                expand: "Mostrar los {count} cambios",
+                collapse: "Ocultar los {count} cambios",
+                reason: "Motivo: {reason}",
+            },
             restore: {
                 button: "Restaurar la descripción anterior",
                 viaAgent: "Reescrita por la IA de Genos",

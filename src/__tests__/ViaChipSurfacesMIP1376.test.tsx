@@ -164,10 +164,16 @@ describe("history rows (the task's Activity tab, the PM thread's Activities tab)
     });
 
     it("MIP-1568: a family this build does not know, or none, keeps the generic chip", () => {
+        // Hours apart, so they are three sessions and not one folded block (MIP-2005).
+        const hoursAgo = (n: number) => new Date(Date.now() - n * 3_600_000).toISOString();
         renderFeed([
             act({ activityId: 1, metadata: { via: { ...APP, app: "gemini" } } }),
-            act({ activityId: 2, metadata: { via: { ...APP, app: "Claude " } } }),
-            act({ activityId: 3, metadata: { via: APP } }),
+            act({
+                activityId: 2,
+                metadata: { via: { ...APP, app: "Claude " } },
+                tsCreatedAt: hoursAgo(2),
+            }),
+            act({ activityId: 3, metadata: { via: APP }, tsCreatedAt: hoursAgo(4) }),
         ]);
         expect(screen.getAllByText("via MCP")).toHaveLength(3);
         expect(screen.queryByRole("img")).toBeNull();
