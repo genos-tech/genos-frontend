@@ -64,8 +64,8 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "Resend",
-        ja: "メール送信（確認・パスワード再設定・招待・通知・ダイジェスト）。宛先アドレス、件名、本文が送信されます。通知メールの本文には、メッセージやタスクなどの内容の抜粋が含まれることがあります。",
-        en: "Email delivery (verification, password reset, invitations, notifications, digests). The recipient address, subject and body are sent. Notification emails can include excerpts of messages, tasks and similar content.",
+        ja: "メール送信（確認・パスワード再設定・招待・通知）。宛先アドレス、件名、本文が送信されます。通知メールの本文には、メッセージやタスクなどの内容の抜粋が含まれることがあります。",
+        en: "Email delivery (verification, password reset, invitations, notifications). The recipient address, subject and body are sent. Notification emails can include excerpts of messages, tasks and similar content.",
     },
     {
         name: "PostHog",
