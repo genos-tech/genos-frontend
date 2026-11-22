@@ -3026,6 +3026,7 @@ export const ar: DeepPartial<Messages> = {
             quickAddLabel: "مهمة سريعة",
             quickAddPlaceholder: "اكتب عنوانًا واضغط على Enter…",
             quickAddError: "تعذر الإنشاء — حاول مرة أخرى",
+            showHidden: "عرض {count} من المهام الفرعية المكتملة",
         },
         fields: {
             assignee: "المُسنَد إليه",

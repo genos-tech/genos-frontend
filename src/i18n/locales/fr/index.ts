@@ -6036,6 +6036,7 @@ export const fr: DeepPartial<Messages> = {
             quickAddLabel: "Tâche rapide",
             quickAddPlaceholder: "Tapez un titre et appuyez sur Entrée…",
             quickAddError: "Création impossible : réessayez",
+            showHidden: "Afficher {count} sous-tâches terminées",
         },
         fields: {
             assignee: "Assigné",

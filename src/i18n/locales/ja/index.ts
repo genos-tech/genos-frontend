@@ -5950,6 +5950,7 @@ export const ja: DeepPartial<Messages> = {
             quickAddLabel: "クイックタスク",
             quickAddPlaceholder: "タイトルを入力して Enter で作成",
             quickAddError: "作成できませんでした。もう一度お試しください",
+            showHidden: "完了したサブタスク {count} 件を表示",
         },
         fields: {
             assignee: "担当者",
