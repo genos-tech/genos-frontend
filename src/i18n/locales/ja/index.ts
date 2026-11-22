@@ -4141,7 +4141,9 @@ export const ja: DeepPartial<Messages> = {
                 title: "セキュリティログ",
                 blurb: "このチームに対する重要な変更の記録です（新しい順）。メンバーの参加と退出、ロールとオーナーの変更、招待、API キー、Webhook、アラートが含まれます。保存期間は 365 日です。",
                 empty: "まだ記録はありません。",
-                loadMore: "さらに古い記録を表示",
+                loadMore: "さらに読み込む",
+                end: "これ以上の記録はありません。",
+                shown: "{n} 件を表示中",
                 loadFailed: "セキュリティログを読み込めませんでした。",
                 retry: "再試行",
                 byWhen: "{actor} · {when}",
@@ -4283,7 +4285,16 @@ export const ja: DeepPartial<Messages> = {
                 other: "その他のAI利用",
             },
             recentHeading: "最近の消費",
-            recentCap: "直近50件、新しい順",
+            recentCap: "新しい順に表示します。",
+            recentListAria: "最近の消費",
+            loadMore: "さらに読み込む",
+            shown: "{n} 件の消費を表示中",
+            end: "これ以上の消費はありません。",
+            sourceOther: "その他のAI利用（{source}）",
+            connectedAppHint:
+                "Claude、ChatGPT、APIキーなど、連携したアプリがGenosで実行したAI検索です。",
+            otherHint:
+                "名前の付いていないAI機能の利用です。新しい機能や、名前を付ける前に記録された利用が含まれる場合があります。",
             emptyTitle: "今月はまだAIを使っていません",
             emptyBody:
                 "Genosが質問に答えたり、要約やレポートの文章を作成すると、使ったクレジットがここに表示されます。",

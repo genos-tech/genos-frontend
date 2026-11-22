@@ -843,7 +843,10 @@ export const hi: DeepPartial<Messages> = {
                 title: "सुरक्षा लॉग",
                 blurb: "इस टीम के संवेदनशील बदलाव, सबसे नए पहले: सदस्यों का जुड़ना और जाना, रोल और स्वामित्व में बदलाव, आमंत्रण, API कुंजियाँ, वेबहुक और अलर्ट। 365 दिन तक रखा जाता है।",
                 empty: "अभी कुछ दर्ज नहीं हुआ है।",
-                loadMore: "पुराने दिखाएँ",
+                loadMore: "और लोड करें",
+                // TODO(copy): MIP-2024 draft wording for a native reader.
+                end: "और कोई रिकॉर्ड नहीं है।",
+                shown: "{n} दिख रहे हैं",
                 loadFailed: "सुरक्षा लॉग लोड नहीं हो सका।",
                 retry: "फिर से कोशिश करें",
                 byWhen: "{actor} · {when}",
@@ -986,7 +989,17 @@ export const hi: DeepPartial<Messages> = {
                 other: "अन्य AI उपयोग",
             },
             recentHeading: "हाल के शुल्क",
-            recentCap: "आपके पिछले 50 शुल्क, नए पहले",
+            // TODO(copy): MIP-2024 draft wording for a native reader.
+            recentCap: "नए पहले।",
+            recentListAria: "हाल के शुल्क",
+            loadMore: "और लोड करें",
+            shown: "{n} शुल्क दिख रहे हैं",
+            end: "और कोई शुल्क नहीं है।",
+            sourceOther: "अन्य AI उपयोग ({source})",
+            connectedAppHint:
+                "आपके जुड़े ऐप (जैसे Claude, ChatGPT या API कुंजी) ने Genos में जो AI खोजें कीं।",
+            otherHint:
+                "ऐसा AI उपयोग जिसका अभी अपना नाम नहीं है। इसमें नई सुविधाएँ या नाम देने से पहले दर्ज उपयोग शामिल हो सकते हैं।",
             emptyTitle: "इस महीने अभी तक AI का उपयोग नहीं हुआ",
             emptyBody:
                 "जब Genos किसी सवाल का जवाब देता है या सारांश या रिपोर्ट वाक्य लिखता है, तो उपयोग हुए क्रेडिट यहाँ दिखते हैं।",

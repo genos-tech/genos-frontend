@@ -671,7 +671,17 @@ export const ar: DeepPartial<Messages> = {
                 other: "استخدام آخر للذكاء الاصطناعي",
             },
             recentHeading: "الخصومات الأخيرة",
-            recentCap: "آخر 50 خصمًا، الأحدث أولًا",
+            // TODO(copy): MIP-2024 draft wording for a native reader.
+            recentCap: "الأحدث أولًا.",
+            recentListAria: "الخصومات الأخيرة",
+            loadMore: "تحميل المزيد",
+            shown: "عرض {n} من الخصومات",
+            end: "لا توجد خصومات أخرى.",
+            sourceOther: "استخدام آخر للذكاء الاصطناعي ({source})",
+            connectedAppHint:
+                "عمليات بحث بالذكاء الاصطناعي أجرتها تطبيقاتك المتصلة، مثل Claude أو ChatGPT أو مفتاح API، داخل Genos.",
+            otherHint:
+                "استخدام للذكاء الاصطناعي لا يملك اسمًا خاصًا بعد. قد يشمل ميزات جديدة أو استخدامًا سُجّل قبل تسميته.",
             emptyTitle: "لم تستخدم الذكاء الاصطناعي هذا الشهر بعد",
             emptyBody:
                 "عندما يجيب Genos عن سؤال أو يكتب ملخصًا أو جملة تقرير، يظهر الرصيد المستخدم هنا.",
@@ -1678,7 +1688,10 @@ export const ar: DeepPartial<Messages> = {
                 title: "سجل الأمان",
                 blurb: "التغييرات الحساسة في هذا الفريق، الأحدث أولًا: انضمام الأعضاء ومغادرتهم، وتغييرات الأدوار والملكية، والدعوات، ومفاتيح API، وخطافات الويب، والتنبيهات. يُحتفظ به لمدة 365 يومًا.",
                 empty: "لم يُسجَّل شيء بعد.",
-                loadMore: "عرض الأقدم",
+                loadMore: "تحميل المزيد",
+                // TODO(copy): MIP-2024 draft wording for a native reader.
+                end: "لا توجد سجلات أخرى.",
+                shown: "عرض {n}",
                 loadFailed: "تعذّر تحميل سجل الأمان.",
                 retry: "حاول مرة أخرى",
                 byWhen: "{actor} · {when}",

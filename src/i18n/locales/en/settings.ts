@@ -335,7 +335,9 @@ export const settings = {
             title: "Security log",
             blurb: "Sensitive changes to this team, newest first: members joining and leaving, role and ownership changes, invites, API keys, webhooks and alerts. Kept for 365 days.",
             empty: "Nothing recorded yet.",
-            loadMore: "Show older",
+            loadMore: "Load more",
+            end: "No older entries.",
+            shown: "Showing {n}",
             loadFailed: "Couldn't load the security log.",
             retry: "Try again",
             // "{actor} · {when}" under the action.
@@ -491,7 +493,17 @@ export const settings = {
             other: "Other AI use",
         },
         recentHeading: "Recent charges",
-        recentCap: "Your last 50 charges, newest first",
+        recentCap: "Newest first.",
+        recentListAria: "Recent charges",
+        loadMore: "Load more",
+        shown: "Showing {n} charges",
+        end: "No more charges.",
+        // A charge from a source this version does not name; {source} is the raw ledger name.
+        sourceOther: "Other AI use ({source})",
+        connectedAppHint:
+            "AI searches that your connected apps (Claude, ChatGPT or an API key) ran in Genos.",
+        otherHint:
+            "AI use that has no name of its own yet. It can include new features, or use recorded before they were named.",
         emptyTitle: "No AI use yet this month",
         emptyBody:
             "When Genos answers a question, writes a summary or a report sentence, the credits it used show up here.",

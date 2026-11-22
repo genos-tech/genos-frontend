@@ -567,8 +567,9 @@ export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeat
     }
 }
 
-// The signed-in member's own AI credit usage (MIP-1971): this month by job and the last 50
-// charges. `job` is a key the client translates; an unknown one is shown as "other".
+// The signed-in member's own AI credit usage (MIP-1971): this month by job and the newest charges
+// (a page of 5; MIP-2024 pages the rest by `next_cursor`). `job` is a key the client translates; an
+// unknown one is shown as "other", with the raw `source` the ledger recorded.
 export type CreditUsageJob = "ask" | "connected_app" | "schedule" | "summary" | "other";
 
 export interface CreditUsage {
@@ -579,7 +580,24 @@ export interface CreditUsage {
     period_end_iso: string | null;
     by_job: { job: CreditUsageJob; count: number; credits: number }[];
     month_total_credits: number;
-    recent: { id: number; at: string; job: CreditUsageJob; credits: number; detail: string }[];
+    recent: CreditCharge[];
+    /** Pass as `cursor` for the next page of charges; null on the last one. */
+    next_cursor: number | null;
+}
+
+export interface CreditCharge {
+    id: number;
+    at: string;
+    job: CreditUsageJob;
+    credits: number;
+    detail: string;
+    /** The raw ledger source, only on a charge no job names ("other"); else "". */
+    source: string;
+}
+
+export interface CreditChargesPage {
+    recent: CreditCharge[];
+    next_cursor: number | null;
 }
 
 export async function fetchCreditUsage(accessToken: string): Promise<CreditUsage | null> {
@@ -589,6 +607,25 @@ export async function fetchCreditUsage(accessToken: string): Promise<CreditUsage
         });
         if (!resp.ok) return null;
         return (await resp.json()) as CreditUsage;
+    } catch {
+        return null;
+    }
+}
+
+/** The next page of Recent charges after `cursor` (the previous page's `next_cursor`). */
+export async function fetchCreditCharges(
+    accessToken: string,
+    cursor: number,
+    limit = 10
+): Promise<CreditChargesPage | null> {
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/credits/usage/?cursor=${encodeURIComponent(cursor)}&limit=${limit}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+        if (!resp.ok) return null;
+        const body = (await resp.json()) as CreditChargesPage;
+        return { recent: body.recent ?? [], next_cursor: body.next_cursor ?? null };
     } catch {
         return null;
     }

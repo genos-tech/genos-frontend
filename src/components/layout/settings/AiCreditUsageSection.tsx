@@ -4,17 +4,26 @@ import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../i18n";
-import { CreditUsage, CreditUsageJob, fetchCreditUsage } from "../../../services/agentApi";
+import {
+    CreditCharge,
+    CreditUsage,
+    CreditUsageJob,
+    fetchCreditCharges,
+    fetchCreditUsage,
+} from "../../../services/agentApi";
 import { g, type } from "../../../theme/tokens";
 import { formatCredits } from "../../../utils/formatCredits";
 import { DashboardCard, formatRelativeTime, ProportionBar, StatTile } from "../../ui/dashboard";
+import { LoadMoreList } from "../../ui/misc/LoadMoreList";
 
 /**
  * Settings → AI credit usage (MIP-1971). Which AI job spent how many credits, for the signed-in
  * member only: the endpoint takes no user, so nobody else's usage can be asked for here.
  *
  * Numbers are the ledger's; this view adds no money logic. A job key the client does not know
- * (a new billable source) reads as "Other AI use".
+ * (a new billable source) reads as "Other AI use", with a line saying what that can include, and
+ * its Recent charges row names the raw source (MIP-2024). Recent charges start at 5 rows and page
+ * by cursor from the API ("Load more"); the totals above always count every charge.
  */
 
 const JOB_ORDER: CreditUsageJob[] = ["ask", "connected_app", "schedule", "summary", "other"];
@@ -37,6 +46,10 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
     const [data, setData] = useState<CreditUsage | null>(null);
     const [state, setState] = useState<"loading" | "error" | "ready">("loading");
     const [reload, setReload] = useState(0);
+    const [charges, setCharges] = useState<CreditCharge[]>([]);
+    const [nextCursor, setNextCursor] = useState<number | null>(null);
+    const [moreBusy, setMoreBusy] = useState(false);
+    const [moreFailed, setMoreFailed] = useState(false);
 
     useEffect(() => {
         if (!accessToken) return;
@@ -47,6 +60,9 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
             if (cancelled) return;
             if (usage) {
                 setData(usage);
+                setCharges(usage.recent);
+                setNextCursor(usage.next_cursor ?? null);
+                setMoreFailed(false);
                 setState("ready");
             } else {
                 setState((prev) => (prev === "ready" ? prev : "error"));
@@ -65,6 +81,20 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
             credits: rows.get(job)?.credits ?? 0,
         }));
     }, [data]);
+
+    const loadMoreCharges = async () => {
+        if (!accessToken || nextCursor === null) return;
+        setMoreBusy(true);
+        setMoreFailed(false);
+        const page = await fetchCreditCharges(accessToken, nextCursor);
+        setMoreBusy(false);
+        if (!page) {
+            setMoreFailed(true);
+            return;
+        }
+        setCharges((prev) => [...prev, ...page.recent]);
+        setNextCursor(page.next_cursor);
+    };
 
     const dateFormat = useMemo(
         () => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }),
@@ -92,8 +122,12 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
         navigate(`/workspace/plans${hash}`);
     };
 
+    // A line under a job that needs one: what "connected apps" and "Other AI use" can include.
+    const jobHint = (job: CreditUsageJob): string =>
+        job === "connected_app" ? u.connectedAppHint : job === "other" ? u.otherHint : "";
+
     const noUse = state === "ready" && (data?.by_job.length ?? 0) === 0;
-    const hasRecent = (data?.recent.length ?? 0) > 0;
+    const hasRecent = charges.length > 0;
     const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
     return (
@@ -215,18 +249,25 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
                                         }}
                                         aria-hidden
                                     />
-                                    <Typography
-                                        title={u.jobs[r.job]}
-                                        sx={{
-                                            ...type("body-sm"),
-                                            color: g.text.primary,
-                                            flex: 1,
-                                            minWidth: 0,
-                                        }}
-                                        noWrap
-                                    >
-                                        {u.jobs[r.job]}
-                                    </Typography>
+                                    <Box sx={{ flex: 1, minWidth: 0, py: 0.5 }}>
+                                        <Typography
+                                            sx={{ ...type("body-sm"), color: g.text.primary }}
+                                            title={u.jobs[r.job]}
+                                            noWrap
+                                        >
+                                            {u.jobs[r.job]}
+                                        </Typography>
+                                        {jobHint(r.job) && (
+                                            <Typography
+                                                sx={{
+                                                    ...type("body-xs"),
+                                                    color: g.text.secondary,
+                                                }}
+                                            >
+                                                {jobHint(r.job)}
+                                            </Typography>
+                                        )}
+                                    </Box>
                                     <Typography
                                         sx={{
                                             ...type("body-xs"),
@@ -258,70 +299,98 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
 
             {state === "ready" && hasRecent && data && (
                 <DashboardCard subtitle={u.recentCap} title={u.recentHeading} variant="flush">
-                    <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-                        {data.recent.map((r) => {
-                            const job = asJob(r.job);
-                            const at = Date.parse(r.at);
-                            return (
-                                <Box
-                                    key={r.id}
-                                    component="li"
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1.5,
-                                        px: { xs: 1.5, md: 2 },
-                                        py: 0.75,
-                                        borderTop: `1px solid ${g.border.subtle}`,
-                                    }}
-                                >
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography
-                                            sx={{ ...type("body-sm"), color: g.text.primary }}
-                                            title={
-                                                r.detail
-                                                    ? `${u.jobs[job]} · ${r.detail}`
-                                                    : u.jobs[job]
-                                            }
-                                            noWrap
-                                        >
-                                            {u.jobs[job]}
-                                            {r.detail ? (
-                                                <>
-                                                    {" · "}
-                                                    <bdi>{r.detail}</bdi>
-                                                </>
-                                            ) : null}
-                                        </Typography>
-                                        <Typography
-                                            component="time"
-                                            dateTime={r.at}
-                                            sx={{ ...type("body-xs"), color: g.text.secondary }}
-                                            title={
-                                                Number.isNaN(at)
-                                                    ? undefined
-                                                    : dateFormat.format(at)
-                                            }
-                                        >
-                                            {formatRelativeTime(at, locale)}
-                                        </Typography>
-                                    </Box>
-                                    <Typography
-                                        sx={{
-                                            ...type("body-sm"),
-                                            color: g.text.primary,
-                                            flexShrink: 0,
-                                            fontVariantNumeric: "tabular-nums",
-                                        }}
-                                    >
-                                        {formatCredits(r.credits)}
-                                    </Typography>
-                                </Box>
-                            );
-                        })}
-                    </Box>
+                    <LoadMoreList
+                        ariaLabel={u.recentListAria}
+                        emptyLabel={u.emptyBody}
+                        endLabel={u.end}
+                        failed={moreFailed}
+                        failedLabel={u.loadError}
+                        footerSx={{ px: { xs: 1.5, md: 2 }, pb: 1 }}
+                        getKey={(r) => r.id}
+                        hasMore={nextCursor !== null}
+                        items={charges}
+                        loading={moreBusy}
+                        loadMoreLabel={u.loadMore}
+                        retryLabel={u.retry}
+                        shownLabel={(n) => fmt(u.shown, { n: numberFormat.format(n) })}
+                        itemSx={{
+                            px: { xs: 1.5, md: 2 },
+                            py: 0.75,
+                            borderTop: `1px solid ${g.border.subtle}`,
+                        }}
+                        renderItem={(r) => (
+                            <ChargeRow
+                                charge={r}
+                                credits={formatCredits(r.credits)}
+                                dateFormat={dateFormat}
+                                jobName={u.jobs[asJob(r.job)]}
+                                locale={locale}
+                                sourceOther={u.sourceOther}
+                            />
+                        )}
+                        onLoadMore={() => void loadMoreCharges()}
+                    />
                 </DashboardCard>
             )}
         </Stack>
+    );
+};
+
+const ChargeRow = ({
+    charge: r,
+    dateFormat,
+    locale,
+    jobName,
+    sourceOther,
+    credits,
+}: {
+    charge: CreditCharge;
+    dateFormat: Intl.DateTimeFormat;
+    locale: string;
+    jobName: string;
+    sourceOther: string;
+    credits: string;
+}) => {
+    const at = Date.parse(r.at);
+    // The real source on every row: a schedule's name, or the raw ledger name of a source no job
+    // names ("Other AI use (new_thing)").
+    const name =
+        asJob(r.job) === "other" && r.source ? fmt(sourceOther, { source: r.source }) : jobName;
+    return (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                    sx={{ ...type("body-sm"), color: g.text.primary }}
+                    title={r.detail ? `${name} · ${r.detail}` : name}
+                    noWrap
+                >
+                    {name}
+                    {r.detail ? (
+                        <>
+                            {" · "}
+                            <bdi>{r.detail}</bdi>
+                        </>
+                    ) : null}
+                </Typography>
+                <Typography
+                    component="time"
+                    dateTime={r.at}
+                    sx={{ ...type("body-xs"), color: g.text.secondary }}
+                    title={Number.isNaN(at) ? undefined : dateFormat.format(at)}
+                >
+                    {formatRelativeTime(at, locale)}
+                </Typography>
+            </Box>
+            <Typography
+                sx={{
+                    ...type("body-sm"),
+                    color: g.text.primary,
+                    flexShrink: 0,
+                    fontVariantNumeric: "tabular-nums",
+                }}
+            >
+                {credits}
+            </Typography>
+        </Box>
     );
 };

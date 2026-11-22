@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
-import { Box, Button, Chip, Sheet, Stack, Typography } from "@mui/joy";
+import { Box, Chip, Sheet, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../context/AuthContext";
 import { fmt, useTranslation } from "../../i18n";
 import { listTeamSecurityEvents, SecurityEvent } from "../../services/developerApi";
-import { EmptyState } from "../ui/feedback/EmptyState";
+import { LoadMoreList } from "../ui/misc/LoadMoreList";
 
 type Props = {
     teamId: string;
@@ -124,28 +124,23 @@ export const SecurityLogSection = ({ teamId }: Props) => {
             <Typography level="body-sm" sx={{ opacity: 0.75 }}>
                 {s.blurb}
             </Typography>
-            {events.length === 0 && (
-                <EmptyState body={s.empty} data-empty="security-log" size="xs" />
-            )}
-            {events.map((e) => (
-                <SecurityEventRow key={e.id} event={e} />
-            ))}
-            {moreFailed && (
-                <Typography color="danger" level="body-xs">
-                    {s.loadFailed}
-                </Typography>
-            )}
-            {nextBefore !== null && (
-                <Button
-                    loading={busy}
-                    size="sm"
-                    sx={{ alignSelf: "flex-start" }}
-                    variant="plain"
-                    onClick={loadMore}
-                >
-                    {moreFailed ? s.retry : s.loadMore}
-                </Button>
-            )}
+            <LoadMoreList
+                ariaLabel={s.title}
+                emptyLabel={s.empty}
+                endLabel={s.end}
+                failed={moreFailed}
+                failedLabel={s.loadFailed}
+                getKey={(e) => e.id}
+                hasMore={nextBefore !== null}
+                items={events}
+                itemSx={{ mb: 1 }}
+                loading={busy}
+                loadMoreLabel={s.loadMore}
+                renderItem={(e) => <SecurityEventRow event={e} />}
+                retryLabel={s.retry}
+                shownLabel={(n) => fmt(s.shown, { n })}
+                onLoadMore={loadMore}
+            />
         </Stack>
     );
 };
