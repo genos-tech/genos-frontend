@@ -1311,6 +1311,10 @@ export const hi: DeepPartial<Messages> = {
             paramAiSentences: "AI के वाक्य",
             paramAiSentencesHint:
                 "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है। सामान्य रिपोर्ट के लिए इसे बंद करें।",
+            aiOutOfCredits:
+                "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए AI वाक्य नहीं चल सकते। उन्हें चालू करने के लिए क्रेडिट खरीदें या प्लान अपग्रेड करें।",
+            aiOutOfCreditsBuy: "क्रेडिट खरीदें",
+            aiOutOfCreditsUpgrade: "प्लान अपग्रेड करें",
             effortLabel: "AI की कोशिश",
             effortDefaultMark: "{level} (डिफ़ॉल्ट)",
             effortCostAbout: "प्रति रन लगभग {credits} क्रेडिट। यह एक अनुमान है।",
