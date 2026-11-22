@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { todayCalendarIso } from "../../../../utils/calendarDate";
 import type { TaskDashboardTab } from "./taskHomeTypes";
@@ -58,68 +58,59 @@ const writeLastTab = (userId: string, tab: TaskDashboardTab) => {
  * The open dashboard tab, kept in the address bar as `?view=<tab>` so a reload or a shared
  * link lands on it (and "Open Today" can link to the Today tab).
  *
- * The Tasks home stays mounted while another service is on screen, so only the tasks route
- * may read the query or write it back (genos-ui rule 6).
+ * On the tasks route the address IS the tab: it is read straight from `?view=`, so a link,
+ * Back, or arriving from another service with a new `view` can never be undone by a stale
+ * local copy. The kept-mounted Home (genos-ui rule 6) only touches the address on that route.
  */
 export const useDashboardTab = (userId: string) => {
     const location = useLocation();
-    const [search, setSearch] = useSearchParams();
+    const navigate = useNavigate();
     const onTasks = location.pathname.startsWith(TASKS_PATH);
-    const viewParam = search.get(DASHBOARD_VIEW_PARAM);
-    const pathRef = useRef(location.pathname);
-    pathRef.current = location.pathname;
-
-    const [activeTab, setActiveTab] = useState<TaskDashboardTab>(() =>
+    const viewParam = new URLSearchParams(location.search).get(DASHBOARD_VIEW_PARAM);
+    const [localTab, setLocalTab] = useState<TaskDashboardTab>(() =>
         isDashboardTab(viewParam) ? viewParam : readLastTab(userId)
     );
+    const activeTab: TaskDashboardTab =
+        onTasks && isDashboardTab(viewParam) ? viewParam : localTab;
 
-    // Address -> tab: a link or the browser's back button names another tab.
+    // The latest address, for the writes and the cleanup below (never a stale render's).
+    const latest = useRef({ pathname: location.pathname, search: location.search });
+    latest.current = { pathname: location.pathname, search: location.search };
+
+    const writeView = (tab: TaskDashboardTab | null) => {
+        const { pathname, search } = latest.current;
+        const next = new URLSearchParams(search);
+        if (tab) next.set(DASHBOARD_VIEW_PARAM, tab);
+        else next.delete(DASHBOARD_VIEW_PARAM);
+        const qs = next.toString();
+        navigate({ pathname, search: qs ? `?${qs}` : "" }, { replace: true });
+    };
+
+    const setActiveTab = (tab: TaskDashboardTab) => {
+        setLocalTab(tab);
+        if (onTasks) writeView(tab);
+    };
+
+    // The address names a tab: remember it (and keep the local copy for off-route renders).
     useEffect(() => {
-        if (onTasks && isDashboardTab(viewParam) && viewParam !== activeTab) {
-            setActiveTab(viewParam);
-        }
-        // Only an address change may move the tab.
+        if (!onTasks || !isDashboardTab(viewParam)) return;
+        setLocalTab(viewParam);
+        writeLastTab(userId, viewParam);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewParam, onTasks]);
 
-    const writeView = (tab: TaskDashboardTab) =>
-        setSearch(
-            (prev) => {
-                const next = new URLSearchParams(prev);
-                next.set(DASHBOARD_VIEW_PARAM, tab);
-                return next;
-            },
-            { replace: true }
-        );
-
-    // Tab -> address: the user picked a tab.
+    // The address names none (a route change dropped it): put the open tab back.
     useEffect(() => {
-        if (!onTasks) return;
-        writeLastTab(userId, activeTab);
-        if (viewParam !== activeTab) writeView(activeTab);
-        // The address is read here only to skip a write that changes nothing.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeTab, onTasks]);
-
-    // A route change (a project pick, a task link) that drops the parameter gets it back.
-    useEffect(() => {
-        if (onTasks && viewParam === null) writeView(activeTab);
+        if (onTasks && !isDashboardTab(viewParam)) writeView(localTab);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewParam, onTasks]);
 
     // The dashboard closing (Task Table, Board) takes its parameter with it, so the address
-    // never re-opens the dashboard behind the user's back.
+    // never re-opens the dashboard behind the user's back. It keeps the CURRENT path and query.
     useEffect(
         () => () => {
-            if (!pathRef.current.startsWith(TASKS_PATH)) return;
-            setSearch(
-                (prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.delete(DASHBOARD_VIEW_PARAM);
-                    return next;
-                },
-                { replace: true }
-            );
+            if (!latest.current.pathname.startsWith(TASKS_PATH)) return;
+            writeView(null);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         []

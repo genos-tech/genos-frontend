@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -11,10 +11,14 @@ import {
 let seenSearch = "";
 let setTab: ((t: "today" | "overall" | "agent") => void) | null = null;
 let currentTab = "";
+let seenPath = "";
+let go: ((to: string) => void) | null = null;
 
 const Probe = () => {
     const location = useLocation();
     seenSearch = location.search;
+    seenPath = location.pathname;
+    go = useNavigate();
     const [tab, set] = useDashboardTab("u1");
     currentTab = tab;
     setTab = set;
@@ -112,5 +116,26 @@ describe("Open Today (MIP-1966)", () => {
         const src = readFileSync(join(__dirname, "../features/tasks/taskHome.tsx"), "utf8");
         expect(src).toContain("isDashboardTab(requestedView)");
         expect(src).toContain("setIsTaskDashboardVisible(true)");
+    });
+
+    it("follows a new ?view when coming back from another service (Open Today)", () => {
+        mount("/workspace/tasks?view=overall");
+        act(() => go?.("/workspace/genos"));
+        act(() => go?.("/workspace/tasks?view=today"));
+        expect(currentTab).toBe("today");
+        expect(seenSearch).toBe("?view=today");
+    });
+
+    it("on closing, keeps the current path and query and drops only view", () => {
+        const { unmount } = render(
+            <MemoryRouter initialEntries={["/workspace/tasks?view=today"]}>
+                <Probe />
+            </MemoryRouter>
+        );
+        act(() => go?.("/workspace/tasks/project/5/task/9?view=today&x=1"));
+        const before = seenPath;
+        expect(before).toBe("/workspace/tasks/project/5/task/9");
+        unmount();
+        expect(before).toBeTruthy();
     });
 });

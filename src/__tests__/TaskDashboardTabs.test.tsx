@@ -127,6 +127,8 @@ describe("TaskDashboard header (MIP-1220)", () => {
 });
 
 describe("TaskDashboard tabs + Tag Insights", () => {
+    beforeEach(() => window.localStorage.clear());
+
     it("renders the three section tabs", () => {
         renderDashboard();
         expect(screen.getByRole("tab", { name: /Overall Insights/ })).toBeInTheDocument();
