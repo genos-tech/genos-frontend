@@ -144,6 +144,9 @@ import { ColorThemeProvider } from "./theme/ColorThemeProvider";
 // otherwise ship in the main bundle. With `lazy` + `Suspense` the chunks
 // load on-demand when the user navigates to that route — initial paint
 // for the workspace shell stays small.
+/** The agent pickers' team task list is reloaded on mount when older than this. */
+const TEAM_TASKS_TTL_MS = 5 * 60_000;
+
 const ChatHome = lazy(() =>
     import("./features/chat/chatHome").then((m) => ({ default: m.ChatHome }))
 );
@@ -374,12 +377,24 @@ const AppBody = () => {
     };
     const loadHashTeamTasksRef = useRef(loadHashTeamTasks);
     loadHashTeamTasksRef.current = loadHashTeamTasks;
-    // Loaded as soon as there is a session, not on the first refresh
-    // trigger: until then `#` offered the open project's tasks only, and
-    // the `#` query that kicked the refresh was answered from the empty
-    // list, so a task in another project never showed up (MIP-788).
-    useEffect(() => {
-        if (accessToken && myself?.teamId) void loadHashTeamTasksRef.current();
+    // MIP-1995: the full list is no longer loaded at sign-in nor re-pulled by the
+    // 60 s change refresh. The editors' `#` menu asks the server's task search per
+    // query instead. Only the agent-input pickers (Spotlight, Ask, to-do pane) still
+    // read it, synchronously, so they call `ensureTeamTasks` when they mount: one
+    // load, reused for `TEAM_TASKS_TTL_MS`, never polled.
+    const teamTasksLoadedAt = useRef<{ team: unknown; at: number } | null>(null);
+    const teamTasksBusy = useRef(false);
+    const ensureHashTeamTasks = useCallback(() => {
+        if (!accessToken || !myself?.teamId || teamTasksBusy.current) return;
+        const last = teamTasksLoadedAt.current;
+        if (last && last.team === myself.teamId && Date.now() - last.at < TEAM_TASKS_TTL_MS) {
+            return;
+        }
+        teamTasksBusy.current = true;
+        void loadHashTeamTasksRef.current().then((ok) => {
+            teamTasksBusy.current = false;
+            if (ok) teamTasksLoadedAt.current = { team: myself.teamId, at: Date.now() };
+        });
     }, [accessToken, myself?.teamId]);
     // One entry point for every trigger (window focus, `visibilitychange`, the
     // 60 s tick while visible, the `#` menu's `refresh`): ONE `GET /changes/`
@@ -416,7 +431,6 @@ const AppBody = () => {
                         usePM.setTeamProjects([...projects]);
                         return true;
                     },
-                    loadTeamTasks: () => loadHashTeamTasksRef.current(),
                     // The `since=` delta of the open project's tasks (it rejects when
                     // the request failed) and its sprints. A sprint's status is derived
                     // from today's date on the server, so a bump never announces a
@@ -447,6 +461,7 @@ const AppBody = () => {
         taskNoteMeta: useNM.taskNoteMeta,
         teamNoteMeta: useNM.teamNoteMeta,
         teamTasks: hashTeamTasks,
+        ensureTeamTasks: ensureHashTeamTasks,
         todoGroups: useTG.groups,
     });
 

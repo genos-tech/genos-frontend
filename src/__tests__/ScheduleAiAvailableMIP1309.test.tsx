@@ -41,6 +41,7 @@ const render = (ui: React.ReactElement) =>
                 value={{
                     tasks: [],
                     teamTasks: [],
+                    ensureTeamTasks: () => {},
                     notes: [],
                     chats: [],
                     allChats: [],

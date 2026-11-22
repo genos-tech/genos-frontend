@@ -28,6 +28,7 @@ const base = (): UseHashMentionDataInputs => ({
     taskNoteMeta: [],
     teamNoteMeta: [],
     teamTasks: [],
+    ensureTeamTasks: noop,
     todoGroups: [],
 });
 

@@ -15,6 +15,7 @@ import { HashMentionData } from "./HashMentionDataContext";
 export type UseHashMentionDataInputs = {
     allChats: AllChatProps[];
     chatNoteMeta: ChatNoteMetaProps[];
+    ensureTeamTasks: HashMentionData["ensureTeamTasks"];
     myNoteMeta: MyNoteMetaProps[];
     myself: UserProps | null;
     projects: ProjectProps[];
@@ -43,6 +44,7 @@ export type UseHashMentionDataInputs = {
 export const useHashMentionData = ({
     allChats,
     chatNoteMeta,
+    ensureTeamTasks,
     myNoteMeta,
     myself,
     projects,
@@ -58,6 +60,7 @@ export const useHashMentionData = ({
         () => ({
             tasks,
             teamTasks,
+            ensureTeamTasks,
             notes: [
                 ...myNoteMeta.map((m) => ({ kind: "my" as const, ...m })),
                 ...taskNoteMeta.map((m) => ({ kind: "task" as const, ...m })),
@@ -80,6 +83,7 @@ export const useHashMentionData = ({
             chatNoteMeta,
             sharedNoteMeta,
             teamNoteMeta,
+            ensureTeamTasks,
             allChats,
             projects,
             todoGroups,

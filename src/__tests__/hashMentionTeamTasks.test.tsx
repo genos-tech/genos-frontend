@@ -13,9 +13,13 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { HashMentionMenuItems } from "../components/editors/HashMention";
+import { HashMentionMenuItems, serverTaskItems } from "../components/editors/HashMention";
 import { HashMentionData } from "../context/HashMentionDataContext";
 import { SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
+
+// Server search rows (what `getItems` merges in) ride along in `teamTasks` here.
+const menuItems = (editor: any, data: HashMentionData) =>
+    HashMentionMenuItems(editor, data, serverTaskItems(editor, data.teamTasks, data));
 
 const openProjectTask = (over: Partial<TaskTableProps>): TaskTableProps =>
     ({
@@ -39,6 +43,7 @@ const teamTask = (over: Partial<SearchTeamTasksResponse>): SearchTeamTasksRespon
 const dataWith = (over: Partial<HashMentionData>): HashMentionData => ({
     tasks: [],
     teamTasks: [],
+    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],
@@ -61,7 +66,7 @@ const subtitleOf = (item: { icon?: unknown }): string => {
 
 describe("HashMentionMenuItems — task sources", () => {
     it("offers tasks from other projects, not just the open one", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({
                 tasks: [openProjectTask({})],
@@ -75,7 +80,7 @@ describe("HashMentionMenuItems — task sources", () => {
     it("lists a task once when it appears in both sources", () => {
         // The open project's rows are in the team list too — the same task
         // must not show up twice.
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({
                 tasks: [openProjectTask({ id: "1", projectId: 1 })],
@@ -92,7 +97,7 @@ describe("HashMentionMenuItems — task sources", () => {
     });
 
     it("does not confuse tasks with the same id in different projects", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({
                 tasks: [openProjectTask({ id: "5", projectId: 1, displayId: "GEN-5" })],
@@ -104,7 +109,7 @@ describe("HashMentionMenuItems — task sources", () => {
     });
 
     it("names the project on each row", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({
                 teamTasks: [teamTask({})],
@@ -121,7 +126,7 @@ describe("HashMentionMenuItems — task sources", () => {
     });
 
     it("falls back to the name on the search row when the project list lacks it", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({ teamTasks: [teamTask({})], projects: [] })
         );
@@ -144,7 +149,7 @@ const statusOf = (item: { icon?: unknown }): string => {
  */
 describe("HashMentionMenuItems — task status chip", () => {
     it("shows the status of an open-project task (bare string source)", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({ tasks: [openProjectTask({ status: "WIP" })] })
         );
@@ -153,7 +158,7 @@ describe("HashMentionMenuItems — task status chip", () => {
     });
 
     it("shows the status of a team task (TaskStatusProps source)", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({
                 teamTasks: [
@@ -175,7 +180,7 @@ describe("HashMentionMenuItems — task status chip", () => {
     it("renders no chip when the status is unknown, rather than a wrong one", () => {
         // An unknown status must render nothing at all instead of
         // silently claiming the task is Open.
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({ tasks: [openProjectTask({ status: null })] })
         );
@@ -184,7 +189,7 @@ describe("HashMentionMenuItems — task status chip", () => {
     });
 
     it("leaves note / chat / project rows without a status chip", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({
                 projects: [
@@ -215,7 +220,7 @@ const subtitlePrefixOf = (item: { icon?: unknown }): string => {
  */
 describe("HashMentionMenuItems — milestone rows", () => {
     it("labels an open-project milestone row 'Milestone', not 'Task'", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({ tasks: [openProjectTask({ isMilestone: true })] })
         );
@@ -225,7 +230,7 @@ describe("HashMentionMenuItems — milestone rows", () => {
     });
 
     it("labels a team-task milestone row 'Milestone' with the project name", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({
                 teamTasks: [teamTask({ isMilestone: true })],
@@ -244,7 +249,7 @@ describe("HashMentionMenuItems — milestone rows", () => {
     });
 
     it("keeps a non-milestone task row labelled 'Task'", () => {
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             newEditor(),
             dataWith({ tasks: [openProjectTask({ isMilestone: false })] })
         );
@@ -254,7 +259,7 @@ describe("HashMentionMenuItems — milestone rows", () => {
 
     it("still inserts a hashTask chip for a milestone (resolves as a task)", () => {
         const editor = newEditor();
-        const items = HashMentionMenuItems(
+        const items = menuItems(
             editor,
             dataWith({ tasks: [openProjectTask({ id: "3", projectId: 1, isMilestone: true })] })
         );

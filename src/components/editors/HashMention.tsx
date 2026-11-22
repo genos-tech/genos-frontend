@@ -28,6 +28,7 @@ import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../../typ
 import { chatTypeCodeToSlug, entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
+import { searchHashTasks } from "./hashTaskSearch";
 import { MentionSuggestionMenu } from "./Mention";
 import { MENTION_ICONS, MentionIconDisc, MentionMenuRow } from "./mentionMenuRow";
 import {
@@ -366,7 +367,6 @@ export const lookedUpTaskItem = (
 
 interface HashMenuCacheEntry {
     tasks: TaskTableProps[];
-    teamTasks: SearchTeamTasksResponse[];
     notes: HashNoteEntry[];
     chats: AllChatProps[];
     projects: ProjectProps[];
@@ -381,14 +381,17 @@ const _hashMenuCache = new WeakMap<object, HashMenuCacheEntry>();
 // custom `MentionSuggestionMenu` renders only that).
 export const HashMentionMenuItems = (
     editor: any,
-    data: HashMentionData
+    data: HashMentionData,
+    // Rows from the server's task search (`serverTaskItems`): they depend on the query, so
+    // a call with some skips the per-editor cache and puts them after the local task rows.
+    remoteTaskItems: DefaultReactSuggestionItem[] = []
 ): DefaultReactSuggestionItem[] => {
     const copy = getMessages().common.editor;
     const cached = _hashMenuCache.get(editor);
     if (
+        remoteTaskItems.length === 0 &&
         cached &&
         cached.tasks === data.tasks &&
-        cached.teamTasks === data.teamTasks &&
         cached.notes === data.notes &&
         cached.chats === data.chats &&
         cached.projects === data.projects &&
@@ -397,16 +400,13 @@ export const HashMentionMenuItems = (
         return cached.items;
     }
 
-    // Two task sources, deduped by project+task id: the OPEN project's
-    // table rows (instant — an optimistic create shows before any refetch)
-    // and the team-wide search list (every project, so `#` isn't confined
-    // to whichever project happens to be open). Open-project rows win the
-    // dedupe: same task, but that copy is the fresher of the two.
+    // Local task rows: the OPEN project's table rows (instant — an
+    // optimistic create shows before any refetch). Tasks of other projects
+    // are not preloaded: `getItems` asks the server's task search for them
+    // once something is typed (MIP-1995), and `HashMentionMenuItems` stays a
+    // pure function of the loaded lists.
     //
-    // The row's project name comes from the project list where possible
-    // (one lookup, always current) and from the search row otherwise. Now
-    // that the menu spans projects, it's the only thing separating two
-    // same-named tasks in different projects.
+    // The row's project name comes from the project list where possible.
     const projectNameById = new Map<string, string>(
         data.projects
             .filter((p) => p.projectId != null)
@@ -424,9 +424,6 @@ export const HashMentionMenuItems = (
                 status: t.status || "",
                 isMilestone: Boolean(t.isMilestone),
             })),
-        ...data.teamTasks
-            .filter((t) => t.taskId != null && t.projectId != null)
-            .map((t) => teamTaskRow(t, projectNameById)),
     ];
     const seenTaskKeys = new Set<string>();
     const taskItems: DefaultReactSuggestionItem[] = taskRows
@@ -529,10 +526,10 @@ export const HashMentionMenuItems = (
             };
         });
 
-    const items = [...taskItems, ...noteItems, ...chatItems, ...projectItems];
+    const items = [...taskItems, ...remoteTaskItems, ...noteItems, ...chatItems, ...projectItems];
+    if (remoteTaskItems.length > 0) return items;
     _hashMenuCache.set(editor, {
         tasks: data.tasks,
-        teamTasks: data.teamTasks,
         notes: data.notes,
         chats: data.chats,
         projects: data.projects,
@@ -540,6 +537,27 @@ export const HashMentionMenuItems = (
         items,
     });
     return items;
+};
+
+/** `#` rows for tasks the server search returned, minus the ones the open project's
+ *  own rows already offer (those copies are the fresher ones). */
+// eslint-disable-next-line react-refresh/only-export-components
+export const serverTaskItems = (
+    editor: object,
+    rows: SearchTeamTasksResponse[],
+    data: Pick<HashMentionData, "tasks" | "projects">
+): DefaultReactSuggestionItem[] => {
+    const have = new Set(data.tasks.map((t) => `${t.projectId}-${t.id}`));
+    const projectNameById = new Map<string, string>(
+        data.projects
+            .filter((p) => p.projectId != null)
+            .map((p) => [String(p.projectId), p.projectName || ""])
+    );
+    const copy = getMessages().common.editor;
+    return rows
+        .filter((r) => r.taskId != null && r.projectId != null)
+        .filter((r) => !have.has(`${r.projectId}-${r.taskId}`))
+        .map((r) => taskSuggestionItem(editor, teamTaskRow(r, projectNameById), copy));
 };
 
 // Drop-in `#` suggestion controller. Reads the entity lists from context
@@ -580,7 +598,14 @@ export const HashSuggestionMenuController = ({ editor }: { editor: any }) => {
             // still typing the name, so the next keystroke shows the item.
             data.refresh();
             rememberHashQuery(editor, query);
-            const items = filterAndRankSuggestionItems(HashMentionMenuItems(editor, data), query);
+            // Tasks of every project come from the server's task search, debounced and
+            // cancelled by the next keystroke (MIP-1995). A failure or a superseded
+            // query leaves the local rows, which are always there.
+            const found = await searchHashTasks(editor, data.myself, accessToken ?? null, query);
+            const items = filterAndRankSuggestionItems(
+                HashMentionMenuItems(editor, data, serverTaskItems(editor, found, data)),
+                query
+            );
             // A whole id that matches no listed task may be a closed
             // one: ask for it (MIP-739). Awaited, unlike the refresh
             // above — it's one row, and only for an exact id.
