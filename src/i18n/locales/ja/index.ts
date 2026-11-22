@@ -6396,13 +6396,6 @@ export const ja: DeepPartial<Messages> = {
                 lastProgress: "最終進捗 {when}",
             },
             memberTasks: {
-                pickLabel: "メンバー",
-                pickPlaceholder: "メンバーを検索…",
-                viewing: "表示中",
-                pickHint: "メンバーを選択して、タスクの統計情報を確認します。",
-                noMembers: "このプロジェクトには他のメンバーがタスクを持っていません。",
-                promptTitle: "メンバーを選ぶ",
-                promptBody: "上でメンバーを選択すると、タスクの統計情報が表示されます。",
                 nothingAssignedTitle: "このメンバーには何も割り当てられていません",
                 nothingAssignedBody:
                     "このプロジェクトのタスクをこのメンバーに割り当てると、ここに表示されます。",
@@ -6432,7 +6425,6 @@ export const ja: DeepPartial<Messages> = {
             topWeight: {
                 title: "重要度の高いタスク",
                 subtitle: "着手を優先すべきタスク",
-                sortFlip: "もう一度クリックすると順序が逆になります",
                 help: {
                     title: "タスクの重要度とは？",
                     body: "今すぐ着手すべき度合いを 1〜25 で表したスコアです。優先度、締切までの余裕、Effortレベルから算出されます。Effortレベルの大きいタスクほど早い段階からスコアが上がり、対応時間を確保しやすくなります。数値が大きいほど、早めの着手が必要です。",
@@ -6468,9 +6460,6 @@ export const ja: DeepPartial<Messages> = {
             pickASprint: "スプリントを選択",
             sprintSettingsTooltip: "スプリント設定",
             manageSprintsTooltip: "スプリントを管理",
-            burndownTooltip: "スプリント内Close件数 / スプリント内作成件数",
-            milestoneTooltip: "マイルストーン",
-            projectsCount: "{count} 件のプロジェクト",
             statusLabels: {
                 open: "Open",
                 wip: "WIP",
@@ -6533,8 +6522,6 @@ export const ja: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "リスクのあるマイルストーンはありません。",
                 openMilestoneFor: "{title}を開く",
             },
-            tabMyTasks: "自分のタスク",
-            tabMemberTasks: "メンバーのタスク",
             tabPeople: "メンバー",
             people: {
                 person: "メンバー",

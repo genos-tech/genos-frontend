@@ -2,14 +2,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import ViewKanbanRoundedIcon from "@mui/icons-material/ViewKanbanRounded";
-import { Box, Button, IconButton, Stack, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Stack } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { PageHeader } from "../../../../components/ui/page/PageHeader";
-import { fmt } from "../../../../i18n";
-import { g } from "../../../../theme/tokens";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
@@ -93,7 +91,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         diagramMilestone,
         setDiagramMilestone,
         sprintNameFor,
-        projectCount,
         joinedProjects,
         handleTaskClick,
         handleGoToTable,
@@ -154,9 +151,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                         title={t.tasks.dashboard.taskStats}
                         actions={
                             <>
-                                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                                    {fmt(t.tasks.dashboard.projectsCount, { count: projectCount })}
-                                </Typography>
                                 {/* The quick actions: one primary New task, two icon buttons. They used to
                                     be three tinted buttons in their own row under the tabs. */}
                                 {usePM.currentProject && (

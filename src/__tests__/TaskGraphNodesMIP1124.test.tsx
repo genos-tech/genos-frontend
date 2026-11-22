@@ -34,8 +34,6 @@ import {
     statusTone,
     toneCss,
 } from "../features/tasks/meta/taskTone";
-import { SprintMilestonesSection } from "../features/tasks/sprint-milestone/components/SprintMilestonesSection";
-import type { Milestone } from "../features/tasks/sprint-milestone/types";
 import type { UserProps } from "../types/admin";
 import type { TaskTableProps } from "../types/tasks";
 
@@ -675,92 +673,6 @@ describe("the nodes carry no old chip, literal color or color-scheme subscriptio
         expect(text.match(/useColorScheme\(\)/g)?.length).toBe(1);
         expect(text.indexOf("useColorScheme()")).toBeGreaterThan(
             text.indexOf("export const NodeDateEditor")
-        );
-    });
-});
-
-describe("the Sprint Insights milestone strip", () => {
-    const milestone = (over: Partial<Milestone> = {}): Milestone =>
-        ({
-            milestoneId: 7,
-            taskId: 70,
-            displayId: "MIP-70",
-            projectId: 1,
-            teamId: 1,
-            sprintId: 3,
-            title: "Strip milestone",
-            status: "WIP",
-            priority: null,
-            tags: [],
-            assignees: [],
-            tasksTotal: 4,
-            tasksClosed: 1,
-            ...over,
-        }) as unknown as Milestone;
-
-    const strip = (ms: Milestone[], useTM: Record<string, unknown> = {}) =>
-        render(
-            withContext(
-                <SprintMilestonesSection
-                    myself={{ userId: "me" } as UserProps}
-                    projectId={1}
-                    selectedSprint={{ sprintId: 3, name: "Sprint 3" } as never}
-                    setMyself={NOOP}
-                    socket={null}
-                    useCM={{} as never}
-                    useSM={{ projectMilestones: { 1: ms } } as never}
-                    useTEM={{ teamMemberProfiles: {} } as never}
-                    useTM={useTM as never}
-                    useUISM={{} as never}
-                />
-            )
-        );
-
-    it.each(STATUS_NAMES)("%s: the table's icon and color, no chip, no loose dot", (s) => {
-        const expected = reference(s);
-        const { container } = strip([milestone({ status: s })]);
-        expect(marks(container)).toEqual([expected]);
-        expect(container.querySelector(".MuiChip-root")).toBeNull();
-    });
-
-    it("a row is a family card: flag, quiet id, title, count; click and Enter open the milestone", () => {
-        const setCurrentPreviewKind = vi.fn();
-        const setCurrentPreviewMilestoneId = vi.fn();
-        const setIsTaskPreviewVisible = vi.fn();
-        const { container } = strip([milestone()], {
-            setCurrentPreviewKind,
-            setCurrentPreviewMilestoneId,
-            setIsTaskPreviewVisible,
-        });
-        expect(container.querySelector('[data-testid="MilestoneFlag"]')).toBeTruthy();
-        expect(screen.getByText("MIP-70")).toBeTruthy();
-        expect(screen.getByText("1/4")).toBeTruthy();
-        const card = screen.getByRole("button", { name: "Strip milestone" });
-        fireEvent.click(card);
-        fireEvent.keyDown(card, { key: "Enter" });
-        expect(setCurrentPreviewKind).toHaveBeenCalledWith("milestone");
-        expect(setCurrentPreviewMilestoneId).toHaveBeenCalledWith(7);
-        expect(setIsTaskPreviewVisible).toHaveBeenCalledTimes(2);
-    });
-
-    it("only this sprint's milestones are listed, and an empty sprint says so", () => {
-        const some = strip([
-            milestone(),
-            milestone({ milestoneId: 8, sprintId: 9, title: "Other sprint" }),
-        ]);
-        expect(screen.queryByText("Other sprint")).toBeNull();
-        expect(screen.getByTestId("sprint-milestones-count").textContent).toBe("1");
-        some.unmount();
-        strip([]);
-        expect(screen.getByText("No milestones in this sprint yet.")).toBeTruthy();
-    });
-
-    it("has no old chip, literal color, STATUS_FILL or isDark", () => {
-        const text = code(
-            "features/tasks/sprint-milestone/components/SprintMilestonesSection.tsx"
-        );
-        expect(text).not.toMatch(
-            /#[0-9a-fA-F]{3,8}\b|rgba?\(|isDark|--gp-|\bChip\b|STATUS_FILL|\bCard\b/
         );
     });
 });

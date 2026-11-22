@@ -3507,13 +3507,6 @@ export const hi: DeepPartial<Messages> = {
                 lastProgress: "आख़िरी प्रगति {when}",
             },
             memberTasks: {
-                pickLabel: "सदस्य",
-                pickPlaceholder: "एक सदस्य खोजें…",
-                viewing: "देखना",
-                pickHint: "किसी सदस्य के कार्य आँकड़े देखने के लिए उसे चुनें।",
-                noMembers: "इस प्रोजेक्ट में किसी अन्य सदस्य के पास कार्य नहीं हैं.",
-                promptTitle: "एक सदस्य चुनें",
-                promptBody: "उनके कार्य आँकड़े देखने के लिए उपरोक्त किसी सदस्य को चुनें।",
                 nothingAssignedTitle: "इस सदस्य को कुछ भी नहीं सौंपा गया है",
                 nothingAssignedBody:
                     "यहाँ देखने के लिए इस प्रोजेक्ट का कोई टास्क इस सदस्य को असाइन करें।",
@@ -3543,7 +3536,6 @@ export const hi: DeepPartial<Messages> = {
             topWeight: {
                 title: "वज़न के अनुसार शीर्ष",
                 subtitle: "इन्हें अभी शुरू करें",
-                sortFlip: "ऑर्डर को उलटने के लिए फिर से क्लिक करें",
                 help: {
                     title: "कार्य भार क्या है?",
                     body: "किसी कार्य को अभी शुरू करने की कितनी आवश्यकता है इसका 1-25 अंक। वजन = प्राथमिकता × आरंभ करने के लिए समय का दबाव। भारी प्रयास के स्तर उस दबाव को पहले ही बनाना शुरू कर देते हैं - एक व्यापक कार्य अपनी नियत तारीख से लगभग एक सप्ताह पहले चढ़ना शुरू हो जाता है, केवल अंतिम कुछ दिनों में तेजी से - इसलिए बड़ी नौकरियां सामने आती हैं जबकि उन पर काम करने के लिए अभी भी जगह होती है। संख्या जितनी बड़ी होगी, उसे उतनी ही जल्दी उठाया जाना चाहिए।",
@@ -3579,9 +3571,6 @@ export const hi: DeepPartial<Messages> = {
             pickASprint: "एक स्प्रिंट चुनें",
             sprintSettingsTooltip: "स्प्रिंट सेटिंग्स",
             manageSprintsTooltip: "स्प्रिंट मैनेज करें",
-            burndownTooltip: "स्प्रिंट में बंद / स्प्रिंट में बनाए गए",
-            milestoneTooltip: "माइलस्टोन",
-            projectsCount: "{count} प्रोजेक्ट",
             statusLabels: {
                 open: "ओपन",
                 wip: "प्रगति पर",
@@ -3643,8 +3632,6 @@ export const hi: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "कोई माइलस्टोन जोखिम में नहीं है।",
                 openMilestoneFor: "{title} खोलें",
             },
-            tabMyTasks: "मेरे टास्क",
-            tabMemberTasks: "सदस्य के टास्क",
             tabPeople: "लोग",
             people: {
                 person: "व्यक्ति",

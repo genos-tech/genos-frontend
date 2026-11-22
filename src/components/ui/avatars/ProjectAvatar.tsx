@@ -18,16 +18,27 @@ type ProjectAvatarProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     avatarSize?: number;
+    /**
+     * Whether a click opens the project profile (default). A picker passes `false`: the picture of
+     * a control opens the control, not another dialog (MIP-1981).
+     */
+    clickable?: boolean;
     pmChat: AllChatProps;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
 };
 export const ProjectAvatar = (props: ProjectAvatarProps) => {
     const { useTEM, socket, myself, setMyself, avatarSize, pmChat, useCM, useUISM } = props;
+    const clickable = props.clickable !== false;
     const [openModalProjectProfile, setOpenModalProjectProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
     const _avatarSize = avatarSize || 32;
+    if (!clickable) {
+        return (
+            <ProjectChatAvatar size={_avatarSize} src={buildAvatarSrc(pmChat.profileImagePath)} />
+        );
+    }
     return (
         <div>
             <Clickable

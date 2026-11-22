@@ -127,6 +127,8 @@ describe("TaskDashboard header (MIP-1220)", () => {
         renderDashboard();
         const header = screen.getByTestId("task-dashboard-header");
         expect(within(header).getByRole("heading", { level: 1 }).textContent).toBe("Task Stats");
+        // The "N projects" count answered no question on this page and is gone (R1).
+        expect(within(header).queryByText(/\d+ projects?/)).toBeNull();
     });
 });
 

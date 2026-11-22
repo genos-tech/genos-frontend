@@ -199,7 +199,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // must always agree, so they are driven by the SAME data: the project's
     // milestones filtered to the selected sprint. `sprintMilestones` mirrors
     // the filter the Project tab's milestone card applies (and the old
-    // SprintMilestonesSection did), so the header and the card list the same milestones.
+    // sprint milestone list did), so the header and the card list the same milestones.
     const sprintMilestones = useMemo<Milestone[]>(() => {
         const projectId = usePM.currentProject?.projectId;
         if (!projectId) return [];
@@ -693,7 +693,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         sprintId != null ? (sprintNameById.get(sprintId) ?? null) : null;
 
     // ── Handlers ──
-    const projectCount = usePM.teamProjects?.length || 0;
 
     const joinedProjects = useMemo(() => {
         return (usePM.teamProjects || []).filter((p) => p.isJoined === true);
@@ -796,7 +795,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         diagramMilestone,
         setDiagramMilestone,
         sprintNameFor,
-        projectCount,
         joinedProjects,
         handleTaskClick,
         handleGoToTable,

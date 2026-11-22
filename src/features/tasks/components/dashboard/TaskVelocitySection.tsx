@@ -296,7 +296,9 @@ export const TaskVelocitySection = ({
                         textMuted={textMuted}
                         textSecondary={textSecondary}
                     />
-                    {(data ?? []).length > 0 && (
+                    {(data ?? []).some(
+                        (d) => d.created + d.started + d.closed + d.updated > 0
+                    ) && (
                         <Typography level="body-xs" sx={{ color: textSecondary }}>
                             {fmt(v.totals, {
                                 created: totals.created,

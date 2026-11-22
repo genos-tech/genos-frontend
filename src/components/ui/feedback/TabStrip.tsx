@@ -1,4 +1,12 @@
-import { KeyboardEvent, ReactNode, useEffect, useRef } from "react";
+import {
+    KeyboardEvent,
+    ReactNode,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, Typography } from "@mui/joy";
 
@@ -16,7 +24,9 @@ import { touchTargetSx } from "../touchTargets";
  * `tablist`: roving tabindex, Arrow keys (mirrored in right-to-left),
  * Home / End, and `aria-selected`. Narrow screens scroll the strip
  * sideways instead of squeezing labels, and the selected tab scrolls into
- * view.
+ * view. While the strip can scroll, the edge with more tabs fades out (and
+ * the fade goes at the end of the scroll), so a tab past the edge is not
+ * missed (MIP-1982); it follows the page direction.
  *
  * Close buttons stay OUT of the tablist: a `tablist` may only own `tab`s
  * (axe: aria-required-children, critical), so the visible x is a pointer /
@@ -106,6 +116,19 @@ const closeButtonSx = {
     },
 } as const;
 
+const CUE_W = 24;
+const cueMask = ({ start, end, rtl }: { start: boolean; end: boolean; rtl: boolean }): string => {
+    const edge = (on: boolean, at: "from" | "to") =>
+        on
+            ? at === "from"
+                ? `transparent 0, black ${CUE_W}px`
+                : `black calc(100% - ${CUE_W}px), transparent 100%`
+            : at === "from"
+              ? "black 0"
+              : "black 100%";
+    return `linear-gradient(to ${rtl ? "left" : "right"}, ${edge(start, "from")}, ${edge(end, "to")})`;
+};
+
 export const TabStrip = ({
     tabs,
     value,
@@ -118,6 +141,37 @@ export const TabStrip = ({
     baseline = true,
 }: TabStripProps) => {
     const listRef = useRef<HTMLDivElement>(null);
+    // Which edges have more tabs behind them. `start` / `end` follow the page direction.
+    const [cues, setCues] = useState({ start: false, end: false, rtl: false });
+    const measureCues = useCallback(() => {
+        const el = listRef.current;
+        if (!el) return;
+        // scrollLeft is 0 at the inline start and negative towards the end in right-to-left.
+        const pos = Math.abs(el.scrollLeft);
+        const next = {
+            start: pos > 1,
+            end: pos + el.clientWidth < el.scrollWidth - 1,
+            rtl: getComputedStyle(el).direction === "rtl",
+        };
+        setCues((c) =>
+            c.start === next.start && c.end === next.end && c.rtl === next.rtl ? c : next
+        );
+    }, []);
+    useLayoutEffect(() => {
+        const el = listRef.current;
+        if (!el) return;
+        measureCues();
+        el.addEventListener("scroll", measureCues, { passive: true });
+        if (typeof ResizeObserver === "undefined") {
+            return () => el.removeEventListener("scroll", measureCues);
+        }
+        const ro = new ResizeObserver(measureCues);
+        ro.observe(el);
+        return () => {
+            el.removeEventListener("scroll", measureCues);
+            ro.disconnect();
+        };
+    }, [measureCues, tabs.length]);
 
     // Keep the selected tab visible when the strip scrolls (many note tabs).
     useEffect(() => {
@@ -213,8 +267,18 @@ export const TabStrip = ({
             <Box
                 ref={listRef}
                 aria-label={ariaLabel}
+                data-overflow-end={cues.end ? "true" : undefined}
+                data-overflow-start={cues.start ? "true" : undefined}
                 role="tablist"
                 sx={{
+                    // The fade, as a mask so it works on any background: 24 px at an edge that has
+                    // more tabs behind it, nothing at an edge that does not.
+                    ...(cues.start || cues.end
+                        ? {
+                              WebkitMaskImage: cueMask(cues),
+                              maskImage: cueMask(cues),
+                          }
+                        : null),
                     display: "flex",
                     alignItems: "stretch",
                     gap: 0.5,
