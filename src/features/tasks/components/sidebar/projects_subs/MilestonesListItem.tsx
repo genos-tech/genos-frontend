@@ -232,8 +232,12 @@ export const MilestonesListItem = memo(function MilestonesListItem({
 
     const milestones: Milestone[] = useMemo(
         () =>
-            selectSidebarLiveMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
-        [useSM.projectMilestones, currentProjectId, sprints]
+            selectSidebarLiveMilestones(
+                useSM.projectMilestones[currentProjectId] ?? [],
+                sprints,
+                useSM.isMilestoneFavorited
+            ),
+        [useSM.projectMilestones, currentProjectId, sprints, useSM.isMilestoneFavorited]
     );
 
     // "Past milestones": Closed milestones whose sprint has ended, plus Closed
@@ -243,8 +247,12 @@ export const MilestonesListItem = memo(function MilestonesListItem({
     // `handleOpen` as a live milestone), which un-hides its full task history.
     const pastMilestones: Milestone[] = useMemo(
         () =>
-            selectSidebarPastMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
-        [useSM.projectMilestones, currentProjectId, sprints]
+            selectSidebarPastMilestones(
+                useSM.projectMilestones[currentProjectId] ?? [],
+                sprints,
+                useSM.isMilestoneFavorited
+            ),
+        [useSM.projectMilestones, currentProjectId, sprints, useSM.isMilestoneFavorited]
     );
 
     // Same past milestones, bucketed into a year → sprint tree so the folder

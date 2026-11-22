@@ -561,9 +561,15 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         if (!projectId) return [];
         return selectVisibleMilestones(
             useSM.projectMilestones[projectId] ?? [],
-            useSM.projectSprints[projectId] ?? []
+            useSM.projectSprints[projectId] ?? [],
+            useSM.isMilestoneFavorited
         ).filter(isOngoingMilestone);
-    }, [usePM.currentProject?.projectId, useSM.projectMilestones, useSM.projectSprints]);
+    }, [
+        usePM.currentProject?.projectId,
+        useSM.projectMilestones,
+        useSM.projectSprints,
+        useSM.isMilestoneFavorited,
+    ]);
 
     // ── My Tasks (badge) + Focus user (shared tasks body) ──
 

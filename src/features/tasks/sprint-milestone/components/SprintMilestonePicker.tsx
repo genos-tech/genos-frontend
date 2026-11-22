@@ -118,18 +118,19 @@ export const SprintMilestonePicker = ({
     // re-admitted if filtering would drop it, so we never silently flip a
     // Closed linkage to "No milestone".
     //
-    // Sort comes from `selectVisibleMilestones` (three-level: due-date
-    // asc → custom status order → title asc). The orphan/fallback row
-    // (if any) is appended last so "this is the current value but no
-    // longer in your active set" is visually distinct.
+    // Sort comes from `selectVisibleMilestones` (the shared `compareMilestones`
+    // order, MIP-2001); the task's current milestone is moved to the top.
     const milestoneOptions: MilestoneOption[] = useMemo(() => {
-        const visible = selectVisibleMilestones(milestones, sprints).filter(
-            (m) => m.status !== "Closed"
-        );
-        const list =
-            milestoneId != null && !visible.some((m) => m.milestoneId === milestoneId)
-                ? [...visible, ...milestones.filter((m) => m.milestoneId === milestoneId)]
-                : visible;
+        const visible = selectVisibleMilestones(
+            milestones,
+            sprints,
+            useSM.isMilestoneFavorited
+        ).filter((m) => m.status !== "Closed");
+        // The task's current milestone always leads the list (even a Closed one,
+        // so a Closed linkage never flips to "No milestone"), then the shared order.
+        const current =
+            milestoneId != null ? milestones.filter((m) => m.milestoneId === milestoneId) : [];
+        const list = [...current, ...visible.filter((m) => m.milestoneId !== milestoneId)];
         return [
             NO_MILESTONE,
             ...list.map<MilestoneOption>((m) => ({
@@ -139,7 +140,7 @@ export const SprintMilestonePicker = ({
                 milestone: m,
             })),
         ];
-    }, [milestones, sprints, milestoneId, NO_MILESTONE]);
+    }, [milestones, sprints, milestoneId, NO_MILESTONE, useSM.isMilestoneFavorited]);
 
     const selectedSprint = sprintOptions.find((o) => o.id === (sprintId ?? null)) ?? NO_SPRINT;
     const selectedMilestone =

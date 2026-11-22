@@ -3,21 +3,7 @@ import { parseCalendarDate } from "../../../../utils/calendarDate";
 import { statusSolid } from "../../meta/taskTone";
 import { Milestone, Sprint } from "../types";
 
-/**
- * Shared milestone sort logic. Used by the sidebar `MilestonesListItem`
- * and the `SprintMilestonePicker` so both surfaces present milestones in
- * the same order regardless of where the user is interacting with them.
- *
- * Three-level sort:
- *   1. due-date ascending (`null` / `undefined` / empty string sorted last)
- *   2. custom status order (Open → WIP → Blocked → Pending → Closed → unknown)
- *   3. title ascending (locale aware)
- *
- * Each level only kicks in when the previous one tied, so groups stay
- * grouped: all items sharing a due date are sorted by status amongst
- * themselves, and within a single (date, status) bucket items are
- * sorted by title.
- */
+/** Shared milestone sort logic: see `compareMilestones` for the rule (MIP-2001). */
 
 // Custom display order for the milestone status chip. Anything not
 // in this list is treated as "after Closed" so unknown / future
@@ -87,13 +73,67 @@ export const compareMilestoneStatus = (a: string, b: string): number => {
     return (ia === -1 ? MILESTONE_STATUS_LAST : ia) - (ib === -1 ? MILESTONE_STATUS_LAST : ib);
 };
 
-/** Combined comparator implementing the three-level sort described above. */
-export const compareMilestones = (a: Milestone, b: Milestone): number => {
+/** What the comparator needs beyond the milestone row itself. */
+export type MilestoneSortContext = {
+    /** Favorites first. Omitted = no favorite tier. */
+    isFavorite?: (milestoneId: number) => boolean;
+    /** Milestones in one of these sprints come before other open ones. */
+    activeSprintIds?: ReadonlySet<number>;
+};
+
+const progressTime = (m: Milestone): number => {
+    const t = m.lastProgressAt ? new Date(m.lastProgressAt).getTime() : NaN;
+    return Number.isFinite(t) ? t : -Infinity;
+};
+
+/** Ids of the sprints that are running now (status "active"). */
+export const getActiveSprintIds = (sprints: Sprint[]): Set<number> =>
+    new Set(sprints.filter((s) => !s.isDeleted && s.status === "active").map((s) => s.sprintId));
+
+/**
+ * THE milestone order (MIP-2001), shared by the sidebar, the task preview's
+ * Milestone dropdown, the table filter and the Task Stats Milestones tab:
+ *   1. favorites first
+ *   2. open work (Open / WIP / Blocked / Pending) before Closed
+ *   3. milestones in the active sprint before other open ones
+ *   4. most recent progress first (`lastProgressAt`: the milestone or any task
+ *      under it, not the raw `tsUpdatedAt`); never-recorded sorts last
+ *   5. nearest due date (none last), then title
+ * Each tier only applies when the previous one tied.
+ */
+export const compareMilestones = (
+    a: Milestone,
+    b: Milestone,
+    ctx: MilestoneSortContext = {}
+): number => {
+    if (ctx.isFavorite) {
+        const fav = Number(ctx.isFavorite(b.milestoneId)) - Number(ctx.isFavorite(a.milestoneId));
+        if (fav !== 0) return fav;
+    }
+    const closed = Number(a.status === "Closed") - Number(b.status === "Closed");
+    if (closed !== 0) return closed;
+    if (ctx.activeSprintIds && a.status !== "Closed") {
+        const active =
+            Number(b.sprintId != null && ctx.activeSprintIds.has(b.sprintId)) -
+            Number(a.sprintId != null && ctx.activeSprintIds.has(a.sprintId));
+        if (active !== 0) return active;
+    }
+    const ta = progressTime(a);
+    const tb = progressTime(b);
+    if (ta !== tb) return ta === -Infinity ? 1 : tb === -Infinity ? -1 : tb - ta;
     const dateCmp = compareDueDate(a.dueDate, b.dueDate);
     if (dateCmp !== 0) return dateCmp;
-    const statusCmp = compareMilestoneStatus(a.status as string, b.status as string);
-    if (statusCmp !== 0) return statusCmp;
     return compareText(a.title, b.title);
+};
+
+/** Sort a copy of `milestones` by the shared order, resolving the active sprints from `sprints`. */
+export const sortMilestones = (
+    milestones: Milestone[],
+    sprints: Sprint[],
+    isFavorite?: (milestoneId: number) => boolean
+): Milestone[] => {
+    const ctx: MilestoneSortContext = { isFavorite, activeSprintIds: getActiveSprintIds(sprints) };
+    return [...milestones].sort((a, b) => compareMilestones(a, b, ctx));
 };
 
 // Sprint statuses that count as "the sprint is over". Closed milestones
@@ -116,8 +156,7 @@ export const ENDED_SPRINT_STATUSES = new Set<Sprint["status"]>(["completed", "ar
  *   - Anything else (Open / WIP / Blocked / Pending in any sprint or no sprint,
  *     plus Closed in active / upcoming sprints) stays.
  *
- * Output is sorted via `compareMilestones` (3-level: due-date → status
- * → title) so callers don't need to re-sort.
+ * Output is sorted via `compareMilestones` so callers don't need to re-sort.
  */
 /**
  * Sibling of `selectVisibleMilestones` for sprints. Returns the sprints
@@ -158,22 +197,25 @@ export const selectEndedSprints = (sprints: Sprint[]): Sprint[] => {
 
 export const selectVisibleMilestones = (
     milestones: Milestone[],
-    sprints: Sprint[]
+    sprints: Sprint[],
+    isFavorite?: (milestoneId: number) => boolean
 ): Milestone[] => {
     const endedSprintIds = new Set<number>(
         sprints
             .filter((s) => !s.isDeleted && ENDED_SPRINT_STATUSES.has(s.status))
             .map((s) => s.sprintId)
     );
-    return milestones
-        .filter((m) => {
+    return sortMilestones(
+        milestones.filter((m) => {
             if (m.isDeleted || m.status === "Deleted") return false;
             if (m.status === "Closed" && m.sprintId != null) {
                 return !endedSprintIds.has(m.sprintId);
             }
             return true;
-        })
-        .sort(compareMilestones);
+        }),
+        sprints,
+        isFavorite
+    );
 };
 
 /**
@@ -193,23 +235,26 @@ export const selectVisibleMilestones = (
  */
 export const selectOutdatedMilestones = (
     milestones: Milestone[],
-    sprints: Sprint[]
+    sprints: Sprint[],
+    isFavorite?: (milestoneId: number) => boolean
 ): Milestone[] => {
     const endedSprintIds = new Set<number>(
         sprints
             .filter((s) => !s.isDeleted && ENDED_SPRINT_STATUSES.has(s.status))
             .map((s) => s.sprintId)
     );
-    return milestones
-        .filter(
+    return sortMilestones(
+        milestones.filter(
             (m) =>
                 !m.isDeleted &&
                 m.status !== "Deleted" &&
                 m.status === "Closed" &&
                 m.sprintId != null &&
                 endedSprintIds.has(m.sprintId)
-        )
-        .sort(compareMilestones);
+        ),
+        sprints,
+        isFavorite
+    );
 };
 
 /** A live (non-deleted) Closed milestone that was never given a sprint. */
@@ -230,19 +275,27 @@ const isClosedWithoutSprint = (m: Milestone): boolean =>
  */
 export const selectSidebarLiveMilestones = (
     milestones: Milestone[],
-    sprints: Sprint[]
+    sprints: Sprint[],
+    isFavorite?: (milestoneId: number) => boolean
 ): Milestone[] =>
-    selectVisibleMilestones(milestones, sprints).filter((m) => !isClosedWithoutSprint(m));
+    selectVisibleMilestones(milestones, sprints, isFavorite).filter(
+        (m) => !isClosedWithoutSprint(m)
+    );
 
 /** Sidebar "Past milestones": the outdated ones plus Closed milestones with no sprint. */
 export const selectSidebarPastMilestones = (
     milestones: Milestone[],
-    sprints: Sprint[]
+    sprints: Sprint[],
+    isFavorite?: (milestoneId: number) => boolean
 ): Milestone[] =>
-    [
-        ...selectOutdatedMilestones(milestones, sprints),
-        ...milestones.filter(isClosedWithoutSprint),
-    ].sort(compareMilestones);
+    sortMilestones(
+        [
+            ...selectOutdatedMilestones(milestones, sprints),
+            ...milestones.filter(isClosedWithoutSprint),
+        ],
+        sprints,
+        isFavorite
+    );
 
 /** Ids of the outdated milestones (see `selectOutdatedMilestones`) — the
  *  hide-set the task filter uses to drop outdated milestones and their tasks. */
