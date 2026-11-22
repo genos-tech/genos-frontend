@@ -116,11 +116,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
             {
                 id: "discounts",
                 q: "Are there discounts?",
-                a: [
-                    // TODO(copy): MIP-1895. Checkout has no promotion-code box (STRIPE_ALLOW_PROMOTION_CODES is off), and
-                    // the first month has its own gated answer above. Ken to approve this wording.
-                    "There are no discount or promotion codes at launch.",
-                ],
+                a: ["There are no discount or promotion codes at launch."],
             },
         ],
     },
@@ -199,11 +195,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
             {
                 id: "discounts",
                 q: "割引はありますか？",
-                a: [
-                    // TODO(copy): MIP-1895. 決済画面にプロモーションコードの入力欄は無く、最初の 1 か月は上の別項目で
-                    // 案内する。文言は Ken の承認が必要。
-                    "リリース時点では、割引やプロモーションコードはありません。",
-                ],
+                a: ["リリース時点では、割引やプロモーションコードはありません。"],
             },
         ],
     },
