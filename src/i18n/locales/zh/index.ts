@@ -2656,7 +2656,6 @@ export const zh: DeepPartial<Messages> = {
             messageReminder: "提醒",
             todoReminder: "待办提醒",
             genosReport: "Genos 报告",
-            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
             trialNotice: "免费试用",
         },
         report: {
@@ -3815,7 +3814,6 @@ export const zh: DeepPartial<Messages> = {
             title: "已连接的应用",
             blurb: "你已允许以你的身份使用 Genos 的 AI 应用。撤销后，该应用在下一次请求时就会失效。",
             empty: "还没有已连接的应用。",
-            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
             paused: "已暂停",
             // TODO(copy)
             pausedNote:
@@ -4067,7 +4065,6 @@ export const zh: DeepPartial<Messages> = {
             heading: "套餐与用量",
             description: "你当前的套餐以及各项限额的使用情况。",
             viaTeam: "来自团队 {team}",
-            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
             trialChip: "免费试用",
             // TODO(copy)
             trialEnds: "Core 的免费月将于 {date} 结束。",

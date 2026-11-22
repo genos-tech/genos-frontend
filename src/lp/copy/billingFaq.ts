@@ -108,8 +108,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 firstMonth: true,
                 q: "Is the first month free?",
                 a: [
-                    // TODO(copy): MIP-1737 / MIP-1250. Wording of the offer and "existing accounts" needs Ken's
-                    // approval, and the existing-account grant is run by the operator. Hidden until the switch is on.
+                    // MIP-1737 / MIP-1250. The existing-account grant is run by the operator. Hidden until the switch is on.
                     "Yes, for now. The first 30 days of the Core plan are free, once per account, and no card is needed to start. When the 30 days end, the account goes back to Free unless you choose a paid plan. We may end this offer once many people have signed up.",
                 ],
             },
@@ -187,8 +186,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 firstMonth: true,
                 q: "最初の 1 か月は無料ですか？",
                 a: [
-                    // TODO(copy): MIP-1737 / MIP-1250. 特典の文言と「既存のアカウント」について Ken の承認が必要。
-                    // 既存アカウントへの付与は運用者が実行する。スイッチが入るまでは非表示。
+                    // MIP-1737 / MIP-1250. 既存アカウントへの付与は運用者が実行する。スイッチが入るまでは非表示。
                     "はい、当面の間です。Core プランの最初の 30 日間を、アカウントごとに一度無料でお使いいただけます。始めるのにカードは不要です。30 日が過ぎると、有料プランを選ばない限り Free に戻ります。多くの方が登録された時点で、この特典は終了する場合があります。",
                 ],
             },

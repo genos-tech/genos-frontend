@@ -2769,7 +2769,6 @@ export const ja: DeepPartial<Messages> = {
             messageReminder: "リマインダー",
             todoReminder: "To-Do リマインダー",
             genosReport: "Genos レポート",
-            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
             trialNotice: "無料トライアル",
         },
         report: {
@@ -3962,7 +3961,6 @@ export const ja: DeepPartial<Messages> = {
             title: "接続済みアプリ",
             blurb: "あなたとして Genos を使うことを許可した AI アプリです。取り消すと、次のリクエストから使えなくなります。",
             empty: "接続済みのアプリはまだありません。",
-            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
             paused: "一時停止中",
             // TODO(copy)
             pausedNote:
@@ -4220,7 +4218,6 @@ export const ja: DeepPartial<Messages> = {
             heading: "プランと使用状況",
             description: "現在のプランと、各上限の使用状況です。",
             viaTeam: "チーム {team} のプラン",
-            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
             trialChip: "無料トライアル",
             // TODO(copy)
             trialEnds: "Core の無料期間は {date} に終わります。",

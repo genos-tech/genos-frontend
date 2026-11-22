@@ -662,7 +662,6 @@ export const hi: DeepPartial<Messages> = {
             title: "कनेक्टेड ऐप",
             blurb: "वे AI ऐप जिन्हें आपने आपकी तरह Genos इस्तेमाल करने की अनुमति दी है। किसी को रद्द करने पर वह अपने अगले रिक्वेस्ट से काम करना बंद कर देता है।",
             empty: "अभी कोई ऐप कनेक्ट नहीं है।",
-            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
             paused: "रुका हुआ",
             // TODO(copy)
             pausedNote:
@@ -921,7 +920,6 @@ export const hi: DeepPartial<Messages> = {
             heading: "प्लान और उपयोग",
             description: "आपका वर्तमान प्लान और प्रत्येक सीमा का उपयोग।",
             viaTeam: "टीम {team} के ज़रिए",
-            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
             trialChip: "मुफ़्त ट्रायल",
             // TODO(copy)
             trialEnds: "आपका Core का मुफ़्त महीना {date} को समाप्त होगा।",
@@ -4506,7 +4504,6 @@ export const hi: DeepPartial<Messages> = {
             messageReminder: "रिमाइंडर",
             todoReminder: "टू-डू रिमाइंडर",
             genosReport: "Genos रिपोर्ट",
-            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
             trialNotice: "मुफ़्त ट्रायल",
         },
         report: {

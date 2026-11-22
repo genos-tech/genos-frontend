@@ -2794,7 +2794,6 @@ export const fr: DeepPartial<Messages> = {
             messageReminder: "Rappel",
             todoReminder: "Rappel de tâche",
             genosReport: "Rapport Genos",
-            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
             trialNotice: "Essai gratuit",
         },
         report: {
@@ -4013,7 +4012,6 @@ export const fr: DeepPartial<Messages> = {
             title: "Apps connectées",
             blurb: "Les apps d'IA que vous avez autorisées à utiliser Genos en votre nom. Si vous en révoquez une, elle cesse de fonctionner dès sa prochaine requête.",
             empty: "Aucune app connectée pour l'instant.",
-            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
             paused: "En pause",
             // TODO(copy)
             pausedNote:
@@ -4275,7 +4273,6 @@ export const fr: DeepPartial<Messages> = {
             heading: "Forfait et utilisation",
             description: "Votre forfait actuel et votre consommation de chaque limite.",
             viaTeam: "via l'équipe {team}",
-            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
             trialChip: "Essai gratuit",
             // TODO(copy)
             trialEnds: "Votre mois gratuit de Core se termine le {date}.",
