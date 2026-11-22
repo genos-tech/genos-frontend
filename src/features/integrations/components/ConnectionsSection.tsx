@@ -10,6 +10,7 @@ import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { fmt, useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import {
     Connection,
     ConnectionsResponse,
@@ -244,7 +245,7 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                             <Typography
                                 component="a"
                                 href="mailto:genos.support@genosai.dev?subject=Add%20me%20as%20Google%20test%20user"
-                                sx={{ color: "primary.500", textDecoration: "underline" }}
+                                sx={{ color: g.link.default, textDecoration: "underline" }}
                             >
                                 genos.support@genosai.dev
                             </Typography>{" "}

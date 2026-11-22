@@ -160,6 +160,14 @@ describe("the task graph by keyboard (canvas)", () => {
         expect(card.getAttribute("aria-label")).toContain("Open");
     });
 
+    it('does not announce a card as a "node" (MIP-1928): React Flow\'s roledescription is removed', async () => {
+        renderCanvas();
+        await waitFor(() => expect(wrapperOf(4)).not.toBeNull());
+        const card = wrapperOf(4);
+        expect(card.getAttribute("role")).toBe("button");
+        expect(card.getAttribute("aria-roledescription")).toBeNull();
+    });
+
     it("moves focus to the linked card above with ArrowUp, and never moves the card", async () => {
         renderCanvas();
         await waitFor(() => expect(wrapperOf(4)).not.toBeNull());

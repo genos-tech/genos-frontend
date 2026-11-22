@@ -66,6 +66,7 @@ export const LP_ROUTES: readonly LpRoute[] = [
     { path: "/subprocessors", langs: "bilingual" },
     { path: "/cookies", langs: "bilingual" },
     { path: "/legal", langs: "bilingual" },
+    { path: "/terms", langs: "bilingual" },
 ];
 
 const BLOG_ARTICLE = /^\/blog\/[^/]+$/;

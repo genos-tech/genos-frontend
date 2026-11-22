@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 
 import { connectApp } from "../i18n/locales/en/connectApp";
 import DevelopersPage from "../lp/DevelopersPage";
-import { mcpServerUrl } from "../utils/mcpConnect";
+import { mcpCoreUrl } from "../utils/mcpConnect";
 
 // What the page itself uses (VITE_DJANGO_URL, else the production API origin).
 const API_BASE = import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev";
@@ -27,6 +27,18 @@ const renderPage = () =>
             <DevelopersPage />
         </MemoryRouter>
     );
+
+describe("DevelopersPage code blocks (MIP-1928)", () => {
+    it("every focusable code block is a named group", () => {
+        const { container } = renderPage();
+        const blocks = container.querySelectorAll('pre[tabindex="0"]');
+        expect(blocks.length).toBeGreaterThan(0);
+        blocks.forEach((pre) => {
+            expect(pre.getAttribute("role")).toBe("group");
+            expect((pre.getAttribute("aria-label") ?? "").trim()).not.toBe("");
+        });
+    });
+});
 
 describe("DevelopersPage", () => {
     it("documents the ApiKey scheme rather than Bearer", () => {
@@ -513,8 +525,8 @@ describe("DevelopersPage: MCP section", () => {
     it("gives the address exactly: the MCP path, no trailing slash, no query, no team_id", () => {
         renderPage();
         const address = pre("the address to paste").textContent ?? "";
-        expect(address).toBe(mcpServerUrl(API_BASE));
-        expect(address).toMatch(/^https?:\/\/[^?#\s]+\/api\/public\/v1\/mcp$/);
+        expect(address).toBe(mcpCoreUrl(API_BASE));
+        expect(address).toMatch(/^https?:\/\/[^?#\s]+\/api\/public\/v1\/mcp\/core$/);
         expect(address.endsWith("/")).toBe(false);
         expect(new URL(address).search).toBe("");
     });
@@ -522,7 +534,7 @@ describe("DevelopersPage: MCP section", () => {
     it("gives Claude Code the key-free command with that same address", () => {
         renderPage();
         const command = pre("the whole setup, no key").textContent ?? "";
-        expect(command).toBe(`claude mcp add --transport http genos ${mcpServerUrl(API_BASE)}`);
+        expect(command).toBe(`claude mcp add --transport http genos ${mcpCoreUrl(API_BASE)}`);
         expect(command).not.toMatch(/--header|ApiKey|team_id/);
     });
 

@@ -19,7 +19,7 @@ import {
     updateMcpConnection,
 } from "../../services/mcpConnections";
 import { v3ApiBaseURL } from "../../services/v3Api";
-import { mcpServerUrl } from "../../utils/mcpConnect";
+import { mcpCoreUrl } from "../../utils/mcpConnect";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConnectAppPanel } from "./ConnectAppPanel";
 
@@ -47,7 +47,7 @@ export const ConnectedAppsSection = () => {
     const [busy, setBusy] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     // The API's own origin (the app's is a different host), so it is derived, never typed in.
-    const address = useMemo(() => mcpServerUrl(v3ApiBaseURL()), []);
+    const address = useMemo(() => mcpCoreUrl(v3ApiBaseURL()), []);
 
     const refresh = useCallback(async () => {
         const list = await listMcpConnections(accessToken);

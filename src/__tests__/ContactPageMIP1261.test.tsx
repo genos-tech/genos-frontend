@@ -30,6 +30,20 @@ const fillValid = () => {
     fill(en.fields.message, "Hello, we would like a demo.");
 };
 
+describe("privacy sentence (MIP-1902)", () => {
+    afterEach(() => localStorage.removeItem("genos-locale"));
+
+    it.each([
+        ["?lang=en", /privacy policy/i],
+        ["?lang=ja", /プライバシーポリシー/],
+    ] as const)("links the policy (%s)", (search, name) => {
+        // A stored language choice outranks `?lang=`, so set the stored choice itself.
+        localStorage.setItem("genos-locale", search.endsWith("ja") ? "ja" : "en");
+        renderPage(search);
+        expect(screen.getByRole("link", { name }).getAttribute("href")).toBe("/privacy");
+    });
+});
+
 const submit = () => fireEvent.click(screen.getByRole("button", { name: en.submit }));
 
 const mockFetch = (response: Response | Error) => {

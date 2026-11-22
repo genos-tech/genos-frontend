@@ -17,17 +17,16 @@
  * hundred.
  */
 
-import { authApi } from "../../../../services/api";
+import { fmt, getMessages } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { createEmptyMyNote } from "../../my-notes/services/createEmptyMyNote";
 import { createMyNoteFolder } from "../../my-notes/services/createMyNoteFolder";
 import { createTeamNoteFolder } from "../../team-notes/services/createTeamNoteFolder";
 import type { FolderImportPlan, PlannedFolder, PlannedNote } from "./folderImportPlan";
+import { externalizeDataUriImages, withoutDataUriImages } from "./importDataUriImages";
 import { collectRelativeAssetHrefs, resolveAssetPath, rewriteAssetHrefs } from "./noteAssetLinks";
+import { putNoteBody, uploadNoteAsset } from "./noteImportWrites";
 import { markdownToNoteBlocks } from "./noteMarkdown";
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
-const DJANGO_URL = import.meta.env.VITE_DJANGO_URL;
 
 /**
  * Where the tree is being planted.
@@ -82,64 +81,6 @@ export type RunFolderImportArgs = {
 const errorText = (error: unknown): string =>
     error instanceof Error ? error.message : String(error);
 
-/**
- * Upload one file against an existing note.
- *
- * Mirrors the editors' own drop/paste upload (`bnMyNoteEditor` and
- * friends) — same endpoint, same field names, same absolute-URL return —
- * because an imported image has to be indistinguishable from a pasted
- * one once it lands. It has to run AFTER the note exists: the endpoint
- * files the attachment under `note_id` and checks the caller's write
- * role on it.
- */
-const uploadNoteAsset = async (args: {
-    noteId: number;
-    file: File;
-    uploaderId: string;
-    accessToken: string;
-}): Promise<string> => {
-    const form = new FormData();
-    form.append("note_attachment_file", args.file);
-    form.append("note_id", String(args.noteId));
-    form.append("uploader", args.uploaderId);
-
-    const res = await fetch(`${API_BASE}/note/personal/attachment/`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${args.accessToken}` },
-        body: form,
-    });
-    const data = (await res.json().catch(() => null)) as { noteAttachmentUrl?: string } | null;
-    if (!res.ok || !data?.noteAttachmentUrl) {
-        throw new Error(`upload failed (${res.status})`);
-    }
-    return `${DJANGO_URL}${data.noteAttachmentUrl}`;
-};
-
-/**
- * Rewrite a freshly created note's body to point at uploaded copies.
- *
- * A direct PUT rather than `sendUpdatedMyNote`, which swallows its errors
- * and emits note-mention socket events — neither of which suits an
- * importer that has to report what failed and is writing bodies whose
- * "mentions" are plain text from someone else's workspace.
- */
-const putNoteBody = async (args: {
-    myself: UserProps;
-    noteId: number;
-    title: string;
-    body: unknown[];
-    accessToken: string;
-}): Promise<void> => {
-    const api = authApi(args.accessToken);
-    if (!api) throw new Error("no auth token");
-    await api.put("/note/personal/", {
-        user_id: args.myself.userId,
-        note_id: args.noteId,
-        title: args.title,
-        body: args.body,
-    });
-};
-
 export const runFolderImport = async ({
     plan,
     destination,
@@ -189,7 +130,9 @@ export const runFolderImport = async ({
                 note.title,
                 accessToken,
                 folderId,
-                body
+                // Created without any `data:` pixels (the API refuses a
+                // body over ~2.5 MB); they are uploaded below.
+                withoutDataUriImages(body)
             )) as { noteId?: number } | undefined;
             if (!created?.noteId) throw new Error("note create failed");
             result.notesCreated += 1;
@@ -199,6 +142,7 @@ export const runFolderImport = async ({
             // relative links. Upload what they point at, then write the
             // body a second time with the real URLs. Notes with no
             // images — the overwhelming majority — never get here.
+            let finalBody: unknown[] = body;
             const hrefs = collectRelativeAssetHrefs(body);
             if (hrefs.length > 0) {
                 const uploaded = new Map<string, string>();
@@ -224,15 +168,37 @@ export const runFolderImport = async ({
                         result.assetsFailed += 1;
                     }
                 }
-                if (uploaded.size > 0) {
-                    await putNoteBody({
-                        myself,
-                        noteId: created.noteId,
-                        title: note.title,
-                        body: rewriteAssetHrefs(body, uploaded),
+                finalBody = rewriteAssetHrefs(finalBody, uploaded);
+            }
+
+            // Pictures embedded as `data:` URIs (a Google Docs export)
+            // go through the same upload, so the note body stays small.
+            // One that cannot be moved stays inline and is counted.
+            const dataImages = await externalizeDataUriImages({
+                body: finalBody,
+                uploadLimitBytes,
+                placeholderText: (n) =>
+                    fmt(getMessages().notes.importMd.imagePlaceholder, { index: n }),
+                upload: (file) =>
+                    uploadNoteAsset({
+                        noteId: created.noteId as number,
+                        file,
+                        uploaderId: myself.userId,
                         accessToken,
-                    });
-                }
+                    }),
+            });
+            finalBody = dataImages.body;
+            result.assetsUploaded += dataImages.report.uploaded;
+            result.assetsFailed += dataImages.report.warnings.length;
+
+            if (finalBody !== body) {
+                await putNoteBody({
+                    myself,
+                    noteId: created.noteId,
+                    title: note.title,
+                    body: finalBody,
+                    accessToken,
+                });
             }
         } catch (error) {
             result.failures.push({ path, reason: errorText(error) });

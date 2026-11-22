@@ -530,6 +530,14 @@ export const chat = {
             joinRequestSuffix: ".",
         },
     },
+    // TODO(copy): MIP-1956 — draft wording for a native reader.
+    liveRegion: {
+        newMessage: "{name}: {preview}",
+        more: "{count, plural, one {+# more message} other {+# more messages}}",
+        attachment: "sent an attachment",
+        listLabel: "Messages",
+        threadListLabel: "Thread replies",
+    },
     emptyPane: {
         title: "No conversation selected",
         subtitle: "Choose a chat from the sidebar to start messaging",

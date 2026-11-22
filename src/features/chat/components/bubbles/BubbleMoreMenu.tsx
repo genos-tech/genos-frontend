@@ -6,6 +6,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
@@ -16,6 +17,7 @@ import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDialog";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import {
@@ -26,10 +28,12 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
+import { forceDeleteMessage } from "../../../../services/forceDelete";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
 import { useAskGenosMessageItem } from "../../hooks/useAskGenosMessageItem";
 import { useMessageReminder } from "../../hooks/useMessageReminder";
+import { deleteMessage } from "../../services/deleteMessage";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { reportFlagFailure } from "../../utils/reportFlagFailure";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
@@ -115,6 +119,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const { t, locale } = useTranslation();
     const [menuOpen, setMenuOpen] = useState(false);
     const [openDeleteMessage, setOpenDeleteMessage] = useState(false);
+    const [openForceDelete, setOpenForceDelete] = useState(false);
     const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatId);
@@ -134,7 +139,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     // the MENU's state let the dialog be torn out mid-interaction. The
     // reminder dialog made that unmissable: opening the browser's own
     // date picker and moving the mouse towards it closed everything.
-    const overlayOpen = menuOpen || openRemindMe || openDeleteMessage;
+    const overlayOpen = menuOpen || openRemindMe || openDeleteMessage || openForceDelete;
     useEffect(() => {
         onMenuOpenChange?.(overlayOpen);
     }, [overlayOpen, onMenuOpenChange]);
@@ -328,6 +333,17 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             onClick: handleDeleteClick,
             visible: canDelete,
         },
+        {
+            // The real delete (MIP-1584): the sender's own message only, and not one that belongs
+            // to a task (its card and comments are deleted through the task).
+            danger: true,
+            icon: <DeleteForeverRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "forceDelete",
+            kind: "delete",
+            label: t.common.forceDelete.menu,
+            onClick: () => setOpenForceDelete(true),
+            visible: isOwnMessage && Boolean(message.messageIdWithChatId) && !message.taskId,
+        },
     ];
 
     // Actions the user pinned (Settings → Chat) sit on the toolbar beside the
@@ -374,6 +390,33 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 socket={socket}
             />
+
+            {message.messageIdWithChatId && (
+                <ForceDeleteDialog
+                    description={t.common.forceDelete.messageDescription}
+                    kind="message"
+                    open={openForceDelete}
+                    title={t.common.forceDelete.messageTitle}
+                    onClose={() => setOpenForceDelete(false)}
+                    onConfirm={async () => {
+                        await forceDeleteMessage(accessToken, message.messageIdWithChatId!);
+                        // The server's delete is idempotent: this one tells the open chat and the
+                        // other members' apps, and clears the local copy.
+                        // The erase has succeeded: a failure here must not tell the person that
+                        // nothing was removed (the sync clears the local copy anyway, MIP-1943).
+                        try {
+                            await deleteMessage(
+                                accessToken,
+                                message.chatType,
+                                message.chatId as unknown as string,
+                                message.messageIdWithChatId!
+                            );
+                        } catch {
+                            /* already erased on the server */
+                        }
+                    }}
+                />
+            )}
 
             {message.messageIdWithChatId && (
                 <ModalRemindMe
