@@ -19,10 +19,20 @@ import { bumpVersionsHead } from "../../features/notes/common/services/bumpVersi
 // that chunk in the entry's critical path for every page load,
 // including signin. See vite.config.ts' manualChunks comments.
 import { deleteNoteRole } from "../../features/notes/common/services/deleteNoteRole";
+import {
+    dataImageWarnings,
+    externalizeDataUriImages,
+    withoutDataUriImages,
+    type DataUriImageReport,
+} from "../../features/notes/common/services/importDataUriImages";
 import { loadNoteRoles } from "../../features/notes/common/services/loadNoteRoles";
 import { loadNoteVersions } from "../../features/notes/common/services/loadNoteVersions";
 import { loadSharedNotesMeta } from "../../features/notes/common/services/loadSharedNotesMeta";
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
+import {
+    putNoteBody,
+    uploadNoteAsset,
+} from "../../features/notes/common/services/noteImportWrites";
 import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/notes/common/services/restoreNoteVersion";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
 import { folderChain } from "../../features/notes/common/utils/folderChain";
@@ -140,6 +150,16 @@ export interface NoteCreateOverrides {
      *  the next time the user visits the notes page. Cache/sidebar
      *  bookkeeping still runs. */
     skipOpenTab?: boolean;
+    /** Markdown import (MIP-1946), My/Team notes only: after the note is
+     *  created and BEFORE its tab opens, upload the body's `data:` images
+     *  as note files and rewrite the stored body to point at them, so a
+     *  Google Docs export does not leave a multi-MB body behind. Writing
+     *  before the editor first opens is what makes the REST write enough:
+     *  a never-opened note's Yjs doc is still empty and seeds from it. */
+    dataImages?: {
+        uploadLimitBytes: number | null;
+        onReport?: (report: DataUriImageReport) => void;
+    };
 }
 
 /**
@@ -909,8 +929,49 @@ export const useNoteManagement = (
                 noteTitle,
                 accessToken,
                 folderId,
-                opts?.body
+                // The API refuses a request body over ~2.5 MB, so the note
+                // is created without the pixels and given them as files.
+                opts?.dataImages && opts.body ? withoutDataUriImages(opts.body) : opts?.body
             );
+
+            if (newNote && opts?.dataImages && opts.body && newNote.noteId) {
+                try {
+                    const moved = await externalizeDataUriImages({
+                        body: opts.body,
+                        uploadLimitBytes: opts.dataImages.uploadLimitBytes,
+                        placeholderText: (n) =>
+                            fmt(getMessages().notes.importMd.imagePlaceholder, { index: n }),
+                        upload: (file) =>
+                            uploadNoteAsset({
+                                noteId: newNote.noteId,
+                                file,
+                                uploaderId: myself.userId,
+                                accessToken,
+                            }),
+                    });
+                    if (moved.body !== opts.body) {
+                        await putNoteBody({
+                            myself,
+                            noteId: newNote.noteId,
+                            title: noteTitle,
+                            body: moved.body,
+                            accessToken,
+                        });
+                        newNote.body = moved.body;
+                    }
+                    opts.dataImages.onReport?.(moved.report);
+                } catch (error) {
+                    // The note exists, but its images are still the blank
+                    // placeholders it was created with: say so, per image.
+                    console.error("Moving imported images out of the note body failed:", error);
+                    opts.dataImages.onReport?.({
+                        uploaded: 0,
+                        bytesBefore: 0,
+                        bytesAfter: 0,
+                        warnings: dataImageWarnings(opts.body, "upload-failed"),
+                    });
+                }
+            }
 
             if (newNote) {
                 const myNote: MyNoteProps = { noteType: 1, ...newNote };

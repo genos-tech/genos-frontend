@@ -28,6 +28,7 @@ import {
     useAuth,
 } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
+import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 import { useTranslation } from "../../../i18n";
 import { markDemoStarted } from "../../../services/demoFunnel";
 import {
@@ -60,6 +61,7 @@ interface SignInFormElement extends HTMLFormElement {
 export const SignInForm = () => {
     const navigate = useNavigate();
     const { t, locale } = useTranslation();
+    useDocumentTitle(`${t.admin.auth.signIn.title} | Genos`);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [rememberEmail, setRememberEmail] = useState<boolean>(false);
     const [openForgotPassword, setOpenForgotPassword] = useState<boolean>(false);

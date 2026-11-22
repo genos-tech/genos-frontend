@@ -48,7 +48,6 @@ function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNo
 
     return (
         <NavItem
-            as="div"
             icon={<DescriptionOutlinedIcon />}
             label={note.title || t.notes.defaults.untitled}
             lines={subLabel ? 2 : 1}

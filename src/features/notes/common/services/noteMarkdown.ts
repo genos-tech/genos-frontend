@@ -19,6 +19,7 @@ import { BlockNoteEditor, type PartialBlock } from "@blocknote/core";
 
 import { normalizeCodeBlockLanguages } from "../../../../components/editors/codeBlockLanguage";
 import { storedMentionName } from "../../../../utils/mentionName";
+import { normalizeGoogleDocsMarkdown } from "./googleDocsMarkdown";
 
 // Headless schema holder, created lazily and reused (editor creation is
 // not free — it builds a ProseMirror schema).
@@ -211,7 +212,9 @@ export const markdownToNoteBlocks = async (markdown: string): Promise<PartialBlo
     // math / mermaid fences have been told apart, falling back to plain text.
     const blocks = normalizeCodeBlockLanguages(
         restoreMathBlocks(
-            unescapeLinkHrefs(await getHolder().tryParseMarkdownToBlocks(markdown))
+            unescapeLinkHrefs(
+                await getHolder().tryParseMarkdownToBlocks(normalizeGoogleDocsMarkdown(markdown))
+            )
         ) as ParsedBlocks
     );
     // A note body must have at least one block (the ProseMirror doc

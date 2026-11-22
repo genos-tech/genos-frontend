@@ -2,6 +2,11 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+    chatArchiveKey,
+    isChatArchived,
+    useArchiveState,
+} from "../../features/archive/archiveState";
+import {
     createCachedMessagesAdapter,
     createCachedThreadMessagesAdapter,
     v3ChannelsToLegacyChats,
@@ -129,6 +134,7 @@ export const useChatManagement = (
     accessToken: string | null
 ): ChatManagementState => {
     const navigate = useNavigate();
+    const archiveState = useArchiveState();
 
     // Chat visibility states
     const [isMainChatVisible, setIsMainChatVisible] = useState(true);
@@ -257,6 +263,8 @@ export const useChatManagement = (
             // is the safer side of the migration gap (over-count is worse
             // than under-count for the unread badge).
             const lastRead = Number(chat.lastReadMessageId || "0");
+            // An archived chat is hidden and takes no new message: it adds nothing (MIP-1921).
+            if (isChatArchived(chatArchiveKey(chat))) return acc;
             if (chat.latestMessage && lastRead < chat.latestMessage.messageId) {
                 acc[chat.chatType] = (acc[chat.chatType] ?? 0) + 1;
             }
@@ -637,7 +645,8 @@ export const useChatManagement = (
 
     useEffect(() => {
         setUnReadChatCounts(countUnreadChats(allChats));
-    }, [allChats]);
+        // The archived set arrives after the chat list and moves on archive / restore.
+    }, [allChats, archiveState]);
 
     useEffect(() => {
         // Exclude the first thread message cause it's actually not a thread message.

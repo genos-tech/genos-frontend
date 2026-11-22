@@ -232,3 +232,32 @@ export const takePendingAskRefs = (): AgentMentionRef[] => {
     pending = [];
     return out;
 };
+
+const DRAFT_EVENT_NAME = "genos:ask-with-draft";
+
+/** Ask the app-level Genos with a question already written in the draft (MIP-1909: the Milestones
+ *  tab's "Ask Genos about sprint progress"). It opens, or the Genos page takes focus, and sends
+ *  nothing until the person presses Ask; a draft they had already typed is kept, the question is added
+ *  after it. A plain text hand-off: no mention, no new tool, the ordinary ask path. */
+export const requestAskGenosWithDraft = (draft: string): void => {
+    window.dispatchEvent(
+        new CustomEvent<{ draft: string }>(DRAFT_EVENT_NAME, { detail: { draft } })
+    );
+};
+
+/** The listener for `requestAskGenosWithDraft` (`useSpotlight`). */
+export const onAskGenosWithDraft = (handler: (draft: string) => void): (() => void) => {
+    const listener = (e: Event) => {
+        const draft = (e as CustomEvent<{ draft?: string }>).detail?.draft?.trim();
+        if (draft) handler(draft);
+    };
+    window.addEventListener(DRAFT_EVENT_NAME, listener);
+    return () => window.removeEventListener(DRAFT_EVENT_NAME, listener);
+};
+
+/** `existing` with the question added: as it is if already there, alone if empty. */
+export const withAskGenosDraft = (existing: string, draft: string): string => {
+    if (existing.includes(draft)) return existing;
+    if (existing.trim() === "") return draft;
+    return `${existing.trimEnd()}\n${draft}`;
+};

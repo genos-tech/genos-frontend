@@ -33,7 +33,7 @@ export const NoteListState = ({
     const { t } = useTranslation();
     const sync = useSyncFailure(`notes:${scope}`);
     return (
-        <Box sx={{ px: 2 }}>
+        <Box component="li" sx={{ px: 2, listStyle: "none" }}>
             <DataState
                 error={sync.failed && !hasAny}
                 hasData={false}

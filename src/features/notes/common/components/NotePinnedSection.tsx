@@ -32,7 +32,7 @@ export function NotePinnedSection({
     const [open, setOpen] = useSidebarOpen(`notes.${id}`, defaultOpen);
 
     return (
-        <ListItem sx={{ mt: 0.5, p: 0 }} nested>
+        <ListItem component="li" sx={{ mt: 0.5, p: 0 }} nested>
             <SectionHeader
                 as="div"
                 count={count}
@@ -48,7 +48,9 @@ export function NotePinnedSection({
                     "& > *": { overflow: "hidden" },
                 }}
             >
-                <List sx={navNestedListSx}>{children}</List>
+                <List component="div" role="list" sx={navNestedListSx}>
+                    {children}
+                </List>
             </Box>
         </ListItem>
     );
