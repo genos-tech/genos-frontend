@@ -108,6 +108,7 @@ export const hi: DeepPartial<Messages> = {
             archivedSection: "संग्रहित ({count})",
             archivedBadge: "संग्रहित",
             newTaskDisabled: "कार्य जोड़ने के लिए इस प्रोजेक्ट का संग्रह हटाएँ।",
+            deleteDisabled: "इसे हटाने के लिए इस प्रोजेक्ट का संग्रह हटाएँ।",
             composerDisabled: "यह समूह संग्रहित है। संदेश भेजने के लिए इसका संग्रह हटाएँ।",
             archiveFailed: "संग्रहित नहीं हो सका। फिर से कोशिश करें।",
             unarchiveFailed: "संग्रह नहीं हटाया जा सका। फिर से कोशिश करें।",

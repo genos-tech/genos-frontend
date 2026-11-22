@@ -286,6 +286,7 @@ export const ar: DeepPartial<Messages> = {
             archivedSection: "مؤرشف ({count})",
             archivedBadge: "مؤرشف",
             newTaskDisabled: "ألغِ أرشفة هذا المشروع لإضافة مهام.",
+            deleteDisabled: "ألغِ أرشفة هذا المشروع لحذفه.",
             composerDisabled: "هذه المجموعة مؤرشفة. ألغِ أرشفتها لإرسال الرسائل.",
             archiveFailed: "تعذّرت الأرشفة. حاول مرة أخرى.",
             unarchiveFailed: "تعذّر إلغاء الأرشفة. حاول مرة أخرى.",

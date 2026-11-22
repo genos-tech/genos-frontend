@@ -1936,6 +1936,7 @@ export const fr: DeepPartial<Messages> = {
             archivedSection: "Archivés ({count})",
             archivedBadge: "Archivé",
             newTaskDisabled: "Désarchivez ce projet pour ajouter des tâches.",
+            deleteDisabled: "Désarchivez ce projet pour le supprimer.",
             composerDisabled: "Ce groupe est archivé. Désarchivez-le pour envoyer des messages.",
             archiveFailed: "Impossible d'archiver. Veuillez réessayer.",
             unarchiveFailed: "Impossible de désarchiver. Veuillez réessayer.",

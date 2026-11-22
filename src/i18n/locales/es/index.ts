@@ -286,6 +286,7 @@ export const es: DeepPartial<Messages> = {
             archivedSection: "Archivados ({count})",
             archivedBadge: "Archivado",
             newTaskDisabled: "Desarchiva este proyecto para añadir tareas.",
+            deleteDisabled: "Desarchiva este proyecto para eliminarlo.",
             composerDisabled: "Este grupo está archivado. Desarchívalo para enviar mensajes.",
             archiveFailed: "No se pudo archivar. Inténtalo de nuevo.",
             unarchiveFailed: "No se pudo desarchivar. Inténtalo de nuevo.",
