@@ -57,6 +57,13 @@ export const g = {
     warning: semantic("warning"),
     info: semantic("info"),
     scrim: v("scrim"),
+    /** The one categorical chart palette (MIP-1963): colour-blind-safe, light and dark values. */
+    chart: {
+        series1: v("chart-1"),
+        series2: v("chart-2"),
+        series3: v("chart-3"),
+        series4: v("chart-4"),
+    },
     shadow: { sm: v("shadow-sm"), md: v("shadow-md"), lg: v("shadow-lg") },
     radius: {
         xs: v("radius-xs"),

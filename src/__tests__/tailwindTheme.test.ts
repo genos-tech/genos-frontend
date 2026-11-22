@@ -115,6 +115,11 @@ describe("@theme inline maps the design tokens into Tailwind", () => {
             // Inline code ink in the bubbles (MIP-1388, MIP-1454): App.css only.
             "--g-text-code",
             "--g-text-code-sent",
+            // The dashboard's categorical chart palette (MIP-1963): `g.chart` only.
+            "--g-chart-1",
+            "--g-chart-2",
+            "--g-chart-3",
+            "--g-chart-4",
         ]);
         const roleNames = [...defined].filter(
             (v) => !/^--g-(type|space|control|row|motion|ease|font|radius)/.test(v)
