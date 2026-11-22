@@ -307,7 +307,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         },
         workspace: {
             kicker: "ひとつのワークスペース",
-            title: "仕事に関わるすべてが、ひとつの場所でつながる。",
+            title: "チャット、タスク、ノートが、たがいにつながっています。",
             sub: "チャットで決まったことをドキュメントに写し、さらにチケットに写す。その手間はもういりません。Genosではスレッド・ノート・タスクが互いにリンクしているので、翌月になっても経緯をたどれます。",
             tabs: [
                 {
@@ -348,9 +348,9 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         receipts: {
             kicker: "Genosに聞く",
             title: "確かめられる答え。承認してから動く変更。",
-            sub: "Genosは、チームのチャット・タスク・ノートを同僚のように読み込みます。答えには必ず出典があり、あなたが「はい」と言うまで何も書き換えません。",
+            sub: "Genosは、チームのチャット・タスク・ノートを同僚のように読み込みます。Genosの回答には、引用元のスレッド・ノート・タスクへのリンクが付きます。Genos自身のAIは、あなたが「はい」と言うまで何も書き換えません。",
             points: [
-                "すべての答えに出典。引用元のスレッド・ノート・タスクをその場で開けます",
+                "Genosの回答では、引用元のスレッド・ノート・タスクをその場で開いて確認できます",
                 "提案して、待つ。タスク・ノート・To-Do・予定の変更は承認後にだけ実行されます",
                 "質問した言語で回答。画面は7言語に対応しています",
             ],
@@ -358,18 +358,17 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             approvalAlt: "Genosが提案した変更の承認カード。承認と却下のボタンがある",
         },
         mcp: {
-            kicker: "MCPネイティブ",
-            title: "ClaudeやChatGPTから、Genosを使う。",
-            sub: "一度つなげば、普段使っているAIアシスタントがあなたのプロジェクトを読み、最新に保ちます。状況のまとめ、今日の計画、タスクの更新、ノートの作成。変更のたびに、あなたの許可をとります。",
+            kicker: "MCPで接続",
+            title: "Claudeから、Genosを使う。",
+            sub: "一度つなげば、普段使っているAIアシスタントがあなたのプロジェクトを読み、最新に保ちます。状況のまとめ、今日の計画、タスクの更新、ノートの作成。変更を許可する範囲は、あなたが決めます。",
             points: [
                 "タスク、マイルストーン、スプリント、ノート、チャット、To-Do、カレンダーを扱う{tools}個のツール",
                 "Genosアカウントでサインイン（OAuth）。キーのコピーは不要で、接続は設定画面でいつでも確認・解除できます",
-                "書き込みは必ず事前に確認。削除などの操作には、別途オプトインが必要です",
+                "接続したアプリに許可する範囲は、あなたが選べます。読み取りと変更。削除は別途許可が必要です",
             ],
             clients: [
                 { name: "Claude", state: "コネクタとして利用可能" },
                 { name: "ChatGPT", state: "近日公開", coming: true },
-                { name: "その他のMCPクライアント", state: "APIキーで利用可能" },
             ],
             transcript: {
                 label: "AIアシスタントとの会話の例",
@@ -382,7 +381,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             link: "すべてのツールを見る",
         },
         secretary: {
-            kicker: "あなたの秘書",
+            kicker: "状況のまとめ",
             title: "追いかけるのは、Genosの仕事。",
             sub: "コメント、変更、新しいリンク。あなたの仕事で起きたことをGenosが追いかけ、大事なことだけを伝えます。進捗報告を書く必要はありません。",
             points: [
@@ -427,13 +426,10 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
         },
         trust: {
-            title: "仕事を預けられる設計",
+            title: "Genos自身のAIの動き方",
             items: [
-                "すべての答えに出典",
-                "AIの書き込みは、承認したあとだけ",
-                "あなたの活動記録は、あなただけのもの。スイッチひとつで停止・削除",
-                "カレンダーの予定は都度読み込み、保存しません",
-                "データの書き出しとアカウント削除は、いつでも",
+                "Genosの回答では、引用元のスレッド・ノート・タスクを開いて確認できます。",
+                "Genos自身のAIは、あなたが承認したあとにだけ変更します。",
             ],
         },
         plans: {
@@ -442,8 +438,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             link: "プランを比較する",
         },
         cta: {
-            title: "チームの仕事が、つながる感覚を。",
-            body: "数秒でデモを開くか、チームの無料ワークスペースを作成できます。",
+            title: "エージェントが残した記録を、見てみよう。",
+            body: "数秒でデモを開くか、無料のワークスペースを作成できます。",
             primary: "デモを試す",
             secondary: "無料で始める",
         },
@@ -658,7 +654,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         },
         workspace: {
             kicker: "One workspace",
-            title: "Everything the work touched, in one place and linked.",
+            title: "Chat, tasks and notes that link to each other.",
             sub: "No more copying a decision from chat into a doc, then into a ticket. In Genos the thread, the note and the task point at each other, so the context is still there next month.",
             tabs: [
                 {
@@ -699,9 +695,9 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         receipts: {
             kicker: "Ask Genos",
             title: "Answers you can check. Changes you approve.",
-            sub: "Genos reads your team's chats, tasks and notes the way a colleague would. Every answer links to where it came from, and nothing is written until you say yes.",
+            sub: "Genos reads your team's chats, tasks and notes the way a colleague would. Genos's answers link to the thread, note or task they quote, and Genos's own assistant changes nothing until you say yes.",
             points: [
-                "Sources on every answer: open the thread, note or task it quotes",
+                "In Genos's answers, you can open the thread, note or task each one quotes",
                 "It proposes, then waits: tasks, notes, to-dos and events change only after you approve",
                 "Answers in the language you ask in, in an app available in 7 languages",
             ],
@@ -710,18 +706,17 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 "An approval card for a change Genos proposed, with Approve and Decline buttons",
         },
         mcp: {
-            kicker: "MCP native",
-            title: "Use Genos from Claude and ChatGPT.",
-            sub: "Connect once, and the assistant you already use can read your projects and keep them current: catch you up, plan your day, update a task, write a note. It asks before every change.",
+            kicker: "Works over MCP",
+            title: "Use Genos from Claude.",
+            sub: "Connect once, and the assistant you already use can read your projects and keep them current: catch you up, plan your day, update a task, write a note. You decide what it is allowed to change.",
             points: [
                 "{tools} tools for tasks, milestones, sprints, notes, chats, to-dos and calendar",
                 "Sign in with your Genos account (OAuth): no keys to copy, and every connection is listed in Settings, where you can end it",
-                "Writes always ask first; destructive actions need a separate opt-in",
+                "You choose what a connected app may do: read, or write. Deleting needs a separate opt-in.",
             ],
             clients: [
                 { name: "Claude", state: "Available as a connector" },
                 { name: "ChatGPT", state: "Coming", coming: true },
-                { name: "Any MCP client", state: "Available with an API key" },
             ],
             transcript: {
                 label: "An example conversation with an AI assistant",
@@ -734,7 +729,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             link: "See every tool",
         },
         secretary: {
-            kicker: "Your secretary",
+            kicker: "Catch-up",
             title: "It keeps track, so you don't have to.",
             sub: "Comments, changes, new links: Genos follows what happens on your work and tells you what matters. You never write a status report.",
             points: [
@@ -781,13 +776,10 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
         },
         trust: {
-            title: "Built to be trusted with your work",
+            title: "How Genos's own assistant behaves",
             items: [
-                "Sources on every answer",
-                "AI writes only after you approve",
-                "Your activity record is yours alone: one switch stops it and deletes it",
-                "Calendar events are read live, never stored",
-                "Export your data or delete your account at any time",
+                "In Genos's answers, you can open the thread, note or task each one quotes.",
+                "Genos's own assistant changes your work only after you approve.",
             ],
         },
         plans: {
@@ -796,8 +788,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             link: "Compare plans",
         },
         cta: {
-            title: "See your team's work connected.",
-            body: "Open the demo in seconds, or start a free workspace for your team.",
+            title: "See what your agent leaves behind.",
+            body: "Open the demo in seconds, or start a free workspace.",
             primary: "Try the demo",
             secondary: "Start free",
         },

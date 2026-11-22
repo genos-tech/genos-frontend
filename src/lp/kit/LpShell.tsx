@@ -32,7 +32,7 @@ const SHELL = {
         dark: "ダークモードにする",
         light: "ライトモードにする",
         lang: "表示言語",
-        tagline: "AIが、仕事の経緯までわかるワークスペース。",
+        tagline: "AIに任せる。仕事の記録は、あなたの手元に。",
         cols: {
             product: "プロダクト",
             forYou: "使い方別",
@@ -84,7 +84,7 @@ const SHELL = {
         dark: "Switch to dark mode",
         light: "Switch to light mode",
         lang: "Language",
-        tagline: "The workspace your AI already understands.",
+        tagline: "Let AI do the work. Keep the record in your hands.",
         cols: {
             product: "Product",
             forYou: "Made for",
