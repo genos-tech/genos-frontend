@@ -90,7 +90,7 @@ import {
 import { requestAppNavigate } from "../../services/appNavigate";
 import { g } from "../../theme/tokens";
 import { CREDIT_PACKS_PATH, PLANS_PATH } from "../billing/billingPaths";
-import { entitySubtitle } from "../spotlight/SpotlightResultItem";
+import { entitySubtitle } from "../spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../spotlight/types";
 import { agentMarkdownComponents } from "./agentMarkdown";
 import type { AgentTurnLabels } from "./agentTurnLabels";

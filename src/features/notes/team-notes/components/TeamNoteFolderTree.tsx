@@ -22,13 +22,11 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { MyNoteMetaTreeNode, TeamNoteFolderTreeNode } from "../../../../types/notes";
-import {
-    FolderFavoriteStar,
-    highlightedFolderSx,
-} from "../../common/components/FolderFavoriteStar";
+import { FolderFavoriteStar } from "../../common/components/FolderFavoriteStar";
+import { highlightedFolderSx } from "../../common/components/folderFavoriteStarHelpers";
 import { folderFavoriteMenuItem } from "../../common/utils/folderFavoriteMenuItem";
 import { NOTE_ROLE_VIEWER } from "../../common/utils/noteRoles";
-import { folderTagChipSx } from "../modals/ModalTeamFolderTags";
+import { folderTagChipSx } from "../modals/modalTeamFolderTagsHelpers";
 
 // Actions bubbled up to the single modal host in NoteSidebar — one
 // modal instance serves every folder row, same as My Notes.

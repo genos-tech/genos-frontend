@@ -20,9 +20,9 @@ import {
 import { HashMentionData } from "../context/HashMentionDataContext";
 import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
 import { useAgentMentionDraft } from "../features/agentQA/mentions/useAgentMentionDraft";
-import { entitySubtitle, rowSubtitle } from "../features/spotlight/SpotlightResultItem";
+import { entitySubtitle, rowSubtitle } from "../features/spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../features/spotlight/types";
-import { filterTaskSearchOptions } from "../features/tasks/components/sidebar/SearchBox";
+import { filterTaskSearchOptions } from "../features/tasks/components/sidebar/searchBoxHelpers";
 import {
     displayIdEquals,
     displayIdMatches,

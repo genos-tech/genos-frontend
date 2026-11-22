@@ -24,10 +24,10 @@ import {
     depthRowBackground,
     depthRowLeftBorder,
 } from "../features/tasks/components/table/depthTone";
+import { splitFilterLabel } from "../features/tasks/components/table/filterBarHelpers";
 import {
     FilterChipButton,
     FilterDropdown,
-    splitFilterLabel,
 } from "../features/tasks/components/table/filterBarParts";
 import { PRIORITY_NAMES, STATUS_NAMES } from "../features/tasks/meta/taskTone";
 import { en } from "../i18n/locales/en";

@@ -26,10 +26,8 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { UserRepository } from "../../../../../db/repositories/user";
 import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
 import { fmt, useTranslation } from "../../../../../i18n";
-import {
-    formatPauseStatusText,
-    NotificationPausePresetItems,
-} from "../../../../../services/notifications/NotificationPausePicker";
+import { formatPauseStatusText } from "../../../../../services/notifications/notificationPauseHelpers";
+import { NotificationPausePresetItems } from "../../../../../services/notifications/NotificationPausePicker";
 import { useNotificationsContext } from "../../../../../services/notifications/notificationsContextState";
 import {
     formatStatusExpiry,

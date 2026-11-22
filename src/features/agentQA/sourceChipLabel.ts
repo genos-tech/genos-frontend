@@ -6,7 +6,7 @@
 
 import { fmt } from "../../i18n";
 import { formatEventWhen } from "../calendar/utils/eventWhen";
-import { badgeFor, entitySubtitle } from "../spotlight/SpotlightResultItem";
+import { badgeFor, entitySubtitle } from "../spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../spotlight/types";
 import type { AgentTurnLabels } from "./agentTurnLabels";
 

@@ -11,7 +11,7 @@ import {
     parseDropResult,
     parseNoteDraggableId,
     taskContainerId,
-} from "../features/notes/common/dnd/sidebarNoteDnd";
+} from "../features/notes/common/dnd/sidebarNoteDndHelpers";
 
 const dropResult = (
     draggableId: string,

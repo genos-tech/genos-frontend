@@ -68,6 +68,7 @@ import {
     writeStoredFilters,
 } from "../../utils/taskFilterStorage";
 import { taskMetaLabel } from "../../utils/taskMeta";
+import { splitFilterLabel } from "./filterBarHelpers";
 import {
     BarChip,
     FilterChipButton,
@@ -75,7 +76,6 @@ import {
     FilterIconButton,
     FilterMenu,
     FilterMenuItem,
-    splitFilterLabel,
 } from "./filterBarParts";
 import { SavedFiltersMenu } from "./SavedFiltersMenu";
 

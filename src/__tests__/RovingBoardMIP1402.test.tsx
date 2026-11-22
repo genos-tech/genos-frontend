@@ -4,8 +4,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { COLUMNS } from "../features/tasks/components/board/SprintBoard";
 import { SprintBoardColumn } from "../features/tasks/components/board/SprintBoardColumn";
+import { COLUMNS } from "../features/tasks/components/board/sprintBoardHelpers";
 import { BOARD_DRAGGING_ATTR } from "../features/tasks/components/board/useBoardDragScrollLock";
 import { useBoardRovingNav } from "../features/tasks/components/board/useBoardRovingNav";
 import type { UserProps } from "../types/admin";

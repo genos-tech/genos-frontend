@@ -64,7 +64,8 @@ import {
 } from "../../team-notes/components/TeamNoteFolderTree";
 import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderMembers";
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
-import { folderTagChipSx, ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
+import { ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
+import { folderTagChipSx } from "../../team-notes/modals/modalTeamFolderTagsHelpers";
 import { isInGuestFolder, splitFoldersByOwnership } from "../../team-notes/utils/guestFolders";
 import { ModalNoteTemplates } from "../../templates/ModalNoteTemplates";
 import {
@@ -81,14 +82,12 @@ import {
 } from "../../templates/templateMenuItems";
 import { useNoteUnread } from "../context/noteUnreadState";
 import {
-    chatContainerId,
     DraggableNoteRow,
     DroppableNoteList,
-    myRootContainerId,
     SidebarDndProvider,
     SidebarNoteMove,
-    taskContainerId,
 } from "../dnd/sidebarNoteDnd";
+import { chatContainerId, myRootContainerId, taskContainerId } from "../dnd/sidebarNoteDndHelpers";
 import { useNoteFilter } from "../hooks/useNoteFilter";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";

@@ -52,7 +52,8 @@ import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 import { TaskStartDateInput } from "./sub/TaskStartDateInput";
 import { TaskDeliveriesBlock } from "./TaskDeliveriesBlock";
-import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlock";
+import { TaskDependenciesBlock } from "./TaskDependenciesBlock";
+import { isCurrentlyBlocked } from "./taskDependenciesHelpers";
 
 // Single shared label for every row. Pinned width keeps the data
 // column flush across rows, the muted color reads as "metadata key"

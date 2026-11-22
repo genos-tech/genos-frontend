@@ -5,7 +5,7 @@ import { Autocomplete, Chip, Stack, Typography } from "@mui/joy";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
-import { OPTION_LISTBOX_SLOT_PROPS } from "./SprintMilestonePicker";
+import { OPTION_LISTBOX_SLOT_PROPS } from "./sprintMilestonePickerHelpers";
 
 type FolderOption = { id: number | null; label: string; count: number };
 

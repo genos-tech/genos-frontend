@@ -8,9 +8,10 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { lookupTaskByDisplayId } from "../../services/lookupTaskByDisplayId";
-import { displayIdEquals, displayIdMatches, fullDisplayIdIn } from "../../utils/taskDisplayId";
+import { displayIdEquals, fullDisplayIdIn } from "../../utils/taskDisplayId";
 import { StatusLabel } from "../meta/StatusLabel";
 import { TaskIdentityRow } from "../TaskIdentityRow";
+import { filterTaskSearchOptions } from "./searchBoxHelpers";
 import type { SidebarSearchTM } from "./useSidebarSlices";
 
 type TaskSidebarSearchBoxProps = {
@@ -25,18 +26,6 @@ type TaskSidebarSearchBoxProps = {
     // For finding a closed task by its exact id (the options hold open work).
     myself?: Pick<UserProps, "teamId">;
     accessToken?: string | null;
-};
-
-// A task matches by title or by display id ("MIP-739", "mip739", "739").
-export const filterTaskSearchOptions = (
-    options: SearchTeamTasksResponse[],
-    input: string
-): SearchTeamTasksResponse[] => {
-    const q = input.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter(
-        (o) => (o.title ?? "").toLowerCase().includes(q) || displayIdMatches(q, o.displayId)
-    );
 };
 
 // Put a looked-up task beside its project's other tasks: the list is
