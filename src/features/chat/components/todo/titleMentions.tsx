@@ -113,9 +113,14 @@ export const TodoMentionsProvider = ({ children }: { children: ReactNode }) => {
     // otherwise offer no tasks whatsoever.
     const sources = useAgentMentionSources({ includeTeamTasks: true });
     const refresh = hash.refresh;
+    // Saved `#Task` tokens in titles resolve from the team list, so the pane loads it once.
+    const ensureTeamTasks = sources.ensureTeamTasks;
+    useEffect(() => {
+        ensureTeamTasks();
+    }, [ensureTeamTasks]);
 
-    // `teamTasks` (and note/project metadata) are fetched lazily on first
-    // demand, so without this a SAVED `#Task` token in an existing title
+    // Note/project metadata are fetched lazily on first demand (`teamTasks`
+    // loads through `useAgentMentionSources`), so without this a SAVED `#Task` token in an existing title
     // would render as plain text until something else happened to pull
     // them. Throttled app-wide, so one call per pane mount is free.
     useEffect(() => {

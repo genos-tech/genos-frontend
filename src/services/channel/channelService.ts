@@ -2272,6 +2272,9 @@ export class ChannelService {
      * the list is re-read, which brings the chat back, and the error is thrown for the caller.
      */
     async hideChannel(channelId: string): Promise<void> {
+        // The server drops the person's pin with the hide (MIP-1991: a hidden chat cannot stay
+        // pinned); do the same locally. A refused hide re-reads the pins with the list.
+        this._removePinByChannel(channelId);
         this.reconcileChannelList([...this._channels.values()].filter((c) => c.id !== channelId));
         try {
             await this.api().post(`/api/v3/channels/${channelId}/hide/`);

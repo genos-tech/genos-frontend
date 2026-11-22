@@ -19,7 +19,6 @@ const makeSources = () => {
         getTeamNoteFolders: vi.fn(async () => true),
         getTeamNoteMeta: vi.fn(async () => true),
         loadProjects: vi.fn(async () => true),
-        loadTeamTasks: vi.fn(async () => true),
         refreshProjectTasks: vi.fn(async () => undefined),
         refreshSprints: vi.fn(async () => true),
     };
@@ -28,7 +27,7 @@ const makeSources = () => {
 
 const EXPECTED: Record<ChangeCollection, string[]> = {
     tasks_project: ["refreshProjectTasks", "refreshSprints"],
-    tasks_team: ["loadTeamTasks"],
+    tasks_team: [],
     projects: ["loadProjects"],
     notes_personal: [
         "getMyNoteMeta",

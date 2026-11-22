@@ -122,8 +122,8 @@ export interface UseAgentMentionSourcesArgs {
      * Also offer `teamTasks` — every active task in the team — merged with
      * the open project's rows, the way the BlockNote "#" menu does.
      *
-     * The list is loaded at sign-in and refreshed with the other `#`
-     * data (App.tsx). Spotlight, the Ask modals and the to-do pane all opt
+     * The list is loaded on demand when the picker's `#` opens (`ensureTeamTasks`
+     * from this hook, App.tsx), not at sign-in and not polled. Spotlight, the Ask modals and the to-do pane all opt
      * in: open-project rows alone made every other project's tasks
      * unmentionable (MIP-788), and with no project open "#" offered no
      * tasks at all.
@@ -159,6 +159,9 @@ export interface AgentMentionSources {
     entities: AgentMentionCandidate[];
     /** One task by its exact display id, any status (MIP-739). */
     lookupTask?: (displayId: string) => Promise<AgentMentionCandidate | null>;
+    /** Loads the team-wide task list for `#` when it is not loaded lately (MIP-1995): the
+     *  list is no longer fetched at sign-in, so a picker calls this when its `#` opens. */
+    ensureTeamTasks: () => void;
 }
 
 type TaskRow = {
@@ -399,5 +402,9 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
         [myself, accessToken, projects]
     );
 
-    return useMemo(() => ({ members, entities, lookupTask }), [members, entities, lookupTask]);
+    const ensureTeamTasks = hash.ensureTeamTasks;
+    return useMemo(
+        () => ({ members, entities, lookupTask, ensureTeamTasks }),
+        [members, entities, lookupTask, ensureTeamTasks]
+    );
 };

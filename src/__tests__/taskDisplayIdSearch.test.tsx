@@ -16,6 +16,7 @@ import {
     HashMentionMenuItems,
     lookedUpTaskItem,
     rememberHashQuery,
+    serverTaskItems,
 } from "../components/editors/HashMention";
 import { HashMentionData } from "../context/HashMentionDataContext";
 import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
@@ -81,9 +82,13 @@ const row = (over: Partial<SearchTeamTasksResponse>): SearchTeamTasksResponse =>
         ...over,
     }) as unknown as SearchTeamTasksResponse;
 
+const menuItems = (editor: any, data: HashMentionData) =>
+    HashMentionMenuItems(editor, data, serverTaskItems(editor, data.teamTasks, data));
+
 const dataWith = (over: Partial<HashMentionData>): HashMentionData => ({
     tasks: [],
     teamTasks: [],
+    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],
@@ -98,7 +103,7 @@ describe("editor # menu", () => {
     const task = row({ taskId: 9, projectId: 2, displayId: "MKT-9", title: "Launch post" });
 
     it("matches an id typed without its hyphen", () => {
-        const [item] = HashMentionMenuItems({}, dataWith({ teamTasks: [task] }));
+        const [item] = menuItems({}, dataWith({ teamTasks: [task] }));
         expect(item.aliases).toContain("MKT9");
     });
 
@@ -108,7 +113,7 @@ describe("editor # menu", () => {
         ["launch", ""],
     ])("picked after typing %s, the chip's labelMode is %j", (query, labelMode) => {
         const editor = { insertInlineContent: vi.fn() };
-        const [item] = HashMentionMenuItems(editor, dataWith({ teamTasks: [task] }));
+        const [item] = menuItems(editor, dataWith({ teamTasks: [task] }));
         rememberHashQuery(editor, query);
         item.onItemClick();
         expect(editor.insertInlineContent.mock.calls[0][0][0].props.labelMode).toBe(labelMode);

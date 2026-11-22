@@ -9,7 +9,17 @@ import { onTasksBulkChanged, onTaskTouched } from "./taskEvents";
 // Child lists change rarely (subtask create / status / reparent), and
 // the local mutation paths emit a scoped "children" event, so a 30s
 // TTL only risks staleness from other clients between socket gaps.
-const childTasksCache = createRequestCache<TaskProps[] | undefined>({ ttlMs: 30_000 });
+// The value is what the endpoint answered: a bare list (no `statuses`), or the scoped envelope.
+type ChildTasksAnswer = TaskProps[] | ChildTasksScoped | undefined;
+const childTasksCache = createRequestCache<ChildTasksAnswer>({ ttlMs: 30_000 });
+
+/** The scoped answer (MIP-1994): only the asked-for statuses are rows, `statusCounts` says how
+ *  many tasks each status has, so "Closed (780)" can be shown without downloading them. */
+export interface ChildTasksScoped {
+    tasks: TaskProps[];
+    statusCounts: Record<string, number>;
+}
+
 onTaskTouched(({ taskId, kind }) => {
     if (kind === "children") {
         // This task's own child list changed (subtask add / move / reparent).
@@ -46,18 +56,36 @@ onTasksBulkChanged(() => {
     childTasksCache.invalidate("children:");
 });
 
-export const loadSpecificChildTasks = async (
+/** No `statuses`: the bare list of every child (the old answer). With `statuses`: the scoped
+ *  envelope, or the bare list from a server that predates the parameter. */
+export function loadSpecificChildTasks(
     myself: UserProps,
     projectId: number,
     currentTaskId: number,
     accessToken: string | null
-) => {
+): Promise<TaskProps[] | undefined>;
+export function loadSpecificChildTasks(
+    myself: UserProps,
+    projectId: number,
+    currentTaskId: number,
+    accessToken: string | null,
+    statuses: readonly string[]
+): Promise<ChildTasksAnswer>;
+export async function loadSpecificChildTasks(
+    myself: UserProps,
+    projectId: number,
+    currentTaskId: number,
+    accessToken: string | null,
+    statuses?: readonly string[]
+): Promise<ChildTasksAnswer> {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const cacheKey = `children:${currentTaskId}:${myself.teamId}:${projectId}`;
+            const scope = statuses?.length ? statuses.join(",") : "";
+            const cacheKey = `children:${currentTaskId}:${myself.teamId}:${projectId}:${scope}`;
             return await childTasksCache.get(cacheKey, async () => {
-                const query: string = `team_id=${myself.teamId}&project_id=${projectId}&current_task_id=${currentTaskId}`;
+                let query: string = `team_id=${myself.teamId}&project_id=${projectId}&current_task_id=${currentTaskId}`;
+                if (scope) query += `&statuses=${encodeURIComponent(scope)}`;
                 const res = await api.get(`/task/childTasks/?${query}`);
                 return res.data;
             });
@@ -71,4 +99,4 @@ export const loadSpecificChildTasks = async (
             console.error("Unexpected error:", error);
         }
     }
-};
+}

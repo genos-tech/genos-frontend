@@ -496,6 +496,7 @@ export const SpotlightContent = ({
         members: mentionSources.members,
         entities: mentionSources.entities,
         lookupTask: mentionSources.lookupTask,
+        onHashOpen: mentionSources.ensureTeamTasks,
     });
     // "Ask Genos about this task": `useSpotlight` already put `#PRJ-12 ` in the
     // draft; the ref waits in a queue for the input that mounts (the overlay is

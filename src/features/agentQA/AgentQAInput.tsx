@@ -48,6 +48,7 @@ export const AgentQAInput = ({ state, labels, disabled }: AgentQAInputProps) => 
         members: sources.members,
         entities: sources.entities,
         lookupTask: sources.lookupTask,
+        onHashOpen: sources.ensureTeamTasks,
     });
 
     const syncCaret = useCallback(() => {

@@ -10,8 +10,6 @@ export interface ChangeLoaderSources {
     getTeamNoteMeta: () => Promise<boolean>;
     /** The project LIST: resolves `false` when the request failed. */
     loadProjects: () => Promise<boolean>;
-    /** The team-wide task list behind the `#` menu: `false` when it failed. */
-    loadTeamTasks: () => Promise<boolean>;
     /** The `since=` delta of one project's tasks. REJECTS when the request failed. */
     refreshProjectTasks: (projectId: number) => Promise<void>;
     /** One project's sprints: `false` when the request failed. */
@@ -25,7 +23,6 @@ export interface ChangeLoaderSources {
  * token is a refetch that never comes.
  *
  *   tasks_project   open project's task delta + its sprints
- *   tasks_team      team-wide task list (the `#` menu)
  *   projects        project list
  *   notes_personal  my notes, shared-with-me notes, team folders, team notes
  *   notes_task      task notes
@@ -55,5 +52,7 @@ export const buildChangeLoaderGroups = (
               () => src.refreshSprints(projectId),
           ]
         : [],
-    tasks_team: [src.loadTeamTasks],
+    // MIP-1995: no loader. The team-wide task list is not polled any more: the editors'
+    // `#` menu searches the server per query, and the agent pickers load it on demand.
+    tasks_team: [],
 });
