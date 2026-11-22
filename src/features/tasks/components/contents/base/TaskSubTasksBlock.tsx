@@ -534,13 +534,13 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             </DataState>
             {hiddenCount > 0 && !hiddenLoaded && hasChildRowsOrEmpty && (
                 <Button
-                    data-testid="sub-tasks-show-hidden"
-                    size="sm"
-                    variant="plain"
                     color="neutral"
+                    data-testid="sub-tasks-show-hidden"
                     loading={showHidden}
-                    onClick={() => setShowHidden(true)}
+                    size="sm"
                     sx={{ alignSelf: "flex-start", mb: 1 }}
+                    variant="plain"
+                    onClick={() => setShowHidden(true)}
                 >
                     {t.tasks.subTasks.showHidden.replace("{count}", String(hiddenCount))}
                 </Button>
