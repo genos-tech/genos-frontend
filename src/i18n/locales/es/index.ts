@@ -318,11 +318,11 @@ export const es: DeepPartial<Messages> = {
             taskTitle: "¿Eliminar esta tarea definitivamente?",
             taskDescription:
                 "La tarea, sus comentarios, archivos, notas, historial y entradas de búsqueda se borran ahora, sin los 30 días que se conserva una tarea eliminada. No se puede deshacer.",
-            myMessagesMenu: "Eliminar todos mis mensajes",
-            myMessagesTitle: "¿Eliminar todos tus mensajes de este chat?",
+            myMessagesMenu: "Eliminar todos mis mensajes y quitar",
+            myMessagesTitle: "¿Eliminar todos tus mensajes y quitar este chat?",
             myMessagesDescription:
-                "Todos los mensajes que escribiste aquí, con sus archivos y reacciones, se borran ahora y no se pueden recuperar. Los mensajes de la otra persona no se tocan y el chat se mantiene.",
-            myMessagesDone: "Se eliminaron tus mensajes.",
+                "Cada mensaje que escribiste aquí, con sus archivos y reacciones, se borra ahora y no se puede deshacer ni recuperar. Solo se eliminan TUS mensajes: los de la otra persona se quedan. Después el chat se quita de tu barra lateral; un mensaje nuevo suyo lo hace volver.",
+            myMessagesDone: "Se eliminaron tus mensajes y se quitó el chat de la barra lateral.",
             noteTitle: "¿Eliminar esta nota definitivamente?",
             noteDescription:
                 "La nota, su historial, sus comentarios, archivos y entradas de búsqueda se borran ahora, junto con su copia colaborativa. No se puede deshacer. Quienes la vieron pueden haberla copiado.",
@@ -2135,6 +2135,13 @@ export const es: DeepPartial<Messages> = {
             openTodo: "Abrir pendientes",
             pinChat: "Fijar chat",
             unpinChat: "Quitar chat fijado",
+            removeFromSidebar: "Quitar de la barra lateral",
+            removeFromSidebarHint:
+                "Solo se oculta para ti. Vuelve cuando llegue un mensaje nuevo.",
+            removedFromSidebar: "Quitado de tu barra lateral. Un mensaje nuevo lo hará volver.",
+            removeFromSidebarFailed: "No se pudo quitar el chat. Ha vuelto a tu barra lateral.",
+            deletedButNotRemoved:
+                "Tus mensajes se eliminaron, pero no se pudo quitar el chat de la barra lateral.",
             unflag: "Quitar destacado",
             chatRemoved: "Chat eliminado",
             messageDeleted: "Mensaje eliminado",

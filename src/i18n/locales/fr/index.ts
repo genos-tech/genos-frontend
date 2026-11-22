@@ -1494,6 +1494,15 @@ export const fr: DeepPartial<Messages> = {
             openTodo: "Ouvrir les tâches à faire",
             pinChat: "Épingler la conversation",
             unpinChat: "Désépingler la conversation",
+            removeFromSidebar: "Retirer de la barre latérale",
+            removeFromSidebarHint:
+                "Masquée pour vous seulement. Elle revient avec un nouveau message.",
+            removedFromSidebar:
+                "Retirée de votre barre latérale. Un nouveau message la fera revenir.",
+            removeFromSidebarFailed:
+                "Impossible de retirer la conversation. Elle est revenue dans votre barre latérale.",
+            deletedButNotRemoved:
+                "Vos messages ont été supprimés, mais la conversation n'a pas pu être retirée de la barre latérale.",
             unflag: "Retirer la marque",
             completeFlag: "Marquer comme terminé",
             reopenFlag: "Réouvrir",
@@ -1970,11 +1979,12 @@ export const fr: DeepPartial<Messages> = {
             taskTitle: "Supprimer cette tâche définitivement ?",
             taskDescription:
                 "La tâche, ses commentaires, fichiers, notes, historique et entrées de recherche sont effacés maintenant, sans les 30 jours de conservation habituels. Cette action est irréversible.",
-            myMessagesMenu: "Supprimer tous mes messages",
-            myMessagesTitle: "Supprimer tous vos messages dans ce chat ?",
+            myMessagesMenu: "Supprimer tous mes messages et retirer",
+            myMessagesTitle: "Supprimer tous vos messages et retirer cette conversation ?",
             myMessagesDescription:
-                "Tous les messages que vous avez écrits ici, avec leurs fichiers et réactions, sont effacés maintenant et ne peuvent pas être récupérés. Les messages de l’autre personne ne sont pas touchés et le chat reste.",
-            myMessagesDone: "Vos messages ont été supprimés.",
+                "Chaque message que vous avez écrit ici, avec ses fichiers et réactions, est effacé maintenant et ne peut être ni annulé ni récupéré. Seuls VOS messages sont supprimés : ceux de l'autre personne restent. La conversation est ensuite retirée de votre barre latérale ; un nouveau message de sa part la fait revenir.",
+            myMessagesDone:
+                "Vos messages ont été supprimés et la conversation retirée de la barre latérale.",
             noteTitle: "Supprimer définitivement cette note ?",
             noteDescription:
                 "La note, son historique, ses commentaires, ses fichiers et ses entrées de recherche sont effacés maintenant, ainsi que sa copie collaborative. Cette action est irréversible. Les personnes qui l'ont vue ont pu la copier.",
