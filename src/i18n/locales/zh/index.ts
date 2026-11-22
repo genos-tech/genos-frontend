@@ -6038,6 +6038,16 @@ export const zh: DeepPartial<Messages> = {
                 noProgress: "尚无进展记录",
                 stalled: "{count} 天没有进展",
                 noSprint: "无冲刺",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "进行中",
+                sprintRollup: "已完成 {closed}/{tasks} · 受阻 {blocked} · 逾期 {overdue}",
+                askProject: "就进度询问 Genos",
+                askSprint: "就此冲刺询问 Genos",
+                thisProject: "此项目",
+                askProjectQuestion:
+                    "{project} 中进行中的里程碑进展如何？哪些已逾期、受阻或停滞，最近有什么进展？",
+                askSprintQuestion:
+                    "{project} 中的 {sprint} 进展如何？其中哪些里程碑已逾期、受阻或停滞，最近有什么进展？",
                 attentionHeading: "需要关注",
                 attentionNone: "没有逾期、受阻或本周到期的任务。",
                 attentionMore: "另有 {count} 项",

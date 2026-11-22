@@ -6342,6 +6342,17 @@ export const fr: DeepPartial<Messages> = {
                 noProgress: "Aucun avancement enregistré",
                 stalled: "Aucun avancement depuis {count} jours",
                 noSprint: "Aucun sprint",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "Actif",
+                sprintRollup:
+                    "Terminées {closed}/{tasks} · Bloquées {blocked} · En retard {overdue}",
+                askProject: "Demander à Genos où en est la progression",
+                askSprint: "Demander à Genos pour ce sprint",
+                thisProject: "ce projet",
+                askProjectQuestion:
+                    "Où en sont les jalons en cours de {project} ? Qu’est-ce qui est en retard, bloqué ou à l’arrêt, et qu’est-ce qui a bougé récemment ?",
+                askSprintQuestion:
+                    "Où en est {sprint} dans {project} ? Quels jalons sont en retard, bloqués ou à l’arrêt, et qu’est-ce qui a bougé récemment ?",
                 attentionHeading: "À traiter",
                 attentionNone: "Rien en retard, bloqué ou à échéance cette semaine.",
                 attentionMore: "{count} de plus",

@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useState } from "react";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import { Box, Button, Stack, Typography } from "@mui/joy";
 import { Link } from "react-router-dom";
 
@@ -9,12 +10,15 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { g } from "../../../../../theme/tokens";
 import { TaskProgressPage } from "../../../../../types/tasks";
+import { requestAskGenosWithDraft } from "../../../../spotlight/askGenosAbout";
+import { useAskGenosAvailable } from "../../../../spotlight/useAskGenosAvailable";
 import { STATUS_TONE, StatusName, toneCss, toneSolid } from "../../../meta/taskTone";
 import { loadTaskProgress } from "../../../services/loadTaskProgress";
 import { Milestone, Sprint } from "../../../sprint-milestone/types";
 import { EffectiveTask } from "../../../utils/effectiveTasks";
 import {
     DUE_SOON_DAYS,
+    groupMilestonesBySprint,
     MilestoneProgressSummary,
     summarizeMilestoneProgress,
     summarizeMilestoneProgressOverview,
@@ -42,6 +46,8 @@ type Props = {
     milestones: Milestone[];
     sprints: Sprint[];
     effectiveTasks: EffectiveTask[];
+    /** The project the tab is about: named in the question "Ask Genos" starts. */
+    projectName?: string | null;
 };
 
 type StatusLabels = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["statusLabels"];
@@ -65,6 +71,7 @@ export const MilestoneProgressTab = ({
     milestones,
     sprints,
     effectiveTasks,
+    projectName,
 }: Props) => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
@@ -81,6 +88,14 @@ export const MilestoneProgressTab = ({
         };
     }, [milestones, effectiveTasks]);
     const overview = useMemo(() => summarizeMilestoneProgressOverview(summaries), [summaries]);
+    const groups = useMemo(
+        () => groupMilestonesBySprint(milestones, summaries, sprints),
+        [milestones, summaries, sprints]
+    );
+    const askAvailable = useAskGenosAvailable();
+    const idBase = useId();
+
+    const projectLabel = projectName?.trim() || m.thisProject;
 
     if (!milestonesLoaded) {
         return <SkeletonLines lines={4} />;
@@ -114,14 +129,31 @@ export const MilestoneProgressTab = ({
 
     return (
         <Stack spacing={2.5}>
-            <Box>
-                <Typography level="title-md" sx={{ color: g.text.primary, fontWeight: 600 }}>
-                    {m.heading}
-                </Typography>
-                <Typography level="body-sm" sx={{ color: g.text.secondary, mt: 0.5 }}>
-                    {m.subtitle}
-                </Typography>
-            </Box>
+            <Stack
+                alignItems={{ xs: "stretch", sm: "flex-start" }}
+                direction={{ xs: "column", sm: "row" }}
+                justifyContent="space-between"
+                spacing={1}
+            >
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography level="title-md" sx={{ color: g.text.primary, fontWeight: 600 }}>
+                        {m.heading}
+                    </Typography>
+                    <Typography level="body-sm" sx={{ color: g.text.secondary, mt: 0.5 }}>
+                        {m.subtitle}
+                    </Typography>
+                </Box>
+                {askAvailable ? (
+                    <AskGenosButton
+                        label={m.askProject}
+                        onClick={() =>
+                            requestAskGenosWithDraft(
+                                fmt(m.askProjectQuestion, { project: projectLabel })
+                            )
+                        }
+                    />
+                ) : null}
+            </Stack>
 
             <Box
                 aria-label={m.heading}
@@ -164,26 +196,109 @@ export const MilestoneProgressTab = ({
                 ))}
             </Box>
 
-            <Stack component="ul" spacing={1.5} sx={{ listStyle: "none", m: 0, p: 0 }}>
-                {summaries.map((s, i) => {
-                    const ms = milestones[i];
+            <Stack spacing={3}>
+                {groups.map((group) => {
+                    const name = group.sprint?.name ?? m.noSprint;
+                    const headingId = `${idBase}-${group.sprint?.sprintId ?? "none"}`;
+                    const r = group.rollup;
                     return (
-                        <li key={ms.milestoneId}>
-                            <MilestoneCard
-                                accessToken={accessToken}
-                                labels={{ m, age, status: t.tasks.dashboard.statusLabels }}
-                                locale={locale}
-                                milestone={ms}
-                                now={now}
-                                summary={s}
-                                sprintName={
-                                    ms.sprintId == null
-                                        ? m.noSprint
-                                        : (sprints.find((sp) => sp.sprintId === ms.sprintId)
-                                              ?.name ?? m.noSprint)
-                                }
-                            />
-                        </li>
+                        <Box
+                            key={group.sprint?.sprintId ?? "none"}
+                            aria-labelledby={headingId}
+                            component="section"
+                        >
+                            <Stack
+                                alignItems={{ xs: "stretch", sm: "center" }}
+                                direction={{ xs: "column", sm: "row" }}
+                                justifyContent="space-between"
+                                spacing={1}
+                                sx={{ mb: 1.5 }}
+                            >
+                                <Box sx={{ minWidth: 0 }}>
+                                    <Stack alignItems="center" direction="row" spacing={1}>
+                                        <Typography
+                                            id={headingId}
+                                            level="title-sm"
+                                            sx={{
+                                                color: g.text.primary,
+                                                fontWeight: 600,
+                                                minWidth: 0,
+                                                overflowWrap: "anywhere",
+                                            }}
+                                        >
+                                            {name}
+                                        </Typography>
+                                        {group.sprint?.status === "active" ? (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color: toneCss("success").text,
+                                                    fontWeight: 600,
+                                                }}
+                                            >
+                                                {m.sprintActive}
+                                            </Typography>
+                                        ) : null}
+                                    </Stack>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{ color: g.text.secondary, mt: 0.25 }}
+                                    >
+                                        {fmt(m.sprintRollup, {
+                                            closed: r.closed,
+                                            tasks: r.tasks,
+                                            blocked: r.blocked,
+                                            overdue: r.overdue,
+                                        })}
+                                        {r.lastProgressAt
+                                            ? ` · ${fmt(m.lastProgress, {
+                                                  age: formatRelativeAge(
+                                                      r.lastProgressAt,
+                                                      age,
+                                                      now.getTime(),
+                                                      locale
+                                                  ),
+                                              })}`
+                                            : ""}
+                                    </Typography>
+                                </Box>
+                                {askAvailable && group.sprint ? (
+                                    <AskGenosButton
+                                        label={m.askSprint}
+                                        onClick={() =>
+                                            requestAskGenosWithDraft(
+                                                fmt(m.askSprintQuestion, {
+                                                    sprint: name,
+                                                    project: projectLabel,
+                                                })
+                                            )
+                                        }
+                                    />
+                                ) : null}
+                            </Stack>
+                            <Stack
+                                component="ul"
+                                spacing={1.5}
+                                sx={{ listStyle: "none", m: 0, p: 0 }}
+                            >
+                                {group.items.map(({ milestone: ms, summary: s }) => (
+                                    <li key={ms.milestoneId}>
+                                        <MilestoneCard
+                                            accessToken={accessToken}
+                                            locale={locale}
+                                            milestone={ms}
+                                            now={now}
+                                            summary={s}
+                                            labels={{
+                                                m,
+                                                age,
+                                                status: t.tasks.dashboard.statusLabels,
+                                            }}
+                                        />
+                                    </li>
+                                ))}
+                            </Stack>
+                        </Box>
                     );
                 })}
             </Stack>
@@ -194,22 +309,13 @@ export const MilestoneProgressTab = ({
 type CardProps = {
     milestone: Milestone;
     summary: MilestoneProgressSummary;
-    sprintName: string;
     accessToken: string | null;
     locale: Locale;
     labels: { m: Msgs; age: AgeMsgs; status: StatusLabels };
     now: Date;
 };
 
-const MilestoneCard = ({
-    milestone,
-    summary,
-    sprintName,
-    accessToken,
-    locale,
-    labels,
-    now,
-}: CardProps) => {
+const MilestoneCard = ({ milestone, summary, accessToken, locale, labels, now }: CardProps) => {
     const { m, age, status: statusLabels } = labels;
     const [open, setOpen] = useState(false);
     // The last page read, kept on screen while a refresh runs or fails (MIP-1187).
@@ -311,18 +417,6 @@ const MilestoneCard = ({
                         }}
                     >
                         {milestone.title}
-                    </Typography>
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: g.text.tertiary,
-                            minWidth: 0,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {sprintName}
                     </Typography>
                 </Stack>
                 <StatusLabel status={milestone.status} />
@@ -622,3 +716,16 @@ const RecentProgress = ({
         </Stack>
     );
 };
+
+const AskGenosButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
+    <Button
+        color="neutral"
+        size="sm"
+        startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 18 }} />}
+        sx={{ alignSelf: { xs: "stretch", sm: "flex-start" }, flexShrink: 0, textAlign: "start" }}
+        variant="soft"
+        onClick={onClick}
+    >
+        {label}
+    </Button>
+);

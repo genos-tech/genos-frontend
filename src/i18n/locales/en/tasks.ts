@@ -1231,6 +1231,16 @@ export const tasks = {
             noProgress: "No progress recorded yet",
             stalled: "No progress for {count} days",
             noSprint: "No sprint",
+            // MIP-1909: draft strings for a native reader (TODO(copy)).
+            sprintActive: "Active",
+            sprintRollup: "Closed {closed}/{tasks} · Blocked {blocked} · Overdue {overdue}",
+            askProject: "Ask Genos about progress",
+            askSprint: "Ask Genos about this sprint",
+            thisProject: "this project",
+            askProjectQuestion:
+                "How are the ongoing milestones in {project} progressing? What is overdue, blocked or stalled, and what moved recently?",
+            askSprintQuestion:
+                "How is {sprint} in {project} progressing? Which of its milestones are overdue, blocked or stalled, and what moved recently?",
             attentionHeading: "Needs attention",
             attentionNone: "Nothing overdue, blocked or due this week.",
             attentionMore: "{count} more",

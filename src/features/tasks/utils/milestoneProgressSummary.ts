@@ -1,4 +1,5 @@
 import { calendarDaysUntil } from "../../../utils/calendarDate";
+import type { Sprint } from "../sprint-milestone/types";
 import { isDueWithin, isOverdueDate } from "./dueWindow";
 import { EffectiveTask } from "./effectiveTasks";
 import { countMilestoneTaskStatuses, MilestoneProgressEntry } from "./milestoneTaskProgress";
@@ -163,3 +164,76 @@ export const summarizeMilestoneProgressOverview = (
         }),
         { milestones: 0, tasks: 0, closed: 0, overdue: 0, blocked: 0, stalled: 0 }
     );
+
+export type MilestoneSprintGroup<M extends { milestoneId: number; sprintId?: number | null }> = {
+    /** The sprint, or null for the milestones of no sprint (or of a sprint that is not loaded). */
+    sprint: Sprint | null;
+    items: { milestone: M; summary: MilestoneProgressSummary }[];
+    rollup: MilestoneProgressOverview & { lastProgressAt: string | null };
+};
+
+const SPRINT_RANK: Record<string, number> = { active: 0, upcoming: 1, completed: 2, archived: 3 };
+
+const startMs = (s: Sprint): number => {
+    const ms = new Date(s.startDate).getTime();
+    return Number.isFinite(ms) ? ms : 0;
+};
+
+/**
+ * The milestones grouped by sprint (MIP-1909): the active sprint first, then upcoming ones
+ * soonest first, then completed and archived ones newest first; the milestones of no sprint last.
+ * `summaries` is parallel to `milestones`, which keep their own order inside a group. Each group
+ * carries the roll-up of its milestones (closed, blocked, overdue, stalled, newest progress).
+ */
+export const groupMilestonesBySprint = <
+    M extends { milestoneId: number; sprintId?: number | null },
+>(
+    milestones: ReadonlyArray<M>,
+    summaries: ReadonlyArray<MilestoneProgressSummary>,
+    sprints: ReadonlyArray<Sprint>
+): MilestoneSprintGroup<M>[] => {
+    const bySprint = new Map<number, Sprint>(sprints.map((s) => [s.sprintId, s]));
+    const buckets = new Map<number | null, MilestoneSprintGroup<M>["items"]>();
+    milestones.forEach((milestone, i) => {
+        const id =
+            milestone.sprintId != null && bySprint.has(milestone.sprintId)
+                ? milestone.sprintId
+                : null;
+        const list = buckets.get(id) ?? [];
+        list.push({ milestone, summary: summaries[i] });
+        buckets.set(id, list);
+    });
+
+    const rollupOf = (items: MilestoneSprintGroup<M>["items"]) => {
+        let newest: number | null = null;
+        let lastProgressAt: string | null = null;
+        for (const { summary } of items) {
+            const ms = summary.lastProgressAt ? new Date(summary.lastProgressAt).getTime() : NaN;
+            if (Number.isFinite(ms) && (newest == null || ms > newest)) {
+                newest = ms;
+                lastProgressAt = summary.lastProgressAt;
+            }
+        }
+        return {
+            ...summarizeMilestoneProgressOverview(items.map((x) => x.summary)),
+            lastProgressAt,
+        };
+    };
+
+    const real = [...buckets.keys()]
+        .filter((id): id is number => id != null)
+        .map((id) => bySprint.get(id) as Sprint)
+        .sort((a, b) => {
+            const rank = (SPRINT_RANK[a.status] ?? 9) - (SPRINT_RANK[b.status] ?? 9);
+            if (rank !== 0) return rank;
+            const diff = startMs(a) - startMs(b);
+            return a.status === "completed" || a.status === "archived" ? -diff : diff;
+        });
+    const groups: MilestoneSprintGroup<M>[] = real.map((sprint) => {
+        const items = buckets.get(sprint.sprintId) ?? [];
+        return { sprint, items, rollup: rollupOf(items) };
+    });
+    const none = buckets.get(null);
+    if (none) groups.push({ sprint: null, items: none, rollup: rollupOf(none) });
+    return groups;
+};
