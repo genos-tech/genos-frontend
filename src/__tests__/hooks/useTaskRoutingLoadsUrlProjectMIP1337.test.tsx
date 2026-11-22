@@ -4,8 +4,8 @@
 // reads IndexedDB; nothing fetched that project's rows until the 60 s change tick. The
 // router must open it with `openProject`, which also fetches its rows.
 import type { ReactNode } from "react";
-import { renderHook } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { act, renderHook } from "@testing-library/react";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { useTaskRouting } from "../../features/tasks/hooks/useTaskRouting";
@@ -39,14 +39,18 @@ const setup = (path: string, currentProjectId: number) => {
     const wrapper = ({ children }: { children: ReactNode }) => (
         <MemoryRouter initialEntries={[path]}>{children}</MemoryRouter>
     );
-    const { rerender } = renderHook(
-        ({ pm }) => useTaskRouting({ usePM: pm, useTM, isActiveRoute: true }),
+    const { rerender, result } = renderHook(
+        ({ pm }) => {
+            const routing = useTaskRouting({ usePM: pm, useTM, isActiveRoute: true });
+            return { routing, navigate: useNavigate() };
+        },
         { wrapper, initialProps: { pm: usePM } }
     );
+    const goTo = (to: string) => act(() => result.current.navigate(to));
     // Boot picking another project after the URL's one was matched.
     const bootMovesTo = (projectId: number) =>
         rerender({ pm: { ...usePM, currentProject: project(projectId) } });
-    return { openProject, setCurrentProject, bootMovesTo };
+    return { openProject, setCurrentProject, bootMovesTo, goTo, usePM, rerender };
 };
 
 describe("useTaskRouting opens the URL's project with its rows (MIP-1337)", () => {
@@ -78,6 +82,23 @@ describe("useTaskRouting opens the URL's project with its rows (MIP-1337)", () =
         } finally {
             vi.useRealTimers();
         }
+    });
+
+    // MIP-1987: the URL's project was never forgotten.
+    it("phone: project cleared and /workspace/tasks opened does not reopen the old project", () => {
+        const { openProject, goTo, usePM, rerender } = setup("/workspace/tasks/project/2", 2);
+        goTo("/workspace/tasks");
+        openProject.mockClear();
+        rerender({ pm: { ...usePM, currentProject: null } as unknown as typeof usePM });
+        expect(openProject).not.toHaveBeenCalled();
+    });
+
+    it("another surface picking a project while the URL is not a tasks project URL is not reverted", () => {
+        const { openProject, goTo, bootMovesTo } = setup("/workspace/tasks/project/2", 2);
+        goTo("/workspace/chat");
+        openProject.mockClear();
+        bootMovesTo(7);
+        expect(openProject).not.toHaveBeenCalled();
     });
 
     it("the URL's project already open: no second open, no refetch", () => {
