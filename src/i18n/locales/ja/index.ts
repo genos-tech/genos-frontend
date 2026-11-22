@@ -4139,6 +4139,22 @@ export const ja: DeepPartial<Messages> = {
                 unknownMember: "チームのメンバー",
                 revokeNamed: "{name} を取り消す",
             },
+            agentUse: {
+                title: "AIアプリの利用",
+                blurb: "このチームでメンバーのAIアプリが行った操作の量を、週ごとに表示します。件数のみで、何を読み、何を検索したかは各メンバーだけが見られ、ここには表示されません。",
+                empty: "AIアプリの利用はまだ記録されていません。",
+                weekOf: "{date}の週",
+                calls: "呼び出し: {n}",
+                changes: "変更: {n}",
+                refused: "拒否: {n}",
+                keyNamed: "{app}({key})",
+                unknownMember: "チームメンバー",
+                apps: {
+                    claude: "Claude",
+                    chatgpt: "ChatGPT",
+                    other: "その他のアプリ",
+                },
+            },
             securityLog: {
                 title: "セキュリティログ",
                 blurb: "このチームに対する重要な変更の記録です（新しい順）。メンバーの参加と退出、ロールとオーナーの変更、招待、API キー、Webhook、アラートが含まれます。保存期間は 365 日です。",
