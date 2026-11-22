@@ -89,6 +89,7 @@ import {
 } from "../../services/agentApi";
 import { requestAppNavigate } from "../../services/appNavigate";
 import { g } from "../../theme/tokens";
+import { CREDIT_PACKS_PATH, PLANS_PATH } from "../billing/billingPaths";
 import { entitySubtitle } from "../spotlight/SpotlightResultItem";
 import type { SpotlightResult } from "../spotlight/types";
 import { agentMarkdownComponents } from "./agentMarkdown";
@@ -113,9 +114,6 @@ import { turnFrameSx, turnLabelSx } from "./turnFrame";
 import type { ToolEvent } from "./types";
 import { UndoSlot } from "./UndoControls";
 import { mergeUndoSteps, type UndoRequest, type UndoStepRef } from "./undoSteps";
-
-const PLANS_PATH = "/workspace/plans";
-const CREDIT_PACKS_PATH = "/workspace/plans#credit-packs";
 
 /** What a per-turn action needs to know about the turn it sits on. */
 export interface AgentTurnActionContext {

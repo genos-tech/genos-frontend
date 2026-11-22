@@ -53,7 +53,7 @@ describe("BillingFaq", () => {
             BILLING_FAQ.en.items.map((i) => i.id)
         );
         expect(BILLING_FAQ.en.items.length).toBeGreaterThanOrEqual(8);
-        expect(BILLING_FAQ.en.items.length).toBeLessThanOrEqual(10);
+        expect(BILLING_FAQ.en.items.length).toBeLessThanOrEqual(11);
     });
 
     it("never uses the forbidden product words", () => {

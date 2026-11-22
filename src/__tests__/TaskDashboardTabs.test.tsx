@@ -20,6 +20,10 @@ vi.mock("../features/today/briefingToday", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../features/today/briefingToday")>()),
     loadBriefingToday: vi.fn().mockResolvedValue({ status: "unavailable" }),
 }));
+vi.mock("../features/tasks/services/loadTaskVelocity", () => ({
+    VELOCITY_MAX_TASK_IDS: 500,
+    loadTaskVelocity: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("../features/tasks/services/loadTeamTasks", () => ({
     loadTeamTasks: vi.fn().mockResolvedValue([]),
 }));
@@ -129,10 +133,11 @@ describe("TaskDashboard header (MIP-1220)", () => {
 describe("TaskDashboard tabs + Tag Insights", () => {
     beforeEach(() => window.localStorage.clear());
 
-    it("renders the three section tabs", () => {
+    it("renders the section tabs: Overall and Sprint are one Project tab (MIP-1963)", () => {
         renderDashboard();
-        expect(screen.getByRole("tab", { name: /Overall Insights/ })).toBeInTheDocument();
-        expect(screen.getByRole("tab", { name: /Sprint Insights/ })).toBeInTheDocument();
+        expect(screen.getByRole("tab", { name: /Project/ })).toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: /Overall Insights/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: /Sprint Insights/ })).not.toBeInTheDocument();
         expect(screen.getByRole("tab", { name: /My Tasks/ })).toBeInTheDocument();
     });
 
@@ -140,7 +145,7 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         renderDashboard();
         // Today covers every project: no project picker there.
         expect(screen.queryByTestId("task-dashboard-toolbar")).not.toBeInTheDocument();
-        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
         expect(screen.getByTestId("task-dashboard-toolbar")).toBeInTheDocument();
         fireEvent.click(screen.getByRole("tab", { name: /Agent Activity/ }));
         expect(screen.queryByTestId("task-dashboard-toolbar")).not.toBeInTheDocument();
@@ -154,30 +159,35 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         expect(within(header).getByRole("button", { name: "Sprint Board" })).toBeInTheDocument();
     });
 
-    it("opens on the Today tab (MIP-1005), not on Overall", () => {
+    it("opens on the Today tab (MIP-1005), not on Project", () => {
         renderDashboard();
         expect(screen.getByRole("tab", { name: /Today/, selected: true })).toBeInTheDocument();
         expect(screen.queryByText("Tag Insights")).not.toBeInTheDocument();
     });
 
-    it("reads the team's tasks only once the Overall tab needs them (not on Today)", async () => {
+    it("reads the team's tasks only when More analytics is open (not on Today or Project)", async () => {
         const { loadTeamTasks } = await import("../features/tasks/services/loadTeamTasks");
         vi.mocked(loadTeamTasks).mockClear();
         renderDashboard();
         await Promise.resolve();
         expect(loadTeamTasks).not.toHaveBeenCalled();
-        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        await Promise.resolve();
+        expect(loadTeamTasks).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByRole("button", { name: /More analytics/ }));
         await Promise.resolve();
         expect(loadTeamTasks).toHaveBeenCalledTimes(1);
         fireEvent.click(screen.getByRole("tab", { name: /Today/ }));
-        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
         await Promise.resolve();
         expect(loadTeamTasks).toHaveBeenCalledTimes(1);
     });
 
-    it("shows Tag Insights on the Overall tab, aggregated by tag", () => {
+    it("shows Tag Insights under More analytics, aggregated by tag", () => {
         renderDashboard();
-        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        expect(screen.queryByText("Tag Insights")).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: /More analytics/ }));
         expect(screen.getByText("Tag Insights")).toBeInTheDocument();
         // "backend" (2 items) is the most-used tag, so it renders in both the
         // summary tile and the table row; "urgent" (1 item) renders once.
@@ -188,13 +198,64 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         expect(screen.getByText("Tag coverage")).toBeInTheDocument();
     });
 
-    it("switches away from Overall content when another tab is selected", () => {
+    it("switches away from Project content when another tab is selected", () => {
         renderDashboard();
-        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        fireEvent.click(screen.getByRole("button", { name: /More analytics/ }));
         expect(screen.getByText("Tag Insights")).toBeInTheDocument();
         fireEvent.click(screen.getByRole("tab", { name: /My Tasks/ }));
-        // Overall tab body (with Tag Insights) unmounts on switch.
+        // The Project tab body (with Tag Insights) unmounts on switch.
         expect(screen.queryByText("Tag Insights")).not.toBeInTheDocument();
+    });
+});
+
+describe("Project tab (MIP-1963)", () => {
+    beforeEach(() => window.localStorage.clear());
+
+    it("leads with the one-line summary and the stat strip", () => {
+        renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        expect(screen.getByTestId("project-summary").textContent).toMatch(
+            /closed.*overdue.*blocked/
+        );
+        expect(screen.getByText("Needs attention")).toBeInTheDocument();
+    });
+
+    it("switches the Needs attention list with its chips", () => {
+        renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        const group = screen.getByRole("radiogroup", { name: "Show in this list" });
+        const chip = (name: RegExp) => within(group).getByRole("radio", { name });
+        expect(chip(/^Overdue$/)).toHaveAttribute("aria-checked", "true");
+        fireEvent.click(chip(/Due This Week/));
+        expect(chip(/Due This Week/)).toHaveAttribute("aria-checked", "true");
+        fireEvent.click(chip(/Top by Weight/));
+        // The weight / urgency sort chips appear only for this list.
+        expect(screen.getByRole("radiogroup", { name: "Top by Weight" })).toBeInTheDocument();
+    });
+
+    it("remembers whether More analytics is open", () => {
+        const first = renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        const toggle = () => screen.getByRole("button", { name: /More analytics/ });
+        expect(toggle()).toHaveAttribute("aria-expanded", "false");
+        fireEvent.click(toggle());
+        expect(toggle()).toHaveAttribute("aria-expanded", "true");
+        first.unmount();
+        renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        expect(toggle()).toHaveAttribute("aria-expanded", "true");
+    });
+
+    it("opens More analytics without asking the velocity again", async () => {
+        const { loadTaskVelocity } = await import("../features/tasks/services/loadTaskVelocity");
+        renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        await Promise.resolve();
+        const before = vi.mocked(loadTaskVelocity).mock.calls.length;
+        fireEvent.click(screen.getByRole("button", { name: /More analytics/ }));
+        await Promise.resolve();
+        expect(vi.mocked(loadTaskVelocity).mock.calls.length).toBe(before);
     });
 });
 

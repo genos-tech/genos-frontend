@@ -113,6 +113,7 @@ import { DensitySetting } from "./DensitySetting";
 import { DeveloperSettingsSection } from "./DeveloperSettingsSection";
 import { MentionGroupsPanel } from "./MentionGroupsPanel";
 import { SchedulesSection } from "./schedules/SchedulesSection";
+import { AiCreditUsageSection } from "./settings/AiCreditUsageSection";
 import { CreditUsageSection } from "./settings/CreditBalance";
 import { KeyboardShortcutsSection } from "./settings/KeyboardShortcutsSection";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
@@ -1648,6 +1649,7 @@ const AutoSyncCalendarSection = () => {
 export type SettingsTabKey =
     | "general"
     | "planUsage"
+    | "aiCreditUsage"
     | "chat"
     | "tasks"
     | "spotlight"
@@ -1795,6 +1797,10 @@ export const SettingsModal = ({
                             <WorkspacePremiumRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.planUsage}
                         </Tab>
+                        <Tab sx={SIDEBAR_TAB_SX} value="aiCreditUsage">
+                            <BoltRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.aiCreditUsage}
+                        </Tab>
                         <Tab sx={SIDEBAR_TAB_SX} value="spotlight">
                             <AutoAwesomeRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.spotlight}
@@ -1859,8 +1865,17 @@ export const SettingsModal = ({
                         <Stack spacing={2}>
                             {/* "Compare plans" navigates to /workspace/plans;
                                 close the modal so it doesn't sit on top. */}
-                            <PlanUsageSection onNavigateAway={onClose} />
+                            <PlanUsageSection
+                                onNavigateAway={onClose}
+                                onOpenCreditUsage={() => setTab("aiCreditUsage")}
+                            />
                         </Stack>
+                    </TabPanel>
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="aiCreditUsage"
+                    >
+                        <AiCreditUsageSection onNavigateAway={onClose} />
                     </TabPanel>
                     <TabPanel
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}

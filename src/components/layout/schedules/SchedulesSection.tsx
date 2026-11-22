@@ -344,6 +344,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
 
     const form = (existing: Schedule | null) => (
         <ScheduleFormPanel
+            aiCreditsOut={data?.aiCreditsOut === true}
             existing={schedules}
             jobs={data?.jobs ?? []}
             schedule={existing}

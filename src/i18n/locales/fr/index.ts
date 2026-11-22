@@ -3951,6 +3951,7 @@ export const fr: DeepPartial<Messages> = {
         tabs: {
             general: "Général",
             planUsage: "Forfait et utilisation",
+            aiCreditUsage: "Utilisation des crédits IA",
             chat: "Chat",
             tasks: "Tâches",
             spotlight: "Genos",
@@ -4263,6 +4264,42 @@ export const fr: DeepPartial<Messages> = {
             errorPassword: "Mot de passe incorrect.",
             errorOwnership: "Transférez d'abord la propriété de vos équipes.",
             errorGeneric: "Une erreur est survenue. Réessayez.",
+        },
+        aiCreditUsage: {
+            heading: "Utilisation des crédits IA",
+            description:
+                "Quelles tâches d'IA ont consommé vos crédits. Cette page n'affiche que votre propre utilisation.",
+            remaining: "Crédits restants",
+            usedThisMonth: "Utilisés ce mois-ci",
+            renews: "Renouvellement",
+            purchasedSub: "+{n} achetés",
+            unlimited: "Illimité",
+            byJobHeading: "Ce mois-ci par tâche",
+            byJobAria: "Crédits utilisés ce mois-ci par tâche : {list}",
+            jobCount: "Usages : {n}",
+            jobs: {
+                ask: "Questions à Genos",
+                connected_app: "Recherches IA depuis des apps connectées",
+                schedule: "Phrases IA des rapports programmés",
+                summary: "Résumés",
+                other: "Autre usage de l'IA",
+            },
+            recentHeading: "Débits récents",
+            recentCap: "Vos 50 derniers débits, du plus récent au plus ancien",
+            emptyTitle: "Aucun usage de l'IA ce mois-ci",
+            emptyBody:
+                "Quand Genos répond à une question ou rédige un résumé ou une phrase de rapport, les crédits utilisés apparaissent ici.",
+            loadError: "Impossible de charger votre utilisation des crédits",
+            retry: "Réessayer",
+            notAuthoritative:
+                "Votre forfait limite les requêtes IA quotidiennes plutôt que des crédits. Forfait et utilisation affiche ces limites.",
+            depletedWarning:
+                "Vous n'avez plus de crédits. Achetez des crédits ou changez de forfait pour continuer à utiliser l'IA avant le renouvellement.",
+            lowWarning:
+                "Vos crédits sont presque épuisés : une longue requête peut s'arrêter en cours de route.",
+            buyCredits: "Acheter des crédits",
+            upgrade: "Changer de forfait",
+            seeUsageLink: "Voir l'utilisation des crédits",
         },
         planUsage: {
             heading: "Forfait et utilisation",
@@ -4667,6 +4704,10 @@ export const fr: DeepPartial<Messages> = {
             paramAiSentences: "Phrases de l'IA",
             paramAiSentencesHint:
                 "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA et dépense vos crédits d'IA. Désactivée par défaut : activez-la si vous la voulez.",
+            aiOutOfCredits:
+                "Vous avez utilisé tous vos crédits d'IA, les phrases de l'IA ne peuvent donc pas s'exécuter. Achetez des crédits ou passez à un plan supérieur pour les activer.",
+            aiOutOfCreditsBuy: "Acheter des crédits",
+            aiOutOfCreditsUpgrade: "Changer de forfait",
             effortLabel: "Effort de l'IA",
             effortDefaultMark: "{level} (par défaut)",
             effortCostAbout: "Environ {credits} crédits par exécution. C'est une estimation.",
@@ -6560,8 +6601,18 @@ export const fr: DeepPartial<Messages> = {
             currentProject: "Projet actuel",
             selectProjectForAnalytics:
                 "Sélectionnez un projet dans la barre latérale pour voir les analyses du sprint",
-            tabOverall: "Vue d'ensemble",
-            tabSprint: "Analyse du sprint",
+            tabProject: "Projet",
+            project: {
+                summary:
+                    "{closed} sur {total} terminées · {overdue} en retard · {blocked} bloquées",
+                attentionTitle: "À traiter",
+                attentionFilter: "Afficher dans cette liste",
+                showAll: "Tout afficher ({count})",
+                showLess: "Réduire",
+                emptyTop: "Aucune tâche n'a encore de priorité ni d'échéance",
+                moreAnalytics: "Plus d'analyses",
+                sprintRemaining: "Restantes",
+            },
             tabMyTasks: "Mes tâches",
             tabMemberTasks: "Tâches des membres",
             tabAgentActivity: "Activité des agents",

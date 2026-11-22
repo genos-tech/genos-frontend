@@ -104,6 +104,14 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 ],
             },
             {
+                id: "ai-credits",
+                q: "What uses AI credits?",
+                a: [
+                    // MIP-1965 / MIP-1971: Ken approved this wording 2026-11-22. Labels match the app's locale files.
+                    "A search by a connected AI app uses a small amount of AI credit. You can see how many credits each AI job uses in Settings > Plan & Usage.",
+                ],
+            },
+            {
                 id: "first-month",
                 firstMonth: true,
                 q: "Is the first month free?",
@@ -179,6 +187,13 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 q: "有料プランが終わるとどうなりますか？",
                 a: [
                     "有料期間が終わると、アカウントは Free に戻ります。データは残ります。Free の期間を超えた古いチャットや AI の履歴（チャットは 180 日、AI の履歴は 30 日）は非表示になるだけで、削除されません。有料プランに戻すと再び見られます。接続した AI アプリは一時停止し、Core 以上に戻るまで一時停止と表示されます。スケジュールされたレポートも一時停止して残ります。公開 REST API は全プランで使えます。",
+                ],
+            },
+            {
+                id: "ai-credits",
+                q: "AI クレジットは何に使われますか？",
+                a: [
+                    "連携した AI アプリによる検索では、少量の AI クレジットを使用します。どの AI 機能がどれだけクレジットを使ったかは、設定 > プランと使用状況 で確認できます。",
                 ],
             },
             {

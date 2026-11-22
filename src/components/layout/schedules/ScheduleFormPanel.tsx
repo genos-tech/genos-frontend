@@ -17,6 +17,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { CREDIT_PACKS_PATH, PLANS_PATH } from "../../../features/billing/billingPaths";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import {
     asEffortLevel,
@@ -49,6 +50,7 @@ import {
 } from "../../../features/schedules/scheduleParams";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { fmt, useTranslation } from "../../../i18n";
+import { requestAppNavigate } from "../../../services/appNavigate";
 import type {
     EffortLevel,
     Schedule,
@@ -68,6 +70,8 @@ type Props = {
     /** The schedule being edited; null to create one. */
     schedule: Schedule | null;
     jobs: ScheduleJob[];
+    /** No AI credits left (MIP-1967): the AI switch is drawn off and disabled, with the reason. */
+    aiCreditsOut?: boolean;
     /** The member's schedules on screen, for the instant "you already have this" check. */
     existing?: Schedule[];
     timeZone: string;
@@ -98,6 +102,7 @@ const FREQUENCY_KEYS = {
 export const ScheduleFormPanel = ({
     schedule,
     jobs,
+    aiCreditsOut = false,
     existing = [],
     timeZone,
     onSubmit,
@@ -374,10 +379,13 @@ export const ScheduleFormPanel = ({
                                 // Not set means the job's own default, which the catalog does not
                                 // state: the form knows it for the parameters it has words for.
                                 const raw = form.params[key] ?? "";
-                                const on =
-                                    raw === ""
-                                        ? (known?.boolean?.defaultOn ?? false)
-                                        : raw === "true";
+                                // No credits: the AI switch cannot be used, so it reads off.
+                                const creditsOut = aiCreditsOut && known?.aiSwitch === true;
+                                const on = creditsOut
+                                    ? false
+                                    : raw === ""
+                                      ? (known?.boolean?.defaultOn ?? false)
+                                      : raw === "true";
                                 return (
                                     <FormControl key={key} sx={{ minWidth: 0 }}>
                                         <Box
@@ -385,6 +393,7 @@ export const ScheduleFormPanel = ({
                                         >
                                             <Switch
                                                 checked={on}
+                                                disabled={creditsOut}
                                                 size="sm"
                                                 onChange={(e) =>
                                                     setParam(e.target.checked ? "true" : "false")
@@ -392,10 +401,45 @@ export const ScheduleFormPanel = ({
                                             />
                                             <FormLabel sx={{ m: 0 }}>{label}</FormLabel>
                                         </Box>
-                                        {hint && (
-                                            <FormHelperText sx={{ color: g.text.secondary }}>
-                                                {hint}
-                                            </FormHelperText>
+                                        {creditsOut ? (
+                                            <>
+                                                <FormHelperText sx={{ color: g.text.secondary }}>
+                                                    {s.aiOutOfCredits}
+                                                </FormHelperText>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        flexWrap: "wrap",
+                                                        gap: 1,
+                                                        mt: 0.75,
+                                                    }}
+                                                >
+                                                    <Button
+                                                        size="sm"
+                                                        variant="solid"
+                                                        onClick={() =>
+                                                            requestAppNavigate(CREDIT_PACKS_PATH)
+                                                        }
+                                                    >
+                                                        {s.aiOutOfCreditsBuy}
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outlined"
+                                                        onClick={() =>
+                                                            requestAppNavigate(PLANS_PATH)
+                                                        }
+                                                    >
+                                                        {s.aiOutOfCreditsUpgrade}
+                                                    </Button>
+                                                </Box>
+                                            </>
+                                        ) : (
+                                            hint && (
+                                                <FormHelperText sx={{ color: g.text.secondary }}>
+                                                    {hint}
+                                                </FormHelperText>
+                                            )
                                         )}
                                     </FormControl>
                                 );
@@ -471,7 +515,7 @@ export const ScheduleFormPanel = ({
                     </Stack>
                 )}
 
-                {showsEffort(job, form.params) && (
+                {showsEffort(job, form.params) && !aiCreditsOut && (
                     <FormControl data-testid="schedule-effort" sx={{ minWidth: 0 }}>
                         <FormLabel id={effortLabelId}>{s.effortLabel}</FormLabel>
                         <RadioGroup

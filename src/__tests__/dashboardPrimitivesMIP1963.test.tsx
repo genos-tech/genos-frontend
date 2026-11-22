@@ -151,6 +151,13 @@ describe("SegmentedChips", () => {
             />
         );
     };
+    it("a click selects the chip (Joy ignores an onClick set on the action slot)", () => {
+        wrap(<Harness />);
+        fireEvent.click(screen.getByRole("radio", { name: "Week" }));
+        expect(screen.getByRole("radio", { name: "Week" }).getAttribute("aria-checked")).toBe(
+            "true"
+        );
+    });
     it("is a radio group with roving tabindex and arrow keys", () => {
         wrap(<Harness />);
         expect(screen.getByRole("radiogroup", { name: "Range" })).toBeTruthy();
