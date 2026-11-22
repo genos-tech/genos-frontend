@@ -104,6 +104,18 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 ],
             },
             {
+                id: "mcp-limits",
+                q: "What happens if my AI app hits a limit?",
+                a: [
+                    // TODO(copy): MIP-1614. Draft for Ken. Numbers are NOT written here: they are the rows under
+                    // "Connected AI apps (MCP)" in the table, which come from the server's tier table. The
+                    // behaviour is `MCP_SERVER.md` §6 "How a limit answers": a 429 with Retry-After for the
+                    // per-minute and per-day limits (the day is counted in UTC, `_seconds_to_next_utc_midnight`),
+                    // and a plain sentence from the tool for a bulk size or a page size.
+                    "Nothing is lost or deleted. For the calls-per-minute and calls-per-day limits, the app is told how long to wait, and it should wait and try again. The per-minute limit clears within a minute, and the daily total starts again at 00:00 UTC. For a limit on how many items one call can carry, the app is told the size to use and sends fewer at a time. Connecting a new app or creating a new API key past your plan's count is refused, and the apps and keys you already have keep working. If you reach a limit often, a higher plan raises these numbers; the plan table on this page lists them.",
+                ],
+            },
+            {
                 id: "ai-credits",
                 q: "What uses AI credits?",
                 a: [
@@ -187,6 +199,15 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 q: "有料プランが終わるとどうなりますか？",
                 a: [
                     "有料期間が終わると、アカウントは Free に戻ります。データは残ります。Free の期間を超えた古いチャットや AI の履歴（チャットは 180 日、AI の履歴は 30 日）は非表示になるだけで、削除されません。有料プランに戻すと再び見られます。接続した AI アプリは一時停止し、Core 以上に戻るまで一時停止と表示されます。スケジュールされたレポートも一時停止して残ります。公開 REST API は全プランで使えます。",
+                ],
+            },
+            {
+                id: "mcp-limits",
+                q: "AI アプリが上限に達するとどうなりますか？",
+                a: [
+                    // TODO(copy): MIP-1614 Ken の確認待ちの草案。数値はここに書かず、表の「接続した AI アプリ (MCP)」の行に
+                    // サーバーのプラン表から表示される。1 日は UTC で数える。
+                    "何かが失われたり削除されたりすることはありません。1 分あたり・1 日あたりの呼び出し回数の上限では、AI アプリに待つ時間が伝えられ、少し待ってからやり直します。1 分あたりの上限は 1 分以内に解除され、1 日あたりの合計は UTC の 0 時 (日本時間の 9 時) からまた数え直されます。一度に送れる件数の上限では、使える件数が伝えられ、AI アプリは一度に送る件数を減らします。プランの数を超えて新しい AI アプリを接続したり新しい API キーを作ったりすることはできませんが、すでにあるアプリとキーはそのまま使えます。上限に何度も達する場合は、上位のプランで数値が上がります。数値はこのページのプラン表に載っています。",
                 ],
             },
             {

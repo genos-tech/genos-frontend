@@ -224,6 +224,11 @@ function PlansBody({ lang }: { lang: Lang }) {
                                                 <tr key={row.key}>
                                                     <th className="lp-plans__feature" scope="row">
                                                         {row.label}
+                                                        {row.hint && (
+                                                            <span className="lp-plans__hint">
+                                                                {row.hint}
+                                                            </span>
+                                                        )}
                                                     </th>
                                                     {row.cells.map((cell, i) => (
                                                         <td

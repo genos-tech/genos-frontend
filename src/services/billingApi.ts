@@ -190,6 +190,22 @@ export interface PlanLimits {
     integrations?: IntegrationName[];
     /** MCP is a Core-and-up capability; absent on a server that predates it. */
     mcp_enabled?: boolean;
+    /**
+     * Tier plan v2 counts and MCP volume limits (MIP-1614, MIP-1960), served from the same
+     * `TIER_QUOTAS` the server enforces (`_PLAN_LIMIT_KEYS`). `null` = unlimited; absent on a
+     * server that predates them, in which case the plan table leaves the rows out.
+     * `webhooks_max` is per team; `schedules_max` and the MCP counts are per person;
+     * `mcp_calls_per_min` is per key or connected app.
+     */
+    webhooks_max?: number | null;
+    schedules_max?: number | null;
+    mcp_calls_per_min?: number | null;
+    mcp_calls_per_day?: number | null;
+    mcp_max_api_keys?: number | null;
+    mcp_max_connections?: number | null;
+    mcp_bulk_max_tasks?: number | null;
+    mcp_bulk_max_plan_tasks?: number | null;
+    mcp_list_page_max?: number | null;
 }
 
 export interface PlanTier {

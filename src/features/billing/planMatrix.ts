@@ -50,6 +50,8 @@ export interface MatrixRow {
     key: string;
     /** Row header. */
     label: string;
+    /** Small print under the header: what the number is counted against. Optional. */
+    hint?: string;
     /** One cell per tier, in the order the tiers were passed in. */
     cells: MatrixCell[];
 }
@@ -205,21 +207,84 @@ export const planMatrixGroups = (
         cells: tiers.map((t) => (t.tier === "free" ? { kind: "no" } : { kind: "yes" })),
     });
 
-    // MCP sits in the AI group rather than under "what Genos can
-    // reach": those rows are what Genos reaches OUT to, and this is an
-    // outside agent reaching in. It is still an AI capability, and that
-    // is how a reader looks for it.
+    groups.push({ key: "ai", label: p.matrixGroupAi, rows: ai });
+
+    // ---- Connected AI apps (MCP) --------------------------------
+    // Its own group (MIP-1614): MCP is what Genos is reached THROUGH
+    // (an outside AI app calling in), not what Genos reaches out to, and
+    // since 2026-11-22 it carries real limits that a user can hit. They
+    // are all read off the same `TIER_QUOTAS` the server enforces, so the
+    // page can never promise a number the server does not apply.
     //
     // `has()` because a server predating the gate sends the key for
     // nobody, and a row of crosses would then advertise that no plan
     // includes a feature every plan actually had.
+    //
+    // A plan without MCP (Free) shows a cross on every number: a "None"
+    // under "calls per day" would read as a limit rather than an absence.
+    // `=== false`, not falsy: a server that predates `mcp_enabled` must
+    // not turn its numbers into crosses.
+    const mcpOn = (L: PlanTier["limits"]) => L.mcp_enabled !== false;
+    const mcpRows: MatrixRow[] = [];
     if (has("mcp_enabled")) {
-        ai.push(
+        mcpRows.push(
             row("mcp", p.matrixRowMcp, (L) => (L.mcp_enabled ? { kind: "yes" } : { kind: "no" }))
         );
     }
-
-    groups.push({ key: "ai", label: p.matrixGroupAi, rows: ai });
+    const mcpCount = (
+        key: string,
+        label: string,
+        limitKey: keyof PlanTier["limits"],
+        hint?: string,
+        // A number the server also caps for every plan (a transport throttle, a fixed bulk size, a
+        // maximum page): "no plan limit" is then NOT "unlimited", and the contract plan, which has no
+        // plan limit, is "Custom" rather than a promise the fixed cap would break.
+        fixedCap = false
+    ) => {
+        if (!has(limitKey)) return;
+        mcpRows.push({
+            key,
+            label,
+            hint,
+            cells: tiers.map((t): MatrixCell => {
+                const L = t.limits;
+                if (!mcpOn(L)) return { kind: "no" };
+                const v = L[limitKey] as number | null | undefined;
+                if (v != null) return { kind: "value", label: num(v, locale) };
+                return fixedCap && t.tier === "enterprise"
+                    ? { kind: "value", label: p.matrixCustom }
+                    : { kind: "value", label: p.matrixUnlimited, emphasis: true };
+            }),
+        });
+    };
+    mcpCount("mcp-apps", p.matrixRowMcpApps, "mcp_max_connections", p.matrixHintMcpNewOnly);
+    mcpCount("mcp-keys", p.matrixRowMcpKeys, "mcp_max_api_keys", p.matrixHintMcpNewOnly);
+    mcpCount(
+        "mcp-per-min",
+        p.matrixRowMcpPerMin,
+        "mcp_calls_per_min",
+        p.matrixHintMcpPerMin,
+        true
+    );
+    mcpCount("mcp-per-day", p.matrixRowMcpPerDay, "mcp_calls_per_day", p.matrixHintMcpPerDay);
+    mcpCount("mcp-bulk", p.matrixRowMcpBulk, "mcp_bulk_max_tasks", undefined, true);
+    mcpCount("mcp-plan", p.matrixRowMcpPlan, "mcp_bulk_max_plan_tasks", undefined, true);
+    mcpCount("mcp-page", p.matrixRowMcpPage, "mcp_list_page_max", undefined, true);
+    // A search from a connected AI app is a billable AI surface (credit_policy.yaml, `mcp_search`),
+    // so the row exists only when credits are the limit the server enforces, the same switch the
+    // credits row uses. Unlimited credits (Enterprise) = no spend to warn about.
+    if (has("mcp_enabled") && has("monthly_ai_credits")) {
+        mcpRows.push(
+            row("mcp-search", p.matrixRowMcpSearch, (L) =>
+                !mcpOn(L)
+                    ? { kind: "no" }
+                    : L.monthly_ai_credits == null
+                      ? { kind: "value", label: p.matrixUnlimited, emphasis: true }
+                      : { kind: "value", label: p.matrixMcpSearchCredits }
+            )
+        );
+    }
+    if (mcpRows.length) groups.push({ key: "mcp", label: p.matrixGroupMcp, rows: mcpRows });
 
     // ---- What it can reach --------------------------------------
     // These are the natural yes/no rows: you either get the integration
@@ -256,6 +321,34 @@ export const planMatrixGroups = (
         );
     }
     groups.push({ key: "workspace", label: p.matrixGroupWorkspace, rows: workspace });
+
+    // ---- Automation: webhooks and scheduled reports --------------
+    // Counts, where 0 is "not on this plan" (a cross, not a "0"), null is unlimited. The webhook cap
+    // is per TEAM (the team's own plan decides), the report cap per person; the hint says which.
+    const automation: MatrixRow[] = [];
+    const count = (
+        key: string,
+        label: string,
+        limitKey: "webhooks_max" | "schedules_max",
+        hint: string
+    ) => {
+        if (!has(limitKey)) return;
+        automation.push({
+            ...row(key, label, (L) => {
+                const v = L[limitKey];
+                if (v === 0) return { kind: "no" };
+                return v == null
+                    ? { kind: "value", label: p.matrixUnlimited, emphasis: true }
+                    : { kind: "value", label: num(v, locale) };
+            }),
+            hint,
+        });
+    };
+    count("webhooks", p.matrixRowWebhooks, "webhooks_max", p.matrixHintPerTeam);
+    count("schedules", p.matrixRowSchedules, "schedules_max", p.matrixHintPerPerson);
+    if (automation.length) {
+        groups.push({ key: "automation", label: p.matrixGroupAutomation, rows: automation });
+    }
 
     return groups;
 };

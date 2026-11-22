@@ -732,6 +732,14 @@ export const PlansHome = () => {
                                             <Typography level="body-sm" sx={{ fontWeight: "md" }}>
                                                 {row.label}
                                             </Typography>
+                                            {row.hint && (
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{ color: "text.tertiary" }}
+                                                >
+                                                    {row.hint}
+                                                </Typography>
+                                            )}
                                         </Box>
                                         {row.cells.map((cell, i) => (
                                             <Box

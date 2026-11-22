@@ -53,7 +53,18 @@ describe("BillingFaq", () => {
             BILLING_FAQ.en.items.map((i) => i.id)
         );
         expect(BILLING_FAQ.en.items.length).toBeGreaterThanOrEqual(8);
-        expect(BILLING_FAQ.en.items.length).toBeLessThanOrEqual(11);
+        expect(BILLING_FAQ.en.items.length).toBeLessThanOrEqual(12);
+    });
+
+    it("answers the AI-app limit question without writing a number that the plan table owns", () => {
+        for (const lang of ["en", "ja"] as const) {
+            const item = BILLING_FAQ[lang].items.find((i) => i.id === "mcp-limits");
+            expect(item, lang).toBeDefined();
+            const text = item!.a.join(" ");
+            // The per-plan numbers come from the server's tier table: a copy here would drift.
+            expect(text, lang).not.toMatch(/\b(3,000|10,000|30,000)\b/);
+            expect(text, lang).toContain("UTC");
+        }
     });
 
     it("never uses the forbidden product words", () => {
