@@ -410,6 +410,9 @@ export type SearchTeamTasksResponse = {
     milestoneId?: number;
     status: TaskStatusProps;
     tsUpdated: string;
+    // `/search/tasks/` only (MIP-1990): who the task is assigned to, for the search rows.
+    assigneeId?: string | null;
+    assigneeName?: string | null;
     // `/task/recent/` only: when the signed-in user last opened the task.
     tsOpened?: string;
 };

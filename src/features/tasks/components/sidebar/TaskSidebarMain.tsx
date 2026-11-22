@@ -18,13 +18,11 @@ import { SearchTeamTasksResponse, TagListProps } from "../../../../types/tasks";
 import { useOnTaskMetadataSaved } from "../../hooks/useOnTaskMetadataSaved";
 import { useOnTaskOpened } from "../../hooks/useOnTaskOpened";
 import { loadProjectTags } from "../../services/loadProjectTags";
-import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { loadRecentTasks } from "../../services/recentTasks";
 import { FavoritesListItem } from "./FavoritesListItem";
 import { ArchivedProjectsListItem } from "./projects_subs/ArchivedProjectsListItem";
 import { ProjectsListItem } from "./ProjectsListItem";
 import { RecentsListItem } from "./RecentsListItem";
-import { TaskSidebarSearchBox } from "./SearchBox";
 import { SprintBoardListItem } from "./SprintBoardListItem";
 import { TaskTableListItem } from "./TaskTableListItem";
 import { SidebarSlices, useSidebarSlices } from "./useSidebarSlices";
@@ -89,44 +87,6 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
     const isDark = mode === "dark";
     const isMobile = useIsMobile();
     const { t } = useTranslation();
-
-    // =======================================================================
-    const [openSearch, setOpenSearch] = useState(false);
-    const [teamTaskSearchOptions, setTeamTaskSearchOptions] = useState<SearchTeamTasksResponse[]>(
-        []
-    );
-    const loading = openSearch && teamTaskSearchOptions.length === 0;
-    useEffect(() => {
-        let active = true;
-
-        if (!loading) {
-            return undefined;
-        }
-
-        (async () => {
-            // Search surfaces active work only: no Closed/Deleted tasks,
-            // and (via include_all=false) no tasks whose parent task /
-            // milestone is already closed — the backend walks the parent
-            // chain when include_all is off.
-            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
-                myself,
-                -1,
-                "open,wip,blocked,pending",
-                -1,
-                accessToken,
-                false
-            );
-
-            if (active) {
-                setTeamTaskSearchOptions([...loadedTeamTasks]);
-            }
-        })();
-
-        return () => {
-            active = false;
-        };
-    }, [loading]);
-    // =======================================================================
 
     // Recents = the tasks THIS user opened, newest open first (MIP-1063). The
     // server caps it at 20 per project and checks access on every read, so
@@ -236,20 +196,6 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
                 minHeight: 0,
             }}
         >
-            {/* Search Box */}
-            <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
-                <TaskSidebarSearchBox
-                    accessToken={accessToken}
-                    loading={loading}
-                    myself={myself}
-                    openSearch={openSearch}
-                    setOpenSearch={setOpenSearch}
-                    setTeamTaskSearchOptions={setTeamTaskSearchOptions}
-                    teamTaskSearchOptions={teamTaskSearchOptions}
-                    useTM={slices.search.tm}
-                />
-            </Box>
-
             {/* Content */}
             <Box
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}

@@ -14,6 +14,7 @@ import { Socket } from "socket.io-client";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { TaskPreview } from "./components/contents/TaskPreview";
 import { TaskDashboard } from "./components/dashboard/TaskDashboard";
+import { TaskSearchBar } from "./components/header/TaskSearchBar";
 import { ModalImportTasksCsv } from "./components/modals/ModalImportTasksCsv";
 import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 
@@ -350,6 +351,21 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         </MenuSurface>
                     </Dropdown>
                 </Stack>
+            )}
+
+            {/* The one task search (MIP-1990), under the header on a phone. */}
+            {(showList || showSidebar) && (
+                <Box sx={{ px: 1, py: 0.75, flexShrink: 0 }}>
+                    <TaskSearchBar
+                        accessToken={accessToken}
+                        myself={myself}
+                        projectId={usePM.currentProject?.projectId}
+                        openTask={(taskId) => {
+                            useTM.setCurrentPreviewTaskId(taskId);
+                            useTM.setIsTaskPreviewVisible(true);
+                        }}
+                    />
+                </Box>
             )}
 
             {showList && archived && (

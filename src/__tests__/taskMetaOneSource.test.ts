@@ -171,7 +171,7 @@ describe("the migrated files do not re-declare the old status hexes", () => {
     it.each([
         "features/tasks/utils/taskMeta.ts",
         "features/tasks/components/TaskIdentityRow.tsx",
-        "features/tasks/components/sidebar/SearchBox.tsx",
+        "features/tasks/components/header/TaskSearchBar.tsx",
         "features/tasks/components/contents/CreateTaskForm.tsx",
         "features/tasks/components/contents/TaskPreview.tsx",
         "features/tasks/components/board/SprintBoard.tsx",

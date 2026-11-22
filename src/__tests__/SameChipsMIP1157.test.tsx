@@ -83,7 +83,7 @@ describe("the other places in the preview use the shared pieces", () => {
             "features/tasks/components/contents/base/TaskTitleBlock.tsx",
             "<StatusLabel",
         ],
-        ["sidebar search", "features/tasks/components/sidebar/SearchBox.tsx", "<StatusLabel"],
+        ["task search", "features/tasks/components/header/TaskSearchBar.tsx", "<StatusLabel"],
         [
             "sub-task rows",
             "features/tasks/components/contents/base/TaskSubTasksBlock.tsx",

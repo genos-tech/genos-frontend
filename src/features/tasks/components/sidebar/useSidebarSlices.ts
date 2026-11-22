@@ -49,14 +49,6 @@ const SHELL_PM = {
 } as const satisfies SliceSpec<ProjectManagementState>;
 export type SidebarShellPM = SliceOf<ProjectManagementState, typeof SHELL_PM>;
 
-// ------------------------------------------------------------------- SearchBox
-
-const SEARCH_TM = {
-    values: ["currentPreviewTaskId", "setIsTaskPreviewVisible"],
-    latest: ["setCurrentPreviewTaskId"],
-} as const satisfies SliceSpec<TaskManagementState>;
-export type SidebarSearchTM = SliceOf<TaskManagementState, typeof SEARCH_TM>;
-
 // ------------------------------------------------ Table / Board view buttons
 
 const TABLE_VIEW_TM = {
@@ -150,7 +142,6 @@ export type SidebarTreeCM = SliceOf<ChatManagementState, typeof TREE_CM>;
 export const SIDEBAR_SLICE_SPECS = {
     shellTM: SHELL_TM,
     shellPM: SHELL_PM,
-    searchTM: SEARCH_TM,
     tableViewTM: TABLE_VIEW_TM,
     boardViewTM: BOARD_VIEW_TM,
     recentsTM: RECENTS_TM,
@@ -164,7 +155,6 @@ export const SIDEBAR_SLICE_SPECS = {
 
 export type SidebarSlices = {
     shell: { tm: SidebarShellTM; pm: SidebarShellPM };
-    search: { tm: SidebarSearchTM };
     tableView: { tm: SidebarTableViewTM };
     boardView: { tm: SidebarBoardViewTM };
     recents: { tm: SidebarRecentsTM; pm: SidebarRecentsPM };
@@ -198,7 +188,6 @@ export const useSidebarSlices = ({
 }: SidebarManagers): SidebarSlices => {
     const shellTM = useManagerSlice(useTM, SHELL_TM);
     const shellPM = useManagerSlice(usePM, SHELL_PM);
-    const searchTM = useManagerSlice(useTM, SEARCH_TM);
     const tableViewTM = useManagerSlice(useTM, TABLE_VIEW_TM);
     const boardViewTM = useManagerSlice(useTM, BOARD_VIEW_TM);
     const recentsTM = useManagerSlice(useTM, RECENTS_TM);
@@ -212,7 +201,6 @@ export const useSidebarSlices = ({
     return useMemo(
         () => ({
             shell: { tm: shellTM, pm: shellPM },
-            search: { tm: searchTM },
             tableView: { tm: tableViewTM },
             boardView: { tm: boardViewTM },
             recents: { tm: recentsTM, pm: recentsPM },
@@ -221,7 +209,6 @@ export const useSidebarSlices = ({
         [
             shellTM,
             shellPM,
-            searchTM,
             tableViewTM,
             boardViewTM,
             recentsTM,

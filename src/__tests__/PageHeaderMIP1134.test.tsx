@@ -25,8 +25,8 @@ import { InboxHeader } from "../features/inbox/components/InboxHeader";
 import { TaskHeader } from "../features/tasks/components/header/TaskHeader";
 
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
-vi.mock("../features/tasks/components/sidebar/SearchBox", () => ({
-    TaskSidebarSearchBox: () => <input aria-label="Search tasks" />,
+vi.mock("../features/tasks/components/header/TaskSearchBar", () => ({
+    TaskSearchBar: () => <input aria-label="Search tasks" />,
 }));
 
 afterEach(cleanup);

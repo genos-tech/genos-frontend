@@ -27,16 +27,14 @@ import { emitRequestError } from "../../../../services/requestErrorNotifier";
 import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
-import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { archiveProject, unarchiveProject } from "../../../archive/archiveApi";
 import { ArchivedBanner } from "../../../archive/ArchivedBanner";
 import { useArchiveState } from "../../../archive/archiveState";
 import { isOwnerOfProject } from "../../../archive/projectOwner";
-import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
 import { ModalImportTasksCsv } from "../modals/ModalImportTasksCsv";
-import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
 import { TaskRefreshButton } from "./TaskRefreshButton";
+import { TaskSearchBar } from "./TaskSearchBar";
 
 interface TaskHeaderProps {
     myself: UserProps;
@@ -122,52 +120,12 @@ export const TaskHeader = ({
         }
     };
 
-    // =======================================================================
-    const [openSearch, setOpenSearch] = useState(false);
-    const [teamTaskSearchOptions, setTeamTaskSearchOptions] = useState<SearchTeamTasksResponse[]>(
-        []
-    );
-    const loading = openSearch && teamTaskSearchOptions.length === 0;
     const currentProjectId = usePM.currentProject?.projectId;
-    // Drop the cached search results whenever the focused project changes so
-    // the next open-search reloads scoped to the new project. Without this,
-    // `loading` stays false (cache is non-empty) and the user would keep
-    // seeing the previous project's tasks.
-    useEffect(() => {
-        setTeamTaskSearchOptions([]);
-    }, [currentProjectId]);
-    useEffect(() => {
-        let active = true;
-
-        if (!loading) {
-            return undefined;
-        }
-
-        (async () => {
-            // Pass the current project id (falling back to -1 = "no filter"
-            // when no project is selected) so the header search only surfaces
-            // tasks from the project the user is looking at. Active work
-            // only: no Closed/Deleted tasks, and (via include_all=false) no
-            // tasks whose parent task / milestone is already closed.
-            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
-                myself,
-                currentProjectId ?? -1,
-                "open,wip,blocked,pending",
-                -1,
-                accessToken,
-                false
-            );
-
-            if (active) {
-                setTeamTaskSearchOptions([...loadedTeamTasks]);
-            }
-        })();
-
-        return () => {
-            active = false;
-        };
-    }, [loading, currentProjectId]);
-    // =======================================================================
+    // A search result opens in the task preview, whichever project it belongs to.
+    const openSearchedTask = (taskId: number) => {
+        useTM.setCurrentPreviewTaskId(taskId);
+        useTM.setIsTaskPreviewVisible(true);
+    };
 
     // Find the PM chat that mirrors the focused project so its avatar can
     // render in the header. Post v3-migration `chat.chatId` is the Channel
@@ -354,15 +312,11 @@ export const TaskHeader = ({
                     </>
                 }
             >
-                <TaskSidebarSearchBox
+                <TaskSearchBar
                     accessToken={accessToken}
-                    loading={loading}
                     myself={myself}
-                    openSearch={openSearch}
-                    setOpenSearch={setOpenSearch}
-                    setTeamTaskSearchOptions={setTeamTaskSearchOptions}
-                    teamTaskSearchOptions={teamTaskSearchOptions}
-                    useTM={useTM}
+                    openTask={openSearchedTask}
+                    projectId={currentProjectId}
                 />
             </PageHeader>
             {archived && (
