@@ -4,7 +4,7 @@ import { IconButton } from "@mui/joy";
 
 import { useTranslation } from "../../../../../i18n";
 import { g } from "../../../../../theme/tokens";
-import { FAVORITE_COLOR } from "./MilestoneFolderMenus";
+import { FAVORITE_COLOR } from "./milestoneFolderMenusHelpers";
 
 // The star beside a project row in the Tasks sidebar (MIP-1695). It sits in the
 // row's actions slot, which overlays the row's end (the title does not move):

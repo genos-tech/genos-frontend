@@ -17,16 +17,14 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { MyNoteFolderTreeNode, MyNoteMetaTreeNode } from "../../../../types/notes";
-import {
-    FolderFavoriteStar,
-    highlightedFolderSx,
-} from "../../common/components/FolderFavoriteStar";
+import { FolderFavoriteStar } from "../../common/components/FolderFavoriteStar";
+import { highlightedFolderSx } from "../../common/components/folderFavoriteStarHelpers";
 import {
     DraggableNoteRow,
     DroppableHeader,
     DroppableNoteList,
-    myFolderContainerId,
 } from "../../common/dnd/sidebarNoteDnd";
+import { myFolderContainerId } from "../../common/dnd/sidebarNoteDndHelpers";
 import { folderFavoriteMenuItem } from "../../common/utils/folderFavoriteMenuItem";
 
 // Actions bubbled up to the single modal host in NoteSidebar — one

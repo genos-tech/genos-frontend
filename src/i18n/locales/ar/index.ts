@@ -2807,9 +2807,6 @@ export const ar: DeepPartial<Messages> = {
                 "لا يوجد أحد لإضافته. يجب أن يكون المتعاونون أعضاءً في هذا المشروع.",
         },
         milestones: {
-            sectionInSprint: "المعالم في {name}",
-            sectionNoSprint: "المعالم (بدون سبرنت)",
-            noMilestones: "لا توجد معالم في هذا السبرنت بعد.",
             untitled: "معلم بدون عنوان",
         },
         deleteSprint: {
@@ -3217,9 +3214,6 @@ export const ar: DeepPartial<Messages> = {
             pickASprint: "اختر سبرنتًا",
             sprintSettingsTooltip: "إعدادات السبرنت",
             manageSprintsTooltip: "إدارة السبرنتات",
-            burndownTooltip: "المغلقة في السبرنت / المُنشأة في السبرنت",
-            milestoneTooltip: "معلم",
-            projectsCount: "{count} مشاريع",
             statusLabels: {
                 open: "مفتوحة",
                 wip: "قيد التنفيذ",
@@ -3259,13 +3253,6 @@ export const ar: DeepPartial<Messages> = {
                 lastProgress: "آخر تقدّم {when}",
             },
             memberTasks: {
-                pickLabel: "عضو",
-                pickPlaceholder: "بحث عن عضو...",
-                viewing: "المشاهدة",
-                pickHint: "اختر عضوًا لرؤية إحصائيات مهمته.",
-                noMembers: "لا يوجد أعضاء آخرين لديهم مهام في هذا المشروع.",
-                promptTitle: "اختر عضوا",
-                promptBody: "اختر عضوًا أعلاه لرؤية إحصائيات مهمته.",
                 nothingAssignedTitle: "لم يتم تعيين أي شيء لهذا العضو",
                 nothingAssignedBody: "أسنِد إلى هذا العضو مهمة في هذا المشروع لتراها هنا.",
                 milestonesEmpty: "لم يتم تعيين أي معالم مستمرة في هذا المشروع لهذا العضو.",
@@ -3293,7 +3280,6 @@ export const ar: DeepPartial<Messages> = {
             topWeight: {
                 title: "أعلى بالوزن",
                 subtitle: "ابدأ هذه الآن",
-                sortFlip: "انقر مرة أخرى لعكس الترتيب",
                 help: {
                     title: "ما هو وزن المهمة؟",
                     body: "درجة من 1 إلى 25 لمدى الحاجة إلى بدء المهمة الآن. الوزن = الأولوية × ضغط الوقت للبدء. تبدأ مستويات الجهد الأثقل في بناء هذا الضغط في وقت مبكر - تبدأ المهمة واسعة النطاق في الصعود قبل حوالي أسبوع من الموعد المحدد لها، وهي مهمة سريعة فقط في الأيام القليلة الماضية - لذلك تظهر المهام الكبيرة بينما لا يزال هناك مجال للعمل عليها. كلما كان الرقم أكبر، كلما كان من الضروري التقاطه بشكل أسرع.",
@@ -3356,8 +3342,15 @@ export const ar: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "لا يوجد معلم معرّض للخطر.",
                 openMilestoneFor: "فتح {title}",
             },
-            tabMyTasks: "مهامي",
-            tabMemberTasks: "مهام الأعضاء",
+            tabPeople: "الأشخاص",
+            people: {
+                person: "الشخص",
+                me: "أنا",
+                statusBreakdownShow: "عرض تفصيل الحالات",
+                statusBreakdownHide: "إخفاء تفصيل الحالات",
+                teamLoadShow: "عرض حمل الفريق",
+                teamLoadHide: "إخفاء حمل الفريق",
+            },
             tabAgentActivity: "نشاط الوكلاء",
             tabToday: "اليوم",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

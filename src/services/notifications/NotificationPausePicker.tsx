@@ -18,53 +18,16 @@ import { ModalFrame } from "../../components/ui/modal/ModalFrame";
 import { MenuDivider, MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
 import { SettingRow } from "../../components/ui/settings/SettingRow";
 import { NotificationPauseState } from "../../hooks/common/useNotificationPause";
-import { fmt, useTranslation, type Locale } from "../../i18n";
-import { Messages } from "../../i18n/types";
+import { useTranslation } from "../../i18n";
+import { formatPauseStatusText } from "./notificationPauseHelpers";
 // The one-shot-instant formatter and the datetime-local (de)serialiser are
 // shared with the custom-status expiry feature, which formats the same kind of
 // absolute instant. Defined in `statusExpiry.ts`; imported here so the pause
 // status line and the status expiry note read identically.
-import { formatStatusExpiry, toLocalInputValue } from "./statusExpiry";
+import { toLocalInputValue } from "./statusExpiry";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
-
-/**
- * The single-line "current pause state" summary, e.g. "Paused until 3:30 PM" /
- * "Scheduled 17:00–09:00" / "Not paused". Extracted so the settings section
- * AND the profile modal's self-only pause line (ModalUserProfile) read the same
- * wording from one place rather than each re-deriving the branch order.
- *
- * `p` is the `pause` i18n subtree; passing it in (rather than calling
- * `useTranslation` here) keeps this a pure function usable from any caller.
- */
-export const formatPauseStatusText = (
-    pause: Pick<NotificationPauseState, "isPausedNow" | "snoozeUntil" | "snoozeSchedule">,
-    p: Messages["services"]["notifications"]["pause"],
-    locale: Locale
-): string => {
-    const { isPausedNow, snoozeUntil, snoozeSchedule } = pause;
-    const untilActive = !!snoozeUntil && Date.parse(snoozeUntil) > Date.now();
-    const scheduleEnabled = snoozeSchedule?.enabled === true;
-    if (untilActive) {
-        return fmt(p.statusPausedUntil, {
-            time: formatStatusExpiry(snoozeUntil as string, locale),
-        });
-    }
-    if (scheduleEnabled && isPausedNow) {
-        return fmt(p.statusPausedSchedule, {
-            start: snoozeSchedule!.start,
-            end: snoozeSchedule!.end,
-        });
-    }
-    if (scheduleEnabled) {
-        return fmt(p.statusScheduledOnly, {
-            start: snoozeSchedule!.start,
-            end: snoozeSchedule!.end,
-        });
-    }
-    return p.statusNotPaused;
-};
 
 // Defaults offered the first time someone enables the daily schedule — a
 // classic "evening to morning" overnight window, so the overnight branch is

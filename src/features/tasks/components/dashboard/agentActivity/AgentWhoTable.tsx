@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Box, Button, Table, Typography } from "@mui/joy";
 
+import { DashboardCard } from "../../../../../components/ui/dashboard";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
@@ -23,18 +24,8 @@ export const AgentWhoTable = ({ rows }: { rows: AgentWorkUserAgentRow[] }) => {
     );
 
     return (
-        <Box sx={{ minWidth: 0 }}>
-            <Typography component="h3" level="title-md" sx={{ mb: 1 }}>
-                {a.who.title}
-            </Typography>
-            <Box
-                sx={{
-                    overflowX: "auto",
-                    minWidth: 0,
-                    borderRadius: g.radius.md,
-                    border: `1px solid ${g.border.subtle}`,
-                }}
-            >
+        <DashboardCard title={a.who.title}>
+            <Box sx={{ overflowX: "auto", minWidth: 0 }}>
                 <Table
                     aria-label={a.who.title}
                     size="sm"
@@ -109,6 +100,6 @@ export const AgentWhoTable = ({ rows }: { rows: AgentWorkUserAgentRow[] }) => {
                     </tbody>
                 </Table>
             </Box>
-        </Box>
+        </DashboardCard>
     );
 };

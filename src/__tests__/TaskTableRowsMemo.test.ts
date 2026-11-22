@@ -21,10 +21,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-    taskTableRowsPropsAreEqual,
-    type TaskTableRowsProps,
-} from "../features/tasks/components/table/TaskTableRows";
+import { type TaskTableRowsProps } from "../features/tasks/components/table/TaskTableRows";
+import { taskTableRowsPropsAreEqual } from "../features/tasks/components/table/taskTableRowsHelpers";
 import type { UserProps } from "../types/admin";
 import type { TagListProps, TaskTableProps } from "../types/tasks";
 

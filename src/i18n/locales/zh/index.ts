@@ -5512,9 +5512,6 @@ export const zh: DeepPartial<Messages> = {
             tasksSuffix: " 个任务",
         },
         milestones: {
-            sectionInSprint: "{name} 中的里程碑",
-            sectionNoSprint: "里程碑（无冲刺）",
-            noMilestones: "此冲刺下还没有里程碑。",
             untitled: "未命名里程碑",
         },
         deleteSprint: {
@@ -6157,13 +6154,6 @@ export const zh: DeepPartial<Messages> = {
                 lastProgress: "最近进展 {when}",
             },
             memberTasks: {
-                pickLabel: "成员",
-                pickPlaceholder: "搜索成员…",
-                viewing: "观看",
-                pickHint: "选择一个成员以查看他们的任务统计信息。",
-                noMembers: "没有其他成员在此项目中执行任务。",
-                promptTitle: "选择一名成员",
-                promptBody: "选择上面的成员以查看他们的任务统计信息。",
                 nothingAssignedTitle: "没有分配给该成员的任何内容",
                 nothingAssignedBody: "将此项目中的任务指派给该成员，它就会显示在这里。",
                 milestonesEmpty: "该项目中没有正在进行的里程碑分配给该成员。",
@@ -6190,7 +6180,6 @@ export const zh: DeepPartial<Messages> = {
             topWeight: {
                 title: "按重量排名靠前",
                 subtitle: "现在就开始这些",
-                sortFlip: "再次点击可反转顺序",
                 help: {
                     title: "什么是任务权重？",
                     body: "1-25 分表示任务现在需要开始的程度。权重=优先级×启动时间压力。更繁重的工作量会更早地产生这种压力——一项繁重的任务在截止日期前一周左右开始攀升，而快速的任务则在最后几天才开始——因此大的工作浮出水面，而仍有工作空间。数字越大，应该越早拿起。",
@@ -6226,9 +6215,6 @@ export const zh: DeepPartial<Messages> = {
             pickASprint: "选择一个冲刺",
             sprintSettingsTooltip: "冲刺设置",
             manageSprintsTooltip: "管理冲刺",
-            burndownTooltip: "本冲刺已关闭 / 本冲刺已创建",
-            milestoneTooltip: "里程碑",
-            projectsCount: "{count} 个项目",
             statusLabels: {
                 open: "待处理",
                 wip: "进行中",
@@ -6288,8 +6274,15 @@ export const zh: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "没有有风险的里程碑。",
                 openMilestoneFor: "打开{title}",
             },
-            tabMyTasks: "我的任务",
-            tabMemberTasks: "成员的任务",
+            tabPeople: "成员",
+            people: {
+                person: "成员",
+                me: "我",
+                statusBreakdownShow: "显示状态明细",
+                statusBreakdownHide: "隐藏状态明细",
+                teamLoadShow: "显示团队负载",
+                teamLoadHide: "隐藏团队负载",
+            },
             tabAgentActivity: "智能体活动",
             tabToday: "今天",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

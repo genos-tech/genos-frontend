@@ -22,6 +22,7 @@ import { useDashboardTab } from "./dashboardTab";
 import { buildCapacityMap, isOngoingMilestone, taskUpdatedAtById } from "./taskHomeHelpers";
 import type { TaskHomeContentProps } from "./taskHomeTypes";
 import { useMoreAnalyticsOpen } from "./useMoreAnalyticsOpen";
+import { useTeamLoadOpen } from "./useTeamLoadOpen";
 
 export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const { useTM, usePM, useSM, myself, useCM } = props;
@@ -40,6 +41,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // With no tab named, Today on the first open of each day, then the one used last.
     const [activeTab, setActiveTab] = useDashboardTab(myself.userId);
     const [moreAnalyticsOpen, setMoreAnalyticsOpen] = useMoreAnalyticsOpen(myself.userId);
+    const [teamLoadOpen, setTeamLoadOpen] = useTeamLoadOpen(myself.userId);
     // The Today tab's data (MIP-1005): loaded only while that tab is open.
     const todayView = useBriefingToday(
         accessToken,
@@ -140,10 +142,12 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // refreshes it. Fails soft: an error (or the pre-load window) just
     // leaves the capacity bars on this project's numbers.
     const [teamWideTasks, setTeamWideTasks] = useState<TaskTableProps[]>([]);
-    // Only the Overall tab shows Team Capacity, so the (up to 500 row) read waits for it: opening
-    // the dashboard on Today no longer fetches it. Read once per team, then kept.
+    // Only the People tab's "Team load" shows it, and only while that card is open, so the (up to
+    // 500 row) read waits for it: opening the dashboard, or the tab, no longer fetches it. Read
+    // once per team, then kept.
     const teamTasksLoadedFor = useRef<string | null>(null);
-    const needsTeamTasks = activeTab === "project" && moreAnalyticsOpen;
+    const [teamTasksReady, setTeamTasksReady] = useState(false);
+    const needsTeamTasks = activeTab === "people" && teamLoadOpen;
     useEffect(() => {
         if (!needsTeamTasks || !myself.teamId || !accessToken) return;
         if (teamTasksLoadedFor.current === myself.teamId) return;
@@ -153,6 +157,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
             if (cancelled) return;
             teamTasksLoadedFor.current = myself.teamId;
             setTeamWideTasks(Array.isArray(rows) ? rows : []);
+            setTeamTasksReady(true);
         })();
         return () => {
             cancelled = true;
@@ -194,7 +199,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // must always agree, so they are driven by the SAME data: the project's
     // milestones filtered to the selected sprint. `sprintMilestones` mirrors
     // the filter the Project tab's milestone card applies (and the old
-    // SprintMilestonesSection did), so the header and the card list the same milestones.
+    // sprint milestone list did), so the header and the card list the same milestones.
     const sprintMilestones = useMemo<Milestone[]>(() => {
         const projectId = usePM.currentProject?.projectId;
         if (!projectId) return [];
@@ -540,13 +545,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     }, [usePM.currentProject?.projectId, useSM.projectMilestones, useSM.projectSprints]);
 
     // ── My Tasks (badge) + Focus user (shared tasks body) ──
-    // `myTasks`/`myStats` stay pinned to the logged-in user so the "My Tasks"
-    // TAB BADGE always shows my own count, no matter which tab is open.
-    const myTasks = useMemo(
-        () => effectiveTasks.filter((t) => t.assigneeId === myself.userId),
-        [effectiveTasks, myself.userId]
-    );
-    const myStats = useMemo(() => computeAssigneeStats(myTasks), [myTasks]);
 
     // Distinct assignees WITH tasks in the current project (excluding me),
     // busiest-first — the picker options for the "Member's Tasks" tab.
@@ -576,25 +574,25 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     }, [effectiveTasks, myself.userId]);
     // Resolve the picked id to a member object. `null` when nothing is picked
     // OR the picked member isn't in THIS project's list (e.g. after a project
-    // switch). Every render gate keys off this RESOLVED object, so a stale id
-    // self-heals back to the "pick a member" prompt instead of a ghost body.
+    // switch). Every render gate keys off this RESOLVED object, so a stale id falls back to me
+    // instead of a ghost body; the id is also cleared on a project switch (below).
     const selectedMember = selectedMemberId
         ? (projectMembers.find((m) => m.id === selectedMemberId) ?? null)
         : null;
 
-    // The shared My Tasks / Member's Tasks body (hidden while the rows are unread).
-    const showFocusBody =
-        !tasksUnread &&
-        (activeTab === "mytasks" || (activeTab === "members" && selectedMember != null));
+    // A project switch starts People on me again: a person picked in another project must not
+    // come back on their own when this one is opened later.
+    const currentProjectId = usePM.currentProject?.projectId;
+    useEffect(() => {
+        setSelectedMemberId(null);
+    }, [currentProjectId]);
 
-    // The user the shared tasks-body renders stats for: me on "My Tasks", the
-    // resolved member on "Member's Tasks" (null → the body isn't shown).
+    // The People tab's body (hidden while the rows are unread).
+    const showFocusBody = !tasksUnread && activeTab === "people";
+
+    // The person the People tab shows: the picked member, else me (the default).
     const focusUserId: string | null =
-        activeTab === "members"
-            ? (selectedMember?.id ?? null)
-            : myself.userId != null
-              ? String(myself.userId)
-              : null;
+        selectedMember?.id ?? (myself.userId != null ? String(myself.userId) : null);
     const isViewingSelf = focusUserId != null && focusUserId === String(myself.userId);
 
     const focusTasks = useMemo(
@@ -695,7 +693,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         sprintId != null ? (sprintNameById.get(sprintId) ?? null) : null;
 
     // ── Handlers ──
-    const projectCount = usePM.teamProjects?.length || 0;
 
     const joinedProjects = useMemo(() => {
         return (usePM.teamProjects || []).filter((p) => p.isJoined === true);
@@ -765,6 +762,9 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         sprintStats,
         moreAnalyticsOpen,
         setMoreAnalyticsOpen,
+        teamLoadOpen,
+        setTeamLoadOpen,
+        teamTasksReady,
         assigneeWorkload,
         tagStats,
         recentTasks,
@@ -780,7 +780,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         overdueAndUpcoming,
         ongoingProjectMilestones,
         sprintMilestones,
-        myStats,
         selectedMemberId,
         setSelectedMemberId,
         projectMembers,
@@ -796,7 +795,6 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         diagramMilestone,
         setDiagramMilestone,
         sprintNameFor,
-        projectCount,
         joinedProjects,
         handleTaskClick,
         handleGoToTable,

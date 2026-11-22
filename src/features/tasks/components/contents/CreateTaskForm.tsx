@@ -1008,7 +1008,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // work, so drop it before we close the form.
             useTM.setTaskDraft(null);
             // Reset creation pane and refresh milestones list. We
-            // include "Closed" so the dashboard's SprintMilestonesSection
+            // include "Closed" so the dashboard's sprint milestone list
             // can keep showing milestones that flip to Closed without
             // them vanishing on the next refresh.
             useTM.setIsCreatingTask({

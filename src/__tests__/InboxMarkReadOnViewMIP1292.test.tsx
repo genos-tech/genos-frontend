@@ -17,6 +17,10 @@ import { DWELL_MS, resetReportReadScheduler } from "../features/inbox/reportRead
 import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
 import type { InboxItemProps } from "../types/common";
 
+// The 100-card list renders slowly on a loaded runner (CI coverage run: 5 s default exceeded, and the
+// aborted test then left its observer behind for the next ones). Same headroom as the other heavy files.
+vi.setConfig({ testTimeout: 30000 });
+
 const put = vi.hoisted(() => vi.fn());
 const request = vi.hoisted(() => vi.fn());
 vi.mock("../services/api", () => ({

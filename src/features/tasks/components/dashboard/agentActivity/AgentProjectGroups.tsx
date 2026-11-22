@@ -1,6 +1,7 @@
 import { Box, Button, Link, Stack, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
+import { DashboardCard } from "../../../../../components/ui/dashboard";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
@@ -40,41 +41,13 @@ export const AgentProjectGroups = ({
             {shown.map((group) => {
                 const key = agentGroupKey(group);
                 return (
-                    <Box
+                    <DashboardCard
                         key={key}
-                        aria-labelledby={`agent-group-${key}`}
-                        component="section"
-                        sx={{ minWidth: 0 }}
+                        title={group.project ? group.project.name : a.groups.noProject}
+                        count={fmt(a.groups.changes, {
+                            count: group.counts?.total ?? group.items.length,
+                        })}
                     >
-                        <Stack
-                            alignItems="baseline"
-                            direction="row"
-                            justifyContent="space-between"
-                            spacing={1}
-                            sx={{
-                                minWidth: 0,
-                                pb: 0.5,
-                                borderBottom: `1px solid ${g.border.subtle}`,
-                            }}
-                        >
-                            <Typography
-                                component="h3"
-                                id={`agent-group-${key}`}
-                                level="title-md"
-                                sx={{ minWidth: 0 }}
-                                noWrap
-                            >
-                                {group.project ? group.project.name : a.groups.noProject}
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{ color: g.text.secondary, flex: "0 0 auto" }}
-                            >
-                                {fmt(a.groups.changes, {
-                                    count: group.counts?.total ?? group.items.length,
-                                })}
-                            </Typography>
-                        </Stack>
                         <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
                             {group.items.map((item) => (
                                 <AgentRow
@@ -85,7 +58,7 @@ export const AgentProjectGroups = ({
                                 />
                             ))}
                         </Box>
-                    </Box>
+                    </DashboardCard>
                 );
             })}
             {hasMore && (
@@ -142,6 +115,8 @@ const AgentRow = ({
                 py: 1,
                 borderBottom: `1px solid ${g.border.subtle}`,
                 minWidth: 0,
+                // The card's own border closes the list.
+                "&:last-child": { borderBottom: "none" },
             }}
         >
             <Typography

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
     buildNodesAndEdges,
     computeOverview,
-} from "../features/tasks/diagram/components/TaskFlowCanvas";
+} from "../features/tasks/diagram/components/taskFlowCanvasHelpers";
 import type { TaskGraph } from "../features/tasks/diagram/types";
 import {
     computeAnchoredExternalIds,

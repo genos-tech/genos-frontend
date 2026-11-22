@@ -13,7 +13,7 @@ import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { NoteFolderTagProps, TeamNoteFolderTreeNode } from "../../../../types/notes";
+import { TeamNoteFolderTreeNode } from "../../../../types/notes";
 import { TagColorOption } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../../../tasks/components/contents/base/sub/TagColorPickerMenu";
 import {
@@ -24,9 +24,7 @@ import {
     setFolderTags,
     updateNoteFolderTag,
 } from "../services/teamNoteFolderTags";
-
-const DEFAULT_COLOR = "#8e23ff";
-const DEFAULT_TEXT_COLOR = "white";
+import { DEFAULT_COLOR, DEFAULT_TEXT_COLOR, folderTagChipSx } from "./modalTeamFolderTagsHelpers";
 
 type Props = {
     open: boolean;
@@ -35,29 +33,6 @@ type Props = {
     onClose: () => void;
     onChanged: () => void;
 };
-
-// Chip styling shared by this dialog and the sidebar folder rows.
-// Mirrors `ProjectLabelChips` so folder tags and project labels read as
-// one visual family — the reference this was asked to match.
-export const folderTagChipSx = (
-    tag: Pick<NoteFolderTagProps, "color" | "textColor">,
-    size: "sm" | "md" = "sm"
-) => ({
-    backgroundColor: tag.color ?? DEFAULT_COLOR,
-    color: tag.textColor ?? DEFAULT_TEXT_COLOR,
-    borderRadius: "5px",
-    fontWeight: 600,
-    fontSize: size === "sm" ? "0.625rem" : "0.7rem",
-    maxWidth: size === "sm" ? 84 : 200,
-    flexShrink: 0,
-    "--Chip-paddingInline": size === "sm" ? "6px" : "8px",
-    "--Chip-minHeight": size === "sm" ? "16px" : "20px",
-    "& .MuiChip-label": {
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-    },
-});
 
 /**
  * Manage the team's folder-tag vocabulary, and which of those tags apply

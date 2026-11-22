@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { isCurrentlyBlocked } from "../features/tasks/components/contents/base/TaskDependenciesBlock";
-import { buildOpenBlockerCountByTask } from "../features/tasks/diagram/components/TaskFlowCanvas";
+import { isCurrentlyBlocked } from "../features/tasks/components/contents/base/taskDependenciesHelpers";
+import { buildOpenBlockerCountByTask } from "../features/tasks/diagram/components/taskFlowCanvasHelpers";
 import type { TaskGraph } from "../features/tasks/diagram/types";
 import { isOpenBlockerStatus, refBlocks } from "../features/tasks/utils/blockerStatus";
 import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";

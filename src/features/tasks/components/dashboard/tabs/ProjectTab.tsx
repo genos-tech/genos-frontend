@@ -44,12 +44,9 @@ type ProjectTabProps = Pick<
     | "effectiveTasks"
     | "moreAnalyticsOpen"
     | "setMoreAnalyticsOpen"
-    | "assigneeWorkload"
     | "tagStats"
     | "priorityBreakdown"
     | "effortBreakdown"
-    | "teamCapacity"
-    | "maxCapacityTotal"
     | "cardBg"
     | "cardBorder"
     | "textPrimary"
@@ -57,10 +54,7 @@ type ProjectTabProps = Pick<
     | "textMuted"
     | "sectionHeaderColor"
 > &
-    Pick<
-        TaskHomeContentProps,
-        "useTM" | "useTEM" | "myself" | "setMyself" | "useCM" | "useUISM" | "socket"
-    >;
+    Pick<TaskHomeContentProps, "useTM" | "myself">;
 
 type AttentionList = "overdue" | "week" | "weight";
 const VISIBLE_ROWS = 5;
@@ -97,12 +91,7 @@ export const ProjectTab = ({
     textSecondary,
     textMuted,
     useTM,
-    useTEM,
     myself,
-    setMyself,
-    useCM,
-    useUISM,
-    socket,
     ...analytics
 }: ProjectTabProps) => {
     const { t } = useTranslation();
@@ -291,16 +280,10 @@ export const ProjectTab = ({
                 <ProjectAnalytics
                     {...analytics}
                     isDark={isDark}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
                     stats={stats}
                     textMuted={textMuted}
                     textPrimary={textPrimary}
                     textSecondary={textSecondary}
-                    useCM={useCM}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
                 />
             </MoreAnalytics>
         </>

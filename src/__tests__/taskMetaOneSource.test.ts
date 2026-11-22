@@ -77,7 +77,7 @@ describe("every other palette agrees with it", () => {
     });
 
     it("the board's columns and the table's status options too (heavy modules: loaded lazily)", async () => {
-        const { COLUMNS } = await import("../features/tasks/components/board/SprintBoard");
+        const { COLUMNS } = await import("../features/tasks/components/board/sprintBoardHelpers");
         const { statusOptions } = await import(
             "../features/tasks/components/table/DraggableTaskTable"
         );
@@ -94,7 +94,7 @@ describe("every other palette agrees with it", () => {
     }, 30000);
 
     it("Pending is ONE color across all of them (it was purple, orange and purple again)", async () => {
-        const { COLUMNS } = await import("../features/tasks/components/board/SprintBoard");
+        const { COLUMNS } = await import("../features/tasks/components/board/sprintBoardHelpers");
         const seen = new Set([
             statuses.find((s) => s.status === "Pending")!.color,
             MILESTONE_STATUS_CHIP_COLORS.Pending.color,
@@ -175,11 +175,11 @@ describe("the migrated files do not re-declare the old status hexes", () => {
         "features/tasks/components/contents/CreateTaskForm.tsx",
         "features/tasks/components/contents/TaskPreview.tsx",
         "features/tasks/components/board/SprintBoard.tsx",
+        "features/tasks/components/board/sprintBoardHelpers.ts",
         "features/tasks/components/table/DraggableTaskTable.tsx",
         "features/tasks/components/table/DraggableTaskRow.tsx",
         "features/tasks/sprint-milestone/utils/sortMilestones.ts",
         "features/tasks/sprint-milestone/components/SprintManagerDialog.tsx",
-        "features/tasks/sprint-milestone/components/SprintMilestonesSection.tsx",
         "features/tasks/utils/TaskMessageTemplate.ts",
         "components/layout/HistoryModal.tsx",
     ])("%s", (file) => {
