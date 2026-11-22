@@ -290,7 +290,7 @@ export const TERMS_ARTICLES: TermsArticle[] = [
             items: [
                 "作成したデータは、「設定」→「アカウント」→「データをエクスポート」から、JSON形式でいつでもダウンロードできます。他の利用者が作成したチーム内の内容は含まれません。",
                 "アカウントは、「設定」→「アカウント」→「アカウントを削除」から、いつでも削除できます。削除すると、すべての端末から直ちにサインアウトされ、氏名、メールアドレス及びプロフィールは匿名化されます。非公開のノート、ToDo及びAI機能の履歴は削除され、APIキーは無効になり、当社に保存されているGoogle・GitHub等の連携情報は削除されます。（連携先のサービス側での許可は、各サービスの設定画面から取り消してください。）",
-                "他の人と共同で作成した内容（チームのメッセージ、タスク、DMへの投稿など）は、その人の側に残り、「削除されたユーザー」として表示されます。ただし、他の利用者が書いた文章の中にあなたの氏名が含まれる場合など、一部は削除されずに残ることがあります。最後のメンバーだったチームは閉鎖され、利用できなくなりますが、内容は保存されたままです。他のメンバーがいるチームのオーナーは、先にオーナー権限を譲渡してください。",
+                "他の人と共同で作成した内容（チームのメッセージ、タスク、DMへの投稿など）は、その人の側に残り、「削除されたユーザー」として表示されます。ただし、他の利用者が書いた文章の中にあなたの氏名が含まれる場合など、一部は削除されずに残ることがあります。最後のメンバーだったチームは閉鎖され、その内容（メッセージ、タスク、ノート、ファイルなど）はすべて完全に削除されます。他のメンバーがいるチームのオーナーは、先にオーナー権限を譲渡してください。",
                 "削除の対象は本サービス内のデータです。既に外部の事業者に送信された情報や、セキュリティの監査記録は、この操作では自動的に削除されません。詳しくはプライバシーポリシーをご覧ください。",
             ],
         },
@@ -299,7 +299,7 @@ export const TERMS_ARTICLES: TermsArticle[] = [
             items: [
                 "You can download the data you created at any time, in JSON format, from Settings → Account → Export your data. Content that other users created in a team is not included.",
                 "You can delete your account at any time from Settings → Account → Delete account. Deleting it signs you out on every device straight away, and anonymises your name, email and profile. Your private notes, to-dos and AI history are deleted, your API keys are revoked, and the Google and GitHub connection details we store are removed. (Revoke access on the service's own settings page too.)",
-                "Work you did together with others (for example, team messages, tasks and posts in direct messages) stays with them and shows as “Deleted user”. Some items may stay in part, for example where your name appears in text another user wrote. A team you were the last member of is closed and can no longer be used, but its content is kept. If you own a team that has other members, transfer ownership first.",
+                "Work you did together with others (for example, team messages, tasks and posts in direct messages) stays with them and shows as “Deleted user”. Some items may stay in part, for example where your name appears in text another user wrote. A team you were the last member of is closed, and all its content (messages, tasks, notes, files and so on) is permanently deleted. If you own a team that has other members, transfer ownership first.",
                 "Deletion covers the data within the Service. Information already sent to external providers, and security audit records, are not deleted automatically by this step. See the Privacy Policy for details.",
             ],
         },
