@@ -1442,6 +1442,13 @@ export const hi: DeepPartial<Messages> = {
             errorProjectUnavailable:
                 "यह प्रोजेक्ट अब आपके लिए उपलब्ध नहीं है। कोई दूसरा प्रोजेक्ट चुनें।",
             projectNone: "चुनने के लिए कोई प्रोजेक्ट नहीं है।",
+            deliverLabel: "रिपोर्ट यहाँ भेजें",
+            deliverInbox: "मेरा इनबॉक्स",
+            deliverProjectChat: "{name} (प्रोजेक्ट चैट)",
+            deliverChatHint:
+                "रिपोर्ट इस चैट में एक संदेश के रूप में पोस्ट होती है, बिना AI के और बिना सूचना के। चैट में सभी लोग इसे पढ़ सकते हैं, इसलिए प्रोजेक्ट रिपोर्ट केवल उसी प्रोजेक्ट के सदस्यों वाली चैट में जा सकती है।",
+            rowDeliver: "यहाँ पोस्ट होती है: {name}",
+            reportPosted: "रिपोर्ट {chat} में पोस्ट हुई",
             rowProject: "प्रोजेक्ट: {name}",
             rowMilestone: "माइलस्टोन: {name}",
             paramAiSentences: "AI के वाक्य",

@@ -41,6 +41,8 @@ export interface ScheduleForm {
     deliverPush: boolean;
     /** "" = the job's own default (MIP-1212); else the member's own level. */
     aiEffort: string;
+    /** "" = the Inbox; else the id of the chat the report is posted in (MIP-1420). */
+    deliverChannelId: string;
 }
 
 export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
@@ -55,6 +57,7 @@ export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
     // On for a new schedule (MIP-1374): a report nobody is told about goes unread.
     deliverPush: true,
     aiEffort: "",
+    deliverChannelId: "",
 });
 
 /** Only the keys the job declares, as text for the inputs. */
@@ -84,6 +87,7 @@ export const formFromSchedule = (s: Schedule, jobs: ScheduleJob[]): ScheduleForm
     runDate: s.runDate ?? "",
     deliverPush: s.deliverPush,
     aiEffort: asEffortLevel(s.aiEffort) ?? "",
+    deliverChannelId: s.deliverChannelId ?? "",
 });
 
 /** "9:30" -> "09:30"; anything that is not a 24-hour time -> null. */
@@ -233,6 +237,7 @@ export const buildCreate = (form: ScheduleForm, job: ScheduleJob | undefined): S
         job: form.job,
         params: paramsFromForm(job, form.params),
         deliverPush: form.deliverPush,
+        ...(form.deliverChannelId ? { deliverChannelId: form.deliverChannelId } : {}),
         ...(effort ? { aiEffort: effort } : {}),
         ...(recurrence(form) as Pick<ScheduleFields, "frequency" | "timeOfDay">),
     };
@@ -251,6 +256,10 @@ export const buildPatch = (
     const patch: ScheduleChange = {};
     if (form.name.trim() !== original.name) patch.name = form.name.trim();
     if (form.deliverPush !== original.deliverPush) patch.deliverPush = form.deliverPush;
+    // "" goes back to the Inbox (null on the wire).
+    if (form.deliverChannelId !== (original.deliverChannelId ?? "")) {
+        patch.deliverChannelId = form.deliverChannelId || null;
+    }
 
     const jobChanged = form.job !== original.job;
     if (jobChanged) patch.job = form.job;

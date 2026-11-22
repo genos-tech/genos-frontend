@@ -1060,6 +1060,13 @@ export const ar: DeepPartial<Messages> = {
             errorProject: "اختر مشروعًا.",
             errorProjectUnavailable: "لم يعد هذا المشروع متاحًا لك. اختر مشروعًا آخر.",
             projectNone: "لا توجد مشاريع لتختار منها.",
+            deliverLabel: "إرسال التقرير إلى",
+            deliverInbox: "صندوق الوارد",
+            deliverProjectChat: "{name} (محادثة المشروع)",
+            deliverChatHint:
+                "يُنشر التقرير في هذه المحادثة كرسالة، دون ذكاء اصطناعي ودون إشعار. يمكن لكل من في المحادثة قراءته، لذا لا يمكن إرسال تقرير مشروع إلا إلى محادثة تضم أعضاء ذلك المشروع فقط.",
+            rowDeliver: "يُنشر في: {name}",
+            reportPosted: "تم نشر التقرير في {chat}",
             rowProject: "المشروع: {name}",
             rowMilestone: "المعلم: {name}",
             paramAiSentences: "جمل الذكاء الاصطناعي",
