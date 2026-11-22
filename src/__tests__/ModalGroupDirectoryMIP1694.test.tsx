@@ -42,8 +42,8 @@ const show = () =>
         <CssVarsProvider>
             <ModalGroupDirectory
                 myself={{ teamId: "team-1" } as never}
-                open
                 useCM={useCM as never}
+                open
                 onClose={onClose}
             />
         </CssVarsProvider>

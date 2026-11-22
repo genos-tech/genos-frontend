@@ -800,6 +800,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                         {descEditMode ? (
                                             <Stack alignItems="center" direction="row" spacing={1}>
                                                 <Input
+                                                    size="sm"
+                                                    sx={{ flex: 1, "--Input-radius": g.radius.md }}
+                                                    value={descDraft}
                                                     aria-label={
                                                         t.chat.groupDirectory.descriptionLabel
                                                     }
@@ -807,8 +810,6 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         t.chat.groupDirectory
                                                             .descriptionPlaceholder
                                                     }
-                                                    size="sm"
-                                                    value={descDraft}
                                                     slotProps={{
                                                         input: {
                                                             maxLength: 280,
@@ -824,7 +825,6 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             },
                                                         },
                                                     }}
-                                                    sx={{ flex: 1, "--Input-radius": g.radius.md }}
                                                     autoFocus
                                                     onChange={(e) => setDescDraft(e.target.value)}
                                                 />
@@ -871,12 +871,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         }
                                                     >
                                                         <IconButton
+                                                            size="sm"
+                                                            variant="plain"
                                                             aria-label={
                                                                 t.chat.groupDirectory
                                                                     .descriptionEdit
                                                             }
-                                                            size="sm"
-                                                            variant="plain"
                                                             onClick={() => {
                                                                 setDescDraft(
                                                                     liveChat.description ?? ""
