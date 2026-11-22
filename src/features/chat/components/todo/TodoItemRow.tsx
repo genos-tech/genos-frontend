@@ -27,7 +27,7 @@ import { formatReminderTime } from "../../utils/reminderPresets";
 import { formatCompletedAt } from "../../utils/todoCompletion";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
 import { ModalCreateTaskFromTodo } from "./ModalCreateTaskFromTodo";
-import { resolveTitleMentions, useTodoMentionPool } from "./titleMentions";
+import { resolveTitleMentions, useTodoMentionPool } from "./titleMentionsHelpers";
 import { renderTitleWithLinks } from "./titleRender";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";

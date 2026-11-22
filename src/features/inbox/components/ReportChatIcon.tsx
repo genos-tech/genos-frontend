@@ -13,30 +13,12 @@ import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarC
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { GroupChatAvatar, ProjectChatAvatar } from "../../../components/ui/avatars/ChatKindAvatar";
 import { MDMAvatar } from "../../../components/ui/avatars/MDMAvatar";
-import { mdmStackWidth } from "../../../components/ui/avatars/mdmStack";
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { TYPE_SCALE } from "../../../theme/tokens";
-import { AVATAR } from "../../../theme/tokens/scales";
 import { withAvatarVersion } from "../../../utils/avatarSrc";
 import { useGMProfileImageVersion } from "../../../utils/gmProfileImageVersion";
 import type { ReportChatMark } from "../utils/reportChatMarks";
-
-/** Width of the icon slot of a line: the `xs` avatar, as wide as the emoji slot it replaces. */
-export const CHAT_ICON_SLOT = AVATAR.xs;
-
-/** The slot width a run of chat lines shares, so their text starts at one edge. A multi-person
- *  DM's stack of faces is wider than one avatar (three `xs` faces are 42px), and a line whose
- *  icon is wider would start its text later than the lines around it; so every line of the run
- *  takes the width of its widest stack. Without a stack it is the one-avatar width, as before.
- *  `marks` holds the mark of each chat line (none for a line with the emoji). */
-export const reportChatSlotWidth = (marks: Iterable<ReportChatMark | undefined>): number => {
-    let width: number = CHAT_ICON_SLOT;
-    for (const mark of marks) {
-        if (mark?.kind === "mdm")
-            width = Math.max(width, mdmStackWidth(mark.members.length, CHAT_ICON_SLOT));
-    }
-    return width;
-};
+import { CHAT_ICON_SLOT } from "./reportChatIconHelpers";
 
 const ChatIconSlot = ({ children, width }: { children: ReactNode; width: number }) => (
     <Box

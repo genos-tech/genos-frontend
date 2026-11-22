@@ -14,10 +14,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-    messageDeepLinkUrl,
-    MessageRowHoverToolbar,
-} from "../features/channel/components/MessageRowHoverToolbar";
+import { MessageRowHoverToolbar } from "../features/channel/components/MessageRowHoverToolbar";
+import { messageDeepLinkUrl } from "../features/channel/components/messageRowHoverToolbarHelpers";
 import { MessagesPaneV3 } from "../features/channel/components/MessagesPaneV3";
 import { channelService } from "../services/channel/channelService";
 import { ChannelKind, type Channel, type Message, type UserLite } from "../types/channel";

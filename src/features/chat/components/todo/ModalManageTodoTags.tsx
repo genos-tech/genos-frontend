@@ -15,7 +15,7 @@ import { TodoCategoryProps } from "../../../../types/chat";
 import { TagColorOption } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../../../tasks/components/contents/base/sub/TagColorPickerMenu";
 import { ProjectTagChip } from "../../../tasks/components/ProjectTagChip";
-import { useTodoDialogLayer } from "./TodoHostLayer";
+import { useTodoDialogLayer } from "./todoHostLayerHooks";
 import { todoTagColor } from "./todoTagColor";
 
 // Matches `ToDoCategory.name` (max_length=64) on the server.

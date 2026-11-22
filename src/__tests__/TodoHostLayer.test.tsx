@@ -15,10 +15,8 @@ import { ModalRemindMe } from "../features/chat/components/modals/ModalRemindMe"
 import { ModalCreateTaskFromTodo } from "../features/chat/components/todo/ModalCreateTaskFromTodo";
 import { ModalManageTodoTags } from "../features/chat/components/todo/ModalManageTodoTags";
 import { ModalScheduledTodos } from "../features/chat/components/todo/ModalScheduledTodos";
-import {
-    TodoHostLayerProvider,
-    useTodoDialogLayer,
-} from "../features/chat/components/todo/TodoHostLayer";
+import { TodoHostLayerProvider } from "../features/chat/components/todo/TodoHostLayer";
+import { useTodoDialogLayer } from "../features/chat/components/todo/todoHostLayerHooks";
 import { TodoItemMoreMenu } from "../features/chat/components/todo/TodoItemMoreMenu";
 import { UserProps } from "../types/admin";
 

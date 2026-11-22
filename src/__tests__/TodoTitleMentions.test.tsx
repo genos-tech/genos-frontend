@@ -5,10 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
 import {
-    resolveTitleMentions,
     TodoMentionPoolProvider,
     type TodoMentionPool,
 } from "../features/chat/components/todo/titleMentions";
+import { resolveTitleMentions } from "../features/chat/components/todo/titleMentionsHelpers";
 import { TodoCategorySection } from "../features/chat/components/todo/TodoCategorySection";
 import { TodoItemRow } from "../features/chat/components/todo/TodoItemRow";
 import { ChatManagementState } from "../hooks/chats/useChatManagement";

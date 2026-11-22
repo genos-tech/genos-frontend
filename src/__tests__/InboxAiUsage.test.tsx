@@ -13,7 +13,8 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AiUsageFooter, costText } from "../features/inbox/components/AiUsageFooter";
+import { AiUsageFooter } from "../features/inbox/components/AiUsageFooter";
+import { costText } from "../features/inbox/components/aiUsageFooterHelpers";
 import { InboxBubble } from "../features/inbox/components/InboxBubble";
 import { resetInboxAiStore } from "../features/inbox/inboxAiStore";
 import { readAiUsage } from "../features/inbox/utils/inboxAi";

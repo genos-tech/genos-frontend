@@ -46,7 +46,8 @@ export { SelectedTextQuote, type SelectedTextQuoteProps } from "./SelectedTextQu
 export { sessionTurnToCompleted } from "./sessionTurns";
 export { type UndoRequest, type UndoStepRef } from "./undoSteps";
 export { sourceChipLabel } from "./sourceChipLabel";
-export { formatDurationMs, ToolProgressList } from "./ToolProgressList";
+export { ToolProgressList } from "./ToolProgressList";
+export { formatDurationMs } from "./toolProgressHelpers";
 export { turnFrameSx, turnLabelSx } from "./turnFrame";
 export { getToolLabel } from "./toolLabels";
 export { MentionHighlightOverlay } from "./mentions/MentionHighlightOverlay";

@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { EmojiGlyph } from "../components/ui/emoji/EmojiGlyph";
 import { MessageBody } from "../features/channel/components/MessageBody";
-import { deriveBodyText } from "../features/channel/components/MessageComposerV3";
+import { deriveBodyText } from "../features/channel/components/messageComposerV3Helpers";
 import { getFirstLine } from "../features/chat/utils/common";
 import { TeamEmoji } from "../services/teamEmojiApi";
 import {

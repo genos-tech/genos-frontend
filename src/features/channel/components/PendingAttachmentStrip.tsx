@@ -13,7 +13,7 @@ import type { CSSProperties } from "react";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
 import type { PendingAttachment } from "../hooks/useAttachmentDraft";
-import { formatSize } from "./MessageAttachments";
+import { formatSize } from "./messageAttachmentsHelpers";
 
 interface PendingAttachmentStripProps {
     pending: readonly PendingAttachment[];

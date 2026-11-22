@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
-import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import RestoreFromTrashRoundedIcon from "@mui/icons-material/RestoreFromTrashRounded";
 import TravelExploreRoundedIcon from "@mui/icons-material/TravelExploreRounded";
 import { Badge, Box, Chip, Divider, IconButton, Sheet, Stack, Typography } from "@mui/joy";
@@ -55,93 +50,8 @@ import { ModalRecentlyDeletedChats } from "../modals/ModalRecentlyDeletedChats";
 import { ChatList } from "./ChatList";
 import { ChatSearch } from "./ChatSearch";
 import { ActivityDivider } from "./ChatSidebarDividers";
+import { CHAT_PANE_TYPES, NAV_ITEMS } from "./chatSidebarNavItems";
 import { GMTagFilterRow } from "./GMTagFilterRow";
-
-// Chat type constants
-const CHAT_PANE_TYPES = {
-    DM: 1,
-    GM: 2,
-    PM: 3,
-    MDM: 4,
-    ACTIVITY: 5,
-    FLAGGED: 6,
-} as const;
-
-// Navigation item configuration
-// Note: MDM (Multi-user DM) is now integrated into DM section, not shown as separate nav item
-// Exported so the chat list keyboard-shortcut handler in `ChatList.tsx`
-// shares the same tab order — keep them in sync.
-//
-// `colorScheme` carries BOTH the plain `var(--gp-…)` reference (for
-// opaque fills) and its `-rgb` companion triplet. The alpha variants
-// below MUST compose through `rgba(var(--…-rgb), α)`: the old
-// `${colorScheme.dark}cc` hex-alpha concatenation yields the literal
-// string `var(--gp-brandalt-400)cc`, which is not a color — it
-// invalidated the whole `linear-gradient()` and dropped the unread
-// badge's background entirely, leaving white-on-white (the "the unread
-// chip disappeared" bug). See the note at the top of `purplePalette.ts`.
-export const NAV_ITEMS = [
-    {
-        type: CHAT_PANE_TYPES.DM,
-        icon: PersonRoundedIcon,
-        labelKey: "navDM" as const,
-        shortLabelKey: "navDMShort" as const,
-        colorScheme: {
-            dark: "var(--gp-brandalt-400)",
-            light: "var(--gp-brand-700)",
-            darkRgb: "var(--gp-brandalt-400-rgb)",
-            lightRgb: "var(--gp-brand-700-rgb)",
-        },
-    },
-    {
-        type: CHAT_PANE_TYPES.GM,
-        icon: GroupsRoundedIcon,
-        labelKey: "navGM" as const,
-        shortLabelKey: "navGMShort" as const,
-        colorScheme: {
-            dark: "var(--gp-brandalt-400)",
-            light: "var(--gp-brand-700)",
-            darkRgb: "var(--gp-brandalt-400-rgb)",
-            lightRgb: "var(--gp-brand-700-rgb)",
-        },
-    },
-    {
-        type: CHAT_PANE_TYPES.PM,
-        icon: AccountTreeRoundedIcon,
-        labelKey: "navPM" as const,
-        shortLabelKey: "navPMShort" as const,
-        colorScheme: {
-            dark: "var(--gp-brandalt-400)",
-            light: "var(--gp-brand-700)",
-            darkRgb: "var(--gp-brandalt-400-rgb)",
-            lightRgb: "var(--gp-brand-700-rgb)",
-        },
-    },
-    {
-        type: CHAT_PANE_TYPES.FLAGGED,
-        icon: FlagRoundedIcon,
-        labelKey: "navFlagged" as const,
-        shortLabelKey: "navFlaggedShort" as const,
-        colorScheme: {
-            dark: "var(--gp-brandalt-400)",
-            light: "var(--gp-brand-700)",
-            darkRgb: "var(--gp-brandalt-400-rgb)",
-            lightRgb: "var(--gp-brand-700-rgb)",
-        },
-    },
-    {
-        type: CHAT_PANE_TYPES.ACTIVITY,
-        icon: NotificationsActiveRoundedIcon,
-        labelKey: "navActivity" as const,
-        shortLabelKey: "navActivityShort" as const,
-        colorScheme: {
-            dark: "var(--gp-brandalt-400)",
-            light: "var(--gp-brand-700)",
-            darkRgb: "var(--gp-brandalt-400-rgb)",
-            lightRgb: "var(--gp-brand-700-rgb)",
-        },
-    },
-];
 
 type ChatSidebarProps = {
     incompleteTodoCount: number;

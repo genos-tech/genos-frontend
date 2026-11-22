@@ -29,8 +29,9 @@ import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import { Box, Button, Chip, ChipDelete, Typography } from "@mui/joy";
 
 import { fmt, useTranslation, type Messages } from "../../../i18n";
-import { focusRing, g } from "../../../theme/tokens";
+import { g } from "../../../theme/tokens";
 import { taskMetaLabel } from "../../tasks/utils/taskMeta";
+import { controlSx } from "./approvalEditFieldsHelpers";
 import {
     clipText,
     currentValue,
@@ -40,27 +41,6 @@ import {
     type FieldSpec,
 } from "./editableFields";
 import type { ApprovalEdit } from "./useApprovalEdit";
-
-export const controlSx = (invalid: boolean) => ({
-    width: "100%",
-    boxSizing: "border-box" as const,
-    font: "inherit",
-    // 16px on a phone: smaller and iOS zooms the page when the field is focused.
-    fontSize: { xs: "1rem", sm: "0.875rem" },
-    px: 1,
-    py: 0.625,
-    borderRadius: "8px",
-    border: "1px solid",
-    borderColor: invalid ? g.danger.text : g.border.default,
-    background: g.surface.default,
-    color: g.text.primary,
-    "&:focus": {
-        ...focusRing,
-        outlineOffset: 0,
-        ...(invalid ? { outlineColor: g.danger.solid } : {}),
-        borderColor: invalid ? g.danger.text : g.focus,
-    },
-});
 
 type FieldLabels = Messages["agentApproval"]["edit"]["fields"];
 
