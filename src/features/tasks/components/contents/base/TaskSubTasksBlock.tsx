@@ -20,7 +20,7 @@ import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWit
 import { DataState } from "../../../../../components/ui/feedback/DataState";
 import { ErrorState } from "../../../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";

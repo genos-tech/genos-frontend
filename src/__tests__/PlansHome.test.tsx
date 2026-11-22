@@ -17,7 +17,7 @@ import { BILLING_REFRESHED } from "../components/layout/BillingReturnSnackbar";
 import { PlansHome } from "../features/billing/PlansHome";
 import type { BillingPlans } from "../services/billingApi";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

@@ -17,7 +17,7 @@ import { HashMentionDataProvider } from "../context/HashMentionDataContext";
 
 vi.setConfig({ testTimeout: 30000 });
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

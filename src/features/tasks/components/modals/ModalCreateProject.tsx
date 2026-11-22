@@ -10,7 +10,7 @@ import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { SearchField } from "../../../../components/ui/fields/SearchField";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { fmt, useTranslation } from "../../../../i18n";

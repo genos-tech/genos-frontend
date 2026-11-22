@@ -17,7 +17,7 @@ import { GenosReportBody } from "../features/inbox/components/GenosReportBody";
 import type { UserProps } from "../types/admin";
 import { bumpGMProfileImageVersion } from "../utils/gmProfileImageVersion";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 afterEach(cleanup);
 

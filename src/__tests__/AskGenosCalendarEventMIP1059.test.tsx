@@ -258,7 +258,7 @@ vi.mock("../features/integrations/services/connections", () => ({
     findGoogleConnections: () => [{ id: ACCOUNT, label: "me@work.com" }],
     hasAnyCalendarScope: () => true,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 describe("from the calendar", { timeout: 30_000 }, () => {
     it("closes the dialogs and raises the ask with the event", async () => {

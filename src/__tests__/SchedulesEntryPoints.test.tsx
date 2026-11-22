@@ -38,7 +38,7 @@ let isMobileViewport = false;
 vi.mock("../hooks/common/useIsMobile", () => ({
     useIsMobile: () => isMobileViewport,
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "t" }),
 }));
 vi.mock("../features/integrations/services/connections", () => ({

@@ -655,7 +655,7 @@ const readCreatedValue = (value: unknown): CreatedSummary | null => {
 const formatValue = (
     value: unknown,
     fieldName: string | null,
-    teamMemberProfiles: Record<string, any>,
+    teamMemberProfiles: Record<string, UserProps>,
     metadata: Record<string, unknown> | null | undefined,
     side: "old" | "new",
     resolveTaskDisplayId: (id: unknown) => string | null,

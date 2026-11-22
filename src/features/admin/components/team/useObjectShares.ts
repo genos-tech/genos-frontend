@@ -24,7 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Socket } from "socket.io-client";
 
 import { rememberPeople } from "../../../../components/ui/avatars/userDirectory";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { relayCrossTeamRequest } from "../../services/crossTeamNotice";
 import {
     addShareParticipants,

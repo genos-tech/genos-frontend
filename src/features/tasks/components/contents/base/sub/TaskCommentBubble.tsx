@@ -23,7 +23,7 @@ import { TaskCommentEmojiReaction } from "../../../../../../components/ui/emoji/
 import { ViaChip } from "../../../../../../components/ui/misc/ViaChip";
 import { ForceDeleteDialog } from "../../../../../../components/ui/modal/ForceDeleteDialog";
 import { MoreMenu, MoreMenuItem } from "../../../../../../components/ui/MoreMenu";
-import { useAuth } from "../../../../../../context/AuthContext";
+import { useAuth } from "../../../../../../context/authState";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import {
     PinnableBubbleAction,

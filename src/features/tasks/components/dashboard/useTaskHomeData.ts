@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { useTranslation } from "../../../../i18n";
 import { useSyncFailure, useTasksSyncFailure } from "../../../../services/syncStatus";
 import { TaskTableProps } from "../../../../types/tasks";

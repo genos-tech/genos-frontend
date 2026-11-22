@@ -27,7 +27,7 @@ import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDi
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
 import { headerTouchTargetsSx, tallHitAreaSx } from "../../../../components/ui/touchTargets";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

@@ -15,7 +15,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TaskVelocitySection } from "../features/tasks/components/dashboard/TaskVelocitySection";
 import type { VelocityPoint } from "../features/tasks/services/loadTaskVelocity";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

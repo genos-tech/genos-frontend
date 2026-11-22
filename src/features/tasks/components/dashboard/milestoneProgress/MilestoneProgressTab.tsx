@@ -17,7 +17,7 @@ import {
 import { DataState } from "../../../../../components/ui/feedback/DataState";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { focusRing, g } from "../../../../../theme/tokens";
 import { TaskProgressPage } from "../../../../../types/tasks";

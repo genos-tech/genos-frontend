@@ -244,7 +244,7 @@ vi.mock("../features/integrations/services/connections", () => ({
     ],
     hasAnyCalendarScope: () => true,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const cal = (account_id: string, id: string, ticked: boolean) => ({
     id,

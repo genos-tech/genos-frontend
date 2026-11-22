@@ -25,7 +25,7 @@ import { Socket } from "socket.io-client";
 import { replaceBlocksSafely } from "../../../../components/editors/safeBlocks";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { consumeYjsPersistenceFailure } from "../../../../db/utils/yjsPersistenceRegistry";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";

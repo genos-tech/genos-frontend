@@ -23,7 +23,7 @@ vi.mock("../features/chat/components/bubbles/BubbleUserName", () => ({
 vi.mock("../components/ui/emoji/EmojiPicker", () => ({ EmojiPicker: () => null }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => <div /> }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 let style: "compact" | "bubble" = "compact";
 vi.mock("../hooks/common/bubbleStylePreferenceState", () => ({

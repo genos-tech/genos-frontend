@@ -14,7 +14,7 @@ import {
 } from "@mui/joy";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useOptionalAccessToken } from "../../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../../context/authState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import {

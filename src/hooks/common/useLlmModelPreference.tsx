@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { AgentModels, fetchAgentModels } from "../../services/agentApi";
 import { authApi } from "../../services/api";
 

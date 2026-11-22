@@ -11,7 +11,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import { OAuthSuccessHandler } from "../features/admin/components/OAuthSuccessHandler";
 import { SignInForm } from "../features/admin/components/SignInForm";
 import { SignUpForm } from "../features/admin/components/SignUpForm";
@@ -24,8 +24,8 @@ import {
 import { redirectToOAuthLogin } from "../features/integrations/services/oauth";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../context/AuthContext", async (importOriginal) => ({
-    ...(await importOriginal<typeof import("../context/AuthContext")>()),
+vi.mock("../context/authState", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("../context/authState")>()),
     useAuth: vi.fn(),
 }));
 vi.mock("../features/admin/services/signup", () => ({ signUp: vi.fn() }));

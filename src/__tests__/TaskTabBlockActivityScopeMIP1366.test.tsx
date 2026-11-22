@@ -37,7 +37,7 @@ vi.mock("../features/tasks/components/contents/base/sub/TaskProgressFeed", () =>
         />
     ),
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
     useOptionalAccessToken: () => "tok",
 }));

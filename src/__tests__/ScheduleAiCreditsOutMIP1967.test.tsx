@@ -16,7 +16,7 @@ import type { EffortCost, ScheduleJob } from "../services/schedules";
 
 vi.setConfig({ testTimeout: 30000 });
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { authApi } from "../../services/api";
 import { detectBrowserTimezone } from "../../utils/userTimezone";
 

@@ -17,7 +17,7 @@ import {
 import { PersonalGMTagsBootstrap } from "../hooks/common/usePersonalGMTags";
 import { server } from "./msw/server";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

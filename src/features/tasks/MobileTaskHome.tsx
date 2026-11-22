@@ -21,7 +21,7 @@ import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 import { MobileOverlay } from "../../components/layout/MobileOverlay";
 import { MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
 import { headerTouchTargetsSx } from "../../components/ui/touchTargets";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";

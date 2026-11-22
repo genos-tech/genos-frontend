@@ -33,7 +33,7 @@ vi.mock("../db/workers/channels", () => ({ inboxChannel: { request } }));
 vi.mock("../components/editors/bnChatPreview", () => ({
     BnChatPreview: () => <div data-testid="bn-preview" />,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const row = (itemId: number, itemType: number, isRead = false): InboxItemProps =>
     ({ itemId, itemType, isRead, itemBody: [], tsSent: "2026-11-16T00:00:00Z" }) as never;

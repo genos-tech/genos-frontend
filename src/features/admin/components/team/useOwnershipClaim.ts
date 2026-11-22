@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import {
     finalizeOwnershipClaim,
     getOwnershipClaim,

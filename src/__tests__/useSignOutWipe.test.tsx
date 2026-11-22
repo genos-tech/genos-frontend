@@ -18,7 +18,7 @@ const navigate = vi.fn(() => calls.push("navigate"));
 const setAccessToken = vi.fn(() => calls.push("setAccessToken"));
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ setAccessToken }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ setAccessToken }) }));
 vi.mock("../services/analytics", () => ({
     analytics: { reset: vi.fn(() => calls.push("analytics.reset")) },
 }));

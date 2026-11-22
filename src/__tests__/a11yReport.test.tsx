@@ -45,7 +45,7 @@ import TermsPage from "../lp/TermsPage";
 const ENABLED = process.env.A11Y_REPORT === "1";
 
 /** The sign-in form reads the auth context; the scan needs no session. */
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: null, setAccessToken: () => {} }),
     useOptionalAccessToken: () => null,
 }));

@@ -20,7 +20,7 @@ import { useTodoDialogLayer } from "../features/chat/components/todo/todoHostLay
 import { TodoItemMoreMenu } from "../features/chat/components/todo/TodoItemMoreMenu";
 import { UserProps } from "../types/admin";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../hooks/common/UrlLinkModalContext", () => ({
     useUrlLinkModal: () => ({ openModalByHref: vi.fn() }),
 }));

@@ -33,7 +33,7 @@ vi.mock("../components/ui/emoji/TaskCommentEmojiReaction", () => ({
     TaskCommentEmojiReaction: () => <div data-testid="quick-emoji-reaction" />,
 }));
 vi.mock("../components/ui/emoji/EmojiPicker", () => ({ EmojiPicker: () => null }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({

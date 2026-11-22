@@ -15,7 +15,7 @@ import type { TeamManagementState } from "../hooks/common/useTeamManagement";
 import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 import type { TaskProps } from "../types/tasks";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

@@ -34,7 +34,7 @@ vi.mock("../db/services/task-full.service", () => ({ invalidateCachedFullTask: v
 vi.mock("../features/tasks/services/loadSpecificTask", () => ({
     loadSpecificTask: vi.fn(async () => []),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/diagram/components/TaskNodeCard", () => ({
     TaskNodeCard: ({ data }: { data: { task: { id: string }; onDelete: () => void } }) => (
         <button data-testid={`delete-${data.task.id}`} onClick={() => data.onDelete()}>

@@ -25,7 +25,7 @@ import { MAX_ANSWER_BYTES } from "../features/agentQA/saveAnswer/answerBlocks";
 import {
     renderSaveAnswerActions,
     renderSaveAnswerStatus,
-} from "../features/agentQA/saveAnswer/SaveAnswerActions";
+} from "../features/agentQA/saveAnswer/renderSaveAnswer";
 import { resetSaveStore } from "../features/agentQA/saveAnswer/saveAnswerStore";
 import { ModalCreateTaskFromTodo } from "../features/chat/components/todo/ModalCreateTaskFromTodo";
 import type { SpotlightResult } from "../features/spotlight/types";
@@ -43,7 +43,7 @@ vi.mock("react-markdown", async () => {
     return { ...actual, default: Counting };
 });
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
     useOptionalAccessToken: () => "tok",
 }));
@@ -636,7 +636,7 @@ describe("the render budget", () => {
     });
 
     it("hands every host the same two functions for ever (module-level)", async () => {
-        const again = await import("../features/agentQA/saveAnswer/SaveAnswerActions");
+        const again = await import("../features/agentQA/saveAnswer/renderSaveAnswer");
         expect(again.renderSaveAnswerActions).toBe(renderSaveAnswerActions);
         expect(again.renderSaveAnswerStatus).toBe(renderSaveAnswerStatus);
     });

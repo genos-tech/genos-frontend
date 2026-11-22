@@ -16,7 +16,7 @@ vi.mock("../hooks/common/useIsMobile", () => ({
 // and the credit/plan sections all reach for the network or a context on
 // mount. Stub the boundaries — the layout under test is the tab rail, not
 // what the panels fetch.
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "t" }),
 }));
 vi.mock("../features/integrations/services/connections", () => ({

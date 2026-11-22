@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { runUndoable, useUndoHidden } from "../../hooks/common/useUndoableAction";
 import type { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../i18n";

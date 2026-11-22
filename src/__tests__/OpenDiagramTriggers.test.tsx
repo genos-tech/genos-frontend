@@ -25,7 +25,7 @@ import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 import type { UserProps } from "../types/admin";
 import type { TaskTableProps } from "../types/tasks";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

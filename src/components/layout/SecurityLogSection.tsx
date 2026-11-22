@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import { Box, Chip, Sheet, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { fmt, useTranslation } from "../../i18n";
 import { listTeamSecurityEvents, SecurityEvent } from "../../services/developerApi";
 import { LoadMoreList } from "../ui/misc/LoadMoreList";

@@ -20,7 +20,7 @@ import { useCallback, useMemo, useRef } from "react";
 
 import { searchHashTasks } from "../../../components/editors/hashTaskSearch";
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
-import { useOptionalAccessToken } from "../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../context/authState";
 import { useHashMentionData, type HashNoteEntry } from "../../../context/HashMentionDataContext";
 import { useMentionGroupsContext } from "../../../context/MentionGroupsContext";
 import type { MentionGroup } from "../../../services/mentionGroupsApi";

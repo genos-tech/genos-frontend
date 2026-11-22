@@ -17,7 +17,7 @@ import { ReactNode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import { useUiSettings } from "../hooks/common/uiSettingsState";
 import { UiSettingsProvider } from "../hooks/common/useUiSettings";
 import { authApi } from "../services/api";
@@ -27,7 +27,7 @@ vi.mock("../services/api", () => ({
     nonAuthApi: vi.fn(),
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: vi.fn(),
 }));
 

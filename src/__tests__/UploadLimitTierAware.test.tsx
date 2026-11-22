@@ -31,7 +31,7 @@ import { ABSOLUTE_MAX_UPLOAD_BYTES } from "../utils/uploadLimits";
 
 const MIB = 1024 * 1024;
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useOptionalAccessToken: () => "test-token",
 }));
 

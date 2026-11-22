@@ -18,7 +18,7 @@ import { cssOf } from "./utils/cssOf";
 import { InstallBanner } from "../components/layout/InstallBanner";
 import { ImageZoomModal } from "../components/messageBody/ImageZoomModal";
 import { NoteModalHostZIndexProvider } from "../components/modals/noteModalHostZIndex";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import { SignInForm } from "../features/admin/components/SignInForm";
 import { requestPasswordReset } from "../features/admin/services/passwordReset";
 import { ModalImportMarkdown } from "../features/notes/common/components/ModalImportMarkdown";
@@ -32,8 +32,8 @@ vi.mock("../utils/downloadUtils", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../utils/downloadUtils")>()),
     downloadFile: vi.fn(async () => undefined),
 }));
-vi.mock("../context/AuthContext", async (importOriginal) => ({
-    ...(await importOriginal<typeof import("../context/AuthContext")>()),
+vi.mock("../context/authState", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("../context/authState")>()),
     useAuth: vi.fn(),
     useOptionalAccessToken: () => "tok",
 }));

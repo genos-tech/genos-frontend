@@ -3,7 +3,7 @@ import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import { Box, Chip, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { fmt, useTranslation } from "../../i18n";
 import {
     endTeamMcpConnection,

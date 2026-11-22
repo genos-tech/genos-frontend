@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { _refetch, _setAccessToken, _setState, EMPTY_STATE } from "./personalGMTagsState";
 
 // ---- public surface --------------------------------------------------

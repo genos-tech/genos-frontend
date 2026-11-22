@@ -159,7 +159,7 @@ describe("classifyTeamCreateFailure (MIP-1841)", () => {
 
 // --- the first-run form: the message sits by its field --------------------------------------
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok", setAccessToken: vi.fn() }),
 }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));

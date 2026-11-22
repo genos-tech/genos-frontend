@@ -27,7 +27,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
-import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
+import { clearUserScopedLocalStorage, useAuth } from "../../../context/authState";
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 import { fmt, useTranslation } from "../../../i18n";
 import { trackSignupCompleted } from "../../../services/marketingFunnel";

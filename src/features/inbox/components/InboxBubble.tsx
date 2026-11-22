@@ -21,7 +21,7 @@ import { Socket } from "socket.io-client";
 import { MessageBody } from "../../../components/messageBody/MessageBody";
 import { Bubble, BubbleMeta } from "../../../components/ui/bubble";
 import { EmojiText } from "../../../components/ui/emoji/EmojiText";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";

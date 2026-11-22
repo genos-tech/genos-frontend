@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { useTranslation } from "../../i18n";
 import { resolveLoggedInLandingPath } from "../../utils/lastWorkspacePath";
 

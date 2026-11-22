@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ModalCreateTeam } from "../features/admin/components/modals/ModalCreateTeam";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const myself = { userId: "u1", teamId: "t1", userName: "Ken" } as never;
 const copy = en.admin.joinTeam;

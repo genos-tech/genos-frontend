@@ -65,7 +65,7 @@ vi.mock("../components/ui/avatars/UserAvatar", () => ({
     UserAvatar: ({ userId }: { userId: string }) => <span data-testid={`user-avatar-${userId}`} />,
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 vi.mock("../services/api", () => ({

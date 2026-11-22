@@ -23,7 +23,7 @@ vi.mock("../components/editors/bnChatPreview", () => ({
 // InboxBubble reads the access token to answer ownership claims
 // (itemType 5) over HTTP, and `useAuth` throws outside a provider.
 // Same stub as InboxBubbleTargetChip.test.tsx.
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

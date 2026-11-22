@@ -1,16 +1,17 @@
 import { useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 
+import type { UserProps } from "../../types/admin";
 import { useChatManagement } from "../chats/useChatManagement";
 import { useInboxManagement } from "../inbox/useInboxManagement";
 import { useNoteManagement } from "../notes/useNoteManagement";
 
 interface UseServiceInitializationProps {
-    myself: any;
+    myself: UserProps;
     accessToken: string;
     currentTeamId: string;
     isLoading: boolean;
-    socketInstance: any;
+    socketInstance: unknown;
 }
 
 // Service identifier derived from the current URL. Using a discrete tag

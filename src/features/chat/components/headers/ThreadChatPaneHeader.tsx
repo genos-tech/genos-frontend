@@ -24,7 +24,7 @@ import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChro
 import { MenuRow, MenuSurface, MoreMenu } from "../../../../components/ui/MoreMenu";
 import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";

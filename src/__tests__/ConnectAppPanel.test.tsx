@@ -24,7 +24,7 @@ import { ConnectedAppsSection } from "../components/layout/ConnectedAppsSection"
 import { en } from "../i18n/locales/en";
 import { PLUGIN_COMMANDS, PLUGIN_REPO_URL, PLUGIN_ZIP_URL } from "../utils/mcpConnect";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

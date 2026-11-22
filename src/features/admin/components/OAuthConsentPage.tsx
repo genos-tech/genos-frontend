@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     ConsentContext,

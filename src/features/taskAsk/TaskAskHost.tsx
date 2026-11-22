@@ -10,7 +10,7 @@
 
 import { memo, useCallback, useEffect, useRef } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import type { ProjectProps } from "../../types/tasks";
 import type { SpotlightResult } from "../spotlight/types";
 import { onAskGenosAboutTask } from "./taskAskLink";

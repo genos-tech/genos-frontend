@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { NoteHeaderActions } from "../features/notes/common/components/NoteHeaderActions";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "t" }),
 }));
 vi.mock("../services/notifications/notificationsContextState", () => ({

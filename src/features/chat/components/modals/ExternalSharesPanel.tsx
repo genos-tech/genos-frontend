@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ObjectSharesPanel } from "../../../../components/ui/sharing/ObjectSharesPanel";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { ChannelKind, type ChannelShare } from "../../../../types/channel";

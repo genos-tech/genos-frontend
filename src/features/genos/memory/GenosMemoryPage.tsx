@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useTranslation } from "../../../i18n";
 import { ConversationsSection } from "./ConversationsSection";
 import { McpUseSection } from "./McpUseSection";

@@ -26,7 +26,7 @@ import { ModalMoveToFolder } from "../features/notes/my-notes/modals/ModalMoveTo
 import { en } from "../i18n/locales/en";
 import { UserProps } from "../types/admin";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../components/ui/avatars/avatarWithStatus", () => ({

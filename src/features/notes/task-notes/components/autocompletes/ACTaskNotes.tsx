@@ -4,7 +4,7 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import Box from "@mui/joy/Box";
 
 import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";

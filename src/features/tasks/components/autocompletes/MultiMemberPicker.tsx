@@ -3,7 +3,7 @@ import { AutocompleteOption, Chip, ListItemContent, Stack, Typography } from "@m
 import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
-import { sortMembersMyselfFirst } from "../../../../components/editors/Mention";
+import { sortMembersMyselfFirst } from "../../../../components/editors/mentionHelpers";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

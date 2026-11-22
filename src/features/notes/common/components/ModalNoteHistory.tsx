@@ -11,7 +11,7 @@ import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { SkeletonLines } from "../../../../components/ui/feedback/Skeleton";
 import { ViaChip } from "../../../../components/ui/misc/ViaChip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";

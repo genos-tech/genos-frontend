@@ -31,7 +31,7 @@ vi.mock("../features/admin/services/slackImportApi", async (orig) => {
 vi.mock("../services/channel/channelService", () => ({
     channelService: { refreshChannels: (...a: unknown[]) => refreshChannels(...a) },
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useOptionalAccessToken: () => "token-1",
     useAuth: () => ({ accessToken: "token-1" }),
 }));

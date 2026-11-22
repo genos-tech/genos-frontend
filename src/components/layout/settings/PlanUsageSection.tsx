@@ -13,7 +13,7 @@ import {
 } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { TrialEndNote } from "../../../features/billing/TrialEndNote";
 import { fmt, useTranslation } from "../../../i18n";
 import {

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { runUndoable } from "../../../hooks/common/useUndoableAction";
 import type { SprintMilestoneManagementState } from "../../../hooks/tasks/useSprintMilestoneManagement";
 import type { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";

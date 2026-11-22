@@ -16,7 +16,7 @@ import { Team, UserProps } from "../types/admin";
 const navigate = vi.fn();
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "token" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "token" }) }));
 vi.mock("../hooks/common/useSignOut", () => ({ useSignOut: () => vi.fn() }));
 vi.mock("../features/admin/services/accountLifecycle", () => ({
     getAccountDeletionStatus: vi.fn().mockResolvedValue({

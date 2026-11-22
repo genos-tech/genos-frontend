@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { keyframes } from "@emotion/react";
 import { Box, Button, Typography } from "@mui/joy";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useTranslation } from "../../../i18n";
 import { loadInitialData } from "../../../services/loadInitialData";
 import { UserProps } from "../../../types/admin";

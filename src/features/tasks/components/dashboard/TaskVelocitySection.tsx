@@ -5,7 +5,7 @@ import { Box, Card, Chip, Option, Select, Stack, Typography } from "@mui/joy";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { DataState } from "../../../../components/ui/feedback/DataState";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { fmt, useTranslation } from "../../../../i18n";
 import {
     loadTaskVelocity,

@@ -32,7 +32,7 @@ import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback
 import { UploadingTileBadge } from "../../../../../components/ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
 import { PlainButton } from "../../../../../components/ui/PlainButton";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";

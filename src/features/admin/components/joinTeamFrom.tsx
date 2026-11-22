@@ -26,7 +26,7 @@ import { io, Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { JoinTeamFormStyles } from "../../../components/ui/styles/commonStyle";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useTeamSetupFields } from "../../../hooks/common/useTeamSetupFields";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import { useTranslation } from "../../../i18n";

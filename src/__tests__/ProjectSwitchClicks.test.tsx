@@ -30,7 +30,7 @@ import { ProjectProps } from "../types/tasks";
 vi.mock("../features/tasks/services/popSpecificProjectTasks", () => ({
     popSpecificProjectTasks: vi.fn(async () => []),
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 vi.mock("../features/tasks/services/loadTeamTasks", () => ({

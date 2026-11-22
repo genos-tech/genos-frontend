@@ -15,7 +15,7 @@ import { ReactNode } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import { partitionFavoriteProjects } from "../features/tasks/components/sidebar/projectSidebarOrder";
 import { readFavoriteProjectIds, useFavoriteProjects } from "../hooks/common/useFavoriteProjects";
 import { UiSettingsProvider } from "../hooks/common/useUiSettings";
@@ -27,7 +27,7 @@ vi.mock("../services/api", () => ({
     nonAuthApi: vi.fn(),
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: vi.fn(),
 }));
 

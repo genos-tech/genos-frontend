@@ -3,7 +3,7 @@ import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import { Box, Button, Stack, Typography } from "@mui/joy";
 
 import { ConfirmDialog } from "../../../../../../components/ui/modal/ConfirmDialog";
-import { useAuth } from "../../../../../../context/AuthContext";
+import { useAuth } from "../../../../../../context/authState";
 import { fmt, useTranslation } from "../../../../../../i18n";
 import { TaskActivityProps } from "../../../../../../types/tasks";
 import { restoreTaskBody } from "../../../../services/restoreTaskBody";

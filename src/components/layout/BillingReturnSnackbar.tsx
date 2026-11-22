@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { useTranslation } from "../../i18n";
 import { refreshBillingTier } from "../../services/billingApi";
 import { Toast } from "../ui/feedback/Toast";

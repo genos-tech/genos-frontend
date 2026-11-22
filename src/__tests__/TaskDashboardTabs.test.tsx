@@ -13,7 +13,7 @@ import { TaskTableProps } from "../types/tasks";
 // stub it so the component mounts outside an AuthProvider. The team-wide
 // fetch itself is stubbed empty so the capacity section just falls back to
 // this project's numbers (all we assert here is the tabs + tag insights).
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 vi.mock("../features/today/briefingToday", async (importOriginal) => ({

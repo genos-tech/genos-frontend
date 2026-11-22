@@ -19,7 +19,7 @@ vi.mock("../features/tasks/diagram/services/loadTaskGraph", () => ({
 }));
 vi.mock("../features/tasks/services/addTask", () => ({ addTask: vi.fn() }));
 vi.mock("../db/services/task-full.service", () => ({ invalidateCachedFullTask: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 // Stub cards: they show what the canvas told them. `TaskNodeView` itself is
 // covered below.
 vi.mock("../features/tasks/diagram/components/TaskNodeCard", async (importOriginal) => ({

@@ -29,7 +29,7 @@ import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChro
 import { MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { useCalendarModal } from "../../../../context/CalendarModalContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";

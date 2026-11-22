@@ -14,7 +14,7 @@ import { InboxTargetChip } from "../features/inbox/components/InboxTargetChip";
 import type { AllChatProps } from "../types/chat";
 import type { InboxItemProps } from "../types/common";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

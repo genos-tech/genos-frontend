@@ -14,7 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { InitialLoad } from "../components/ui/misc/InitialLoad";
 import { I18nProvider } from "../i18n";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "token", setAccessToken: () => {} }),
 }));
 vi.mock("../services/loadInitialData", () => ({ loadInitialData: () => {} }));

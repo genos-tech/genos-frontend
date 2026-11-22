@@ -8,7 +8,7 @@ import { Socket } from "socket.io-client";
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { Clickable } from "../../../../../components/ui/Clickable";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";

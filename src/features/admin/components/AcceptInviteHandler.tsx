@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
-import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/AuthContext";
+import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { clearPrivateProfile, ensurePrivateProfile } from "../../../services/privateProfileStore";
 import { refreshSession } from "../../../services/refreshSession";

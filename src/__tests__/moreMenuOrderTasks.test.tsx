@@ -17,7 +17,7 @@ import { TaskTitleBlock } from "../features/tasks/components/contents/base/TaskT
 import { TaskHeader } from "../features/tasks/components/header/TaskHeader";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../services/notifications/notificationsContextState", () => ({
     useNotificationsContext: () => ({
         isTargetMutedByKey: () => false,

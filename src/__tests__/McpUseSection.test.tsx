@@ -18,7 +18,7 @@ import { en } from "../i18n/locales/en";
 
 const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../services/api", () => ({ authApi: () => api }));

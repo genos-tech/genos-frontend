@@ -16,7 +16,7 @@ import { BillingReturnSnackbar } from "../components/layout/BillingReturnSnackba
 import { refreshBillingTier } from "../services/billingApi";
 
 let authState: { accessToken: string | null } = { accessToken: "tok" };
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => authState,
 }));
 

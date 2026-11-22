@@ -5,7 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { ResizeHandle } from "../../components/ui/ResizeHandle";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";

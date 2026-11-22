@@ -18,7 +18,7 @@ const mobile = vi.hoisted(() => ({ value: true }));
 const thread = vi.hoisted(() => ({ taskId: 42 }));
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => mobile.value }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "token" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "token" }) }));
 vi.mock("../i18n", async () => {
     const { en } = await import("../i18n/locales/en");
     return { useTranslation: () => ({ t: en }) };

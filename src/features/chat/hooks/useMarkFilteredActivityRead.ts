@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import axios from "axios";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { ActivityService } from "../../../db/services";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { v3ApiBaseURL } from "../../../services/v3Api";

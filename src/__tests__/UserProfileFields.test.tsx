@@ -26,7 +26,7 @@ import {
 import { UserProps } from "../types/admin";
 import { zoneLabel } from "../utils/userTimezone";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

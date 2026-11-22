@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DynamicURLManager } from "../features/tasks/components/contents/base/sub/DynamicURLManager";
 import type { TaskProps } from "../types/tasks";
 
-vi.mock("../context/AuthContext", () => ({ useOptionalAccessToken: () => "tok" }));
+vi.mock("../context/authState", () => ({ useOptionalAccessToken: () => "tok" }));
 vi.mock("../features/tasks/utils/getPageTitle", () => ({
     getPageTitle: vi.fn(async () => "Fetched title"),
 }));

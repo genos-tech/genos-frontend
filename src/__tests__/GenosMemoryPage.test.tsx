@@ -32,7 +32,7 @@ import {
 const apiGet = vi.fn();
 const apiPatch = vi.fn();
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../services/api", () => ({

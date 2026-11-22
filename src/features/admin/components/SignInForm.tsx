@@ -26,7 +26,7 @@ import {
     AUTH_LOCAL_STORAGE_KEYS,
     clearUserScopedLocalStorage,
     useAuth,
-} from "../../../context/AuthContext";
+} from "../../../context/authState";
 import { DatabaseUtils } from "../../../db/utils";
 import { DEMO_WORKSPACE_PENDING_KEY } from "../../../hooks/common/useDemoWorkspaceSetup";
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";

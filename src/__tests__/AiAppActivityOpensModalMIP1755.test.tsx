@@ -25,7 +25,7 @@ vi.mock("react-router-dom", async (importOriginal) => ({
     ...(await importOriginal<typeof import("react-router-dom")>()),
     useNavigate: () => navigateMock,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/chat/hooks/useActivityStatus", () => ({
     useActivityStatus: () => ({ updateActivityReadStatus: vi.fn() }),
 }));

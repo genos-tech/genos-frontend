@@ -5,7 +5,7 @@ import { IconButton } from "@mui/joy";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { toast } from "../../../components/ui/feedback/toastStore";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { focusRing } from "../../../theme/tokens";
 import type { UserProps } from "../../../types/admin";

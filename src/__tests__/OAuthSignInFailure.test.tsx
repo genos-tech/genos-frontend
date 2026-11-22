@@ -13,12 +13,12 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import { OAuthSuccessHandler } from "../features/admin/components/OAuthSuccessHandler";
 import { rememberOAuthProvider } from "../features/integrations/oauthProvider";
 
-vi.mock("../context/AuthContext", async (importOriginal) => ({
-    ...(await importOriginal<typeof import("../context/AuthContext")>()),
+vi.mock("../context/authState", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("../context/authState")>()),
     useAuth: vi.fn(),
 }));
 

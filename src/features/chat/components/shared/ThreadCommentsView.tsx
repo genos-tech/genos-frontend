@@ -3,7 +3,7 @@ import { Box, Sheet } from "@mui/joy";
 import { useLocation } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -98,9 +98,9 @@ export const ThreadCommentsView = ({
         return {
             id: threadTaskId,
             project: {
-                projectId: (main as any).chatId,
-                projectName: (main as any).chatName,
-                isPrivate: (main as any).isPrivate,
+                projectId: main.chatId,
+                projectName: main.chatName,
+                isPrivate: main.isPrivate,
             },
         } as unknown as TaskProps;
     }, [useTM.currentPreviewTask, threadTaskId, useCM.currentMainChat]);

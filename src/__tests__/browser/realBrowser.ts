@@ -36,14 +36,17 @@ const stubAuth = (): Plugin => ({
     name: "stub-auth-context",
     enforce: "pre",
     load(id) {
-        if (id.replace(/\\/g, "/").endsWith("/src/context/AuthContext.tsx")) {
+        const path = id.replace(/\\/g, "/");
+        if (path.endsWith("/src/context/authState.ts")) {
             return `export const useAuth = () => ({ accessToken: "t", setAccessToken: () => {} });
 export const useOptionalAccessToken = () => "t";
-export const AuthProvider = ({ children }) => children;
 export const AUTH_LOCAL_STORAGE_KEYS = [];
 export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [];
 export const TRANSIENT_HANDOFF_LOCAL_STORAGE_KEYS = [];
 export const clearUserScopedLocalStorage = () => {};`;
+        }
+        if (path.endsWith("/src/context/AuthContext.tsx")) {
+            return "export const AuthProvider = ({ children }) => children;";
         }
         return null;
     },

@@ -38,7 +38,7 @@ vi.mock("../features/tasks/services/taskEvents", async (importActual) => ({
     ...(await importActual<typeof import("../features/tasks/services/taskEvents")>()),
     emitTaskTouched: vi.fn(),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/messageBody/MessageBody", () => ({
     MessageBody: () => <div data-testid="message-body" />,
 }));

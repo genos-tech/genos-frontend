@@ -16,7 +16,7 @@ import { HashMentionDataProvider, type HashMentionData } from "../context/HashMe
 // Big dialogs rendered through Joy: slow when the whole suite shares the machine.
 vi.setConfig({ testTimeout: 30000 });
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

@@ -49,7 +49,7 @@ const fail = (match: string) => answers.queue.push({ match, out: new Error("Netw
 const ok = (match: string, out: unknown) => answers.queue.push({ match, out });
 const hits = (match: string) => calls.urls.filter((u) => u.includes(match)).length;
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => <span /> }));
 // The note panel resolves from IndexedDB first; a cold miss is the failing case.
 vi.mock("../db/services/note.service", () => ({

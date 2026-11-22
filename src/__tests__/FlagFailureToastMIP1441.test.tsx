@@ -67,7 +67,7 @@ vi.mock("../components/ui/emoji/TaskCommentEmojiReaction", () => ({
     TaskCommentEmojiReaction: () => <div />,
 }));
 vi.mock("../components/ui/emoji/EmojiPicker", () => ({ EmojiPicker: () => null }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => <div /> }));
 vi.mock("../components/ui/avatars/avatarWithStatus", () => ({ AvatarWithStatus: () => null }));
 vi.mock("../components/ui/avatars/GMAvatar", () => ({ GMAvatar: () => null }));

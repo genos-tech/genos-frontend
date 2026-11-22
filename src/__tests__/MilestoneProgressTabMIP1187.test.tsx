@@ -14,7 +14,7 @@ import { en } from "../i18n/locales/en";
 // MIP-1187: the Milestones tab of the Tasks dashboard. Mounts the real tab with seeded
 // task rows; the progress request is stubbed so the expand-to-load path is exercised.
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 vi.mock("../features/tasks/services/loadTaskProgress", () => ({

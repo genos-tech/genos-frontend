@@ -28,7 +28,7 @@ import type { UserProps } from "../types/admin";
 import { storedMentionName } from "../utils/mentionName";
 
 // The light body reads the access token (PR unfurls); same seam as lightMessageBody.test.
-vi.mock("../context/AuthContext", async (importOriginal) => ({
+vi.mock("../context/authState", async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     useAuth: () => ({ accessToken: null }),
 }));

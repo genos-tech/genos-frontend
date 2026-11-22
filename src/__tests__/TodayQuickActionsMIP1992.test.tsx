@@ -27,7 +27,7 @@ vi.mock("../features/tasks/services/deleteTaskCommit", () => ({
     afterTaskDeleted: vi.fn(),
     syncDeletedTaskCard: vi.fn(async () => undefined),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/components/TaskMentionHoverCard", () => ({
     TaskMentionHoverCard: () => null,
 }));

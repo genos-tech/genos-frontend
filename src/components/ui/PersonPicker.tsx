@@ -4,7 +4,7 @@ import Autocomplete from "@mui/joy/Autocomplete";
 
 import { useTranslation } from "../../i18n";
 import { personFilterOptions } from "../../utils/personLabel";
-import { sortMembersMyselfFirst } from "../editors/Mention";
+import { sortMembersMyselfFirst } from "../editors/mentionHelpers";
 import { UserAvatar } from "./avatars/UserAvatar";
 
 /**

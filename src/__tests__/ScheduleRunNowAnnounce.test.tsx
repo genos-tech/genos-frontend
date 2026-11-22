@@ -23,7 +23,7 @@ import {
 } from "../features/inbox/inboxResyncEvent";
 import { APP_NAVIGATE_EVENT } from "../services/appNavigate";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

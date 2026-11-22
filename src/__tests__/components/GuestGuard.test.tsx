@@ -2,11 +2,11 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { GuestGuard } from "../../features/admin/authGuard";
 import { saveLastWorkspacePath } from "../../utils/lastWorkspacePath";
 
-vi.mock("../../context/AuthContext", () => ({
+vi.mock("../../context/authState", () => ({
     useAuth: vi.fn(),
 }));
 

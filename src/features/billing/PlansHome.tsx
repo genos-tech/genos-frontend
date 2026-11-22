@@ -6,7 +6,7 @@ import { Box, Button, Card, Chip, LinearProgress, Link, Sheet, Stack, Typography
 
 import { BILLING_REFRESHED } from "../../components/layout/BillingReturnSnackbar";
 import { CreditBalance } from "../../components/layout/settings/CreditBalance";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
 import { fmt, useTranslation } from "../../i18n";
 import type { Messages } from "../../i18n/types";

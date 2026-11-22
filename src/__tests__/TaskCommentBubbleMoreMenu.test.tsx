@@ -37,7 +37,7 @@ vi.mock("../components/ui/emoji/EmojiPicker", () => ({
     EmojiPicker: () => null,
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

@@ -47,7 +47,7 @@ vi.mock("@hello-pangea/dnd", () => ({
         <>{children({}, {})}</>
     ),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 // What the table hands to its rows, so the test can call it and read the rows.
 let rowUpdate: (row: TaskTableProps) => Promise<TaskTableProps> = async (row) => row;

@@ -26,7 +26,7 @@ vi.mock("../services/agentApi", async (importOriginal) => {
         submitAgentFeedback: vi.fn(async () => true),
     };
 });
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
     useOptionalAccessToken: () => "tok",
 }));

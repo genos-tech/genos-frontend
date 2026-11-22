@@ -15,9 +15,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
     HashMentionMenuItems,
     lookedUpTaskItem,
-    rememberHashQuery,
     serverTaskItems,
 } from "../components/editors/HashMention";
+import { rememberHashQuery } from "../components/editors/hashMentionHelpers";
 import { HashMentionData } from "../context/HashMentionDataContext";
 import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
 import { useAgentMentionDraft } from "../features/agentQA/mentions/useAgentMentionDraft";

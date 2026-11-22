@@ -19,7 +19,7 @@ import {
     Typography,
 } from "@mui/joy";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { formatRelativeAge } from "../../features/tasks/utils/relativeAge";
 import { fmt, getDocumentDirection, useTranslation } from "../../i18n";
 import { fetchAgentFeatures } from "../../services/agentApi";

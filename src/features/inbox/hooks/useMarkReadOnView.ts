@@ -13,7 +13,7 @@
 
 import { useCallback, useRef } from "react";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import type { InboxItemProps } from "../../../types/common";
 import { isHeldUnread, readKey } from "../readHold";
 import { watchUntilRead } from "../reportReadScheduler";

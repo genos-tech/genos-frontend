@@ -14,7 +14,7 @@ import {
 import { useTheme } from "@mui/joy/styles";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { useSprintMilestoneManagement } from "../../../../hooks/tasks/useSprintMilestoneManagement";

@@ -31,7 +31,7 @@ vi.mock("../features/inbox/services/patchInboxAiSource", () => ({
     patchInboxAiSource: () => Promise.resolve(),
 }));
 vi.mock("../components/editors/bnChatPreview", () => ({ BnChatPreview: () => <div /> }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const AI = {
     request_id: "",

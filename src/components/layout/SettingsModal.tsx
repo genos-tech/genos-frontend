@@ -50,7 +50,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { ContentLengthSection } from "../../features/genos/ContentLengthSection";
 import { GenosSettingsPanel } from "../../features/genos/memory/GenosSettingsPanel";
 import { ConnectionsSection } from "../../features/integrations/components/ConnectionsSection";

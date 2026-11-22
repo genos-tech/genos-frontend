@@ -36,7 +36,7 @@ export { CitationLink } from "./CitationLink";
 export { FeedbackThumbs } from "./FeedbackThumbs";
 export { markdownAnswerSx } from "./markdownAnswerSx";
 export { markdownToBlocks } from "./markdownToBlocks";
-export { renderSaveAnswerActions, renderSaveAnswerStatus } from "./saveAnswer/SaveAnswerActions";
+export { renderSaveAnswerActions, renderSaveAnswerStatus } from "./saveAnswer/renderSaveAnswer";
 export {
     type AgentSessionsDeletedDetail,
     deletionCoversSession,

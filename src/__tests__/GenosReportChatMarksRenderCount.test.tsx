@@ -27,7 +27,7 @@ vi.mock("../features/tasks/components/meta/StatusLabel", () => ({
         return <span>{status}</span>;
     },
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const GM = "11111111-1111-4111-8111-111111111111";
 

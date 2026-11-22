@@ -18,7 +18,7 @@ import { authApi } from "../services/api";
 import type { TeamMcpConnection } from "../services/teamIntegrations";
 
 vi.mock("../services/api", () => ({ authApi: vi.fn(), nonAuthApi: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const get = vi.fn();
 beforeEach(() => {

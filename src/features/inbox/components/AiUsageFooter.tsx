@@ -23,7 +23,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import { Box, Button, Link, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { g, type } from "../../../theme/tokens";
 import type { InboxItemProps } from "../../../types/common";

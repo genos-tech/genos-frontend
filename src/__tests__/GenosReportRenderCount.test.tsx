@@ -44,7 +44,7 @@ vi.mock("../features/tasks/components/meta/StatusLabel", () => ({
 }));
 
 // The answer buttons read the member's token (MIP-1211); a tap is the only thing that uses it.
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const section = (key: string, n: number) => ({
     heading: key,

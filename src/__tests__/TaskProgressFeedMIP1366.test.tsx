@@ -15,7 +15,7 @@ import type { TaskActivityProps, TaskProgressPage } from "../types/tasks";
 vi.mock("../components/ui/avatars/avatarWithStatus", () => ({
     AvatarWithStatus: () => <span />,
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../features/tasks/services/loadTaskProgress", () => ({

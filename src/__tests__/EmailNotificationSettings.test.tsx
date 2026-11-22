@@ -29,7 +29,7 @@ let activeLocale = "ja";
 vi.mock("../services/api", () => ({
     authApi: () => (hasApi ? { get, patch } : null),
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "token" }),
 }));
 vi.mock("../i18n", () => ({

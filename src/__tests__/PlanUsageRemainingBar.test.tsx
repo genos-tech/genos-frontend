@@ -18,7 +18,7 @@ import { describe, expect, it, vi } from "vitest";
 import { PlanUsageSection } from "../components/layout/settings/PlanUsageSection";
 import { I18nProvider } from "../i18n";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("../services/billingApi", () => ({
     fetchBillingConfig: vi.fn(async () => null),

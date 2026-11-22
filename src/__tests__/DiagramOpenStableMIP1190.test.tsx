@@ -27,7 +27,7 @@ vi.mock("../features/tasks/diagram/services/loadMilestoneBurndown", () => ({
 }));
 vi.mock("../features/tasks/services/addTask", () => ({ addTask: vi.fn() }));
 vi.mock("../db/services/task-full.service", () => ({ invalidateCachedFullTask: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/diagram/components/TaskNodeCard", () => ({
     TaskNodeCard: ({ data }: { data: { task: { id: string } } }) => (
         <div data-testid={`card-${data.task.id}`}>card</div>

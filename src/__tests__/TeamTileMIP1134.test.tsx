@@ -14,7 +14,7 @@ import { cssOf } from "./utils/cssOf";
 
 import { TeamDropdown } from "../features/admin/components/teamDropdown";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../features/admin/services/loadMyTeams", () => ({
     loadMyTeams: async () => [],
     membershipTeams: (x: unknown[]) => x,

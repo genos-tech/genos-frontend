@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { initDB } from "../../db/config/schema";
 import { DatabaseUtils } from "../../db/utils/database";
 import { clearTeamHydrated } from "../../services/hydrationState";

@@ -21,7 +21,7 @@ import { MyNoteFolderTree } from "../features/notes/my-notes/components/MyNoteFo
 import { TeamNoteFolderTree } from "../features/notes/team-notes/components/TeamNoteFolderTree";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "t" }),
 }));
 vi.mock("../services/notifications/notificationsContextState", () => ({

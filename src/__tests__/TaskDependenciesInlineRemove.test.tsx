@@ -24,7 +24,7 @@ import type { TaskDependencyRef, TaskProps } from "../types/tasks";
 
 // The manage modal's ACTaskSelector reads the auth token for its task
 // fetches; no AuthProvider is mounted in this stripped render.
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

@@ -23,7 +23,7 @@ import { Box, Button, Typography } from "@mui/joy";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { CalendarEventModal } from "../../integrations/components/CalendarEventModal";
