@@ -4977,6 +4977,8 @@ export const fr: DeepPartial<Messages> = {
             creditsResetsTomorrow: "Réinitialisation demain",
             creditsResetsInDays: "Réinitialisations dans les jours {days}",
             creditsPurchased: "+{n} crédits achetés — ceux-ci n'expirent pas",
+            // TODO(copy): MIP-1965 draft wording for a native reader.
+            creditsMcpSearch: "Dont {n} pour les recherches IA des applications connectées",
             creditsLowWarning:
                 "Faible niveau — une requête longue peut s'arrêter à mi-chemin. Vos crédits IA réinitialisent {when}.",
             creditsEmptyWarning:
