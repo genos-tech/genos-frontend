@@ -4946,8 +4946,6 @@ export const ja: DeepPartial<Messages> = {
             shareLabel: "利用データを共有する",
             shareHelper:
                 "同意するまではオフです。オンにすると、ユーザーID、チームID、ロール、訪問ページを、アカウントに紐づけて送信します。メッセージ内容やクリックは追跡されません。オフにすると、送信を止め、分析のためにこのブラウザへ保存されたものを削除します。",
-            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
-            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
             consent: {
                 region: "分析の同意",
                 title: "利用状況の分析を許可しますか？",

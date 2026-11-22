@@ -1646,8 +1646,6 @@ export const hi: DeepPartial<Messages> = {
             shareLabel: "उपयोग डेटा शेयर करें",
             shareHelper:
                 "आपके स्वीकार करने तक बंद। चालू करने पर आपकी यूज़र ID, टीम ID और रोल के साथ-साथ आप जो पेज देखते हैं, आपके खाते से जुड़ा हुआ भेजा जाता है। न मेसेज का कंटेंट, न क्लिक ट्रैक किए जाते हैं। भेजना रोकने और एनालिटिक्स द्वारा इस ब्राउज़र में सहेजा गया डेटा हटाने के लिए बंद करें।",
-            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
-            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
             consent: {
                 region: "एनालिटिक्स की सहमति",
                 title: "उपयोग एनालिटिक्स की अनुमति दें?",
