@@ -841,18 +841,14 @@ export class ChannelService {
     }
 
     private async _doListChannels(): Promise<Channel[]> {
-        // The default list leaves archived group chats out (MIP-1693). The full list keeps them,
-        // so an archived chat can still be opened. What the default list lacks is the archived
-        // set, and it is recorded here for every pane and banner to read.
-        const [active, all] = await Promise.all([
-            this._fetchChannelPages(false),
-            this._fetchChannelPages(true),
-        ]);
-        const activeIds = new Set(active.map((c) => c.id));
-        // Group chats only: a project's chat follows its project (`isChatArchivedIn`), so it
-        // must not be pinned here, or it stays archived after the project is restored (MIP-1919).
+        // One read of the full list (MIP-1693): archived chats stay in it so an archived chat can
+        // still be opened, and each row says whether it is archived (MIP-1853). A chat whose
+        // project is archived is covered by the project's own row, not listed here, and it must
+        // not be pinned here either: a project's chat follows its project (`isChatArchivedIn`), or
+        // it stays archived after the project is restored (MIP-1919).
+        const all = await this._fetchChannelPages(true);
         setArchivedChannelIds(
-            all.filter((c) => !activeIds.has(c.id) && c.projectId == null).map((c) => c.id)
+            all.filter((c) => c.archived === true && c.projectId == null).map((c) => c.id)
         );
         return all;
     }
