@@ -93,7 +93,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 id: "downgrade",
                 q: "What happens if I switch to a cheaper plan?",
                 a: [
-                    "The cheaper plan applies at once, not at the end of the period. Stripe works out the difference for the rest of the current billing period, the same way as for an upgrade. Anything the cheaper plan does not include is hidden, not deleted, and comes back when you move to a plan that includes it.",
+                    "A cheaper plan takes effect at the end of the current billing period, and you keep your current plan until then. There is no credit for the rest of the period. An upgrade takes effect at once and you are charged the difference. Anything the cheaper plan does not include is hidden, not deleted, and comes back when you move to a plan that includes it.",
                 ],
             },
             {
@@ -172,7 +172,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
                 id: "downgrade",
                 q: "下位のプランに変えるとどうなりますか？",
                 a: [
-                    "下位のプランは期末を待たず、すぐに適用されます。差額は、アップグレードと同じく現在の請求期間の残り分として Stripe が計算します。下位のプランに含まれない機能は非表示になるだけで削除されず、上位のプランに戻すと再び使えます。",
+                    "下位のプランへの変更は、現在の請求期間の終了時に適用され、それまでは現在のプランをご利用いただけます。期間の残り分の返金や差額の充当はありません。アップグレードはすぐに適用され、差額が請求されます。下位のプランに含まれない機能は非表示になるだけで削除されず、上位のプランに戻すと再び使えます。",
                 ],
             },
             {
