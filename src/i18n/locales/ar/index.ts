@@ -4193,6 +4193,23 @@ export const ar: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "إدارة القوالب…",
+                manageTitle: "قوالب الملاحظات",
+                manageHint:
+                    "تظهر قوالب الفريق بجانب القوالب المدمجة في كل قائمة «ملاحظة جديدة». اكتب {date} في العنوان لتاريخ اليوم.",
+                empty: "لا توجد قوالب للفريق بعد.",
+                newTemplate: "قالب جديد",
+                editTemplate: "تحرير القالب",
+                name: "اسم القالب",
+                noteTitle: "عنوان الملاحظة",
+                body: "المحتوى (Markdown)",
+                defaultFolder: "افتراضي للمجلد",
+                noDefault: "لا شيء",
+                saveFailed: "تعذّر حفظ القالب.",
+                deleteFailed: "تعذّر حذف القالب.",
+                defaultIn: "الافتراضي في {folder}",
+            },
             meeting: {
                 label: "ملاحظات الاجتماع",
                 title: "ملاحظات الاجتماع {date}",

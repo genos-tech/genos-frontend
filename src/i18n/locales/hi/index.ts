@@ -4032,6 +4032,23 @@ export const hi: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "टेम्पलेट प्रबंधित करें…",
+                manageTitle: "नोट टेम्पलेट",
+                manageHint:
+                    'टीम के टेम्पलेट हर "नया नोट" मेनू में बिल्ट-इन टेम्पलेट के साथ दिखते हैं। आज की तारीख़ के लिए शीर्षक में {date} लिखें।',
+                empty: "अभी कोई टीम टेम्पलेट नहीं है।",
+                newTemplate: "नया टेम्पलेट",
+                editTemplate: "टेम्पलेट संपादित करें",
+                name: "टेम्पलेट का नाम",
+                noteTitle: "नोट का शीर्षक",
+                body: "सामग्री (Markdown)",
+                defaultFolder: "फ़ोल्डर के लिए डिफ़ॉल्ट",
+                noDefault: "कोई नहीं",
+                saveFailed: "टेम्पलेट सहेजा नहीं जा सका।",
+                deleteFailed: "टेम्पलेट हटाया नहीं जा सका।",
+                defaultIn: "{folder} में डिफ़ॉल्ट",
+            },
             meeting: {
                 label: "बैठक के नोट्स",
                 title: "बैठक के नोट्स {date}",

@@ -4245,6 +4245,23 @@ export const es: DeepPartial<Messages> = {
         },
         // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
         noteTemplates: {
+            team: {
+                manage: "Gestionar plantillas…",
+                manageTitle: "Plantillas de nota",
+                manageHint:
+                    "Las plantillas del equipo aparecen junto a las integradas en cada menú Nueva nota. Usa {date} en el título para la fecha de hoy.",
+                empty: "Aún no hay plantillas del equipo.",
+                newTemplate: "Nueva plantilla",
+                editTemplate: "Editar plantilla",
+                name: "Nombre de la plantilla",
+                noteTitle: "Título de la nota",
+                body: "Contenido (Markdown)",
+                defaultFolder: "Predeterminada para la carpeta",
+                noDefault: "Ninguna",
+                saveFailed: "No se pudo guardar la plantilla.",
+                deleteFailed: "No se pudo eliminar la plantilla.",
+                defaultIn: "Predeterminada en {folder}",
+            },
             meeting: {
                 label: "Notas de reunión",
                 title: "Notas de reunión {date}",

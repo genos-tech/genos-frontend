@@ -21,6 +21,23 @@ export const notes = {
     },
     // TODO(copy): MIP-1697 — every string of this block is a DRAFT for a native reader.
     noteTemplates: {
+        team: {
+            manage: "Manage templates…",
+            manageTitle: "Note templates",
+            manageHint:
+                "Team templates appear next to the built-in ones in every New note menu. Put {date} in the title for today's date.",
+            empty: "No team templates yet.",
+            newTemplate: "New template",
+            editTemplate: "Edit template",
+            name: "Template name",
+            noteTitle: "Note title",
+            body: "Content (Markdown)",
+            defaultFolder: "Default for folder",
+            noDefault: "None",
+            saveFailed: "Could not save the template.",
+            deleteFailed: "Could not delete the template.",
+            defaultIn: "Default in {folder}",
+        },
         meeting: {
             label: "Meeting notes",
             title: "Meeting notes {date}",
