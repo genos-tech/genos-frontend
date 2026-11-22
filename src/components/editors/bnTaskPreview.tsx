@@ -87,7 +87,7 @@ type BnTaskPreviewProps = {
     /** Called once after the BlockNote editor instance is ready. Used by the
      *  task creation form so it can imperatively swap templates via
      *  `editor.replaceBlocks(...)`. */
-    onEditorReady?: (editor: any) => void;
+    onEditorReady?: (editor: unknown) => void;
 };
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const {
@@ -217,8 +217,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     const [, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
-    const [selectedEmoji] = useState<any>(null);
-    const insertEmoji = (emoji: any) => {
+    const [selectedEmoji] = useState<string | null>(null);
+    const insertEmoji = (emoji: string) => {
         // ":name:" shortcodes from the picker's Team Emoji category
         // become customEmoji inline nodes; unicode stays plain text.
         insertEmojiValue(editor, emoji);

@@ -21,8 +21,11 @@ type EmojiMartResult = {
     skins?: { native: string }[];
 };
 
+/** The slice of the BlockNote editor the emoji menu drives. */
+type EmojiInserter = { insertInlineContent: (content: unknown[]) => void };
+
 const buildEmojiItem = (
-    editor: any,
+    editor: EmojiInserter,
     emoji: EmojiMartResult
 ): DefaultReactSuggestionItem | null => {
     const native = emoji.skins?.[0]?.native;
@@ -58,7 +61,10 @@ const buildEmojiItem = (
 // on mount, but only after a picker has opened — the store is the
 // authoritative source at all times). Listed ahead of unicode results,
 // Slack-style.
-const buildCustomEmojiItems = (editor: any, query: string): DefaultReactSuggestionItem[] => {
+const buildCustomEmojiItems = (
+    editor: EmojiInserter,
+    query: string
+): DefaultReactSuggestionItem[] => {
     const q = query.toLowerCase();
     return getTeamEmojiSnapshot()
         .filter((e) => e.name.includes(q))
@@ -93,7 +99,7 @@ const buildCustomEmojiItems = (editor: any, query: string): DefaultReactSuggesti
 // against names, keywords, and shortcodes. Combined cap stays at
 // MAX_RESULTS so the menu doesn't grow.
 export const getEmojiSuggestionItems = async (
-    editor: any,
+    editor: EmojiInserter,
     query: string
 ): Promise<DefaultReactSuggestionItem[]> => {
     if (!query) {

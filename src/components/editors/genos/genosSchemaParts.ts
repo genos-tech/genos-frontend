@@ -20,12 +20,12 @@ import { genosExtraBlockSpecs, genosExtraInlineContentSpecs } from "../genosBloc
 const createSafeCodeBlockSpec = (): ReturnType<typeof createCodeBlockSpec> => {
     const spec = createCodeBlockSpec(codeBlockOptions);
     const implementation = spec.implementation as {
-        render: (...a: any[]) => unknown;
-        parse?: (...a: any[]) => Record<string, unknown> | undefined;
+        render: (...a: unknown[]) => unknown;
+        parse?: (...a: unknown[]) => Record<string, unknown> | undefined;
     };
     const render = implementation.render;
     const parse = implementation.parse;
-    const meta = (spec.implementation as { meta?: { highlight?: (b: any) => unknown } }).meta;
+    const meta = (spec.implementation as { meta?: { highlight?: (b: unknown) => unknown } }).meta;
     const highlight = meta?.highlight;
     return {
         ...spec,
@@ -55,7 +55,7 @@ const createSafeCodeBlockSpec = (): ReturnType<typeof createCodeBlockSpec> => {
                         : props;
                 },
             }),
-            render(this: unknown, block: any, editor: unknown) {
+            render(this: unknown, block: { props?: Record<string, unknown> }, editor: unknown) {
                 const language = resolveCodeLanguage(block.props?.language);
                 return render.call(
                     this,

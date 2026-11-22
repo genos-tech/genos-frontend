@@ -551,7 +551,7 @@ describe("link and PR-unfurl behaviour carries over from BnChatPreview", () => {
 });
 
 describe("media blocks render as BlockNote-shaped plain DOM", () => {
-    const wrap = (block: any) => [block, { type: "paragraph", content: [] }];
+    const wrap = (block: Record<string, unknown>) => [block, { type: "paragraph", content: [] }];
 
     afterEach(() => {
         downloadFile.mockClear();
@@ -704,13 +704,13 @@ describe("hash mentions render as inline styled text", () => {
         expect(offenders).toEqual([]);
     };
 
-    const para = (inline: any) => [
+    const para = (inline: Record<string, unknown>) => [
         { type: "paragraph", content: [inline] },
         { type: "paragraph", content: [] },
     ];
 
     const clickHashAndExpectHref = async (
-        inline: any,
+        inline: Record<string, unknown>,
         expectedText: string,
         expectedHref: string
     ) => {
@@ -793,7 +793,10 @@ describe("hash mentions render as inline styled text", () => {
 });
 
 describe("canRenderLight routing", () => {
-    const wrap = (blocks: any[]) => [...blocks, { type: "paragraph", content: [] }];
+    const wrap = (blocks: Record<string, unknown>[]) => [
+        ...blocks,
+        { type: "paragraph", content: [] },
+    ];
 
     it("accepts plain and styled text", () => {
         expect(
