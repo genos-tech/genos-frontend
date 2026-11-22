@@ -1,10 +1,10 @@
-import { ReactNode, useId } from "react";
+import { ReactNode, useId, useState } from "react";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import { Box, Typography } from "@mui/joy";
+import { Box, Button, Typography } from "@mui/joy";
 
 import { DashboardCard, useNumberFormat } from "../../../../components/ui/dashboard";
 import { formatRelativeTime } from "../../../../components/ui/dashboard/relativeTime";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { focusRing, g, type } from "../../../../theme/tokens";
 import { TaskListItem, TaskListPanel } from "../card";
 import type { TaskHomeData } from "./useTaskHomeData";
@@ -33,6 +33,7 @@ export const MoreAnalytics = ({
     const { t, locale } = useTranslation();
     const nf = useNumberFormat();
     const regionId = useId();
+    const [allRecent, setAllRecent] = useState(false);
     return (
         <Box sx={{ minWidth: 0 }}>
             <Box
@@ -90,7 +91,10 @@ export const MoreAnalytics = ({
                                 variant="flush"
                             >
                                 <TaskListPanel>
-                                    {recentTasks.slice(0, RECENT_ROWS).map((task) => (
+                                    {(allRecent
+                                        ? recentTasks
+                                        : recentTasks.slice(0, RECENT_ROWS)
+                                    ).map((task) => (
                                         <TaskListItem
                                             key={task.id}
                                             status={task.effectiveStatus}
@@ -117,6 +121,20 @@ export const MoreAnalytics = ({
                                         />
                                     ))}
                                 </TaskListPanel>
+                                {recentTasks.length > RECENT_ROWS && (
+                                    <Button
+                                        size="sm"
+                                        sx={{ mx: 1.5, mt: 0.5 }}
+                                        variant="plain"
+                                        onClick={() => setAllRecent(!allRecent)}
+                                    >
+                                        {allRecent
+                                            ? t.tasks.dashboard.project.showLess
+                                            : fmt(t.tasks.dashboard.project.showAll, {
+                                                  count: nf.number(recentTasks.length),
+                                              })}
+                                    </Button>
+                                )}
                             </DashboardCard>
                         )}
                     </>

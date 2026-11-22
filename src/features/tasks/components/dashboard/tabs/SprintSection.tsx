@@ -1,3 +1,5 @@
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import { Typography } from "@mui/joy";
 
 import {
@@ -5,13 +7,17 @@ import {
     ProportionBar,
     useNumberFormat,
 } from "../../../../../components/ui/dashboard";
+import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { g, type } from "../../../../../theme/tokens";
 import { SprintMilestonesSection } from "../../../sprint-milestone/components/SprintMilestonesSection";
 import type { TaskHomeContentProps } from "../taskHomeTypes";
 import type { TaskHomeData } from "../useTaskHomeData";
 
-type SprintSectionProps = Pick<TaskHomeData, "selectedSprint" | "sprintStats"> &
+type SprintSectionProps = Pick<
+    TaskHomeData,
+    "selectedSprint" | "sprintStats" | "recentTasks" | "handleCreateTask"
+> &
     Pick<
         TaskHomeContentProps,
         | "useTM"
@@ -33,6 +39,8 @@ type SprintSectionProps = Pick<TaskHomeData, "selectedSprint" | "sprintStats"> &
 export const SprintSection = ({
     selectedSprint,
     sprintStats,
+    recentTasks,
+    handleCreateTask,
     usePM,
     useSM,
     useTM,
@@ -93,6 +101,28 @@ export const SprintSection = ({
                     segments={segments}
                 />
             </DashboardCard>
+            {/* The selected sprint (or the backlog) has no tasks: say so, with the way out. */}
+            {recentTasks.length === 0 && (
+                <EmptyState
+                    data-empty="home-no-tasks"
+                    icon={<AssignmentRoundedIcon />}
+                    action={{
+                        label: t.tasks.dashboard.emptyCreateTask,
+                        icon: <AddRoundedIcon />,
+                        onClick: handleCreateTask,
+                    }}
+                    body={
+                        selectedSprint
+                            ? t.tasks.dashboard.emptySprintSubtitle
+                            : t.tasks.dashboard.emptyBacklogSubtitle
+                    }
+                    title={
+                        selectedSprint
+                            ? t.tasks.dashboard.emptySprintTitle
+                            : t.tasks.dashboard.emptyBacklogTitle
+                    }
+                />
+            )}
             <SprintMilestonesSection
                 myself={myself}
                 projectId={usePM.currentProject?.projectId}

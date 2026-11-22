@@ -1,7 +1,7 @@
 import { useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import { Button, Typography } from "@mui/joy";
+import { Box, Button, Typography } from "@mui/joy";
 
 import {
     DashboardCard,
@@ -201,35 +201,37 @@ export const ProjectTab = ({
 
             <DashboardCard
                 count={nf.number(rows.length)}
+                help={list === "weight" ? d.topWeight.help.body : undefined}
+                helpLabel={list === "weight" ? d.topWeight.help.title : undefined}
                 subtitle={list === "weight" ? d.topWeight.subtitle : undefined}
                 title={d.project.attentionTitle}
                 variant="flush"
                 actions={
-                    <>
-                        {list === "weight" && (
-                            <SegmentedChips
-                                ariaLabel={d.topWeight.title}
-                                value={topWeightSort}
-                                options={[
-                                    { value: "weight", label: d.upNext.byWeight },
-                                    { value: "urgency", label: d.upNext.byUrgency },
-                                ]}
-                                onChange={setTopWeightSort}
-                            />
-                        )}
-                        <SegmentedChips
-                            ariaLabel={d.project.attentionFilter}
-                            value={list}
-                            options={[
-                                { value: "overdue", label: d.kpiOverdue },
-                                { value: "week", label: d.kpiDueThisWeek },
-                                { value: "weight", label: d.topWeight.title },
-                            ]}
-                            onChange={pick}
-                        />
-                    </>
+                    <SegmentedChips
+                        ariaLabel={d.project.attentionFilter}
+                        value={list}
+                        options={[
+                            { value: "overdue", label: d.kpiOverdue },
+                            { value: "week", label: d.kpiDueThisWeek },
+                            { value: "weight", label: d.topWeight.title },
+                        ]}
+                        onChange={pick}
+                    />
                 }
             >
+                {list === "weight" && (
+                    <Box sx={{ px: { xs: 1.5, md: 2 }, pb: 1 }}>
+                        <SegmentedChips
+                            ariaLabel={d.topWeight.title}
+                            value={topWeightSort}
+                            options={[
+                                { value: "weight", label: d.upNext.byWeight },
+                                { value: "urgency", label: d.upNext.byUrgency },
+                            ]}
+                            onChange={setTopWeightSort}
+                        />
+                    </Box>
+                )}
                 {rows.length === 0 ? (
                     <Typography sx={{ ...type("body-sm"), color: g.text.secondary, px: 2 }}>
                         {emptyText}
@@ -261,7 +263,9 @@ export const ProjectTab = ({
             </DashboardCard>
 
             <SprintSection
+                handleCreateTask={handleCreateTask}
                 myself={myself}
+                recentTasks={recentTasks}
                 selectedSprint={selectedSprint}
                 setMyself={setMyself}
                 socket={socket}

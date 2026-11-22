@@ -138,7 +138,8 @@ export const ProjectAnalytics = ({
         label: taskMetaLabel(key, t.tasks.filters) || key,
         value: n,
         tone: STATUS_TONE[key as keyof typeof STATUS_TONE],
-        display: nf.number(n),
+        // "3 · 60%": the old status cards showed each share.
+        display: `${nf.number(n)} · ${nf.percent(stats.totalTasks > 0 ? n / stats.totalTasks : 0)}`,
     }));
     const levelSegments = (
         data: Record<string, number>,
@@ -162,33 +163,31 @@ export const ProjectAnalytics = ({
     return (
         <>
             {/* ════════ Status, priority and effort (MIP-1963): one ProportionBar each ════════ */}
-            <DashboardGrid cols={2}>
+            <DashboardGrid>
                 <DashboardCard title={t.tasks.dashboard.statusDistribution}>
                     <ProportionBar
                         ariaLabel={segmentsLabel(statusSegments)}
                         segments={statusSegments}
                     />
                 </DashboardCard>
-                <DashboardGrid cols={2}>
-                    <DashboardCard
-                        count={nf.number(prioritySum)}
-                        title={t.tasks.dashboard.priorityDistribution}
-                    >
-                        <ProportionBar
-                            ariaLabel={segmentsLabel(prioritySegments)}
-                            segments={prioritySegments}
-                        />
-                    </DashboardCard>
-                    <DashboardCard
-                        count={nf.number(effortSum)}
-                        title={t.tasks.dashboard.effortDistribution}
-                    >
-                        <ProportionBar
-                            ariaLabel={segmentsLabel(effortSegments)}
-                            segments={effortSegments}
-                        />
-                    </DashboardCard>
-                </DashboardGrid>
+                <DashboardCard
+                    count={nf.number(prioritySum)}
+                    title={t.tasks.dashboard.priorityDistribution}
+                >
+                    <ProportionBar
+                        ariaLabel={segmentsLabel(prioritySegments)}
+                        segments={prioritySegments}
+                    />
+                </DashboardCard>
+                <DashboardCard
+                    count={nf.number(effortSum)}
+                    title={t.tasks.dashboard.effortDistribution}
+                >
+                    <ProportionBar
+                        ariaLabel={segmentsLabel(effortSegments)}
+                        segments={effortSegments}
+                    />
+                </DashboardCard>
             </DashboardGrid>
 
             {/* ════════ Section G: Team Capacity ════════ */}
