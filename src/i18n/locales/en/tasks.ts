@@ -824,6 +824,15 @@ export const tasks = {
         },
         // Restoring the description an agent, an API key or MCP replaced
         // (MIP-738). Offered on the history row that kept the old body.
+        // One agent session's consecutive rows collapsed into one block (MIP-2005).
+        session: {
+            appMcp: "Connected app",
+            appApiKey: "API key",
+            summary: "{app} · {count} changes · {range}",
+            expand: "Show the {count} changes",
+            collapse: "Hide the {count} changes",
+            reason: "Reason: {reason}",
+        },
         restore: {
             button: "Restore the previous description",
             viaAgent: "Rewritten by the Genos AI",

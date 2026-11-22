@@ -6299,6 +6299,15 @@ export const fr: DeepPartial<Messages> = {
                 appHintNamed:
                     "Fait depuis votre app connectée « {name} » ({app}), pas saisi dans Genos",
             },
+            // One agent session's consecutive rows collapsed into one block (MIP-2005).
+            session: {
+                appMcp: "App connectée",
+                appApiKey: "Clé API",
+                summary: "{app} · {count} modifications · {range}",
+                expand: "Afficher les {count} modifications",
+                collapse: "Masquer les {count} modifications",
+                reason: "Motif : {reason}",
+            },
             restore: {
                 button: "Restaurer la description précédente",
                 viaAgent: "Réécrite par l'IA de Genos",

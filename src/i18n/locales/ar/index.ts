@@ -3931,6 +3931,15 @@ export const ar: DeepPartial<Messages> = {
                 appHint: "تم عبر تطبيق ذكاء اصطناعي متصل ({app})، وليس كتابةً في Genos",
                 appHintNamed: "تم عبر تطبيقك المتصل «{name}» ({app})، وليس كتابةً في Genos",
             },
+            // One agent session's consecutive rows collapsed into one block (MIP-2005).
+            session: {
+                appMcp: "تطبيق متصل",
+                appApiKey: "مفتاح API",
+                summary: "{app} · {count} تغييرات · {range}",
+                expand: "عرض التغييرات الـ {count}",
+                collapse: "إخفاء التغييرات الـ {count}",
+                reason: "السبب: {reason}",
+            },
             restore: {
                 button: "استعادة الوصف السابق",
                 viaAgent: "أعاد Genos AI كتابته",
