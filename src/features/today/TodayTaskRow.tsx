@@ -1,6 +1,8 @@
 import { ReactNode } from "react";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
-import { Box } from "@mui/joy";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
+import { Box, IconButton } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { fmt, useTranslation } from "../../i18n";
@@ -20,6 +22,7 @@ import { ProjectAvatar } from "../tasks/components/ProjectIdentityRow";
 import { TaskMentionHoverCard } from "../tasks/components/TaskMentionHoverCard";
 import type { BriefingBlocked, BriefingTask } from "./briefingToday";
 import type { TodayCopy } from "./briefingWords";
+import { TodayAction } from "./todayActions";
 import { dueOf } from "./todaySummary";
 
 /**
@@ -55,6 +58,10 @@ export type TodayTaskRowProps = {
     /** One line for the Genos-page card. */
     compact?: boolean;
     copy: TodayCopy;
+    /** Quick actions (MIP-1992): set on the rows that are the member's own; none on the card. */
+    onAction?: (action: TodayAction) => void;
+    /** "Move to tomorrow" leaves this row on screen (it still shows, with its new day). */
+    keepsOnTomorrow?: boolean;
     onOpen: (href: string) => void;
 };
 
@@ -66,6 +73,8 @@ export const TodayTaskRow = ({
     context,
     compact = false,
     copy: a,
+    onAction,
+    keepsOnTomorrow = false,
     onOpen,
 }: TodayTaskRowProps) => {
     const { locale } = useTranslation();
@@ -241,9 +250,110 @@ export const TodayTaskRow = ({
         ) : (
             button
         );
+    // A milestone, a row of someone else's and the card variant get no actions: closing a
+    // milestone goes through its own record (sprint, sub-tasks), which this row cannot name.
+    const canAct = onAction != null && !task.isMilestone && task.projectId != null;
+    // "Tomorrow" is for what is due today or already late: it must never pull a deadline earlier.
+    const canTomorrow = task.daysUntilDue != null && task.daysUntilDue <= 0;
     return (
-        <Box component="li" data-kind={kind} sx={{ listStyle: "none" }}>
-            {card}
+        <Box
+            component="li"
+            data-kind={kind}
+            sx={{
+                listStyle: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.25,
+                minWidth: 0,
+                // Hover-capable devices show the actions on hover and keyboard focus; they stay
+                // in the tab order either way (opacity, not display). A phone has no hover: they
+                // are always there.
+                "& [data-today-actions]": {
+                    "@media (hover: hover)": {
+                        opacity: 0,
+                        transition: `opacity ${g.motion.fast}`,
+                    },
+                },
+                "&:hover [data-today-actions], &:focus-within [data-today-actions]": {
+                    opacity: 1,
+                },
+            }}
+        >
+            <Box sx={{ minWidth: 0, flex: 1 }}>{card}</Box>
+            {canAct ? (
+                <Box
+                    aria-label={fmt(a.actions.group, { task: `${task.displayId} ${task.title}` })}
+                    data-today-actions=""
+                    role="group"
+                    sx={{ display: "flex", flexShrink: 0, pr: 0.5 }}
+                >
+                    <AppTooltip title={a.actions.done}>
+                        <IconButton
+                            aria-label={`${a.actions.done}: ${task.displayId}`}
+                            size="sm"
+                            variant="plain"
+                            sx={{
+                                minWidth: { xs: 36, sm: 44 },
+                                minHeight: 44,
+                                "&:focus-visible": focusRing,
+                            }}
+                            onClick={(e) => {
+                                focusNeighbour(e.currentTarget);
+                                onAction("done");
+                            }}
+                        >
+                            <CheckRoundedIcon />
+                        </IconButton>
+                    </AppTooltip>
+                    {canTomorrow ? (
+                        <AppTooltip title={a.actions.tomorrow}>
+                            <IconButton
+                                aria-label={`${a.actions.tomorrow}: ${task.displayId}`}
+                                size="sm"
+                                variant="plain"
+                                sx={{
+                                    minWidth: { xs: 36, sm: 44 },
+                                    minHeight: 44,
+                                    "&:focus-visible": focusRing,
+                                }}
+                                onClick={(e) => {
+                                    if (!keepsOnTomorrow) focusNeighbour(e.currentTarget);
+                                    onAction("tomorrow");
+                                }}
+                            >
+                                <EventRepeatRoundedIcon />
+                            </IconButton>
+                        </AppTooltip>
+                    ) : null}
+                </Box>
+            ) : null}
         </Box>
     );
+};
+
+/**
+ * The row is about to leave the list: put focus on the nearest row that stays (the next, else the
+ * previous), so a keyboard user is not dropped on the page. Falls back to the Today page itself.
+ */
+const focusNeighbour = (from: HTMLElement): void => {
+    const li = from.closest("li");
+    if (!li) return;
+    const main = (el: Element): HTMLElement | null =>
+        Array.from(el.querySelectorAll("button")).find(
+            (b) => !b.closest("[data-today-actions]")
+        ) ?? null;
+    let target: HTMLElement | null = null;
+    for (let n = li.nextElementSibling; n && !target; n = n.nextElementSibling) target = main(n);
+    for (let p = li.previousElementSibling; p && !target; p = p.previousElementSibling) {
+        target = main(p);
+    }
+    if (!target) {
+        // The page, not the section: the section itself may be gone once its last row left.
+        const page = li.closest<HTMLElement>('[data-testid="today-page"]');
+        if (page) {
+            page.setAttribute("tabindex", "-1");
+            target = page;
+        }
+    }
+    target?.focus({ preventScroll: true });
 };

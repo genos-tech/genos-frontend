@@ -3761,6 +3761,14 @@ export const hi: DeepPartial<Messages> = {
                     blocked: "अवरुद्ध",
                     waitingOn: "{ids} की प्रतीक्षा",
                 },
+                actions: {
+                    group: "{task} के त्वरित कार्य",
+                    done: "पूर्ण करें",
+                    tomorrow: "कल पर ले जाएँ",
+                    doneToast: "{task} पूर्ण हुआ",
+                    tomorrowToast: "{task} को {date} पर ले जाया गया",
+                    failed: "{task} अपडेट नहीं हो सका। कुछ नहीं बदला।",
+                },
                 empty: {
                     title: "आपका दिन खाली है",
                     body: "कुछ देय नहीं, किसी उत्तर की प्रतीक्षा नहीं और कुछ बदला नहीं। गहन काम के लिए अच्छा समय।",

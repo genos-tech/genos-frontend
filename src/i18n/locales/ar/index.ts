@@ -3476,6 +3476,14 @@ export const ar: DeepPartial<Messages> = {
                     blocked: "متوقفة",
                     waitingOn: "بانتظار {ids}",
                 },
+                actions: {
+                    group: "إجراءات سريعة لـ {task}",
+                    done: "تمييز كمكتملة",
+                    tomorrow: "النقل إلى الغد",
+                    doneToast: "تم تمييز {task} كمكتملة",
+                    tomorrowToast: "تم نقل {task} إلى {date}",
+                    failed: "تعذّر تحديث {task}. لم يتغير شيء.",
+                },
                 empty: {
                     title: "يومك خالٍ",
                     body: "لا شيء مستحق ولا شيء ينتظر ردًا ولم يتغيّر شيء. وقت مناسب للعمل المركّز.",
