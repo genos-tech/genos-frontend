@@ -57,8 +57,9 @@ describe("MilestoneProgressTab sprint groups and Ask Genos (MIP-1909)", () => {
 
     it("groups by sprint: active first, no-sprint last", () => {
         mount();
+        // The sprint groups only: each milestone card is a region of its own now.
         const headings = screen
-            .getAllByRole("region")
+            .getAllByTestId("milestone-sprint-group")
             .map((r) => r.querySelector("p, h1, h2, h3, h4, h5, h6, div")?.textContent ?? "");
         expect(headings[0]).toContain("Sprint 13");
         expect(headings[1]).toContain("Sprint 12");

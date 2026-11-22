@@ -25,6 +25,7 @@ import { SprintSection } from "./SprintSection";
 type ProjectTabProps = Pick<
     TaskHomeData,
     | "isDark"
+    | "setActiveTab"
     | "stats"
     | "overdueAndUpcoming"
     | "topByWeightRows"
@@ -96,6 +97,7 @@ export const ProjectTab = ({
     effectiveTasks,
     moreAnalyticsOpen,
     setMoreAnalyticsOpen,
+    setActiveTab,
     isDark,
     textPrimary,
     textSecondary,
@@ -263,19 +265,15 @@ export const ProjectTab = ({
             </DashboardCard>
 
             <SprintSection
+                effectiveTasks={effectiveTasks}
                 handleCreateTask={handleCreateTask}
-                myself={myself}
                 recentTasks={recentTasks}
                 selectedSprint={selectedSprint}
-                setMyself={setMyself}
-                socket={socket}
                 sprintStats={sprintStats}
-                useCM={useCM}
                 usePM={usePM}
                 useSM={useSM}
-                useTEM={useTEM}
                 useTM={useTM}
-                useUISM={useUISM}
+                onShowAllMilestones={() => setActiveTab("milestones")}
             />
 
             {/* Mounted once, outside "More analytics": opening or closing it never remounts the

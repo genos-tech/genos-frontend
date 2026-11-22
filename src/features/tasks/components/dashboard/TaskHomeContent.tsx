@@ -275,6 +275,11 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                         useSM.projectMilestones[usePM.currentProject.projectId] !==
                                             undefined
                                     }
+                                    onOpenMilestone={(milestoneId) => {
+                                        useTM.setCurrentPreviewKind("milestone");
+                                        useTM.setCurrentPreviewMilestoneId(milestoneId);
+                                        useTM.setIsTaskPreviewVisible(true);
+                                    }}
                                 />
                             )}
 
@@ -354,6 +359,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     recentTasks={recentTasks}
                                     sectionHeaderColor={sectionHeaderColor}
                                     selectedSprint={selectedSprint}
+                                    setActiveTab={setActiveTab}
                                     setMoreAnalyticsOpen={setMoreAnalyticsOpen}
                                     setMyself={setMyself}
                                     setTopWeightSort={setTopWeightSort}
