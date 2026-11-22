@@ -380,7 +380,7 @@ input[type="checkbox"] {
 
 /* Editor common styles */
 .bn-editor img {
-    max-width: 500px;
+    max-width: min(500px, 100%);
     max-height: 400px;
     width: auto;
     height: auto;
@@ -571,7 +571,7 @@ input[type="checkbox"] {
 }
 
 .bn-task-body-box-light .bn-editor img {
-    max-width: 600px;
+    max-width: min(600px, 100%);
     max-height: 600px;
     width: auto;
     height: auto;
@@ -586,7 +586,7 @@ input[type="checkbox"] {
 }
 
 .bn-task-body-box-dark .bn-editor img {
-    max-width: 600px;
+    max-width: min(600px, 100%);
     max-height: 600px;
     width: auto;
     height: auto;
@@ -646,7 +646,7 @@ input[type="checkbox"] {
 }
 
 .bn-note-body-box-light .bn-editor img {
-    max-width: 600px;
+    max-width: min(600px, 100%);
     max-height: 600px;
     width: auto;
     height: auto;
@@ -661,7 +661,7 @@ input[type="checkbox"] {
 }
 
 .bn-note-body-box-dark .bn-editor img {
-    max-width: 600px;
+    max-width: min(600px, 100%);
     max-height: 600px;
     width: auto;
     height: auto;

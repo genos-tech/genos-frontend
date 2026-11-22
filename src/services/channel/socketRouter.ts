@@ -80,6 +80,12 @@ export function registerSocketRouter(socket: Socket): () => void {
         channelService.handleMessageDeleted(e)
     );
 
+    // Several messages of one chat force-deleted at once (ids only): blank those rows now.
+    on<{ channelId: string; channelKind: ChannelKind; messageIds: string[] }>(
+        "messages.deleted",
+        (e) => channelService.handleMessagesDeleted(e)
+    );
+
     on<{
         messageId: string;
         channelId: string;

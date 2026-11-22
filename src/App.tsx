@@ -37,6 +37,7 @@ import {
     QuickMeetClipboardHost,
 } from "./components/layout/QuickMeetClipboardHost";
 import { RequestErrorSnackbar } from "./components/layout/RequestErrorSnackbar";
+import { ScreenHeading } from "./components/layout/ScreenHeading";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { ServiceSwitchLoader } from "./components/layout/ServiceSwitchLoader";
 import { ServiceSwitchReady } from "./components/layout/ServiceSwitchReady";
@@ -1868,6 +1869,12 @@ const AppBody = () => {
                                                                                                             "flex",
                                                                                                         minHeight:
                                                                                                             "var(--app-vh)",
+                                                                                                        // The same floor as the body
+                                                                                                        // (--min-width): a 100vw shell in
+                                                                                                        // a window narrower than the body
+                                                                                                        // left a blank strip (MIP-1927).
+                                                                                                        minWidth:
+                                                                                                            "var(--min-width)",
                                                                                                         width: "100vw",
                                                                                                     }}
                                                                                                 >
@@ -1903,64 +1910,94 @@ const AppBody = () => {
                                                                                                             showTodoModal
                                                                                                         }
                                                                                                     />
-                                                                                                    {/* The skip link's target: focus lands at the start of the routed content, after the sidebar. */}
-                                                                                                    <div
-                                                                                                        id={
-                                                                                                            APP_MAIN_ID
-                                                                                                        }
-                                                                                                        tabIndex={
-                                                                                                            -1
-                                                                                                        }
-                                                                                                    />
-                                                                                                    <Routes>
-                                                                                                        <Route
-                                                                                                            path="inbox/*"
-                                                                                                            element={
-                                                                                                                <Suspense
-                                                                                                                    fallback={
-                                                                                                                        <RouteLoadingFallback />
-                                                                                                                    }
-                                                                                                                >
-                                                                                                                    <InboxHome
-                                                                                                                        myself={
-                                                                                                                            myself
-                                                                                                                        }
-                                                                                                                        setMyself={
-                                                                                                                            setMyself
-                                                                                                                        }
-                                                                                                                        socket={
-                                                                                                                            socketInstance
-                                                                                                                        }
-                                                                                                                        useCM={
-                                                                                                                            useCM
-                                                                                                                        }
-                                                                                                                        useIM={
-                                                                                                                            useIM
-                                                                                                                        }
-                                                                                                                        useTEM={
-                                                                                                                            useTEM
-                                                                                                                        }
-                                                                                                                        useUISM={
-                                                                                                                            useUISM
-                                                                                                                        }
-                                                                                                                    />
-                                                                                                                    <ServiceSwitchReady
-                                                                                                                        service="inbox"
-                                                                                                                        active
-                                                                                                                    />
-                                                                                                                </Suspense>
+                                                                                                    {/* The one main landmark of the signed-in app (MIP-1826). `display: contents` keeps the flex row's layout exactly as it was; the skip link's target stays a focusable div at its start. */}
+                                                                                                    <Box
+                                                                                                        component="main"
+                                                                                                        sx={{
+                                                                                                            display:
+                                                                                                                "contents",
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        <div
+                                                                                                            id={
+                                                                                                                APP_MAIN_ID
+                                                                                                            }
+                                                                                                            tabIndex={
+                                                                                                                -1
                                                                                                             }
                                                                                                         />
-                                                                                                        {OAUTH_INTEGRATIONS_ENABLED && (
+                                                                                                        <ScreenHeading />
+                                                                                                        <Routes>
                                                                                                             <Route
-                                                                                                                path="integrations"
+                                                                                                                path="inbox/*"
+                                                                                                                element={
+                                                                                                                    <Suspense
+                                                                                                                        fallback={
+                                                                                                                            <RouteLoadingFallback />
+                                                                                                                        }
+                                                                                                                    >
+                                                                                                                        <InboxHome
+                                                                                                                            myself={
+                                                                                                                                myself
+                                                                                                                            }
+                                                                                                                            setMyself={
+                                                                                                                                setMyself
+                                                                                                                            }
+                                                                                                                            socket={
+                                                                                                                                socketInstance
+                                                                                                                            }
+                                                                                                                            useCM={
+                                                                                                                                useCM
+                                                                                                                            }
+                                                                                                                            useIM={
+                                                                                                                                useIM
+                                                                                                                            }
+                                                                                                                            useTEM={
+                                                                                                                                useTEM
+                                                                                                                            }
+                                                                                                                            useUISM={
+                                                                                                                                useUISM
+                                                                                                                            }
+                                                                                                                        />
+                                                                                                                        <ServiceSwitchReady
+                                                                                                                            service="inbox"
+                                                                                                                            active
+                                                                                                                        />
+                                                                                                                    </Suspense>
+                                                                                                                }
+                                                                                                            />
+                                                                                                            {OAUTH_INTEGRATIONS_ENABLED && (
+                                                                                                                <Route
+                                                                                                                    path="integrations"
+                                                                                                                    element={
+                                                                                                                        <FeatureErrorBoundary
+                                                                                                                            feature={
+                                                                                                                                t
+                                                                                                                                    .app
+                                                                                                                                    .features
+                                                                                                                                    .integrations
+                                                                                                                            }
+                                                                                                                        >
+                                                                                                                            <Suspense
+                                                                                                                                fallback={
+                                                                                                                                    <RouteLoadingFallback />
+                                                                                                                                }
+                                                                                                                            >
+                                                                                                                                <IntegrationsHome />
+                                                                                                                            </Suspense>
+                                                                                                                        </FeatureErrorBoundary>
+                                                                                                                    }
+                                                                                                                />
+                                                                                                            )}
+                                                                                                            <Route
+                                                                                                                path="plans"
                                                                                                                 element={
                                                                                                                     <FeatureErrorBoundary
                                                                                                                         feature={
                                                                                                                             t
                                                                                                                                 .app
                                                                                                                                 .features
-                                                                                                                                .integrations
+                                                                                                                                .plans
                                                                                                                         }
                                                                                                                     >
                                                                                                                         <Suspense
@@ -1968,377 +2005,356 @@ const AppBody = () => {
                                                                                                                                 <RouteLoadingFallback />
                                                                                                                             }
                                                                                                                         >
-                                                                                                                            <IntegrationsHome />
+                                                                                                                            <PlansHome />
                                                                                                                         </Suspense>
                                                                                                                     </FeatureErrorBoundary>
                                                                                                                 }
                                                                                                             />
-                                                                                                        )}
-                                                                                                        <Route
-                                                                                                            path="plans"
-                                                                                                            element={
-                                                                                                                <FeatureErrorBoundary
-                                                                                                                    feature={
-                                                                                                                        t
-                                                                                                                            .app
-                                                                                                                            .features
-                                                                                                                            .plans
-                                                                                                                    }
-                                                                                                                >
-                                                                                                                    <Suspense
-                                                                                                                        fallback={
-                                                                                                                            <RouteLoadingFallback />
-                                                                                                                        }
-                                                                                                                    >
-                                                                                                                        <PlansHome />
-                                                                                                                    </Suspense>
-                                                                                                                </FeatureErrorBoundary>
-                                                                                                            }
-                                                                                                        />
-                                                                                                        {/* Design-system review page (MIP-1106).
+                                                                                                            {/* Design-system review page (MIP-1106).
                                                                                         URL only, no nav entry; English only. */}
-                                                                                                        <Route
-                                                                                                            path="design"
-                                                                                                            element={
-                                                                                                                <FeatureErrorBoundary feature="Design system">
-                                                                                                                    <Suspense
-                                                                                                                        fallback={
-                                                                                                                            <RouteLoadingFallback />
-                                                                                                                        }
-                                                                                                                    >
-                                                                                                                        <DesignSystemPage />
-                                                                                                                    </Suspense>
-                                                                                                                </FeatureErrorBoundary>
-                                                                                                            }
-                                                                                                        />
-                                                                                                        {/* v3 proof-of-life routes. Behind `VITE_USE_V3_CHAT`
+                                                                                                            <Route
+                                                                                                                path="design"
+                                                                                                                element={
+                                                                                                                    <FeatureErrorBoundary feature="Design system">
+                                                                                                                        <Suspense
+                                                                                                                            fallback={
+                                                                                                                                <RouteLoadingFallback />
+                                                                                                                            }
+                                                                                                                        >
+                                                                                                                            <DesignSystemPage />
+                                                                                                                        </Suspense>
+                                                                                                                    </FeatureErrorBoundary>
+                                                                                                                }
+                                                                                                            />
+                                                                                                            {/* v3 proof-of-life routes. Behind `VITE_USE_V3_CHAT`
                                                                                         — production builds without the env flag don't
                                                                                         even register the routes. The bare `/v3` shows
                                                                                         the chat list with no pane; `/v3/<uuid>` opens
                                                                                         that channel. Selecting a channel from the
                                                                                         sidebar navigates between them. */}
-                                                                                                        {v3ChatEnabled && (
-                                                                                                            <>
-                                                                                                                <Route
-                                                                                                                    path="v3"
-                                                                                                                    element={
-                                                                                                                        <Suspense
-                                                                                                                            fallback={
-                                                                                                                                <RouteLoadingFallback />
-                                                                                                                            }
-                                                                                                                        >
-                                                                                                                            <V3ChatShell
-                                                                                                                                myself={
-                                                                                                                                    myself
+                                                                                                            {v3ChatEnabled && (
+                                                                                                                <>
+                                                                                                                    <Route
+                                                                                                                        path="v3"
+                                                                                                                        element={
+                                                                                                                            <Suspense
+                                                                                                                                fallback={
+                                                                                                                                    <RouteLoadingFallback />
                                                                                                                                 }
-                                                                                                                                useNM={
-                                                                                                                                    useNM
+                                                                                                                            >
+                                                                                                                                <V3ChatShell
+                                                                                                                                    myself={
+                                                                                                                                        myself
+                                                                                                                                    }
+                                                                                                                                    useNM={
+                                                                                                                                        useNM
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                            </Suspense>
+                                                                                                                        }
+                                                                                                                    />
+                                                                                                                    <Route
+                                                                                                                        path="v3/:channelId"
+                                                                                                                        element={
+                                                                                                                            <Suspense
+                                                                                                                                fallback={
+                                                                                                                                    <RouteLoadingFallback />
                                                                                                                                 }
-                                                                                                                            />
-                                                                                                                        </Suspense>
-                                                                                                                    }
-                                                                                                                />
-                                                                                                                <Route
-                                                                                                                    path="v3/:channelId"
-                                                                                                                    element={
-                                                                                                                        <Suspense
-                                                                                                                            fallback={
-                                                                                                                                <RouteLoadingFallback />
-                                                                                                                            }
-                                                                                                                        >
-                                                                                                                            <V3ChatShell
-                                                                                                                                myself={
-                                                                                                                                    myself
+                                                                                                                            >
+                                                                                                                                <V3ChatShell
+                                                                                                                                    myself={
+                                                                                                                                        myself
+                                                                                                                                    }
+                                                                                                                                    useNM={
+                                                                                                                                        useNM
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                            </Suspense>
+                                                                                                                        }
+                                                                                                                    />
+                                                                                                                    <Route
+                                                                                                                        path="v3/:channelId/t/:rootMessageId"
+                                                                                                                        element={
+                                                                                                                            <Suspense
+                                                                                                                                fallback={
+                                                                                                                                    <RouteLoadingFallback />
                                                                                                                                 }
-                                                                                                                                useNM={
-                                                                                                                                    useNM
-                                                                                                                                }
-                                                                                                                            />
-                                                                                                                        </Suspense>
-                                                                                                                    }
-                                                                                                                />
-                                                                                                                <Route
-                                                                                                                    path="v3/:channelId/t/:rootMessageId"
-                                                                                                                    element={
-                                                                                                                        <Suspense
-                                                                                                                            fallback={
-                                                                                                                                <RouteLoadingFallback />
-                                                                                                                            }
-                                                                                                                        >
-                                                                                                                            <V3ChatShell
-                                                                                                                                myself={
-                                                                                                                                    myself
-                                                                                                                                }
-                                                                                                                                useNM={
-                                                                                                                                    useNM
-                                                                                                                                }
-                                                                                                                            />
-                                                                                                                        </Suspense>
-                                                                                                                    }
-                                                                                                                />
-                                                                                                            </>
-                                                                                                        )}
-                                                                                                        {/* The Genos main page. Inside the provider tree
+                                                                                                                            >
+                                                                                                                                <V3ChatShell
+                                                                                                                                    myself={
+                                                                                                                                        myself
+                                                                                                                                    }
+                                                                                                                                    useNM={
+                                                                                                                                        useNM
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                            </Suspense>
+                                                                                                                        }
+                                                                                                                    />
+                                                                                                                </>
+                                                                                                            )}
+                                                                                                            {/* The Genos main page. Inside the provider tree
                                                                                         (unlike the overlay), but mention/project data
                                                                                         still rides in as props so SpotlightContent has
                                                                                         one code path across its two hosts. */}
-                                                                                                        <Route
-                                                                                                            path="genos"
-                                                                                                            element={
-                                                                                                                <FeatureErrorBoundary
-                                                                                                                    feature={
-                                                                                                                        t
-                                                                                                                            .app
-                                                                                                                            .features
-                                                                                                                            .genos
-                                                                                                                    }
-                                                                                                                >
-                                                                                                                    <Suspense
-                                                                                                                        fallback={
-                                                                                                                            <RouteLoadingFallback />
+                                                                                                            <Route
+                                                                                                                path="genos"
+                                                                                                                element={
+                                                                                                                    <FeatureErrorBoundary
+                                                                                                                        feature={
+                                                                                                                            t
+                                                                                                                                .app
+                                                                                                                                .features
+                                                                                                                                .genos
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <GenosHome
-                                                                                                                            accessToken={
-                                                                                                                                accessToken
+                                                                                                                        <Suspense
+                                                                                                                            fallback={
+                                                                                                                                <RouteLoadingFallback />
                                                                                                                             }
-                                                                                                                            mentionGroups={
-                                                                                                                                useMGM.mentionGroups
-                                                                                                                            }
-                                                                                                                            mentionMembers={
-                                                                                                                                spotlightMentionMembers
-                                                                                                                            }
-                                                                                                                            noteScopes={
-                                                                                                                                noteScopes
-                                                                                                                            }
-                                                                                                                            projectAvatars={
-                                                                                                                                projectAvatars
-                                                                                                                            }
-                                                                                                                            projects={
-                                                                                                                                spotlightFilterProjects
-                                                                                                                            }
-                                                                                                                            spotlight={
-                                                                                                                                spotlight
-                                                                                                                            }
-                                                                                                                            teamId={
-                                                                                                                                useTEM.currentTeamId
-                                                                                                                            }
-                                                                                                                            userId={
-                                                                                                                                myself.userId
-                                                                                                                            }
-                                                                                                                            onOpenSettings={() =>
-                                                                                                                                setSpotlightSettingsOpen(
-                                                                                                                                    true
-                                                                                                                                )
-                                                                                                                            }
-                                                                                                                            onPreview={
-                                                                                                                                handleSpotlightPreview
-                                                                                                                            }
-                                                                                                                            onSelect={
-                                                                                                                                handleSpotlightSelect
-                                                                                                                            }
-                                                                                                                        />
-                                                                                                                        <ServiceSwitchReady
-                                                                                                                            service="genos"
-                                                                                                                            active
-                                                                                                                        />
-                                                                                                                    </Suspense>
-                                                                                                                </FeatureErrorBoundary>
-                                                                                                            }
-                                                                                                        />
-                                                                                                        {/* Default redirect to the Genos main page */}
-                                                                                                        <Route
-                                                                                                            path=""
-                                                                                                            element={
-                                                                                                                <Navigate
-                                                                                                                    to="genos"
-                                                                                                                    replace
-                                                                                                                />
-                                                                                                            }
-                                                                                                        />
-                                                                                                        {/* chat/tasks/notes render as keep-alive panes below, not routes;
-    swallow their paths so the router doesn't warn about no match. */}
-                                                                                                        <Route
-                                                                                                            path="*"
-                                                                                                            element={
-                                                                                                                null
-                                                                                                            }
-                                                                                                        />
-                                                                                                    </Routes>
-                                                                                                    {homesToRender.has(
-                                                                                                        "chat"
-                                                                                                    ) && (
-                                                                                                        <div
-                                                                                                            style={{
-                                                                                                                display:
-                                                                                                                    activeService ===
-                                                                                                                    "chat"
-                                                                                                                        ? "contents"
-                                                                                                                        : "none",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            <FreezeWhenHidden
-                                                                                                                active={
-                                                                                                                    activeService ===
-                                                                                                                    "chat"
+                                                                                                                        >
+                                                                                                                            <GenosHome
+                                                                                                                                accessToken={
+                                                                                                                                    accessToken
+                                                                                                                                }
+                                                                                                                                mentionGroups={
+                                                                                                                                    useMGM.mentionGroups
+                                                                                                                                }
+                                                                                                                                mentionMembers={
+                                                                                                                                    spotlightMentionMembers
+                                                                                                                                }
+                                                                                                                                noteScopes={
+                                                                                                                                    noteScopes
+                                                                                                                                }
+                                                                                                                                projectAvatars={
+                                                                                                                                    projectAvatars
+                                                                                                                                }
+                                                                                                                                projects={
+                                                                                                                                    spotlightFilterProjects
+                                                                                                                                }
+                                                                                                                                spotlight={
+                                                                                                                                    spotlight
+                                                                                                                                }
+                                                                                                                                teamId={
+                                                                                                                                    useTEM.currentTeamId
+                                                                                                                                }
+                                                                                                                                userId={
+                                                                                                                                    myself.userId
+                                                                                                                                }
+                                                                                                                                onOpenSettings={() =>
+                                                                                                                                    setSpotlightSettingsOpen(
+                                                                                                                                        true
+                                                                                                                                    )
+                                                                                                                                }
+                                                                                                                                onPreview={
+                                                                                                                                    handleSpotlightPreview
+                                                                                                                                }
+                                                                                                                                onSelect={
+                                                                                                                                    handleSpotlightSelect
+                                                                                                                                }
+                                                                                                                            />
+                                                                                                                            <ServiceSwitchReady
+                                                                                                                                service="genos"
+                                                                                                                                active
+                                                                                                                            />
+                                                                                                                        </Suspense>
+                                                                                                                    </FeatureErrorBoundary>
                                                                                                                 }
+                                                                                                            />
+                                                                                                            {/* Default redirect to the Genos main page */}
+                                                                                                            <Route
+                                                                                                                path=""
+                                                                                                                element={
+                                                                                                                    <Navigate
+                                                                                                                        to="genos"
+                                                                                                                        replace
+                                                                                                                    />
+                                                                                                                }
+                                                                                                            />
+                                                                                                            {/* chat/tasks/notes render as keep-alive panes below, not routes;
+    swallow their paths so the router doesn't warn about no match. */}
+                                                                                                            <Route
+                                                                                                                path="*"
+                                                                                                                element={
+                                                                                                                    null
+                                                                                                                }
+                                                                                                            />
+                                                                                                        </Routes>
+                                                                                                        {homesToRender.has(
+                                                                                                            "chat"
+                                                                                                        ) && (
+                                                                                                            <div
+                                                                                                                style={{
+                                                                                                                    display:
+                                                                                                                        activeService ===
+                                                                                                                        "chat"
+                                                                                                                            ? "contents"
+                                                                                                                            : "none",
+                                                                                                                }}
                                                                                                             >
-                                                                                                                <FreezeRouterWhenHidden
+                                                                                                                <FreezeWhenHidden
                                                                                                                     active={
                                                                                                                         activeService ===
                                                                                                                         "chat"
                                                                                                                     }
                                                                                                                 >
-                                                                                                                    <FeatureErrorBoundary
-                                                                                                                        feature={
-                                                                                                                            t
-                                                                                                                                .app
-                                                                                                                                .features
-                                                                                                                                .chat
+                                                                                                                    <FreezeRouterWhenHidden
+                                                                                                                        active={
+                                                                                                                            activeService ===
+                                                                                                                            "chat"
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <Suspense
-                                                                                                                            fallback={
-                                                                                                                                <RouteLoadingFallback />
+                                                                                                                        <FeatureErrorBoundary
+                                                                                                                            feature={
+                                                                                                                                t
+                                                                                                                                    .app
+                                                                                                                                    .features
+                                                                                                                                    .chat
                                                                                                                             }
                                                                                                                         >
-                                                                                                                            <ChatHome
-                                                                                                                                {...homeManagers}
-                                                                                                                                isActiveRoute={
-                                                                                                                                    activeService ===
-                                                                                                                                    "chat"
+                                                                                                                            <Suspense
+                                                                                                                                fallback={
+                                                                                                                                    <RouteLoadingFallback />
                                                                                                                                 }
-                                                                                                                                useTG={
-                                                                                                                                    useTG
-                                                                                                                                }
-                                                                                                                            />
-                                                                                                                            <ServiceSwitchReady
-                                                                                                                                service="chat"
-                                                                                                                                active={
-                                                                                                                                    activeService ===
-                                                                                                                                    "chat"
-                                                                                                                                }
-                                                                                                                            />
-                                                                                                                        </Suspense>
-                                                                                                                    </FeatureErrorBoundary>
-                                                                                                                </FreezeRouterWhenHidden>
-                                                                                                            </FreezeWhenHidden>
-                                                                                                        </div>
-                                                                                                    )}
-                                                                                                    {homesToRender.has(
-                                                                                                        "tasks"
-                                                                                                    ) && (
-                                                                                                        <div
-                                                                                                            style={{
-                                                                                                                display:
-                                                                                                                    activeService ===
-                                                                                                                    "tasks"
-                                                                                                                        ? "contents"
-                                                                                                                        : "none",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            <FreezeWhenHidden
-                                                                                                                active={
-                                                                                                                    activeService ===
-                                                                                                                    "tasks"
-                                                                                                                }
+                                                                                                                            >
+                                                                                                                                <ChatHome
+                                                                                                                                    {...homeManagers}
+                                                                                                                                    isActiveRoute={
+                                                                                                                                        activeService ===
+                                                                                                                                        "chat"
+                                                                                                                                    }
+                                                                                                                                    useTG={
+                                                                                                                                        useTG
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                                <ServiceSwitchReady
+                                                                                                                                    service="chat"
+                                                                                                                                    active={
+                                                                                                                                        activeService ===
+                                                                                                                                        "chat"
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                            </Suspense>
+                                                                                                                        </FeatureErrorBoundary>
+                                                                                                                    </FreezeRouterWhenHidden>
+                                                                                                                </FreezeWhenHidden>
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                        {homesToRender.has(
+                                                                                                            "tasks"
+                                                                                                        ) && (
+                                                                                                            <div
+                                                                                                                style={{
+                                                                                                                    display:
+                                                                                                                        activeService ===
+                                                                                                                        "tasks"
+                                                                                                                            ? "contents"
+                                                                                                                            : "none",
+                                                                                                                }}
                                                                                                             >
-                                                                                                                <FreezeRouterWhenHidden
+                                                                                                                <FreezeWhenHidden
                                                                                                                     active={
                                                                                                                         activeService ===
                                                                                                                         "tasks"
                                                                                                                     }
                                                                                                                 >
-                                                                                                                    <FeatureErrorBoundary
-                                                                                                                        feature={
-                                                                                                                            t
-                                                                                                                                .app
-                                                                                                                                .features
-                                                                                                                                .tasks
+                                                                                                                    <FreezeRouterWhenHidden
+                                                                                                                        active={
+                                                                                                                            activeService ===
+                                                                                                                            "tasks"
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <Suspense
-                                                                                                                            fallback={
-                                                                                                                                <RouteLoadingFallback />
+                                                                                                                        <FeatureErrorBoundary
+                                                                                                                            feature={
+                                                                                                                                t
+                                                                                                                                    .app
+                                                                                                                                    .features
+                                                                                                                                    .tasks
                                                                                                                             }
                                                                                                                         >
-                                                                                                                            <TaskHome
-                                                                                                                                {...homeManagers}
-                                                                                                                                isActiveRoute={
-                                                                                                                                    activeService ===
-                                                                                                                                    "tasks"
+                                                                                                                            <Suspense
+                                                                                                                                fallback={
+                                                                                                                                    <RouteLoadingFallback />
                                                                                                                                 }
-                                                                                                                            />
-                                                                                                                            <ServiceSwitchReady
-                                                                                                                                service="tasks"
-                                                                                                                                active={
-                                                                                                                                    activeService ===
-                                                                                                                                    "tasks"
-                                                                                                                                }
-                                                                                                                            />
-                                                                                                                        </Suspense>
-                                                                                                                    </FeatureErrorBoundary>
-                                                                                                                </FreezeRouterWhenHidden>
-                                                                                                            </FreezeWhenHidden>
-                                                                                                        </div>
-                                                                                                    )}
-                                                                                                    {homesToRender.has(
-                                                                                                        "notes"
-                                                                                                    ) && (
-                                                                                                        <div
-                                                                                                            style={{
-                                                                                                                display:
-                                                                                                                    activeService ===
-                                                                                                                    "notes"
-                                                                                                                        ? "contents"
-                                                                                                                        : "none",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            <FreezeWhenHidden
-                                                                                                                active={
-                                                                                                                    activeService ===
-                                                                                                                    "notes"
-                                                                                                                }
+                                                                                                                            >
+                                                                                                                                <TaskHome
+                                                                                                                                    {...homeManagers}
+                                                                                                                                    isActiveRoute={
+                                                                                                                                        activeService ===
+                                                                                                                                        "tasks"
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                                <ServiceSwitchReady
+                                                                                                                                    service="tasks"
+                                                                                                                                    active={
+                                                                                                                                        activeService ===
+                                                                                                                                        "tasks"
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                            </Suspense>
+                                                                                                                        </FeatureErrorBoundary>
+                                                                                                                    </FreezeRouterWhenHidden>
+                                                                                                                </FreezeWhenHidden>
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                        {homesToRender.has(
+                                                                                                            "notes"
+                                                                                                        ) && (
+                                                                                                            <div
+                                                                                                                style={{
+                                                                                                                    display:
+                                                                                                                        activeService ===
+                                                                                                                        "notes"
+                                                                                                                            ? "contents"
+                                                                                                                            : "none",
+                                                                                                                }}
                                                                                                             >
-                                                                                                                <FreezeRouterWhenHidden
+                                                                                                                <FreezeWhenHidden
                                                                                                                     active={
                                                                                                                         activeService ===
                                                                                                                         "notes"
                                                                                                                     }
                                                                                                                 >
-                                                                                                                    <FeatureErrorBoundary
-                                                                                                                        feature={
-                                                                                                                            t
-                                                                                                                                .app
-                                                                                                                                .features
-                                                                                                                                .notes
+                                                                                                                    <FreezeRouterWhenHidden
+                                                                                                                        active={
+                                                                                                                            activeService ===
+                                                                                                                            "notes"
                                                                                                                         }
                                                                                                                     >
-                                                                                                                        <Suspense
-                                                                                                                            fallback={
-                                                                                                                                <RouteLoadingFallback />
+                                                                                                                        <FeatureErrorBoundary
+                                                                                                                            feature={
+                                                                                                                                t
+                                                                                                                                    .app
+                                                                                                                                    .features
+                                                                                                                                    .notes
                                                                                                                             }
                                                                                                                         >
-                                                                                                                            <NoteHome
-                                                                                                                                {...homeManagers}
-                                                                                                                                isActiveRoute={
-                                                                                                                                    activeService ===
-                                                                                                                                    "notes"
+                                                                                                                            <Suspense
+                                                                                                                                fallback={
+                                                                                                                                    <RouteLoadingFallback />
                                                                                                                                 }
-                                                                                                                            />
-                                                                                                                            <ServiceSwitchReady
-                                                                                                                                service="notes"
-                                                                                                                                active={
-                                                                                                                                    activeService ===
-                                                                                                                                    "notes"
-                                                                                                                                }
-                                                                                                                            />
-                                                                                                                        </Suspense>
-                                                                                                                    </FeatureErrorBoundary>
-                                                                                                                </FreezeRouterWhenHidden>
-                                                                                                            </FreezeWhenHidden>
-                                                                                                        </div>
-                                                                                                    )}
+                                                                                                                            >
+                                                                                                                                <NoteHome
+                                                                                                                                    {...homeManagers}
+                                                                                                                                    isActiveRoute={
+                                                                                                                                        activeService ===
+                                                                                                                                        "notes"
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                                <ServiceSwitchReady
+                                                                                                                                    service="notes"
+                                                                                                                                    active={
+                                                                                                                                        activeService ===
+                                                                                                                                        "notes"
+                                                                                                                                    }
+                                                                                                                                />
+                                                                                                                            </Suspense>
+                                                                                                                        </FeatureErrorBoundary>
+                                                                                                                    </FreezeRouterWhenHidden>
+                                                                                                                </FreezeWhenHidden>
+                                                                                                            </div>
+                                                                                                        )}
+                                                                                                    </Box>
                                                                                                     <BottomTabBar
                                                                                                         useCM={
                                                                                                             useCM

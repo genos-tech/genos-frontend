@@ -4,12 +4,12 @@
 // nobody types one: the team name is not an address. Building it from the raw name broke for
 // any space, Japanese character or symbol. So the address is a readable ASCII slug of the name
 // plus a short random suffix:
-//   "Docs Walk Lab" -> docs-walk-lab-x7k2qp@genos.tech
-//   "営業部"         -> team-x7k2qp@genos.tech          (no ASCII in the name)
+//   "Docs Walk Lab" -> docs-walk-lab-x7k2qp@teams.genosai.dev
+//   "営業部"         -> team-x7k2qp@teams.genosai.dev          (no ASCII in the name)
 // The suffix keeps names that slug to the same text ("Acme" and "acme") from colliding on the
 // API's unique address. Display-only in the app (join-team lists); nothing reads it as a name.
 
-const DOMAIN = "genos.tech";
+const DOMAIN = "teams.genosai.dev";
 const SUFFIX_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 const SUFFIX_LENGTH = 6;
 const SLUG_MAX = 40;

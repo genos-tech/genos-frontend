@@ -1,9 +1,11 @@
 import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import { Box, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -18,6 +20,7 @@ import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 import { MobileOverlay } from "../../components/layout/MobileOverlay";
 import { MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
 import { headerTouchTargetsSx } from "../../components/ui/touchTargets";
+import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -26,8 +29,13 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
+import { emitRequestError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
-import { useArchiveState } from "../archive/archiveState";
+import { archiveProject, unarchiveProject } from "../archive/archiveApi";
+import { ArchivedBanner } from "../archive/ArchivedBanner";
+import { useArchiveState, useIsProjectArchived } from "../archive/archiveState";
+import { useCreateTaskBlockedByArchive } from "../archive/createTaskGuard";
+import { isOwnerOfProject } from "../archive/projectOwner";
 import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../notes/my-notes/components/MyNoteMain";
 import { TaskNoteMain } from "../notes/task-notes/components/TaskNoteMain";
@@ -135,6 +143,50 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const selectedTab = useNM.tabItems[useNM.selectedTabIndex];
     const activeNoteType = selectedTab?.noteType ?? useNM.currentNoteType;
 
+    // Archive (MIP-1693, MIP-1854): the same rules as the desktop header. An archived project is
+    // read-only here: the list and the task preview stay readable (tap, scroll), Create is hidden, and the banner says why. Only
+    // the owner may archive or restore, and the menu offers it to the owner alone.
+    const { accessToken } = useAuth();
+    const openProjectId = usePM.currentProject?.projectId;
+    const archived = useIsProjectArchived(openProjectId);
+    // A create intent left set when the project is archived is dropped, or the form would open by itself on unarchive.
+    useCreateTaskBlockedByArchive(
+        openProjectId,
+        useTM.isCreatingTask.flag === true,
+        useTM.setIsCreatingTask
+    );
+    const archivedRecord = useArchiveState().archivedProjects.find(
+        (p) => p.projectId === openProjectId
+    );
+    const isProjectOwner = isOwnerOfProject(useTM.taskFieldRules, openProjectId, myself.userId);
+    const [archiveBusy, setArchiveBusy] = useState(false);
+
+    // Archive the open project, or put an archived one back. The list moves at once; a refusal
+    // says so in one line, and the project stays as it was.
+    const toggleArchive = async () => {
+        const current = usePM.currentProject;
+        if (!current || archiveBusy) return;
+        setArchiveBusy(true);
+        try {
+            if (archived) {
+                await unarchiveProject(accessToken, myself.teamId, archivedRecord ?? current);
+                usePM.setTeamProjects([...usePM.teamProjects, archivedRecord ?? current]);
+            } else {
+                await archiveProject(accessToken, myself.teamId, current);
+                usePM.setTeamProjects(
+                    usePM.teamProjects.filter((p) => p.projectId !== current.projectId)
+                );
+            }
+        } catch {
+            emitRequestError(
+                "serverMessage",
+                archived ? t.common.archive.unarchiveFailed : t.common.archive.archiveFailed
+            );
+        } finally {
+            setArchiveBusy(false);
+        }
+    };
+
     return (
         <Box
             sx={{
@@ -232,16 +284,18 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                                 <DashboardRoundedIcon sx={{ fontSize: 18 }} />
                             </IconButton>
 
-                            <IconButton
-                                aria-label={t.tasks.mobile.createTask}
-                                color="primary"
-                                size="sm"
-                                sx={{ flexShrink: 0 }}
-                                variant="solid"
-                                onClick={handleCreateTaskClick}
-                            >
-                                <AddIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
+                            {!archived && (
+                                <IconButton
+                                    aria-label={t.tasks.mobile.createTask}
+                                    color="primary"
+                                    size="sm"
+                                    sx={{ flexShrink: 0 }}
+                                    variant="solid"
+                                    onClick={handleCreateTaskClick}
+                                >
+                                    <AddIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            )}
                         </>
                     )}
 
@@ -276,9 +330,34 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             <MenuRow onClick={() => usePM.setOpenCreateProject(true)}>
                                 {t.tasks.mobile.newProject}
                             </MenuRow>
+                            {hasProject && isProjectOwner && (
+                                <MenuRow
+                                    mark="none"
+                                    icon={
+                                        archived ? (
+                                            <UnarchiveOutlinedIcon sx={{ fontSize: 18 }} />
+                                        ) : (
+                                            <ArchiveOutlinedIcon sx={{ fontSize: 18 }} />
+                                        )
+                                    }
+                                    onClick={toggleArchive}
+                                >
+                                    {archived
+                                        ? t.common.archive.unarchiveMenuProject
+                                        : t.common.archive.archiveMenuProject}
+                                </MenuRow>
+                            )}
                         </MenuSurface>
                     </Dropdown>
                 </Stack>
+            )}
+
+            {showList && archived && (
+                <ArchivedBanner
+                    busy={archiveBusy}
+                    kind="project"
+                    onRestore={isProjectOwner ? toggleArchive : undefined}
+                />
             )}
 
             {/* Content area below the header. flex: 1 so the panes fill
@@ -324,7 +403,16 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             flexDirection: "column",
                         }}
                     >
-                        <MobileTaskList usePM={usePM} useTM={useTM} />
+                        <Box
+                            sx={{
+                                flex: 1,
+                                minHeight: 0,
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <MobileTaskList usePM={usePM} useTM={useTM} />
+                        </Box>
                     </Box>
                 )}
             </Box>
@@ -344,23 +432,32 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             `minHeight: 500` — a short card in a tall empty
                             overlay, which is the wasted space in the
                             report. */}
-                        <TaskPreview
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            usePM={usePM}
-                            useSM={useSM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                            holdSwitchWithLoader
-                        />
+                        <Box
+                            sx={{
+                                flex: 1,
+                                minHeight: 0,
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <TaskPreview
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useCM={useCM}
+                                useNM={useNM}
+                                usePM={usePM}
+                                useSM={useSM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                                holdSwitchWithLoader
+                            />
+                        </Box>
                     </MobileOverlay>
                 )}
 
-            {useTM.isCreatingTask.flag === true && isActiveRoute && (
+            {useTM.isCreatingTask.flag === true && isActiveRoute && !archived && (
                 <MobileOverlay
                     onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >
@@ -399,17 +496,20 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             />
                         )}
                         {activeNoteType === 2 && useNM.currentTaskNote && (
-                            <TaskNoteMain
-                                isInTaskPage={true}
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useNM={useNM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
+                            // Read-only like the desktop note panel (MIP-1693): the server has no archive check on notes.
+                            <Box inert={archived}>
+                                <TaskNoteMain
+                                    isInTaskPage={true}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useNM={useNM}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                />
+                            </Box>
                         )}
                         {activeNoteType === 3 && useNM.currentChatNote && (
                             <ChatNoteMain

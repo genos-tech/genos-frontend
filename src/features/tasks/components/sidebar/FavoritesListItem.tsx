@@ -190,6 +190,10 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                         </Box>
                                     </Box>
                                 }
+                                // MIP-1915: the star overlays the row's end while hovered, instead of
+                                // keeping an empty column there, so the title and the project line
+                                // use the full width. On touch it stays shown and the row keeps room.
+                                actionsOverlay
                                 onClick={() =>
                                     openMilestoneFromSidebar(
                                         { usePM, useTM },

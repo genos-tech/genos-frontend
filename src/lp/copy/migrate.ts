@@ -88,7 +88,7 @@ export const MIGRATE_COPY: Record<Lang, MigrateCopy> = {
             },
             {
                 tool: "Google Docs",
-                body: "No direct import of documents. Whether a Google Docs export to Markdown works with the notes import has not been checked.",
+                body: "No direct import of Google Docs, and no .docx import. In Google Docs choose File, Download, Markdown (.md), then import that file as a note (see above): headings, lists, tables, links and footnotes come in. Pictures stay inside the note as embedded images, and colours, comments and page layout are not kept.",
             },
         ],
         gapsOutro:
@@ -144,7 +144,7 @@ export const MIGRATE_COPY: Record<Lang, MigrateCopy> = {
             },
             {
                 tool: "Google ドキュメント",
-                body: "ドキュメントを直接取り込むことはできません。Google ドキュメントから Markdown に書き出したものがノートの取り込みで使えるかは、確認していません。",
+                body: "Google ドキュメントの直接の取り込みと、.docx の取り込みはありません。Google ドキュメントで「ファイル」「ダウンロード」「Markdown (.md)」を選び、そのファイルをノートとして取り込んでください(上記参照)。見出し、リスト、表、リンク、脚注は取り込まれます。画像はノート内に埋め込まれた画像として残り、色、コメント、ページレイアウトは引き継がれません。",
             },
         ],
         gapsOutro:

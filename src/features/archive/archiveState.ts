@@ -82,6 +82,17 @@ export const markChannelArchived = (channelId: string, archived: boolean): void 
 export const isProjectArchived = (projectId: number | null | undefined): boolean =>
     projectId != null && snapshot.archivedProjects.some((p) => p.projectId === projectId);
 
+/**
+ * A project by id: the active list first, then the archived ones (an archived project is in
+ * no active list, but a reload, Back or a link still has to open it, MIP-1920).
+ */
+export const findProject = (
+    activeProjects: readonly ProjectProps[],
+    projectId: number
+): ProjectProps | undefined =>
+    activeProjects.find((p) => p.projectId === projectId) ??
+    snapshot.archivedProjects.find((p) => p.projectId === projectId);
+
 /** A group chat is archived when it is listed as archived or when its project is, in `state`. */
 export const isChatArchivedIn = (
     state: ArchiveSnapshot,
