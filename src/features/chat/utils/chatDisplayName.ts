@@ -20,7 +20,7 @@
 // unit-tested without mounting a chat pane. Same reason `threadIdentity` and
 // `resolveDisplayName` are shaped this way.
 
-import { resolveDisplayName } from "../../../components/ui/avatars/AvatarContext";
+import { resolveDisplayName } from "../../../components/ui/avatars/avatarContextHelpers";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
 

@@ -14,7 +14,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { FAB_CLEARANCE_COMPONENTS } from "../../../../components/layout/FabClearanceFooter";
+import { FAB_CLEARANCE_COMPONENTS } from "../../../../components/layout/fabClearanceComponents";
 import { DataState } from "../../../../components/ui/feedback/DataState";
 import { EmptyState as FeedbackEmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";

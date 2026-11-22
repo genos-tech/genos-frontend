@@ -10,7 +10,7 @@ import { useBlockNoteDictionary } from "../blockNoteI18n";
 import { genosTableOptions } from "../genosBlockSpecs";
 import { safeInitialContent } from "../safeInitialContent";
 import { codeFenceInputRule } from "../sub/codeBlockExtras";
-import { buildCommentSchema } from "../sub/CommentEditorWithMentions";
+import { buildCommentSchema } from "../sub/commentEditorSchema";
 import { linkHostCaption } from "../sub/linkHostCaption";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../sub/tabIndent";
 import {

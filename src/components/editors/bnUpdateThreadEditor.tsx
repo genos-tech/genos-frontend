@@ -31,7 +31,7 @@ import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { useChatComposer } from "./composer/useChatComposer";
-import { insertEmojiValue } from "./CustomEmoji";
+import { insertEmojiValue } from "./customEmojiHelpers";
 import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";

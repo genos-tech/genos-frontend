@@ -58,11 +58,8 @@ import type {
     ScheduleResult,
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
-import {
-    MilestoneParamSelect,
-    ProjectParamSelect,
-    useJoinedProjects,
-} from "./ScheduleParamPickers";
+import { useJoinedProjects } from "./scheduleParamHooks";
+import { MilestoneParamSelect, ProjectParamSelect } from "./ScheduleParamPickers";
 
 type Props = {
     /** The schedule being edited; null to create one. */

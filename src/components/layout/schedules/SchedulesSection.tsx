@@ -30,7 +30,7 @@ import {
 import { g } from "../../../theme/tokens";
 import { EmptyState } from "../../ui/feedback/EmptyState";
 import { ScheduleFormPanel } from "./ScheduleFormPanel";
-import { useJoinedProjects, useProjectMilestones } from "./ScheduleParamPickers";
+import { useJoinedProjects, useProjectMilestones } from "./scheduleParamHooks";
 import { SchedulesUpgradePrompt } from "./SchedulesUpgradePrompt";
 
 type Props = {

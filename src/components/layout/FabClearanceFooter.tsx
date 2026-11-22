@@ -10,6 +10,3 @@ import { FAB_CLEARANCE_VAR } from "./spotlightFabPosition";
 export const FabClearanceFooter = () => (
     <div style={{ height: `var(${FAB_CLEARANCE_VAR}, 0px)` }} aria-hidden />
 );
-
-/** `components` prop for a Virtuoso list: one shared object, so it is stable. */
-export const FAB_CLEARANCE_COMPONENTS = { Footer: FabClearanceFooter };

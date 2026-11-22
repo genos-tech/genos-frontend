@@ -17,11 +17,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { commentFirstLine } from "../components/editors/sub/commentMentions";
 import { LightMessageBody } from "../components/messageBody/LightMessageBody";
-import {
-    AvatarContextProvider,
-    resolveDisplayName,
-    ResolvedUserName,
-} from "../components/ui/avatars/AvatarContext";
+import { AvatarContextProvider, ResolvedUserName } from "../components/ui/avatars/AvatarContext";
+import { resolveDisplayName } from "../components/ui/avatars/avatarContextHelpers";
 import { forgetEveryone, rememberPeople } from "../components/ui/avatars/userDirectory";
 import { MentionChipV3 } from "../features/channel/components/MentionChipV3";
 import { MessageBody as ChannelMessageBody } from "../features/channel/components/MessageBody";
