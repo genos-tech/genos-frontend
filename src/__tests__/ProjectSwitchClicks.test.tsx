@@ -275,7 +275,8 @@ describe("the dashboard's project picker", () => {
             <CssVarsProvider>
                 <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
                     <AvatarContextProvider value={avatarContextValue}>
-                        <MemoryRouter initialEntries={["/workspace/tasks"]}>
+                        {/* The project toolbar shows only on project tabs; Today is the default. */}
+                        <MemoryRouter initialEntries={["/workspace/tasks?view=overall"]}>
                             <TaskDashboard
                                 myself={myself}
                                 setMyself={vi.fn()}
