@@ -77,6 +77,32 @@ describe("forceDeleteAllMyMessages never claims success it did not get (MIP-1943
         expect(post.mock.calls.length).toBeLessThan(5);
     });
 
+    it("a later round that fails after some were erased says incomplete, not 'nothing removed' (MIP-1951)", async () => {
+        post.mockReturnValueOnce(ok({ removed: { messages: 200 }, remaining: 50 }));
+        post.mockImplementationOnce(async () => {
+            throw Object.assign(new Error("boom"), {
+                isAxiosError: true,
+                response: { status: 502, data: {} },
+            });
+        });
+        await expect(forceDeleteAllMyMessages("tok", "chan")).rejects.toMatchObject({
+            code: "incomplete",
+        });
+    });
+
+    it("a failure in the FIRST round keeps its own error (nothing was removed)", async () => {
+        post.mockImplementationOnce(async () => {
+            throw Object.assign(new Error("boom"), {
+                isAxiosError: true,
+                response: { status: 403, data: { code: "forbidden", error: "No." } },
+            });
+        });
+        await expect(forceDeleteAllMyMessages("tok", "chan")).rejects.toMatchObject({
+            status: 403,
+            code: "forbidden",
+        });
+    });
+
     it("rejects when the round cap is reached with messages left", async () => {
         post.mockReturnValue(ok({ removed: { messages: 1 }, remaining: 5 }));
         await expect(forceDeleteAllMyMessages("tok", "chan")).rejects.toMatchObject({
