@@ -30,6 +30,26 @@ describe("public pages, accessibility regressions (MIP-1901)", () => {
         cleanup();
     }, 60_000);
 
+    it("/developers has no landmark-unique violation (MIP-1875)", async () => {
+        const { container } = render(
+            <MemoryRouter initialEntries={["/developers"]}>
+                <DevelopersPage />
+            </MemoryRouter>
+        );
+        const navs = [...container.querySelectorAll("nav")];
+        // Every <nav> on the page needs its own accessible name.
+        const names = navs.map(
+            (n) => n.getAttribute("aria-label") ?? n.getAttribute("aria-labelledby")
+        );
+        expect(names.every(Boolean)).toBe(true);
+        expect(new Set(names).size).toBe(names.length);
+        const results = await axe.run(container, {
+            runOnly: { type: "rule", values: ["landmark-unique"] },
+        });
+        expect(results.violations.map((v) => v.id)).toEqual([]);
+        cleanup();
+    }, 60_000);
+
     it("the report job scans every public route main.tsx registers", () => {
         const main = read("../main.tsx");
         const registered = [

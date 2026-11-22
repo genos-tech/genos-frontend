@@ -220,7 +220,7 @@ export default function DevelopersPage() {
                                 cannot fall behind this page. Import it into Postman, Insomnia, or
                                 a client generator.
                             </p>
-                            <nav className="lp-toc">
+                            <nav aria-label="On this page" className="lp-toc">
                                 {TOC.map(([id, label]) => (
                                     <a key={id} href={`#${id}`}>
                                         {label}
