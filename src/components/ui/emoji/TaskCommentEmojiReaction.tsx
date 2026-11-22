@@ -11,28 +11,7 @@ import { TaskCommentProps } from "../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { AppTooltip } from "../AppTooltip";
 import { EmojiGlyph } from "./EmojiGlyph";
-
-export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
-    const map = new Map<string, { count: number; senders: UserProps[] }>();
-
-    reactions.forEach(({ emoji, sender }) => {
-        const entry = map.get(emoji);
-        if (entry) {
-            entry.count += 1;
-            entry.senders.push(sender);
-        } else {
-            map.set(emoji, { count: 1, senders: [sender] });
-        }
-    });
-
-    return Array.from(map.entries())
-        .map(([emoji, { count, senders }]) => ({
-            emoji,
-            count,
-            senders,
-        }))
-        .sort((a, b) => b.count - a.count);
-};
+import { groupEmojis } from "./taskCommentEmojiReactionHelpers";
 
 // The quick-add row (3 default picks + open-picker icon) for task
 // comments — split out of `ReactionTaskCommentEmojiDisplay` so it can

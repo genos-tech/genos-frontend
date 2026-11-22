@@ -11,7 +11,7 @@ import { act, render as rtlRender, screen, waitFor, within } from "@testing-libr
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { openConnectAppPanel } from "../components/layout/ConnectAppPanel";
+import { openConnectAppPanel } from "../components/layout/connectAppPanelHelpers";
 import { ConnectedAppsSection } from "../components/layout/ConnectedAppsSection";
 import { en } from "../i18n/locales/en";
 import { PLUGIN_COMMANDS, PLUGIN_REPO_URL, PLUGIN_ZIP_URL } from "../utils/mcpConnect";

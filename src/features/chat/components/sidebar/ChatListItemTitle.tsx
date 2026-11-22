@@ -2,7 +2,7 @@ import React from "react";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 import { Box, Stack } from "@mui/joy";
 
-import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
+import { resolveDisplayName } from "../../../../components/ui/avatars/avatarContextHelpers";
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { fmt, useTranslation } from "../../../../i18n";

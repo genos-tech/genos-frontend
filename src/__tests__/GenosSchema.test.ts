@@ -19,7 +19,7 @@ import {
 import { GENOS_CHIP_TYPES } from "../components/editors/genos/genosSchemaParts";
 import { genosStyleSpecs } from "../components/editors/genosStyleSpecs";
 import { createHeadlessNoteSchema } from "../components/editors/headlessNoteSchema";
-import { buildCommentSchema } from "../components/editors/sub/CommentEditorWithMentions";
+import { buildCommentSchema } from "../components/editors/sub/commentEditorSchema";
 import {
     createMentionGroupSpecV3,
     createMentionSpecV3,

@@ -4,7 +4,7 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
 import { sortMembersMyselfFirst } from "../../../../components/editors/Mention";
-import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
+import { resolveDisplayName } from "../../../../components/ui/avatars/avatarContextHelpers";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

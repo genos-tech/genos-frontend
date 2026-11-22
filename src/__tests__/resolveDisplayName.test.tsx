@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 
 import {
     AvatarContextProvider,
-    resolveDisplayName,
     ResolvedUserName,
     useResolvedUserName,
 } from "../components/ui/avatars/AvatarContext";
+import { resolveDisplayName } from "../components/ui/avatars/avatarContextHelpers";
 import { UserProps } from "../types/admin";
 
 // The live-name resolver is the fix for "renames don't propagate": names are

@@ -13,11 +13,8 @@ import { render, renderHook, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LightMessageBody } from "../components/messageBody/LightMessageBody";
-import {
-    AvatarContextProvider,
-    resolveDisplayName,
-    useUserProfile,
-} from "../components/ui/avatars/AvatarContext";
+import { AvatarContextProvider, useUserProfile } from "../components/ui/avatars/AvatarContext";
+import { resolveDisplayName } from "../components/ui/avatars/avatarContextHelpers";
 import {
     forgetEveryone,
     rememberDeletedUsers,

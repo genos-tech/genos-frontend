@@ -46,7 +46,7 @@ import {
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
-import { openConnectAppPanel } from "./ConnectAppPanel";
+import { openConnectAppPanel } from "./connectAppPanelHelpers";
 import { SecurityLogSection } from "./SecurityLogSection";
 import { TeamConnectedAppsSection } from "./TeamConnectedAppsSection";
 

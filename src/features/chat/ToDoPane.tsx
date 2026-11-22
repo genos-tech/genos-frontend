@@ -29,7 +29,7 @@ import {
     writeTagFilter,
 } from "./utils/todoTagFilter";
 
-import { FAB_CLEARANCE_COMPONENTS } from "../../components/layout/FabClearanceFooter";
+import { FAB_CLEARANCE_COMPONENTS } from "../../components/layout/fabClearanceComponents";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { modalChromeEndPadding } from "../../components/ui/modal/modalChrome";

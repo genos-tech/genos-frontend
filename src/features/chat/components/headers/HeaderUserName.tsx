@@ -4,7 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { resolveDisplayName } from "../../../../components/ui/avatars/AvatarContext";
+import { resolveDisplayName } from "../../../../components/ui/avatars/avatarContextHelpers";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";

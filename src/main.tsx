@@ -7,10 +7,8 @@ import { createRoot } from "react-dom/client";
 import { Outlet, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
-import {
-    AnalyticsRouteGate,
-    startAnalyticsOutsideMarketing,
-} from "./components/AnalyticsRouteGate";
+import { AnalyticsRouteGate } from "./components/AnalyticsRouteGate";
+import { startAnalyticsOutsideMarketing } from "./components/analyticsRouteGateHelpers";
 import { PageNotFound } from "./components/layout/pageNotFound";
 import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
 import { AcceptInviteHandler } from "./features/admin/components/AcceptInviteHandler";

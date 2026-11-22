@@ -28,7 +28,7 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
-import { insertEmojiValue } from "./CustomEmoji";
+import { insertEmojiValue } from "./customEmojiHelpers";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosDocumentToolbar } from "./genos/GenosToolbars";
 import { useGenosCollabEditor } from "./genos/useGenosEditor";

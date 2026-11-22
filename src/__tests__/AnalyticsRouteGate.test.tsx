@@ -11,10 +11,8 @@ import { fireEvent, render } from "@testing-library/react";
 import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-    AnalyticsRouteGate,
-    startAnalyticsOutsideMarketing,
-} from "../components/AnalyticsRouteGate";
+import { AnalyticsRouteGate } from "../components/AnalyticsRouteGate";
+import { startAnalyticsOutsideMarketing } from "../components/analyticsRouteGateHelpers";
 import { LP_ROUTES } from "../lp/seo/routes";
 import { analytics } from "../services/analytics";
 

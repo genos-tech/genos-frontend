@@ -12,7 +12,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { startAnalyticsOutsideMarketing } from "../components/AnalyticsRouteGate";
+import { startAnalyticsOutsideMarketing } from "../components/analyticsRouteGateHelpers";
 import { LpShell } from "../lp/kit/LpShell";
 
 const PREF_KEY = "genos-analytics-preferences:v1";

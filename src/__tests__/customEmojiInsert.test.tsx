@@ -8,7 +8,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { insertEmojiValue } from "../components/editors/CustomEmoji";
+import { insertEmojiValue } from "../components/editors/customEmojiHelpers";
 import { getEmojiSuggestionItems } from "../components/editors/EmojiSuggestion";
 import { TeamEmojiPanel } from "../components/layout/TeamEmojiPanel";
 import { EmojiPicker } from "../components/ui/emoji/EmojiPicker";

@@ -28,7 +28,7 @@ const walk = (dir: string): string[] => {
  */
 export const SCHEMA_FACTORY = "components/editors/genos/genosSchema.ts";
 export const HEADLESS_SCHEMA = "components/editors/headlessNoteSchema.ts";
-export const COMMENT_SCHEMA = "components/editors/sub/CommentEditorWithMentions.tsx";
+export const COMMENT_SCHEMA = "components/editors/sub/commentEditorSchema.ts";
 export const ALLOWED_SCHEMA_SITES = [SCHEMA_FACTORY, HEADLESS_SCHEMA, COMMENT_SCHEMA].sort();
 
 export const schemaSites = (): string[] =>
