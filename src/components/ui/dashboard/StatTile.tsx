@@ -10,7 +10,7 @@ import { focusRing, g, type } from "../../../theme/tokens";
  * that stands out. `value` is already formatted (`useNumberFormat`).
  */
 export type StatTileProps = {
-    label: string;
+    label: ReactNode;
     value: string;
     /** The numeric value, only to grey a zero. */
     raw?: number;
@@ -19,6 +19,8 @@ export type StatTileProps = {
     onClick?: () => void;
     /** A clickable tile is a filter: whether it is the active one. */
     pressed?: boolean;
+    /** `data-testid` of the number, for tests that read the value. */
+    valueTestId?: string;
 };
 
 export const StatTile = ({
@@ -29,6 +31,7 @@ export const StatTile = ({
     sub,
     onClick,
     pressed,
+    valueTestId,
 }: StatTileProps) => {
     const zero = raw === 0;
     const color = zero || tone === "neutral" ? g.text.primary : toneCss(tone).text;
@@ -36,6 +39,7 @@ export const StatTile = ({
         <>
             <Typography
                 component="span"
+                data-testid={valueTestId}
                 sx={{
                     ...type("h3"),
                     color: zero ? g.text.secondary : color,

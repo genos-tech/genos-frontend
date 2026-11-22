@@ -1,6 +1,7 @@
 import { Box, Link, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
+import { DashboardCard } from "../../../../../components/ui/dashboard";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
@@ -15,10 +16,7 @@ export const AgentDecisionsList = ({ decisions }: { decisions: AgentWorkDecision
     const a = t.tasks.dashboard.agentActivity;
     const navigate = useNavigate();
     return (
-        <Box sx={{ minWidth: 0 }}>
-            <Typography component="h3" level="title-md" sx={{ mb: 1 }}>
-                {a.decisions.title}
-            </Typography>
+        <DashboardCard title={a.decisions.title}>
             {decisions.length === 0 ? (
                 <EmptyState body={a.decisions.empty} data-empty="agent-decisions" size="xs" />
             ) : (
@@ -82,6 +80,6 @@ export const AgentDecisionsList = ({ decisions }: { decisions: AgentWorkDecision
                     })}
                 </Box>
             )}
-        </Box>
+        </DashboardCard>
     );
 };

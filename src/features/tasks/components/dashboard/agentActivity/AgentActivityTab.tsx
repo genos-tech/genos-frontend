@@ -3,7 +3,9 @@ import { Box, Stack, Typography } from "@mui/joy";
 import { useLocation, useSearchParams } from "react-router-dom";
 
 import { requestOpenSettings } from "../../../../../components/layout/settingsEvents";
+import { SectionHeading } from "../../../../../components/ui/dashboard";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
+import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
@@ -100,9 +102,9 @@ export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, tea
     let body: ReactNode;
     if (view.status === "loading") {
         body = (
-            <Typography level="body-sm" role="status" sx={{ color: g.text.secondary, py: 3 }}>
-                {a.states.loading}
-            </Typography>
+            <Box aria-label={a.states.loading} role="status">
+                <SkeletonLines lines={4} />
+            </Box>
         );
     } else if (view.status === "unavailable") {
         // 404: the API is not switched on for this workspace (or the viewer is outside the team).
@@ -206,23 +208,10 @@ export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, tea
             aria-label={sectionLabel}
             component="section"
             data-testid="agent-activity-tab"
-            sx={{
-                minWidth: 0,
-                p: { xs: 1.5, md: 2 },
-                borderRadius: g.radius.lg,
-                border: `1px solid ${g.border.subtle}`,
-                bgcolor: g.surface.default,
-            }}
+            sx={{ minWidth: 0 }}
         >
-            <Stack spacing={2} sx={{ minWidth: 0 }}>
-                <Box>
-                    <Typography component="h2" level="h4">
-                        {a.heading}
-                    </Typography>
-                    <Typography level="body-sm" sx={{ color: g.text.secondary, mt: 0.25 }}>
-                        {a.subtitle}
-                    </Typography>
-                </Box>
+            <Stack spacing={3} sx={{ minWidth: 0 }}>
+                <SectionHeading description={a.subtitle} title={a.heading} />
                 <AgentFilterBar
                     filters={filters}
                     people={people}

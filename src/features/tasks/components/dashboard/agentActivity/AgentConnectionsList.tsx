@@ -1,6 +1,7 @@
 import { Box, Button, Typography } from "@mui/joy";
 
 import { requestOpenSettings } from "../../../../../components/layout/settingsEvents";
+import { DashboardCard } from "../../../../../components/ui/dashboard";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
@@ -14,10 +15,7 @@ export const AgentConnectionsList = ({ connections }: { connections: AgentWorkCo
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.agentActivity;
     return (
-        <Box sx={{ minWidth: 0 }}>
-            <Typography component="h3" level="title-md" sx={{ mb: 1 }}>
-                {a.connections.title}
-            </Typography>
+        <DashboardCard title={a.connections.title}>
             {connections.length === 0 ? (
                 <EmptyState body={a.connections.empty} data-empty="agent-connections" size="xs" />
             ) : (
@@ -63,6 +61,6 @@ export const AgentConnectionsList = ({ connections }: { connections: AgentWorkCo
                     {a.states.connect}
                 </Button>
             )}
-        </Box>
+        </DashboardCard>
     );
 };
