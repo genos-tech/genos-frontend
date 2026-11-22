@@ -1,5 +1,5 @@
 import { memo, useEffect, useSyncExternalStore } from "react";
-import { Box, Sheet } from "@mui/joy";
+import { Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useIsMobile } from "../../hooks/common/useIsMobile";
