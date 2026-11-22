@@ -104,20 +104,28 @@ const setup = () => {
         currentPreviewTask: undefined,
         setCurrentPreviewTask: vi.fn(),
     } as never;
-    const data = day();
-    const view = { status: "ready", data, since: "x", refresh: vi.fn() } as BriefingTodayView;
     return renderHook(
-        () => {
+        ({ data }: { data: BriefingToday }) => {
+            const view = {
+                status: "ready",
+                data,
+                since: "x",
+                refresh: vi.fn(),
+            } as BriefingTodayView;
             const run = useTodayQuickActions({
                 useTM,
                 myself: { userId: "u" } as never,
                 localDate: "2026-11-20",
+                data,
             });
             const shown = useQuickActionView(view);
             const toasts = useToasts();
             return { run, shown, toasts };
         },
-        { wrapper: ({ children }) => <CssVarsProvider>{children}</CssVarsProvider> }
+        {
+            initialProps: { data: day() },
+            wrapper: ({ children }) => <CssVarsProvider>{children}</CssVarsProvider>,
+        }
     );
 };
 
@@ -190,9 +198,50 @@ describe("useTodayQuickActions", () => {
         expect(patch).toHaveBeenCalledTimes(1);
         expect(patch).toHaveBeenCalledWith(2, { status: "Closed", status_code: 0 }, "tok");
     });
+
+    it("never pulls a deadline earlier: no 'tomorrow' for a task that is not due yet", () => {
+        const h = setup();
+        act(() => h.result.current.run(task(7, { daysUntilDue: 3 }) as never, "tomorrow"));
+        expect(h.result.current.toasts).toHaveLength(0);
+        expect(patch).not.toHaveBeenCalled();
+    });
+
+    it("after the write the row stays gone for that answer, comes back with a newer one, and can act again", async () => {
+        const h = setup();
+        const first = h.result.current.shown.view.data as BriefingToday;
+        act(() => h.result.current.run(task(1) as never, "done"));
+        await act(async () => flushUndoables("next"));
+        expect(h.result.current.shown.view.data?.overdueCount).toBe(0);
+        // A refresh brings the server's answer (the task is listed again, e.g. reopened).
+        h.rerender({ data: day() });
+        expect(h.result.current.shown.view.data?.overdueCount).toBe(1);
+        expect(first).not.toBe(h.result.current.shown.view.data);
+        patch.mockClear();
+        act(() => h.result.current.run(task(1) as never, "tomorrow"));
+        await act(async () => flushUndoables("next"));
+        expect(patch).toHaveBeenCalledWith(1, { due_date: "2026-11-23" }, "tok");
+    });
 });
 
 describe("the row's buttons", () => {
+    it("offers 'tomorrow' only for a task due today or late", () => {
+        render(
+            <CssVarsProvider>
+                <ul>
+                    <TodayTaskRow
+                        copy={copy}
+                        href="/x"
+                        task={task(8, { daysUntilDue: 4 }) as never}
+                        onAction={vi.fn()}
+                        onOpen={vi.fn()}
+                    />
+                </ul>
+            </CssVarsProvider>
+        );
+        expect(screen.getByRole("button", { name: "Mark done: WEB-8" })).toBeTruthy();
+        expect(screen.queryByRole("button", { name: /Move to tomorrow/ })).toBeNull();
+    });
+
     const row = (props: Partial<Parameters<typeof TodayTaskRow>[0]>) =>
         render(
             <CssVarsProvider>

@@ -37,7 +37,16 @@ const KEY = "today:";
 const keyOf = (taskId: number) => `${KEY}${taskId}`;
 
 /** What each pending (or committed) key stands for; module level, like the undo state it pairs with. */
-const actions = new Map<string, { action: TodayAction; due: string | null }>();
+const actions = new Map<
+    string,
+    {
+        action: TodayAction;
+        due: string | null;
+        /** Written. It then applies only to the briefing it was written against: a newer answer is the server's word. */
+        committed?: boolean;
+        base?: BriefingToday | null;
+    }
+>();
 
 export const DONE_STATUS = "Closed";
 
@@ -80,7 +89,8 @@ export const withQuickActions = (
     if (!data) return data;
     let out = data;
     for (const [key, a] of actions) {
-        if (!hidden.has(key)) continue;
+        const applies = hidden.has(key) || (a.committed === true && a.base === data);
+        if (!applies) continue;
         out = applyTodayAction(out, Number(key.slice(KEY.length)), a.action, a.due);
     }
     return out;
@@ -107,13 +117,15 @@ type Deps = {
     myself: UserProps;
     /** The member's today, for "tomorrow". */
     localDate: string | undefined;
+    /** The loaded briefing (not the one with actions applied): what a committed action is tied to. */
+    data: BriefingToday | null;
 };
 
-export const useTodayQuickActions = ({ useTM, myself, localDate }: Deps) => {
+export const useTodayQuickActions = ({ useTM, myself, localDate, data }: Deps) => {
     const { accessToken } = useAuth();
     const { t, locale } = useTranslation();
-    const latest = useRef({ useTM, myself, accessToken, t, locale, localDate });
-    latest.current = { useTM, myself, accessToken, t, locale, localDate };
+    const latest = useRef({ useTM, myself, accessToken, t, locale, localDate, data });
+    latest.current = { useTM, myself, accessToken, t, locale, localDate, data };
 
     return useCallback((task: BriefingTask, action: TodayAction) => {
         const { t, locale, localDate } = latest.current;
@@ -121,13 +133,16 @@ export const useTodayQuickActions = ({ useTM, myself, localDate }: Deps) => {
         const copy = t.tasks.dashboard.today.actions;
         const due = action === "tomorrow" ? nextWorkingDay(localDate) : null;
         if (action === "tomorrow" && !due) return;
+        // Never pull a deadline earlier: "tomorrow" is for what is due today or already late.
+        if (action === "tomorrow" && (task.daysUntilDue == null || task.daysUntilDue > 0)) return;
         const id = task.taskId;
         const projectId = task.projectId;
         const key = keyOf(id);
         const label = `${task.displayId} ${task.title}`;
         // One action per task (a double click, or "done" then "tomorrow" on its second row):
         // `runUndoable` would ignore the second one, and this map must not remember it.
-        if (actions.has(key)) return;
+        const prior = actions.get(key);
+        if (prior && !prior.committed) return;
         actions.set(key, { action, due });
         runUndoable({
             key,
@@ -137,6 +152,16 @@ export const useTodayQuickActions = ({ useTM, myself, localDate }: Deps) => {
                     : fmt(copy.tomorrowToast, { task: label, date: dayWords(due, locale) }),
             errorMessage: fmt(copy.failed, { task: label }),
             keepOnNavigate: true,
+            // The row is hidden by the briefing derivation (`committed` + `base`), not by the
+            // undo store, so a later answer, a reopened task or a second action is not blocked.
+            releaseOnCommit: true,
+            onCommitted: () => {
+                const entry = actions.get(key);
+                if (entry) {
+                    entry.committed = true;
+                    entry.base = latest.current.data;
+                }
+            },
             commit: async () => {
                 // Read now, not at the click: the token can be refreshed in the window.
                 const { useTM, myself, accessToken } = latest.current;

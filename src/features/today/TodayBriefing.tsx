@@ -315,13 +315,18 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction }:
         const blockedBy = new Map(d.blocked.map((b) => [b.taskId, b.waitingFor]));
         // Actions only where the task is the member's own to finish: due and "look at these
         // first". Delegated rows belong to someone else.
-        const taskRow = (task: BriefingTask, context?: ReactNode, actions = false) => (
+        const taskRow = (
+            task: BriefingTask,
+            context?: ReactNode,
+            actions: false | "leaves" | "stays" = false
+        ) => (
             <TodayTaskRow
                 key={task.taskId}
                 blockedBy={blockedBy.get(task.taskId)}
                 context={context}
                 copy={a}
                 href={taskHref(task)}
+                keepsOnTomorrow={actions === "stays"}
                 projectAvatarSrc={task.projectId != null ? avatars.get(task.projectId) : undefined}
                 task={withProjectName(task, projects)}
                 onAction={actions && onAction ? (act) => onAction(task, act) : undefined}
@@ -355,13 +360,13 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction }:
                     {d.overdue.length > 0 ? (
                         <>
                             {groupLabel(a.tiles.overdue, d.overdueCount)}
-                            {d.overdue.map((task) => taskRow(task, undefined, true))}
+                            {d.overdue.map((task) => taskRow(task, undefined, "leaves"))}
                         </>
                     ) : null}
                     {d.dueToday.length > 0 ? (
                         <>
                             {groupLabel(a.dueToday, d.dueTodayCount)}
-                            {d.dueToday.map((task) => taskRow(task, undefined, true))}
+                            {d.dueToday.map((task) => taskRow(task, undefined, "leaves"))}
                         </>
                     ) : null}
                 </Section>
@@ -371,7 +376,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction }:
             mainSections.push(
                 <Section key="next" count={d.suggestedNext.length} title={a.sections.next}>
                     {d.suggestedNext.map((task) =>
-                        taskRow(task, reasonLine(task, a, locale), true)
+                        taskRow(task, reasonLine(task, a, locale), "stays")
                     )}
                 </Section>
             );

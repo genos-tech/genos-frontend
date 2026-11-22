@@ -16,6 +16,7 @@ export const TodayTab = ({ todayView, useTM, myself }: TodayTabProps) => {
         useTM,
         myself,
         localDate: todayView.data?.window.localDate,
+        data: todayView.data,
     });
     return <TodayBriefing view={view} onAction={onAction} />;
 };

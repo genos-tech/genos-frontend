@@ -60,6 +60,8 @@ export type TodayTaskRowProps = {
     copy: TodayCopy;
     /** Quick actions (MIP-1992): set on the rows that are the member's own; none on the card. */
     onAction?: (action: TodayAction) => void;
+    /** "Move to tomorrow" leaves this row on screen (it still shows, with its new day). */
+    keepsOnTomorrow?: boolean;
     onOpen: (href: string) => void;
 };
 
@@ -72,6 +74,7 @@ export const TodayTaskRow = ({
     compact = false,
     copy: a,
     onAction,
+    keepsOnTomorrow = false,
     onOpen,
 }: TodayTaskRowProps) => {
     const { locale } = useTranslation();
@@ -250,6 +253,8 @@ export const TodayTaskRow = ({
     // A milestone, a row of someone else's and the card variant get no actions: closing a
     // milestone goes through its own record (sprint, sub-tasks), which this row cannot name.
     const canAct = onAction != null && !task.isMilestone && task.projectId != null;
+    // "Tomorrow" is for what is due today or already late: it must never pull a deadline earlier.
+    const canTomorrow = task.daysUntilDue != null && task.daysUntilDue <= 0;
     return (
         <Box
             component="li"
@@ -300,24 +305,26 @@ export const TodayTaskRow = ({
                             <CheckRoundedIcon />
                         </IconButton>
                     </AppTooltip>
-                    <AppTooltip title={a.actions.tomorrow}>
-                        <IconButton
-                            aria-label={`${a.actions.tomorrow}: ${task.displayId}`}
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                minWidth: { xs: 36, sm: 44 },
-                                minHeight: 44,
-                                "&:focus-visible": focusRing,
-                            }}
-                            onClick={(e) => {
-                                focusNeighbour(e.currentTarget);
-                                onAction("tomorrow");
-                            }}
-                        >
-                            <EventRepeatRoundedIcon />
-                        </IconButton>
-                    </AppTooltip>
+                    {canTomorrow ? (
+                        <AppTooltip title={a.actions.tomorrow}>
+                            <IconButton
+                                aria-label={`${a.actions.tomorrow}: ${task.displayId}`}
+                                size="sm"
+                                variant="plain"
+                                sx={{
+                                    minWidth: { xs: 36, sm: 44 },
+                                    minHeight: 44,
+                                    "&:focus-visible": focusRing,
+                                }}
+                                onClick={(e) => {
+                                    if (!keepsOnTomorrow) focusNeighbour(e.currentTarget);
+                                    onAction("tomorrow");
+                                }}
+                            >
+                                <EventRepeatRoundedIcon />
+                            </IconButton>
+                        </AppTooltip>
+                    ) : null}
                 </Box>
             ) : null}
         </Box>
@@ -326,7 +333,7 @@ export const TodayTaskRow = ({
 
 /**
  * The row is about to leave the list: put focus on the nearest row that stays (the next, else the
- * previous), so a keyboard user is not dropped on the page. Falls back to the section itself.
+ * previous), so a keyboard user is not dropped on the page. Falls back to the Today page itself.
  */
 const focusNeighbour = (from: HTMLElement): void => {
     const li = from.closest("li");
@@ -341,10 +348,11 @@ const focusNeighbour = (from: HTMLElement): void => {
         target = main(p);
     }
     if (!target) {
-        const section = li.closest("section");
-        if (section) {
-            section.setAttribute("tabindex", "-1");
-            target = section as HTMLElement;
+        // The page, not the section: the section itself may be gone once its last row left.
+        const page = li.closest<HTMLElement>('[data-testid="today-page"]');
+        if (page) {
+            page.setAttribute("tabindex", "-1");
+            target = page;
         }
     }
     target?.focus({ preventScroll: true });
