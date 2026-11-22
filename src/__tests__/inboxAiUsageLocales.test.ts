@@ -25,7 +25,6 @@ const NEEDS: Partial<Record<Key, string>> = {
     turnOffNamed: "{name}",
     turnBackOnNamed: "{name}",
     undoNamed: "{name}",
-    offDigest: "{name}",
     offSchedule: "{name}",
     alreadyOff: "{name}",
     restingOff: "{name}",

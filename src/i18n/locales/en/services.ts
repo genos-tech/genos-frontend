@@ -174,9 +174,6 @@ export const services = {
             },
             // Proactive digest (UX tier model §8) — server-backed
             // opt-out; whether/how often it fires comes from the plan.
-            digestHeading: "Genos digest",
-            digestDescription:
-                "A short personal digest from Genos, delivered to your inbox (weekly on Pro, daily on Max).",
             // Email channel (independent of push/in-app; sent only after
             // you've been away for a while, batched into one email).
             emailHeading: "Email notifications",

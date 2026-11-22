@@ -622,7 +622,6 @@ export const settings = {
         matrixRowMemory: "What it draws on",
         matrixRowGenosHistory: "Genos conversation history",
         matrixRowPremiumModels: "Premium AI models",
-        matrixRowDigest: "Proactive digest",
         matrixRowMcp: "Connect an AI coding agent (MCP)",
         matrixRowHistory: "Message history",
         matrixRowTasks: "Tasks per month",
@@ -643,8 +642,6 @@ export const settings = {
         matrixMemoryNone: "This conversation",
         matrixMemoryOwn: "Your history",
         matrixMemoryTeam: "Your team's knowledge",
-        matrixDigestWeekly: "Weekly",
-        matrixDigestDaily: "Daily + alerts",
         billingReturnCancelled: "Checkout cancelled — your plan is unchanged.",
     },
     appearance: {

@@ -2815,8 +2815,6 @@ export const ja: DeepPartial<Messages> = {
             turnBackOnNamed: "オンに戻す: {name}",
             undo: "元に戻す",
             undoNamed: "元に戻す: {name} をオンに戻す",
-            offDigest:
-                "{name} をオフにしました。オンに戻すまで、新しく作成されず、AI クレジットも使われません。",
             offSchedule:
                 "{name} をオフにしました。オンに戻すまで、実行されず AI クレジットも使われません。",
             offScheduleNoAi: "{name} はオフです。再びオンにするまで実行されません。",
@@ -3797,9 +3795,6 @@ export const ja: DeepPartial<Messages> = {
                     default: "まだ許可されていません",
                     unsupported: "サポートされていません",
                 },
-                digestHeading: "Genosダイジェスト",
-                digestDescription:
-                    "Genos からの短い個人的なダイジェストが受信箱に配信されます (Pro では毎週、Max では毎日)。",
                 emailHeading: "メール通知",
                 emailDescription:
                     "離席中に見逃した通知を、1通にまとめてメールでお知らせします（イベントごとには送信されません）。",
@@ -4346,7 +4341,6 @@ export const ja: DeepPartial<Messages> = {
             matrixRowMemory: "何を参照するか",
             matrixRowGenosHistory: "Genosの会話履歴",
             matrixRowPremiumModels: "プレミアム AI モデル",
-            matrixRowDigest: "プロアクティブダイジェスト",
             matrixRowMcp: "AI コーディング エージェント (MCP) を接続する",
             matrixRowHistory: "メッセージ履歴",
             matrixRowTasks: "月ごとのタスク",
@@ -4365,8 +4359,6 @@ export const ja: DeepPartial<Messages> = {
             matrixMemoryNone: "この会話",
             matrixMemoryOwn: "あなたの履歴",
             matrixMemoryTeam: "あなたのチームの知識",
-            matrixDigestWeekly: "毎週",
-            matrixDigestDaily: "毎日 + アラート",
             billingReturnCancelled:
                 "チェックアウトをキャンセルしました — プランは変更されていません。",
         },

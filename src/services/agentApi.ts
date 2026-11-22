@@ -553,7 +553,6 @@ export interface AgentFeatures {
     agent_memory?: "none" | "own" | "team";
     agent_history_retention_days?: number | null;
     integrations?: ("web" | "google_calendar" | "github")[];
-    digest_cadence?: "weekly" | "daily" | null;
 }
 
 export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {

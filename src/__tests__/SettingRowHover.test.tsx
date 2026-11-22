@@ -28,8 +28,6 @@ import { DEFAULT_NOTIFICATION_PREFERENCE } from "../services/notifications/types
 
 vi.mock("../hooks/common/useDigestPreference", () => ({
     useDigestPreference: () => ({
-        digestEnabled: true,
-        setDigestEnabled: () => undefined,
         emailDigestEnabled: null,
         setEmailDigestEnabled: () => undefined,
     }),

@@ -2702,7 +2702,6 @@ export const zh: DeepPartial<Messages> = {
             turnBackOnNamed: "重新开启：{name}",
             undo: "撤销",
             undoNamed: "撤销：重新开启 {name}",
-            offDigest: "{name} 已关闭。在你重新开启之前，不会再生成，也不会再消耗 AI 积分。",
             offSchedule: "{name} 已关闭。在你重新开启之前，它不会运行，也不会消耗 AI 积分。",
             offScheduleNoAi: "{name} 已关闭。重新开启前不会运行。",
             alreadyOff: "{name} 已处于关闭状态。",
@@ -3654,9 +3653,6 @@ export const zh: DeepPartial<Messages> = {
                     default: "尚未允许",
                     unsupported: "不支持",
                 },
-                digestHeading: "Genos 摘要",
-                digestDescription:
-                    "来自 Genos 的简短个人摘要，发送到你的收件箱（Pro 中每周，Max 中每天）。",
                 emailHeading: "邮件通知",
                 emailDescription:
                     "当你离开时，Genos 会把错过的通知汇总为一封邮件发送给你（不会每条事件发一封）。",
@@ -4188,7 +4184,6 @@ export const zh: DeepPartial<Messages> = {
             matrixRowMemory: "它参考什么",
             matrixRowGenosHistory: "Genos 对话记录",
             matrixRowPremiumModels: "高级人工智能模型",
-            matrixRowDigest: "主动消化",
             matrixRowMcp: "连接AI编码代理（MCP）",
             matrixRowHistory: "消息记录",
             matrixRowTasks: "每月任务",
@@ -4207,8 +4202,6 @@ export const zh: DeepPartial<Messages> = {
             matrixMemoryNone: "这段对话",
             matrixMemoryOwn: "你的历史",
             matrixMemoryTeam: "你团队的知识",
-            matrixDigestWeekly: "每周",
-            matrixDigestDaily: "每日+提醒",
             billingReturnCancelled: "已取消结账 — 你的套餐未更改。",
         },
         appearance: {
