@@ -45,6 +45,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                         <ProjectTagChip
                             isDark={mode === "dark"}
                             label={option.tagName}
+                            size="md"
                             tagColor={option.tagColor}
                         />
                     </ListItemContent>
@@ -58,6 +59,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                             key={`ac-project-tags-chip-${key}`}
                             isDark={mode === "dark"}
                             label={item.tagName}
+                            size="md"
                             tagColor={item.tagColor}
                         />
                     );

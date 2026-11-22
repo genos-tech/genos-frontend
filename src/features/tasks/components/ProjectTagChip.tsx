@@ -8,6 +8,8 @@ type ProjectTagChipProps = {
     isDark?: boolean;
     /** Override the chip's font size. */
     fontSize?: string | number;
+    /** `md`: the larger chip of the task/milestone preview tag fields (MIP-1984). */
+    size?: "sm" | "md";
 };
 
 /**
@@ -22,5 +24,13 @@ export const ProjectTagChip = ({
     tagColor,
     // The size the chip always had (0.7rem): the table's tag column is narrow
     // and a larger default truncates "sample-tag".
+    size = "sm",
     fontSize = "var(--table-tag-size, 0.7rem)",
-}: ProjectTagChipProps) => <Tag color={tagColor} fontSize={fontSize} label={label} />;
+}: ProjectTagChipProps) => (
+    <Tag
+        color={tagColor}
+        fontSize={size === "md" ? undefined : fontSize}
+        label={label}
+        size={size}
+    />
+);
