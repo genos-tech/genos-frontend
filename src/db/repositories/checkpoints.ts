@@ -14,7 +14,14 @@ export interface CheckpointRecord {
     lastUpdated: string;
     // Only on the `DELETED_USER_IDS_KEY` row: see below.
     deletedUserIds?: string[];
+    // Only on a `tasks:v2:<projectId>` row (MIP-2000): the task statuses the store holds for
+    // that project. Absent = all of them (every record written before this field existed),
+    // so an old browser keeps its watermark. A watermark always describes ONE set.
+    statuses?: string[];
 }
+
+/** What a loader stores next to its watermark. */
+export type CheckpointMeta = Pick<CheckpointRecord, "statuses">;
 
 // The roster's deleted-account ids (MIP-1820), kept in the checkpoint store so
 // they live and die with the roster's own watermark: a team switch clears this
@@ -35,12 +42,20 @@ export class CheckpointRepository extends BaseRepository<CheckpointRecord> {
     // Only call AFTER the corresponding sync's IDB writes have committed,
     // so an in-flight failure leaves the watermark unmoved and the next
     // sync retries the same window.
-    async setCheckpoint(key: string, serverTime: string): Promise<void> {
+    async setCheckpoint(key: string, serverTime: string, meta?: CheckpointMeta): Promise<void> {
         await this.put({
             key,
             serverTime,
             lastUpdated: new Date().toISOString(),
+            ...(meta?.statuses ? { statuses: meta.statuses } : {}),
         });
+    }
+
+    // The whole record, for a loader that keeps more than the watermark. Null when the
+    // loader never synced (or forgot its watermark).
+    async getCheckpointRecord(key: string): Promise<CheckpointRecord | null> {
+        const res = await this.get(key);
+        return res.success && res.data ? res.data : null;
     }
 
     // Ids of accounts the roster said are deleted. A deleted account never

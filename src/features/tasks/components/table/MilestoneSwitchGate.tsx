@@ -14,11 +14,15 @@ import { usePendingMilestoneSwitch } from "../../state/milestoneSwitchStore";
 export const MilestoneSwitchGate = ({
     skeleton,
     children,
+    forcePending = false,
 }: {
     skeleton: ReactNode;
     children: ReactNode;
+    /** MIP-2000: a status the filter now shows is being fetched, so the rows that are held
+     *  would be an incomplete list. Same treatment as a milestone switch: hidden, not unmounted. */
+    forcePending?: boolean;
 }) => {
-    const pending = usePendingMilestoneSwitch() !== null;
+    const pending = usePendingMilestoneSwitch() !== null || forcePending;
     return (
         <>
             <div

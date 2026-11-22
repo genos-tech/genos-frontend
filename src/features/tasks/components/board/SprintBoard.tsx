@@ -23,6 +23,7 @@ import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
+import { isWidening, useProjectStatusScope } from "../../state/projectStatusScopeStore";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { milestonesByTaskIdWithLiveProgress } from "../../utils/boardMilestoneProgress";
 import { pickScopedMilestoneId, quickAddParentFor } from "../../utils/boardQuickAdd";
@@ -65,6 +66,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
     const { t } = useTranslation();
     // The first read of the project's tasks: in flight, or failed (MIP-1298's shared sync state).
     const syncFailure = useTasksSyncFailure(usePM.currentProject?.projectId);
+    // MIP-2000: the board shows every status (its Closed column too), so its filter bar asks for
+    // them all; until they are held the skeleton stands in for a half-filled board.
+    const statusWidening = isWidening(useProjectStatusScope(usePM.currentProject?.projectId));
 
     // Normalize mode
     const mode: "light" | "dark" | undefined =
@@ -688,6 +692,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     }
                     loading={
                         (useTM.isLoadingTasks ||
+                            statusWidening ||
                             (syncFailure.loading && useTM.allTasks.length === 0) ||
                             syncFailure.retrying) &&
                         !isQuickAddOpen

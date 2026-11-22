@@ -245,13 +245,17 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                 <DataState
                                     error={tasksSync.failed}
                                     hasData={false}
-                                    loading={tasksSync.loading || tasksSync.retrying}
                                     skeleton={<SkeletonRows count={4} />}
                                     errorState={{
                                         "data-error": "home-tasks",
                                         onRetry: tasksSync.retry,
                                         title: t.common.feedback.sync.tasksFailed,
                                     }}
+                                    loading={
+                                        tasksSync.loading ||
+                                        tasksSync.retrying ||
+                                        !tasksSync.failed
+                                    }
                                 />
                             )}
 

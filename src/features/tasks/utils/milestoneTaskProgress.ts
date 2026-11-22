@@ -76,3 +76,23 @@ export const milestoneTaskStatuses = (
     }
     return statuses;
 };
+
+/**
+ * The chips when the project's Closed rows are not loaded (MIP-2000): the Closed chip (and
+ * the total) would count only the few Closed rows that came along as ancestors, so the
+ * server's own count for the milestone (`tasksClosed`) stands in when it is higher. The
+ * other statuses are exact: every non-Closed row is loaded.
+ */
+export const withServerClosedCount = (
+    summary: { entries: MilestoneProgressEntry[]; total: number },
+    serverClosed: number | undefined
+): { entries: MilestoneProgressEntry[]; total: number } => {
+    if (typeof serverClosed !== "number") return summary;
+    const held = summary.entries.find((e) => e.status === "Closed")?.count ?? 0;
+    if (serverClosed <= held) return summary;
+    const entries = summary.entries.filter((e) => e.status !== "Closed");
+    const closed: MilestoneProgressEntry = { status: "Closed", count: serverClosed };
+    const other = entries.findIndex((e) => e.status === "Other");
+    entries.splice(other === -1 ? entries.length : other, 0, closed);
+    return { entries, total: summary.total + (serverClosed - held) };
+};

@@ -14,12 +14,15 @@ import {
     CreateTaskDependencyResult,
 } from "../../features/tasks/services/createTaskDependency";
 import { deleteTaskDependency } from "../../features/tasks/services/deleteTaskDependency";
+import { ensureProjectStatuses } from "../../features/tasks/services/ensureProjectStatuses";
+import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
 import {
     loadTaskDependenciesForTasks,
     loadTaskDependenciesInto,
 } from "../../features/tasks/services/loadTaskDependencies";
 import { popSpecificProjectTasks } from "../../features/tasks/services/popSpecificProjectTasks";
+import { primeProjectScopeFromStore } from "../../features/tasks/services/primeProjectScope";
 import { ProjectTemplateDefaults } from "../../features/tasks/services/projectTemplateDefaults";
 import {
     applyTreePositionToDescendants,
@@ -37,6 +40,7 @@ import {
     projectRowsKey,
     rowsOfProject,
 } from "../../features/tasks/utils/projectRowsCache";
+import { type StatusScope } from "../../features/tasks/utils/projectStatusScope";
 import { ProjectTaskFieldRules } from "../../features/tasks/utils/taskFieldRules";
 import { CustomTaskTemplate } from "../../features/tasks/utils/taskTemplates";
 import { UserProps } from "../../types/admin";
@@ -340,6 +344,11 @@ export interface TaskManagementState {
     initializeTaskStates: () => void;
     handleCreateTask: () => void;
     fetchProjectTasks: (projectId: number) => Promise<void>;
+    // Make sure the rows of these statuses are held for the project (MIP-2000: `null` = all
+    // of them). A project is first loaded for the ongoing statuses only; a view that needs
+    // more (the Closed filter, the board, the dashboard) calls this, and the missing rows
+    // are fetched once. Resolves at once when they are already held.
+    ensureProjectStatuses: (projectId: number, need: StatusScope) => Promise<void>;
     // The in-memory copies of the last projects' rows (see `allTasks`). Drop
     // one project's, or everything for projects that are no longer listed.
     dropCachedProjectRows: (projectId: number) => void;
@@ -1076,6 +1085,8 @@ export const useTaskManagement = (
         const askedIn = scopeRef.current;
         setTsLastLoadProjectTasks(Date.now());
         setIsLoadingTasks(true);
+        // MIP-2000: what the stored rows hold, known before the first load answers.
+        void primeProjectScopeFromStore(projectId);
         try {
             const _allTasks: TaskTableProps[] = await popSpecificProjectTasks(
                 projectId,
@@ -1126,6 +1137,16 @@ export const useTaskManagement = (
             if (seq === readSeqRef.current) setIsLoadingTasks(false);
         }
     };
+
+    // Fetch the statuses a view needs that the project's rows do not hold yet (MIP-2000), and
+    // read them into the table (see `ensureProjectStatuses` for when nothing is fetched).
+    // `loadProjectTasks` has told the sync status about a failure (banner and Retry); the table
+    // keeps the rows it has.
+    const ensureStatuses = (projectId: number, need: StatusScope) =>
+        ensureProjectStatuses(projectId, need, async () => {
+            await loadProjectTasks(myself, projectId, accessToken, need);
+            await fetchProjectTasks(projectId);
+        });
 
     // Push an edited task onto its row in `allTasks`. We spread the existing
     // row first so milestone-only fields (`isMilestone`, `milestoneId`,
@@ -1349,6 +1370,7 @@ export const useTaskManagement = (
         initializeTaskStates,
         handleCreateTask,
         fetchProjectTasks,
+        ensureProjectStatuses: ensureStatuses,
         dropCachedProjectRows,
         pruneCachedProjectRows,
     };

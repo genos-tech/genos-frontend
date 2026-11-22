@@ -6,11 +6,17 @@ import {
     projectTasksFailureMessage,
 } from "../../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamTasks } from "../../../features/tasks/services/loadTeamTasks";
+import {
+    rowInScope,
+    scopeCovers,
+    unionScope,
+    type StatusScope,
+} from "../../../features/tasks/utils/projectStatusScope";
 import type { TaskTableProps } from "../../../types/tasks";
 import { TaskRepository } from "../../repositories";
 import { CheckpointRepository } from "../../repositories/checkpoints";
 import { TaskService } from "../../services";
-import type { TasksRequests } from "../contracts";
+import type { LoadedProjectTasks, TasksRequests } from "../contracts";
 import type { HandlerMap } from "../poolWorker";
 import { syncWithCheckpoint } from "../utils/syncWithCheckpoint";
 
@@ -71,7 +77,7 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         await taskRepo.put(task);
     },
 
-    loadProjectTasks: async ({ myself, projectId, accessToken }) => {
+    loadProjectTasks: async ({ myself, projectId, accessToken, statuses }) => {
         // Per-project checkpoint key so switching between projects
         // doesn't collide. The TASK_META store is shared across projects
         // (indexed by projectId), so it can never be `clear()`ed on a full
@@ -85,6 +91,27 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         // browser fetch each project in full once, which rewrites those rows.
         // Keep the "tasks:" prefix: `loadTeamTasks` forgets checkpoints by it.
         const key = `tasks:v2:${projectId}`;
+
+        // Which statuses this project's rows are held for (MIP-2000). The watermark above
+        // says "I hold everything older than this", and that is only true for one set of
+        // statuses, so the set is stored with it (a record without one = all, as written
+        // before this existed). `need` is what the caller wants shown:
+        //   - nothing held yet: ask for exactly `need`;
+        //   - held already covers it: a delta over what is held (never narrower, so a
+        //     background refresh cannot drop rows a view still shows);
+        //   - held does not cover it: forget the watermark and load the union in full,
+        //     once. The set only grows, so turning a status off and on again costs nothing.
+        // A caller that says nothing wants every status: the behaviour before MIP-2000.
+        const need: StatusScope = statuses ?? null;
+        const record = await checkpointRepo.getCheckpointRecord(key);
+        const held: StatusScope | undefined = record ? (record.statuses ?? null) : undefined;
+        const widen = held !== undefined && !scopeCovers(held, need);
+        if (widen) await checkpointRepo.forgetCheckpoint(key);
+        const state: { scope: StatusScope; counts: Record<string, number> | null } = {
+            scope: held === undefined ? need : widen ? unionScope(held, need) : held,
+            counts: null,
+        };
+
         // What the server says we should hold once the delta is applied.
         // Only an answer to "what changed" carries it: a full answer is its
         // own proof, so there is nothing to check after one. Held in an
@@ -94,21 +121,48 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         // The `serverTime` of the answer being applied: the applier needs
         // it to tell a row saved mid-load from one that is simply stale.
         const answer = { serverTime: "" };
+        // The scope fell back to All during a DELTA (an API without the parameter, or one that
+        // refused it): the watermark then stands for rows of the narrow set only, so what is
+        // older than it, Closed included, was never loaded. One full load makes it true.
+        const collapsedOnDelta = { value: false };
         const sync = () =>
             syncWithCheckpoint({
                 key,
                 fetcher: async (since) => {
                     const failure: { status?: number } = {};
-                    const response = await loadProjectTasksFromApi(
+                    let response = await loadProjectTasksFromApi(
                         myself,
                         projectId,
                         accessToken,
                         since,
-                        failure
+                        failure,
+                        state.scope
                     );
+                    // A server that refuses the parameter (400): ask for everything, so a
+                    // scoping problem degrades to the old behaviour and not to no tasks.
+                    if (!response && state.scope !== null && failure.status === 400) {
+                        state.scope = null;
+                        if (since !== null) collapsedOnDelta.value = true;
+                        failure.status = undefined;
+                        response = await loadProjectTasksFromApi(
+                            myself,
+                            projectId,
+                            accessToken,
+                            since,
+                            failure,
+                            null
+                        );
+                    }
                     if (!response) {
                         throw new Error(projectTasksFailureMessage(failure.status));
                     }
+                    // An API that predates `?statuses=` ignores it and answers with every
+                    // status and no counts: the store then holds all of them.
+                    if (state.scope !== null && response.statusCounts === undefined) {
+                        state.scope = null;
+                        if (since !== null) collapsedOnDelta.value = true;
+                    }
+                    state.counts = response.statusCounts ?? null;
                     answer.serverTime = response.serverTime;
                     if (since !== null) {
                         claim.count = response.totalCount ?? null;
@@ -122,6 +176,9 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
                         forceFull: response.forceFull,
                     };
                 },
+                checkpointMeta: () => ({
+                    statuses: state.scope === null ? undefined : [...state.scope],
+                }),
                 applier: async (tasks, hadCheckpoint) => {
                     const toUpsert: TaskTableProps[] = [];
                     for (const t of tasks) {
@@ -169,7 +226,12 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         // agree or nothing was claimed; otherwise a line saying how.
         const disagreement = async (): Promise<string | null> => {
             if (claim.count === null && claim.idSum === null) return null;
-            const rows = await taskRepo.getTasksByProject(projectId);
+            // Only the rows whose own status is held count: the server counts the same way,
+            // and a stray row of another status (a delta is never narrowed) is not part
+            // of the claim. Ancestors and milestone rows of other statuses are the same.
+            const rows = (await taskRepo.getTasksByProject(projectId)).filter((row) =>
+                rowInScope(state.scope, row.status)
+            );
             if (claim.count !== null && rows.length !== claim.count) {
                 return `${rows.length} rows held, server says ${claim.count}`;
             }
@@ -184,7 +246,18 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
             return null;
         };
 
+        // What the caller learns: the statuses now held and the server's per-status counts.
+        const result = (): LoadedProjectTasks => ({
+            statuses: state.scope === null ? null : [...state.scope],
+            statusCounts: state.counts,
+        });
+
         await sync();
+        if (collapsedOnDelta.value) {
+            collapsedOnDelta.value = false;
+            await checkpointRepo.forgetCheckpoint(key);
+            await sync();
+        }
 
         // A checkpoint claims we already hold everything older than it.
         // When that is untrue there is nothing in a later answer to reveal
@@ -216,10 +289,11 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         // cheap, and happens once per gap.
         if ((await disagreement()) === null) {
             failedHeals.delete(projectId);
-            return;
+            return result();
         }
         const failedAt = failedHeals.get(projectId);
-        if (failedAt !== undefined && Date.now() - failedAt < FAILED_HEAL_RETRY_MS) return;
+        if (failedAt !== undefined && Date.now() - failedAt < FAILED_HEAL_RETRY_MS)
+            return result();
 
         await checkpointRepo.forgetCheckpoint(key);
         await sync();
@@ -231,12 +305,18 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         const after = await disagreement();
         if (after === null) {
             failedHeals.delete(projectId);
-            return;
+            return result();
         }
         failedHeals.set(projectId, Date.now());
         console.warn(
             `[loadProjectTasks] project ${projectId}: still out of step with the server after a full reload (${after}); not forcing another for 30 minutes`
         );
+        return result();
+    },
+
+    readProjectTaskScope: async ({ projectId }) => {
+        const record = await checkpointRepo.getCheckpointRecord(`tasks:v2:${projectId}`);
+        return { known: record !== null, statuses: record?.statuses ?? null };
     },
 
     loadTeamTasks: async ({ myself, accessToken }) => {

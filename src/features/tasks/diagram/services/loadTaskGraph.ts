@@ -162,7 +162,9 @@ const loadAllProjectTasks = async (
     accessToken: string | null
 ): Promise<TaskTableProps[] | null> => {
     try {
-        await loadProjectTasks(myself, projectId, accessToken);
+        // Every status: the tree is drawn with its Closed subtasks (MIP-2000: the table's
+        // own load is for the ongoing statuses only).
+        await loadProjectTasks(myself, projectId, accessToken, null);
         const rows = await popSpecificProjectTasks(projectId, taskTypes.all.statuses);
         if (Array.isArray(rows) && rows.length > 0) return rows;
     } catch (error: unknown) {

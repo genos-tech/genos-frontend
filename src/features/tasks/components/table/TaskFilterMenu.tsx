@@ -36,6 +36,7 @@ import {
     selectVisibleMilestones,
     selectVisibleSprints,
 } from "../../sprint-milestone/utils/sortMilestones";
+import { useProjectStatusScope } from "../../state/projectStatusScopeStore";
 import {
     FilterProps,
     predefinedEffortLevelFilters,
@@ -49,6 +50,7 @@ import {
     selectMilestoneRowsForSelection,
     selectMilestonesWithMatchingChildren,
 } from "../../utils/milestoneChildFilter";
+import { scopeCovers, scopeKey, statusesNeeded } from "../../utils/projectStatusScope";
 import {
     buildSavedFilterPayload,
     resolveSavedFilter,
@@ -445,9 +447,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // this key, and re-applying would fire a redundant `applyFilters`
     // before the task list has even loaded.
     const restoredKeyRef = React.useRef<string | undefined | null>(filterStorageKey);
+    // The storage key the selection in state belongs to (MIP-2000): until the restore below has
+    // run for a new project, the selection is the PREVIOUS project's and says nothing about
+    // what this one needs.
+    const [selectionKey, setSelectionKey] = React.useState<string | undefined | null>(
+        filterStorageKey
+    );
     React.useEffect(() => {
         if (restoredKeyRef.current === filterStorageKey) return;
         restoredKeyRef.current = filterStorageKey;
+        setSelectionKey(filterStorageKey);
 
         const next = filterStorageKey ? readStoredFilters(filterStorageKey) : null;
         const nextStatus = hideStatusFilter
@@ -1157,6 +1166,44 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         milestoneKeys: selectedMilestoneKeys,
         memberKeys: selectedMemberKeys,
     };
+
+    // MIP-2000: the project's rows are loaded for the statuses the table opens on (Open, WIP,
+    // Blocked, Pending); the rest of a big project is mostly Closed and is fetched when a
+    // filter first needs it. What this selection needs is a pure function of it, so the
+    // fetch follows the selection whichever way it changed (a chip, a saved filter, a stored
+    // filter restored for another project, a past milestone picked). A status already held is
+    // never fetched again: turning Closed off and on costs nothing.
+    const projectScope = useProjectStatusScope(savedFiltersProjectId);
+    const scopeMilestoneId = useTM.tableMilestoneFilterId;
+    const statusNeed = statusesNeeded({
+        labels: selectedStatus.map((f) => f.label),
+        // A past milestone's full history (Closed included) bypasses the status filter.
+        showsFullHistory:
+            (scopeMilestoneId != null && outdatedMilestoneIds.has(scopeMilestoneId)) ||
+            selectedMilestoneKeys.some(
+                (k) => typeof k === "number" && outdatedMilestoneIds.has(k)
+            ),
+    });
+    const statusNeedKey = scopeKey(statusNeed);
+    const heldStatusKey = scopeKey(projectScope.loaded);
+    // The server's count for a status the rows do not hold yet ("Closed 780" on a chip), so the
+    // number is there before the rows are. Null for a status that is held (the table's own count
+    // is by effective status, which can differ from the server's by a task's own status) or
+    // that the server did not count.
+    const notLoadedStatusCount = (label: string): number | null => {
+        if (projectScope.loaded === undefined || projectScope.loaded === null) return null;
+        if (scopeCovers(projectScope.loaded, [label])) return null;
+        const n = projectScope.counts?.[label];
+        return typeof n === "number" ? n : null;
+    };
+    // A layout effect: the skeleton must stand in before the frame in which the filter has
+    // changed but its rows are not there, or the table flashes "no tasks".
+    React.useLayoutEffect(() => {
+        if (savedFiltersProjectId == null) return;
+        if (selectionKey !== filterStorageKey) return;
+        void useTM.ensureProjectStatuses(savedFiltersProjectId, statusNeed);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [savedFiltersProjectId, statusNeedKey, heldStatusKey, selectionKey, filterStorageKey]);
 
     // Apply filters — single-pass walk over allTasks. Previously this was
     // 5-6 chained `.filter()` calls allocating intermediate arrays plus a
@@ -2447,6 +2494,19 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                                 >
                                                     {filterLabel(status)}
                                                 </Typography>
+                                                {notLoadedStatusCount(status.label) !== null && (
+                                                    <Typography
+                                                        data-status-count={status.label}
+                                                        sx={{
+                                                            fontSize: "12px",
+                                                            color: styles.textColor,
+                                                            opacity: 0.6,
+                                                            fontVariantNumeric: "tabular-nums",
+                                                        }}
+                                                    >
+                                                        {notLoadedStatusCount(status.label)}
+                                                    </Typography>
+                                                )}
                                                 {isSelected && (
                                                     <Box
                                                         sx={{

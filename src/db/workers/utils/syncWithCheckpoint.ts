@@ -1,4 +1,4 @@
-import { CheckpointRepository } from "../../repositories/checkpoints";
+import { CheckpointMeta, CheckpointRepository } from "../../repositories/checkpoints";
 
 const checkpointRepo = new CheckpointRepository();
 
@@ -37,6 +37,10 @@ export interface SyncWithCheckpointOptions<T> {
     // The new checkpoint is still persisted afterward, so the NEXT sync
     // returns to incremental.
     forceFull?: boolean;
+
+    // Extra fields stored with the new watermark, read AFTER the applier succeeded (so it can
+    // describe what the answer just applied).
+    checkpointMeta?: () => CheckpointMeta;
 }
 
 // Drive one checkpointed sync round.
@@ -62,5 +66,5 @@ export async function syncWithCheckpoint<T>(opts: SyncWithCheckpointOptions<T>):
     // us to (catastrophic-delta).
     const hadCheckpoint = since !== null && !response.forceFull;
     await opts.applier(response.data, hadCheckpoint);
-    await checkpointRepo.setCheckpoint(opts.key, response.serverTime);
+    await checkpointRepo.setCheckpoint(opts.key, response.serverTime, opts.checkpointMeta?.());
 }

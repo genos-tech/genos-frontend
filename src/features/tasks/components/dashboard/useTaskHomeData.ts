@@ -12,10 +12,12 @@ import { loadTeamTasks } from "../../services/loadTeamTasks";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
 import { sprintBucketOf } from "../../sprint-milestone/utils/sprintBucket";
+import { useProjectStatusScope } from "../../state/projectStatusScopeStore";
 import { computeAssigneeStats, computeUpNext } from "../../utils/dashboardStats";
 import { isDueWithin, isOverdueDate, sprintWindowMs } from "../../utils/dueWindow";
 import { deriveEffectiveTasks, EffectiveTask } from "../../utils/effectiveTasks";
 import { projectAvatarSrcMap } from "../../utils/projectAvatar";
+import { scopeCovers, scopeKey } from "../../utils/projectStatusScope";
 import { computeTaskWeight } from "../../utils/taskWeight";
 import { sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
 import { useDashboardTab } from "./dashboardTab";
@@ -106,8 +108,27 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     }, [selectedSprint?.sprintId]);
     // ── All-project stats ──
     const allTasks = useTM.allTasks || [];
+    // MIP-2000: a project is first loaded for the ongoing statuses only. Every tab but Today and
+    // Agent counts the WHOLE project (closed counts, completion, milestone progress), so they
+    // ask for all statuses and say "loading" until those rows are held, instead of counting a
+    // partial list. Today and Agent read other endpoints.
+    const dashboardProjectId = usePM.currentProject?.projectId;
+    const wholeProjectScope = useProjectStatusScope(dashboardProjectId);
+    const needsWholeProject = activeTab !== "today" && activeTab !== "agent";
+    const wholeProjectPending =
+        needsWholeProject &&
+        !scopeCovers(wholeProjectScope.loaded, null) &&
+        (wholeProjectScope.loaded !== undefined || tasksSync.loading);
+    const heldScopeKey = scopeKey(wholeProjectScope.loaded);
+    useEffect(() => {
+        if (dashboardProjectId && needsWholeProject) {
+            void useTM.ensureProjectStatuses(dashboardProjectId, null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dashboardProjectId, needsWholeProject, heldScopeKey]);
     const tasksUnread =
-        allTasks.length === 0 && (tasksSync.failed || tasksSync.loading || tasksSync.retrying);
+        wholeProjectPending ||
+        (allTasks.length === 0 && (tasksSync.failed || tasksSync.loading || tasksSync.retrying));
 
     // Index every task by id so we can walk the parent chain efficiently.
     const taskById = useMemo(() => {

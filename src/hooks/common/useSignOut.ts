@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 import { DatabaseUtils } from "../../db/utils/database";
+import { resetProjectScopes } from "../../features/tasks/state/projectStatusScopeStore";
 import { analytics } from "../../services/analytics";
 import { clearPrivateProfile } from "../../services/privateProfileStore";
 import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
@@ -93,6 +94,8 @@ export const useSignOut = () => {
             } catch (error) {
                 console.error("Could not clear the local cache on sign-out:", error);
             }
+            // The statuses the next person's rows hold are not this person's (MIP-2000).
+            resetProjectScopes();
 
             setAccessToken(null);
             // The sign-in form, as before: `/` is the home page for signed-out visitors now.
