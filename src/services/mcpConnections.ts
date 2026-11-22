@@ -233,3 +233,27 @@ export const revokeMcpConnection = async (
         return { ok: false, ...writeFailure(error) };
     }
 };
+
+// ── No-activity check (MIP-2022) ─────────────────────────────────────
+
+/** "Connected, but no agent has written anything for `days` days": the caller's own, read
+ *  server-side from data that already exists. `quiet` is false when not connected. */
+export interface AgentQuiet {
+    connected: boolean;
+    quiet: boolean;
+    days: number;
+}
+
+/** `null` when the check could not be read: the line is then simply not shown. */
+export const fetchAgentQuiet = async (accessToken: string | null): Promise<AgentQuiet | null> => {
+    const api = authApi(accessToken);
+    if (!api) return null;
+    try {
+        const res = await api.get<Partial<AgentQuiet>>("/mcp/connections/quiet/", SILENT);
+        const { connected, quiet, days } = res.data;
+        if (typeof connected !== "boolean" || typeof quiet !== "boolean") return null;
+        return { connected, quiet, days: typeof days === "number" && days > 0 ? days : 3 };
+    } catch {
+        return null;
+    }
+};

@@ -23,6 +23,7 @@ import { mcpCoreUrl } from "../../utils/mcpConnect";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConnectAppPanel } from "./ConnectAppPanel";
 import { latestActivity } from "./connectAppPanelHelpers";
+import { useAgentQuiet } from "./useAgentQuiet";
 
 /**
  * Settings → Developer → Connected apps (MIP-1079): the AI apps this member has
@@ -42,6 +43,8 @@ export const ConnectedAppsSection = () => {
 
     const [connections, setConnections] = useState<McpConnection[] | null>(null);
     const [loadFailed, setLoadFailed] = useState(false);
+    // No-activity check (MIP-2022): read once the list says something is connected.
+    const quiet = useAgentQuiet(accessToken, (connections?.length ?? 0) > 0);
     const [availableTeams, setAvailableTeams] = useState<{ id: string; name: string }[]>([]);
     const [editing, setEditing] = useState<string | null>(null);
     const [confirming, setConfirming] = useState<string | null>(null);
@@ -383,6 +386,7 @@ export const ConnectedAppsSection = () => {
                     defaultOpen={!connections?.length}
                     lastActivityAt={latestActivity(connections ?? [])}
                     listKnown={!loadFailed}
+                    quietDays={quiet?.quiet ? quiet.days : null}
                 />
             )}
         </Stack>

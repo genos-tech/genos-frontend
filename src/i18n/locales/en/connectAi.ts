@@ -21,6 +21,10 @@ export const connectAi = {
     statusActivity: "Agent activity seen {when}",
     statusNoActivity: "No agent activity seen yet. Ask your AI about your Genos tasks to try it.",
     // Free plan.
+    // No-activity check (MIP-2022): one quiet line, with a link to these steps.
+    quietLine:
+        "Your AI app hasn't recorded anything in {days, plural, one {# day} other {# days}}.",
+    quietAction: "Check the setup",
     freePlan: "The Genos connector needs the Core plan or above, and you are on Free.",
     // Tabs.
     tabsAria: "Choose your AI app",

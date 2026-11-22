@@ -1,5 +1,6 @@
 import { parseServerTime } from "../../features/tasks/utils/relativeAge";
 import { smoothScrollBehavior } from "../../utils/motion";
+import { requestOpenSettings } from "./settingsEvents";
 
 /**
  * Open the "Connect your AI" panel (if it is on screen) and bring it into view. A
@@ -13,6 +14,24 @@ export const openConnectAppPanel = () => {
             .getElementById(CONNECT_APP_PANEL_ID)
             ?.scrollIntoView?.({ block: "start", behavior: smoothScrollBehavior() });
     });
+};
+
+/**
+ * "Check the setup" from outside Settings (the Genos page, MIP-2022): the panel is not mounted
+ * until Settings → Developer is, so the request is remembered and the panel takes it on mount.
+ * `takePendingSetup` reads it once.
+ */
+let pendingSetup = false;
+
+export const requestConnectSetup = () => {
+    pendingSetup = true;
+    requestOpenSettings("developer");
+};
+
+export const takePendingSetup = (): boolean => {
+    const was = pendingSetup;
+    pendingSetup = false;
+    return was;
 };
 
 /** The panel's anchor, and the window event that opens it (see `openConnectAppPanel`). */

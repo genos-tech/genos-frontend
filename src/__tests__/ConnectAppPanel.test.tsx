@@ -17,6 +17,8 @@ import {
     latestActivity,
     OPEN_PLAN_EVENT,
     openConnectAppPanel,
+    requestConnectSetup,
+    takePendingSetup,
 } from "../components/layout/connectAppPanelHelpers";
 import { ConnectedAppsSection } from "../components/layout/ConnectedAppsSection";
 import { en } from "../i18n/locales/en";
@@ -27,10 +29,12 @@ vi.mock("../context/AuthContext", () => ({
 }));
 
 const listMcpConnections = vi.fn();
+const fetchAgentQuiet = vi.fn();
 vi.mock("../services/mcpConnections", () => ({
     listMcpConnections: (...a: unknown[]) => listMcpConnections(...a),
     updateMcpConnection: vi.fn(),
     revokeMcpConnection: vi.fn(),
+    fetchAgentQuiet: (...a: unknown[]) => fetchAgentQuiet(...a),
 }));
 
 const fetchAgentFeatures = vi.fn();
@@ -66,6 +70,8 @@ beforeEach(() => {
     vi.stubEnv("VITE_DJANGO_URL", ORIGIN);
     listMcpConnections.mockReset();
     listMcpConnections.mockResolvedValue({ connections: [], availableTeams: [] });
+    fetchAgentQuiet.mockReset();
+    fetchAgentQuiet.mockResolvedValue({ connected: false, quiet: false, days: 3 });
     fetchAgentFeatures.mockReset();
     fetchAgentFeatures.mockResolvedValue({ tier: "core" });
 });
@@ -212,6 +218,66 @@ describe("Connect your AI panel", () => {
         await screen.findByTestId("mcp-command");
         await openTab(ai.tabClaudeDesktop);
         expect(screen.getByTestId("mcp-address").textContent).toBe(ADDRESS);
+    });
+});
+
+describe("the no-activity line (MIP-2022)", () => {
+    const connected = () =>
+        listMcpConnections.mockResolvedValue({ connections: [CONN], availableTeams: [] });
+
+    it("shows one quiet line under the header, even while the panel is collapsed, when the check says quiet", async () => {
+        connected();
+        fetchAgentQuiet.mockResolvedValue({ connected: true, quiet: true, days: 3 });
+        render(<ConnectedAppsSection />);
+        const line = await screen.findByTestId("agent-quiet-notice");
+        expect(line.textContent).toContain("Your AI app hasn't recorded anything in 3 days.");
+        expect(line.textContent).toContain(ai.quietAction);
+        expect(toggle().getAttribute("aria-expanded")).toBe("false");
+        // Quiet: not an alert, nothing announced.
+        expect(within(line).queryByRole("alert")).toBeNull();
+        expect(line.closest("[role=alert]")).toBeNull();
+    });
+
+    it("'Check the setup' opens the steps", async () => {
+        connected();
+        fetchAgentQuiet.mockResolvedValue({ connected: true, quiet: true, days: 3 });
+        render(<ConnectedAppsSection />);
+        await userEvent.setup().click(await screen.findByRole("button", { name: ai.quietAction }));
+        expect(toggle().getAttribute("aria-expanded")).toBe("true");
+        expect(screen.getByRole("tablist", { name: ai.tabsAria })).toBeTruthy();
+    });
+
+    it("says nothing when the check says an agent wrote recently, failed, or nothing is connected", async () => {
+        connected();
+        fetchAgentQuiet.mockResolvedValue({ connected: true, quiet: false, days: 3 });
+        const first = render(<ConnectedAppsSection />);
+        await screen.findByTestId("connected-app");
+        await waitFor(() => expect(fetchAgentQuiet).toHaveBeenCalled());
+        expect(screen.queryByTestId("agent-quiet-notice")).toBeNull();
+        first.unmount();
+
+        fetchAgentQuiet.mockReset();
+        fetchAgentQuiet.mockResolvedValue(null);
+        render(<ConnectedAppsSection />);
+        await screen.findByTestId("connected-app");
+        await waitFor(() => expect(fetchAgentQuiet).toHaveBeenCalled());
+        expect(screen.queryByTestId("agent-quiet-notice")).toBeNull();
+    });
+
+    it("does not even ask while nothing is connected", async () => {
+        render(<ConnectedAppsSection />);
+        await screen.findByText("No apps connected yet.");
+        expect(fetchAgentQuiet).not.toHaveBeenCalled();
+        expect(screen.queryByTestId("agent-quiet-notice")).toBeNull();
+    });
+
+    it("a request from the Genos page opens the panel as soon as it mounts", async () => {
+        connected();
+        requestConnectSetup();
+        render(<ConnectedAppsSection />);
+        await screen.findByTestId("connected-app");
+        expect(toggle().getAttribute("aria-expanded")).toBe("true");
+        expect(takePendingSetup()).toBe(false); // consumed once
     });
 });
 
