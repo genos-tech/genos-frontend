@@ -22,7 +22,8 @@ import ReactMarkdown from "react-markdown";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
-import { agentMarkdownComponents, externalHost } from "../features/agentQA/agentMarkdown";
+import { agentMarkdownComponents } from "../features/agentQA/agentMarkdownComponents";
+import { externalHost } from "../features/agentQA/externalHost";
 import { AgentTurn } from "../features/agentQA/AgentTurn";
 import { buildAgentTurnLabels } from "../features/agentQA/agentTurnLabels";
 import { ApprovalCard } from "../features/agentQA/ApprovalCard";

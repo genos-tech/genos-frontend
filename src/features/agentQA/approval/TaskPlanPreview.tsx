@@ -17,7 +17,7 @@ import { MilestoneFlag } from "../../tasks/components/card/parts";
 import { EffortLabel } from "../../tasks/components/meta/EffortLabel";
 import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
 import { isPriorityName } from "../../tasks/meta/taskTone";
-import { agentMarkdownComponents } from "../agentMarkdown";
+import { agentMarkdownComponents } from "../agentMarkdownComponents";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
 import { MetaChip } from "./previewHelpers";
 

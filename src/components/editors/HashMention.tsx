@@ -30,7 +30,8 @@ import { filterAndRankSuggestionItems } from "../../utils/suggestionRanking";
 import { AppTooltip } from "../ui/AppTooltip";
 import { searchHashTasks } from "./hashTaskSearch";
 import { MentionSuggestionMenu } from "./Mention";
-import { MENTION_ICONS, MentionIconDisc, MentionMenuRow } from "./mentionMenuRow";
+import { MENTION_ICONS } from "./mentionIcons";
+import { MentionIconDisc, MentionMenuRow } from "./mentionMenuRow";
 import {
     CHAT_PALETTE,
     MILESTONE_PALETTE,
@@ -45,18 +46,6 @@ import {
     HASH_PROJECT_SPEC_CONFIG,
     HASH_TASK_SPEC_CONFIG,
 } from "./schemaSpecConfigs";
-
-// Per-entity palettes now live in the BlockNote-free `mentionPalettes`
-// module. Re-exported here for existing consumers (LightMessageBody) that
-// import them from `./HashMention`.
-export {
-    CHAT_PALETTE,
-    MILESTONE_PALETTE,
-    NOTE_PALETTE,
-    PROJECT_PALETTE,
-    TASK_PALETTE,
-    type MentionPalette,
-} from "./mentionPalettes";
 
 // `#` mentions render as styled inline TEXT — NOT a chip/pill — so they read
 // as a distinct affordance from the `@` user/group mention chips (which keep

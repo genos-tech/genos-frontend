@@ -21,7 +21,8 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import { useNavigate } from "react-router-dom";
 
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
-import { agentMarkdownComponents, ExternalLink } from "../../agentQA/agentMarkdown";
+import { ExternalLink } from "../../agentQA/agentMarkdown";
+import { agentMarkdownComponents } from "../../agentQA/agentMarkdownComponents";
 
 // Old digest rows stored the agent's raw token grammar as link targets.
 // Blank them (the anchor override then renders plain text) rather than

@@ -27,7 +27,8 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { diffValue, linkEntries, LinkLines, MetaChip, placeValue } from "./previewHelpers";
+import { LinkLines, MetaChip } from "./previewHelpers";
+import { diffValue, linkEntries, placeValue } from "./previewValues";
 
 const CHIP_FIELDS = ["status", "priority", "effort_level", "due_date"] as const;
 type ChipField = (typeof CHIP_FIELDS)[number];

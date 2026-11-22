@@ -22,7 +22,8 @@ import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { formatBytes } from "../../../utils/uploadLimits";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString, MetaChip } from "./previewHelpers";
+import { MetaChip } from "./previewHelpers";
+import { asString } from "./previewValues";
 
 type CurrentFile = { name?: unknown; size_bytes?: unknown; type?: unknown };
 

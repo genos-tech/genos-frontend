@@ -50,20 +50,18 @@ import { UserProps } from "../../types/admin";
 import { downloadFile } from "../../utils/downloadUtils";
 import { entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { CustomEmojiImg } from "../editors/CustomEmojiImg";
+import { hashMentionTextSx } from "../editors/HashMention";
+import { mentionChipSx } from "../editors/Mention";
 import {
     CHAT_PALETTE,
-    hashMentionTextSx,
+    GROUP_PALETTE,
+    MentionPalette,
     NOTE_PALETTE,
     PROJECT_PALETTE,
     TASK_PALETTE,
-} from "../editors/HashMention";
-import {
-    GROUP_PALETTE,
-    mentionChipSx,
-    MentionPalette,
     USER_OTHER_PALETTE,
     USER_SELF_PALETTE,
-} from "../editors/Mention";
+} from "../editors/mentionPalettes";
 import { withoutTrailingBlank } from "../editors/utils/messageBlocks";
 import { AppTooltip } from "../ui/AppTooltip";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";

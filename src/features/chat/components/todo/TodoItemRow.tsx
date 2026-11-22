@@ -28,7 +28,7 @@ import { formatCompletedAt } from "../../utils/todoCompletion";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
 import { ModalCreateTaskFromTodo } from "./ModalCreateTaskFromTodo";
 import { resolveTitleMentions, useTodoMentionPool } from "./titleMentionsHelpers";
-import { renderTitleWithLinks } from "./titleRender";
+import { renderTitleWithLinks } from "./titleRenderLinks";
 import { TodoItemMoreMenu } from "./TodoItemMoreMenu";
 import { TodoNotesEditor } from "./TodoNotesEditor";
 import { useTodoTitleField } from "./useTodoTitleField";

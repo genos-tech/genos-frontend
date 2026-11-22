@@ -26,40 +26,10 @@
 // BlockNote import here drags the whole editor runtime into it.
 
 import type { ElementType, ReactNode } from "react";
-import EventRoundedIcon from "@mui/icons-material/EventRounded";
-import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
-import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import { Box, Chip, Typography } from "@mui/joy";
 
 import { g } from "../../theme/tokens";
 import { mentionIconColor, type MentionPalette } from "./mentionPalettes";
-
-/**
- * Which icon means which kind of thing — shared so a `#task` is the same
- * glyph in the editor menu, the dropdown, and (via the citation chips) a
- * Spotlight answer.
- *
- * `todo` reuses the task glyph deliberately: it has no BlockNote `#`
- * equivalent to match, and it is already the icon Spotlight's todo
- * citation chip uses, so following that beats inventing a third glyph.
- * Its violet palette and "To-do" subtitle are what separate it from a
- * task row.
- */
-export const MENTION_ICONS = {
-    task: TaskAltRoundedIcon,
-    milestone: FlagRoundedIcon,
-    note: StickyNote2RoundedIcon,
-    chat: ForumRoundedIcon,
-    project: FolderRoundedIcon,
-    group: GroupRoundedIcon,
-    todo: TaskAltRoundedIcon,
-    // An agent mention made by "Ask Genos about this event"; never a row of the `#` menu.
-    calendarEvent: EventRoundedIcon,
-} as const satisfies Record<string, ElementType>;
 
 /**
  * The leading 32px identity visual for a non-person row: the kind's icon

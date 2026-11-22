@@ -22,7 +22,8 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString, MetaChip } from "./previewHelpers";
+import { MetaChip } from "./previewHelpers";
+import { asString } from "./previewValues";
 
 // The API stars unless `favorite` says otherwise, so a missing value reads as
 // star. Only a false boolean or the string "false" is an unstar.

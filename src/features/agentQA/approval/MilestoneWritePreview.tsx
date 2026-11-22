@@ -36,7 +36,8 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString, diffValue, MetaChip } from "./previewHelpers";
+import { MetaChip } from "./previewHelpers";
+import { asString, diffValue } from "./previewValues";
 
 // `''` clears a folder, a sprint and a date; `[]` clears tags and assignees.
 const FIELDS = [

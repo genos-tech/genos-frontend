@@ -20,7 +20,7 @@ import { Box, Typography } from "@mui/joy";
 import { fmt, useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { ApprovalPreviewProps } from "./approvalRenderers";
-import { asString } from "./previewHelpers";
+import { asString } from "./previewValues";
 
 export const DeleteProjectPreview = ({ args, undoKnown }: ApprovalPreviewProps) => {
     const { t } = useTranslation();
