@@ -123,6 +123,8 @@ const ARABIC_SAME_AS_ENGLISH_OK: Record<string, string> = {
     "common.editor.emojiTypingHint": "the literal `:+typing` trigger the user types",
     "settings.developer.webhooks.urlPlaceholder": "an example URL",
     "tasks.linkedPr.paste": "an example URL",
+    "settings.developer.agentUse.apps.claude": "the product name Claude",
+    "settings.developer.agentUse.apps.chatgpt": "the product name ChatGPT",
     "tasks.activity.via.apps.claude": "the product name Claude",
     "tasks.activity.via.apps.chatgpt": "the product name ChatGPT",
     "tasks.dashboard.agentActivity.agents.claude": "the product name Claude",

@@ -4197,6 +4197,22 @@ export const fr: DeepPartial<Messages> = {
                 unknownMember: "un membre de l'équipe",
                 revokeNamed: "Révoquer {name}",
             },
+            agentUse: {
+                title: "Utilisation des apps d'IA",
+                blurb: "Ce que les apps d'IA de chaque membre ont fait dans cette équipe, par semaine. Uniquement des décomptes : ce qu'elles ont lu ou recherché reste privé pour chaque membre et n'est pas affiché ici.",
+                empty: "Aucune utilisation d'app d'IA enregistrée pour l'instant.",
+                weekOf: "Semaine du {date}",
+                calls: "Appels : {n}",
+                changes: "Modifications : {n}",
+                refused: "Refusés : {n}",
+                keyNamed: "{app} ({key})",
+                unknownMember: "Un membre de l'équipe",
+                apps: {
+                    claude: "Claude",
+                    chatgpt: "ChatGPT",
+                    other: "Autre app",
+                },
+            },
             securityLog: {
                 title: "Journal de sécurité",
                 blurb: "Modifications sensibles de cette équipe, les plus récentes d'abord : arrivées et départs de membres, changements de rôle et de propriété, invitations, clés API, webhooks et alertes. Conservé 365 jours.",

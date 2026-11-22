@@ -5,6 +5,7 @@ import { Box, Chip, Sheet, Stack, Typography } from "@mui/joy";
 import { useAuth } from "../../context/AuthContext";
 import { fmt, useTranslation } from "../../i18n";
 import { AgentUseRow, listTeamAgentUse } from "../../services/developerApi";
+import { EmptyState } from "../ui/feedback/EmptyState";
 
 type Props = {
     teamId: string;
@@ -69,9 +70,7 @@ export const AgentUseSection = ({ teamId }: Props) => {
                 {s.blurb}
             </Typography>
             {weeks.length === 0 ? (
-                <Typography level="body-sm" sx={{ opacity: 0.75 }}>
-                    {s.empty}
-                </Typography>
+                <EmptyState body={s.empty} size="xs" />
             ) : (
                 weeks.map((w) => (
                     <Stack key={w.weekStart} data-testid="agent-use-week" spacing={0.75}>

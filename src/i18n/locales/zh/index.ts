@@ -3986,6 +3986,22 @@ export const zh: DeepPartial<Messages> = {
                 unknownMember: "一位团队成员",
                 revokeNamed: "撤销 {name}",
             },
+            agentUse: {
+                title: "AI 应用使用情况",
+                blurb: "按周显示每位成员的 AI 应用在此团队中的操作量。仅显示次数：读取或搜索的内容仅各成员本人可见，此处不会显示。",
+                empty: "尚无 AI 应用使用记录。",
+                weekOf: "{date} 当周",
+                calls: "调用：{n}",
+                changes: "更改：{n}",
+                refused: "已拒绝：{n}",
+                keyNamed: "{app}（{key}）",
+                unknownMember: "团队成员",
+                apps: {
+                    claude: "Claude",
+                    chatgpt: "ChatGPT",
+                    other: "其他应用",
+                },
+            },
             securityLog: {
                 title: "安全日志",
                 blurb: "此团队的敏感变更，按时间倒序：成员加入与离开、角色与所有权变更、邀请、API 密钥、webhook 和告警。保留 365 天。",
