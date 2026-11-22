@@ -32,6 +32,14 @@ import { TaskCommentBubble } from "./TaskCommentBubble";
 // mount cost — so this is back to the modest symmetric value.
 const OVERSCAN_PX = 600;
 
+/** The hover toolbar floats above each row's top edge, and the scroller clips
+ *  anything above its own top: a gap above the first row keeps that toolbar
+ *  whole. Module-level so Virtuoso gets a stable component. */
+const LIST_TOP_GAP_PX = 20;
+const LIST_COMPONENTS = {
+    Header: () => <div style={{ height: LIST_TOP_GAP_PX }} aria-hidden />,
+};
+
 type TaskCommentListProps = {
     socket: Socket | null;
     myself: UserProps;
@@ -324,6 +332,7 @@ export const TaskCommentList = ({
                     atBottomThreshold={128}
                     atTopThreshold={64}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                    components={LIST_COMPONENTS}
                     followOutput={followOutput}
                     increaseViewportBy={{ top: OVERSCAN_PX, bottom: OVERSCAN_PX }}
                     initialTopMostItemIndex={taskComments.length - 1}
@@ -349,6 +358,7 @@ export const TaskCommentList = ({
                 atBottomThreshold={128}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                components={LIST_COMPONENTS}
                 followOutput={followOutput}
                 increaseViewportBy={{ top: OVERSCAN_PX, bottom: OVERSCAN_PX }}
                 initialTopMostItemIndex={taskComments.length - 1}

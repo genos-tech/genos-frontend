@@ -85,6 +85,10 @@ export type BubbleProps = {
     actionsOpen?: boolean;
     /** Compact layout: a follow-up message in a run drops the top divider. */
     grouped?: boolean;
+    /** Compact layout: float the toolbar over the row's top edge (mostly above
+     *  it, the part inside lands in the header line's empty right side) instead
+     *  of inside the row, where it covers the first line of the text. */
+    toolbarOnEdge?: boolean;
     /** The row or balloon is clickable (pointer cursor). */
     interactive?: boolean;
     /** Bubble layout: the pointed corner that says who spoke. Off for a card. */
@@ -151,6 +155,15 @@ const toolbarBase = {
 /** Inside the row's top-right corner (compact), or straddling the balloon's top
  *  edge so it never covers a one-word message. */
 const toolbarPlace = {
+    // Above the row. From `sm` up the 40% that dips inside stays within the
+    // header line (author, time), whose right side is empty, never on the text.
+    // On a phone the header is as wide as the toolbar's reach, so it sits
+    // wholly above the row instead.
+    compactOnEdge: {
+        insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right,
+        top: 0,
+        transform: { xs: "translateY(-100%)", sm: "translateY(-60%)" },
+    },
     compact: { insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right, top: BUBBLE_TOOLBAR_OFFSET.top },
     // The toolbar is wider than a short balloon, so it opens into the empty
     // side: a received balloon sits at the start edge of the list, a sent one at
@@ -251,6 +264,7 @@ export const Bubble = (props: BubbleProps) => {
         actionsPosition = "toolbar",
         grouped = false,
         interactive = false,
+        toolbarOnEdge = false,
         tail = true,
         bodyOffset = 0.25,
         narrowBody = "below",
@@ -274,7 +288,9 @@ export const Bubble = (props: BubbleProps) => {
                 ref={toolbarRef}
                 place={
                     layout === "compact"
-                        ? "compact"
+                        ? toolbarOnEdge
+                            ? "compactOnEdge"
+                            : "compact"
                         : side === "sent"
                           ? "bubbleSent"
                           : "bubbleReceived"
