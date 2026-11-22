@@ -139,9 +139,11 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
         // leaving the URL out of sync with the visible task.
         lastNavigatedPath.current = location.pathname;
 
-        if (projectId) {
-            targetUrlProjectId.current = projectId;
-        }
+        // The target follows the URL: a URL without a project (phone "back to the
+        // list" -> /workspace/tasks, or another surface while this Home is kept
+        // alive but hidden) must forget it, or the enforce effect below puts the
+        // old project back (MIP-1987).
+        targetUrlProjectId.current = projectId || undefined;
 
         // If there's a projectId in the URL, set it
         if (projectId && usePM.teamProjects.length > 0) {
