@@ -281,4 +281,73 @@ describe("the agent-record top of /home", () => {
             "Can I try it without signing up?",
         ]);
     });
+
+    it.each(LANGS)(
+        "%s: the earlier sections no longer say what the brief rules out (MIP-1753)",
+        (lang) => {
+            const t = HOME_COPY[lang];
+            // The headings, subs and claims of the earlier sections (not their screenshot alts).
+            const earlier = JSON.stringify([
+                t.workspace.kicker,
+                t.workspace.title,
+                t.workspace.sub,
+                t.receipts,
+                t.mcp.kicker,
+                t.mcp.title,
+                t.mcp.sub,
+                t.mcp.points,
+                t.mcp.clients,
+                t.secretary.kicker,
+                t.trust,
+                t.cta,
+            ]);
+            const ruledOut: Array<[string, RegExp]> = [
+                ["MCP native", /MCP[- ]?native|MCPネイティブ/i],
+                ["Secretary", /secretary|秘書/i],
+                ["everything, one place", /everything|one place|仕事に関わるすべて|ひとつの場所/i],
+                ["every answer", /every answer|every change|すべての答え|必ず/i],
+                ["always ask first", /always ask|事前に確認/i],
+                ["any MCP client", /any MCP client|その他のMCPクライアント/i],
+                ["ChatGPT works", /Claude and ChatGPT|ClaudeやChatGPT/i],
+                [
+                    "a data-safety line",
+                    /never stored|保存しません|delete your account|アカウント削除/i,
+                ],
+                ["connected team", /team's work connected|つながる感覚/i],
+            ];
+            const found = ruledOut.filter(([, re]) => re.test(earlier)).map(([name]) => name);
+            expect(found).toEqual([]);
+        }
+    );
+
+    it.each(LANGS)(
+        "%s: the MCP clients row lists only Claude (available) and ChatGPT (coming)",
+        (lang) => {
+            expect(HOME_COPY[lang].mcp.clients.map((c) => [c.name, Boolean(c.coming)])).toEqual([
+                ["Claude", false],
+                ["ChatGPT", true],
+            ]);
+            const { container } = renderHome(lang);
+            expect(container.querySelectorAll("#mcp .lp-row")).toHaveLength(2);
+            expect(container.querySelector("#mcp")?.textContent).not.toMatch(
+                /any MCP client|その他のMCPクライアント/i
+            );
+        }
+    );
+
+    it.each(LANGS)(
+        "%s: the trust block keeps two lines about Genos's own assistant, and the footer says the hero's line",
+        (lang) => {
+            expect(HOME_COPY[lang].trust.items).toHaveLength(2);
+            const { container } = renderHome(lang);
+            expect(container.querySelectorAll("#trust .lp-points li")).toHaveLength(2);
+            const footer = container.querySelector("footer")?.textContent ?? "";
+            expect(footer).toContain(
+                lang === "ja"
+                    ? "AIに任せる。仕事の記録は、あなたの手元に。"
+                    : "Let AI do the work. Keep the record in your hands."
+            );
+            expect(footer).not.toMatch(/already understands|わかるワークスペース/);
+        }
+    );
 });
