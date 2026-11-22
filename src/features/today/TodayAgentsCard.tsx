@@ -47,9 +47,9 @@ export const TodayAgentsCard = ({ data }: Props) => {
             }}
         >
             <Box
-                title={a.open}
                 component="button"
                 data-testid="today-agents-open"
+                title={a.open}
                 type="button"
                 sx={{
                     display: "flex",

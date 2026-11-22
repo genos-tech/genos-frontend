@@ -41,9 +41,9 @@ export const connectApp = {
     revoke: "To disconnect an app, revoke it under Settings → Developer → Connected apps.",
     trap: "Paste the whole address, including the path at the end. Without it Claude says it signed in, then reports that Genos refused its request.",
     // The optional Genos plugin (MIP-1870). Its address and commands live in utils/mcpConnect.ts, never here.
-    pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+    pluginTitle: "Or add the Genos plugin: the connection plus ready-made skills",
     pluginIntro:
-        "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+        "The plugin bundles this connection with Genos skills you call by name, such as /genos:catchup, and with /genos:setup, which saves the Genos rules to your memory file. Optional: the address above works on its own.",
     pluginCodeLabel: "Claude Code: run these two commands in the chat",
     pluginCopyAria: "Copy the plugin commands",
     pluginDesktopLabel:

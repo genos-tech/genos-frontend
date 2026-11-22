@@ -101,7 +101,7 @@ describe("Connect your AI panel", () => {
             ai.tabChatgpt,
         ]);
         expect(screen.getByRole("tablist", { name: ai.tabsAria })).toBeTruthy();
-        // Claude Code first: one install, then sign in. Two steps, not ten minutes.
+        // Claude Code first: install, sign in, run /genos:setup. Three steps, not ten minutes.
         expect(screen.getAllByRole("listitem")).toHaveLength(ai.claudeCodeSteps.length);
         for (const step of ai.claudeCodeSteps) {
             expect(screen.getByText(step, { exact: false })).toBeTruthy();

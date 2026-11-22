@@ -324,7 +324,10 @@ describe("registerSocketRouter", () => {
         vi.useFakeTimers();
         try {
             const refresh = vi.spyOn(channelService, "refreshChannels").mockResolvedValue();
-            env.fire("channel.created", fakeChannel("c2", { latestMessage: fakeMessage("m1") }));
+            env.fire(
+                "channel.created",
+                fakeChannel("c2", { latestMessage: fakeMessage("m1", "c2") })
+            );
             vi.advanceTimersByTime(CHANNEL_APPEARED_DEBOUNCE_MS * 4);
             expect(refresh).not.toHaveBeenCalled();
         } finally {

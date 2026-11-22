@@ -127,6 +127,21 @@ describe("Connect your AI has every string in every locale", () => {
         expect(own(name)?.chatgptSteps).toHaveLength(AI.chatgptSteps.length);
     });
 
+    it.each(NAMES)(
+        "%s ends the Claude Code steps with the /genos:setup command (MIP-2035)",
+        (name) => {
+            const steps = own(name)?.claudeCodeSteps ?? [];
+            expect(steps[steps.length - 1]).toContain("/genos:setup");
+            expect(own(name)?.prefWhereClaudeCode).toContain("/genos:setup");
+        }
+    );
+
+    it("English says install the plugin, sign in, then run /genos:setup", () => {
+        expect(AI.claudeCodeSteps).toHaveLength(3);
+        expect(AI.claudeCodeSteps[1]).toContain("/mcp");
+        expect(AI.claudeCodeSteps[2]).toContain("/genos:setup");
+    });
+
     it.each(NAMES)("%s keeps {days} in the no-activity line and has the link label", (name) => {
         expect(own(name)?.quietLine).toContain("{days");
         expect((own(name)?.quietAction ?? "").length).toBeGreaterThan(0);

@@ -1581,9 +1581,9 @@ export const ar: DeepPartial<Messages> = {
                 revoke: "لفصل تطبيق، أبطِله من الإعدادات ← المطور ← التطبيقات المتصلة.",
                 trap: "الصق العنوان كاملًا، بما في ذلك المسار في آخره. بدونه يذكر Claude أنه سجّل الدخول، ثم يُبلغ بأن Genos رفض طلبه.",
                 // TODO(copy): plugin wording (MIP-1870), Arabic draft to be reviewed.
-                pluginTitle: "أو أضف إضافة Genos: الاتصال مع ثلاث مهارات",
+                pluginTitle: "أو أضف إضافة Genos: الاتصال مع مهارات جاهزة",
                 pluginIntro:
-                    "تجمع الإضافة هذا الاتصال مع مهارات Genos للعمل، فيعرف Claude كيف يعمل داخل Genos، لا كيف يصل إليه فقط. اختيارية: يعمل العنوان أعلاه وحده.",
+                    "تجمع الإضافة هذا الاتصال مع مهارات Genos تستدعيها بالاسم، مثل /genos:catchup، ومع /genos:setup الذي يحفظ قواعد Genos في ملف الذاكرة الخاص بك. اختيارية: يعمل العنوان أعلاه وحده.",
                 pluginCodeLabel: "Claude Code: شغّل هذين الأمرين في المحادثة",
                 pluginCopyAria: "نسخ أوامر الإضافة",
                 pluginDesktopLabel:
@@ -1614,6 +1614,7 @@ export const ar: DeepPartial<Messages> = {
                 claudeCodeSteps: [
                     "شغّل هذين الأمرين في محادثة Claude Code، واحدًا بعد الآخر.",
                     "شغّل /mcp وسجّل الدخول إلى Genos، ثم اختر الفريق وما يُسمح لـ Claude بفعله.",
+                    "شغّل /genos:setup. يتحقق من الاتصال، وبعد موافقتك يحفظ قواعد Genos في ملف الذاكرة الخاص بك.",
                 ],
                 claudeCodeCommandLabel: "أوامر محادثة Claude Code",
                 claudeCodeCommandAria: "نسخ أمرَي الإضافة",
@@ -1638,7 +1639,7 @@ export const ar: DeepPartial<Messages> = {
                 prefText: "عندما أعمل، أبقِ Genos محدّثًا: المهام والقرارات والتقدّم.",
                 prefCopyAria: "نسخ التفضيل",
                 prefWhereClaudeCode:
-                    "Claude Code: أضفه إلى ملف CLAUDE.md الخاص بك (الملف الموجود في مجلد .claude في مجلدك الشخصي يسري على كل المشاريع).",
+                    "Claude Code: يحفظ /genos:setup قواعد Genos كاملة في ملف الذاكرة نيابةً عنك. لإضافة هذا السطر وحده بنفسك، ضعه في CLAUDE.md (الملف الموجود في مجلد .claude في مجلدك الشخصي يسري على كل المشاريع).",
                 prefWhereClaudeDesktop:
                     "claude.ai وClaude Desktop: الصقه في Settings → Profile ضمن personal preferences.",
                 prefWhereChatgpt: "ChatGPT: الصقه في تعليماته المخصصة (الإعدادات → التخصيص).",

@@ -4027,7 +4027,7 @@ export const ja: DeepPartial<Messages> = {
                 // TODO(copy): plugin wording (MIP-1870) draft.
                 pluginTitle: "プラグインを入れる（スキルと接続をまとめて）",
                 pluginIntro:
-                    "プラグインには上の接続と、Genos の作業用スキル 3 種が入ります。Claude は Genos に接続するだけでなく、Genos での進め方も知った状態になります。任意です。上のアドレスだけでも使えます。",
+                    "プラグインには上の接続と、/genos:catchup のように名前で呼び出せる Genos のスキルが入ります。/genos:setup を実行すると、Genos のルールがメモリファイルに保存されます。任意です。上のアドレスだけでも使えます。",
                 pluginCodeLabel: "Claude Code: チャットで次の 2 行を実行します",
                 pluginCopyAria: "プラグインのコマンドをコピー",
                 pluginDesktopLabel:
@@ -4057,6 +4057,7 @@ export const ja: DeepPartial<Messages> = {
                 claudeCodeSteps: [
                     "Claude Code のチャットで、次の 2 行を順に実行します。",
                     "/mcp を実行して Genos にサインインし、チームと Claude に許可する内容を選びます。",
+                    "/genos:setup を実行します。接続を確認し、あなたが了承したあとで、Genos のルールをメモリファイルに保存します。",
                 ],
                 claudeCodeCommandLabel: "Claude Code のチャットで実行するコマンド",
                 claudeCodeCommandAria: "プラグインの 2 つのコマンドをコピー",
@@ -4083,7 +4084,7 @@ export const ja: DeepPartial<Messages> = {
                     "作業するときは、Genos を最新に保ってください。タスク、決定事項、進捗を反映します。",
                 prefCopyAria: "設定をコピー",
                 prefWhereClaudeCode:
-                    "Claude Code: CLAUDE.md に追記します（ホームの .claude フォルダにあるものは、すべてのプロジェクトに適用されます）。",
+                    "Claude Code: /genos:setup が Genos のルール一式をメモリファイルに保存します。この 1 行だけを自分で追加する場合は、CLAUDE.md に追記します（ホームの .claude フォルダにあるものは、すべてのプロジェクトに適用されます）。",
                 prefWhereClaudeDesktop:
                     "claude.ai と Claude Desktop: Settings → Profile の personal preferences に貼り付けます。",
                 prefWhereChatgpt: "ChatGPT: カスタム指示（設定 → パーソナライズ）に貼り付けます。",
