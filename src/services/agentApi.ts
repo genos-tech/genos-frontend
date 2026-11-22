@@ -510,6 +510,10 @@ export interface CreditsBlock {
     // the same payload-shape convention `credits` itself uses. `null`
     // on an unlimited plan.
     purchased_balance?: number | null;
+    // Of `used`, the credits spent this month on searches by connected AI
+    // apps (MCP `search_workspace`, MIP-1965). Shown as its own line.
+    // Optional: an older server does not send it; `null` on unlimited.
+    mcp_search_used?: number | null;
 }
 
 // The single fetch behind Settings → Plan & Usage: the user's

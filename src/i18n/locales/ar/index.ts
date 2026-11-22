@@ -1729,6 +1729,8 @@ export const ar: DeepPartial<Messages> = {
             creditsResetsTomorrow: "يُعاد التعيين غدًا",
             creditsResetsInDays: "تُعاد التهيئة خلال {days} يومًا",
             creditsPurchased: "+{n} أرصدة مشتراة — لا تنتهي صلاحيتها",
+            // TODO(copy): MIP-1965 draft wording for a native reader.
+            creditsMcpSearch: "منها {n} لعمليات بحث الذكاء الاصطناعي من التطبيقات المتصلة",
             creditsLowWarning:
                 "الأرصدة منخفضة — قد يتوقف الطلب الطويل قبل اكتماله. يُعاد تعيين رصيد الذكاء الاصطناعي {when}.",
             creditsEmptyWarning:

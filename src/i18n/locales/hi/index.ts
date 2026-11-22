@@ -1612,6 +1612,8 @@ export const hi: DeepPartial<Messages> = {
             creditsResetsTomorrow: "कल रीसेट होगा",
             creditsResetsInDays: "{days} दिनों में रीसेट होता है",
             creditsPurchased: "+{n} ने क्रेडिट खरीदे - ये समाप्त नहीं होते",
+            // TODO(copy): MIP-1965 draft wording for a native reader.
+            creditsMcpSearch: "इनमें से {n} कनेक्टेड ऐप्स की AI खोज के लिए",
             creditsLowWarning:
                 "कम चल रहा है - एक लंबा अनुरोध आंशिक रूप से रुक सकता है। आपका AI क्रेडिट {when} रीसेट हो गया।",
             creditsEmptyWarning:

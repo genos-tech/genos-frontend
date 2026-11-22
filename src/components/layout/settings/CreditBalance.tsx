@@ -76,6 +76,9 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
     // is what the server actually gates on.
     const purchased = Math.max(credits.purchased_balance ?? 0, 0);
     const monthly = Math.max(balance - purchased, 0);
+    // What searches by connected AI apps took this month (MIP-1965): a line of its own,
+    // so the spend is not a mystery. Absent from an older server.
+    const mcpSearchUsed = Math.max(credits.mcp_search_used ?? 0, 0);
     const used = Math.max(credits.limit - monthly, 0);
     // The bar shows what is LEFT, not what has been spent: full on a
     // fresh month, empty at the cap. It is a fuel gauge, and it drains.
@@ -133,6 +136,14 @@ export const CreditBalance = ({ credits, hideUpgradeNote, tier }: Props) => {
                 <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                     {fmt(t.settings.llmModel.creditsPurchased, {
                         n: formatCredits(purchased),
+                    })}
+                </Typography>
+            )}
+
+            {mcpSearchUsed > 0 && (
+                <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                    {fmt(t.settings.llmModel.creditsMcpSearch, {
+                        n: formatCredits(mcpSearchUsed),
                     })}
                 </Typography>
             )}

@@ -1062,6 +1062,7 @@ export const settings = {
         // Separate from the allowance because only one of the two
         // resets, and a single figure would imply both do.
         creditsPurchased: "+{n} bought credits — these don't expire",
+        creditsMcpSearch: "{n} used this month on AI searches from connected apps",
         creditsLowWarning:
             "Running low — a long request may stop partway. Your AI credits reset {when}.",
         creditsEmptyWarning:

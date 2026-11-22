@@ -4727,6 +4727,8 @@ export const zh: DeepPartial<Messages> = {
             creditsResetsTomorrow: "明天重置",
             creditsResetsInDays: "{days} 天后重置",
             creditsPurchased: "+{n} 购买了积分 — 这些积分不会过期",
+            // TODO(copy): MIP-1965 draft wording for a native reader.
+            creditsMcpSearch: "其中 {n} 用于已连接应用的 AI 搜索",
             creditsLowWarning: "电量不足 — 长请求可能会中途停止。你的 AI 积分重置为 {when}。",
             creditsEmptyWarning:
                 "你的人工智能积分用完了。他们重置 {when}，或升级你的计划以继续进行。",

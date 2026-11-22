@@ -4911,6 +4911,7 @@ export const ja: DeepPartial<Messages> = {
             creditsResetsTomorrow: "明日リセット",
             creditsResetsInDays: "{days} 日後にリセットされます",
             creditsPurchased: "+{n} で購入したクレジット — これらには有効期限がありません",
+            creditsMcpSearch: "今月 {n} を連携アプリからの AI 検索に使用",
             creditsLowWarning:
                 "不足しています — 長いリクエストは途中で停止する可能性があります。 AI クレジットが {when} にリセットされます。",
             creditsEmptyWarning:
