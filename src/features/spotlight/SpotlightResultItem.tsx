@@ -416,12 +416,23 @@ const SpotlightResultItemInner = ({
             </Box>
 
             <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 1,
+                        // On a phone the kind, status and Archived chips would squeeze the title to
+                        // one letter (MIP-1852, 390 px ja): they drop to a second line instead.
+                        flexWrap: { xs: "wrap", sm: "nowrap" },
+                        rowGap: 0.25,
+                    }}
+                >
                     <Typography
                         level="body-md"
                         sx={{
                             // 500, so the matched words (600) still stand out of the title.
                             fontWeight: 500,
+                            maxWidth: "100%",
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
