@@ -3697,7 +3697,7 @@ export const zh: DeepPartial<Messages> = {
                         "当你在消息上设置的提醒到期时。关闭此功能会将提醒保留在收件箱中，而不会发出通知。",
                     todoReminder:
                         "当你在待办事项上设置的提醒到期时。关闭此功能会将提醒保留在收件箱中，而不会发出通知。",
-                    aiApps: "通过 MCP 连接的 AI 应用（Claude Code、Claude Desktop 等）代你所做操作的通知。可选择想收到的操作。",
+                    aiApps: "通过 MCP 连接的 AI 应用（Claude Code、Claude Desktop 等）代你所做操作的通知。默认只对有风险的操作提醒：删除，以及一次更改 10 项或更多。可打开其他操作来获得提醒；它们所做的一切也会显示在“今天”卡片中。",
                     aiAppNoteEdited:
                         "默认关闭：AI 应用可能连续多次编辑同一篇笔记，每次编辑都会产生一条通知。",
                 },

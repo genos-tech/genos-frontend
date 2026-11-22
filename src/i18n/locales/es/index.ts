@@ -5246,7 +5246,7 @@ export const es: DeepPartial<Messages> = {
                         "Cuando vence un recordatorio que estableciste en un mensaje. Desactivar esta opción mantiene el recordatorio en su bandeja de entrada sin notificación.",
                     todoReminder:
                         "Cuando vence un recordatorio que estableciste en una tarea pendiente. Desactivar esta opción mantiene el recordatorio en su bandeja de entrada sin notificación.",
-                    aiApps: "Avisos de lo que hace en tu nombre una app de IA conectada por MCP (Claude Code, Claude Desktop…). Elige de qué acciones quieres enterarte.",
+                    aiApps: "Avisos de lo que hace en tu nombre una app de IA conectada por MCP (Claude Code, Claude Desktop…). Por defecto solo te avisamos de las acciones de riesgo: borrados y cambios de 10 elementos o más a la vez. Activa cualquier otra acción para recibir también su aviso; todo lo que hacen aparece además en tu tarjeta de Hoy.",
                     aiAppNoteEdited:
                         "Desactivado por defecto: una app de IA puede editar la misma nota muchas veces seguidas, y cada edición es un aviso.",
                 },

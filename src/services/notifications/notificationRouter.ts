@@ -338,9 +338,11 @@ export const buildActivityIntent = (
             body: truncate(first?.title || first?.displayId || ""),
             category: aiAppCategory(
                 activity.aiApp.verb,
-                activity.aiApp.kind
+                activity.aiApp.kind,
+                activity.aiApp.bulk
             ) as NotificationCategory,
-            id: `${aiAppCategory(activity.aiApp.verb, activity.aiApp.kind)}:${activity.activityId}`,
+            // A bulk push is filed under `ai_app` by the API (webpush_dispatch), so share its tag.
+            id: `${activity.aiApp.bulk ? "ai_app" : aiAppCategory(activity.aiApp.verb, activity.aiApp.kind)}:${activity.activityId}`,
             source: { surfaceType: AI_APP_SURFACE },
             // Where the change is (the created task, the edited note), as the Activity row opens
             // it. Without it a click had nothing to go on and fell through to the chat page.
