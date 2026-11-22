@@ -21,6 +21,10 @@ export const SegmentedChips = <T extends string>({
     onChange: (v: T) => void;
     ariaLabel: string;
 }) => {
+    const active = Math.max(
+        0,
+        options.findIndex((o) => o.value === value)
+    );
     const refs = useRef<(HTMLButtonElement | null)[]>([]);
     const move = (to: number) => {
         const i = (to + options.length) % options.length;
@@ -55,14 +59,15 @@ export const SegmentedChips = <T extends string>({
                                 },
                                 role: "radio",
                                 "aria-checked": selected,
-                                tabIndex: selected ? 0 : -1,
+                                tabIndex: i === active ? 0 : -1,
                                 onClick: () => onChange(o.value),
                                 onKeyDown: (e: KeyboardEvent) => onKeyDown(e, i),
                             },
                         }}
                         sx={{
                             minHeight: g.control.sm,
-                            "&:focus-within": focusRing,
+                            "&:has(:focus-visible)": focusRing,
+                            "& .MuiChip-action:focus-visible": { outline: "none" },
                         }}
                     >
                         {o.label}

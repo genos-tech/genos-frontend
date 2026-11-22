@@ -55,6 +55,23 @@ describe("DashboardCard", () => {
         expect(onRetry).toHaveBeenCalledTimes(1);
     });
 
+    it("error without onRetry still shows the error state, not the children", () => {
+        wrap(
+            <DashboardCard errorTitle="Couldn't load" state="error" title="T">
+                <p>stale</p>
+            </DashboardCard>
+        );
+        expect(screen.queryByText("stale")).toBeNull();
+        expect(screen.getByText("Couldn't load")).toBeTruthy();
+    });
+
+    it("help text is exposed through aria-describedby", () => {
+        wrap(<DashboardCard help="Counted across projects" helpLabel="More info" title="T" />);
+        const b = screen.getByRole("button", { name: "More info" });
+        const id = b.getAttribute("aria-describedby")!;
+        expect(document.getElementById(id)?.textContent).toBe("Counted across projects");
+    });
+
     it("empty says what is empty and the action runs", () => {
         const onClick = vi.fn();
         wrap(
@@ -107,6 +124,11 @@ describe("ProportionBar", () => {
         const zero = document.querySelector('[data-zero="true"]');
         expect(zero?.textContent).toContain("WIP");
         expect(document.querySelectorAll("[data-segment]")).toHaveLength(1);
+    });
+    it("keeps a share-scale spacer so a bar below `total` does not fill the track", () => {
+        wrap(<ProportionBar ariaLabel="x" segments={segs} total={10} />);
+        const seg = document.querySelector<HTMLElement>("[data-segment]")!;
+        expect(seg.nextElementSibling?.getAttribute("aria-hidden")).toBe("true");
     });
     it("draws no segment when everything is zero", () => {
         wrap(<ProportionBar ariaLabel="none" segments={segs.map((s) => ({ ...s, value: 0 }))} />);

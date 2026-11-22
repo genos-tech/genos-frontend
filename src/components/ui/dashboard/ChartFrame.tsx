@@ -16,7 +16,7 @@ export type LegendItem = {
 /**
  * A chart inside a DashboardCard (MIP-1963): fixed plot height so loading, empty and ready
  * do not jump, the legend ABOVE the plot, an empty plot shown as `EmptyState size="xs"` at
- * the same height, and a `role="img"` summary of the totals for assistive tech. Series
+ * the same height, and a `role="img"` summary (children must be non-interactive: it makes them presentational) of the totals for assistive tech. Series
  * colours come from `g.chart.series1-4`; status / priority / effort from the tone maps.
  */
 export const ChartFrame = ({
@@ -36,7 +36,11 @@ export const ChartFrame = ({
     children: ReactNode;
 }) => {
     return (
-        <DashboardCard {...card} state={card.state ?? "ready"}>
+        <DashboardCard
+            {...card}
+            minBodyHeight={CHART_H.desktop + (legend?.length ? 24 : 0)}
+            state={card.state ?? "ready"}
+        >
             {legend && legend.length > 0 && (
                 <Box
                     component="ul"

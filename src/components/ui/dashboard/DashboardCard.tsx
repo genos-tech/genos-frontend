@@ -1,8 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, useId } from "react";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import { Box, IconButton, Typography } from "@mui/joy";
 
 import { focusRing, g, type } from "../../../theme/tokens";
+import { visuallyHidden } from "../a11y/visuallyHidden";
 import { AppTooltip } from "../AppTooltip";
 import { EmptyState } from "../feedback/EmptyState";
 import { ErrorState } from "../feedback/ErrorState";
@@ -16,6 +17,8 @@ import { SkeletonLines } from "../feedback/Skeleton";
  * `variant="flush"` is for lists and tables whose rows bring their own padding; the header
  * keeps 16 px either way.
  */
+const noop = () => {};
+
 export type CardState = "loading" | "error" | "empty" | "ready";
 
 export type CardHeaderProps = {
@@ -30,6 +33,8 @@ export type CardHeaderProps = {
     actions?: ReactNode;
     /** Heading level of the title (the page h1 is the PageHeader's). */
     as?: "h2" | "h3" | "h4";
+    /** `id` of the title, so the card is a named region. */
+    titleId?: string;
 };
 
 export const CardHeader = ({
@@ -40,80 +45,91 @@ export const CardHeader = ({
     helpLabel,
     actions,
     as = "h3",
-}: CardHeaderProps) => (
-    <Box
-        sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            columnGap: 1.5,
-            rowGap: 1,
-            minWidth: 0,
-        }}
-    >
-        <Box sx={{ minWidth: 0, flex: "1 1 auto" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
-                <Typography
-                    component={as}
-                    sx={{ ...type("title-sm"), color: g.text.primary, m: 0, minWidth: 0 }}
-                >
-                    {title}
-                </Typography>
-                {count !== undefined && (
+    titleId,
+}: CardHeaderProps) => {
+    const helpId = useId();
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                columnGap: 1.5,
+                rowGap: 1,
+                minWidth: 0,
+            }}
+        >
+            <Box sx={{ minWidth: 0, flex: "1 1 auto" }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}>
+                    <Typography
+                        component={as}
+                        id={titleId}
+                        sx={{ ...type("title-sm"), color: g.text.primary, m: 0, minWidth: 0 }}
+                    >
+                        {title}
+                    </Typography>
+                    {count !== undefined && (
+                        <Typography
+                            sx={{
+                                ...type("body-xs"),
+                                color: g.text.secondary,
+                                fontVariantNumeric: "tabular-nums",
+                            }}
+                        >
+                            {count}
+                        </Typography>
+                    )}
+                    {help && (
+                        <AppTooltip title={help}>
+                            <IconButton
+                                aria-describedby={helpId}
+                                aria-label={helpLabel ?? help}
+                                size="sm"
+                                variant="plain"
+                                sx={{
+                                    "--IconButton-size": "20px",
+                                    minHeight: 0,
+                                    color: g.text.secondary,
+                                    "& svg": { fontSize: 16 },
+                                    "&:focus-visible": focusRing,
+                                }}
+                            >
+                                <HelpOutlineRoundedIcon />
+                            </IconButton>
+                        </AppTooltip>
+                    )}
+                    {help && (
+                        <Box component="span" id={helpId} sx={visuallyHidden}>
+                            {help}
+                        </Box>
+                    )}
+                </Box>
+                {subtitle && (
                     <Typography
                         sx={{
                             ...type("body-xs"),
                             color: g.text.secondary,
-                            fontVariantNumeric: "tabular-nums",
+                            display: "-webkit-box",
+                            WebkitBoxOrient: "vertical",
+                            WebkitLineClamp: { xs: 2, md: 1 },
+                            overflow: "hidden",
                         }}
                     >
-                        {count}
+                        {subtitle}
                     </Typography>
                 )}
-                {help && (
-                    <AppTooltip title={help}>
-                        <IconButton
-                            aria-label={helpLabel ?? help}
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                "--IconButton-size": "20px",
-                                minHeight: 0,
-                                color: g.text.secondary,
-                                "& svg": { fontSize: 16 },
-                                "&:focus-visible": focusRing,
-                            }}
-                        >
-                            <HelpOutlineRoundedIcon />
-                        </IconButton>
-                    </AppTooltip>
-                )}
             </Box>
-            {subtitle && (
-                <Typography
-                    sx={{
-                        ...type("body-xs"),
-                        color: g.text.secondary,
-                        display: "-webkit-box",
-                        WebkitBoxOrient: "vertical",
-                        WebkitLineClamp: { xs: 2, md: 1 },
-                        overflow: "hidden",
-                    }}
-                >
-                    {subtitle}
-                </Typography>
+            {actions && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                    {actions}
+                </Box>
             )}
         </Box>
-        {actions && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                {actions}
-            </Box>
-        )}
-    </Box>
-);
+    );
+};
 
-export type DashboardCardProps = Omit<CardHeaderProps, "as"> & {
+export type DashboardCardProps = Omit<CardHeaderProps, "as" | "titleId"> & {
     variant?: "padded" | "flush";
     state?: CardState;
     /** Replaces the default `SkeletonLines` while loading. */
@@ -148,15 +164,16 @@ export const DashboardCard = ({
     ...header
 }: DashboardCardProps) => {
     const flush = variant === "flush";
+    const titleId = useId();
     let body: ReactNode = children;
     if (state === "loading") body = skeleton ?? <SkeletonLines lines={3} />;
-    else if (state === "error" && onRetry) {
+    else if (state === "error") {
         body = (
             <ErrorState
                 retryLabel={retryLabel}
                 size="sm"
                 title={errorTitle ?? header.title}
-                onRetry={onRetry}
+                onRetry={onRetry ?? noop}
             />
         );
     } else if (state === "empty") {
@@ -171,6 +188,7 @@ export const DashboardCard = ({
     }
     return (
         <Box
+            aria-labelledby={titleId}
             component="section"
             data-state={state}
             data-testid={testId}
@@ -185,7 +203,7 @@ export const DashboardCard = ({
             }}
         >
             <Box sx={{ px: flush ? { xs: 1.5, md: 2 } : 0 }}>
-                <CardHeader as={headingLevel} {...header} />
+                <CardHeader as={headingLevel} titleId={titleId} {...header} />
             </Box>
             <Box sx={{ mt: 1.5, minHeight: minBodyHeight, minWidth: 0 }}>{body}</Box>
         </Box>

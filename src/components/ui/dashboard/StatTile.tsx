@@ -47,7 +47,11 @@ export const StatTile = ({
                 {sub && (
                     <Typography
                         component="span"
-                        sx={{ ...type("body-xs"), color: g.text.secondary, ml: 0.5 }}
+                        sx={{
+                            ...type("body-xs"),
+                            color: g.text.secondary,
+                            marginInlineStart: 0.5,
+                        }}
                     >
                         {sub}
                     </Typography>

@@ -75,6 +75,7 @@ export const ProportionBar = ({
                                 />
                             </AppTooltip>
                         ))}
+                {scale > sum && <Box sx={{ flex: `${scale - sum} 1 0` }} aria-hidden />}
             </Box>
             {legend && (
                 <Box
@@ -99,7 +100,6 @@ export const ProportionBar = ({
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 0.75,
-                                opacity: s.value === 0 ? 0.55 : 1,
                             }}
                         >
                             <Box
@@ -109,6 +109,7 @@ export const ProportionBar = ({
                                     borderRadius: g.radius.full,
                                     background: fillOf(s),
                                     flexShrink: 0,
+                                    opacity: s.value === 0 ? 0.5 : 1,
                                 }}
                                 aria-hidden
                             />
