@@ -8,7 +8,7 @@ export type VisibleRange = { startIndex: number; endIndex: number };
 
 interface UseScrollManagementProps {
     currentChat: ChatProps | ThreadProps;
-    indexMap?: { [k: string]: any };
+    indexMap?: Record<string, number>;
     isThread?: boolean;
     /** Invoked on every Virtuoso `rangeChanged` tick with the fresh range.
      * Callers hang side effects here (visible-range tracking) instead of

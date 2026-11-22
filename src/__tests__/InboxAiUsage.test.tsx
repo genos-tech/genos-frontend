@@ -351,8 +351,17 @@ describe("AiUsageFooter", () => {
     });
     afterEach(() => resetInboxAiStore());
 
-    it("shows the cost and a Turn this off button", () => {
+    it("a retired digest item shows its cost and no switch", () => {
         const { container } = render(tree(footer(digest())));
+        expect(container.querySelector("[data-ai-usage-cost]")?.textContent).toContain(
+            "AI credits used: 1.83"
+        );
+        expect(screen.queryByRole("button")).toBeNull();
+        expect(container.querySelector('[role="status"]')).toBeNull();
+    });
+
+    it("shows the cost and a Turn this off button", () => {
+        const { container } = render(tree(footer(report())));
         expect(container.querySelector("[data-ai-usage-cost]")?.textContent).toContain(
             "AI credits used: 1.83"
         );
@@ -401,7 +410,7 @@ describe("AiUsageFooter", () => {
 
     it("a digest the server says used AI but kept no cost says so, with no number", () => {
         const { container } = render(
-            tree(footer(digest({ itemOptionals: { cadence: "weekly" } })))
+            tree(footer(report({ itemOptionals: { cadence: "weekly" } })))
         );
         const line = container.querySelector("[data-ai-usage-cost]")?.textContent ?? "";
         expect(line).toBe(en.inbox.aiUsage.unmeasured);
@@ -409,7 +418,7 @@ describe("AiUsageFooter", () => {
     });
 
     it("renders nothing for an item with no usable ai", () => {
-        const { container } = render(tree(footer(digest({ itemType: 0 }))));
+        const { container } = render(tree(footer(report({ itemType: 0 }))));
         expect(container.querySelector("[data-ai-usage]")).toBeNull();
         expect(screen.queryByRole("button")).toBeNull();
     });
@@ -437,18 +446,18 @@ describe("AiUsageFooter", () => {
         expect(screen.getByRole("button", { name: /turn this off/i })).toBeTruthy();
     });
 
-    it("the digest confirmation names the digest, in the app's words", async () => {
+    it("the confirmation names the schedule, in the app's words", async () => {
         calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
-        render(tree(footer(digest())));
+        render(tree(footer(report())));
         fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
         await waitFor(() =>
-            expect(screen.getByRole("status").textContent).toContain("Genos digest is off")
+            expect(screen.getByRole("status").textContent).toContain("Morning plan")
         );
     });
 
     it("offers NO Undo when it was already off (Undo would turn it on)", async () => {
         calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: false });
-        render(tree(footer(digest())));
+        render(tree(footer(report())));
         fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
         await waitFor(() =>
             expect(screen.getByRole("status").textContent).toContain("already off")
@@ -461,11 +470,18 @@ describe("AiUsageFooter", () => {
         render(
             tree(
                 footer(
-                    digest({ aiSource: { kind: "digest", enabled: false, label: "x" } as never })
+                    report({
+                        aiSource: {
+                            kind: "schedule",
+                            enabled: false,
+                            label: "x",
+                            schedule_id: SID,
+                        } as never,
+                    })
                 )
             )
         );
-        expect(screen.getByRole("status").textContent).toContain("Genos digest is turned off");
+        expect(screen.getByRole("status").textContent).toContain("turned off");
         expect(screen.queryByRole("button", { name: /turn this off/i })).toBeNull();
         expect(screen.getByRole("button", { name: /turn back on/i })).toBeTruthy();
     });
@@ -534,7 +550,7 @@ describe("AiUsageFooter", () => {
             reason: "error",
             error: "Too many tries.",
         });
-        render(tree(footer(digest())));
+        render(tree(footer(report())));
         fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
         expect((await screen.findByRole("alert")).textContent).toContain("Too many tries.");
         calls.switch.mockResolvedValueOnce({ ok: false, reason: "error", error: null });
@@ -548,7 +564,7 @@ describe("AiUsageFooter", () => {
     it("disables the button while the request is in flight (no double press)", async () => {
         let finish: (v: unknown) => void = () => undefined;
         calls.switch.mockReturnValue(new Promise((resolve) => (finish = resolve)));
-        render(tree(footer(digest())));
+        render(tree(footer(report())));
         const button = screen.getByRole("button", { name: /turn this off/i });
         fireEvent.click(button);
         await waitFor(() => expect((button as HTMLButtonElement).disabled).toBe(true));
@@ -560,7 +576,7 @@ describe("AiUsageFooter", () => {
     it("pressing the button does not open the item (the row's click handler)", () => {
         calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
         const onRow = vi.fn();
-        render(tree(<div onClick={onRow}>{footer(digest())}</div>));
+        render(tree(<div onClick={onRow}>{footer(report())}</div>));
         fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
         expect(onRow).not.toHaveBeenCalled();
     });
@@ -570,7 +586,7 @@ describe("AiUsageFooter", () => {
         // accepts it because its whole handler is `stopPropagation()`): the cost line and the
         // empty space beside the button must not open the row either.
         const onRow = vi.fn();
-        const { container } = render(tree(<div onClick={onRow}>{footer(digest())}</div>));
+        const { container } = render(tree(<div onClick={onRow}>{footer(report())}</div>));
         fireEvent.click(container.querySelector("[data-ai-usage-cost]") as HTMLElement);
         expect(onRow).not.toHaveBeenCalled();
         fireEvent.click(container.querySelector("[data-ai-usage]") as HTMLElement);
@@ -582,12 +598,21 @@ describe("AiUsageFooter", () => {
 
     it("every card of the same source agrees, and another source is untouched", async () => {
         calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
-        const other = digest({ itemId: 813 });
-        const schedule = report();
+        const other = report({ itemId: 813 });
+        const schedule = report({
+            itemId: 814,
+            aiSource: {
+                kind: "schedule",
+                enabled: true,
+                label: "Other",
+                schedule_id: "22222222-2222-4222-8222-222222222222",
+                used_ai: true,
+            } as never,
+        });
         render(
             tree(
                 <>
-                    <div data-testid="a">{footer(digest())}</div>
+                    <div data-testid="a">{footer(report())}</div>
                     <div data-testid="b">{footer(other)}</div>
                     <div data-testid="c">{footer(schedule)}</div>
                 </>
@@ -608,21 +633,21 @@ describe("AiUsageFooter", () => {
 
     it("a remounted card (Virtuoso recycles rows) keeps its Undo", async () => {
         calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
-        const first = render(tree(footer(digest())));
+        const first = render(tree(footer(report())));
         fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
         await screen.findByRole("button", { name: /undo/i });
         first.unmount();
-        render(tree(footer(digest())));
+        render(tree(footer(report())));
         expect(screen.getByRole("button", { name: /undo/i })).toBeTruthy();
     });
 
     it("a different member's session shares nothing", async () => {
         calls.switch.mockResolvedValue({ ok: true, enabled: false, wasEnabled: true });
-        const first = render(tree(footer(digest(), "u1")));
+        const first = render(tree(footer(report(), "u1")));
         fireEvent.click(screen.getByRole("button", { name: /turn this off/i }));
         await screen.findByRole("button", { name: /undo/i });
         first.unmount();
-        render(tree(footer(digest(), "u2")));
+        render(tree(footer(report(), "u2")));
         expect(screen.getByRole("button", { name: /turn this off/i })).toBeTruthy();
     });
 });
@@ -651,10 +676,10 @@ const bubble = (item: Partial<InboxItemProps> & { itemId: number; itemType: numb
 describe("InboxBubble: where the footer appears", () => {
     beforeEach(() => resetInboxAiStore());
 
-    it("a digest with an ai block draws the cost and the switch", async () => {
+    it("an old digest with an ai block draws the cost and no switch", async () => {
         const { container } = render(bubble(digest() as never));
         await waitFor(() => expect(container.querySelector("[data-ai-usage]")).not.toBeNull());
-        expect(screen.getByRole("button", { name: /turn this off/i })).toBeTruthy();
+        expect(screen.queryByRole("button", { name: /turn this off/i })).toBeNull();
     });
 
     it("a report (typed or plain) with an ai block draws it", () => {

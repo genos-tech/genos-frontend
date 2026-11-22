@@ -68,7 +68,7 @@ function countEmojiInText(text: string): number | null {
     return count;
 }
 
-type AnyBlock = Record<string, any>;
+type AnyBlock = Record<string, unknown>;
 
 /**
  * How many emoji this body consists of, or 0 when it is not emoji-only.

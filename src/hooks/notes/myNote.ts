@@ -45,7 +45,7 @@ type updataMyNoteChainProps = {
             | Record<string, number[]>
             | ((prev: Record<string, number[]>) => Record<string, number[]>)
     ) => void;
-    tabItems: any[];
+    tabItems: { noteId: number; noteType: number; title: string }[];
     selectedTabIndex: number;
 };
 export const updataMyNoteChain = (props: updataMyNoteChainProps) => {

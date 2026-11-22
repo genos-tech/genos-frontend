@@ -229,10 +229,8 @@ describe("names are bidi-isolated", () => {
         ["features/tasks/components/autocompletes/MultiMemberPicker.tsx", ["{user.userName}"]],
         ["features/tasks/components/contents/base/CustomFieldsBlock.tsx", ["{option.userName}"]],
         ["features/tasks/components/modals/ModalCreateProject.tsx", ["{member.userName}"]],
-        [
-            "features/tasks/components/dashboard/TaskHomeContent.tsx",
-            ["{selectedMember.name}", "{m.name}", "{a.name}"],
-        ],
+        ["features/tasks/components/dashboard/tabs/MemberTasksTab.tsx", ["{selectedMember.name}"]],
+        ["features/tasks/components/dashboard/tabs/OverallTab.tsx", ["{m.name}", "{a.name}"]],
         // The member option row shared by Member's Tasks and the Agent Activity filter (MIP-1916).
         ["features/tasks/components/autocompletes/MemberPickerParts.tsx", ["{o.name}"]],
     ];

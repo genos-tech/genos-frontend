@@ -1789,7 +1789,7 @@ const MilestonePreviewInner = ({
                         pending,
                         accessToken
                     );
-                    uploadedAttachments = uploaded.map((a: any) => ({
+                    uploadedAttachments = uploaded.map((a) => ({
                         attachment_id: a.attachment_id,
                         file: a.attached_file,
                         file_base64: a.file_base64,

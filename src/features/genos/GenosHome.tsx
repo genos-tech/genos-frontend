@@ -130,7 +130,7 @@ export const GenosHome = ({
     // "What changed, what waits on me" across projects (MIP-1696): one request on arrival, shown
     // only when there is something, and only before a conversation starts.
     const todayView = useBriefingToday(accessToken, teamId, userId, true, false);
-    const openToday = useCallback(() => requestAppNavigate("/workspace/tasks"), []);
+    const openToday = useCallback(() => requestAppNavigate("/workspace/tasks?view=today"), []);
 
     const handleOpenSchedules = useCallback(() => setSchedulesOpen(true), []);
 

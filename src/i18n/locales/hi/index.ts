@@ -1049,7 +1049,6 @@ export const hi: DeepPartial<Messages> = {
             matrixRowMemory: "यह किस पर आधारित है",
             matrixRowGenosHistory: "Genos वार्तालाप इतिहास",
             matrixRowPremiumModels: "प्रीमियम एआई मॉडल",
-            matrixRowDigest: "प्रोएक्टिव डाइजेस्ट",
             matrixRowMcp: "AI कोडिंग एजेंट कनेक्ट करें (MCP)",
             matrixRowHistory: "संदेश इतिहास",
             matrixRowTasks: "प्रति माह कार्य",
@@ -1068,8 +1067,6 @@ export const hi: DeepPartial<Messages> = {
             matrixMemoryNone: "यह बातचीत",
             matrixMemoryOwn: "आपका इतिहास",
             matrixMemoryTeam: "आपकी टीम का ज्ञान",
-            matrixDigestWeekly: "साप्ताहिक",
-            matrixDigestDaily: "दैनिक + अलर्ट",
             billingReturnCancelled: "चेकआउट रद्द — आपका प्लान अपरिवर्तित है।",
         },
         appearance: {
@@ -1612,6 +1609,8 @@ export const hi: DeepPartial<Messages> = {
             creditsResetsTomorrow: "कल रीसेट होगा",
             creditsResetsInDays: "{days} दिनों में रीसेट होता है",
             creditsPurchased: "+{n} ने क्रेडिट खरीदे - ये समाप्त नहीं होते",
+            // TODO(copy): MIP-1965 draft wording for a native reader.
+            creditsMcpSearch: "इनमें से {n} कनेक्टेड ऐप्स की AI खोज के लिए",
             creditsLowWarning:
                 "कम चल रहा है - एक लंबा अनुरोध आंशिक रूप से रुक सकता है। आपका AI क्रेडिट {when} रीसेट हो गया।",
             creditsEmptyWarning:
@@ -4550,8 +4549,6 @@ export const hi: DeepPartial<Messages> = {
             turnBackOnNamed: "फिर से चालू करें: {name}",
             undo: "पूर्ववत करें",
             undoNamed: "पूर्ववत करें: {name} फिर से चालू करें",
-            offDigest:
-                "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, न नया लिखा जाएगा और न इस पर AI क्रेडिट खर्च होंगे।",
             offSchedule:
                 "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, यह नहीं चलेगा और AI क्रेडिट खर्च नहीं करेगा।",
             offScheduleNoAi: "{name} बंद है। जब तक आप इसे फिर से चालू नहीं करते, यह नहीं चलेगा।",
@@ -5364,15 +5361,9 @@ export const hi: DeepPartial<Messages> = {
                     default: "अभी तक अनुमति नहीं है",
                     unsupported: "असमर्थित",
                 },
-                digestHeading: "Genos डाइजेस्ट",
-                digestDescription:
-                    "Genos से एक संक्षिप्त व्यक्तिगत डाइजेस्ट, आपके इनबॉक्स में भेजा गया (प्रो पर साप्ताहिक, मैक्स पर दैनिक)।",
                 emailHeading: "ईमेल सूचनाएँ",
                 emailDescription:
                     "जब आप दूर हों, Genos छूटी हुई सूचनाएँ एक ईमेल में समेटकर भेजता है — हर घटना के लिए अलग ईमेल नहीं।",
-                emailDigestHeading: "दैनिक ईमेल डाइजेस्ट",
-                emailDigestDescription:
-                    "आपके समयानुसार हर सुबह 8 बजे एक ईमेल में अनदेखे अपडेट — कुछ नया होने पर ही भेजा जाता है।",
                 mutedChatsHeading: "म्यूट की गई चैट ({count})",
                 noMutedChats:
                     "कोई म्यूट चैट नहीं। किसी भी चैट हेडर में बेल आइकन से उसे म्यूट करें।",
@@ -6758,7 +6749,6 @@ export const hi: DeepPartial<Messages> = {
                     bullets: [
                         "जब आप काम कर रहे हों तो ब्राउज़र पुश करें, जब आप दूर हों तो ईमेल करें",
                         "प्रति-श्रेणी नियंत्रण: उल्लेख, उत्तर, कार्य टिप्पणियाँ, प्रतिक्रियाएँ",
-                        "एक डाइजेस्ट जो आपके तलाश में जाने से पहले आता है - दैनिक या साप्ताहिक",
                         "पढ़ें राज्य आपका अनुसरण करता है, इसलिए दो बार कुछ भी घोषित नहीं किया जाता है",
                     ],
                 },

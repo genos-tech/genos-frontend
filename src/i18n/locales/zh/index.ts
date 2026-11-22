@@ -2478,7 +2478,6 @@ export const zh: DeepPartial<Messages> = {
                     bullets: [
                         "当你工作时浏览器推送，当你离开时发送邮箱",
                         "按类别控制：提及、回复、任务评论、反应",
-                        "在你每天或每周查看之前收到的摘要",
                         "读取状态跟随你，因此不会两次宣布任何内容",
                     ],
                 },
@@ -2702,7 +2701,6 @@ export const zh: DeepPartial<Messages> = {
             turnBackOnNamed: "重新开启：{name}",
             undo: "撤销",
             undoNamed: "撤销：重新开启 {name}",
-            offDigest: "{name} 已关闭。在你重新开启之前，不会再生成，也不会再消耗 AI 积分。",
             offSchedule: "{name} 已关闭。在你重新开启之前，它不会运行，也不会消耗 AI 积分。",
             offScheduleNoAi: "{name} 已关闭。重新开启前不会运行。",
             alreadyOff: "{name} 已处于关闭状态。",
@@ -3657,15 +3655,9 @@ export const zh: DeepPartial<Messages> = {
                     default: "尚未允许",
                     unsupported: "不支持",
                 },
-                digestHeading: "Genos 摘要",
-                digestDescription:
-                    "来自 Genos 的简短个人摘要，发送到你的收件箱（Pro 中每周，Max 中每天）。",
                 emailHeading: "邮件通知",
                 emailDescription:
                     "当你离开时，Genos 会把错过的通知汇总为一封邮件发送给你（不会每条事件发一封）。",
-                emailDigestHeading: "每日邮件摘要",
-                emailDigestDescription:
-                    "每天早上8点（当地时间）将未读更新汇总为一封邮件发送，仅在有新内容时发送。",
                 mutedChatsHeading: "已静音的聊天（{count}）",
                 noMutedChats: "暂无静音的聊天。点击任意聊天顶部的铃铛图标即可静音。",
                 mutedTargetsHeading: "静音项目 ({count})",
@@ -4191,7 +4183,6 @@ export const zh: DeepPartial<Messages> = {
             matrixRowMemory: "它参考什么",
             matrixRowGenosHistory: "Genos 对话记录",
             matrixRowPremiumModels: "高级人工智能模型",
-            matrixRowDigest: "主动消化",
             matrixRowMcp: "连接AI编码代理（MCP）",
             matrixRowHistory: "消息记录",
             matrixRowTasks: "每月任务",
@@ -4210,8 +4201,6 @@ export const zh: DeepPartial<Messages> = {
             matrixMemoryNone: "这段对话",
             matrixMemoryOwn: "你的历史",
             matrixMemoryTeam: "你团队的知识",
-            matrixDigestWeekly: "每周",
-            matrixDigestDaily: "每日+提醒",
             billingReturnCancelled: "已取消结账 — 你的套餐未更改。",
         },
         appearance: {
@@ -4730,6 +4719,8 @@ export const zh: DeepPartial<Messages> = {
             creditsResetsTomorrow: "明天重置",
             creditsResetsInDays: "{days} 天后重置",
             creditsPurchased: "+{n} 购买了积分 — 这些积分不会过期",
+            // TODO(copy): MIP-1965 draft wording for a native reader.
+            creditsMcpSearch: "其中 {n} 用于已连接应用的 AI 搜索",
             creditsLowWarning: "电量不足 — 长请求可能会中途停止。你的 AI 积分重置为 {when}。",
             creditsEmptyWarning:
                 "你的人工智能积分用完了。他们重置 {when}，或升级你的计划以继续进行。",

@@ -67,9 +67,9 @@ const num = (v: number, locale: string) => v.toLocaleString(locale);
  *
  * Takes ALL tiers at once rather than one at a time: a row only exists
  * if at least one tier has an opinion about it, and that is not knowable
- * from a single tier. `digest_cadence` is the live example — a server
- * that predates the digest sends it for nobody, and the row should then
- * not appear at all rather than appear empty for everyone.
+ * from a single tier. A server that predates a
+ * capability sends it for nobody, and the row should then not appear at
+ * all rather than appear empty for everyone.
  */
 export const planMatrixGroups = (
     tiers: PlanTier[],
@@ -186,23 +186,6 @@ export const planMatrixGroups = (
                 (L) => L.agent_history_retention_days,
                 p.matrixUnlimited
             )
-        );
-    }
-
-    // Absent for every tier = a server that predates the digest. Skipped
-    // entirely rather than shown as a row of crosses, which would
-    // advertise the absence of a feature the product does not have yet.
-    if (has("digest_cadence")) {
-        ai.push(
-            row("digest", p.matrixRowDigest, (L) => {
-                const cadence = L.digest_cadence;
-                if (cadence == null) return { kind: "no" };
-                return {
-                    kind: "value",
-                    label: cadence === "daily" ? p.matrixDigestDaily : p.matrixDigestWeekly,
-                    emphasis: cadence === "daily",
-                };
-            })
         );
     }
 

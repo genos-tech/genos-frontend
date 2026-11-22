@@ -142,6 +142,8 @@ const isAgentWrittenNoteType = (t: unknown): t is AgentWrittenNoteType =>
  *  import: `title` replaces the auto-numbered "New … Note (n)" name and
  *  `body` seeds the note with parsed blocks instead of the empty
  *  placeholder paragraph. */
+type NoteTabItem = { noteId: number; noteType: number; title: string };
+
 export interface NoteCreateOverrides {
     title?: string;
     body?: unknown[];
@@ -192,8 +194,8 @@ export interface NoteManagementState {
     // Note type and tabs
     currentNoteType: number;
     setCurrentNoteType: (type: number) => void;
-    tabItems: any[];
-    setTabItems: (items: any[]) => void;
+    tabItems: NoteTabItem[];
+    setTabItems: (items: NoteTabItem[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (index: number) => void;
 
@@ -435,7 +437,7 @@ export const useNoteManagement = (
         // boot into a section that renders nothing.
         return stored === 0 ? 1 : stored;
     });
-    const [tabItems, setTabItems] = useState<any[]>([]);
+    const [tabItems, setTabItems] = useState<NoteTabItem[]>([]);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
     // New tab API — synchronous tab operations + persistence-driven

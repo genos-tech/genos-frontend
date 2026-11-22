@@ -5,7 +5,7 @@ import { useBlockNoteEditor, useComponentsContext, useExtensionState } from "@bl
 import { useTranslation } from "../../../i18n";
 
 export function ResetBlockTypeItem(props: { children?: ReactNode }) {
-    const editor = useBlockNoteEditor<any, any, any>();
+    const editor = useBlockNoteEditor();
     const { t } = useTranslation();
 
     const Components = useComponentsContext()!;

@@ -2590,7 +2590,6 @@ export const ja: DeepPartial<Messages> = {
                     bullets: [
                         "仕事中はブラウザプッシュ、外出中はメール",
                         "カテゴリごとのコントロール: メンション、返信、タスクのコメント、リアクション",
-                        "毎日または毎週、探しに行く前にダイジェストが配信されます",
                         "読み取り状態が追従するため、二度アナウンスされることはありません",
                     ],
                 },
@@ -2815,8 +2814,6 @@ export const ja: DeepPartial<Messages> = {
             turnBackOnNamed: "オンに戻す: {name}",
             undo: "元に戻す",
             undoNamed: "元に戻す: {name} をオンに戻す",
-            offDigest:
-                "{name} をオフにしました。オンに戻すまで、新しく作成されず、AI クレジットも使われません。",
             offSchedule:
                 "{name} をオフにしました。オンに戻すまで、実行されず AI クレジットも使われません。",
             offScheduleNoAi: "{name} はオフです。再びオンにするまで実行されません。",
@@ -3800,15 +3797,9 @@ export const ja: DeepPartial<Messages> = {
                     default: "まだ許可されていません",
                     unsupported: "サポートされていません",
                 },
-                digestHeading: "Genosダイジェスト",
-                digestDescription:
-                    "Genos からの短い個人的なダイジェストが受信箱に配信されます (Pro では毎週、Max では毎日)。",
                 emailHeading: "メール通知",
                 emailDescription:
                     "離席中に見逃した通知を、1通にまとめてメールでお知らせします（イベントごとには送信されません）。",
-                emailDigestHeading: "デイリーメールダイジェスト",
-                emailDigestDescription:
-                    "未読の更新を毎朝8時（現地時間）に1通のメールでお届けします。新しいものがあるときだけ送信されます。",
                 mutedChatsHeading: "ミュート中のチャット（{count}）",
                 noMutedChats:
                     "ミュート中のチャットはありません。各チャットヘッダーのベルアイコンからミュートできます。",
@@ -3931,7 +3922,7 @@ export const ja: DeepPartial<Messages> = {
             selectPrompt: "左側でグループを選択して、そのメンバーを管理します。",
             modalHeading: "メンショングループ",
             notFound: "グループが見つかりません。",
-            deleteGroup: "グループの削除",
+            deleteGroup: "グループを削除",
             deleted: "@{name} を削除しました",
             deleteFailed: "@{name} を削除できませんでした。元に戻しました。",
             addDescription: "説明を追加…",
@@ -4349,7 +4340,6 @@ export const ja: DeepPartial<Messages> = {
             matrixRowMemory: "何を参照するか",
             matrixRowGenosHistory: "Genosの会話履歴",
             matrixRowPremiumModels: "プレミアム AI モデル",
-            matrixRowDigest: "プロアクティブダイジェスト",
             matrixRowMcp: "AI コーディング エージェント (MCP) を接続する",
             matrixRowHistory: "メッセージ履歴",
             matrixRowTasks: "月ごとのタスク",
@@ -4368,8 +4358,6 @@ export const ja: DeepPartial<Messages> = {
             matrixMemoryNone: "この会話",
             matrixMemoryOwn: "あなたの履歴",
             matrixMemoryTeam: "あなたのチームの知識",
-            matrixDigestWeekly: "毎週",
-            matrixDigestDaily: "毎日 + アラート",
             billingReturnCancelled:
                 "チェックアウトをキャンセルしました — プランは変更されていません。",
         },
@@ -4914,6 +4902,7 @@ export const ja: DeepPartial<Messages> = {
             creditsResetsTomorrow: "明日リセット",
             creditsResetsInDays: "{days} 日後にリセットされます",
             creditsPurchased: "+{n} で購入したクレジット — これらには有効期限がありません",
+            creditsMcpSearch: "今月 {n} を連携アプリからの AI 検索に使用",
             creditsLowWarning:
                 "不足しています — 長いリクエストは途中で停止する可能性があります。 AI クレジットが {when} にリセットされます。",
             creditsEmptyWarning:

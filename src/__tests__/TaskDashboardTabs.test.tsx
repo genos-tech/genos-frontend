@@ -1,6 +1,7 @@
 import { CssVarsProvider } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
@@ -106,13 +107,15 @@ const avatarContextValue = {
 
 const renderDashboard = () =>
     render(
-        <CssVarsProvider>
-            <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
-                <AvatarContextProvider value={avatarContextValue}>
-                    <TaskDashboard {...baseProps} />
-                </AvatarContextProvider>
-            </ThemeProvider>
-        </CssVarsProvider>
+        <MemoryRouter initialEntries={["/workspace/tasks"]}>
+            <CssVarsProvider>
+                <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
+                    <AvatarContextProvider value={avatarContextValue}>
+                        <TaskDashboard {...baseProps} />
+                    </AvatarContextProvider>
+                </ThemeProvider>
+            </CssVarsProvider>
+        </MemoryRouter>
     );
 
 describe("TaskDashboard header (MIP-1220)", () => {
@@ -124,6 +127,8 @@ describe("TaskDashboard header (MIP-1220)", () => {
 });
 
 describe("TaskDashboard tabs + Tag Insights", () => {
+    beforeEach(() => window.localStorage.clear());
+
     it("renders the three section tabs", () => {
         renderDashboard();
         expect(screen.getByRole("tab", { name: /Overall Insights/ })).toBeInTheDocument();
@@ -131,10 +136,43 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         expect(screen.getByRole("tab", { name: /My Tasks/ })).toBeInTheDocument();
     });
 
+    it("shows the project and sprint toolbar only on the tabs it changes (MIP-1963)", () => {
+        renderDashboard();
+        // Today covers every project: no project picker there.
+        expect(screen.queryByTestId("task-dashboard-toolbar")).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        expect(screen.getByTestId("task-dashboard-toolbar")).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("tab", { name: /Agent Activity/ }));
+        expect(screen.queryByTestId("task-dashboard-toolbar")).not.toBeInTheDocument();
+    });
+
+    it("keeps the quick actions, now in the page header", () => {
+        renderDashboard();
+        const header = screen.getByTestId("task-dashboard-header");
+        expect(within(header).getByRole("button", { name: "New Task" })).toBeInTheDocument();
+        expect(within(header).getByRole("button", { name: "Task Table" })).toBeInTheDocument();
+        expect(within(header).getByRole("button", { name: "Sprint Board" })).toBeInTheDocument();
+    });
+
     it("opens on the Today tab (MIP-1005), not on Overall", () => {
         renderDashboard();
         expect(screen.getByRole("tab", { name: /Today/, selected: true })).toBeInTheDocument();
         expect(screen.queryByText("Tag Insights")).not.toBeInTheDocument();
+    });
+
+    it("reads the team's tasks only once the Overall tab needs them (not on Today)", async () => {
+        const { loadTeamTasks } = await import("../features/tasks/services/loadTeamTasks");
+        vi.mocked(loadTeamTasks).mockClear();
+        renderDashboard();
+        await Promise.resolve();
+        expect(loadTeamTasks).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        await Promise.resolve();
+        expect(loadTeamTasks).toHaveBeenCalledTimes(1);
+        fireEvent.click(screen.getByRole("tab", { name: /Today/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        await Promise.resolve();
+        expect(loadTeamTasks).toHaveBeenCalledTimes(1);
     });
 
     it("shows Tag Insights on the Overall tab, aggregated by tag", () => {
@@ -228,21 +266,23 @@ describe("TaskDashboard Assigned Milestones (MIP-1004)", () => {
 
     const renderWith = (milestones: unknown[]) =>
         render(
-            <CssVarsProvider>
-                <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
-                    <AvatarContextProvider value={avatarContextValue}>
-                        <TaskDashboard
-                            {...baseProps}
-                            useTM={{ ...baseProps.useTM, allTasks: otherTasks }}
-                            useSM={{
-                                ...baseProps.useSM,
-                                projectSprints: { 42: sprints },
-                                projectMilestones: { 42: milestones },
-                            }}
-                        />
-                    </AvatarContextProvider>
-                </ThemeProvider>
-            </CssVarsProvider>
+            <MemoryRouter initialEntries={["/workspace/tasks"]}>
+                <CssVarsProvider>
+                    <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
+                        <AvatarContextProvider value={avatarContextValue}>
+                            <TaskDashboard
+                                {...baseProps}
+                                useTM={{ ...baseProps.useTM, allTasks: otherTasks }}
+                                useSM={{
+                                    ...baseProps.useSM,
+                                    projectSprints: { 42: sprints },
+                                    projectMilestones: { 42: milestones },
+                                }}
+                            />
+                        </AvatarContextProvider>
+                    </ThemeProvider>
+                </CssVarsProvider>
+            </MemoryRouter>
         );
 
     // The count chip sits in the section header next to the title.

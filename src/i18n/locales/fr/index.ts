@@ -2613,7 +2613,6 @@ export const fr: DeepPartial<Messages> = {
                     bullets: [
                         "Push du navigateur pendant que vous travaillez, e-mail lorsque vous êtes absent",
                         "Contrôle par catégorie : mentions, réponses, commentaires sur les tâches, réactions",
-                        "Un résumé qui arrive avant que vous partiez en recherche – quotidiennement ou hebdomadairement",
                         "L'état de lecture vous suit, donc rien n'est annoncé deux fois",
                     ],
                 },
@@ -2841,8 +2840,6 @@ export const fr: DeepPartial<Messages> = {
             turnBackOnNamed: "Réactiver : {name}",
             undo: "Annuler",
             undoNamed: "Annuler : réactiver {name}",
-            offDigest:
-                "{name} est désactivé. Plus rien ne sera rédigé, ni plus de crédits IA dépensés, jusqu'à la réactivation.",
             offSchedule:
                 "{name} : désactivé. Rien ne s'exécutera ni ne consommera de crédits IA jusqu'à la réactivation.",
             offScheduleNoAi:
@@ -3847,15 +3844,9 @@ export const fr: DeepPartial<Messages> = {
                     default: "Pas encore autorisé",
                     unsupported: "Non pris en charge",
                 },
-                digestHeading: "Résumé Genos",
-                digestDescription:
-                    "Un court résumé personnel de Genos, livré dans votre boîte de réception (hebdomadairement sur Pro, quotidiennement sur Max).",
                 emailHeading: "Notifications par e-mail",
                 emailDescription:
                     "En votre absence, Genos vous envoie un e-mail récapitulatif de ce que vous avez manqué — groupé, jamais un e-mail par événement.",
-                emailDigestHeading: "Résumé quotidien par e-mail",
-                emailDigestDescription:
-                    "Un e-mail chaque matin à 8 h (votre heure) résumant ce que vous n'avez pas vu — envoyé seulement s'il y a du nouveau.",
                 mutedChatsHeading: "Conversations en sourdine ({count})",
                 noMutedChats:
                     "Aucune conversation en sourdine. Utilisez l'icône de cloche dans l'en-tête de toute conversation pour la mettre en sourdine.",
@@ -4410,7 +4401,6 @@ export const fr: DeepPartial<Messages> = {
             matrixRowMemory: "Ce sur quoi il s'appuie",
             matrixRowGenosHistory: "Historique des conversations Genos",
             matrixRowPremiumModels: "Modèles IA premium",
-            matrixRowDigest: "Prorésumé actif",
             matrixRowMcp: "Connectez un agent de codage AI (MCP)",
             matrixRowHistory: "Historique des messages",
             matrixRowTasks: "Tâches par mois",
@@ -4429,8 +4419,6 @@ export const fr: DeepPartial<Messages> = {
             matrixMemoryNone: "Cette conversation",
             matrixMemoryOwn: "Votre historique",
             matrixMemoryTeam: "Les connaissances de votre équipe",
-            matrixDigestWeekly: "Hebdomadaire",
-            matrixDigestDaily: "Alertes quotidiennes +",
             billingReturnCancelled: "Paiement annulé — votre forfait est inchangé.",
         },
         appearance: {
@@ -4985,6 +4973,8 @@ export const fr: DeepPartial<Messages> = {
             creditsResetsTomorrow: "Réinitialisation demain",
             creditsResetsInDays: "Réinitialisations dans les jours {days}",
             creditsPurchased: "+{n} crédits achetés — ceux-ci n'expirent pas",
+            // TODO(copy): MIP-1965 draft wording for a native reader.
+            creditsMcpSearch: "Dont {n} pour les recherches IA des applications connectées",
             creditsLowWarning:
                 "Faible niveau — une requête longue peut s'arrêter à mi-chemin. Vos crédits IA réinitialisent {when}.",
             creditsEmptyWarning:

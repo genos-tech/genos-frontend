@@ -1159,7 +1159,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             map.get(key)!.notes.push(note);
         });
         return Array.from(map.values());
-    }, [sharedNoteState.tmpMetaTree]);
+    }, [sharedNoteState.tmpMetaTree, t.notes.sidebar.unknownOwner]);
 
     // Render one task's folder (MIP-1667): its own notes, then the folders of its sub-tasks, each
     // the same again, at any depth. A milestone is the folder of its backing task, the parent of

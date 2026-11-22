@@ -155,7 +155,6 @@ export type AgentToolLevel = "read" | "act" | "organize";
 export type EffortLevel = "low" | "medium" | "high";
 export type AgentMemoryLevel = "none" | "own" | "team";
 export type IntegrationName = "web" | "google_calendar" | "github";
-export type DigestCadence = "weekly" | "daily";
 
 export interface PlanLimits {
     llm_ask_daily: number | null;
@@ -189,7 +188,6 @@ export interface PlanLimits {
     agent_memory?: AgentMemoryLevel;
     agent_history_retention_days?: number | null;
     integrations?: IntegrationName[];
-    digest_cadence?: DigestCadence | null;
     /** MCP is a Core-and-up capability; absent on a server that predates it. */
     mcp_enabled?: boolean;
 }

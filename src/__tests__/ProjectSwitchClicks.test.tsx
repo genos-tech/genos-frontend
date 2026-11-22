@@ -15,6 +15,7 @@
 import { CssVarsProvider } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
@@ -274,25 +275,28 @@ describe("the dashboard's project picker", () => {
             <CssVarsProvider>
                 <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
                     <AvatarContextProvider value={avatarContextValue}>
-                        <TaskDashboard
-                            myself={myself}
-                            setMyself={vi.fn()}
-                            socket={null}
-                            useCM={{ allChats: [] } as never}
-                            usePM={usePM as never}
-                            useTEM={{ teamMemberProfiles: {} } as never}
-                            useTM={useTM as never}
-                            useUISM={{} as never}
-                            useSM={
-                                {
-                                    projectSprints: {},
-                                    currentSprint: null,
-                                    projectMilestones: {},
-                                    setCurrentSprint: vi.fn(),
-                                } as never
-                            }
-                            onCloseTaskHome={vi.fn()}
-                        />
+                        {/* The project toolbar shows only on project tabs; Today is the default. */}
+                        <MemoryRouter initialEntries={["/workspace/tasks?view=overall"]}>
+                            <TaskDashboard
+                                myself={myself}
+                                setMyself={vi.fn()}
+                                socket={null}
+                                useCM={{ allChats: [] } as never}
+                                usePM={usePM as never}
+                                useTEM={{ teamMemberProfiles: {} } as never}
+                                useTM={useTM as never}
+                                useUISM={{} as never}
+                                useSM={
+                                    {
+                                        projectSprints: {},
+                                        currentSprint: null,
+                                        projectMilestones: {},
+                                        setCurrentSprint: vi.fn(),
+                                    } as never
+                                }
+                                onCloseTaskHome={vi.fn()}
+                            />
+                        </MemoryRouter>
                     </AvatarContextProvider>
                 </ThemeProvider>
             </CssVarsProvider>

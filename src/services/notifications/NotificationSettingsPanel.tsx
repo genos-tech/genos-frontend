@@ -16,7 +16,6 @@ import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { SettingRow } from "../../components/ui/settings/SettingRow";
 import { chatDisplayName } from "../../features/chat/utils/chatDisplayName";
-import { useDigestPreference } from "../../hooks/common/useDigestPreference";
 import { fmt, Messages, useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { AllChatProps } from "../../types/chat";
@@ -178,12 +177,6 @@ export const NotificationSettingsPanel = ({
     const ctx = useNotificationsContext();
     const { t } = useTranslation();
     const nameLookup: NameLookup = { allChats, myself, teamMemberProfiles };
-    // Proactive digest opt-out — server-backed, independent of the
-    // browser-push preferences (the digest also lands in the Inbox, so
-    // it is NOT gated by masterEnabled). Above the early return: hooks
-    // must run unconditionally.
-    const { digestEnabled, setDigestEnabled, emailDigestEnabled, setEmailDigestEnabled } =
-        useDigestPreference();
     if (!ctx) return null;
 
     const {
@@ -580,57 +573,6 @@ export const NotificationSettingsPanel = ({
                     })}
                 </Stack>
             )}
-
-            <Divider sx={{ mt: 1.5 }} />
-
-            {/* Proactive digest (UX tier model §8). Disabled while the
-                server value is unknown — flashing a default that then
-                snaps reads like the setting changed itself. */}
-            <SettingRow
-                alignItems="center"
-                direction="row"
-                disabled={digestEnabled === null}
-                justifyContent="space-between"
-                spacing={2}
-                sx={{ mt: 1.5 }}
-            >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">{settingsMessages.digestHeading}</Typography>
-                    <Typography level="body-xs">{settingsMessages.digestDescription}</Typography>
-                </Box>
-                <Switch
-                    checked={digestEnabled ?? true}
-                    disabled={digestEnabled === null}
-                    slotProps={{ input: { "aria-label": settingsMessages.digestHeading } }}
-                    onChange={(e) => setDigestEnabled(e.target.checked)}
-                />
-            </SettingRow>
-
-            {/* Email digest — the plain unread-summary email (all tiers),
-                a separate opt-out from the agent digest above. Disabled
-                while unknown, including against a backend that doesn't
-                support it yet. */}
-            <SettingRow
-                alignItems="center"
-                direction="row"
-                disabled={emailDigestEnabled === null}
-                justifyContent="space-between"
-                spacing={2}
-                sx={{ mt: 1.5 }}
-            >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">{settingsMessages.emailDigestHeading}</Typography>
-                    <Typography level="body-xs">
-                        {settingsMessages.emailDigestDescription}
-                    </Typography>
-                </Box>
-                <Switch
-                    checked={emailDigestEnabled ?? true}
-                    disabled={emailDigestEnabled === null}
-                    slotProps={{ input: { "aria-label": settingsMessages.emailDigestHeading } }}
-                    onChange={(e) => setEmailDigestEnabled(e.target.checked)}
-                />
-            </SettingRow>
         </Sheet>
     );
 };

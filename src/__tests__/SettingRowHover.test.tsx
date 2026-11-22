@@ -11,7 +11,7 @@
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { cssWithMediaOf } from "./utils/cssOf";
 
@@ -25,15 +25,6 @@ import {
 import { NotificationsProvider } from "../services/notifications/NotificationsContext";
 import { NotificationSettingsPanel } from "../services/notifications/NotificationSettingsPanel";
 import { DEFAULT_NOTIFICATION_PREFERENCE } from "../services/notifications/types";
-
-vi.mock("../hooks/common/useDigestPreference", () => ({
-    useDigestPreference: () => ({
-        digestEnabled: true,
-        setDigestEnabled: () => undefined,
-        emailDigestEnabled: null,
-        setEmailDigestEnabled: () => undefined,
-    }),
-}));
 
 afterEach(cleanup);
 

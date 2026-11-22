@@ -136,4 +136,17 @@ describe("CreditBalance", () => {
         expect(screen.getByText(/unlimited ai credits/i)).toBeTruthy();
         expect(screen.queryByText(/credits left/i)).toBeNull();
     });
+
+    it("shows AI searches from connected apps as its own line, only when there is some", () => {
+        const { unmount } = renderBalance(block({ mcp_search_used: 1.25 }));
+        expect(screen.getByText(/AI searches from connected apps/i).textContent).toContain("1.25");
+        unmount();
+        renderBalance(block({ mcp_search_used: 0 }));
+        expect(screen.queryByText(/AI searches from connected apps/i)).toBeNull();
+    });
+
+    it("an older server that sends no figure shows no line", () => {
+        renderBalance(block());
+        expect(screen.queryByText(/AI searches from connected apps/i)).toBeNull();
+    });
 });

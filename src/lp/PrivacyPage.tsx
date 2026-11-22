@@ -36,7 +36,7 @@ import { useDocumentMeta } from "./useDocumentMeta";
  *   by an AI assistant, not by a lawyer or native legal writer.
  * TODO(owner): add an effective / last-updated date when the text is
  *   approved. None is shown (it is a legal fact the owner sets).
- * TODO(owner): hosting region, vendor retention, signed DPAs, backups,
+ * TODO(owner): hosting region, vendor retention, signed DPAs,
  *   compliance regimes: not stated because not verified.
  * Decided (owner): MIP-767 Stripe keeps the customer email (needed for
  *   receipts and Checkout); Stripe customer and billing history are kept
@@ -167,6 +167,10 @@ const JA_SECTIONS: Section[] = [
                     </li>
                 </ul>
                 <p>
+                    <b>バックアップ</b>
+                    ：データベースとアップロードされたファイルのバックアップを、最長27日間保管します。バックアップはホスティング事業者のスケジュールに従って削除されます。アカウントやデータを削除しても、既存のバックアップからは、そのバックアップが期限切れになるまで削除されません。
+                </p>
+                <p>
                     サインインできない場合など、アプリ内で削除できない場合は、下記メールアドレスまでご連絡ください。合理的な期間内に対応いたします。
                 </p>
             </>
@@ -280,6 +284,11 @@ const EN_SECTIONS: Section[] = [
                     which is not contacted on deletion); your name where other people's messages,
                     tasks or notes mention you; and security audit records (the event and its time;
                     the IP address and user agent are erased at deletion).
+                </p>
+                <p>
+                    <b>Backups:</b> we keep backups of our database and of uploaded files for up to
+                    27 days, and they are deleted on our hosting provider's schedule. Deleting your
+                    account or data does not remove it from existing backups until they expire.
                 </p>
                 <p>
                     If you cannot sign in, or cannot delete in the app, email us at the address

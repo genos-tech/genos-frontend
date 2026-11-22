@@ -5,7 +5,7 @@ import { MdDelete } from "react-icons/md";
 import { useTranslation } from "../../../i18n";
 
 export function RemoveBlockButton() {
-    const editor = useBlockNoteEditor<any, any, any>();
+    const editor = useBlockNoteEditor();
     const { t } = useTranslation();
 
     const Components = useComponentsContext()!;
