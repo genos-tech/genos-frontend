@@ -307,6 +307,31 @@ describe("registerSocketRouter", () => {
         expect(channelService.handleChannelCreated).toHaveBeenCalledWith(ch);
     });
 
+    it("channel.created without a latestMessage also re-reads the list so the row gets its preview (MIP-1999)", () => {
+        vi.useFakeTimers();
+        try {
+            const refresh = vi.spyOn(channelService, "refreshChannels").mockResolvedValue();
+            env.fire("channel.created", fakeChannel("c2", { latestMessage: null }));
+            expect(refresh).not.toHaveBeenCalled(); // debounced
+            vi.advanceTimersByTime(CHANNEL_APPEARED_DEBOUNCE_MS);
+            expect(refresh).toHaveBeenCalledTimes(1);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("channel.created that already carries a latestMessage does not re-read the list", () => {
+        vi.useFakeTimers();
+        try {
+            const refresh = vi.spyOn(channelService, "refreshChannels").mockResolvedValue();
+            env.fire("channel.created", fakeChannel("c2", { latestMessage: fakeMessage("m1") }));
+            vi.advanceTimersByTime(CHANNEL_APPEARED_DEBOUNCE_MS * 4);
+            expect(refresh).not.toHaveBeenCalled();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it("channel.updated routes to handleChannelUpdated with the channel", () => {
         const ch = fakeChannel("c2", { title: "renamed" });
         env.fire("channel.updated", ch);
