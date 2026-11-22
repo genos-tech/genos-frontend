@@ -74,7 +74,7 @@ export const SecurityEventRow = ({ event: e }: { event: SecurityEvent }) => {
  * the one error shown, because by then the owner knows the log exists.
  */
 export const SecurityLogSection = ({ teamId }: Props) => {
-    const { t, locale } = useTranslation();
+    const { t } = useTranslation();
     const { accessToken } = useAuth();
     const s = t.settings.developer.securityLog;
 

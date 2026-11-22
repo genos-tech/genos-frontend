@@ -16,7 +16,6 @@ interface ActivityTypeChipsProps {
      *  `chatName` is frozen at adapt time and can be a `"?"` placeholder
      *  when the source channel wasn't loaded yet; this overrides it for
      *  the project chip. Falls back to `activity.chatName` when omitted. */
-    resolvedChatName?: string;
 }
 
 // Chip color configurations
@@ -154,7 +153,6 @@ const ModernChip: React.FC<ModernChipProps> = ({
 export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     activity,
     chatTypeLookup,
-    resolvedChatName,
 }) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -197,11 +195,6 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     // (project/task FK columns on the v3 `Activity` row).
     const showProjectAndTaskChips =
         activity.chatType === 3 || isTaskComment || isTaskBody || isTaskNote;
-
-    // Prefer the parent's live-resolved name over the frozen payload
-    // value (which can be the `"?"` placeholder for channel-backed
-    // surfaces whose channel wasn't loaded at adapt time).
-    const projectChipName = resolvedChatName ?? activity.chatName;
 
     return (
         <Stack

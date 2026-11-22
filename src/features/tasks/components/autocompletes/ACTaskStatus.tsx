@@ -26,14 +26,8 @@ type ACTaskStatusProps = {
     onDeleteTask?: () => void;
 };
 export const ACTaskStatus = (props: ACTaskStatusProps) => {
-    const {
-        socket,
-        taskContent,
-        setTaskContent,
-        setTaskUpdated,
-        setTaskStatusUpdated,
-        onDeleteTask,
-    } = props;
+    const { taskContent, setTaskContent, setTaskUpdated, setTaskStatusUpdated, onDeleteTask } =
+        props;
 
     const { t } = useTranslation();
     const options = useMemo(
@@ -71,7 +65,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                 )}
                 renderTags={(tags, getTagProps) =>
                     tags.slice(-1).map((item, index) => {
-                        const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                        const { key } = getTagProps({ index }); // only the 'key' is needed
                         return <StatusLabel key={key} status={item.status} />;
                     })
                 }

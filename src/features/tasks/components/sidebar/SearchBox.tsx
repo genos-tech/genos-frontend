@@ -136,7 +136,7 @@ export const TaskSidebarSearchBox = memo(function TaskSidebarSearchBox(
             )}
             renderTags={(tags, getTagProps) =>
                 tags.map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index });
+                    const { key } = getTagProps({ index });
                     return (
                         <StatusLabel
                             key={`ac-taskhome-search-task-chip-${key}`}

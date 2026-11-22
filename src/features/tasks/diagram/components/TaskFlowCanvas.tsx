@@ -64,7 +64,7 @@ import {
     selectAncestorVerdicts,
 } from "../../utils/closedByAncestor";
 import { overlayGraphDeletes, pendingDeleteSignature } from "../../utils/pendingTaskDelete";
-import { statuses, taskMetaLabel } from "../../utils/taskMeta";
+import { taskMetaLabel } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { loadMilestoneBurndown } from "../services/loadMilestoneBurndown";

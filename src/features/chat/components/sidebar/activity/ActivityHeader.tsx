@@ -120,11 +120,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     </Typography>
                 )}
 
-                <ActivityTypeChips
-                    activity={activity}
-                    chatTypeLookup={chatTypeLookup}
-                    resolvedChatName={resolvedChatName}
-                />
+                <ActivityTypeChips activity={activity} chatTypeLookup={chatTypeLookup} />
             </Stack>
 
             {/* Right-aligned timestamp and unread indicator */}

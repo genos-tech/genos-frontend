@@ -14,7 +14,6 @@ import {
     setArchivedChannelIds,
     setArchivedProjects,
 } from "../features/archive/archiveState";
-import { loadTeamProjects } from "../features/tasks/services/loadTeamProjects";
 import { fmt, I18nProvider } from "../i18n";
 import { en } from "../i18n/locales/en";
 import { channelService } from "../services/channel/channelService";

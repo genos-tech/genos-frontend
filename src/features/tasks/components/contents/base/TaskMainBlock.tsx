@@ -379,7 +379,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // task-open render and naively closing over `taskContent` would
     // wipe out user-added links on the next setTaskContent.
     const pullsFetchTokenRef = useRef(0);
-    const [pullsRefreshing, setPullsRefreshing] = useState(false);
+    const [, setPullsRefreshing] = useState(false);
     const fetchLinkedPullsRef = useRef<(opts?: { bypassCache?: boolean }) => Promise<void>>(
         async () => {}
     );

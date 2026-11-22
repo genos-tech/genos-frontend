@@ -13,7 +13,6 @@ import {
     withTrailingBlank,
 } from "./utils/messageBlocks";
 
-import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -22,7 +21,6 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { useTranslation } from "../../i18n";
 import { channelService } from "../../services/channel/channelService";
 import { notifyActionError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
@@ -63,18 +61,14 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         myself,
         setMyself,
         socket,
-        thread,
         message,
         isInEdit,
         setIsInEdit,
-        setCurrentChat,
         useUISM,
         setNumEditorLines,
         useCM,
     } = props;
     const { mode } = useColorScheme();
-    const { accessToken } = useAuth();
-    const { t } = useTranslation();
     const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);

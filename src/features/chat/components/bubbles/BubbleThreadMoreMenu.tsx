@@ -78,7 +78,6 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         flaggedMessages,
         message,
         myself,
-        setCurrentThreadChat,
         setEditTargetMessage,
         setFlaggedMessages,
         setIsInEdit,

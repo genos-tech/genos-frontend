@@ -98,6 +98,7 @@ export const buildCommentSchema = (args: {
     // schema does (the comment formatting toolbar offers no color buttons, so
     // keeping them would be dead schema), starting from ours so inline code
     // can still be combined with the other styles (see `genosStyleSpecs`).
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- destructured only to drop them from the spread
     const { textColor, backgroundColor, ...styleSpecs } = genosStyleSpecs;
     return BlockNoteSchema.create({
         blockSpecs: {

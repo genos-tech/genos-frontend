@@ -18,7 +18,6 @@ import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContex
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { Clickable } from "../../../../components/ui/Clickable";
-import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -48,7 +47,7 @@ import { isDeletingStatus } from "../../utils/deletedStatus";
 import { TASK_ROW_CLASS } from "../../utils/familyFocusCss";
 import { formatRelativeAge } from "../../utils/relativeAge";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
-import { effortLevels, priorities, taskMetaLabel } from "../../utils/taskMeta";
+import { effortLevels, priorities } from "../../utils/taskMeta";
 import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/taskWeight";
 import { PriorityIcon } from "../meta/PriorityIcon";
 import { StatusLabel } from "../meta/StatusLabel";
@@ -243,7 +242,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         index,
         columns,
         mode,
-        myself,
         teamMembers,
         onRowUpdate,
         onDeleteTask,
@@ -253,12 +251,6 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         familyKey,
         projectTags,
         customFieldDefs,
-        useTM,
-        useTEM,
-        useCM,
-        useUISM,
-        socket,
-        setMyself,
         expandedRows,
         toggleExpand,
         hasChildren,

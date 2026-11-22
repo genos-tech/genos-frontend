@@ -226,7 +226,6 @@ const MemberFieldEditor = ({
     stored,
     teamMembers,
     placeholder,
-    isDark,
     writeValue,
 }: {
     def: ProjectCustomFieldDef;
