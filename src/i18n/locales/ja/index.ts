@@ -3905,6 +3905,7 @@ export const ja: DeepPartial<Messages> = {
         tabs: {
             general: "一般",
             planUsage: "プランと使用状況",
+            aiCreditUsage: "AIクレジット利用",
             chat: "チャット",
             tasks: "タスク",
             spotlight: "Genos",
@@ -4213,6 +4214,42 @@ export const ja: DeepPartial<Messages> = {
             errorPassword: "パスワードが正しくありません。",
             errorOwnership: "先にチームのオーナー権限を譲渡してください。",
             errorGeneric: "問題が発生しました。もう一度お試しください。",
+        },
+        aiCreditUsage: {
+            heading: "AIクレジット利用",
+            description:
+                "どのAI機能でクレジットを使ったかを表示します。あなた自身の利用のみが表示されます。",
+            remaining: "残りクレジット",
+            usedThisMonth: "今月の使用量",
+            renews: "更新日",
+            purchasedSub: "+購入分 {n}",
+            unlimited: "無制限",
+            byJobHeading: "今月の機能別使用量",
+            byJobAria: "今月の機能別クレジット使用量: {list}",
+            jobCount: "{n}回",
+            jobs: {
+                ask: "Genosへの質問",
+                connected_app: "連携アプリからのAI検索",
+                schedule: "定期レポートのAI文章",
+                summary: "要約",
+                other: "その他のAI利用",
+            },
+            recentHeading: "最近の消費",
+            recentCap: "直近50件、新しい順",
+            emptyTitle: "今月はまだAIを使っていません",
+            emptyBody:
+                "Genosが質問に答えたり、要約やレポートの文章を作成すると、使ったクレジットがここに表示されます。",
+            loadError: "クレジット利用状況を読み込めませんでした",
+            retry: "再試行",
+            notAuthoritative:
+                "お使いのプランはクレジットではなく、1日のAI利用回数を制限します。上限は「プランと使用状況」で確認できます。",
+            depletedWarning:
+                "クレジットが残っていません。更新日まで引き続きAIを使うには、クレジットを購入するかアップグレードしてください。",
+            lowWarning:
+                "クレジットが少なくなっています。長いリクエストは途中で止まる場合があります。",
+            buyCredits: "クレジットを購入",
+            upgrade: "プランをアップグレード",
+            seeUsageLink: "クレジット利用状況を見る",
         },
         planUsage: {
             heading: "プランと使用状況",

@@ -756,7 +756,11 @@ export const PlansHome = () => {
                     plan includes, and it carries the current balance for
                     the same reason: "buy more" needs a "more than what". */}
                 {creditPacks?.packs?.length ? (
-                    <Sheet sx={{ borderRadius: "lg", mt: 4, p: 2.5 }} variant="outlined">
+                    <Sheet
+                        id="credit-packs"
+                        sx={{ borderRadius: "lg", mt: 4, p: 2.5, scrollMarginTop: 16 }}
+                        variant="outlined"
+                    >
                         <Typography level="title-md">{p.creditsPacksHeading}</Typography>
                         <Typography level="body-sm" sx={{ color: "text.tertiary", mt: 0.5 }}>
                             {p.creditsPacksBlurb}

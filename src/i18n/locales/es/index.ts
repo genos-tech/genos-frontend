@@ -612,6 +612,7 @@ export const es: DeepPartial<Messages> = {
         tabs: {
             general: "General",
             planUsage: "Plan y uso",
+            aiCreditUsage: "Uso de créditos de IA",
             chat: "Chat",
             tasks: "Tareas",
             spotlight: "Genos",
@@ -662,6 +663,42 @@ export const es: DeepPartial<Messages> = {
             errorPassword: "La contraseña no es correcta.",
             errorOwnership: "Primero transfiere la propiedad de tus equipos.",
             errorGeneric: "Algo salió mal. Inténtalo de nuevo.",
+        },
+        aiCreditUsage: {
+            heading: "Uso de créditos de IA",
+            description:
+                "Qué tareas de IA gastaron tus créditos. Esta página muestra solo tu propio uso.",
+            remaining: "Créditos restantes",
+            usedThisMonth: "Usados este mes",
+            renews: "Se renueva",
+            purchasedSub: "+{n} comprados",
+            unlimited: "Ilimitado",
+            byJobHeading: "Este mes por tarea",
+            byJobAria: "Créditos usados este mes por tarea: {list}",
+            jobCount: "Usos: {n}",
+            jobs: {
+                ask: "Preguntar a Genos",
+                connected_app: "Búsquedas de IA desde apps conectadas",
+                schedule: "Frases de IA en informes programados",
+                summary: "Resúmenes",
+                other: "Otro uso de IA",
+            },
+            recentHeading: "Cargos recientes",
+            recentCap: "Tus últimos 50 cargos, del más reciente al más antiguo",
+            emptyTitle: "Aún no has usado la IA este mes",
+            emptyBody:
+                "Cuando Genos responda una pregunta o escriba un resumen o una frase de informe, los créditos usados aparecerán aquí.",
+            loadError: "No se pudo cargar tu uso de créditos",
+            retry: "Reintentar",
+            notAuthoritative:
+                "Tu plan limita las solicitudes diarias de IA en lugar de créditos. Plan y uso muestra esos límites.",
+            depletedWarning:
+                "No te quedan créditos. Compra créditos o mejora tu plan para seguir usando la IA antes de que se renueve tu asignación.",
+            lowWarning:
+                "Te quedan pocos créditos, así que una solicitud larga puede detenerse a medias.",
+            buyCredits: "Comprar créditos",
+            upgrade: "Mejorar plan",
+            seeUsageLink: "Ver uso de créditos",
         },
         planUsage: {
             heading: "Plan y uso",
