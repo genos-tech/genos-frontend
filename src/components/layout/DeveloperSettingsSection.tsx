@@ -196,6 +196,12 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
             // public address" is the difference between the person
             // fixing their tunnel and filing a bug against us.
             setHookError(res.message);
+        } else if (res.status === "limit") {
+            setHookError(
+                res.limit === 0
+                    ? d.webhooks.planLimitFree
+                    : fmt(d.webhooks.planLimit, { limit: res.limit, used: res.used })
+            );
         } else if (res.status === "forbidden") {
             setHookError(d.webhooks.managerOnly);
         } else {

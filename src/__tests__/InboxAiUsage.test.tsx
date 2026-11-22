@@ -315,6 +315,11 @@ describe("costText", () => {
         expect(text).not.toMatch(/\d|deduct|credit/i);
     });
 
+    it("a report that skipped its AI part for lack of credits says so (MIP-1960)", () => {
+        expect(costText(null, c, true)).toBe(c.noAiNoCredits);
+        expect(costText(null, c, false)).toBe("No AI used");
+    });
+
     it("an unmetered item names no number and claims no deduction", () => {
         const text = costText({ metered: false }, c);
         expect(text).toBe(c.unmeasured);

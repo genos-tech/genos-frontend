@@ -150,6 +150,9 @@ export type ScheduleFailure = {
     gone: boolean;
     error: string | null;
     planRequired: boolean;
+    /** A 429 `plan_limit` (MIP-1960): the plan's count of schedules is reached. The page words
+     *  it from its own `limit`, in the member's language. */
+    limitReached: boolean;
 };
 export type ScheduleResult<T> = ({ ok: true } & T) | ScheduleFailure;
 
@@ -173,10 +176,17 @@ const failure = (error: unknown): ScheduleFailure => {
         gone: res?.status === 404,
         error: typeof sentence === "string" && sentence.trim() !== "" ? sentence : null,
         planRequired: res?.status === 403 && res?.data?.code === "plan_required",
+        limitReached: res?.status === 429 && res?.data?.code === "plan_limit",
     };
 };
 
-const NO_SESSION: ScheduleFailure = { ok: false, gone: false, error: null, planRequired: false };
+const NO_SESSION: ScheduleFailure = {
+    ok: false,
+    gone: false,
+    error: null,
+    planRequired: false,
+    limitReached: false,
+};
 
 export const listSchedules = async (
     accessToken: string | null,

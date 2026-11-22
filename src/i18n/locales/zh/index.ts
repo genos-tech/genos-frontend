@@ -2692,6 +2692,8 @@ export const zh: DeepPartial<Messages> = {
             usedTiny: "已使用的 AI 积分：不足 0.01",
             unmeasured: "Genos 为此使用了 AI，用量未被计量。",
             noAiUsed: "未使用 AI",
+            // TODO(copy): MIP-1960 draft wording for a native reader.
+            noAiNoCredits: "未使用 AI：本月的 AI 额度已用完",
             deductedNone: "未从你的余额中扣除",
             deducted: "已从你的余额中扣除 {credits}",
             scheduleFallback: "此定时任务",
@@ -4004,6 +4006,10 @@ export const zh: DeepPartial<Messages> = {
                 disabled: "多次失败后禁用",
                 managerOnly: "只有团队所有者或编辑者可以添加 webhook。",
                 createFailed: "无法添加 webhook。请再试一次。",
+                // TODO(copy): MIP-1960 draft wording for a native reader.
+                planLimit:
+                    "你团队的套餐最多允许 {limit} 个 webhook，目前已有 {used} 个。请删除一个，或升级团队套餐。现有的 webhook 会继续发送。",
+                planLimitFree: "你团队的套餐不包含 webhook。升级团队套餐后即可添加。",
                 projectScopeAll: "项目：全部（选择一些以缩小范围）",
                 projectScopeSome: "项目：仅选定的项目",
                 channelScopeRequired:

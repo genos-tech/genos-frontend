@@ -160,6 +160,36 @@ describe("DeveloperSettingsSection", () => {
         expect(await screen.findByText(/must resolve to a public address/i)).toBeInTheDocument();
     });
 
+    // The plan's count of webhook endpoints (MIP-1960): the API answers 429 `plan_limit`, and the
+    // page words it itself, from the two numbers, not from the API's English sentence.
+    it("says the team's plan count in its own words when the limit is reached", async () => {
+        const user = userEvent.setup();
+        createWebhook.mockResolvedValue({ status: "limit", limit: 3, used: 3 });
+        render(<DeveloperSettingsSection teamId="t1" />);
+        await user.type(
+            screen.getByPlaceholderText(/your-app.example.com/i),
+            "https://x.example/h"
+        );
+        await user.click(screen.getByRole("button", { name: /Add webhook/i }));
+        expect(
+            await screen.findByText(/plan allows 3 webhooks, and it has 3/i)
+        ).toBeInTheDocument();
+    });
+
+    it("says webhooks are not in the plan when the limit is zero", async () => {
+        const user = userEvent.setup();
+        createWebhook.mockResolvedValue({ status: "limit", limit: 0, used: 0 });
+        render(<DeveloperSettingsSection teamId="t1" />);
+        await user.type(
+            screen.getByPlaceholderText(/your-app.example.com/i),
+            "https://x.example/h"
+        );
+        await user.click(screen.getByRole("button", { name: /Add webhook/i }));
+        expect(
+            await screen.findByText(/aren't included in your team's plan/i)
+        ).toBeInTheDocument();
+    });
+
     it("explains a disabled endpoint rather than just hiding it", async () => {
         listWebhooks.mockResolvedValue([
             {

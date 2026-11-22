@@ -1672,6 +1672,11 @@ export const es: DeepPartial<Messages> = {
                 disabled: "Deshabilitado después de repetidos fallos",
                 managerOnly: "Solo el propietario o editor del equipo puede agregar un webhook.",
                 createFailed: "No se pudo añadir el webhook. Inténtalo de nuevo.",
+                // TODO(copy): MIP-1960 draft wording for a native reader.
+                planLimit:
+                    "El plan de tu equipo permite {limit} webhooks y ya tiene {used}. Elimina uno o mejora el plan del equipo. Los webhooks existentes siguen entregando.",
+                planLimitFree:
+                    "Los webhooks no están incluidos en el plan de tu equipo. Mejora el plan del equipo para añadir uno.",
                 projectScopeAll: "Proyectos: todos (seleccione algunos para limitarlos)",
                 projectScopeSome: "Proyectos: sólo los seleccionados",
                 channelScopeRequired:
@@ -4567,6 +4572,8 @@ export const es: DeepPartial<Messages> = {
             usedTiny: "Créditos de IA usados: menos de 0.01",
             unmeasured: "Genos usó IA para esto. No se midió la cantidad.",
             noAiUsed: "No se usó IA",
+            // TODO(copy): MIP-1960 draft wording for a native reader.
+            noAiNoCredits: "No se usó IA: no te quedan créditos de IA este mes",
             deductedNone: "Nada descontado de tu saldo",
             deducted: "{credits} descontados de tu saldo",
             scheduleFallback: "Esta programación",

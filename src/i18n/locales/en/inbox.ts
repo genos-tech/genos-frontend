@@ -89,6 +89,7 @@ export const inbox = {
         usedTiny: "AI credits used: less than 0.01",
         unmeasured: "Genos used AI for this. The amount wasn't measured.",
         noAiUsed: "No AI used",
+        noAiNoCredits: "No AI used: you have no AI credits left this month",
         deductedNone: "None deducted from your balance",
         deducted: "{credits} deducted from your balance",
         scheduleFallback: "This schedule",

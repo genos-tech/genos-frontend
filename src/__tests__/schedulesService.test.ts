@@ -163,6 +163,7 @@ describe("failures", () => {
             gone: false,
             error: "Ran a moment ago, try again in 42 seconds.",
             planRequired: false,
+            limitReached: false,
         });
     });
 
@@ -173,6 +174,7 @@ describe("failures", () => {
             gone: true,
             error: "Schedule not found",
             planRequired: false,
+            limitReached: false,
         });
     });
 
@@ -183,6 +185,7 @@ describe("failures", () => {
             gone: false,
             error: null,
             planRequired: false,
+            limitReached: false,
         });
         api.get.mockRejectedValue(new Error("network"));
         expect(await listSchedules("tok", TEAM)).toBeNull();
@@ -227,6 +230,20 @@ describe("the plan gate (MIP-1213)", () => {
             ok: false,
             planRequired: true,
         });
+    });
+
+    it("a 429 plan_limit is the plan's count, and only that", async () => {
+        const limit = { response: { status: 429, data: { error: "x", code: "plan_limit" } } };
+        api.post.mockRejectedValueOnce(limit);
+        expect(await createSchedule("tok", TEAM, FIELDS)).toMatchObject({
+            ok: false,
+            limitReached: true,
+            planRequired: false,
+        });
+        api.post.mockRejectedValueOnce({
+            response: { status: 429, data: { error: "slow down" } },
+        });
+        expect(await createSchedule("tok", TEAM, FIELDS)).toMatchObject({ limitReached: false });
     });
 
     it("any other refusal is not a plan refusal", async () => {

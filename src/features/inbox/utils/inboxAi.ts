@@ -57,6 +57,8 @@ export type AiSourceView = {
     gone: boolean;
     /** The server's `used_ai`; null for a row stored before the field existed. */
     usedAi: boolean | null;
+    /** The report ran without its AI part because the member had no credits left (MIP-1960). */
+    noCredits: boolean;
 };
 
 export type AiUsage = {
@@ -89,7 +91,15 @@ const parseSource = (raw: unknown, kind: "digest" | "schedule"): AiSourceView | 
     if (source.used_ai !== undefined && typeof source.used_ai !== "boolean") return null;
     const usedAi = typeof source.used_ai === "boolean" ? source.used_ai : null;
     if (kind === "digest") {
-        return { kind, key: "digest", enabled: source.enabled, name: "", gone: false, usedAi };
+        return {
+            kind,
+            key: "digest",
+            enabled: source.enabled,
+            name: "",
+            gone: false,
+            usedAi,
+            noCredits: false,
+        };
     }
     const id = text(source.schedule_id, MAX_ID);
     if (id === "") return null;
@@ -100,6 +110,7 @@ const parseSource = (raw: unknown, kind: "digest" | "schedule"): AiSourceView | 
         name: text(source.label, MAX_NAME),
         gone: source.gone === true,
         usedAi,
+        noCredits: source.ai_skipped === "no_credits",
     };
 };
 

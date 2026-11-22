@@ -313,6 +313,9 @@ export type CreateWebhookResult =
     // the difference between fixing it and filing a bug.
     | { status: "invalid"; message: string }
     | { status: "forbidden" }
+    // The team's plan count of webhook endpoints is reached (429 `plan_limit`, MIP-1960):
+    // `limit` 0 means the plan has none. The page words it in the person's language.
+    | { status: "limit"; limit: number; used: number }
     | { status: "error" };
 
 export const createWebhook = async (
@@ -346,8 +349,23 @@ export const createWebhook = async (
         const { secret, ...rest } = res.data;
         return { status: "created", secret, created: toWebhook(rest) };
     } catch (error: unknown) {
-        const response = (error as { response?: { status?: number; data?: { error?: string } } })
-            ?.response;
+        const response = (
+            error as {
+                response?: {
+                    status?: number;
+                    data?: { error?: string; code?: string; limit?: unknown; used?: unknown };
+                };
+            }
+        )?.response;
+        if (response?.status === 429 && response.data?.code === "plan_limit") {
+            const limit = Number(response.data.limit);
+            const used = Number(response.data.used);
+            return {
+                status: "limit",
+                limit: Number.isFinite(limit) ? limit : 0,
+                used: Number.isFinite(used) ? used : 0,
+            };
+        }
         if (response?.status === 400 && response.data?.error) {
             return { status: "invalid", message: response.data.error };
         }
