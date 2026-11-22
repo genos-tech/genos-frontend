@@ -667,7 +667,6 @@ export const es: DeepPartial<Messages> = {
             heading: "Plan y uso",
             description: "Tu plan actual y cuánto has usado de cada límite.",
             viaTeam: "vía equipo {team}",
-            // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
             trialChip: "Prueba gratuita",
             // TODO(copy)
             trialEnds: "Tu mes gratis de Core termina el {date}.",
@@ -1476,7 +1475,6 @@ export const es: DeepPartial<Messages> = {
             title: "Apps conectadas",
             blurb: "Apps de IA a las que has permitido usar Genos como si fueras tú. Si revocas una, deja de funcionar en su próxima solicitud.",
             empty: "Aún no hay apps conectadas.",
-            // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
             paused: "En pausa",
             // TODO(copy)
             pausedNote:
@@ -4528,7 +4526,6 @@ export const es: DeepPartial<Messages> = {
             teamConnection: "Conexión de equipo",
             externalShare: "Compartido con tu equipo",
             genosReport: "Informe de Genos",
-            // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
             trialNotice: "Prueba gratuita",
         },
         report: {

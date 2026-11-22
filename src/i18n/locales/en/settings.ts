@@ -62,7 +62,6 @@ export const settings = {
         title: "Connected apps",
         blurb: "AI apps you've allowed to use Genos as you. Revoke one and it stops working on its next request.",
         empty: "No apps connected yet.",
-        // TODO(copy): MIP-1737 draft wording for a connection the current plan doesn't include.
         paused: "Paused",
         // TODO(copy)
         pausedNote:
@@ -465,7 +464,6 @@ export const settings = {
         heading: "Plan & Usage",
         description: "Your current plan and how much of each limit you've used.",
         viaTeam: "via team {team}",
-        // TODO(copy): MIP-1737 first-month-of-Core trial wording is a DRAFT for Ken's review.
         trialChip: "Free trial",
         // TODO(copy)
         trialEnds: "Your free month of Core ends on {date}.",

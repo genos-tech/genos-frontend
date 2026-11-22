@@ -194,8 +194,8 @@ describe("InboxBubble trial notice plans link, through the router", () => {
 });
 
 // Non-English catalogs are `DeepPartial<Messages>` and fall back to English, so a locale that forgot
-// the key type-checks and quietly shows English. These read the raw catalogs. The wording is a draft
-// (TODO(copy)): the same words as the "Free trial" chip on Settings > Plan and usage.
+// the key type-checks and quietly shows English. These read the raw catalogs. The words are the same as the
+// "Free trial" chip on Settings > Plan and usage.
 describe("inbox.requestTypes.trialNotice in all seven locales", () => {
     const CATALOGS = { en, ja, es, fr, zh, ar, hi } as const;
     it.each(Object.keys(CATALOGS) as Array<keyof typeof CATALOGS>)(

@@ -48,7 +48,6 @@ export const inbox = {
         messageReminder: "Reminder",
         todoReminder: "To-do reminder",
         genosReport: "Genos report",
-        // TODO(copy): MIP-1772 draft wording, the same words as `settings.planUsage.trialChip`.
         trialNotice: "Free trial",
     },
     // The rich card of a typed report (item_body.version 2, MIP-1208). Section headings and
