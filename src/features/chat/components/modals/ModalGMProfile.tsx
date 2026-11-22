@@ -1215,11 +1215,16 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 open={openDeleteConfirm}
                 onCancel={() => setOpenDeleteConfirm(false)}
                 onConfirm={handleDeleteGM}
-                onArchive={async () => {
-                    const ok = await handleArchiveGM();
-                    if (ok) setOpenDeleteConfirm(false);
-                    return ok;
-                }}
+                onArchive={
+                    // An archived group is already archived: the button would restore it.
+                    gmArchived
+                        ? undefined
+                        : async () => {
+                              const ok = await handleArchiveGM();
+                              if (ok) setOpenDeleteConfirm(false);
+                              return ok;
+                          }
+                }
             />
             <ModalTransferOwner
                 candidates={transferCandidates}

@@ -90,6 +90,7 @@ describe("registerSocketRouter", () => {
         vi.spyOn(channelService, "handleMessageUpdated").mockImplementation(() => {});
         vi.spyOn(channelService, "handleReplyCountChanged").mockImplementation(() => {});
         vi.spyOn(channelService, "handleMessageDeleted").mockImplementation(() => {});
+        vi.spyOn(channelService, "handleMessagesDeleted").mockImplementation(() => {});
         vi.spyOn(channelService, "handleReactionAdded").mockImplementation(() => {});
         vi.spyOn(channelService, "handleReactionRemoved").mockImplementation(() => {});
         vi.spyOn(channelService, "handleReadAdvanced").mockImplementation(() => {});
@@ -125,12 +126,13 @@ describe("registerSocketRouter", () => {
         expect(V3_NAMESPACE).toBe("/v3");
     });
 
-    it("registers exactly one handler per server event (22 events)", () => {
+    it("registers exactly one handler per server event (25 events)", () => {
         const expected = [
             "message.created",
             "message.updated",
             "message.reply_count_changed",
             "message.deleted",
+            "messages.deleted",
             "reaction.added",
             "reaction.removed",
             "read.advanced",
@@ -154,7 +156,7 @@ describe("registerSocketRouter", () => {
         ];
         expect([...env.handlers.keys()].sort()).toEqual([...expected].sort());
         expect(env.socket.on).toHaveBeenCalledTimes(expected.length);
-        expect(expected).toHaveLength(24);
+        expect(expected).toHaveLength(25);
     });
 
     // ---- inbox.changed (MIP-1627) -----------------------------------------
@@ -211,6 +213,13 @@ describe("registerSocketRouter", () => {
         env.fire("message.deleted", e);
         expect(channelService.handleMessageDeleted).toHaveBeenCalledTimes(1);
         expect(channelService.handleMessageDeleted).toHaveBeenCalledWith(e);
+    });
+
+    it("messages.deleted (bulk force delete, MIP-1951) routes to handleMessagesDeleted", () => {
+        const e = { channelId: "c1", channelKind: ChannelKind.DM, messageIds: ["m1", "m2"] };
+        env.fire("messages.deleted", e);
+        expect(channelService.handleMessagesDeleted).toHaveBeenCalledTimes(1);
+        expect(channelService.handleMessagesDeleted).toHaveBeenCalledWith(e);
     });
 
     // ---- reaction.* -------------------------------------------------------
@@ -474,13 +483,13 @@ describe("registerSocketRouter", () => {
         }
     });
 
-    it("a second registerSocketRouter call is independent: its teardown removes only its own 22 handlers", () => {
+    it("a second registerSocketRouter call is independent: its teardown removes only its own 25 handlers", () => {
         // Sanity: registering twice produces independent handler sets; the
         // second registration's teardown only removes its own handlers.
         const env2 = makeFakeSocket();
         const teardown2 = registerSocketRouter(env2.socket);
-        expect(env2.socket.on).toHaveBeenCalledTimes(24);
+        expect(env2.socket.on).toHaveBeenCalledTimes(25);
         teardown2();
-        expect(env2.socket.off).toHaveBeenCalledTimes(24);
+        expect(env2.socket.off).toHaveBeenCalledTimes(25);
     });
 });

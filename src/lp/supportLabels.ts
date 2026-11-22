@@ -1,4 +1,4 @@
-import { mcpServerUrl } from "../utils/mcpConnect";
+import { mcpCoreUrl } from "../utils/mcpConnect";
 import type { Lang } from "./lpLang";
 
 /**
@@ -13,7 +13,7 @@ export const SUPPORT_EMAIL = "genos.support@genosai.dev";
  * same API-origin fallback, as the public /developers page and Settings → Developer →
  * Connected apps, so the three can never show different addresses.
  */
-export const SUPPORT_MCP_ADDRESS = mcpServerUrl(
+export const SUPPORT_MCP_ADDRESS = mcpCoreUrl(
     import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev"
 );
 

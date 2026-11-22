@@ -86,6 +86,69 @@ export const collectRelativeAssetHrefs = (blocks: unknown[]): string[] => {
     return [...found];
 };
 
+/** Every `data:image/*` url on an IMAGE block, deduped, in document
+ *  order. What an import has to upload so the body does not carry the
+ *  pixels (a Google Docs export embeds every picture this way). */
+export const collectDataUriImageUrls = (blocks: unknown[]): string[] => {
+    const found = new Set<string>();
+    eachMediaBlock(blocks, (block) => {
+        if (block.type !== "image") return;
+        const url = (block.props as AnyRecord | undefined)?.url;
+        if (typeof url === "string" && /^data:image\//i.test(url)) found.add(url);
+    });
+    return [...found];
+};
+
+/** What to do with one `data:` image: point it at `url` (an empty string
+ *  is allowed: a placeholder to be filled in later), or drop it for a
+ *  paragraph of `text` so nothing broken is left in the note. */
+export type DataUriImageDecision = { url: string } | { text: string };
+
+/**
+ * Rewrite every `data:image/*` image block. `decide` is called once per
+ * block (not per distinct url) with the url and the 1-based position of
+ * that url among the document's distinct data: images, so a caller's
+ * warnings and its rewrite agree on "image 2".
+ */
+export const replaceDataUriImages = (
+    blocks: unknown[],
+    decide: (url: string, index: number) => DataUriImageDecision
+): unknown[] => {
+    const order = new Map(collectDataUriImageUrls(blocks).map((url, i) => [url, i + 1]));
+    if (order.size === 0) return blocks;
+    const walk = (list: unknown[]): unknown[] =>
+        list.map((raw) => {
+            if (!raw || typeof raw !== "object") return raw;
+            const block = raw as AnyRecord;
+            const children = Array.isArray(block.children) ? walk(block.children) : undefined;
+            const props = (block.props ?? {}) as AnyRecord;
+            const url = props.url;
+            if (block.type === "image" && typeof url === "string" && order.has(url)) {
+                const decision = decide(url, order.get(url) as number);
+                if ("url" in decision) {
+                    return {
+                        ...block,
+                        ...(children ? { children } : {}),
+                        props: { ...props, url: decision.url },
+                    };
+                }
+                return {
+                    ...(block.id !== undefined ? { id: block.id } : {}),
+                    type: "paragraph",
+                    props: {
+                        textColor: "default",
+                        textAlignment: "left",
+                        backgroundColor: "default",
+                    },
+                    content: [{ type: "text", text: decision.text, styles: {} }],
+                    children: children ?? [],
+                };
+            }
+            return children ? { ...block, children } : block;
+        });
+    return walk(blocks);
+};
+
 /** Every http(s) media href in `blocks`, deduped, in document order.
  *  What an export has to fetch a copy of. `data:` URIs are excluded —
  *  they are already carried by the markdown itself. */

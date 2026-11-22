@@ -56,5 +56,7 @@ export const refreshArchivedProjects = async (
     });
     if (!all) return;
     const activeIds = new Set(active.map((p) => p.projectId));
-    setArchivedProjects(all.filter((p) => !activeIds.has(p.projectId)));
+    // Only projects the member joined: the team list also holds projects they never joined
+    // (private ones too), which they cannot open (MIP-1921).
+    setArchivedProjects(all.filter((p) => !activeIds.has(p.projectId) && p.isJoined === true));
 };
