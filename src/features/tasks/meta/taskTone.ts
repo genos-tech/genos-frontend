@@ -61,6 +61,18 @@ export const PRIORITY_TONE: Record<PriorityName, Tone> = {
     Critical: "danger",
 };
 
+export const EFFORT_NAMES = ["Minimal", "Low", "Moderate", "High", "Extensive"] as const;
+export type EffortName = (typeof EFFORT_NAMES)[number];
+
+/** Effort speaks the same tones as priority (the dashboard's effort bar used its own hexes). */
+export const EFFORT_TONE: Record<EffortName, Tone> = {
+    Minimal: "muted",
+    Low: "neutral",
+    Moderate: "info",
+    High: "warning",
+    Extensive: "danger",
+};
+
 // Own-property checks, never `obj[key]`: a status or priority string can come
 // from the backend or an LLM, and "constructor" / "toString" would otherwise
 // find an inherited function on a plain object.

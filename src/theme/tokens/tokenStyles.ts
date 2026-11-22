@@ -76,6 +76,16 @@ export const roleVars = (r: RoleColors): [string, string][] => [
     ["ink-rgb", r.inkRgb],
 ];
 
+/** The categorical chart palette (moved out of TaskVelocityChart, MIP-1963). Validated with
+ *  scripts/validate_palette.js on the light (#ffffff) and dark (#0b0a16) surfaces. */
+export const CHART_SERIES: Record<Mode, readonly [string, string, string, string]> = {
+    light: ["#2a78d6", "#eda100", "#008300", "#e87ba4"],
+    dark: ["#3987e5", "#c98500", "#008300", "#d55181"],
+};
+
+export const chartVars = (mode: Mode): [string, string][] =>
+    CHART_SERIES[mode].map((c, i): [string, string] => [`chart-${i + 1}`, c]);
+
 const spaceKey = (k: string) => k.replace(".", "-");
 
 export const scaleVars = (): [string, string][] => [
@@ -127,7 +137,7 @@ const firstPaintDark = (): string =>
         const sel = `:root[data-theme="${id}"]:not([data-joy-color-scheme])`;
         const selectors =
             id === DEFAULT_THEME_ID ? [":root:not([data-joy-color-scheme])", sel] : [sel];
-        return block(selectors, roleVars(buildRoles(id, "dark")))
+        return block(selectors, [...roleVars(buildRoles(id, "dark")), ...chartVars("dark")])
             .split("\n")
             .map((line) => `    ${line}`)
             .join("\n");
@@ -155,7 +165,12 @@ export const buildTokenStylesheet = (): string =>
         block([":root"], scaleVars()),
         ...densityBlocks(),
         ...THEME_IDS.flatMap((id) =>
-            MODES.map((mode) => block(selectorsFor(id, mode), roleVars(buildRoles(id, mode))))
+            MODES.map((mode) =>
+                block(selectorsFor(id, mode), [
+                    ...roleVars(buildRoles(id, mode)),
+                    ...chartVars(mode),
+                ])
+            )
         ),
         firstPaintDark(),
     ].join("\n\n");
