@@ -1821,6 +1821,7 @@ export const ja: DeepPartial<Messages> = {
             archivedBadge: "アーカイブ済み",
             newTaskDisabled:
                 "タスクを追加するには、このプロジェクトのアーカイブを解除してください。",
+            deleteDisabled: "削除するには、このプロジェクトのアーカイブを解除してください。",
             composerDisabled:
                 "このグループはアーカイブされています。メッセージを送るにはアーカイブを解除してください。",
             archiveFailed: "アーカイブできませんでした。もう一度お試しください。",

@@ -1747,6 +1747,7 @@ export const zh: DeepPartial<Messages> = {
             archivedSection: "已归档 ({count})",
             archivedBadge: "已归档",
             newTaskDisabled: "取消归档此项目后才能添加任务。",
+            deleteDisabled: "取消归档此项目后才能删除。",
             composerDisabled: "此群组已归档。取消归档后才能发送消息。",
             archiveFailed: "归档失败，请重试。",
             unarchiveFailed: "取消归档失败，请重试。",

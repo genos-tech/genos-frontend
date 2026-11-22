@@ -242,6 +242,9 @@ export const TaskHeader = ({
             label: t.tasks.header.deleteProjectMenuItem,
             icon: <DeleteIcon sx={{ fontSize: 18 }} />,
             danger: true,
+            // An archive is read-only: unarchive first, then delete (MIP-1693).
+            disabled: archived,
+            hint: archived ? t.common.archive.deleteDisabled : undefined,
             onClick: onDeleteProject,
         },
     ];
