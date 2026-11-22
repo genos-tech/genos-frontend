@@ -8,6 +8,7 @@ import PendingIcon from "@mui/icons-material/Pending";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import dayjs from "dayjs";
+import { flushSync } from "react-dom";
 import { Socket } from "socket.io-client";
 
 import { DataState } from "../../../../components/ui/feedback/DataState";
@@ -60,6 +61,7 @@ import {
 import { deriveGhostAncestors } from "../../utils/ghostAncestors";
 import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
 import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
+import { keyGrowth, RENDER_ALL_UP_TO, useRenderOnScroll } from "../../utils/renderOnScroll";
 import { nextHeaderTiers, sortTableTasks } from "../../utils/sortTask";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
@@ -1639,7 +1641,51 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         (syncFailure.loading && useTM.allTasks.length === 0) || syncFailure.retrying;
     // The skeleton the gate shows from the click until this table's rows are the picked
     // milestone's (MIP-1972): the same one the first read of a project uses.
-    const shownRows = scopeSettled ? displayRows : NO_DISPLAY_ROWS;
+    const allShownRows = scopeSettled ? displayRows : NO_DISPLAY_ROWS;
+    // A long table (the status filter on All: ~590 rows for an 800-task milestone) draws its
+    // rows as far down as it has been scrolled. The rows drawn are a PREFIX of `allShownRows`,
+    // so the drag indexes, the order and the grouping are the list's own (MIP-1985).
+    const { limit, grow, ensure, onScroll, scroller } = useRenderOnScroll(allShownRows.length);
+    const shownRows = limit < allShownRows.length ? allShownRows.slice(0, limit) : allShownRows;
+    // The selected row and the row holding the open quick-add draft must be drawn even when
+    // they sit below the drawn rows (the preview was opened from a link or a search).
+    const mustShowIndex = useMemo(() => {
+        if (allShownRows.length <= RENDER_ALL_UP_TO) return -1;
+        return allShownRows.findIndex(
+            (r) =>
+                resolveIsSelected(r) ||
+                (quickAddParentId != null && String(r.id) === quickAddParentId)
+        );
+    }, [allShownRows, resolveIsSelected, quickAddParentId]);
+    useEffect(() => {
+        if (mustShowIndex >= limit) ensure(mustShowIndex);
+    }, [mustShowIndex, limit, ensure]);
+    // One stable ref for the grid element: the grid controller attaches on every ref change.
+    const treegridRef = useCallback(
+        (element: HTMLElement | null) => {
+            gridRef(element);
+            scroller.current = element;
+        },
+        [gridRef, scroller]
+    );
+    // The keyboard reaches the drawn rows' end: draw more BEFORE the grid's own key handler
+    // (a listener on this same element, in the bubble phase) picks the row to move to.
+    const onGridKeyDownCapture = (event: React.KeyboardEvent<HTMLElement>) => {
+        if (limit >= allShownRows.length) return;
+        const rowEls = Array.from(
+            event.currentTarget.querySelectorAll<HTMLElement>(
+                `[${GRID_ROW_ATTR}]:not([${GRID_ROW_ATTR}="${GRID_HEADER_ROW}"])`
+            )
+        );
+        const rowEl = (event.target as HTMLElement).closest<HTMLElement>(`[${GRID_ROW_ATTR}]`);
+        const need = keyGrowth(
+            event.key,
+            event.ctrlKey || event.metaKey,
+            rowEl ? rowEls.indexOf(rowEl) : -1,
+            rowEls.length
+        );
+        if (need) flushSync(() => grow(need));
+    };
     const switchSkeleton = (
         <TaskTableSkeleton
             columns={columnsWithWidths}
@@ -1690,7 +1736,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     onClose={() => setIsColumnSettingsOpen(false)}
                 />
                 <Box
-                    ref={gridRef}
+                    ref={treegridRef}
                     // A treegrid (`role` below): rows expand to show subtasks. One tab
                     // stop for the whole table, arrows between cells (useGridNav).
                     aria-label={t.tasks.table.gridLabel}
@@ -1735,6 +1781,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         // sticky header (the scroller's padding, so it holds for every target).
                         scrollPaddingTop: "48px",
                     }}
+                    onKeyDownCapture={onGridKeyDownCapture}
+                    onScroll={onScroll}
                 >
                     {/* Table Header */}
                     <div
