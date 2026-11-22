@@ -141,6 +141,11 @@ describe("MilestonesAtRiskCard", () => {
         expect(screen.getByRole("button", { name: "All milestones" })).toBeTruthy();
     });
 
+    it("ignores a deleted milestone", () => {
+        mount([milestone(1, "Gone", { isDeleted: true })], [task(1, 1, "Blocked")]);
+        expect(screen.getByText("No milestone is at risk.")).toBeTruthy();
+    });
+
     it("ignores a Closed milestone", () => {
         mount([milestone(1, "Done", { status: "Closed" })], [task(1, 1, "Blocked")]);
         expect(screen.getByText("No milestone is at risk.")).toBeTruthy();

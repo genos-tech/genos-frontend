@@ -37,6 +37,7 @@ import {
 import { formatRelativeAge } from "../../../utils/relativeAge";
 import { SourceTaskLine } from "../../contents/base/sub/TaskProgressFeed";
 import { StatusLabel } from "../../meta/StatusLabel";
+import { statusText, type StatusLabels } from "../taskHomeHelpers";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -63,16 +64,6 @@ type Props = {
     projectName?: string | null;
     /** Opens the milestone's preview (the "Milestones in sprint" list of the old Sprint tab did). */
     onOpenMilestone?: (milestoneId: number) => void;
-};
-
-type StatusLabels = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["statusLabels"];
-
-// The dashboard's own words for a status ("Completed", not the stored "Closed"); a status the
-// dashboard has no word for (or the "Other" bucket) falls back to the caller's text.
-const statusText = (status: string, labels: StatusLabels, other: string): string => {
-    if (status === "Other") return other;
-    const key = status.toLowerCase() as keyof StatusLabels;
-    return labels[key] ?? status;
 };
 
 export const MilestoneProgressTab = ({
@@ -115,25 +106,39 @@ export const MilestoneProgressTab = ({
         return <EmptyState body={m.empty} data-empty="milestone-progress" size="md" />;
     }
 
-    const tiles: { label: string; value: string; sub?: string; tone?: "danger" | "warning" }[] = [
-        { label: m.summaryMilestones, value: nf.number(overview.milestones) },
+    const tiles: {
+        label: string;
+        raw: number;
+        value: string;
+        sub?: string;
+        tone?: "danger" | "warning";
+    }[] = [
+        {
+            label: m.summaryMilestones,
+            raw: overview.milestones,
+            value: nf.number(overview.milestones),
+        },
         {
             label: m.summaryClosed,
+            raw: overview.closed,
             value: nf.number(overview.closed),
             sub: overview.tasks > 0 ? `/ ${nf.number(overview.tasks)}` : undefined,
         },
         {
             label: m.summaryOverdue,
+            raw: overview.overdue,
             value: nf.number(overview.overdue),
             tone: overview.overdue > 0 ? "danger" : undefined,
         },
         {
             label: m.summaryBlocked,
+            raw: overview.blocked,
             value: nf.number(overview.blocked),
             tone: overview.blocked > 0 ? "warning" : undefined,
         },
         {
             label: m.summaryStalled,
+            raw: overview.stalled,
             value: nf.number(overview.stalled),
             tone: overview.stalled > 0 ? "warning" : undefined,
         },
@@ -165,6 +170,7 @@ export const MilestoneProgressTab = ({
                     <StatTile
                         key={tile.label}
                         label={tile.label}
+                        raw={tile.raw}
                         sub={tile.sub}
                         tone={tile.tone}
                         value={tile.value}
@@ -194,6 +200,7 @@ export const MilestoneProgressTab = ({
                                 <Box sx={{ minWidth: 0 }}>
                                     <Stack alignItems="center" direction="row" spacing={1}>
                                         <Typography
+                                            component="h3"
                                             id={headingId}
                                             level="title-sm"
                                             sx={{
@@ -378,6 +385,7 @@ const MilestoneCard = ({
     const openLabel = tr.tasks.dashboard.project.openMilestoneFor;
     return (
         <DashboardCard
+            headingLevel="h4"
             title={milestone.title}
             actions={
                 <Stack alignItems="center" direction="row" spacing={1}>

@@ -76,6 +76,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         topByWeightRows,
         overdueAndUpcoming,
         ongoingProjectMilestones,
+        sprintMilestones,
         myStats,
         setSelectedMemberId,
         projectMembers,
@@ -365,6 +366,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     setTopWeightSort={setTopWeightSort}
                                     socket={socket}
                                     sprintMembers={sprintMembers}
+                                    sprintMilestones={sprintMilestones}
                                     sprintNameFor={sprintNameFor}
                                     sprintStats={sprintStats}
                                     sprintTaskIds={sprintTaskIds}
@@ -378,8 +380,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     topByWeightRows={topByWeightRows}
                                     topWeightSort={topWeightSort}
                                     useCM={useCM}
-                                    usePM={usePM}
-                                    useSM={useSM}
                                     useTEM={useTEM}
                                     useTM={useTM}
                                     useUISM={useUISM}

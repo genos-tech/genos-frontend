@@ -16,6 +16,7 @@ import {
     isMilestoneAtRisk,
     summarizeMilestoneProgress,
 } from "../../../utils/milestoneProgressSummary";
+import { statusText } from "../taskHomeHelpers";
 
 const SHOWN = 3;
 
@@ -44,7 +45,7 @@ export const MilestonesAtRiskCard = ({
     const risky = useMemo(() => {
         const now = new Date();
         return milestones
-            .filter((m) => m.status !== "Closed")
+            .filter((m) => !m.isDeleted && m.status !== "Closed" && m.status !== "Deleted")
             .map((milestone) => ({
                 milestone,
                 summary: summarizeMilestoneProgress(milestone, effectiveTasks, now),
@@ -125,17 +126,23 @@ export const MilestonesAtRiskCard = ({
                             {summary.total > 0 && (
                                 <ProportionBar
                                     legend={false}
-                                    ariaLabel={summary.entries
-                                        .map((e) => `${e.status} ${e.count}`)
-                                        .join(", ")}
+                                    ariaLabel={fmt(d.milestoneProgress.closedOfTotal, {
+                                        closed: nf.number(summary.closed),
+                                        total: nf.number(summary.total),
+                                    })}
                                     segments={summary.entries.map((e) => ({
                                         key: e.status,
-                                        label:
-                                            statusLabels[
-                                                e.status.toLowerCase() as keyof typeof statusLabels
-                                            ] ?? e.status,
+                                        label: statusText(
+                                            e.status,
+                                            statusLabels,
+                                            d.milestoneProgress.otherStatus
+                                        ),
                                         value: e.count,
-                                        tone: STATUS_TONE[e.status as StatusName] ?? "muted",
+                                        display: nf.number(e.count),
+                                        tone:
+                                            e.status === "Other"
+                                                ? "muted"
+                                                : (STATUS_TONE[e.status as StatusName] ?? "muted"),
                                     }))}
                                 />
                             )}

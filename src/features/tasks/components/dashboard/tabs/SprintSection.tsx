@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import { Typography } from "@mui/joy";
@@ -17,9 +16,14 @@ import { MilestonesAtRiskCard } from "./MilestonesAtRiskCard";
 
 type SprintSectionProps = Pick<
     TaskHomeData,
-    "selectedSprint" | "sprintStats" | "recentTasks" | "handleCreateTask" | "effectiveTasks"
+    | "selectedSprint"
+    | "sprintStats"
+    | "sprintMilestones"
+    | "recentTasks"
+    | "handleCreateTask"
+    | "effectiveTasks"
 > &
-    Pick<TaskHomeContentProps, "useTM" | "usePM" | "useSM"> & {
+    Pick<TaskHomeContentProps, "useTM"> & {
         onShowAllMilestones: () => void;
     };
 
@@ -31,34 +35,22 @@ type SprintSectionProps = Pick<
 export const SprintSection = ({
     selectedSprint,
     sprintStats,
+    sprintMilestones,
     recentTasks,
     handleCreateTask,
     effectiveTasks,
-    usePM,
-    useSM,
     useTM,
     onShowAllMilestones,
 }: SprintSectionProps) => {
     const { t } = useTranslation();
     const nf = useNumberFormat();
-    const projectId = usePM.currentProject?.projectId;
-    // The selected sprint's milestones, or the backlog's when no sprint is selected.
-    const sprintMilestones = useMemo(
-        () =>
-            projectId
-                ? (useSM.projectMilestones[projectId] ?? []).filter((m) =>
-                      selectedSprint ? m.sprintId === selectedSprint.sprintId : m.sprintId == null
-                  )
-                : [],
-        [projectId, selectedSprint, useSM.projectMilestones]
-    );
     const openMilestone = (milestoneId: number) => {
         useTM.setCurrentPreviewKind("milestone");
         useTM.setCurrentPreviewMilestoneId(milestoneId);
         useTM.setIsTaskPreviewVisible(true);
     };
-    // Closed vs total across the selected sprint's milestones: the same numerator and
-    // denominator as the per-milestone bars below, so every sprint figure tells one story.
+    // Closed vs total across the selected sprint's milestones (the server's counts, sub-tasks
+    // included). The milestone card's bars count the dashboard's own rows, so the two can differ.
     const pct = sprintStats.total > 0 ? Math.min(1, sprintStats.closed / sprintStats.total) : 0;
     const segments = [
         {

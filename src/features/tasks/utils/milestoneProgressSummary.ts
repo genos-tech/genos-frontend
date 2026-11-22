@@ -257,4 +257,4 @@ export const compareMilestoneRisk = (
     b.overdue.length - a.overdue.length ||
     b.blocked.length - a.blocked.length ||
     Number(b.stalled) - Number(a.stalled) ||
-    (a.dueInDays ?? Number.POSITIVE_INFINITY) - (b.dueInDays ?? Number.POSITIVE_INFINITY);
+    (a.dueInDays ?? Number.MAX_SAFE_INTEGER) - (b.dueInDays ?? Number.MAX_SAFE_INTEGER);

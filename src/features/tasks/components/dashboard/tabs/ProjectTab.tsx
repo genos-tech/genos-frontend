@@ -36,6 +36,7 @@ type ProjectTabProps = Pick<
     | "handleCreateTask"
     | "selectedSprint"
     | "sprintStats"
+    | "sprintMilestones"
     | "sprintMembers"
     | "sprintTaskIds"
     | "sprintTaskUpdatedAt"
@@ -58,15 +59,7 @@ type ProjectTabProps = Pick<
 > &
     Pick<
         TaskHomeContentProps,
-        | "useTM"
-        | "usePM"
-        | "useTEM"
-        | "useSM"
-        | "myself"
-        | "setMyself"
-        | "useCM"
-        | "useUISM"
-        | "socket"
+        "useTM" | "useTEM" | "myself" | "setMyself" | "useCM" | "useUISM" | "socket"
     >;
 
 type AttentionList = "overdue" | "week" | "weight";
@@ -90,6 +83,7 @@ export const ProjectTab = ({
     handleCreateTask,
     selectedSprint,
     sprintStats,
+    sprintMilestones,
     sprintMembers,
     sprintTaskIds,
     sprintTaskUpdatedAt,
@@ -103,9 +97,7 @@ export const ProjectTab = ({
     textSecondary,
     textMuted,
     useTM,
-    usePM,
     useTEM,
-    useSM,
     myself,
     setMyself,
     useCM,
@@ -269,9 +261,8 @@ export const ProjectTab = ({
                 handleCreateTask={handleCreateTask}
                 recentTasks={recentTasks}
                 selectedSprint={selectedSprint}
+                sprintMilestones={sprintMilestones}
                 sprintStats={sprintStats}
-                usePM={usePM}
-                useSM={useSM}
                 useTM={useTM}
                 onShowAllMilestones={() => setActiveTab("milestones")}
             />

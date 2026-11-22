@@ -193,8 +193,8 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // The Sprint Summary header and the "Sprint Insights" milestone cards
     // must always agree, so they are driven by the SAME data: the project's
     // milestones filtered to the selected sprint. `sprintMilestones` mirrors
-    // the exact filter SprintMilestonesSection applies, so summing the cards
-    // below reproduces the header here by construction.
+    // the filter the Project tab's milestone card applies (and the old
+    // SprintMilestonesSection did), so the header and the card list the same milestones.
     const sprintMilestones = useMemo<Milestone[]>(() => {
         const projectId = usePM.currentProject?.projectId;
         if (!projectId) return [];
@@ -779,6 +779,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         topByWeightRows,
         overdueAndUpcoming,
         ongoingProjectMilestones,
+        sprintMilestones,
         myStats,
         selectedMemberId,
         setSelectedMemberId,

@@ -64,6 +64,12 @@ describe("MilestoneProgressTab sprint groups and Ask Genos (MIP-1909)", () => {
         expect(headings[0]).toContain("Sprint 13");
         expect(headings[1]).toContain("Sprint 12");
         expect(headings[2]).toContain("No sprint");
+        // Sprint names are h3 headings, with each milestone card an h4 below them.
+        expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+            "Sprint 13",
+            "Sprint 12",
+            "No sprint",
+        ]);
     });
 
     it("the sprint button hands the app-level ask a question naming sprint and project", () => {
