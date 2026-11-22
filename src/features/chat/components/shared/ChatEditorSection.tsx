@@ -60,7 +60,10 @@ export const ChatEditorSection = ({
     if (archived) {
         return (
             <Box sx={{ paddingLeft: 1, paddingRight: 1, paddingBottom: 1 }}>
-                <ArchivedBanner kind="chat" />
+                <ArchivedBanner
+                    kind="chat"
+                    projectChat={(chat as ChatProps).project?.projectId != null}
+                />
             </Box>
         );
     }

@@ -358,6 +358,7 @@ export const settings = {
                 "member.added": "Member added",
                 "member.removed": "Member left",
                 "channel.deleted": "Group chat deleted",
+                "data.force_deleted": "Data deleted permanently",
                 "role.changed": "Role changed",
                 "owner.transferred": "Ownership transferred",
                 "invite.sent": "Invite sent",

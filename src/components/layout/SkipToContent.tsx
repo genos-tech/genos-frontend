@@ -1,3 +1,4 @@
+import type React from "react";
 import Box from "@mui/joy/Box";
 
 import { useTranslation } from "../../i18n";
@@ -32,7 +33,12 @@ export function SkipToContent() {
                 transform: "translateY(calc(-100% - 16px))",
                 "&:focus-visible": { ...focusRing, transform: "none" },
             }}
-            onClick={() => document.getElementById(APP_MAIN_ID)?.focus()}
+            // MIP-1928: only move focus. Following the href would push `/path#app-main` onto the
+            // history (a wasted Back step) and re-render the app on the location change.
+            onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                document.getElementById(APP_MAIN_ID)?.focus();
+            }}
         >
             {t.common.skipToContent}
         </Box>

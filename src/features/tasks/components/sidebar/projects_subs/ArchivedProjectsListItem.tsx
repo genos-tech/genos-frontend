@@ -4,7 +4,7 @@ import { List } from "@mui/joy";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../../components/ui/nav/navStyles";
 import type { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
-import { useTranslation } from "../../../../../i18n";
+import { fmt, useTranslation } from "../../../../../i18n";
 import { useArchiveState } from "../../../../archive/archiveState";
 import { Toggler } from "../common";
 
@@ -31,14 +31,18 @@ export const ArchivedProjectsListItem = ({ usePM }: ArchivedProjectsListItemProp
             storageKey="archived-projects"
             renderToggle={({ open, setOpen }) => (
                 <NavItem
+                    as="div"
                     expanded={open}
                     icon={<ArchiveOutlinedIcon />}
-                    label={`${t.common.archive.archivedSection} (${archivedProjects.length})`}
+                    label={fmt(t.common.archive.archivedSection, {
+                        count: archivedProjects.length,
+                    })}
                     onClick={() => {
                         setOpen(!open);
                     }}
                 />
             )}
+            asListItem
         >
             <List sx={navNestedListSx}>
                 {archivedProjects.map((project) => (
