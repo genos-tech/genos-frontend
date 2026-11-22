@@ -1639,6 +1639,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         (syncFailure.loading && useTM.allTasks.length === 0) || syncFailure.retrying;
     // The skeleton the gate shows from the click until this table's rows are the picked
     // milestone's (MIP-1972): the same one the first read of a project uses.
+    const shownRows = scopeSettled ? displayRows : NO_DISPLAY_ROWS;
     const switchSkeleton = (
         <TaskTableSkeleton
             columns={columnsWithWidths}
@@ -1934,9 +1935,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                                 columns={columnsWithWidths}
                                                 customFieldDefs={customFieldDefs}
                                                 depthMap={depthMap}
-                                                displayRows={
-                                                    scopeSettled ? displayRows : NO_DISPLAY_ROWS
-                                                }
+                                                displayRows={shownRows}
                                                 expandedRows={expandedRows}
                                                 familyKeyByRow={familyKeyByRow}
                                                 ghostIds={ghostInfo.ghostIds}
