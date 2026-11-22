@@ -82,6 +82,17 @@ export const markChannelArchived = (channelId: string, archived: boolean): void 
 export const isProjectArchived = (projectId: number | null | undefined): boolean =>
     projectId != null && snapshot.archivedProjects.some((p) => p.projectId === projectId);
 
+/**
+ * A project by id: the active list first, then the archived ones (an archived project is in
+ * no active list, but a reload, Back or a link still has to open it, MIP-1920).
+ */
+export const findProject = (
+    activeProjects: readonly ProjectProps[],
+    projectId: number
+): ProjectProps | undefined =>
+    activeProjects.find((p) => p.projectId === projectId) ??
+    snapshot.archivedProjects.find((p) => p.projectId === projectId);
+
 /** A group chat is archived when it is listed as archived or when its project is, in `state`. */
 export const isChatArchivedIn = (
     state: ArchiveSnapshot,
@@ -128,6 +139,19 @@ export const useIsProjectArchived = (projectId: number | null | undefined): bool
     const state = useArchiveState();
     return projectId != null && state.archivedProjects.some((p) => p.projectId === projectId);
 };
+
+/**
+ * Whether a note's comments are closed because its project or chat is archived (MIP-1693, Ken
+ * 2026-11-22: sharing stays allowed, comments do not). `host` is the note's comment host: a task note
+ * carries a `projectId`, a chat note a `chatId`. A chat note's chat is matched by its id as text.
+ */
+export const isNoteCommentingArchived = (
+    state: ArchiveSnapshot,
+    host: { projectId?: number | null; chatId?: number | string | null }
+): boolean =>
+    (host.projectId != null &&
+        state.archivedProjects.some((p) => p.projectId === host.projectId)) ||
+    (host.chatId != null && state.archivedChannelIds.has(String(host.chatId)));
 
 /** React binding: re-renders the caller whenever the archive state changes. */
 export const useArchiveState = (): ArchiveSnapshot =>

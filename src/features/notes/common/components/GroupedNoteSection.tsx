@@ -151,8 +151,8 @@ function GroupedNoteSectionComponent({
     );
 
     return (
-        <Box key={groupKey}>
-            <ListItem sx={{ p: 0 }} nested>
+        <Box key={groupKey} role="none">
+            <ListItem component="li" sx={{ p: 0 }} nested>
                 {droppableId && droppableKind ? (
                     <DroppableHeader containerId={droppableId} kind={droppableKind}>
                         {(isDraggingOver) => headerButton(isDraggingOver)}
@@ -172,7 +172,9 @@ function GroupedNoteSectionComponent({
                         },
                     }}
                 >
-                    <List sx={navNestedListSx}>{hasBeenOpened ? children : null}</List>
+                    <List component="div" role="list" sx={navNestedListSx}>
+                        {hasBeenOpened ? children : null}
+                    </List>
                 </Box>
             </ListItem>
         </Box>

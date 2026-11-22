@@ -79,7 +79,7 @@ export const EmptyState = ({
             >
                 <Typography
                     level="body-xs"
-                    sx={{ color: g.text.tertiary, overflowWrap: "anywhere" }}
+                    sx={{ color: g.text.secondary, overflowWrap: "anywhere" }}
                 >
                     {body ?? title}
                 </Typography>

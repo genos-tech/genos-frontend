@@ -31,7 +31,7 @@ export const AgentDecisionsList = ({ decisions }: { decisions: AgentWorkDecision
                         const title = d.title || a.untitled;
                         return (
                             <Box
-                                key={String(d.note_id)}
+                                key={`${String(d.note_type ?? "")}:${String(d.note_id)}`}
                                 component="li"
                                 sx={{ minWidth: 0, py: 0.5 }}
                             >
