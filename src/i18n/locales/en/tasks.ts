@@ -85,8 +85,14 @@ export const tasks = {
 
     // Sidebar / search box on the tasks sidebar.
     sidebar: {
-        searchPlaceholder: "Search tasks (closed & deleted excluded)...",
-        searchAriaLabel: "Search Tasks",
+        searchPlaceholder: "Search all tasks or type an ID…",
+        searchAriaLabel: "Search tasks",
+        searchRecent: "Recently opened",
+        searchInProject: "Open in this project",
+        searchEmpty: "No tasks match “{query}”",
+        searchEmptyStart: "No recent tasks yet",
+        searchError: "Search failed. Try again.",
+        searchLoading: "Searching…",
         recents: "Recents",
         // The per-project "show more" row under Recents: each project folder
         // starts at five tasks and this reveals the next five.

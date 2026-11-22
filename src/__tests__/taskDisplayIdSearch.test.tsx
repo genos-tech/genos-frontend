@@ -22,7 +22,6 @@ import type { AgentMentionCandidate } from "../features/agentQA/mentions/types";
 import { useAgentMentionDraft } from "../features/agentQA/mentions/useAgentMentionDraft";
 import { entitySubtitle, rowSubtitle } from "../features/spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../features/spotlight/types";
-import { filterTaskSearchOptions } from "../features/tasks/components/sidebar/searchBoxHelpers";
 import {
     displayIdEquals,
     displayIdMatches,
@@ -81,20 +80,6 @@ const row = (over: Partial<SearchTeamTasksResponse>): SearchTeamTasksResponse =>
         status: { code: 0, status: "Open", color: "", textColor: "" },
         ...over,
     }) as unknown as SearchTeamTasksResponse;
-
-describe("task search bar", () => {
-    const options = [
-        row({ taskId: 1, displayId: "MIP-739", title: "Search by id" }),
-        row({ taskId: 2, displayId: "MIP-12", title: "Note folders" }),
-    ];
-
-    it("matches by title or by id", () => {
-        expect(filterTaskSearchOptions(options, "folders").map((o) => o.taskId)).toEqual([2]);
-        expect(filterTaskSearchOptions(options, "mip-739").map((o) => o.taskId)).toEqual([1]);
-        expect(filterTaskSearchOptions(options, "12").map((o) => o.taskId)).toEqual([2]);
-        expect(filterTaskSearchOptions(options, "")).toEqual(options);
-    });
-});
 
 const dataWith = (over: Partial<HashMentionData>): HashMentionData => ({
     tasks: [],

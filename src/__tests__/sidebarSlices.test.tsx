@@ -146,7 +146,6 @@ type Managers = Record<ManagerName, Record<string, unknown>>;
 const SLICE_OF: Record<SliceName, (b: Bundle) => unknown> = {
     shellTM: (b) => b.shell.tm,
     shellPM: (b) => b.shell.pm,
-    searchTM: (b) => b.search.tm,
     tableViewTM: (b) => b.tableView.tm,
     boardViewTM: (b) => b.boardView.tm,
     recentsTM: (b) => b.recents.tm,
@@ -160,7 +159,6 @@ const SLICE_OF: Record<SliceName, (b: Bundle) => unknown> = {
 const MANAGER_OF: Record<SliceName, ManagerName> = {
     shellTM: "useTM",
     shellPM: "usePM",
-    searchTM: "useTM",
     tableViewTM: "useTM",
     boardViewTM: "useTM",
     recentsTM: "useTM",
