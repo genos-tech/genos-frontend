@@ -1035,6 +1035,10 @@ export const ar: DeepPartial<Messages> = {
             paramAiSentences: "جمل الذكاء الاصطناعي",
             paramAiSentencesHint:
                 "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي. أوقفه للحصول على تقرير عادي.",
+            aiOutOfCredits:
+                "لقد استخدمت كل رصيد الذكاء الاصطناعي، لذلك لا يمكن تشغيل جمل الذكاء الاصطناعي. اشترِ رصيدًا أو قم بالترقية لتفعيلها.",
+            aiOutOfCreditsBuy: "شراء رصيد",
+            aiOutOfCreditsUpgrade: "ترقية الخطة",
             effortLabel: "جهد الذكاء الاصطناعي",
             effortDefaultMark: "{level} (افتراضي)",
             effortCostAbout: "نحو {credits} رصيد لكل تشغيل. هذا تقدير.",

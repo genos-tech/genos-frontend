@@ -4460,6 +4460,10 @@ export const zh: DeepPartial<Messages> = {
             paramAiSentences: "AI 一句话说明",
             paramAiSentencesHint:
                 "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI。关闭后为普通报告。",
+            aiOutOfCredits:
+                "您的 AI 额度已用完，因此无法生成 AI 一句话说明。购买额度或升级套餐即可开启。",
+            aiOutOfCreditsBuy: "购买额度",
+            aiOutOfCreditsUpgrade: "升级套餐",
             effortLabel: "AI 推理强度",
             effortDefaultMark: "{level}(默认)",
             effortCostAbout: "每次运行约 {credits} 积分。这只是估算。",

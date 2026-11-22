@@ -1058,6 +1058,10 @@ export const es: DeepPartial<Messages> = {
             paramAiSentences: "Frases de IA",
             paramAiSentencesHint:
                 "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA. Desactívala para un informe sin IA.",
+            aiOutOfCredits:
+                "Has usado todos tus créditos de IA, así que las frases de IA no pueden ejecutarse. Compra créditos o mejora tu plan para activarlas.",
+            aiOutOfCreditsBuy: "Comprar créditos",
+            aiOutOfCreditsUpgrade: "Mejorar plan",
             effortLabel: "Esfuerzo de la IA",
             effortDefaultMark: "{level} (predeterminado)",
             effortCostAbout: "Unos {credits} créditos por ejecución. Es una estimación.",

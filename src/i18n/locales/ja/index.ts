@@ -4637,6 +4637,10 @@ export const ja: DeepPartial<Messages> = {
             paramAiSentences: "AI による一文",
             paramAiSentencesHint:
                 "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用します。通常のレポートにするにはオフにしてください。",
+            aiOutOfCredits:
+                "AIクレジットを使い切ったため、AIの一文は実行できません。クレジットを購入するかプランをアップグレードすると使えます。",
+            aiOutOfCreditsBuy: "クレジットを購入",
+            aiOutOfCreditsUpgrade: "プランをアップグレード",
             effortLabel: "AI の Effort",
             effortDefaultMark: "{level}（既定）",
             effortCostAbout: "1 回の実行あたり約 {credits} クレジット。これは見積もりです。",

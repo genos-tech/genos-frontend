@@ -52,12 +52,20 @@ describe("every call names the member's team", () => {
             planMessage: "",
             // Same for an API that predates MIP-1309: AI is available, as before.
             aiAvailable: true,
+            aiCreditsOut: false,
             timeZone: "Asia/Tokyo",
             limit: 20,
             jobs: [],
             schedules: [],
             suggestions: [],
         });
+    });
+
+    it("GET carries aiCreditsOut; only an explicit true means out of credits (MIP-1967)", async () => {
+        api.get.mockResolvedValue({ data: { aiCreditsOut: true, jobs: [], schedules: [] } });
+        expect((await listSchedules("tok", TEAM))?.aiCreditsOut).toBe(true);
+        api.get.mockResolvedValue({ data: { jobs: [], schedules: [] } });
+        expect((await listSchedules("tok", TEAM))?.aiCreditsOut).toBe(false);
     });
 
     it("GET carries aiAvailable; only an explicit false means AI cannot run here (MIP-1309)", async () => {
