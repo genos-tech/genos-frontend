@@ -3,9 +3,26 @@ import AddLinkRoundedIcon from "@mui/icons-material/AddLinkRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import { Alert, Box, Button, Sheet, Stack, Typography } from "@mui/joy";
+import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
+import {
+    Alert,
+    Box,
+    Button,
+    Chip,
+    Link,
+    Sheet,
+    Stack,
+    Tab,
+    TabList,
+    TabPanel,
+    Tabs,
+    Typography,
+} from "@mui/joy";
 
-import { useTranslation } from "../../i18n";
+import { useAuth } from "../../context/AuthContext";
+import { formatRelativeAge } from "../../features/tasks/utils/relativeAge";
+import { fmt, getDocumentDirection, useTranslation } from "../../i18n";
+import { fetchAgentFeatures } from "../../services/agentApi";
 import { g } from "../../theme/tokens";
 import {
     claudeCodeAddCommand,
@@ -13,7 +30,7 @@ import {
     PLUGIN_REPO_URL,
     PLUGIN_ZIP_URL,
 } from "../../utils/mcpConnect";
-import { CONNECT_APP_PANEL_ID, OPEN_EVENT } from "./connectAppPanelHelpers";
+import { CONNECT_APP_PANEL_ID, OPEN_EVENT, openPlanUsage } from "./connectAppPanelHelpers";
 
 const COPIED_MS = 1500;
 
@@ -71,12 +88,16 @@ const visuallyHidden = {
 /**
  * Text to copy, in a box that is real, selectable text (never an image or an input
  * that hides part of it), with a Copy button beside it. Always left-to-right: an
- * address or a command does not mirror in Arabic.
+ * address or a command does not mirror in Arabic. `plain` is for a sentence (the
+ * preference) rather than code: the page's font, and the direction its own text asks
+ * for (an Arabic sentence reads right-to-left), since it is pasted into another app
+ * exactly as shown.
  */
 const CopyBox = ({
     label,
     text,
     block,
+    plain,
     testId,
     copyAria,
 }: {
@@ -84,6 +105,8 @@ const CopyBox = ({
     text: string;
     /** A command (wraps anywhere, shown as a block) rather than an address. */
     block?: boolean;
+    /** A sentence, not code: the page's font instead of the monospace one. */
+    plain?: boolean;
     testId: string;
     /** Accessible name of the Copy button; defaults to the address or command wording. */
     copyAria?: string;
@@ -108,7 +131,7 @@ const CopyBox = ({
                     aria-labelledby={labelId}
                     component={block ? "pre" : "code"}
                     data-testid={testId}
-                    dir="ltr"
+                    dir={plain ? "auto" : "ltr"}
                     translate="no"
                     sx={{
                         flex: 1,
@@ -120,10 +143,10 @@ const CopyBox = ({
                         border: `1px solid ${g.border.default}`,
                         bgcolor: g.bg.subtle,
                         color: g.text.primary,
-                        fontFamily: g.font.mono,
+                        fontFamily: plain ? "inherit" : g.font.mono,
                         fontSize: { xs: "0.75rem", sm: "0.8125rem" },
                         lineHeight: 1.5,
-                        textAlign: "left",
+                        textAlign: plain ? "start" : "left",
                         whiteSpace: "pre-wrap",
                         overflowWrap: "anywhere",
                         userSelect: "all",
@@ -162,12 +185,13 @@ const CopyBox = ({
     );
 };
 
+/** A numbered list; `after` hangs a node (a copy box) under the step at that index. */
 const Steps = ({
     items,
-    afterFirst,
+    after,
 }: {
     items: readonly string[];
-    afterFirst?: React.ReactNode;
+    after?: { index: number; node: React.ReactNode };
 }) => (
     <Box component="ol" sx={{ m: 0, paddingInlineStart: "1.25rem", listStyleType: "decimal" }}>
         {items.map((step, i) => (
@@ -178,34 +202,68 @@ const Steps = ({
                 sx={{ display: "list-item", mb: 0.75, "&::marker": { color: g.text.secondary } }}
             >
                 {step}
-                {i === 0 && afterFirst && <Box sx={{ mt: 0.75 }}>{afterFirst}</Box>}
+                {after && after.index === i && after.node && (
+                    <Box sx={{ mt: 0.75 }}>{after.node}</Box>
+                )}
             </Typography>
         ))}
     </Box>
 );
 
+type AppTab = "claudeCode" | "claudeDesktop" | "chatgpt";
+
+// Tab rail: three short labels that must stay on ONE line at a phone's width, so the
+// list scrolls sideways before a label ever wraps.
+const TAB_SX = {
+    flex: "none",
+    whiteSpace: "nowrap",
+    minHeight: g.control.md,
+    px: 1.25,
+    fontSize: "0.8125rem",
+} as const;
+
 /**
- * Settings → Developer → Connected apps: how to connect an AI app the OAuth way
- * (no API key). The address to paste, one short list of steps per app, and the three
- * things people trip on: the plan, how to undo it, and the address typed in full.
+ * Settings → Developer → "Connect your AI" (MIP-2020): how to connect an AI app the
+ * OAuth way (no API key), in one or two steps per app, with a connection check.
+ *
+ * - Status: "Connected" once the member has a live connection, and when an app last
+ *   called Genos (`lastUsedAt`, the most recent over the connections). Not connected
+ *   is a neutral line, not an error.
+ * - One tab per app (Claude Code, claude.ai / Desktop, ChatGPT), each with its steps.
+ * - One optional sentence to paste into the AI's own personal preferences, with a copy
+ *   button and where it goes for the selected app.
+ * - Free plan: the connector needs Core; says so and links to Plan & Usage.
  *
  * Collapsed when apps are already connected (the list is the point then), open when
- * none are. `address` is "" when the API origin is unknown: the row is then left out
- * rather than showing a relative address that would fail once pasted.
+ * none are. `address` is "" when the API origin is unknown: the address rows are then
+ * left out rather than showing a relative address that would fail once pasted.
  */
 export const ConnectAppPanel = ({
     address,
     defaultOpen,
+    connectionCount,
+    lastActivityAt,
+    listKnown,
 }: {
     address: string;
     defaultOpen: boolean;
+    /** False when the connections list failed to load: the status is then unknown, not "none". */
+    listKnown: boolean;
+    /** How many apps are connected right now. */
+    connectionCount: number;
+    /** The latest `lastUsedAt` over them (see `latestActivity`), or null. */
+    lastActivityAt: string | null;
 }) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
+    const { accessToken } = useAuth();
     const c = t.settings.connectedApps.connect;
+    const ai = t.settings.connectedApps.connectAi;
     // `null` until the person (or a pointer elsewhere) decides: the default can change
     // as the list loads, and their choice must then win.
     const [chosen, setChosen] = useState<boolean | null>(null);
     const open = chosen ?? defaultOpen;
+    const [tab, setTab] = useState<AppTab>("claudeCode");
+    const [isFree, setIsFree] = useState(false);
     const bodyId = useId();
     const titleId = useId();
 
@@ -214,6 +272,28 @@ export const ConnectAppPanel = ({
         window.addEventListener(OPEN_EVENT, onOpen);
         return () => window.removeEventListener(OPEN_EVENT, onOpen);
     }, []);
+
+    // The plan decides one notice only, so a failed read just leaves the notice out.
+    useEffect(() => {
+        if (!accessToken) return;
+        let cancelled = false;
+        void fetchAgentFeatures(accessToken).then((features) => {
+            if (!cancelled) setIsFree(features?.tier === "free");
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [accessToken]);
+
+    const connected = listKnown && connectionCount > 0;
+    const when = lastActivityAt
+        ? formatRelativeAge(lastActivityAt, t.tasks.activity, Date.now(), locale)
+        : "";
+    const preferenceWhere: Record<AppTab, string> = {
+        claudeCode: ai.prefWhereClaudeCode,
+        claudeDesktop: ai.prefWhereClaudeDesktop,
+        chatgpt: ai.prefWhereChatgpt,
+    };
 
     return (
         <Sheet
@@ -247,8 +327,13 @@ export const ConnectAppPanel = ({
                 onClick={() => setChosen(!open)}
             >
                 <Typography id={titleId} level="title-sm" sx={{ flex: 1, textAlign: "start" }}>
-                    {c.title}
+                    {ai.title}
                 </Typography>
+                {connected && !open && (
+                    <Chip color="success" size="sm" variant="soft">
+                        {ai.statusConnected}
+                    </Chip>
+                )}
             </Button>
             <Box
                 aria-labelledby={open ? titleId : undefined}
@@ -258,99 +343,241 @@ export const ConnectAppPanel = ({
                 {open && (
                     <Stack spacing={2} sx={{ px: 1.25, pb: 1.5, minWidth: 0 }}>
                         <Typography level="body-sm" sx={{ color: g.text.secondary }}>
-                            {c.intro}
+                            {ai.intro}
                         </Typography>
 
-                        {address && (
-                            <CopyBox label={c.urlLabel} testId="mcp-address" text={address} />
+                        {/* The connection check. Not connected is a plain line, not a warning;
+                            when the list failed to load there is nothing true to say. */}
+                        {listKnown && (
+                            <Stack
+                                alignItems="flex-start"
+                                data-testid="connect-status"
+                                direction="row"
+                                spacing={1}
+                                sx={{ flexWrap: "wrap", minWidth: 0 }}
+                                useFlexGap
+                            >
+                                {connected ? (
+                                    <>
+                                        <Chip
+                                            color="success"
+                                            size="sm"
+                                            variant="soft"
+                                            startDecorator={
+                                                <CheckRoundedIcon sx={{ fontSize: 14 }} />
+                                            }
+                                        >
+                                            {ai.statusConnected}
+                                        </Chip>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{ color: g.text.secondary, flex: 1, minWidth: 0 }}
+                                        >
+                                            {when
+                                                ? fmt(ai.statusActivity, { when })
+                                                : ai.statusNoActivity}
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <>
+                                        <LinkOffRoundedIcon
+                                            sx={{
+                                                fontSize: 18,
+                                                color: g.text.tertiary,
+                                                mt: 0.125,
+                                            }}
+                                        />
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{ color: g.text.secondary, flex: 1, minWidth: 0 }}
+                                        >
+                                            {ai.statusNone}
+                                        </Typography>
+                                    </>
+                                )}
+                            </Stack>
                         )}
 
-                        <Stack spacing={0.75}>
-                            <Typography level="title-sm">{c.claudeTitle}</Typography>
-                            <Steps items={c.claudeSteps} />
-                        </Stack>
+                        {isFree && (
+                            <Alert
+                                color="warning"
+                                data-testid="connect-free-plan"
+                                size="sm"
+                                sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}
+                                variant="soft"
+                                endDecorator={
+                                    <Button
+                                        color="warning"
+                                        size="sm"
+                                        variant="outlined"
+                                        onClick={openPlanUsage}
+                                    >
+                                        {t.settings.tabs.planUsage}
+                                    </Button>
+                                }
+                            >
+                                {ai.freePlan}
+                            </Alert>
+                        )}
 
-                        <Stack spacing={0.75}>
-                            <Typography level="title-sm">{c.claudeCodeTitle}</Typography>
-                            <Steps
-                                items={c.claudeCodeSteps}
-                                afterFirst={
-                                    address && (
+                        <Tabs
+                            direction={getDocumentDirection()}
+                            sx={{ bgcolor: "transparent", minWidth: 0 }}
+                            value={tab}
+                            onChange={(_e, v) => {
+                                if (typeof v === "string") setTab(v as AppTab);
+                            }}
+                        >
+                            <TabList
+                                aria-label={ai.tabsAria}
+                                sx={{ gap: 0.5, mb: 1.5, overflowX: "auto", flexWrap: "nowrap" }}
+                            >
+                                <Tab sx={TAB_SX} value="claudeCode">
+                                    {ai.tabClaudeCode}
+                                </Tab>
+                                <Tab sx={TAB_SX} value="claudeDesktop">
+                                    {ai.tabClaudeDesktop}
+                                </Tab>
+                                <Tab sx={TAB_SX} value="chatgpt">
+                                    {ai.tabChatgpt}
+                                </Tab>
+                            </TabList>
+
+                            <TabPanel sx={{ p: 0 }} value="claudeCode">
+                                <Stack spacing={1.5}>
+                                    <Steps
+                                        items={ai.claudeCodeSteps}
+                                        after={{
+                                            index: 0,
+                                            node: (
+                                                <CopyBox
+                                                    copyAria={ai.claudeCodeCommandAria}
+                                                    label={ai.claudeCodeCommandLabel}
+                                                    testId="mcp-plugin-command"
+                                                    text={PLUGIN_COMMANDS}
+                                                    block
+                                                />
+                                            ),
+                                        }}
+                                    />
+                                    {address && (
                                         <CopyBox
-                                            label={c.codeLabel}
+                                            label={ai.claudeCodeAloneLabel}
                                             testId="mcp-command"
                                             text={claudeCodeAddCommand(address)}
                                             block
                                         />
-                                    )
-                                }
-                            />
-                        </Stack>
+                                    )}
+                                    <Typography level="body-sm">
+                                        <Link
+                                            href={PLUGIN_REPO_URL}
+                                            rel="noopener noreferrer"
+                                            target="_blank"
+                                        >
+                                            {c.pluginRepoLink}
+                                        </Link>
+                                    </Typography>
+                                </Stack>
+                            </TabPanel>
 
-                        <Stack spacing={0.75}>
-                            <Typography level="title-sm">{c.pluginTitle}</Typography>
-                            <Typography level="body-sm">{c.pluginIntro}</Typography>
+                            <TabPanel sx={{ p: 0 }} value="claudeDesktop">
+                                <Stack spacing={1.5}>
+                                    <Steps
+                                        items={ai.claudeDesktopSteps}
+                                        after={
+                                            address
+                                                ? {
+                                                      index: 0,
+                                                      node: (
+                                                          <CopyBox
+                                                              label={ai.claudeDesktopAddressLabel}
+                                                              testId="mcp-address"
+                                                              text={address}
+                                                          />
+                                                      ),
+                                                  }
+                                                : undefined
+                                        }
+                                    />
+                                    {/* The trap is about the pasted address and names Claude, so only this tab shows it. */}
+                                    <Alert color="warning" size="sm" variant="soft">
+                                        {c.trap}
+                                    </Alert>
+                                    <Stack spacing={0.75}>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: g.text.secondary }}
+                                        >
+                                            {c.pluginDesktopLabel}
+                                        </Typography>
+                                        <Box>
+                                            <Button
+                                                color="neutral"
+                                                component="a"
+                                                href={PLUGIN_ZIP_URL}
+                                                rel="noopener noreferrer"
+                                                size="sm"
+                                                target="_blank"
+                                                variant="outlined"
+                                            >
+                                                {c.pluginZipLink}
+                                            </Button>
+                                        </Box>
+                                    </Stack>
+                                </Stack>
+                            </TabPanel>
+
+                            <TabPanel sx={{ p: 0 }} value="chatgpt">
+                                <Stack spacing={1.5}>
+                                    <Steps
+                                        items={ai.chatgptSteps}
+                                        after={
+                                            address
+                                                ? {
+                                                      index: 1,
+                                                      node: (
+                                                          <CopyBox
+                                                              label={ai.chatgptAddressLabel}
+                                                              testId="mcp-address"
+                                                              text={address}
+                                                          />
+                                                      ),
+                                                  }
+                                                : undefined
+                                        }
+                                    />
+                                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                                        {ai.chatgptNote}
+                                    </Typography>
+                                </Stack>
+                            </TabPanel>
+                        </Tabs>
+
+                        {/* The optional one-line preference, with where it goes for the chosen app. */}
+                        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                            <Typography level="title-sm">{ai.prefTitle}</Typography>
+                            <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+                                {ai.prefIntro}
+                            </Typography>
                             <CopyBox
-                                copyAria={c.pluginCopyAria}
-                                label={c.pluginCodeLabel}
-                                testId="mcp-plugin-command"
-                                text={PLUGIN_COMMANDS}
-                                block
+                                copyAria={ai.prefCopyAria}
+                                label={ai.prefLabel}
+                                testId="mcp-preference"
+                                text={ai.prefText}
+                                plain
                             />
-                            <Typography level="body-sm">{c.pluginDesktopLabel}</Typography>
-                            <Stack
-                                direction="row"
-                                spacing={1.5}
-                                sx={{ flexWrap: "wrap" }}
-                                useFlexGap
+                            <Typography
+                                data-testid="mcp-preference-where"
+                                level="body-xs"
+                                sx={{ color: g.text.secondary }}
                             >
-                                <Button
-                                    color="neutral"
-                                    component="a"
-                                    href={PLUGIN_ZIP_URL}
-                                    rel="noopener noreferrer"
-                                    size="sm"
-                                    target="_blank"
-                                    variant="outlined"
-                                >
-                                    {c.pluginZipLink}
-                                </Button>
-                                <Button
-                                    color="neutral"
-                                    component="a"
-                                    href={PLUGIN_REPO_URL}
-                                    rel="noopener noreferrer"
-                                    size="sm"
-                                    target="_blank"
-                                    variant="plain"
-                                >
-                                    {c.pluginRepoLink}
-                                </Button>
-                            </Stack>
-                            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                                {c.pluginNote}
+                                {preferenceWhere[tab]}
                             </Typography>
                         </Stack>
 
-                        <Stack spacing={0.5}>
-                            <Typography level="title-sm">{c.chatgptTitle}</Typography>
-                            <Typography level="body-sm">{c.chatgptBody}</Typography>
-                        </Stack>
-
-                        <Stack spacing={0.75}>
-                            <Alert color="warning" size="sm" variant="soft">
-                                {c.trap}
-                            </Alert>
-                            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                                {c.plan}
-                            </Typography>
-                            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                                {c.revoke}
-                            </Typography>
-                            <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                                {c.menuNote}
-                            </Typography>
-                        </Stack>
+                        <Typography level="body-xs" sx={{ color: g.text.secondary }}>
+                            {c.revoke}
+                        </Typography>
                     </Stack>
                 )}
             </Box>

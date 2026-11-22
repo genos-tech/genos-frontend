@@ -4095,6 +4095,56 @@ export const fr: DeepPartial<Messages> = {
                 menuNote:
                     "Les noms de menu des autres apps changent : cherchez les connecteurs ou les serveurs MCP personnalisés.",
             },
+            // TODO(copy): MIP-2020 draft wording for a native reader (Connect your AI).
+            connectAi: {
+                title: "Connectez votre IA",
+                intro: "Pas de clé d'API nécessaire. Choisissez votre app, suivez les étapes et connectez-vous à Genos quand elle le demande.",
+                statusNone: "Pas encore connectée. Choisissez votre app ci-dessous.",
+                statusConnected: "Connectée",
+                statusActivity: "Activité de l'agent vue {when}",
+                statusNoActivity:
+                    "Aucune activité de l'agent vue pour l'instant. Interrogez votre IA sur vos tâches Genos pour l'essayer.",
+                freePlan:
+                    "Le connecteur Genos nécessite le forfait Core ou supérieur, et vous êtes sur Free.",
+                tabsAria: "Choisissez votre app d'IA",
+                tabClaudeCode: "Claude Code",
+                tabClaudeDesktop: "claude.ai et Desktop",
+                tabChatgpt: "ChatGPT",
+                claudeCodeSteps: [
+                    "Exécutez ces deux commandes dans le chat de Claude Code, l'une après l'autre.",
+                    "Exécutez /mcp, connectez-vous à Genos, puis choisissez l'équipe et ce que Claude peut faire.",
+                ],
+                claudeCodeCommandLabel: "Commandes pour le chat de Claude Code",
+                claudeCodeCommandAria: "Copier les deux commandes du plugin",
+                claudeCodeAloneLabel:
+                    "Sans plugin ? Cette commande dans votre terminal connecte Genos à elle seule.",
+                claudeDesktopSteps: [
+                    "Dans Claude, ouvrez Customize puis Connectors. Ajoutez Genos depuis l'annuaire ; s'il n'y figure pas encore, choisissez Add custom connector et collez l'adresse ci-dessous.",
+                    "Connectez-vous à Genos quand Claude le demande, choisissez l'équipe et ce que Claude peut faire, puis appuyez sur Autoriser.",
+                ],
+                claudeDesktopAddressLabel: "Adresse du connecteur personnalisé",
+                chatgptSteps: [
+                    "Genos est en cours de référencement dans l'annuaire de ChatGPT. Une fois référencé, ajoutez-le depuis là.",
+                    "D'ici là, sur une offre ChatGPT qui accepte les serveurs MCP personnalisés, ajoutez-en un : collez l'adresse ci-dessous et choisissez la connexion par OAuth.",
+                    "Connectez-vous à Genos quand ChatGPT le demande, choisissez l'équipe et ce que ChatGPT peut faire, puis appuyez sur Autoriser.",
+                ],
+                chatgptAddressLabel: "Adresse du serveur MCP personnalisé",
+                chatgptNote:
+                    "Pas encore testé de bout en bout avec ChatGPT. Les noms de menu de ChatGPT changent : cherchez les plugins ou les serveurs MCP personnalisés.",
+                prefTitle: "Facultatif : demandez à votre IA de tenir Genos à jour",
+                prefIntro:
+                    "Collez cette ligne une fois dans votre app d'IA et elle tiendra vos tâches, décisions et avancées à jour dans Genos sans que vous le demandiez à chaque chat.",
+                prefLabel: "Préférence à coller",
+                prefText:
+                    "Quand je travaille, tiens Genos à jour : tâches, décisions et avancement.",
+                prefCopyAria: "Copier la préférence",
+                prefWhereClaudeCode:
+                    "Claude Code : ajoutez-la à votre CLAUDE.md (celui du dossier .claude de votre dossier personnel s'applique à tous les projets).",
+                prefWhereClaudeDesktop:
+                    "claude.ai et Claude Desktop : collez-la dans Settings → Profile, sous personal preferences.",
+                prefWhereChatgpt:
+                    "ChatGPT : collez-la dans ses instructions personnalisées (Paramètres → Personnalisation).",
+            },
         },
         developer: {
             keys: {

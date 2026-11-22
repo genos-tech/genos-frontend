@@ -108,6 +108,7 @@ import {
 } from "../ui/nav/navStyles";
 import { SettingRow } from "../ui/settings/SettingRow";
 import { AccountSettingsSection } from "./AccountSettingsSection";
+import { OPEN_PLAN_EVENT } from "./connectAppPanelHelpers";
 import { ConnectedAppsSection } from "./ConnectedAppsSection";
 import { DensitySetting } from "./DensitySetting";
 import { DeveloperSettingsSection } from "./DeveloperSettingsSection";
@@ -1730,6 +1731,20 @@ export const SettingsModal = ({
     useEffect(() => {
         if (open && initialTab) setTab(initialTab);
     }, [open, initialTab]);
+    // "Connect your AI" points a Free member at Plan & Usage (MIP-2020).
+    useEffect(() => {
+        if (!open) return;
+        const toPlan = () => {
+            setTab("planUsage");
+            // The button that was pressed unmounts with its panel: put focus on the tab
+            // now showing, so a keyboard or screen-reader user is not dropped on <body>.
+            window.requestAnimationFrame(() => {
+                document.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.focus();
+            });
+        };
+        window.addEventListener(OPEN_PLAN_EVENT, toPlan);
+        return () => window.removeEventListener(OPEN_PLAN_EVENT, toPlan);
+    }, [open]);
     // The team the Genos tab works in (its memory page and its schedules).
     const genosTeamId =
         useTEM?.currentTeamId || myself?.teamId || localStorage.getItem("teamId") || "";

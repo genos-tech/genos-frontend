@@ -739,6 +739,55 @@ export const hi: DeepPartial<Messages> = {
                 menuNote:
                     "दूसरे ऐप में मेनू के नाम बदलते रहते हैं: कनेक्टर या कस्टम MCP सर्वर देखें।",
             },
+            // TODO(copy): MIP-2020 draft wording for a native reader (Connect your AI).
+            connectAi: {
+                title: "अपना AI कनेक्ट करें",
+                intro: "API कुंजी की ज़रूरत नहीं है। अपना ऐप चुनें, चरणों का पालन करें, और जब कहा जाए तब Genos में साइन इन करें।",
+                statusNone: "अभी कनेक्ट नहीं है। नीचे अपना ऐप चुनें।",
+                statusConnected: "कनेक्टेड",
+                statusActivity: "एजेंट की गतिविधि दिखी ({when})",
+                statusNoActivity:
+                    "अभी तक एजेंट की कोई गतिविधि नहीं दिखी। आज़माने के लिए अपने AI से Genos के टास्क के बारे में पूछें।",
+                freePlan:
+                    "Genos कनेक्टर के लिए Core या उससे ऊपर का प्लान चाहिए, और आप Free पर हैं।",
+                tabsAria: "अपना AI ऐप चुनें",
+                tabClaudeCode: "Claude Code",
+                tabClaudeDesktop: "claude.ai और Desktop",
+                tabChatgpt: "ChatGPT",
+                claudeCodeSteps: [
+                    "Claude Code की चैट में ये दोनों कमांड एक के बाद एक चलाएँ।",
+                    "/mcp चलाएँ, Genos में साइन इन करें, फिर टीम चुनें और यह भी कि Claude क्या कर सकता है।",
+                ],
+                claudeCodeCommandLabel: "Claude Code की चैट के लिए कमांड",
+                claudeCodeCommandAria: "दोनों प्लगइन कमांड कॉपी करें",
+                claudeCodeAloneLabel:
+                    "प्लगइन नहीं चाहिए? टर्मिनल में यह एक कमांड अकेले Genos को कनेक्ट कर देती है।",
+                claudeDesktopSteps: [
+                    "Claude में Customize खोलें, फिर Connectors। डायरेक्टरी से Genos जोड़ें; अगर वह अभी सूचीबद्ध नहीं है, तो Add custom connector चुनें और नीचे का पता चिपकाएँ।",
+                    "Claude के कहने पर Genos में साइन इन करें, टीम चुनें और यह भी कि Claude क्या कर सकता है, फिर अनुमति दें दबाएँ।",
+                ],
+                claudeDesktopAddressLabel: "कस्टम कनेक्टर का पता",
+                chatgptSteps: [
+                    "Genos को ChatGPT की डायरेक्टरी में सूचीबद्ध करवाया जा रहा है। सूचीबद्ध होने पर उसे वहीं से जोड़ें।",
+                    "तब तक, ऐसे ChatGPT प्लान पर जो कस्टम MCP सर्वर की अनुमति देता है, एक सर्वर जोड़ें: नीचे का पता चिपकाएँ और OAuth से साइन-इन चुनें।",
+                    "ChatGPT के कहने पर Genos में साइन इन करें, टीम चुनें और यह भी कि ChatGPT क्या कर सकता है, फिर अनुमति दें दबाएँ।",
+                ],
+                chatgptAddressLabel: "कस्टम MCP सर्वर का पता",
+                chatgptNote:
+                    "ChatGPT के साथ अभी शुरू से अंत तक परीक्षण नहीं हुआ है। ChatGPT में मेनू के नाम बदलते रहते हैं: प्लगइन या कस्टम MCP सर्वर देखें।",
+                prefTitle: "वैकल्पिक: अपने AI से Genos को अप-टू-डेट रखवाएँ",
+                prefIntro:
+                    "यह एक पंक्ति अपने AI ऐप में एक बार चिपका दें, फिर हर चैट में कहे बिना वह आपके टास्क, फ़ैसले और प्रगति Genos में रखेगा।",
+                prefLabel: "चिपकाने के लिए प्राथमिकता",
+                prefText: "जब मैं काम करूँ, Genos को अप-टू-डेट रखो: टास्क, फ़ैसले और प्रगति।",
+                prefCopyAria: "प्राथमिकता कॉपी करें",
+                prefWhereClaudeCode:
+                    "Claude Code: इसे अपनी CLAUDE.md में जोड़ें (होम की .claude फ़ोल्डर वाली सभी प्रोजेक्ट पर लागू होती है)।",
+                prefWhereClaudeDesktop:
+                    "claude.ai और Claude Desktop: इसे Settings → Profile में personal preferences में चिपकाएँ।",
+                prefWhereChatgpt:
+                    "ChatGPT: इसे उसके कस्टम निर्देशों में चिपकाएँ (सेटिंग → वैयक्तिकरण)।",
+            },
         },
         developer: {
             keys: {

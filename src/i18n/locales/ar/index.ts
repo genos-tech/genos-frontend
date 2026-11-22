@@ -1557,6 +1557,52 @@ export const ar: DeepPartial<Messages> = {
                 menuNote:
                     "تتغير أسماء القوائم في التطبيقات الأخرى: ابحث عن الموصّلات أو خوادم MCP المخصصة.",
             },
+            // TODO(copy): MIP-2020 draft wording for a native reader (Connect your AI).
+            connectAi: {
+                title: "اربط الذكاء الاصطناعي الخاص بك",
+                intro: "لا حاجة إلى مفتاح API. اختر تطبيقك، واتبع الخطوات، وسجّل الدخول إلى Genos عندما يُطلب منك.",
+                statusNone: "لم يتم الربط بعد. اختر تطبيقك أدناه.",
+                statusConnected: "متصل",
+                statusActivity: "تم رصد نشاط الوكيل ({when})",
+                statusNoActivity:
+                    "لم يُرصد أي نشاط للوكيل بعد. جرّب أن تسأل الذكاء الاصطناعي عن مهامك في Genos.",
+                freePlan: "يحتاج موصّل Genos إلى خطة Core أو أعلى، وأنت على خطة Free.",
+                tabsAria: "اختر تطبيق الذكاء الاصطناعي",
+                tabClaudeCode: "Claude Code",
+                tabClaudeDesktop: "claude.ai وDesktop",
+                tabChatgpt: "ChatGPT",
+                claudeCodeSteps: [
+                    "شغّل هذين الأمرين في محادثة Claude Code، واحدًا بعد الآخر.",
+                    "شغّل /mcp وسجّل الدخول إلى Genos، ثم اختر الفريق وما يُسمح لـ Claude بفعله.",
+                ],
+                claudeCodeCommandLabel: "أوامر محادثة Claude Code",
+                claudeCodeCommandAria: "نسخ أمرَي الإضافة",
+                claudeCodeAloneLabel: "بدون الإضافة؟ هذا الأمر الواحد في الطرفية يربط Genos وحده.",
+                claudeDesktopSteps: [
+                    "في Claude افتح Customize ثم Connectors. أضف Genos من الدليل؛ وإن لم يكن مدرجًا بعد فاختر Add custom connector والصق العنوان أدناه.",
+                    "سجّل الدخول إلى Genos عندما يطلب Claude ذلك، واختر الفريق وما يُسمح لـ Claude بفعله، ثم اضغط «سماح».",
+                ],
+                claudeDesktopAddressLabel: "عنوان الموصّل المخصص",
+                chatgptSteps: [
+                    "يجري إدراج Genos في دليل ChatGPT. وعند إدراجه أضفه من هناك.",
+                    "إلى ذلك الحين، وفي خطة ChatGPT تسمح بخوادم MCP المخصصة، أضف خادمًا: الصق العنوان أدناه واختر تسجيل الدخول عبر OAuth.",
+                    "سجّل الدخول إلى Genos عندما يطلب ChatGPT ذلك، واختر الفريق وما يُسمح لـ ChatGPT بفعله، ثم اضغط «سماح».",
+                ],
+                chatgptAddressLabel: "عنوان خادم MCP المخصص",
+                chatgptNote:
+                    "لم يُختبر بعد من البداية إلى النهاية مع ChatGPT. تتغير أسماء القوائم في ChatGPT: ابحث عن الإضافات أو خوادم MCP المخصصة.",
+                prefTitle: "اختياري: اجعل الذكاء الاصطناعي يُبقي Genos محدّثًا",
+                prefIntro:
+                    "الصق هذا السطر مرة واحدة في تطبيق الذكاء الاصطناعي، فيُبقي مهامك وقراراتك وتقدّمك في Genos دون أن تطلب ذلك في كل محادثة.",
+                prefLabel: "التفضيل المراد لصقه",
+                prefText: "عندما أعمل، أبقِ Genos محدّثًا: المهام والقرارات والتقدّم.",
+                prefCopyAria: "نسخ التفضيل",
+                prefWhereClaudeCode:
+                    "Claude Code: أضفه إلى ملف CLAUDE.md الخاص بك (الملف الموجود في مجلد .claude في مجلدك الشخصي يسري على كل المشاريع).",
+                prefWhereClaudeDesktop:
+                    "claude.ai وClaude Desktop: الصقه في Settings → Profile ضمن personal preferences.",
+                prefWhereChatgpt: "ChatGPT: الصقه في تعليماته المخصصة (الإعدادات → التخصيص).",
+            },
         },
         developer: {
             keys: {
