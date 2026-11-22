@@ -3183,6 +3183,16 @@ export const ar: DeepPartial<Messages> = {
                 stalled:
                     "{count, plural, zero {لا تقدم منذ # يوم} one {لا تقدم منذ يوم} two {لا تقدم منذ يومين} few {لا تقدم منذ # أيام} many {لا تقدم منذ # يومًا} other {لا تقدم منذ # يوم}}",
                 noSprint: "بدون سبرنت",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "نشط",
+                sprintRollup: "مكتملة {closed}/{tasks} · متوقفة {blocked} · متأخرة {overdue}",
+                askProject: "اسأل Genos عن التقدم",
+                askSprint: "اسأل Genos عن هذا السبرنت",
+                thisProject: "هذا المشروع",
+                askProjectQuestion:
+                    "كيف يتقدم العمل في المعالم الجارية في {project}؟ ما المتأخر أو المتوقف أو الراكد، وما الذي تحرّك مؤخرًا؟",
+                askSprintQuestion:
+                    "كيف يتقدم {sprint} في {project}؟ أي معالمه متأخرة أو متوقفة أو راكدة، وما الذي تحرّك مؤخرًا؟",
                 attentionHeading: "يحتاج إلى انتباه",
                 attentionNone: "لا شيء متأخر أو معطّل أو مستحق هذا الأسبوع.",
                 attentionMore:
@@ -4127,6 +4137,14 @@ export const ar: DeepPartial<Messages> = {
             loadingDestinations: "جارٍ التحميل…",
             noDestinations: "لا يوجد ما يمكن الاستيراد إليه هنا.",
             importedTo: "تم الاستيراد كملاحظة في {where}.",
+            importedWithWarnings: "تم الاستيراد. تُركت بعض الصور خارج الملاحظة.",
+            imagesLeftOut: "الصور التي تُركت خارج الملاحظة:",
+            imagePlaceholder: "[لم يتم استيراد الصورة {index}]",
+            imageWarning: {
+                "too-large": "حجم الصورة {index} هو {size}، وهو أكبر من حد الرفع {limit}.",
+                "upload-failed": "تعذّر رفع الصورة {index} ({size}).",
+                undecodable: "تعذّرت قراءة الصورة {index}.",
+            },
         },
         exportZip: {
             menuItem: "تصدير المجلد بصيغة .zip",

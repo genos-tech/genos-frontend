@@ -86,14 +86,23 @@ const MAX_ROUNDS = 200;
 
 /** Every batch of "all my messages" until the server says none remain. Resolves with how many were
  *  erased; rejects with code `incomplete` when messages are still left because a round made no
- *  progress or the guard ran out, so the caller never shows a success it did not get (MIP-1943). */
+ *  progress, the guard ran out, or a later round failed after some were erased, so the caller never shows a success it did not get (MIP-1943). */
 export const forceDeleteAllMyMessages = async (
     accessToken: string | null,
     channelId: string
 ): Promise<number> => {
     let total = 0;
     for (let round = 0; round < MAX_ROUNDS; round += 1) {
-        const res = await forceDeleteMyMessages(accessToken, channelId);
+        let res: ForceDeleteResult;
+        try {
+            res = await forceDeleteMyMessages(accessToken, channelId);
+        } catch (e) {
+            // Earlier rounds already erased messages: "nothing was removed" would be false (MIP-1951).
+            if (total > 0 && e instanceof ForceDeleteError) {
+                throw new ForceDeleteError(e.status, "incomplete", e.message);
+            }
+            throw e;
+        }
         const removed = res.removed.messages ?? 0;
         total += removed;
         if (!res.remaining) return total;

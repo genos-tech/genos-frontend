@@ -3416,6 +3416,15 @@ export const ja: DeepPartial<Messages> = {
             loadingDestinations: "読み込み中…",
             noDestinations: "ここにはインポートできる先がありません。",
             importedTo: "{where} にノートとしてインポートしました。",
+            importedWithWarnings: "インポートしました。一部の画像はノートに含まれていません。",
+            imagesLeftOut: "ノートに含まれなかった画像:",
+            imagePlaceholder: "[画像 {index} はインポートされませんでした]",
+            imageWarning: {
+                "too-large":
+                    "画像 {index} は {size} で、アップロード上限 {limit} を超えています。",
+                "upload-failed": "画像 {index}（{size}）をアップロードできませんでした。",
+                undecodable: "画像 {index} を読み取れませんでした。",
+            },
         },
         exportZip: {
             menuItem: "フォルダを .zip でエクスポート",
@@ -6271,6 +6280,16 @@ export const ja: DeepPartial<Messages> = {
                 noProgress: "まだ進捗はありません",
                 stalled: "{count}日間進捗なし",
                 noSprint: "スプリントなし",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "進行中",
+                sprintRollup: "完了 {closed}/{tasks} · ブロック {blocked} · 期限超過 {overdue}",
+                askProject: "進捗についてGenosに質問",
+                askSprint: "このスプリントについてGenosに質問",
+                thisProject: "このプロジェクト",
+                askProjectQuestion:
+                    "{project} で進行中のマイルストーンの進捗はどうですか？ 期限超過・ブロック・停滞しているものと、最近動いたものを教えてください。",
+                askSprintQuestion:
+                    "{project} の {sprint} の進捗はどうですか？ そのマイルストーンのうち期限超過・ブロック・停滞しているものと、最近動いたものを教えてください。",
                 attentionHeading: "要確認",
                 attentionNone: "期限超過・ブロック中・今週期限のタスクはありません。",
                 attentionMore: "ほか{count}件",

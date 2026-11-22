@@ -33,6 +33,7 @@ import { UserProps } from "../../types/admin";
 import { archiveProject, unarchiveProject } from "../archive/archiveApi";
 import { ArchivedBanner } from "../archive/ArchivedBanner";
 import { useArchiveState, useIsProjectArchived } from "../archive/archiveState";
+import { useCreateTaskBlockedByArchive } from "../archive/createTaskGuard";
 import { isOwnerOfProject } from "../archive/projectOwner";
 import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../notes/my-notes/components/MyNoteMain";
@@ -135,11 +136,17 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const activeNoteType = selectedTab?.noteType ?? useNM.currentNoteType;
 
     // Archive (MIP-1693, MIP-1854): the same rules as the desktop header. An archived project is
-    // read-only here: the list takes no input, Create is hidden, and the banner says why. Only
+    // read-only here: the list and the task preview stay readable (tap, scroll), Create is hidden, and the banner says why. Only
     // the owner may archive or restore, and the menu offers it to the owner alone.
     const { accessToken } = useAuth();
     const openProjectId = usePM.currentProject?.projectId;
     const archived = useIsProjectArchived(openProjectId);
+    // A create intent left set when the project is archived is dropped, or the form would open by itself on unarchive.
+    useCreateTaskBlockedByArchive(
+        openProjectId,
+        useTM.isCreatingTask.flag === true,
+        useTM.setIsCreatingTask
+    );
     const archivedRecord = useArchiveState().archivedProjects.find(
         (p) => p.projectId === openProjectId
     );
@@ -384,7 +391,6 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         }}
                     >
                         <Box
-                            inert={archived}
                             sx={{
                                 flex: 1,
                                 minHeight: 0,
@@ -414,7 +420,6 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             overlay, which is the wasted space in the
                             report. */}
                         <Box
-                            inert={archived}
                             sx={{
                                 flex: 1,
                                 minHeight: 0,

@@ -306,6 +306,12 @@ type MessageDeletedPayload = {
     channelKind: ChannelKind;
     correlation_id?: string;
 };
+/** MIP-1951: some messages of one chat were force-deleted (ids only, never text). */
+type MessagesDeletedPayload = {
+    channelId: string;
+    channelKind: ChannelKind;
+    messageIds: string[];
+};
 type ReactionAddedPayload = {
     messageId: string;
     channelId: string;
@@ -2896,6 +2902,47 @@ export class ChannelService {
         void this._persistDeletedById(event.id, event.channelId);
     }
 
+    /**
+     * Force delete of several messages at once (MIP-1951, "Delete all my messages"): blank every
+     * named row the same way the server did (no text, files, reactions or mentions; tombstoned), in
+     * the store, in the chat list's latest-message preview and in IndexedDB, so the text is gone
+     * from this device now instead of at the next sync. Ids this device does not hold are fine.
+     */
+    handleMessagesDeleted(event: MessagesDeletedPayload): void {
+        const ids = new Set(event.messageIds);
+        if (ids.size === 0) return;
+        const now = new Date().toISOString();
+        const blank = (m: Message): Message => ({
+            ...m,
+            deletedAt: m.deletedAt ?? now,
+            body: [],
+            bodyText: "",
+            attachments: [],
+            reactions: [],
+            mentions: [],
+        });
+        const arr = this._messages.get(event.channelId);
+        if (arr) {
+            this._messages.set(
+                event.channelId,
+                arr.map((m) => (ids.has(m.id) ? blank(m) : m))
+            );
+            if (event.messageIds.some((id) => this._flagByMessageId.has(id))) {
+                this._flagsVersion += 1;
+            }
+        }
+        const ch = this._channels.get(event.channelId);
+        if (ch?.latestMessage && ids.has(ch.latestMessage.id)) {
+            this._channels.set(event.channelId, {
+                ...ch,
+                latestMessage: blank(ch.latestMessage),
+            });
+            this._bumpChannels();
+        }
+        this._notify();
+        void this._persistBlankedByIds([...ids]);
+    }
+
     handleReactionAdded(event: ReactionAddedPayload): void {
         this._mutateMessage(event.channelId, event.messageId, (m) => {
             // Dedup by reaction id (idempotent — same event delivered twice
@@ -3593,6 +3640,32 @@ export class ChannelService {
             void channelId; // referenced for signature parity
         } catch (e) {
             this._recordIdbError("_persistDeletedById", e);
+        }
+    }
+
+    /** Blank the named rows in IndexedDB in ONE transaction (MIP-1951); ids not stored are skipped. */
+    private async _persistBlankedByIds(ids: readonly string[]) {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORES.MESSAGES_V3, "readwrite");
+            const store = tx.objectStore(STORES.MESSAGES_V3);
+            const now = new Date().toISOString();
+            for (const id of ids) {
+                const existing = (await store.get(id)) as Message | undefined;
+                if (!existing) continue;
+                await store.put({
+                    ...existing,
+                    deletedAt: existing.deletedAt ?? now,
+                    body: [],
+                    bodyText: "",
+                    attachments: [],
+                    reactions: [],
+                    mentions: [],
+                });
+            }
+            await tx.done;
+        } catch (e) {
+            this._recordIdbError("_persistBlankedByIds", e);
         }
     }
 

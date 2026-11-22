@@ -3452,6 +3452,15 @@ export const fr: DeepPartial<Messages> = {
             loadingDestinations: "Chargement…",
             noDestinations: "Rien dans quoi importer ici.",
             importedTo: "Importé comme note dans {where}.",
+            importedWithWarnings: "Importé. Certaines images ont été laissées de côté.",
+            imagesLeftOut: "Images laissées de côté :",
+            imagePlaceholder: "[L'image {index} n'a pas été importée]",
+            imageWarning: {
+                "too-large":
+                    "L'image {index} pèse {size}, au-delà de votre limite d'envoi de {limit}.",
+                "upload-failed": "L'image {index} ({size}) n'a pas pu être envoyée.",
+                undecodable: "L'image {index} n'a pas pu être lue.",
+            },
         },
         exportZip: {
             menuItem: "Exporter le dossier au format .zip",
@@ -4165,7 +4174,7 @@ export const fr: DeepPartial<Messages> = {
             cancelPlan: "Résilier l'abonnement",
             changeTeamPlan: "Changer de forfait",
             planChangeHint:
-                "Choisissez un forfait ci-dessous pour changer — Stripe calcule la différence au prorata. En cas de résiliation, votre forfait reste actif jusqu'à la fin de la période de facturation en cours.",
+                "Choisissez un forfait ci-dessous pour changer. Une montée en gamme prend effet immédiatement et est facturée à la différence. Une rétrogradation prend effet à la fin de la période de facturation en cours, sans crédit. En cas de résiliation, votre forfait reste actif jusqu'à la fin de la période de facturation en cours.",
             manageBilling: "Gérer la facturation",
             manageBillingHint:
                 "Changez de forfait, de moyen de paiement ou résiliez via le portail sécurisé Stripe.",
@@ -6342,6 +6351,17 @@ export const fr: DeepPartial<Messages> = {
                 noProgress: "Aucun avancement enregistré",
                 stalled: "Aucun avancement depuis {count} jours",
                 noSprint: "Aucun sprint",
+                // MIP-1909: draft strings for a native reader (TODO(copy)).
+                sprintActive: "Actif",
+                sprintRollup:
+                    "Terminées {closed}/{tasks} · Bloquées {blocked} · En retard {overdue}",
+                askProject: "Demander à Genos où en est la progression",
+                askSprint: "Demander à Genos pour ce sprint",
+                thisProject: "ce projet",
+                askProjectQuestion:
+                    "Où en sont les jalons en cours de {project} ? Qu’est-ce qui est en retard, bloqué ou à l’arrêt, et qu’est-ce qui a bougé récemment ?",
+                askSprintQuestion:
+                    "Où en est {sprint} dans {project} ? Quels jalons sont en retard, bloqués ou à l’arrêt, et qu’est-ce qui a bougé récemment ?",
                 attentionHeading: "À traiter",
                 attentionNone: "Rien en retard, bloqué ou à échéance cette semaine.",
                 attentionMore: "{count} de plus",
