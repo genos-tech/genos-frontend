@@ -37,11 +37,12 @@ export type HashMentionData = {
     // project only — `teamTasks` is what makes the menu team-wide.
     tasks: TaskTableProps[];
     // Every active task in the team, across all projects, from
-    // `/search/teamTasks/` — the same list the task search bars use.
-    // Fetched lazily on the first `#` query (see `refresh`) rather than at
-    // boot, since most sessions never open the menu. The `#` menu merges
-    // it with `tasks` above, deduped by project+task id.
+    // `/search/teamTasks/`. Empty until `ensureTeamTasks` runs. Only the
+    // agent-input pickers (Spotlight, Ask, to-do pane) read it: the editors'
+    // `#` menu searches the server per query instead (MIP-1995).
     teamTasks: SearchTeamTasksResponse[];
+    // Loads `teamTasks` if it has not been loaded lately. Never polled.
+    ensureTeamTasks: () => void;
     notes: HashNoteEntry[];
     // Already filtered to GM (chatType === 2) by the provider. The
     // editors' "#" menu keeps this GM-only scope deliberately (notes
@@ -78,6 +79,7 @@ export type HashMentionData = {
 const EMPTY: HashMentionData = {
     tasks: [],
     teamTasks: [],
+    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],

@@ -90,6 +90,8 @@ export interface UseAgentMentionDraftArgs {
     /** One task by its exact display id, whatever its status (MIP-739):
      *  the entity pool holds open work only. */
     lookupTask?: (displayId: string) => Promise<AgentMentionCandidate | null>;
+    /** Called when a `#` trigger opens: the host loads the entity pool lazily (MIP-1995). */
+    onHashOpen?: () => void;
 }
 
 export interface MentionTokenMatch {
@@ -189,6 +191,7 @@ export function useAgentMentionDraft({
     members,
     entities,
     lookupTask,
+    onHashOpen,
 }: UseAgentMentionDraftArgs): UseAgentMentionDraftReturn {
     const [caret, setCaretPos] = useState(0);
     // Trigger start the user dismissed with Escape — the picker stays
@@ -211,6 +214,10 @@ export function useAgentMentionDraft({
         query: string;
         candidate: AgentMentionCandidate;
     } | null>(null);
+    const hashOpen = trigger?.char === "#";
+    useEffect(() => {
+        if (hashOpen) onHashOpen?.();
+    }, [hashOpen, onHashOpen]);
     const lookupQuery = trigger?.char === "#" ? trigger.query : "";
     useEffect(() => {
         const id = fullDisplayIdIn(lookupQuery);

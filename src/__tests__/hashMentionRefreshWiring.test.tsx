@@ -47,6 +47,7 @@ const dataWith = (refresh: () => void): HashMentionData => ({
         } as unknown as HashMentionData["tasks"][number],
     ],
     teamTasks: [],
+    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],
