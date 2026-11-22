@@ -34,6 +34,9 @@ import { useDocumentMeta } from "./useDocumentMeta";
  *
  * TODO(owner): legal review of the whole text; the Japanese was drafted
  *   by an AI assistant, not by a lawyer or native legal writer.
+ * TODO(owner): the "AI アプリの呼び出しログ" / "AI-app call log" paragraph
+ *   (MIP-2007, decision D2 of MIP-1998) is a DRAFT for counsel; the Japanese
+ *   needs a native legal reader. It must merge before the log is switched on.
  * TODO(owner): add an effective / last-updated date when the text is
  *   approved. None is shown (it is a legal fact the owner sets).
  * TODO(owner): hosting region, vendor retention, signed DPAs,
@@ -140,8 +143,17 @@ const JA_SECTIONS: Section[] = [
                 </p>
                 <p>
                     一部の記録には自動で削除される期間があります。たとえば、セキュリティの監査記録は最長
-                    365 日、AI アプリからの通知は 90
+                    365 日、AI アプリからの通知と AI アプリの呼び出しログは 90
                     日保存されます。チャット、タスク、ノートなどの内容には、現時点で自動の削除期間を設けていません。
+                </p>
+                <p>
+                    <b>AI アプリの呼び出しログ</b>
+                    ：接続した AI アプリがあなたに代わって Genos を使うと、Genos は 1
+                    回の呼び出しごとに 1
+                    件の非公開の記録を保存します。記録するのは、呼び出されたツールの名前、対象となった項目の
+                    ID、結果（成功または拒否）、日時、呼び出したアプリです。アプリが送った内容や受け取った内容（引数、検索のキーワード、結果）は保存しません。この記録を見られるのはご本人のみで、チームのオーナーが見られるのはメンバーごと・アプリごとの件数だけです。記録は
+                    90
+                    日間保存されたのち削除され、データのエクスポートに含まれます。アカウントを削除すると、記録も削除されます。
                 </p>
                 <p>
                     <b>アカウントの削除</b>
@@ -189,7 +201,8 @@ const JA_SECTIONS: Section[] = [
                     データをエクスポート」から JSON
                     ファイルでダウンロードできます。書き出しには、AI
                     への質問と回答、リアクション、添付ファイルの情報（ファイル名など）、タスクの変更履歴、セキュリティの記録、API
-                    キーの名前と権限（キーの値は含みません）、連携アプリの情報などが含まれます。件数の多い項目は最新分に上限があり、上限を超えた場合は書き出しファイルにその旨が記載されます。他の利用者が作成したチーム内の内容は含まれません。
+                    キーの名前と権限（キーの値は含みません）、連携アプリの情報、AI
+                    アプリの呼び出しログなどが含まれます。件数の多い項目は最新分に上限があり、上限を超えた場合は書き出しファイルにその旨が記載されます。他の利用者が作成したチーム内の内容は含まれません。
                 </p>
                 <p>
                     保有個人データの開示・訂正・利用停止等のご請求は、
@@ -262,8 +275,17 @@ const EN_SECTIONS: Section[] = [
                 </p>
                 <p>
                     Some records are deleted automatically on a schedule: security audit records
-                    after up to 365 days, AI-app notices after 90 days. Chat, task, note and
-                    similar content has no automatic deletion period yet.
+                    after up to 365 days, AI-app notices and the AI-app call log after 90 days.
+                    Chat, task, note and similar content has no automatic deletion period yet.
+                </p>
+                <p>
+                    <b>AI-app call log:</b> when a connected AI app uses Genos for you, Genos keeps
+                    one private record per call: which tool was called, the ids of the items it
+                    touched, whether the call succeeded or was refused, when, and which app made
+                    it. It never keeps what the app sent or received (no arguments, no search text,
+                    no results). Only you can see your records; a team owner sees only counts per
+                    member per app. Records are kept for 90 days and then deleted, are included if
+                    you export your data, and are deleted if you delete your account.
                 </p>
                 <p>
                     <b>Deleting your account:</b> you can do it yourself in the app under Settings
@@ -305,9 +327,9 @@ const EN_SECTIONS: Section[] = [
                     You can download the data you created in the app under Settings → Account →
                     Export your data. The export includes your AI questions and answers, reactions,
                     attachment details, task change history, security events, API key names and
-                    scopes (never the key values), and connected apps. Long lists are capped at the
-                    newest entries, and the file says so when a cap applies. Content other users
-                    created in a team is not included.
+                    scopes (never the key values), connected apps, and the AI-app call log. Long
+                    lists are capped at the newest entries, and the file says so when a cap
+                    applies. Content other users created in a team is not included.
                 </p>
                 <p>
                     Disclosure, correction, or deletion requests:{" "}
