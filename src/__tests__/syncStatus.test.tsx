@@ -339,7 +339,9 @@ describe("adoption (source-level: the table and the dashboard are too big to mou
         expect(read("features/tasks/components/table/DraggableTaskTable.tsx")).toContain(
             "useTasksSyncFailure("
         );
-        const home = read("features/tasks/components/dashboard/TaskHomeContent.tsx");
+        const home =
+            read("features/tasks/components/dashboard/TaskHomeContent.tsx") +
+            read("features/tasks/components/dashboard/useTaskHomeData.ts");
         expect(home).toContain('useSyncFailure("projects")');
         // MIP-1323: the home cards are counted from the project's rows; the three tab
         // bodies are gated on "unread", the member picker is not.

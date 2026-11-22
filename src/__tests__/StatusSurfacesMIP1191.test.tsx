@@ -301,6 +301,11 @@ describe("the files stay on the shared pieces", () => {
         "features/tasks/sprint-milestone/components/SprintManagerDialog.tsx",
         "features/tasks/sprint-milestone/components/SprintMilestonePicker.tsx",
         "features/tasks/components/dashboard/TaskHomeContent.tsx",
+        "features/tasks/components/dashboard/taskHomeHelpers.ts",
+        "features/tasks/components/dashboard/useTaskHomeData.ts",
+        "features/tasks/components/dashboard/tabs/OverallTab.tsx",
+        "features/tasks/components/dashboard/tabs/MyTasksTab.tsx",
+        "features/tasks/components/dashboard/tabs/SprintTab.tsx",
         "features/tasks/components/dashboard/AssignedMilestoneCard.tsx",
         "features/spotlight/SpotlightResultItem.tsx",
         "features/agentQA/mentions/MentionSuggestionDropdown.tsx",
@@ -334,7 +339,7 @@ describe("the files stay on the shared pieces", () => {
         ],
         [
             "dashboard stat cards",
-            "features/tasks/components/dashboard/TaskHomeContent.tsx",
+            "features/tasks/components/dashboard/tabs/OverallTab.tsx",
             "<StatusLabel",
         ],
         [
@@ -358,7 +363,8 @@ describe("the files stay on the shared pieces", () => {
 
     it("the dashboard status bars read the tone source, with no literal color", () => {
         const text = strip(
-            source("features/tasks/components/dashboard/TaskHomeContent.tsx")
+            source("features/tasks/components/dashboard/taskHomeHelpers.ts") +
+                source("features/tasks/components/dashboard/tabs/OverallTab.tsx")
         ).replace(/\s+/g, "");
         expect(text).toContain("toneSolid(STATUS_TONE[status])");
         expect(text).toContain("toneCss(STATUS_TONE[cell.key])");

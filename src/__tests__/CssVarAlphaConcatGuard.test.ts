@@ -36,8 +36,10 @@ const ALLOWLIST: Record<string, string> = {
     // `tile.color` is a hardcoded functional hex (#ef4444 / #f59e0b / …)
     // on the capacity tiles; the file's var()-backed `color:` keys are
     // unrelated sx values that are never concatenated.
-    "features/tasks/components/dashboard/TaskHomeContent.tsx":
+    "features/tasks/components/dashboard/tabs/OverallTab.tsx":
         "tile.color is a real hex from the capacity tile config",
+    "features/tasks/components/dashboard/tabs/MyTasksTab.tsx":
+        "tile.color is a real hex from the KPI tile config",
 };
 
 const collectSourceFiles = (dir: string, out: string[] = []): string[] => {
