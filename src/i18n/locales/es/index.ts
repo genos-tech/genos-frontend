@@ -3519,6 +3519,14 @@ export const es: DeepPartial<Messages> = {
                 since: "Cambios desde {time}",
                 refresh: "Actualizar",
                 openToday: "Abrir Hoy",
+                agents: {
+                    title: "Tus agentes hoy",
+                    sessions: "Sesiones",
+                    changes: "Cambios",
+                    decisions: "Decisiones",
+                    refused: "Rechazadas",
+                    open: "Abrir actividad de agentes",
+                },
                 sections: {
                     due: "Vencen y vencidas",
                     waiting: "Esperan tu respuesta",

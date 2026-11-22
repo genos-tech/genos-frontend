@@ -3744,6 +3744,14 @@ export const hi: DeepPartial<Messages> = {
                 since: "{time} के बाद के बदलाव",
                 refresh: "रीफ़्रेश",
                 openToday: "आज खोलें",
+                agents: {
+                    title: "आज आपके एजेंट",
+                    sessions: "सत्र",
+                    changes: "बदलाव",
+                    decisions: "निर्णय",
+                    refused: "अस्वीकृत",
+                    open: "एजेंट गतिविधि खोलें",
+                },
                 sections: {
                     due: "देय और विलंबित",
                     waiting: "आपके जवाब का इंतज़ार",

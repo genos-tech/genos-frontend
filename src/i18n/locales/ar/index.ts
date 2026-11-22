@@ -3455,6 +3455,14 @@ export const ar: DeepPartial<Messages> = {
                 since: "تغييرات منذ {time}",
                 refresh: "تحديث",
                 openToday: "فتح اليوم",
+                agents: {
+                    title: "وكلاؤك اليوم",
+                    sessions: "جلسات",
+                    changes: "تغييرات",
+                    decisions: "قرارات",
+                    refused: "مرفوضة",
+                    open: "فتح نشاط الوكلاء",
+                },
                 sections: {
                     due: "المستحق والمتأخر",
                     waiting: "بانتظار ردك",

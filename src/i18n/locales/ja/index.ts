@@ -6634,6 +6634,14 @@ export const ja: DeepPartial<Messages> = {
                 since: "{time} 以降の変更",
                 refresh: "更新",
                 openToday: "今日を開く",
+                agents: {
+                    title: "今日のエージェント",
+                    sessions: "セッション",
+                    changes: "変更",
+                    decisions: "決定",
+                    refused: "拒否",
+                    open: "エージェントの活動を開く",
+                },
                 sections: {
                     due: "期限と期限切れ",
                     waiting: "あなたの返事待ち",
