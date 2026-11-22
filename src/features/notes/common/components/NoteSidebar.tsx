@@ -64,6 +64,12 @@ import { ModalTeamFolderMembers } from "../../team-notes/modals/ModalTeamFolderM
 import { ModalTeamFolderName } from "../../team-notes/modals/ModalTeamFolderName";
 import { folderTagChipSx, ModalTeamFolderTags } from "../../team-notes/modals/ModalTeamFolderTags";
 import { isInGuestFolder, splitFoldersByOwnership } from "../../team-notes/utils/guestFolders";
+import {
+    buildTemplateMenuItems,
+    resolveTemplate,
+    type ResolvedTemplate,
+    type TemplatePick,
+} from "../../templates/templateMenuItems";
 import { useNoteUnread } from "../context/NoteUnreadContext";
 import {
     chatContainerId,
@@ -248,7 +254,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // RecentNoteItem opens the note (loadNote) and marks it read on click,
     // which clears it from this list.
     const renderUnreadNotes = () => (
-        <Box>
+        <Box role="none">
             {unreadNotes.map((n) => {
                 const found = findNoteMeta(n.noteType, n.noteId);
                 // Fall back to the activity's title without mutating the
@@ -431,13 +437,25 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         },
     });
 
+    // MIP-1697: build the template (blocks come from the built-ins) and hand title + body to the
+    // creator of the surface the menu belongs to.
+    type ResolvedNoteOverrides = { title: string; body: ResolvedTemplate["blocks"] };
+    const createFromTemplate = async (
+        pick: TemplatePick,
+        create: (o: ResolvedNoteOverrides) => unknown
+    ) => {
+        const tpl = await resolveTemplate(pick, t.notes.noteTemplates);
+        if (tpl) void create({ title: tpl.title, body: tpl.blocks });
+    };
+
     // Folder-row menu shared by the task and chat sections: create a note
     // in this folder, or import one from a markdown file. `onCreate`
     // carries the folder's own anchor, so the new note lands with the
     // same metadata as its siblings.
     const buildFolderMenuItems = (
         onCreate: () => void,
-        importContext: ImportMarkdownContext
+        importContext: ImportMarkdownContext,
+        onCreateFromTemplate?: (o: ResolvedNoteOverrides) => unknown
     ): MoreMenuItem[] => [
         {
             id: "new-note-here",
@@ -446,6 +464,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             icon: <NoteAddRoundedIcon sx={{ fontSize: 16 }} />,
             onClick: onCreate,
         },
+        ...(onCreateFromTemplate
+            ? buildTemplateMenuItems({
+                  copy: t.notes.noteTemplates,
+                  idPrefix: "new-note-here",
+                  onPick: (pick) => createFromTemplate(pick, onCreateFromTemplate),
+              })
+            : []),
         {
             id: "import-note-here",
             kind: "import",
@@ -457,11 +482,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     // Folder menu for one task (task / subtask / milestone-backing task).
     const buildTaskFolderMenuItems = (projectId: number, taskId: number): MoreMenuItem[] =>
-        buildFolderMenuItems(() => void useNM.handleCreateNewTaskNote(null, projectId, taskId), {
-            kind: "task",
-            projectId,
-            taskId,
-        });
+        buildFolderMenuItems(
+            () => void useNM.handleCreateNewTaskNote(null, projectId, taskId),
+            { kind: "task", projectId, taskId },
+            (o) => useNM.handleCreateNewTaskNote(null, projectId, taskId, undefined, o)
+        );
 
     const buildChatFolderMenuItems = (chatGroup: ChatGroup): MoreMenuItem[] | undefined => {
         const { chatType, chatId, isThread, threadId } = chatGroup;
@@ -471,7 +496,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         if (threadId == null) return undefined;
         return buildFolderMenuItems(
             () => void useNM.handleCreateNewChatNote(null, chatType, chatId, isThread, threadId),
-            { kind: "chat", chatType, chatId, isThread, threadId }
+            { kind: "chat", chatType, chatId, isThread, threadId },
+            (o) =>
+                useNM.handleCreateNewChatNote(
+                    null,
+                    chatType,
+                    chatId,
+                    isThread,
+                    threadId,
+                    undefined,
+                    o
+                )
         );
     };
 
@@ -499,6 +534,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onCreateNoteHere: (folderId) => {
             void useNM.handleCreateNewMyNote(null, folderId);
         },
+        templateMenuItems: (folderId) =>
+            buildTemplateMenuItems({
+                copy: t.notes.noteTemplates,
+                idPrefix: "new-note-here",
+                onPick: (pick) =>
+                    createFromTemplate(pick, (o) =>
+                        useNM.handleCreateNewMyNote(null, folderId, o)
+                    ),
+            }),
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
         onExportFolder: (folder) =>
             setExportFolderTarget({
@@ -591,6 +635,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         // A plain root note: no parent, no folder.
                         onClick: () => void useNM.handleCreateNewMyNote(null),
                     },
+                    // MIP-1697: templates, one row each, after the blank note.
+                    ...buildTemplateMenuItems({
+                        copy: t.notes.noteTemplates,
+                        idPrefix: "new-note",
+                        divider: true,
+                        onPick: (pick) =>
+                            createFromTemplate(pick, (o) =>
+                                useNM.handleCreateNewMyNote(null, null, o)
+                            ),
+                    }),
                     {
                         id: "new-folder",
                         kind: "newSubfolder",
@@ -633,13 +687,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     const renderMyNotesSection = () => {
         return (
-            <Box>
+            <Box role="none">
                 {/* "New note" / "New folder" live in the family row's "+", and that row is
                     the "move to the top level" drop target (see `noteTypesConfig`). Nothing
                     here but the empty state, which has to say where to start because the
                     "+" only shows on hover. */}
                 {myNotesIsEmpty && (
-                    <Box sx={{ px: 1.5 }}>
+                    <Box component="li" sx={{ px: 1.5, listStyle: "none" }}>
                         <EmptyState
                             body={t.notes.list.empty}
                             data-empty="my-notes"
@@ -778,6 +832,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         onCreateNoteHere: (folderId) => {
             void useNM.handleCreateNewMyNote(null, folderId);
         },
+        templateMenuItems: (folderId) =>
+            buildTemplateMenuItems({
+                copy: t.notes.noteTemplates,
+                idPrefix: "new-note-here",
+                onPick: (pick) =>
+                    createFromTemplate(pick, (o) =>
+                        useNM.handleCreateNewMyNote(null, folderId, o)
+                    ),
+            }),
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
         onExportFolder: (folder) =>
             setExportFolderTarget({
@@ -890,9 +953,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     //
     // Box root ON PURPOSE — see renderMyNotesSection.
     const renderTeamNotesSection = () => (
-        <Box>
+        <Box role="none">
             {teamFolderTags.length > 0 && (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, px: 1, py: 0.5 }}>
+                <Box
+                    component="li"
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        px: 1,
+                        py: 0.5,
+                        listStyle: "none",
+                    }}
+                >
                     {teamFolderTags.map((tag) => {
                         const isOn = teamTagFilter.has(tag.tagId);
                         return (
@@ -1208,7 +1281,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     //
     // Box root ON PURPOSE — see renderMyNotesSection.
     const renderGroupedSharedNotes = () => (
-        <Box>
+        <Box role="none">
             {/* Folders first: a folder is the bigger unit, and it is the
                 one thing in here that arrived from outside the company
                 rather than from a colleague. Unfiltered — the tag chips
@@ -1332,7 +1405,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         }
 
         return (
-            <Box>
+            <Box role="none">
                 {hasFolders && (
                     <FavoriteNoteSection
                         defaultExpanded={true}

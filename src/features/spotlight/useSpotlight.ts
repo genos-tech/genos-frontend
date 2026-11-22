@@ -80,6 +80,8 @@ import {
     askGenosToken,
     onAskGenosAbout,
     onAskGenosAboutSelection,
+    onAskGenosWithDraft,
+    withAskGenosDraft,
     withAskGenosToken,
 } from "./askGenosAbout";
 import { idHitPassesFilter, spotlightResultForTask, withIdHit } from "./displayIdHit";
@@ -464,6 +466,20 @@ export const useSpotlight = ({
         () =>
             onAskGenosAbout((ref) => {
                 setQuery((prev) => withAskGenosToken(prev, askGenosToken(ref)));
+                if (isPageActiveRef.current) {
+                    pageInputFocusRef.current?.();
+                } else {
+                    setIsOpen(true);
+                }
+            }),
+        []
+    );
+
+    // ---- "Ask Genos about the sprint progress" (MIP-1909): a written question in the draft. ----
+    useEffect(
+        () =>
+            onAskGenosWithDraft((draft) => {
+                setQuery((prev) => withAskGenosDraft(prev, draft));
                 if (isPageActiveRef.current) {
                     pageInputFocusRef.current?.();
                 } else {

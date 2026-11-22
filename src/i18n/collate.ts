@@ -28,12 +28,22 @@ export const getCollator = (
     return collator;
 };
 
+// The app's locale as `I18nProvider` last rendered it. Written DURING render (MIP-1899), like the
+// plural locale: `<html lang>` is only written in an effect, after the render a language switch
+// triggers, so a sort computed in that render would still use the old language.
+let renderedLocale: Locale | null = null;
+
+export const setAppLocale = (locale: Locale): void => {
+    renderedLocale = locale;
+};
+
 /**
- * The app's current locale for code that is not a React component. `applyDocumentLocale`
- * writes it onto `<html lang>` at boot and on every language switch; a page that has not
- * set it yet (tests, first paint) falls back to the stored or browser choice.
+ * The app's current locale for code that is not a React component. `I18nProvider` publishes it
+ * during render (`setAppLocale`); before that (tests, first paint) it is `<html lang>` (written
+ * by `applyDocumentLocale` at boot), then the stored or browser choice.
  */
 export const currentAppLocale = (): Locale => {
+    if (renderedLocale) return renderedLocale;
     if (typeof document !== "undefined") {
         const lang = document.documentElement.lang;
         if (isLocale(lang)) return lang;

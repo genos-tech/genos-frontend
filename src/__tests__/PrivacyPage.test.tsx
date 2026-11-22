@@ -133,10 +133,20 @@ describe("PrivacyPage", () => {
         const text = container.textContent ?? "";
         expect(text).toContain("本番環境は Railway 上で稼働");
         expect(text).toContain("Production runs on Railway");
-        // The AI cost reports are uploaded to a Cloud Storage bucket (MIP-1791 not yet done).
+        // The AI cost reports are uploaded to a Cloud Storage bucket (per-user pages stopped, MIP-1791).
         const { ja, en } = splitText(text);
         expect(ja).toMatch(/Google Cloud Storage：AI 利用料の集計ページ/);
+        expect(ja).toContain("Vertex AI");
+        expect(en).toContain("AI features call Google Vertex AI");
         expect(en).toMatch(/Google Cloud Storage: Stores the daily AI cost reports/);
+    });
+
+    it("says the Stripe billing owner's email is sent for a team, not a team email (MIP-1904)", () => {
+        const stripe = PROCESSORS.find((p) => p.name === "Stripe");
+        expect(stripe?.ja).toContain("チームのオーナー）のメールアドレス");
+        expect(stripe?.ja).not.toContain("チームのメールアドレスが送信");
+        expect(stripe?.en).toContain("email address of the billing owner");
+        expect(stripe?.en).not.toContain("team name and team email");
     });
 
     it("points deletion at the in-app flow and keeps a contact route", () => {
