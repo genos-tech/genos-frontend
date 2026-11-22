@@ -1,3 +1,4 @@
+import { connectAi } from "./connectAi";
 import { connectApp } from "./connectApp";
 
 export const settings = {
@@ -96,6 +97,8 @@ export const settings = {
         removeTeamNamed: "Remove {team} from this app",
         // The "Connect an AI app" panel (sentences live in connectApp.ts: the public /developers page prints them too).
         connect: connectApp,
+        // "Connect your AI" (MIP-2020): the in-app tabbed page. Not on /developers.
+        connectAi,
     },
     // Settings → Genos → Genos Assist Schedules: reports Genos prepares at the member's chosen times (MIP-1150).
     schedules: {

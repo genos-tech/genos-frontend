@@ -102,3 +102,52 @@ describe("Connect an AI app has every string in every locale", () => {
         expect(JSON.stringify(zh)).not.toContain("开发人员");
     });
 });
+
+/** "Connect your AI" (MIP-2020): the tabbed page, in all seven locales. */
+describe("Connect your AI has every string in every locale", () => {
+    const AI = en.settings.connectedApps.connectAi;
+    const AI_KEYS = Object.keys(AI) as Array<keyof typeof AI>;
+    const own = (name: keyof typeof OTHERS) => OTHERS[name].settings?.connectedApps?.connectAi;
+
+    it.each(NAMES)("%s defines every key English has, and none it does not", (name) => {
+        const keys = Object.keys(own(name) ?? {});
+        expect({ name, missing: AI_KEYS.filter((k) => !keys.includes(k)) }).toEqual({
+            name,
+            missing: [],
+        });
+        expect({ name, extra: keys.filter((k) => !(AI_KEYS as string[]).includes(k)) }).toEqual({
+            name,
+            extra: [],
+        });
+    });
+
+    it.each(NAMES)("%s keeps the same number of steps per app", (name) => {
+        expect(own(name)?.claudeCodeSteps).toHaveLength(AI.claudeCodeSteps.length);
+        expect(own(name)?.claudeDesktopSteps).toHaveLength(AI.claudeDesktopSteps.length);
+        expect(own(name)?.chatgptSteps).toHaveLength(AI.chatgptSteps.length);
+    });
+
+    it.each(NAMES)("%s keeps {when} in the activity line", (name) => {
+        expect(own(name)?.statusActivity).toContain("{when}");
+    });
+
+    it.each(NAMES)("%s never bakes an address or a command into the catalog", (name) => {
+        expect(JSON.stringify(own(name))).not.toMatch(/api\/public|https?:\/\/|claude mcp add/);
+    });
+
+    it("English does not either", () => {
+        expect(JSON.stringify(AI)).not.toMatch(/api\/public|https?:\/\/|claude mcp add/);
+    });
+
+    it.each(NAMES)("%s keeps the other app's own menu names in English", (name) => {
+        const steps = own(name)?.claudeDesktopSteps ?? [];
+        expect(steps[0]).toContain("Customize");
+        expect(steps[0]).toContain("Connectors");
+        expect(steps[0]).toContain("Add custom connector");
+        expect(own(name)?.prefWhereClaudeDesktop).toContain("Settings → Profile");
+    });
+
+    it.each(NAMES)("%s names the Core plan on the Free notice", (name) => {
+        expect(own(name)?.freePlan).toContain("Core");
+    });
+});

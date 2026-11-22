@@ -4038,6 +4038,54 @@ export const ja: DeepPartial<Messages> = {
                 menuNote:
                     "他のアプリのメニュー名は変わることがあります。コネクタ、またはカスタム MCP サーバーの項目を探してください。",
             },
+            // Connect your AI (MIP-2020). Menu names (Customize, Connectors, Add custom connector, Settings → Profile) stay English: they are the other app's own labels.
+            connectAi: {
+                title: "AI を接続する",
+                intro: "API キーは不要です。使うアプリを選び、手順に沿って、求められたら Genos にサインインします。",
+                statusNone: "まだ接続されていません。下から使うアプリを選んでください。",
+                statusConnected: "接続済み",
+                statusActivity: "エージェントの動作を確認しました（{when}）",
+                statusNoActivity:
+                    "まだエージェントの動作は確認されていません。AI に Genos のタスクについて聞いて試してみてください。",
+                freePlan: "Genos コネクタには Core プラン以上が必要です。現在は Free プランです。",
+                tabsAria: "使う AI アプリを選ぶ",
+                tabClaudeCode: "Claude Code",
+                tabClaudeDesktop: "claude.ai と Desktop",
+                tabChatgpt: "ChatGPT",
+                claudeCodeSteps: [
+                    "Claude Code のチャットで、次の 2 行を順に実行します。",
+                    "/mcp を実行して Genos にサインインし、チームと Claude に許可する内容を選びます。",
+                ],
+                claudeCodeCommandLabel: "Claude Code のチャットで実行するコマンド",
+                claudeCodeCommandAria: "プラグインの 2 つのコマンドをコピー",
+                claudeCodeAloneLabel:
+                    "プラグインなしの場合: ターミナルでこの 1 行を実行すると、Genos だけを接続できます。",
+                claudeDesktopSteps: [
+                    "Claude で Customize、Connectors の順に開きます。ディレクトリから Genos を追加します。まだ掲載されていない場合は Add custom connector を選び、下のアドレスを貼り付けます。",
+                    "Claude から求められたら Genos にサインインし、チームと Claude に許可する内容を選んで「許可」を押します。",
+                ],
+                claudeDesktopAddressLabel: "カスタムコネクタ用のアドレス",
+                chatgptSteps: [
+                    "Genos は ChatGPT のディレクトリへの掲載を準備中です。掲載されたら、そこから追加できます。",
+                    "それまでは、カスタム MCP サーバーを使える ChatGPT のプランで、下のアドレスを貼り付け、OAuth でのサインインを選んでサーバーを追加します。",
+                    "ChatGPT から求められたら Genos にサインインし、チームと ChatGPT に許可する内容を選んで「許可」を押します。",
+                ],
+                chatgptAddressLabel: "カスタム MCP サーバー用のアドレス",
+                chatgptNote:
+                    "ChatGPT との接続は、まだ最後まで動作確認できていません。ChatGPT のメニュー名は変わることがあります。プラグイン、またはカスタム MCP サーバーの項目を探してください。",
+                prefTitle: "任意: AI に Genos を最新に保たせる",
+                prefIntro:
+                    "この 1 行を AI アプリに一度貼り付けておくと、チャットのたびに頼まなくても、タスク・決定・進捗が Genos に反映されます。",
+                prefLabel: "貼り付ける設定",
+                prefText:
+                    "作業するときは、Genos を最新に保ってください。タスク、決定事項、進捗を反映します。",
+                prefCopyAria: "設定をコピー",
+                prefWhereClaudeCode:
+                    "Claude Code: CLAUDE.md に追記します（ホームの .claude フォルダにあるものは、すべてのプロジェクトに適用されます）。",
+                prefWhereClaudeDesktop:
+                    "claude.ai と Claude Desktop: Settings → Profile の personal preferences に貼り付けます。",
+                prefWhereChatgpt: "ChatGPT: カスタム指示（設定 → パーソナライズ）に貼り付けます。",
+            },
         },
         developer: {
             keys: {

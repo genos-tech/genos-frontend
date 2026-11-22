@@ -1589,6 +1589,55 @@ export const es: DeepPartial<Messages> = {
                 menuNote:
                     "Los nombres de menú de otras apps cambian: busca conectores o servidores MCP personalizados.",
             },
+            // TODO(copy): MIP-2020 draft wording for a native reader (Connect your AI).
+            connectAi: {
+                title: "Conecta tu IA",
+                intro: "No necesitas clave de API. Elige tu app, sigue los pasos e inicia sesión en Genos cuando te lo pida.",
+                statusNone: "Aún no está conectada. Elige tu app abajo.",
+                statusConnected: "Conectado",
+                statusActivity: "Actividad del agente vista {when}",
+                statusNoActivity:
+                    "Aún no se ha visto actividad del agente. Pregunta a tu IA por tus tareas de Genos para probarlo.",
+                freePlan:
+                    "El conector de Genos necesita el plan Core o superior, y tienes el plan Free.",
+                tabsAria: "Elige tu app de IA",
+                tabClaudeCode: "Claude Code",
+                tabClaudeDesktop: "claude.ai y Desktop",
+                tabChatgpt: "ChatGPT",
+                claudeCodeSteps: [
+                    "Ejecuta estos dos comandos en el chat de Claude Code, uno tras otro.",
+                    "Ejecuta /mcp, inicia sesión en Genos y elige el equipo y lo que Claude puede hacer.",
+                ],
+                claudeCodeCommandLabel: "Comandos para el chat de Claude Code",
+                claudeCodeCommandAria: "Copiar los dos comandos del plugin",
+                claudeCodeAloneLabel:
+                    "¿Sin plugin? Este comando en tu terminal conecta Genos por sí solo.",
+                claudeDesktopSteps: [
+                    "En Claude, abre Customize y luego Connectors. Añade Genos desde el directorio; si aún no aparece, elige Add custom connector y pega la dirección de abajo.",
+                    "Inicia sesión en Genos cuando Claude lo pida, elige el equipo y lo que Claude puede hacer, y pulsa Permitir.",
+                ],
+                claudeDesktopAddressLabel: "Dirección para el conector personalizado",
+                chatgptSteps: [
+                    "Genos está en proceso de publicarse en el directorio de ChatGPT. Cuando esté, añádelo desde allí.",
+                    "Mientras tanto, en un plan de ChatGPT que permita servidores MCP personalizados, añade uno: pega la dirección de abajo y elige el inicio de sesión con OAuth.",
+                    "Inicia sesión en Genos cuando ChatGPT lo pida, elige el equipo y lo que ChatGPT puede hacer, y pulsa Permitir.",
+                ],
+                chatgptAddressLabel: "Dirección para el servidor MCP personalizado",
+                chatgptNote:
+                    "Aún no se ha probado de principio a fin con ChatGPT. Los nombres de menú de ChatGPT cambian: busca plugins o servidores MCP personalizados.",
+                prefTitle: "Opcional: que tu IA mantenga Genos al día",
+                prefIntro:
+                    "Pega esta línea una vez en tu app de IA y mantendrá tus tareas, decisiones y avances en Genos sin que lo pidas en cada chat.",
+                prefLabel: "Preferencia para pegar",
+                prefText: "Cuando trabajo, mantén Genos al día: tareas, decisiones y avances.",
+                prefCopyAria: "Copiar la preferencia",
+                prefWhereClaudeCode:
+                    "Claude Code: añádela a tu CLAUDE.md (el de la carpeta .claude de tu carpeta personal vale para todos los proyectos).",
+                prefWhereClaudeDesktop:
+                    "claude.ai y Claude Desktop: pégala en Settings → Profile, en personal preferences.",
+                prefWhereChatgpt:
+                    "ChatGPT: pégala en sus instrucciones personalizadas (Ajustes → Personalización).",
+            },
         },
         developer: {
             keys: {

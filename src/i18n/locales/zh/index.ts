@@ -3889,6 +3889,52 @@ export const zh: DeepPartial<Messages> = {
                 pluginNote: "The plugin needs the same plan as the connector: Core or above.",
                 menuNote: "其他应用的菜单名称会变化：请找“连接器”或自定义 MCP 服务器。",
             },
+            // TODO(copy): MIP-2020 draft wording for a native reader (Connect your AI).
+            connectAi: {
+                title: "连接你的 AI",
+                intro: "无需 API 密钥。选择你的应用，按步骤操作，在提示时登录 Genos。",
+                statusNone: "尚未连接。请在下方选择你的应用。",
+                statusConnected: "已连接",
+                statusActivity: "已检测到智能体活动（{when}）",
+                statusNoActivity:
+                    "尚未检测到智能体活动。可以让你的 AI 查询 Genos 中的任务来试一试。",
+                freePlan: "Genos 连接器需要 Core 或更高套餐，而你目前是 Free 套餐。",
+                tabsAria: "选择你的 AI 应用",
+                tabClaudeCode: "Claude Code",
+                tabClaudeDesktop: "claude.ai 和 Desktop",
+                tabChatgpt: "ChatGPT",
+                claudeCodeSteps: [
+                    "在 Claude Code 聊天中依次运行下面两条命令。",
+                    "运行 /mcp，登录 Genos，然后选择团队以及 Claude 可以做什么。",
+                ],
+                claudeCodeCommandLabel: "在 Claude Code 聊天中运行的命令",
+                claudeCodeCommandAria: "复制两条插件命令",
+                claudeCodeAloneLabel: "不用插件？在终端运行这一条命令即可单独连接 Genos。",
+                claudeDesktopSteps: [
+                    "在 Claude 中依次打开 Customize、Connectors。从目录中添加 Genos；如果还没有上架，请选择 Add custom connector 并粘贴下面的地址。",
+                    "Claude 提示时登录 Genos，选择团队以及 Claude 可以做什么，然后点击“允许”。",
+                ],
+                claudeDesktopAddressLabel: "自定义连接器的地址",
+                chatgptSteps: [
+                    "Genos 正在申请上架 ChatGPT 的目录。上架后即可从那里添加。",
+                    "在此之前，如果你的 ChatGPT 套餐允许自定义 MCP 服务器，请粘贴下面的地址并选择 OAuth 登录来添加。",
+                    "ChatGPT 提示时登录 Genos，选择团队以及 ChatGPT 可以做什么，然后点击“允许”。",
+                ],
+                chatgptAddressLabel: "自定义 MCP 服务器的地址",
+                chatgptNote:
+                    "尚未与 ChatGPT 完成端到端测试。ChatGPT 的菜单名称会变化：请找“插件”或自定义 MCP 服务器。",
+                prefTitle: "可选：让你的 AI 随时更新 Genos",
+                prefIntro:
+                    "把这一行粘贴到你的 AI 应用中一次，之后不用每次聊天都提醒，它就会把任务、决定和进展记到 Genos。",
+                prefLabel: "要粘贴的偏好",
+                prefText: "我工作时，请随时更新 Genos：任务、决定和进展。",
+                prefCopyAria: "复制偏好",
+                prefWhereClaudeCode:
+                    "Claude Code：添加到你的 CLAUDE.md（主目录 .claude 文件夹中的那个对所有项目生效）。",
+                prefWhereClaudeDesktop:
+                    "claude.ai 和 Claude Desktop：粘贴到 Settings → Profile 的 personal preferences 中。",
+                prefWhereChatgpt: "ChatGPT：粘贴到自定义指令中（设置 → 个性化）。",
+            },
         },
         developer: {
             keys: {

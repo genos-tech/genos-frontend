@@ -22,6 +22,7 @@ import { v3ApiBaseURL } from "../../services/v3Api";
 import { mcpCoreUrl } from "../../utils/mcpConnect";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConnectAppPanel } from "./ConnectAppPanel";
+import { latestActivity } from "./connectAppPanelHelpers";
 
 /**
  * Settings → Developer → Connected apps (MIP-1079): the AI apps this member has
@@ -376,7 +377,13 @@ export const ConnectedAppsSection = () => {
 
             {/* Not before the list has answered: its default (open when empty) would flip. */}
             {(connections !== null || loadFailed) && (
-                <ConnectAppPanel address={address} defaultOpen={!connections?.length} />
+                <ConnectAppPanel
+                    address={address}
+                    connectionCount={connections?.length ?? 0}
+                    defaultOpen={!connections?.length}
+                    lastActivityAt={latestActivity(connections ?? [])}
+                    listKnown={!loadFailed}
+                />
             )}
         </Stack>
     );
