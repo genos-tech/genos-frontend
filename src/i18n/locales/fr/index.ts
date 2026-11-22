@@ -2613,7 +2613,6 @@ export const fr: DeepPartial<Messages> = {
                     bullets: [
                         "Push du navigateur pendant que vous travaillez, e-mail lorsque vous êtes absent",
                         "Contrôle par catégorie : mentions, réponses, commentaires sur les tâches, réactions",
-                        "Un résumé qui arrive avant que vous partiez en recherche – quotidiennement ou hebdomadairement",
                         "L'état de lecture vous suit, donc rien n'est annoncé deux fois",
                     ],
                 },
@@ -3844,9 +3843,6 @@ export const fr: DeepPartial<Messages> = {
                 emailHeading: "Notifications par e-mail",
                 emailDescription:
                     "En votre absence, Genos vous envoie un e-mail récapitulatif de ce que vous avez manqué — groupé, jamais un e-mail par événement.",
-                emailDigestHeading: "Résumé quotidien par e-mail",
-                emailDigestDescription:
-                    "Un e-mail chaque matin à 8 h (votre heure) résumant ce que vous n'avez pas vu — envoyé seulement s'il y a du nouveau.",
                 mutedChatsHeading: "Conversations en sourdine ({count})",
                 noMutedChats:
                     "Aucune conversation en sourdine. Utilisez l'icône de cloche dans l'en-tête de toute conversation pour la mettre en sourdine.",

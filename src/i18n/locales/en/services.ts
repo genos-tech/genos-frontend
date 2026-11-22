@@ -172,16 +172,11 @@ export const services = {
                 default: "Not yet allowed",
                 unsupported: "Unsupported",
             },
-            // Proactive digest (UX tier model §8) — server-backed
-            // opt-out; whether/how often it fires comes from the plan.
             // Email channel (independent of push/in-app; sent only after
             // you've been away for a while, batched into one email).
             emailHeading: "Email notifications",
             emailDescription:
                 "When you're away, Genos emails you what you missed — batched, never one email per event.",
-            emailDigestHeading: "Daily email digest",
-            emailDigestDescription:
-                "One morning email at 8am your time summarizing what you haven't seen — sent only when there's something new.",
             mutedChatsHeading: "Muted chats ({count})",
             noMutedChats: "No muted chats. Use the bell icon in any chat header to mute it.",
             mutedTargetsHeading: "Muted items ({count})",

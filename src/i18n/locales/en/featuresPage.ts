@@ -125,7 +125,6 @@ export const featuresPage = {
                 bullets: [
                     "Browser push while you're working, email when you're away",
                     "Per-category control: mentions, replies, task comments, reactions",
-                    "A digest that arrives before you go looking — daily or weekly",
                     "Read state follows you, so nothing is announced twice",
                 ],
             },
