@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
-import { Box, Button, Chip, Divider, LinearProgress, Sheet, Stack, Typography } from "@mui/joy";
+import {
+    Box,
+    Button,
+    Chip,
+    Divider,
+    LinearProgress,
+    Link,
+    Sheet,
+    Stack,
+    Typography,
+} from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -128,7 +138,10 @@ const UsageRow = ({
     );
 };
 
-export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => void } = {}) => {
+export const PlanUsageSection = ({
+    onNavigateAway,
+    onOpenCreditUsage,
+}: { onNavigateAway?: () => void; onOpenCreditUsage?: () => void } = {}) => {
     const { accessToken } = useAuth();
     const { t, locale } = useTranslation();
     const navigate = useNavigate();
@@ -242,7 +255,20 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
                     is priced into the request's credits, so a separate
                     allowance would charge for it twice. */}
                 {data.credits ? (
-                    <CreditBalance credits={data.credits} tier={data.tier} hideUpgradeNote />
+                    <>
+                        <CreditBalance credits={data.credits} tier={data.tier} hideUpgradeNote />
+                        {onOpenCreditUsage && (
+                            <Link
+                                component="button"
+                                level="body-xs"
+                                sx={{ alignSelf: "flex-start" }}
+                                type="button"
+                                onClick={onOpenCreditUsage}
+                            >
+                                {t.settings.aiCreditUsage.seeUsageLink}
+                            </Link>
+                        )}
+                    </>
                 ) : (
                     <>
                         <UsageRow
