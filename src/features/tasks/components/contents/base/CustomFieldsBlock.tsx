@@ -192,6 +192,7 @@ const TagFieldEditor = ({
                         <ProjectTagChip
                             isDark={isDark}
                             label={option.label}
+                            size="md"
                             tagColor={option.color}
                         />
                     </ListItemContent>
@@ -205,6 +206,7 @@ const TagFieldEditor = ({
                             key={`cf-chip-${key}`}
                             isDark={isDark}
                             label={item.label}
+                            size="md"
                             tagColor={item.color}
                         />
                     );
