@@ -7,6 +7,15 @@ type TagProps = {
      *  hue that is data is still there. */
     color: string;
     fontSize?: string | number;
+    /** `md` is the larger chip of the task/milestone preview fields: 24px high,
+     *  13px text, a 6px dot, on the same token steps as the Project field beside it. */
+    size?: "sm" | "md";
+};
+
+const chipMd: CSSProperties = {
+    height: "var(--g-space-6, 24px)",
+    padding: "0 var(--g-space-1-5, 6px)",
+    gap: "var(--g-space-1, 4px)",
 };
 
 const chip: CSSProperties = {
@@ -38,15 +47,18 @@ const chip: CSSProperties = {
 export const Tag = ({
     label,
     color,
-    fontSize = "var(--g-type-body-xs-size, 0.75rem)",
+    size = "sm",
+    fontSize = size === "md"
+        ? "var(--g-type-body-sm-size, 0.8125rem)"
+        : "var(--g-type-body-xs-size, 0.75rem)",
 }: TagProps) => (
-    <span style={{ ...chip, fontSize }} title={label}>
+    <span style={{ ...chip, ...(size === "md" ? chipMd : null), fontSize }} title={label}>
         <span
             aria-hidden="true"
             style={{
                 flexShrink: 0,
-                width: 5,
-                height: 5,
+                width: size === "md" ? 6 : 5,
+                height: size === "md" ? 6 : 5,
                 borderRadius: "50%",
                 // No color, or an invalid one, still gets a visible neutral dot.
                 background: color || "var(--g-text-tertiary, #9ca3af)",

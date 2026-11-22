@@ -567,6 +567,33 @@ export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeat
     }
 }
 
+// The signed-in member's own AI credit usage (MIP-1971): this month by job and the last 50
+// charges. `job` is a key the client translates; an unknown one is shown as "other".
+export type CreditUsageJob = "ask" | "connected_app" | "schedule" | "summary" | "other";
+
+export interface CreditUsage {
+    // Same block as `AgentFeatures.credits`; null when credits are not the plan's limit.
+    credits: CreditsBlock | null;
+    tier: SubscriptionTier;
+    period: string;
+    period_end_iso: string | null;
+    by_job: { job: CreditUsageJob; count: number; credits: number }[];
+    month_total_credits: number;
+    recent: { id: number; at: string; job: CreditUsageJob; credits: number; detail: string }[];
+}
+
+export async function fetchCreditUsage(accessToken: string): Promise<CreditUsage | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/agent/credits/usage/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        return (await resp.json()) as CreditUsage;
+    } catch {
+        return null;
+    }
+}
+
 // Provider/model picker payload — drives Settings → Spotlight → AI Model.
 // `daily_limit` is null when no per-model quota applies to this user
 // (e.g. paid tier on a cheap model not listed in MODEL_DAILY_QUOTAS).

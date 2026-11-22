@@ -117,6 +117,10 @@ export interface ScheduleList {
      *  predates it: read it as available (`aiAvailable !== false`). When false the form shows no
      *  AI switch, effort or estimate, because they would do nothing. */
     aiAvailable?: boolean;
+    /** The member has no AI credits left (MIP-1967). The form then shows the AI sentences switch
+     *  off and disabled, with the reason and the buy / upgrade actions. Absent on a server that
+     *  predates it: read it as false. */
+    aiCreditsOut?: boolean;
     timeZone: string;
     limit: number;
     jobs: ScheduleJob[];
@@ -205,6 +209,7 @@ export const listSchedules = async (
             planMessage: typeof res.data.planMessage === "string" ? res.data.planMessage : "",
             // Same for a server that predates MIP-1309: available, as before.
             aiAvailable: res.data.aiAvailable !== false,
+            aiCreditsOut: res.data.aiCreditsOut === true,
             timeZone: res.data.timeZone ?? "",
             limit: res.data.limit ?? 0,
             jobs: res.data.jobs ?? [],

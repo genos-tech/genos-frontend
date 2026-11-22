@@ -5,6 +5,7 @@ export const settings = {
     tabs: {
         general: "General",
         planUsage: "Plan & Usage",
+        aiCreditUsage: "AI credit usage",
         chat: "Chat",
         tasks: "Tasks",
         spotlight: "Genos",
@@ -244,6 +245,10 @@ export const settings = {
         paramAiSentences: "AI sentences",
         paramAiSentencesHint:
             "Adds one short sentence under a task when its comments explain where it stands. This uses AI. Turn it off for a plain report.",
+        aiOutOfCredits:
+            "You've used all your AI credits, so AI sentences can't run. Buy credits or upgrade to turn them on.",
+        aiOutOfCreditsBuy: "Buy credits",
+        aiOutOfCreditsUpgrade: "Upgrade plan",
         effortLabel: "AI effort",
         effortDefaultMark: "{level} (default)",
         effortCostAbout: "About {credits} credits per run. This is an estimate.",
@@ -463,6 +468,40 @@ export const settings = {
         errorPassword: "That password is incorrect.",
         errorOwnership: "Transfer ownership of your teams first.",
         errorGeneric: "Something went wrong. Please try again.",
+    },
+    aiCreditUsage: {
+        heading: "AI credit usage",
+        description: "Which AI jobs spent your credits. This page shows your own use only.",
+        remaining: "Credits left",
+        usedThisMonth: "Used this month",
+        renews: "Renews",
+        purchasedSub: "+{n} bought",
+        unlimited: "Unlimited",
+        byJobHeading: "This month by job",
+        byJobAria: "Credits used this month by job: {list}",
+        jobCount: "Uses: {n}",
+        jobs: {
+            ask: "Ask Genos",
+            connected_app: "AI searches from connected apps",
+            schedule: "AI sentences in scheduled reports",
+            summary: "Summaries",
+            other: "Other AI use",
+        },
+        recentHeading: "Recent charges",
+        recentCap: "Your last 50 charges, newest first",
+        emptyTitle: "No AI use yet this month",
+        emptyBody:
+            "When Genos answers a question, writes a summary or a report sentence, the credits it used show up here.",
+        loadError: "Could not load your credit usage",
+        retry: "Try again",
+        notAuthoritative:
+            "Your plan limits daily AI requests rather than credits. Plan & Usage shows those limits.",
+        depletedWarning:
+            "You have no credits left. Buy credits or upgrade to keep using AI before your allowance renews.",
+        lowWarning: "Your credits are running low, so a long request may stop partway.",
+        buyCredits: "Buy credits",
+        upgrade: "Upgrade plan",
+        seeUsageLink: "See credit usage",
     },
     planUsage: {
         heading: "Plan & Usage",
