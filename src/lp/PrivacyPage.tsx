@@ -148,7 +148,7 @@ const JA_SECTIONS: Section[] = [
                     ：アプリ内の「設定 → アカウント →
                     アカウントを削除」から、ご自身で実行できます。実行すると、すべての端末から直ちにサインアウトされ、氏名・メールアドレス・プロフィールが匿名化されます。非公開のノート・To-Do・AI
                     の利用履歴は削除され、API キーは無効化されます。Google・GitHub
-                    との連携情報は当サービスから削除され、各サービス側の許可の取り消しも行います。チームのメンバーと共同で作成した内容（チームのノートを含む）はそのチームに残り、「削除されたユーザー」の名義になります。あなたが最後のメンバーであるチームは閉鎖されますが、内容は削除されず保存されたままです。他のメンバーがいるチームのオーナーである場合は、先にオーナー権限を譲渡する必要があります。
+                    との連携情報は当サービスから削除され、各サービス側の許可の取り消しも行います。チームのメンバーと共同で作成した内容（チームのノートを含む）はそのチームに残り、「削除されたユーザー」の名義になります。あなたが最後のメンバーであるチームは閉鎖され、そのチームのデータ（メッセージ、タスク、ノート、ファイルなど）はすべて完全に削除されます。他のメンバーがいるチームのオーナーである場合は、先にオーナー権限を譲渡する必要があります。
                 </p>
                 <p>
                     この操作の対象は当サービス内のデータです。次のものは、この操作では自動的には削除されません。
@@ -269,8 +269,9 @@ const EN_SECTIONS: Section[] = [
                     connection details we store are removed; we also revoke the access at Google
                     and GitHub. Work you did with teammates, including team notes, stays in their
                     workspace, attributed to "Deleted user". A team where you were the last member
-                    is closed, but its content is kept. If you own a team that still has other
-                    members, you must transfer ownership first.
+                    is closed and all of its data (messages, tasks, notes, files and more) is
+                    permanently deleted. If you own a team that still has other members, you must
+                    transfer ownership first.
                 </p>
                 <p>
                     Deletion covers the data within the service. The following are not deleted
