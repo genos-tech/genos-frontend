@@ -23,8 +23,7 @@ import {
 import { UserProps } from "../../types/admin";
 import { AllChatProps } from "../../types/chat";
 
-// The pause editor owns a live clock/timezone; the digest hook fetches. Neither
-// has anything to do with how a muted row is named.
+// The pause editor owns a live clock/timezone, which has nothing to do with how a muted row is named.
 vi.mock("../../services/notifications/NotificationPausePicker", () => ({
     NotificationPauseSection: () => null,
 }));

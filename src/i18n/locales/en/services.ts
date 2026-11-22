@@ -172,8 +172,6 @@ export const services = {
                 default: "Not yet allowed",
                 unsupported: "Unsupported",
             },
-            // Proactive digest (UX tier model §8) — server-backed
-            // opt-out; whether/how often it fires comes from the plan.
             // Email channel (independent of push/in-app; sent only after
             // you've been away for a while, batched into one email).
             emailHeading: "Email notifications",
