@@ -355,6 +355,7 @@ export const ja: DeepPartial<Messages> = {
                 title: "保留中の招待 ({count})",
                 detail: "招待者: {name} · 有効期限 {date}",
                 guestOf: "{project} のゲスト",
+                guestOfHidden: "非表示プロジェクトのゲスト",
                 cancelNamed: "{email} への招待を取り消す",
                 confirmTitle: "{email} への招待を取り消しますか？",
                 confirmBody: "メールのリンクはすぐに使えなくなります。後からまた招待できます。",
@@ -2061,6 +2062,7 @@ export const ja: DeepPartial<Messages> = {
         privacy: {
             privateLabel: "プライベート",
             privateHint: "オーナーに申請して参加します。名前は鍵アイコン付きで表示されます。",
+            privateLockedHint: "他のチームと共有しているグループは常に非公開です。",
             hiddenLabel: "非表示",
             hiddenHint:
                 "メンバーだけが存在を確認できます。一覧や検索に表示されず、招待でのみ参加できます。",

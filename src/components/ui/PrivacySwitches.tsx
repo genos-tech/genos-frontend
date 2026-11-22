@@ -8,6 +8,9 @@ interface PrivacySwitchesProps {
     isHidden: boolean;
     /** Who may switch: the project owner, or a group's owner or editor. Others see the state only. */
     canEdit: boolean;
+    /** A cross-team group must stay private (the server refuses otherwise): Private is shown on and
+     *  cannot be switched off, while Hidden stays switchable (MIP-1949). */
+    privateLocked?: boolean;
     busy?: boolean;
     errorMessage?: string | null;
     /** Called with the NEXT pair. Making the item public clears Hidden, as the server does. */
@@ -20,6 +23,7 @@ export function PrivacySwitches({
     isPrivate,
     isHidden,
     canEdit,
+    privateLocked = false,
     busy = false,
     errorMessage,
     onChange,
@@ -34,12 +38,12 @@ export function PrivacySwitches({
                         {copy.privateLabel}
                     </FormLabel>
                     <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                        {copy.privateHint}
+                        {privateLocked ? copy.privateLockedHint : copy.privateHint}
                     </Typography>
                 </Box>
                 <Switch
-                    checked={isPrivate}
-                    disabled={!canEdit || busy}
+                    checked={isPrivate || privateLocked}
+                    disabled={!canEdit || busy || privateLocked}
                     slotProps={{ input: { "aria-label": copy.privateLabel } }}
                     onChange={(e) =>
                         onChange({
@@ -55,14 +59,19 @@ export function PrivacySwitches({
                         {copy.hiddenLabel}
                     </FormLabel>
                     <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                        {isPrivate ? copy.hiddenHint : copy.hiddenNeedsPrivate}
+                        {isPrivate || privateLocked ? copy.hiddenHint : copy.hiddenNeedsPrivate}
                     </Typography>
                 </Box>
                 <Switch
-                    checked={isHidden && isPrivate}
-                    disabled={!canEdit || busy || !isPrivate}
+                    checked={isHidden && (isPrivate || privateLocked)}
+                    disabled={!canEdit || busy || !(isPrivate || privateLocked)}
                     slotProps={{ input: { "aria-label": copy.hiddenLabel } }}
-                    onChange={(e) => onChange({ isPrivate, isHidden: e.target.checked })}
+                    onChange={(e) =>
+                        onChange({
+                            isPrivate: isPrivate || privateLocked,
+                            isHidden: e.target.checked,
+                        })
+                    }
                 />
             </FormControl>
             {errorMessage && (

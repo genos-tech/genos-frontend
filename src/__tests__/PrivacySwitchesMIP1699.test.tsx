@@ -51,4 +51,18 @@ describe("PrivacySwitches", () => {
         expect(screen.getByRole("switch", { name: "Private" })).toBeDisabled();
         expect(screen.getByRole("switch", { name: "Hidden" })).toBeDisabled();
     });
+
+    it("locks Private on for a cross-team group but leaves Hidden switchable (MIP-1949)", () => {
+        const onChange = setup({ privateLocked: true, isPrivate: true });
+        const priv = screen.getByRole("switch", { name: "Private" });
+        expect(priv).toBeChecked();
+        expect(priv).toBeDisabled();
+        expect(
+            screen.getByText("A group shared with another team always stays private.")
+        ).toBeInTheDocument();
+        const hidden = screen.getByRole("switch", { name: "Hidden" });
+        expect(hidden).not.toBeDisabled();
+        fireEvent.click(hidden);
+        expect(onChange).toHaveBeenCalledWith({ isPrivate: true, isHidden: true });
+    });
 });

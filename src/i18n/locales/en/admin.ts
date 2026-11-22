@@ -343,6 +343,8 @@ export const admin = {
             title: "Pending invites ({count})",
             detail: "Invited by {name} · expires {date}",
             guestOf: "Guest of {project}",
+            // TODO(copy): MIP-1949 draft wording for a native reader.
+            guestOfHidden: "Guest of a hidden project",
             cancelNamed: "Cancel the invite for {email}",
             confirmTitle: "Cancel the invite for {email}?",
             confirmBody:

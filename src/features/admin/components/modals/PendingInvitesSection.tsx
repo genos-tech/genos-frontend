@@ -69,9 +69,11 @@ export const PendingInvitesSection = ({
                                 })}
                             </Typography>
                         </Box>
-                        {i.projectName && (
+                        {(i.projectName || i.projectHidden) && (
                             <Chip color="warning" size="sm" variant="soft">
-                                {fmt(p.guestOf, { project: i.projectName })}
+                                {i.projectName
+                                    ? fmt(p.guestOf, { project: i.projectName })
+                                    : p.guestOfHidden}
                             </Chip>
                         )}
                         <AppTooltip title={fmt(p.cancelNamed, { email: i.email })}>

@@ -1241,6 +1241,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                         errorMessage={privacyError}
                                         isHidden={!!gmProfile?.isHidden}
                                         isPrivate={!!gmProfile?.isPrivate}
+                                        privateLocked={gmProfile?.isExternal === true}
                                         onChange={(next) => void handlePrivacyChange(next)}
                                     />
 

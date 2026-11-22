@@ -48,6 +48,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { addMembersToProjectWithNotice } from "../../../../services/addMembersWithNotice";
 import { channelService } from "../../../../services/channel/channelService";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
+import { announceProjectPrivacyChanged } from "../../../../services/projectPrivacyChanged";
 import { g } from "../../../../theme/tokens";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
@@ -291,6 +292,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         const ok = await updateProjectProfile(accessToken, pmChatIdLegacy, next, setPrivacyError);
         if (ok) {
             setProjectProfile({ ...projectProfile, ...next });
+            // The sidebar lock, the Join list and Spotlight read the shared project list.
+            announceProjectPrivacyChanged({ projectId: projectProfile.projectId, ...next });
         }
         setPrivacyBusy(false);
     };
