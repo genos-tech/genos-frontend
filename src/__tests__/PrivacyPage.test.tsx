@@ -178,6 +178,25 @@ describe("PrivacyPage", () => {
         expect(en).toContain("does not remove it from existing backups until they expire");
     });
 
+    // MIP-2007: DRAFT wording for counsel. Pin the facts the agent-call log promises, so the
+    // page cannot drift from them (what is kept, what is never kept, who sees it, 90 days,
+    // export, account deletion).
+    it("states the private AI-app call log in both languages (MIP-2007 draft)", () => {
+        const { container } = renderPage();
+        const { ja, en } = splitText(container.textContent ?? "");
+        expect(ja).toMatch(/AI アプリの呼び出しログ[^]*?ツールの名前[^]*?ID[^]*?日時[^]*?アプリ/);
+        expect(ja).toMatch(/引数、検索のキーワード、結果）は保存しません/);
+        expect(ja).toMatch(/ご本人のみで[^]*?件数だけ/);
+        expect(ja).toMatch(/90\s*日間保存されたのち削除され、データのエクスポートに含まれます/);
+        expect(ja).toMatch(/アカウントを削除すると、記録も削除されます/);
+        expect(en).toMatch(/AI-app call log:[^]*?which tool was called[^]*?which app made\s+it/);
+        expect(en).toMatch(/no arguments, no search text,\s+no results/);
+        expect(en).toMatch(/Only you can see your records; a team owner sees only counts/);
+        expect(en).toMatch(
+            /kept for 90 days[^]*?included if\s+you export your data[^]*?delete your account/
+        );
+    });
+
     it("does not make claims that are unverified or placeholders", () => {
         const { container } = renderPage();
         const text = container.textContent ?? "";
