@@ -1,5 +1,5 @@
-import { useMemo, useRef, type ReactNode } from "react";
-import { Box, Stack, Typography } from "@mui/joy";
+import { useMemo, useRef, useState, type ReactNode } from "react";
+import { Box, Button, Stack, Typography } from "@mui/joy";
 import { useLocation, useSearchParams } from "react-router-dom";
 
 import { requestOpenSettings } from "../../../../../components/layout/settingsEvents";
@@ -17,14 +17,17 @@ import {
     parseAgentFilters,
     writeAgentFilters,
 } from "../../../agentActivity/agentActivityFilters";
+import { buildAppStrip, groupsForSession } from "../../../agentActivity/agentSessions";
 import { useAgentWork } from "../../../hooks/useAgentWork";
 import { AgentWorkUserAgentRow } from "../../../services/loadAgentWork";
 import type { ProjectIdentity } from "../../ProjectIdentityRow";
 import { familyKind, formatAgentWhen } from "./agentActivityLinks";
+import { AgentAppStrip } from "./AgentAppStrip";
 import { AgentConnectionsList } from "./AgentConnectionsList";
 import { AgentDecisionsList } from "./AgentDecisionsList";
 import { AgentFilterBar } from "./AgentFilterBar";
 import { AgentProjectGroups } from "./AgentProjectGroups";
+import { AgentSessionsView } from "./AgentSessionsView";
 import { AgentSummaryRow } from "./AgentSummaryRow";
 import { AgentWhoTable } from "./AgentWhoTable";
 
@@ -74,6 +77,9 @@ export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, tea
         setSearch((prev) => writeAgentFilters(prev, next), { replace: true });
     };
     const clearFilters = () => applyFilters(DEFAULT_AGENT_FILTERS);
+    // One click on a session narrows the change list to that run (MIP-2003). Local state: a run
+    // id is not something to share in a link.
+    const [sessionRunId, setSessionRunId] = useState<string | null>(null);
 
     const page = view.page;
     const filtered = hasActiveAgentFilters(filters);
@@ -171,18 +177,55 @@ export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, tea
             );
         }
 
+        const sessions = page.sessions.items;
+        const activeSession = sessions.find((s) => s.run_id === sessionRunId) ?? null;
+        const groups = activeSession ? groupsForSession(page.groups, activeSession) : page.groups;
+        const stripRows = buildAppStrip(page.connections, sessions);
         body = (
             <Stack spacing={2.5} sx={{ minWidth: 0 }}>
                 {empty}
+                {stripRows.length > 0 && <AgentAppStrip rows={stripRows} />}
+                {(sessions.length > 0 || !nothingInWindow) && (
+                    <AgentSessionsView
+                        activeRunId={activeSession?.run_id ?? null}
+                        sessions={sessions}
+                        total={page.sessions.total}
+                        onPick={setSessionRunId}
+                    />
+                )}
                 {!nothingInWindow && (
                     <>
                         <AgentSummaryRow totals={page.totals} />
                         {page.by_user_agent.length > 0 && (
                             <AgentWhoTable rows={page.by_user_agent} />
                         )}
+                        {activeSession && (
+                            <Stack
+                                alignItems="center"
+                                data-testid="agent-session-filter-banner"
+                                direction="row"
+                                spacing={1}
+                                sx={{ flexWrap: "wrap" }}
+                                useFlexGap
+                            >
+                                <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+                                    {fmt(a.sessions.filtered, {
+                                        count: groups.reduce((n, grp) => n + grp.items.length, 0),
+                                    })}
+                                </Typography>
+                                <Button
+                                    color="neutral"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => setSessionRunId(null)}
+                                >
+                                    {a.sessions.showAll}
+                                </Button>
+                            </Stack>
+                        )}
                         {page.groups.length > 0 && (
                             <AgentProjectGroups
-                                groups={page.groups}
+                                groups={groups}
                                 hasMore={view.hasMore}
                                 loadingMore={view.loadingMore}
                                 loadMoreFailed={view.loadMoreFailed}
@@ -192,7 +235,7 @@ export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, tea
                         <AgentDecisionsList decisions={page.decisions} />
                     </>
                 )}
-                {(nothingInWindow || page.connections.length > 0) && (
+                {nothingInWindow && stripRows.length === 0 && (
                     <AgentConnectionsList connections={page.connections} />
                 )}
             </Stack>
