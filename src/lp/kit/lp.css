@@ -1763,6 +1763,15 @@ a.lp-row:hover .lp-row__arrow {
     font-weight: 500;
 }
 
+/* Small print under a row label: what the number is counted against (per key, per team, ...). */
+.lp-plans__hint {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--lp-text-secondary);
+}
+
 .lp-plans__tier {
     vertical-align: top;
     padding: 20px;
