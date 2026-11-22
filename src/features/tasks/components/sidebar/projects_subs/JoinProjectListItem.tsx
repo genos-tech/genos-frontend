@@ -72,6 +72,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
             storageKey="join-project"
             renderToggle={({ open, setOpen }) => (
                 <NavItem
+                    as="div"
                     expanded={open}
                     icon={<LoginIcon />}
                     label={t.tasks.sidebar.joinProject}
@@ -80,6 +81,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     }}
                 />
             )}
+            asListItem
         >
             <List sx={navNestedListSx}>
                 {unjoined.length > 0 && (

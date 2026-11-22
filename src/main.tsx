@@ -31,7 +31,6 @@ import { startLabellingExternalLinks } from "./utils/labelExternalLinks";
 import { App } from "./App";
 import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
 import type { SegmentKey } from "./lp/segments";
-import { termsRoutes } from "./lp/termsRoute";
 
 // The public marketing pages are code-split away from the app entry.
 // They are the only consumers of framer-motion, and nobody who opens
@@ -55,6 +54,7 @@ const GenosLandingPage = lazy(() => import("./lp/LandingPage"));
 const GenosLegalPage = lazy(() => import("./lp/LegalPage"));
 const GenosPlansPage = lazy(() => import("./lp/PlansPage"));
 const GenosPrivacyPage = lazy(() => import("./lp/PrivacyPage"));
+const GenosTermsPage = lazy(() => import("./lp/TermsPage"));
 const GenosSubprocessorsPage = lazy(() => import("./lp/SubprocessorsPage"));
 const GenosCookiesPage = lazy(() => import("./lp/CookiesPage"));
 const GenosSegmentPage = lazy(() => import("./lp/SegmentLandingPage"));
@@ -172,19 +172,15 @@ const tree = (
             <Route element={publicPage(GenosSubprocessorsPage)} path="/subprocessors" />
             <Route element={publicPage(GenosCookiesPage)} path="/cookies" />
 
-            {/* 利用規約 — the public Terms of Service. DRAFT, behind the
-                build-time flag VITE_SHOW_TERMS_PAGE (default off): with the flag
-                off nothing is registered, the URL renders the 404 page and the
-                page chunk is not even built. See lp/termsRoute.tsx. */}
-            {termsRoutes()}
+            {/* 利用規約 — the public Terms of Service (interim v1, MIP-1843). */}
+            <Route element={publicPage(GenosTermsPage)} path="/terms" />
 
             {/* Contact form (MIP-1261): mailed to support, not stored. ?topic=enterprise is the Enterprise variant. */}
             <Route element={publicPage(GenosContactPage)} path="/contact" />
 
             {/* Support — how to reach us and how to disconnect a connected AI
                 app. Public and auth-free like /legal and /privacy; holds its
-                own ja + en copy. (/terms exists only behind VITE_SHOW_TERMS_PAGE;
-                the terms are an interim draft.) */}
+                own ja + en copy. */}
             <Route element={publicPage(GenosSupportPage)} path="/support" />
 
             {/* Moving into Genos (MIP-1260): what imports today and what does not. Public, like /docs. */}

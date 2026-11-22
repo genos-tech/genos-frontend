@@ -1305,7 +1305,7 @@ export const tasks = {
                 sortByCount: "Sort by changes",
             },
             groups: {
-                changes: "{count} changes",
+                changes: "{count, plural, one {# change} other {# changes}}",
                 loadMore: "Load more",
                 loadingMore: "Loading…",
                 loadMoreFailed: "Could not load more. Try again.",

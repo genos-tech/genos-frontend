@@ -1279,11 +1279,17 @@ const CanvasInner = ({
     const cardNodes = useMemo(
         () =>
             drawn.nodes.map((n) => {
-                const d = n.data as unknown as TaskNodeData;
+                // MIP-1925: band caption nodes carry no task; leave them as they are.
+                const d = n.data as unknown as TaskNodeData | undefined;
+                if (n.type === BAND_LABEL_NODE_TYPE || !d?.task) return n;
                 const status = d.task.status ?? "";
                 return {
                     ...n,
                     ariaRole: "button",
+                    // MIP-1928: React Flow sets aria-roledescription="node" on every card, so a
+                    // screen reader said "node" (English) over the card's own role. domAttributes
+                    // is spread last, so undefined removes it and the role ("button") is read.
+                    domAttributes: { "aria-roledescription": undefined },
                     ariaLabel: fmt(t.tasks.diagram.tooltips.cardAriaLabel, {
                         id: d.task.displayId ?? String(d.task.id),
                         title: d.task.title ?? "",
