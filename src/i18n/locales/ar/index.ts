@@ -2499,6 +2499,11 @@ export const ar: DeepPartial<Messages> = {
             reading: "جارٍ قراءة الملف…",
             detectedJira: "تم اكتشاف تصدير من Jira",
             detectedNotion: "تم اكتشاف تصدير قاعدة بيانات من Notion",
+            // TODO(copy): MIP-1837 draft wording for a native reader.
+            detectedJiraJson: "تم اكتشاف تصدير JSON من Jira",
+            colComments: "التعليقات",
+            jiraJsonHelp:
+                "لتصدير مشروع Jira بصيغة JSON، افتح عنوان واجهة البحث الخاصة به في المتصفح وأنت مسجّل الدخول إلى Jira ثم احفظ الصفحة: /rest/api/3/search/jql?jql=project%3DKEY&fields=summary,description,status,priority,assignee,duedate,labels,parent,comment,attachment&expand=changelog&maxResults=100. لا يطلب Genos كلمة مرور Jira أو الرمز المميز أبدًا.",
             detectedGeneric: "ملف CSV",
             rowsInFile: "{count} صفًا",
             mapIntro: "اربط كل حقل في Genos بعمود في ملفك. اترك الحقل على «غير مستخدم» لتخطيه.",
@@ -2573,6 +2578,7 @@ export const ar: DeepPartial<Messages> = {
             errEmptyFile: "الملف فارغ.",
             errBadEncoding: "تعذّرت قراءة الملف. احفظه بصيغة CSV بترميز UTF-8 وأعد المحاولة.",
             errBadCsv: "لا يبدو هذا ملف CSV.",
+            errBadJson: "ملف JSON هذا ليس تصدير بحث من Jira.",
             errArchived: "هذا المشروع مؤرشف. استعده قبل الاستيراد.",
             errForbidden: "المحرّر أو مالك هذا المشروع فقط يمكنه استيراد المهام.",
             errQuota: "وصلت إلى حد المهام لهذا الشهر.",

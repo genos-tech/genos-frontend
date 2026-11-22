@@ -5392,12 +5392,18 @@ export const ja: DeepPartial<Messages> = {
             stepMap: "列",
             stepPreview: "プレビュー",
             stepResult: "結果",
-            chooseFile: "CSVファイルを選択",
+            chooseFile: "CSVまたはJira JSONファイルを選択",
             fileHint:
                 "最大{rows}行・{mb} MBまで。JiraやNotionの書き出しは自動で認識し、列も自動で割り当てます。",
             reading: "ファイルを読み込み中…",
             detectedJira: "Jiraの書き出しを検出しました",
             detectedNotion: "Notionデータベースの書き出しを検出しました",
+            // TODO(copy): MIP-1837 draft wording for a native reader.
+            detectedJiraJson: "JiraのJSON書き出しを検出しました",
+            colComments: "コメント",
+            jiraJsonHelp:
+                "JiraプロジェクトをJSONで書き出すには、Jiraにログインしたブラウザで検索APIのアドレスを開き、ページを保存します: /rest/api/3/search/jql?jql=project%3DKEY&fields=summary,description,status,priority,assignee,duedate,labels,parent,comment,attachment&expand=changelog&maxResults=100。GenosがJiraのパスワードやトークンを求めることはありません。",
+            errBadJson: "このJSONファイルはJiraの検索結果ではありません。",
             detectedGeneric: "CSVファイル",
             rowsInFile: "{count}行",
             mapIntro:

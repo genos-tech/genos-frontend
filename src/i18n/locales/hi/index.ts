@@ -2526,6 +2526,11 @@ export const hi: DeepPartial<Messages> = {
             reading: "फ़ाइल पढ़ी जा रही है…",
             detectedJira: "Jira एक्सपोर्ट पहचाना गया",
             detectedNotion: "Notion डेटाबेस एक्सपोर्ट पहचाना गया",
+            // TODO(copy): MIP-1837 draft wording for a native reader.
+            detectedJiraJson: "Jira JSON एक्सपोर्ट पहचाना गया",
+            colComments: "टिप्पणियाँ",
+            jiraJsonHelp:
+                "Jira प्रोजेक्ट को JSON में एक्सपोर्ट करने के लिए, Jira में साइन इन ब्राउज़र में उसके सर्च API का पता खोलें और पेज सेव करें: /rest/api/3/search/jql?jql=project%3DKEY&fields=summary,description,status,priority,assignee,duedate,labels,parent,comment,attachment&expand=changelog&maxResults=100। Genos आपसे कभी Jira का पासवर्ड या टोकन नहीं मांगता।",
             detectedGeneric: "CSV फ़ाइल",
             rowsInFile: "{count} पंक्तियाँ",
             mapIntro:
@@ -2603,6 +2608,7 @@ export const hi: DeepPartial<Messages> = {
             errBadEncoding:
                 "फ़ाइल पढ़ी नहीं जा सकी। उसे UTF-8 CSV के रूप में सहेजकर दोबारा कोशिश करें।",
             errBadCsv: "यह CSV फ़ाइल नहीं लगती।",
+            errBadJson: "यह JSON फ़ाइल Jira सर्च एक्सपोर्ट नहीं है।",
             errArchived: "यह प्रोजेक्ट संग्रहीत है। इम्पोर्ट से पहले उसे बहाल करें।",
             errForbidden: "केवल इस प्रोजेक्ट का संपादक या मालिक टास्क इम्पोर्ट कर सकता है।",
             errQuota: "आप इस महीने की टास्क सीमा तक पहुँच गए हैं।",

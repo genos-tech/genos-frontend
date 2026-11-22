@@ -5194,6 +5194,11 @@ export const zh: DeepPartial<Messages> = {
             reading: "正在读取文件…",
             detectedJira: "已识别为 Jira 导出文件",
             detectedNotion: "已识别为 Notion 数据库导出文件",
+            // TODO(copy): MIP-1837 draft wording for a native reader.
+            detectedJiraJson: "已识别为 Jira JSON 导出文件",
+            colComments: "评论",
+            jiraJsonHelp:
+                "要将 Jira 项目导出为 JSON,请在已登录 Jira 的浏览器中打开其搜索 API 地址并保存页面:/rest/api/3/search/jql?jql=project%3DKEY&fields=summary,description,status,priority,assignee,duedate,labels,parent,comment,attachment&expand=changelog&maxResults=100。Genos 不会向你索要 Jira 密码或令牌。",
             detectedGeneric: "CSV 文件",
             rowsInFile: "{count} 行",
             mapIntro: "将每个 Genos 字段对应到文件中的一列。不需要的字段保持“不使用”即可。",
@@ -5268,6 +5273,7 @@ export const zh: DeepPartial<Messages> = {
             errEmptyFile: "文件是空的。",
             errBadEncoding: "无法读取该文件。请另存为 UTF-8 编码的 CSV 后重试。",
             errBadCsv: "这看起来不是 CSV 文件。",
+            errBadJson: "这个 JSON 文件不是 Jira 搜索导出文件。",
             errArchived: "该项目已归档。请先恢复再导入。",
             errForbidden: "只有该项目的编辑者或所有者可以导入任务。",
             errQuota: "你已达到本月的任务数量上限。",

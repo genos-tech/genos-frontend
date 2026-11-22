@@ -2540,6 +2540,11 @@ export const es: DeepPartial<Messages> = {
             reading: "Leyendo el archivo…",
             detectedJira: "Exportación de Jira detectada",
             detectedNotion: "Exportación de una base de datos de Notion detectada",
+            // TODO(copy): MIP-1837 draft wording for a native reader.
+            detectedJiraJson: "Exportación JSON de Jira detectada",
+            colComments: "Comentarios",
+            jiraJsonHelp:
+                "Para exportar un proyecto de Jira en JSON, abre en el navegador, con la sesión de Jira iniciada, la dirección de su API de búsqueda y guarda la página: /rest/api/3/search/jql?jql=project%3DKEY&fields=summary,description,status,priority,assignee,duedate,labels,parent,comment,attachment&expand=changelog&maxResults=100. Genos nunca te pide tu contraseña ni tu token de Jira.",
             detectedGeneric: "Archivo CSV",
             rowsInFile: "{count} filas",
             mapIntro:
@@ -2618,6 +2623,7 @@ export const es: DeepPartial<Messages> = {
             errBadEncoding:
                 "No se pudo leer el archivo. Guárdalo como CSV en UTF-8 e inténtalo de nuevo.",
             errBadCsv: "Esto no parece un archivo CSV.",
+            errBadJson: "Este archivo JSON no es una exportación de búsqueda de Jira.",
             errArchived: "Este proyecto está archivado. Restáuralo antes de importar.",
             errForbidden:
                 "Solo un editor o el propietario de este proyecto puede importar tareas.",
