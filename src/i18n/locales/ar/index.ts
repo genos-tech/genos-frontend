@@ -14,6 +14,11 @@ export const ar: DeepPartial<Messages> = {
         feedback: {
             loading: "جارٍ التحميل…",
             loadFailedBody: "تحقّق من اتصالك ثم حاول مرة أخرى.",
+            demoSetup: {
+                preparing: "جارٍ إعداد مساحة العمل التجريبية…",
+                failed: "تعذّر إعداد مساحة العمل التجريبية.",
+                retry: "أعد المحاولة",
+            },
             sync: {
                 banner: "تعذّرت مزامنة مساحة العمل.",
                 bannerRetrying: "جارٍ مزامنة مساحة العمل…",
@@ -4569,6 +4574,7 @@ export const ar: DeepPartial<Messages> = {
             thinking: "جارٍ التفكير…",
             streaming: "جارٍ البث…",
             awaitingApproval: "بانتظار موافقتك",
+            archived: "مؤرشف",
             untitled: "(بدون عنوان)",
             noAnswer: "(لا توجد إجابة)",
         },

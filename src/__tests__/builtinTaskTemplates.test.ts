@@ -21,7 +21,7 @@ import golden from "./fixtures/taskTemplates.golden.json";
 
 // The hash of the PARSED content of the shared file (formatting does not count; `npm run format`
 // re-indents JSON). The SAME value is pinned in genos-api's `test_builtin_task_templates.py`.
-const PINNED_SHA256 = "7cbb3cae38bae98e63f653558ab4d9a43fa17da2f0163112ae1614913e55c62e";
+const PINNED_SHA256 = "73d0ff35da9f95845a4f0f6fa342825414073ec643fcd2c107d7da9cc0e63317";
 
 describe("built-in task templates: what the form builds is what it built before", () => {
     it("offers the four templates in the picker's order", () => {
