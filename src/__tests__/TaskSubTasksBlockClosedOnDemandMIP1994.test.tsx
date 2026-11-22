@@ -48,14 +48,6 @@ const renderBlock = () =>
         <CssVarsProvider>
             <VirtuosoMockContext.Provider value={{ viewportHeight: 300, itemHeight: 44 }}>
                 <TaskSubTasksBlock
-                    currentTaskContent={
-                        {
-                            id: PARENT,
-                            rootTaskId: PARENT,
-                            title: "Ship v2",
-                            project: { projectId: PROJECT, projectName: "P" },
-                        } as unknown as TaskProps
-                    }
                     emptyText="No tasks yet"
                     forceLoad={true}
                     myself={{ userId: "u1" } as never}
@@ -66,6 +58,14 @@ const renderBlock = () =>
                     useTEM={{ teamMemberProfiles: {} } as unknown as TeamManagementState}
                     useTM={{ currentPreviewTaskId: -1 } as unknown as TaskManagementState}
                     useUISM={{} as never}
+                    currentTaskContent={
+                        {
+                            id: PARENT,
+                            rootTaskId: PARENT,
+                            title: "Ship v2",
+                            project: { projectId: PROJECT, projectName: "P" },
+                        } as unknown as TaskProps
+                    }
                 />
             </VirtuosoMockContext.Provider>
         </CssVarsProvider>
