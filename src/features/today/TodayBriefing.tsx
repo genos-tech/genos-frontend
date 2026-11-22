@@ -20,6 +20,7 @@ import {
     taskHref,
 } from "./briefingToday";
 import { changeLine, reasonLine } from "./briefingWords";
+import { TodayAction } from "./todayActions";
 import { TodaySummary } from "./TodaySummary";
 import { TodayTaskRow } from "./TodayTaskRow";
 import { BriefingTodayView } from "./useBriefingToday";
@@ -28,6 +29,8 @@ import { BriefingTodayView } from "./useBriefingToday";
 type Variant = "page" | "card";
 
 type Props = {
+    /** Page only: "Mark done" / "Move to tomorrow" on the member's own rows (MIP-1992). */
+    onAction?: (task: BriefingTask, action: TodayAction) => void;
     view: BriefingTodayView;
     variant?: Variant;
     /** Card only: where "Open Today" goes (the dashboard tab). */
@@ -200,7 +203,7 @@ const total = (d: BriefingToday): number =>
     d.blocked.length +
     d.delegatedTotal;
 
-export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) => {
+export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction }: Props) => {
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.today;
     const card = variant === "card";
@@ -310,7 +313,9 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
         }
         const waitingCount = d.requests.length + d.mentions.length;
         const blockedBy = new Map(d.blocked.map((b) => [b.taskId, b.waitingFor]));
-        const taskRow = (task: BriefingTask, context?: ReactNode) => (
+        // Actions only where the task is the member's own to finish: due and "look at these
+        // first". Delegated rows belong to someone else.
+        const taskRow = (task: BriefingTask, context?: ReactNode, actions = false) => (
             <TodayTaskRow
                 key={task.taskId}
                 blockedBy={blockedBy.get(task.taskId)}
@@ -319,6 +324,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                 href={taskHref(task)}
                 projectAvatarSrc={task.projectId != null ? avatars.get(task.projectId) : undefined}
                 task={withProjectName(task, projects)}
+                onAction={actions && onAction ? (act) => onAction(task, act) : undefined}
                 onOpen={open}
             />
         );
@@ -349,13 +355,13 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                     {d.overdue.length > 0 ? (
                         <>
                             {groupLabel(a.tiles.overdue, d.overdueCount)}
-                            {d.overdue.map((task) => taskRow(task))}
+                            {d.overdue.map((task) => taskRow(task, undefined, true))}
                         </>
                     ) : null}
                     {d.dueToday.length > 0 ? (
                         <>
                             {groupLabel(a.dueToday, d.dueTodayCount)}
-                            {d.dueToday.map((task) => taskRow(task))}
+                            {d.dueToday.map((task) => taskRow(task, undefined, true))}
                         </>
                     ) : null}
                 </Section>
@@ -364,7 +370,9 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
         if (d.suggestedNext.length > 0) {
             mainSections.push(
                 <Section key="next" count={d.suggestedNext.length} title={a.sections.next}>
-                    {d.suggestedNext.map((task) => taskRow(task, reasonLine(task, a, locale)))}
+                    {d.suggestedNext.map((task) =>
+                        taskRow(task, reasonLine(task, a, locale), true)
+                    )}
                 </Section>
             );
         }

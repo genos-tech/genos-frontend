@@ -6654,6 +6654,14 @@ export const ja: DeepPartial<Messages> = {
                     blocked: "ブロック中",
                     waitingOn: "{ids} 待ち",
                 },
+                actions: {
+                    group: "{task} のクイック操作",
+                    done: "完了にする",
+                    tomorrow: "明日に移す",
+                    doneToast: "{task} を完了にしました",
+                    tomorrowToast: "{task} を {date} に移しました",
+                    failed: "{task} を更新できませんでした。何も変更されていません。",
+                },
                 empty: {
                     title: "今日は予定がありません",
                     body: "期限も返事待ちも変更もありません。集中作業にぴったりの日です。",

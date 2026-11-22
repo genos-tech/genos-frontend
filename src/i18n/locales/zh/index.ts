@@ -6405,6 +6405,14 @@ export const zh: DeepPartial<Messages> = {
                     blocked: "被阻塞",
                     waitingOn: "等待 {ids}",
                 },
+                actions: {
+                    group: "{task} 的快捷操作",
+                    done: "标记为完成",
+                    tomorrow: "移到明天",
+                    doneToast: "{task} 已标记为完成",
+                    tomorrowToast: "{task} 已移到 {date}",
+                    failed: "无法更新 {task}。未做任何更改。",
+                },
                 empty: {
                     title: "今天很清闲",
                     body: "没有到期事项，没有待回复，也没有变更。适合专注工作。",

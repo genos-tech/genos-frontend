@@ -3534,6 +3534,14 @@ export const es: DeepPartial<Messages> = {
                     blocked: "Bloqueada",
                     waitingOn: "Espera a {ids}",
                 },
+                actions: {
+                    group: "Acciones rápidas para {task}",
+                    done: "Marcar como hecha",
+                    tomorrow: "Pasar a mañana",
+                    doneToast: "{task} marcada como hecha",
+                    tomorrowToast: "{task} pasada al {date}",
+                    failed: "No se pudo actualizar {task}. No se cambió nada.",
+                },
                 empty: {
                     title: "Tu día está despejado",
                     body: "No vence nada, nada necesita respuesta y nada cambió. Buen momento para trabajar a fondo.",

@@ -1430,6 +1430,15 @@ export const tasks = {
                 blocked: "Blocked",
                 waitingOn: "Waiting on {ids}",
             },
+            // MIP-1992: quick actions on a row. Drafts for a native reader (TODO(copy)).
+            actions: {
+                group: "Quick actions for {task}",
+                done: "Mark done",
+                tomorrow: "Move to tomorrow",
+                doneToast: "{task} marked done",
+                tomorrowToast: "{task} moved to {date}",
+                failed: "Could not update {task}. Nothing was changed.",
+            },
             empty: {
                 title: "Your day is clear",
                 body: "Nothing is due, nothing needs an answer and nothing changed. A good time for deep work.",

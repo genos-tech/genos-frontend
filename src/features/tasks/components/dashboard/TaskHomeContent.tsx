@@ -309,7 +309,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
 
                             {/* Today (MIP-1005): what is due, what waits on me, what changed. */}
                             {!tasksUnread && activeTab === "today" && (
-                                <TodayTab todayView={todayView} />
+                                <TodayTab myself={myself} todayView={todayView} useTM={useTM} />
                             )}
 
                             {/* ════════ TAB: Overall Insights ════════ */}
