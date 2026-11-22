@@ -5724,9 +5724,6 @@ export const ja: DeepPartial<Messages> = {
             tasksSuffix: " 件のタスク",
         },
         milestones: {
-            sectionInSprint: "{name} のマイルストーン",
-            sectionNoSprint: "マイルストーン（スプリントなし）",
-            noMilestones: "このスプリントにはまだマイルストーンがありません。",
             untitled: "無題のマイルストーン",
         },
         deleteSprint: {

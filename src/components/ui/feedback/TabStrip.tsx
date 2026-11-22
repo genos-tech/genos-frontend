@@ -171,7 +171,12 @@ export const TabStrip = ({
             el.removeEventListener("scroll", measureCues);
             ro.disconnect();
         };
-    }, [measureCues, tabs.length]);
+    }, [measureCues]);
+    // A tab's width can change without the strip's box changing (a title arrives, a count badge
+    // appears, the language switches): measure again whenever the tabs do.
+    useLayoutEffect(() => {
+        measureCues();
+    }, [measureCues, tabs]);
 
     // Keep the selected tab visible when the strip scrolls (many note tabs).
     useEffect(() => {
@@ -285,6 +290,8 @@ export const TabStrip = ({
                     flex: "1 1 auto",
                     minWidth: 0,
                     overflowX: "auto",
+                    // The tab scrolled into view stops clear of the fade.
+                    scrollPaddingInline: `${CUE_W}px`,
                     scrollbarWidth: "none",
                     "&::-webkit-scrollbar": { display: "none" },
                     ...(baseline ? { boxShadow: `inset 0 -1px 0 ${g.border.subtle}` } : null),

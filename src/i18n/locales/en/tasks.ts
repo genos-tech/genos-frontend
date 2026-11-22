@@ -442,9 +442,6 @@ export const tasks = {
 
     // Milestones section in board / dashboard.
     milestones: {
-        sectionInSprint: "Milestones in {name}",
-        sectionNoSprint: "Milestones (no sprint)",
-        noMilestones: "No milestones in this sprint yet.",
         untitled: "Untitled milestone",
     },
 
@@ -1156,7 +1153,7 @@ export const tasks = {
         emptySprintSubtitle: "Assign tasks to this sprint or create new ones",
         emptyBacklogSubtitle: "Tasks not attached to a sprint will show here",
         emptyCreateTask: "New task",
-        // My Tasks "Up Next" — sort selector + plain-language help.
+        // People tab "Up Next" — sort selector + plain-language help.
         upNext: {
             byWeight: "By weight",
             byUrgency: "By urgency",
@@ -1167,7 +1164,7 @@ export const tasks = {
             title: "Up Next",
             allClosed: "All your assigned tasks are closed — nothing to do here.",
         },
-        // My Tasks "Assigned Milestones" — the ongoing milestones the user is
+        // People tab "Assigned Milestones" — the ongoing milestones the user is
         // an assignee of, in the current project. Cards open the task graph.
         assignedMilestones: {
             title: "Assigned Milestones",
@@ -1180,7 +1177,7 @@ export const tasks = {
             // had real progress ("3 days ago").
             lastProgress: "Last progress {when}",
         },
-        // "Member's Tasks" tab — the same stats as My Tasks, for a picked member.
+        // People tab, for a picked member (not me).
         memberTasks: {
             nothingAssignedTitle: "Nothing assigned to this member",
             nothingAssignedBody: "Assign this member a task in this project to see it here.",
@@ -1213,8 +1210,6 @@ export const tasks = {
         topWeight: {
             title: "Top by Weight",
             subtitle: "Start these now",
-            // Tooltip on the active sort chip — the inactive ones just
-            // switch field, so the hint would be misleading there.
             help: {
                 title: "What is Task Weight?",
                 body: "A 1–25 score of how much a task needs to be started now. Weight = priority × time pressure to get started. Heavier effort levels start building that pressure earlier — an extensive task begins climbing about a week before its due date, a quick one only in the last few days — so big jobs surface while there's still room to work on them. The bigger the number, the sooner it should be picked up.",

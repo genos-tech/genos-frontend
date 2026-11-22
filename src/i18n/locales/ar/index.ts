@@ -2807,9 +2807,6 @@ export const ar: DeepPartial<Messages> = {
                 "لا يوجد أحد لإضافته. يجب أن يكون المتعاونون أعضاءً في هذا المشروع.",
         },
         milestones: {
-            sectionInSprint: "المعالم في {name}",
-            sectionNoSprint: "المعالم (بدون سبرنت)",
-            noMilestones: "لا توجد معالم في هذا السبرنت بعد.",
             untitled: "معلم بدون عنوان",
         },
         deleteSprint: {

@@ -2841,9 +2841,6 @@ export const hi: DeepPartial<Messages> = {
             tasksSuffix: " टास्क",
         },
         milestones: {
-            sectionInSprint: "{name} में माइलस्टोन",
-            sectionNoSprint: "माइलस्टोन (कोई स्प्रिंट नहीं)",
-            noMilestones: "इस स्प्रिंट में अभी कोई माइलस्टोन नहीं है।",
             untitled: "बिना शीर्षक का माइलस्टोन",
         },
         deleteSprint: {

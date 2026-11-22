@@ -5509,9 +5509,6 @@ export const zh: DeepPartial<Messages> = {
             tasksSuffix: " 个任务",
         },
         milestones: {
-            sectionInSprint: "{name} 中的里程碑",
-            sectionNoSprint: "里程碑（无冲刺）",
-            noMilestones: "此冲刺下还没有里程碑。",
             untitled: "未命名里程碑",
         },
         deleteSprint: {

@@ -5803,9 +5803,6 @@ export const fr: DeepPartial<Messages> = {
             tasksSuffix: " tâches",
         },
         milestones: {
-            sectionInSprint: "Jalons dans {name}",
-            sectionNoSprint: "Jalons (aucun sprint)",
-            noMilestones: "Aucun jalon dans ce sprint pour le moment.",
             untitled: "Jalon sans titre",
         },
         deleteSprint: {

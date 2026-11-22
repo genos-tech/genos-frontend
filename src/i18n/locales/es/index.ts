@@ -2857,9 +2857,6 @@ export const es: DeepPartial<Messages> = {
                 "No hay nadie a quien agregar. Los colaboradores deben ser miembros de este proyecto.",
         },
         milestones: {
-            sectionInSprint: "Hitos en {name}",
-            sectionNoSprint: "Hitos (sin sprint)",
-            noMilestones: "Aún no hay hitos en este sprint.",
             untitled: "Hito sin título",
         },
         deleteSprint: {
