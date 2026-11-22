@@ -13,9 +13,9 @@ const setup = (props: Partial<Parameters<typeof PrivacySwitches>[0]> = {}) => {
     render(
         <CssVarsProvider>
             <PrivacySwitches
-                canEdit
                 isHidden={false}
                 isPrivate={false}
+                canEdit
                 onChange={onChange}
                 {...props}
             />
