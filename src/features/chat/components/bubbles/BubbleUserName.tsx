@@ -1,6 +1,6 @@
 import { Box, Stack } from "@mui/joy";
 
-import { ResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
+import { AuthorName } from "../../../../components/ui/avatars/GenosAuthor";
 import { BubbleAuthor, BubbleMeta } from "../../../../components/ui/bubble";
 import { ViaChip } from "../../../../components/ui/misc/ViaChip";
 import { useTranslation } from "../../../../i18n";
@@ -128,7 +128,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                     re-renders on `teamMemberProfiles` churn.
                                     Falls back to the name frozen on the
                                     message when the sender is in no roster. */}
-                                <ResolvedUserName
+                                <AuthorName
                                     fallbackName={sender.userName}
                                     userId={sender.userId}
                                 />

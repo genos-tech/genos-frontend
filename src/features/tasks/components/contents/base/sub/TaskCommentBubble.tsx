@@ -14,8 +14,7 @@ import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
-import { ResolvedUserName } from "../../../../../../components/ui/avatars/AvatarContext";
-import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
+import { AuthorAvatar, AuthorName } from "../../../../../../components/ui/avatars/GenosAuthor";
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../../../../../components/ui/bubble";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
@@ -627,7 +626,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const header = (
         <Stack alignItems="center" direction="row" spacing={1}>
             <BubbleAuthor>
-                <ResolvedUserName fallbackName={comment.senderName} userId={comment.senderId} />
+                <AuthorName fallbackName={comment.senderName} userId={comment.senderId} />
             </BubbleAuthor>
             <BubbleMeta>
                 {isEdited ? `${sentLabel} ${t.chat.bubble.edited}` : sentLabel}
@@ -639,7 +638,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     );
 
     const senderAvatar = (
-        <UserAvatar
+        <AuthorAvatar
             fallbackName={comment.senderName}
             showPulseDot={false}
             userId={comment.senderId}
