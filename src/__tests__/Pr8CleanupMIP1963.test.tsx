@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -48,7 +49,7 @@ describe("Velocity with nothing in the window", () => {
 
 describe("ProjectAvatar in a picker (MIP-1981)", () => {
     // The real props are a dozen app-state objects; the test only needs the two it reads.
-    const Avatar = ProjectAvatar as unknown as (p: Record<string, unknown>) => JSX.Element;
+    const Avatar = ProjectAvatar as unknown as (p: Record<string, unknown>) => ReactElement;
     const props: Record<string, unknown> = {
         socket: null,
         useTEM: { teamMemberProfiles: {} },
