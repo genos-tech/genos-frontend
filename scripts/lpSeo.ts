@@ -4,6 +4,7 @@ import type { Plugin } from "vite";
 
 import type { ChangelogEntry } from "../src/lp/changelog/changelog";
 import { buildChangelogRss } from "../src/lp/changelog/rss";
+import { buildSeoPages, type BlogArticleHead } from "../src/lp/seo/pageHeads";
 import { buildSitemapXml, type SitemapArticle } from "../src/lp/seo/sitemap";
 
 // Emits `sitemap.xml` into the build output from the same route list the app
@@ -17,6 +18,9 @@ import { buildSitemapXml, type SitemapArticle } from "../src/lp/seo/sitemap";
 //
 // The manifest is read from disk rather than imported because the Node-side
 // tsconfig has no JSON-module support.
+const readManifest = (root: string): BlogArticleHead[] =>
+    JSON.parse(readFileSync(join(root, "src/lp/blog/articles.json"), "utf8")) as BlogArticleHead[];
+
 const readArticles = (root: string): SitemapArticle[] => {
     const manifest = JSON.parse(
         readFileSync(join(root, "src/lp/blog/articles.json"), "utf8")
@@ -37,10 +41,12 @@ export const lpSeo = (): Plugin => {
     return {
         name: "lp-seo",
         apply: "build",
+        // After Vite's own HTML plugin, so `bundle["index.html"]` is the final file.
+        enforce: "post",
         configResolved(config) {
             root = config.root;
         },
-        generateBundle() {
+        generateBundle(_options, bundle) {
             this.emitFile({
                 type: "asset",
                 fileName: "sitemap.xml",
@@ -51,6 +57,27 @@ export const lpSeo = (): Plugin => {
                 type: "asset",
                 fileName: "changelog.rss",
                 source: buildChangelogRss(readChangelog(root)),
+            });
+
+            // One copy of index.html per public page and language with that page's head
+            // written in (MIP-1988): a crawler or link preview that does not run JavaScript
+            // gets the page's own title, description, canonical, hreflang and share card.
+            // `scripts/serve-spa.mjs` picks the file by path and `?lang=`; the manifest
+            // is the list of what exists. The bundle itself is untouched.
+            const index = bundle["index.html"];
+            if (!index || index.type !== "asset") {
+                throw new Error("lp-seo: no index.html in the bundle to write page heads from");
+            }
+            const template = String(index.source);
+            const pages = buildSeoPages(template, readManifest(root));
+            for (const page of pages) {
+                this.emitFile({ type: "asset", fileName: page.file, source: page.html });
+            }
+            const entries = pages.map(({ path, lang, file }) => ({ path, lang, file }));
+            this.emitFile({
+                type: "asset",
+                fileName: "_seo/manifest.json",
+                source: JSON.stringify(entries, null, 2),
             });
         },
     };
