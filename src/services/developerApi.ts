@@ -289,6 +289,45 @@ export const listMySecurityEvents = async (
     }
 };
 
+// ── Agent use counts (owner only, MIP-2011) ──────────────────────────
+
+/** One week of one member's use of one AI app: sums only. The server never
+ *  sends what was read or searched (no targets, tool names or run ids). */
+export interface AgentUseRow {
+    /** Monday of the week, YYYY-MM-DD (UTC). */
+    weekStart: string;
+    userId: string;
+    username: string;
+    app: "claude" | "chatgpt" | "other";
+    credentialKind: "oauth" | "api_key";
+    /** An API key's own label (e.g. "Claude Code"); null for a connected app. */
+    keyName: string | null;
+    calls: number;
+    changes: number;
+    refused: number;
+}
+
+/** Counts per member per app per week for `teamId`, newest week first. Owner
+ *  only: everyone else gets the 404 the security log gives, read as "don't show
+ *  the section" (`null`). */
+export const listTeamAgentUse = async (
+    accessToken: string | null,
+    teamId: string,
+    weeks = 4
+): Promise<AgentUseRow[] | null> => {
+    const api = authApi(accessToken);
+    if (!api) return null;
+    try {
+        const res = await api.get<{ rows: AgentUseRow[] }>("/team/agent-use/", {
+            params: { team_id: teamId, weeks },
+            suppressErrorToast: true,
+        });
+        return res.data.rows ?? [];
+    } catch {
+        return null;
+    }
+};
+
 // ── Webhooks ─────────────────────────────────────────────────────────
 
 export const listWebhooks = async (

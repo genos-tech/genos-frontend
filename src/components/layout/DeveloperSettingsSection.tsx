@@ -46,6 +46,7 @@ import {
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
+import { AgentUseSection } from "./AgentUseSection";
 import { openConnectAppPanel } from "./connectAppPanelHelpers";
 import { SecurityLogSection } from "./SecurityLogSection";
 import { TeamConnectedAppsSection } from "./TeamConnectedAppsSection";
@@ -502,6 +503,9 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
             {/* The AI apps connected by members that can work in this team (MIP-1371):
                 renders nothing unless the caller is the owner or an editor. */}
             {teamId && <TeamConnectedAppsSection teamId={teamId} />}
+
+            {/* ── AI app use counts (owner only; hides itself otherwise) ── */}
+            {teamId && <AgentUseSection teamId={teamId} />}
 
             {/* ── Security log (owner only; hides itself otherwise) ── */}
             {teamId && <SecurityLogSection teamId={teamId} />}

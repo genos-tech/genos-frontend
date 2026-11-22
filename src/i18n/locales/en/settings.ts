@@ -328,6 +328,24 @@ export const settings = {
             unknownMember: "a team member",
             revokeNamed: "Revoke {name}",
         },
+        // Owner-only (MIP-2011): counts of what AI apps did, per member per
+        // app per week. Never what was read or searched.
+        agentUse: {
+            title: "AI app use",
+            blurb: "How much each member's AI apps did in this team, by week. Counts only: what they read or searched is private to each member and is not shown here.",
+            empty: "No AI app use recorded yet.",
+            weekOf: "Week of {date}",
+            calls: "Calls: {n}",
+            changes: "Changes: {n}",
+            refused: "Refused: {n}",
+            keyNamed: "{app} ({key})",
+            unknownMember: "A team member",
+            apps: {
+                claude: "Claude",
+                chatgpt: "ChatGPT",
+                other: "Other app",
+            },
+        },
         // Owner-only, like the team keys. The team's audit trail: who
         // joined or left, role and ownership changes, invites, keys,
         // webhooks and alerts. A person's own sign-ins are not here.
