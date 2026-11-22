@@ -292,6 +292,12 @@ export const chat = {
         openTodo: "Open To-Do",
         pinChat: "Pin Chat",
         unpinChat: "Unpin Chat",
+        removeFromSidebar: "Remove from sidebar",
+        removeFromSidebarHint: "Hidden for you only. It comes back when a new message arrives.",
+        removedFromSidebar: "Removed from your sidebar. A new message brings it back.",
+        removeFromSidebarFailed: "Could not remove the chat. It is back in your sidebar.",
+        deletedButNotRemoved:
+            "Your messages were deleted, but the chat could not be removed from the sidebar.",
         unflag: "Unflag",
         completeFlag: "Mark done",
         reopenFlag: "Reopen",

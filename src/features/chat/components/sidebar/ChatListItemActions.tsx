@@ -8,6 +8,7 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SellOutlinedIcon from "@mui/icons-material/SellOutlined";
 import SplitscreenIcon from "@mui/icons-material/Splitscreen";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import { Badge, Dropdown, IconButton, MenuButton, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -21,6 +22,7 @@ import {
 import { anchoredTallHitAreaSx } from "../../../../components/ui/touchTargets";
 import { useOptionalAccessToken } from "../../../../context/AuthContext";
 import { useTranslation } from "../../../../i18n";
+import { channelService } from "../../../../services/channel/channelService";
 import { forceDeleteAllMyMessages } from "../../../../services/forceDelete";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
@@ -62,6 +64,17 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     // "Delete all my messages" (MIP-1584): a DM or a multi-person DM only. Each person deletes
     // their own side; the other person's messages and the chat stay.
     const showDeleteMine = chat.chatType === 1 || chat.chatType === 4;
+
+    // "Remove from sidebar" (MIP-1414): hides the chat for this person only, deletes nothing, and
+    // a new message brings it back. The row leaves the list at once; a refusal puts it back.
+    const removeFromSidebar = async () => {
+        try {
+            await channelService.hideChannel(String(chat.chatId));
+            toast.success(t.chat.listItem.removedFromSidebar);
+        } catch {
+            toast.error(t.chat.listItem.removeFromSidebarFailed);
+        }
+    };
 
     // Show add members option for DM and MDM chats (chatType 1 and 4)
     const showAddMembers = (chat.chatType === 1 || chat.chatType === 4) && onAddMembersClick;
@@ -167,7 +180,21 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
 
                     {showDeleteMine && (
                         <MenuRow
+                            icon={<VisibilityOffOutlinedIcon />}
+                            title={t.chat.listItem.removeFromSidebarHint}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                void removeFromSidebar();
+                            }}
+                        >
+                            {t.chat.listItem.removeFromSidebar}
+                        </MenuRow>
+                    )}
+
+                    {showDeleteMine && (
+                        <MenuRow
                             icon={<DeleteForeverRoundedIcon />}
+                            danger
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setOpenForceDelete(true);
@@ -197,7 +224,14 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                     onClose={() => setOpenForceDelete(false)}
                     onConfirm={async () => {
                         await forceDeleteAllMyMessages(accessToken, String(chat.chatId));
-                        toast.success(t.common.forceDelete.myMessagesDone);
+                        try {
+                            await channelService.hideChannel(String(chat.chatId));
+                            toast.success(t.common.forceDelete.myMessagesDone);
+                        } catch {
+                            // The messages ARE gone; only the removal failed, so do not
+                            // reject (the dialog would claim the delete failed).
+                            toast.error(t.chat.listItem.deletedButNotRemoved);
+                        }
                     }}
                 />
             )}

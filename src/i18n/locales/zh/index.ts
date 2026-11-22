@@ -1410,6 +1410,11 @@ export const zh: DeepPartial<Messages> = {
             openTodo: "打开待办",
             pinChat: "置顶聊天",
             unpinChat: "取消置顶",
+            removeFromSidebar: "从侧边栏移除",
+            removeFromSidebarHint: "仅对你隐藏。有新消息时会重新出现。",
+            removedFromSidebar: "已从侧边栏移除。有新消息时会重新出现。",
+            removeFromSidebarFailed: "无法移除该聊天，已恢复到侧边栏。",
+            deletedButNotRemoved: "消息已删除，但无法将聊天从侧边栏移除。",
             unflag: "取消标记",
             completeFlag: "标记完成",
             reopenFlag: "重新开放",
@@ -1864,11 +1869,11 @@ export const zh: DeepPartial<Messages> = {
             taskTitle: "永久删除此任务？",
             taskDescription:
                 "任务及其评论、文件、笔记、历史和搜索条目将立即清除，不再保留通常的 30 天。此操作无法撤销。",
-            myMessagesMenu: "删除我的所有消息",
-            myMessagesTitle: "删除你在此聊天中的所有消息？",
+            myMessagesMenu: "删除我的所有消息并移除",
+            myMessagesTitle: "删除你的所有消息并移除此聊天？",
             myMessagesDescription:
-                "你在此处发送的所有消息及其文件和回应将立即清除，无法恢复。对方的消息不受影响，聊天会保留。",
-            myMessagesDone: "已删除你的消息。",
+                "你在这里发送的每条消息及其文件和回应都会立即被清除，无法撤销或恢复。只会删除你自己的消息，对方的消息会保留。之后此聊天会从你的侧边栏移除，对方发来新消息时会重新出现。",
+            myMessagesDone: "已删除你的消息，并将聊天从侧边栏移除。",
             noteTitle: "永久删除此笔记?",
             noteDescription:
                 "笔记及其历史记录、评论、文件和搜索条目将立即被清除,协作副本也一并删除。此操作无法撤销。看过它的人可能已经复制了内容。",

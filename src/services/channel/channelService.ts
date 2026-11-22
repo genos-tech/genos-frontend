@@ -2265,6 +2265,33 @@ export class ChannelService {
     }
 
     /**
+     * "Remove from sidebar" for a DM or multi-person DM (MIP-1414). Nothing is deleted: the server
+     * sets a per-person flag and leaves the chat out of THIS person's list until a new message
+     * arrives in it (or they open the DM again). The chat leaves the list at once (the same
+     * eviction `refreshChannels` does for what the server stops listing); if the server refuses,
+     * the list is re-read, which brings the chat back, and the error is thrown for the caller.
+     */
+    async hideChannel(channelId: string): Promise<void> {
+        this.reconcileChannelList([...this._channels.values()].filter((c) => c.id !== channelId));
+        try {
+            await this.api().post(`/api/v3/channels/${channelId}/hide/`);
+        } catch (e) {
+            await this.refreshChannels();
+            throw unwrapAxiosError(e);
+        }
+    }
+
+    /** Show a chat removed with `hideChannel` again, then re-read the list so it appears. */
+    async unhideChannel(channelId: string): Promise<void> {
+        try {
+            await this.api().delete(`/api/v3/channels/${channelId}/hide/`);
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
+        await this.refreshChannels();
+    }
+
+    /**
      * The team's public group chats, a page at a time (MIP-1694). The server decides what is
      * listed (never private, external, archived or deleted chats); this is a read, not part of
      * the chat store. Joining goes through `joinChannel`.
