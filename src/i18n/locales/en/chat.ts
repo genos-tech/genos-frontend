@@ -483,6 +483,7 @@ export const chat = {
             title: "Create New Group Message",
             groupNamePlaceholder: "Enter group name...",
             privateGroup: "Private Group",
+            hiddenGroup: "Hidden: only members can see it exists",
             publicGroup: "Public Group",
             searchPlaceholder: "Search team members...",
             noMembersMatchingSearch: "No members found matching your search.",

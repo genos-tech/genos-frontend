@@ -1673,6 +1673,7 @@ export const fr: DeepPartial<Messages> = {
                 title: "Créer un nouveau message de groupe",
                 groupNamePlaceholder: "Saisir le nom du groupe…",
                 privateGroup: "Groupe privé",
+                hiddenGroup: "Masqué : seuls les membres voient qu'il existe",
                 publicGroup: "Groupe public",
                 searchPlaceholder: "Rechercher des membres de l'équipe…",
                 noMembersMatchingSearch: "Aucun membre ne correspond à votre recherche.",
@@ -2079,6 +2080,16 @@ export const fr: DeepPartial<Messages> = {
             sectionLabel: "Rôle",
             changeFailed: "Impossible de modifier le rôle de ce membre.",
             guestHint: "Collaborateur externe : voit uniquement ce projet.",
+        },
+        privacy: {
+            privateLabel: "Privé",
+            privateHint:
+                "On le rejoint en le demandant au propriétaire. Le nom s'affiche avec un cadenas.",
+            hiddenLabel: "Masqué",
+            hiddenHint:
+                "Seuls les membres voient qu'il existe. Il n'apparaît ni dans les listes ni dans la recherche, et on le rejoint sur invitation uniquement.",
+            hiddenNeedsPrivate: "Activez Privé pour le masquer.",
+            saveFailed: "Impossible de modifier ce réglage. Réessayez.",
         },
         profileEdit: {
             rename: "Renommer",
@@ -5638,6 +5649,7 @@ export const fr: DeepPartial<Messages> = {
                 namePlaceholder: "Saisir le nom du projet…",
                 privateProject: "Projet privé",
                 publicProject: "Projet public",
+                hiddenProject: "Masqué : seuls les membres voient qu'il existe",
                 cancelButton: "Annuler",
                 createButton: "Créer le projet",
                 creationFailed: "Échec de la création du projet",

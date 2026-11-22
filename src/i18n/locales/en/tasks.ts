@@ -288,6 +288,7 @@ export const tasks = {
             namePlaceholder: "Enter project name...",
             privateProject: "Private Project",
             publicProject: "Public Project",
+            hiddenProject: "Hidden: only members can see it exists",
             cancelButton: "Cancel",
             createButton: "Create Project",
             creationFailed: "Project Creation Failed",

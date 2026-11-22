@@ -95,6 +95,7 @@ export type ProjectProps = {
     // See ProjectLabelProps — NOT the same thing as projectTags.
     projectLabels?: ProjectLabelProps[];
     isPrivate?: boolean;
+    isHidden?: boolean;
     isJoined?: boolean;
     /** Archived by its owner (MIP-1693). The list returns archived rows only with
      *  `include_archived=true`, and each row says so (MIP-1853). */

@@ -248,6 +248,15 @@ export const hi: DeepPartial<Messages> = {
             changeFailed: "उस सदस्य की भूमिका नहीं बदली जा सकी.",
             guestHint: "बाहरी सहयोगी - केवल इस परियोजना को देखता है।",
         },
+        privacy: {
+            privateLabel: "प्राइवेट",
+            privateHint: "लोग मालिक से अनुरोध करके जुड़ते हैं। नाम ताले के साथ दिखता है।",
+            hiddenLabel: "छिपा हुआ",
+            hiddenHint:
+                "केवल सदस्य देख सकते हैं कि यह मौजूद है। यह सूचियों या खोज में नहीं दिखता, और लोग केवल आमंत्रण से जुड़ते हैं।",
+            hiddenNeedsPrivate: "इसे छिपाने के लिए प्राइवेट चालू करें।",
+            saveFailed: "यह सेटिंग बदली नहीं जा सकी। फिर कोशिश करें।",
+        },
         profileEdit: {
             rename: "नाम बदलें",
             save: "बचाना",
@@ -2250,6 +2259,7 @@ export const hi: DeepPartial<Messages> = {
                 title: "नया ग्रुप मेसेज बनाएँ",
                 groupNamePlaceholder: "ग्रुप का नाम डालें…",
                 privateGroup: "प्राइवेट ग्रुप",
+                hiddenGroup: "छिपा हुआ: केवल सदस्य देख सकते हैं कि यह मौजूद है",
                 publicGroup: "पब्लिक ग्रुप",
                 searchPlaceholder: "टीम मेंबर खोजें…",
                 noMembersMatchingSearch: "आपकी खोज से मेल खाने वाला कोई मेंबर नहीं मिला।",
@@ -2672,6 +2682,7 @@ export const hi: DeepPartial<Messages> = {
                 namePlaceholder: "प्रोजेक्ट का नाम डालें…",
                 privateProject: "प्राइवेट प्रोजेक्ट",
                 publicProject: "पब्लिक प्रोजेक्ट",
+                hiddenProject: "छिपा हुआ: केवल सदस्य देख सकते हैं कि यह मौजूद है",
                 cancelButton: "रद्द करें",
                 createButton: "प्रोजेक्ट बनाएँ",
                 creationFailed: "प्रोजेक्ट नहीं बन सका",

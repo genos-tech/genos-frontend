@@ -148,7 +148,7 @@ describe("the group profile modal body", () => {
         // the modal came back.
         expect(screen.getByText("Group name")).toBeInTheDocument();
         expect(screen.getByText("Owner")).toBeInTheDocument();
-        expect(screen.getByText("Is Private")).toBeInTheDocument();
+        expect(screen.getByText("Private")).toBeInTheDocument();
         expect(screen.getByText("Created Date")).toBeInTheDocument();
     });
 
@@ -164,7 +164,7 @@ describe("the group profile modal body", () => {
         // time, which is why every presence assertion above passed even
         // while a phone showed an empty sheet. What was wrong was a
         // `display: none` on a wrapper, so that is what is asserted.
-        for (const label of ["Group name", "Owner", "Is Private", "Created Date"]) {
+        for (const label of ["Group name", "Owner", "Private", "Created Date"]) {
             expect(hidingRule(screen.getByText(label))).toBeNull();
         }
         expect(hidingRule(screen.getByPlaceholderText("Search members..."))).toBeNull();

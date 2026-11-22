@@ -129,6 +129,8 @@ export interface Channel {
     projectId: number | null;
     ownerId: string | null;
     isPrivate: boolean;
+    /** Private and not listed or searchable by non-members (MIP-1699). */
+    isHidden?: boolean;
     /** A one-line topic a group chat's owner or editor wrote (MIP-1694). Absent on rows cached
      *  before the field existed. */
     description?: string;

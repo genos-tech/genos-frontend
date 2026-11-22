@@ -12,7 +12,12 @@ import { authApi } from "../../../services/api";
 export const updateProjectProfile = async (
     accessToken: string | null,
     projectId: number,
-    updates: { projectName?: string; ownerId?: string },
+    updates: {
+        projectName?: string;
+        ownerId?: string;
+        isPrivate?: boolean;
+        isHidden?: boolean;
+    },
     setErrorMessage?: (value: string) => void
 ): Promise<boolean> => {
     const messages = getMessages();
@@ -25,6 +30,8 @@ export const updateProjectProfile = async (
         const body: Record<string, unknown> = { project_id: projectId };
         if (updates.projectName !== undefined) body.project_name = updates.projectName;
         if (updates.ownerId !== undefined) body.owner_id = updates.ownerId;
+        if (updates.isPrivate !== undefined) body.is_private = updates.isPrivate;
+        if (updates.isHidden !== undefined) body.is_hidden = updates.isHidden;
         await api.put("/project/", body);
         return true;
     } catch (error: unknown) {
