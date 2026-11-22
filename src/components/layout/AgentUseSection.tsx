@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import { Box, Chip, Sheet, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { fmt, useTranslation } from "../../i18n";
 import { AgentUseRow, listTeamAgentUse } from "../../services/developerApi";
 import { EmptyState } from "../ui/feedback/EmptyState";

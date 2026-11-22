@@ -1,4 +1,4 @@
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import type { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import type { UserProps } from "../../../../../types/admin";
 import { TodayAgentsCard } from "../../../../today/TodayAgentsCard";
