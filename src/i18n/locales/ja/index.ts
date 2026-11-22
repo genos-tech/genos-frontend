@@ -4722,7 +4722,7 @@ export const ja: DeepPartial<Messages> = {
                 "このプロジェクトはもう利用できません。別のプロジェクトを選択してください。",
             projectNone: "選択できるプロジェクトがありません。",
             deliverLabel: "レポートの送信先",
-            deliverInbox: "自分の受信トレイ",
+            deliverInbox: "自分の受信箱",
             deliverProjectChat: "{name}（プロジェクトのチャット）",
             deliverChatHint:
                 "レポートはメッセージとしてこのチャットに投稿されます。AI は使わず、通知も送りません。チャットの全員が読めるため、プロジェクトのレポートはそのプロジェクトのメンバーだけのチャットにしか送れません。",
