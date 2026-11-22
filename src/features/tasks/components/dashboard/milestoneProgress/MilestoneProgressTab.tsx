@@ -1,8 +1,19 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import { Box, Button, Stack, Typography } from "@mui/joy";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/joy";
 import { Link } from "react-router-dom";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
+import { AvatarGroup, BaseAvatar } from "../../../../../components/ui/avatars/BaseAvatar";
+import {
+    DashboardCard,
+    ProportionBar,
+    SectionHeading,
+    StatStrip,
+    StatTile,
+    useNumberFormat,
+} from "../../../../../components/ui/dashboard";
 import { DataState } from "../../../../../components/ui/feedback/DataState";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
@@ -12,7 +23,7 @@ import { g } from "../../../../../theme/tokens";
 import { TaskProgressPage } from "../../../../../types/tasks";
 import { requestAskGenosWithDraft } from "../../../../spotlight/askGenosAbout";
 import { useAskGenosAvailable } from "../../../../spotlight/useAskGenosAvailable";
-import { STATUS_TONE, StatusName, toneCss, toneSolid } from "../../../meta/taskTone";
+import { STATUS_TONE, StatusName, toneCss } from "../../../meta/taskTone";
 import { loadTaskProgress } from "../../../services/loadTaskProgress";
 import { Milestone, Sprint } from "../../../sprint-milestone/types";
 import { EffectiveTask } from "../../../utils/effectiveTasks";
@@ -26,6 +37,9 @@ import {
 import { formatRelativeAge } from "../../../utils/relativeAge";
 import { SourceTaskLine } from "../../contents/base/sub/TaskProgressFeed";
 import { StatusLabel } from "../../meta/StatusLabel";
+import { statusText, type StatusLabels } from "../taskHomeHelpers";
+
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type Msgs = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["milestoneProgress"];
 type AgeMsgs = ReturnType<typeof useTranslation>["t"]["tasks"]["activity"];
@@ -48,22 +62,8 @@ type Props = {
     effectiveTasks: EffectiveTask[];
     /** The project the tab is about: named in the question "Ask Genos" starts. */
     projectName?: string | null;
-};
-
-type StatusLabels = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["statusLabels"];
-
-// The dashboard's own words for a status ("Completed", not the stored "Closed"); a status the
-// dashboard has no word for (or the "Other" bucket) falls back to the caller's text.
-const statusText = (status: string, labels: StatusLabels, other: string): string => {
-    if (status === "Other") return other;
-    const key = status.toLowerCase() as keyof StatusLabels;
-    return labels[key] ?? status;
-};
-
-// One segment per status in the stacked bar and one legend chip per status with tasks.
-const segmentColor = (key: string): string => {
-    if (key === "Other") return toneSolid("muted").bg;
-    return toneSolid(STATUS_TONE[key as StatusName] ?? "muted").bg;
+    /** Opens the milestone's preview (the "Milestones in sprint" list of the old Sprint tab did). */
+    onOpenMilestone?: (milestoneId: number) => void;
 };
 
 export const MilestoneProgressTab = ({
@@ -72,8 +72,10 @@ export const MilestoneProgressTab = ({
     sprints,
     effectiveTasks,
     projectName,
+    onOpenMilestone,
 }: Props) => {
     const { t, locale } = useTranslation();
+    const nf = useNumberFormat();
     const { accessToken } = useAuth();
     const m = t.tasks.dashboard.milestoneProgress;
     const age = t.tasks.activity;
@@ -104,25 +106,40 @@ export const MilestoneProgressTab = ({
         return <EmptyState body={m.empty} data-empty="milestone-progress" size="md" />;
     }
 
-    const tiles: { label: string; value: string; tone?: "danger" | "warning" }[] = [
-        { label: m.summaryMilestones, value: String(overview.milestones) },
+    const tiles: {
+        label: string;
+        raw: number;
+        value: string;
+        sub?: string;
+        tone?: "danger" | "warning";
+    }[] = [
+        {
+            label: m.summaryMilestones,
+            raw: overview.milestones,
+            value: nf.number(overview.milestones),
+        },
         {
             label: m.summaryClosed,
-            value: overview.tasks > 0 ? `${overview.closed}/${overview.tasks}` : "0",
+            raw: overview.closed,
+            value: nf.number(overview.closed),
+            sub: overview.tasks > 0 ? `/ ${nf.number(overview.tasks)}` : undefined,
         },
         {
             label: m.summaryOverdue,
-            value: String(overview.overdue),
+            raw: overview.overdue,
+            value: nf.number(overview.overdue),
             tone: overview.overdue > 0 ? "danger" : undefined,
         },
         {
             label: m.summaryBlocked,
-            value: String(overview.blocked),
+            raw: overview.blocked,
+            value: nf.number(overview.blocked),
             tone: overview.blocked > 0 ? "warning" : undefined,
         },
         {
             label: m.summaryStalled,
-            value: String(overview.stalled),
+            raw: overview.stalled,
+            value: nf.number(overview.stalled),
             tone: overview.stalled > 0 ? "warning" : undefined,
         },
     ];
@@ -135,14 +152,7 @@ export const MilestoneProgressTab = ({
                 justifyContent="space-between"
                 spacing={1}
             >
-                <Box sx={{ minWidth: 0 }}>
-                    <Typography level="title-md" sx={{ color: g.text.primary, fontWeight: 600 }}>
-                        {m.heading}
-                    </Typography>
-                    <Typography level="body-sm" sx={{ color: g.text.secondary, mt: 0.5 }}>
-                        {m.subtitle}
-                    </Typography>
-                </Box>
+                <SectionHeading description={m.subtitle} title={m.heading} />
                 {askAvailable ? (
                     <AskGenosButton
                         label={m.askProject}
@@ -155,46 +165,18 @@ export const MilestoneProgressTab = ({
                 ) : null}
             </Stack>
 
-            <Box
-                aria-label={m.heading}
-                role="list"
-                sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                        xs: "repeat(3, minmax(0, 1fr))",
-                        sm: "repeat(5, minmax(0, 1fr))",
-                    },
-                    gap: 1,
-                }}
-            >
+            <StatStrip>
                 {tiles.map((tile) => (
-                    <Box
+                    <StatTile
                         key={tile.label}
-                        role="listitem"
-                        sx={{
-                            p: 1.5,
-                            borderRadius: "10px",
-                            border: "1px solid",
-                            borderColor: g.border.subtle,
-                            minWidth: 0,
-                        }}
-                    >
-                        <Typography
-                            level="title-lg"
-                            sx={{
-                                color: tile.tone ? toneCss(tile.tone).text : g.text.primary,
-                                fontWeight: 600,
-                                fontVariantNumeric: "tabular-nums",
-                            }}
-                        >
-                            {tile.value}
-                        </Typography>
-                        <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                            {tile.label}
-                        </Typography>
-                    </Box>
+                        label={tile.label}
+                        raw={tile.raw}
+                        sub={tile.sub}
+                        tone={tile.tone}
+                        value={tile.value}
+                    />
                 ))}
-            </Box>
+            </StatStrip>
 
             <Stack spacing={3}>
                 {groups.map((group) => {
@@ -206,6 +188,7 @@ export const MilestoneProgressTab = ({
                             key={group.sprint?.sprintId ?? "none"}
                             aria-labelledby={headingId}
                             component="section"
+                            data-testid="milestone-sprint-group"
                         >
                             <Stack
                                 alignItems={{ xs: "stretch", sm: "center" }}
@@ -217,6 +200,7 @@ export const MilestoneProgressTab = ({
                                 <Box sx={{ minWidth: 0 }}>
                                     <Stack alignItems="center" direction="row" spacing={1}>
                                         <Typography
+                                            component="h3"
                                             id={headingId}
                                             level="title-sm"
                                             sx={{
@@ -294,6 +278,7 @@ export const MilestoneProgressTab = ({
                                                 age,
                                                 status: t.tasks.dashboard.statusLabels,
                                             }}
+                                            onOpenMilestone={onOpenMilestone}
                                         />
                                     </li>
                                 ))}
@@ -313,10 +298,20 @@ type CardProps = {
     locale: Locale;
     labels: { m: Msgs; age: AgeMsgs; status: StatusLabels };
     now: Date;
+    onOpenMilestone?: (milestoneId: number) => void;
 };
 
-const MilestoneCard = ({ milestone, summary, accessToken, locale, labels, now }: CardProps) => {
+const MilestoneCard = ({
+    milestone,
+    summary,
+    accessToken,
+    locale,
+    labels,
+    now,
+    onOpenMilestone,
+}: CardProps) => {
     const { m, age, status: statusLabels } = labels;
+    const nf = useNumberFormat();
     const [open, setOpen] = useState(false);
     // The last page read, kept on screen while a refresh runs or fails (MIP-1187).
     const [page, setPage] = useState<TaskProgressPage | null>(null);
@@ -386,48 +381,52 @@ const MilestoneCard = ({ milestone, summary, accessToken, locale, labels, now }:
     const shownAttention = summary.attention.slice(0, ATTENTION_LIMIT);
     const hiddenAttention = summary.attention.length - shownAttention.length;
 
+    const { t: tr } = useTranslation();
+    const openLabel = tr.tasks.dashboard.project.openMilestoneFor;
     return (
-        <Box
-            sx={{
-                p: 2,
-                borderRadius: "12px",
-                border: "1px solid",
-                borderColor: g.border.subtle,
-                bgcolor: g.surface.raised,
-                minWidth: 0,
-            }}
-        >
-            <Stack
-                alignItems="center"
-                direction="row"
-                justifyContent="space-between"
-                spacing={1}
-                sx={{ minWidth: 0 }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
-                    <Typography
-                        level="title-sm"
-                        sx={{
-                            color: g.text.primary,
-                            fontWeight: 600,
-                            minWidth: 0,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {milestone.title}
-                    </Typography>
+        <DashboardCard
+            headingLevel="h4"
+            title={milestone.title}
+            actions={
+                <Stack alignItems="center" direction="row" spacing={1}>
+                    {(milestone.assignees?.length ?? 0) > 0 && (
+                        <AvatarGroup size="sm">
+                            {(milestone.assignees ?? []).slice(0, 4).map((a, idx) => (
+                                <BaseAvatar
+                                    key={a.userId != null ? String(a.userId) : `idx-${idx}`}
+                                    alt={a.username ?? ""}
+                                    name={a.username}
+                                    src={
+                                        a.profileImageUrl
+                                            ? `${media_url}${a.profileImageUrl}`
+                                            : undefined
+                                    }
+                                />
+                            ))}
+                        </AvatarGroup>
+                    )}
+                    <StatusLabel status={milestone.status} />
+                    {onOpenMilestone && (
+                        <AppTooltip title={fmt(openLabel, { title: milestone.title })}>
+                            <IconButton
+                                aria-label={fmt(openLabel, { title: milestone.title })}
+                                size="sm"
+                                variant="plain"
+                                onClick={() => onOpenMilestone(milestone.milestoneId)}
+                            >
+                                <OpenInNewRoundedIcon />
+                            </IconButton>
+                        </AppTooltip>
+                    )}
                 </Stack>
-                <StatusLabel status={milestone.status} />
-            </Stack>
-
+            }
+        >
             <Stack
                 alignItems="baseline"
                 direction="row"
                 justifyContent="space-between"
                 spacing={1}
-                sx={{ mt: 1, flexWrap: "wrap" }}
+                sx={{ flexWrap: "wrap" }}
             >
                 <Typography
                     level="body-xs"
@@ -441,58 +440,32 @@ const MilestoneCard = ({ milestone, summary, accessToken, locale, labels, now }:
                 >
                     {total === 0
                         ? m.noTasks
-                        : fmt(m.closedOfTotal, { closed: summary.closed, total })}
+                        : fmt(m.closedOfTotal, {
+                              closed: nf.number(summary.closed),
+                              total: nf.number(total),
+                          })}
                 </Typography>
             </Stack>
 
             {total > 0 && (
-                <Box
-                    aria-label={fmt(m.closedOfTotal, { closed: summary.closed, total })}
-                    role="img"
-                    sx={{
-                        mt: 1,
-                        display: "flex",
-                        height: 8,
-                        borderRadius: "4px",
-                        overflow: "hidden",
-                        bgcolor: g.border.subtle,
-                    }}
-                >
-                    {summary.entries.map((e) => (
-                        <Box
-                            key={e.status}
-                            sx={{
-                                width: `${(e.count / total) * 100}%`,
-                                bgcolor: segmentColor(e.status),
-                            }}
-                        />
-                    ))}
+                <Box sx={{ mt: 1 }}>
+                    <ProportionBar
+                        ariaLabel={fmt(m.closedOfTotal, {
+                            closed: nf.number(summary.closed),
+                            total: nf.number(total),
+                        })}
+                        segments={summary.entries.map((e) => ({
+                            key: e.status,
+                            label: statusText(e.status, statusLabels, m.otherStatus),
+                            value: e.count,
+                            tone:
+                                e.status === "Other"
+                                    ? "muted"
+                                    : (STATUS_TONE[e.status as StatusName] ?? "muted"),
+                            display: nf.number(e.count),
+                        }))}
+                    />
                 </Box>
-            )}
-            {total > 0 && (
-                <Stack direction="row" spacing={1.25} sx={{ mt: 0.75, flexWrap: "wrap" }}>
-                    {summary.entries.map((e) => (
-                        <Stack key={e.status} alignItems="center" direction="row" spacing={0.5}>
-                            <Box
-                                sx={{
-                                    width: 8,
-                                    height: 8,
-                                    borderRadius: "2px",
-                                    bgcolor: segmentColor(e.status),
-                                }}
-                            />
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    color: g.text.secondary,
-                                    fontVariantNumeric: "tabular-nums",
-                                }}
-                            >
-                                {statusText(e.status, statusLabels, m.otherStatus)} {e.count}
-                            </Typography>
-                        </Stack>
-                    ))}
-                </Stack>
             )}
 
             <Typography
@@ -657,7 +630,7 @@ const MilestoneCard = ({ milestone, summary, accessToken, locale, labels, now }:
                     )}
                 </Stack>
             )}
-        </Box>
+        </DashboardCard>
     );
 };
 

@@ -17,8 +17,7 @@ import { AgentActivityTab } from "./agentActivity/AgentActivityTab";
 import { MilestoneProgressTab } from "./milestoneProgress/MilestoneProgressTab";
 import { MemberTasksTab } from "./tabs/MemberTasksTab";
 import { MyTasksTab } from "./tabs/MyTasksTab";
-import { OverallTab } from "./tabs/OverallTab";
-import { SprintTab } from "./tabs/SprintTab";
+import { ProjectTab } from "./tabs/ProjectTab";
 import { TodayTab } from "./tabs/TodayTab";
 import { TaskHomeHeader } from "./TaskHomeHeader";
 import { TaskHomeTabBar } from "./TaskHomeTabBar";
@@ -62,6 +61,8 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         effectiveTasks,
         stats,
         sprintStats,
+        moreAnalyticsOpen,
+        setMoreAnalyticsOpen,
         assigneeWorkload,
         tagStats,
         recentTasks,
@@ -72,10 +73,10 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         effortBreakdown,
         teamCapacity,
         maxCapacityTotal,
-        topByWeight,
         topByWeightRows,
         overdueAndUpcoming,
         ongoingProjectMilestones,
+        sprintMilestones,
         myStats,
         setSelectedMemberId,
         projectMembers,
@@ -275,34 +276,11 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                         useSM.projectMilestones[usePM.currentProject.projectId] !==
                                             undefined
                                     }
-                                />
-                            )}
-
-                            {/* ════════ TAB: Sprint Insights ════════ */}
-                            {!tasksUnread && activeTab === "sprint" && (
-                                <SprintTab
-                                    handleCreateTask={handleCreateTask}
-                                    handleTaskClick={handleTaskClick}
-                                    isDark={isDark}
-                                    myself={myself}
-                                    recentTasks={recentTasks}
-                                    sectionHeaderColor={sectionHeaderColor}
-                                    selectedSprint={selectedSprint}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    sprintMembers={sprintMembers}
-                                    sprintStats={sprintStats}
-                                    sprintTaskIds={sprintTaskIds}
-                                    sprintTaskUpdatedAt={sprintTaskUpdatedAt}
-                                    textMuted={textMuted}
-                                    textPrimary={textPrimary}
-                                    textSecondary={textSecondary}
-                                    useCM={useCM}
-                                    usePM={usePM}
-                                    useSM={useSM}
-                                    useTEM={useTEM}
-                                    useTM={useTM}
-                                    useUISM={useUISM}
+                                    onOpenMilestone={(milestoneId) => {
+                                        useTM.setCurrentPreviewKind("milestone");
+                                        useTM.setCurrentPreviewMilestoneId(milestoneId);
+                                        useTM.setIsTaskPreviewVisible(true);
+                                    }}
                                 />
                             )}
 
@@ -363,34 +341,47 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                 />
                             )}
 
-                            {!tasksUnread && activeTab === "overall" && (
-                                <OverallTab
+                            {/* ════════ TAB: Project (Overall + Sprint, MIP-1963) ════════ */}
+                            {!tasksUnread && activeTab === "project" && (
+                                <ProjectTab
                                     assigneeWorkload={assigneeWorkload}
                                     cardBg={cardBg}
                                     cardBorder={cardBorder}
+                                    effectiveTasks={effectiveTasks}
                                     effortBreakdown={effortBreakdown}
+                                    handleCreateTask={handleCreateTask}
                                     handleTaskClick={handleTaskClick}
                                     isDark={isDark}
                                     maxCapacityTotal={maxCapacityTotal}
+                                    moreAnalyticsOpen={moreAnalyticsOpen}
                                     myself={myself}
                                     overdueAndUpcoming={overdueAndUpcoming}
                                     priorityBreakdown={priorityBreakdown}
+                                    recentTasks={recentTasks}
                                     sectionHeaderColor={sectionHeaderColor}
+                                    selectedSprint={selectedSprint}
+                                    setActiveTab={setActiveTab}
+                                    setMoreAnalyticsOpen={setMoreAnalyticsOpen}
                                     setMyself={setMyself}
                                     setTopWeightSort={setTopWeightSort}
                                     socket={socket}
+                                    sprintMembers={sprintMembers}
+                                    sprintMilestones={sprintMilestones}
                                     sprintNameFor={sprintNameFor}
+                                    sprintStats={sprintStats}
+                                    sprintTaskIds={sprintTaskIds}
+                                    sprintTaskUpdatedAt={sprintTaskUpdatedAt}
                                     stats={stats}
                                     tagStats={tagStats}
                                     teamCapacity={teamCapacity}
                                     textMuted={textMuted}
                                     textPrimary={textPrimary}
                                     textSecondary={textSecondary}
-                                    topByWeight={topByWeight}
                                     topByWeightRows={topByWeightRows}
                                     topWeightSort={topWeightSort}
                                     useCM={useCM}
                                     useTEM={useTEM}
+                                    useTM={useTM}
                                     useUISM={useUISM}
                                 />
                             )}

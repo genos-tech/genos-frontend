@@ -233,6 +233,28 @@ describe("Tag", () => {
     });
 });
 
+describe("Tag size md (MIP-1984, task/milestone preview tag fields)", () => {
+    it("is taller and larger than the default, on token steps", () => {
+        const sm = render(<Tag color="#ef4444" label="bug" />).container.firstChild as HTMLElement;
+        const md = render(<Tag color="#ef4444" label="bug" size="md" />).container
+            .firstChild as HTMLElement;
+        expect(sm.style.height).toBe("20px");
+        expect(md.style.height).toBe("var(--g-space-6, 24px)");
+        expect(md.style.fontSize).toContain("--g-type-body-sm-size");
+        expect(md.style.padding).toContain("--g-space-1-5");
+    });
+
+    it("ProjectTagChip keeps its default size unless asked for md", () => {
+        const def = render(<ProjectTagChip label="bug" tagColor="#ef4444" />).container
+            .firstChild as HTMLElement;
+        const md = render(<ProjectTagChip label="bug" size="md" tagColor="#ef4444" />).container
+            .firstChild as HTMLElement;
+        expect(def.style.fontSize).toBe("var(--table-tag-size, 0.7rem)");
+        expect(md.style.height).toBe("var(--g-space-6, 24px)");
+        expect(md.style.fontSize).toContain("--g-type-body-sm-size");
+    });
+});
+
 describe("the old chips are the shared label now", () => {
     it("StatusLabel and the dependency StatusChip draw the same status", () => {
         const a = render(<StatusLabel status="Blocked" />);

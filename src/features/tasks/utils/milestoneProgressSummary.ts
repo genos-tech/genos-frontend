@@ -237,3 +237,24 @@ export const groupMilestonesBySprint = <
     if (none) groups.push({ sprint: null, items: none, rollup: rollupOf(none) });
     return groups;
 };
+
+/**
+ * A milestone is at risk when something under it is overdue or blocked, it has stalled, or its own
+ * due date is within `DUE_SOON_DAYS` (or past) while tasks remain open (MIP-1963: the Project
+ * tab's "Milestones at risk").
+ */
+export const isMilestoneAtRisk = (s: MilestoneProgressSummary): boolean =>
+    s.overdue.length > 0 ||
+    s.blocked.length > 0 ||
+    s.stalled ||
+    (s.dueInDays != null && s.dueInDays <= DUE_SOON_DAYS && s.closed < s.total);
+
+/** Most at-risk first: overdue tasks, then blocked, then stalled, then the soonest own due date. */
+export const compareMilestoneRisk = (
+    a: MilestoneProgressSummary,
+    b: MilestoneProgressSummary
+): number =>
+    b.overdue.length - a.overdue.length ||
+    b.blocked.length - a.blocked.length ||
+    Number(b.stalled) - Number(a.stalled) ||
+    (a.dueInDays ?? Number.MAX_SAFE_INTEGER) - (b.dueInDays ?? Number.MAX_SAFE_INTEGER);

@@ -12,8 +12,7 @@ import { DueBucket } from "../../utils/taskWeight";
 /** The dashboard's tabs. `agent` is the Agent Activity tab (MIP-1613). */
 export type TaskDashboardTab =
     | "today"
-    | "overall"
-    | "sprint"
+    | "project"
     | "milestones"
     | "mytasks"
     | "members"

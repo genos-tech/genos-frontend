@@ -346,8 +346,7 @@ describe("adoption (source-level: the table and the dashboard are too big to mou
         // MIP-1323: the home cards are counted from the project's rows; the three tab
         // bodies are gated on "unread", the member picker is not.
         expect(home).toContain("useTasksSyncFailure(");
-        expect(home).toContain('!tasksUnread && activeTab === "sprint"');
-        expect(home).toContain('!tasksUnread && activeTab === "overall"');
+        expect(home).toContain('!tasksUnread && activeTab === "project"');
         expect(home).toContain("showFocusBody");
     });
 

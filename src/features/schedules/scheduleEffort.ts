@@ -37,14 +37,14 @@ export const aiSwitchKey = (job: ScheduleJob | undefined): string | undefined =>
     Object.keys(job?.params ?? {}).find((key) => knownParam(key)?.aiSwitch === true);
 
 /** The control is drawn only while the AI step can run: the job uses AI and the member has not
- *  switched its AI parameter off (then the report is plain and the level means nothing). */
+ *  left its AI parameter off, which is the default (then the report is plain and the level means nothing). */
 export const showsEffort = (
     job: ScheduleJob | undefined,
     typed: Record<string, string>
 ): boolean => {
     if (!jobUsesAi(job)) return false;
     const key = aiSwitchKey(job);
-    return key === undefined || typed[key] !== "false";
+    return key === undefined || typed[key] === "true";
 };
 
 /** The level the form shows as chosen: the member's own, else the job's default. */
@@ -87,5 +87,5 @@ export const rowEffort = (
     const level = asEffortLevel(schedule.aiEffortEffective);
     if (!level || !jobUsesAi(job)) return null;
     const key = aiSwitchKey(job);
-    return key !== undefined && schedule.params?.[key] === false ? null : level;
+    return key !== undefined && schedule.params?.[key] !== true ? null : level;
 };

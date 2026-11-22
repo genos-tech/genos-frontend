@@ -65,7 +65,13 @@ export const CardHeader = ({
                     <Typography
                         component={as}
                         id={titleId}
-                        sx={{ ...type("title-sm"), color: g.text.primary, m: 0, minWidth: 0 }}
+                        sx={{
+                            ...type("title-sm"),
+                            color: g.text.primary,
+                            m: 0,
+                            minWidth: 0,
+                            overflowWrap: "anywhere",
+                        }}
                     >
                         {title}
                     </Typography>

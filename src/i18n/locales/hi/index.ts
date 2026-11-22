@@ -606,6 +606,7 @@ export const hi: DeepPartial<Messages> = {
         tabs: {
             general: "सामान्य",
             planUsage: "प्लान और उपयोग",
+            aiCreditUsage: "AI क्रेडिट उपयोग",
             chat: "चैट",
             tasks: "टास्क",
             spotlight: "Genos",
@@ -915,6 +916,41 @@ export const hi: DeepPartial<Messages> = {
             errorPassword: "पासवर्ड ग़लत है।",
             errorOwnership: "पहले अपनी टीमों का स्वामित्व ट्रांसफ़र करें।",
             errorGeneric: "कुछ गड़बड़ हुई। फिर से कोशिश करें।",
+        },
+        aiCreditUsage: {
+            heading: "AI क्रेडिट उपयोग",
+            description:
+                "किन AI कामों ने आपके क्रेडिट खर्च किए। यह पेज केवल आपका अपना उपयोग दिखाता है।",
+            remaining: "बचे हुए क्रेडिट",
+            usedThisMonth: "इस महीने उपयोग किए",
+            renews: "रीसेट",
+            purchasedSub: "+{n} खरीदे हुए",
+            unlimited: "असीमित",
+            byJobHeading: "इस महीने काम के अनुसार",
+            byJobAria: "इस महीने काम के अनुसार उपयोग किए गए क्रेडिट: {list}",
+            jobCount: "उपयोग: {n}",
+            jobs: {
+                ask: "Genos से सवाल",
+                connected_app: "जुड़े ऐप्स से AI खोज",
+                schedule: "निर्धारित रिपोर्ट में AI वाक्य",
+                summary: "सारांश",
+                other: "अन्य AI उपयोग",
+            },
+            recentHeading: "हाल के शुल्क",
+            recentCap: "आपके पिछले 50 शुल्क, नए पहले",
+            emptyTitle: "इस महीने अभी तक AI का उपयोग नहीं हुआ",
+            emptyBody:
+                "जब Genos किसी सवाल का जवाब देता है या सारांश या रिपोर्ट वाक्य लिखता है, तो उपयोग हुए क्रेडिट यहाँ दिखते हैं।",
+            loadError: "आपका क्रेडिट उपयोग लोड नहीं हो सका",
+            retry: "फिर कोशिश करें",
+            notAuthoritative:
+                "आपका प्लान क्रेडिट के बजाय रोज़ाना AI अनुरोधों को सीमित करता है। ये सीमाएँ प्लान और उपयोग में दिखती हैं।",
+            depletedWarning:
+                "आपके पास कोई क्रेडिट नहीं बचा। रीसेट से पहले AI इस्तेमाल करते रहने के लिए क्रेडिट खरीदें या प्लान अपग्रेड करें।",
+            lowWarning: "आपके क्रेडिट कम हैं, इसलिए लंबा अनुरोध बीच में रुक सकता है।",
+            buyCredits: "क्रेडिट खरीदें",
+            upgrade: "प्लान अपग्रेड करें",
+            seeUsageLink: "क्रेडिट उपयोग देखें",
         },
         planUsage: {
             heading: "प्लान और उपयोग",
@@ -1310,7 +1346,11 @@ export const hi: DeepPartial<Messages> = {
             rowMilestone: "माइलस्टोन: {name}",
             paramAiSentences: "AI के वाक्य",
             paramAiSentencesHint:
-                "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है। सामान्य रिपोर्ट के लिए इसे बंद करें।",
+                "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है और आपके AI क्रेडिट खर्च होते हैं। यह डिफ़ॉल्ट रूप से बंद है; चाहें तो चालू करें।",
+            aiOutOfCredits:
+                "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए AI वाक्य नहीं चल सकते। उन्हें चालू करने के लिए क्रेडिट खरीदें या प्लान अपग्रेड करें।",
+            aiOutOfCreditsBuy: "क्रेडिट खरीदें",
+            aiOutOfCreditsUpgrade: "प्लान अपग्रेड करें",
             effortLabel: "AI की कोशिश",
             effortDefaultMark: "{level} (डिफ़ॉल्ट)",
             effortCostAbout: "प्रति रन लगभग {credits} क्रेडिट। यह एक अनुमान है।",
@@ -3588,8 +3628,21 @@ export const hi: DeepPartial<Messages> = {
             currentProject: "वर्तमान प्रोजेक्ट",
             selectProjectForAnalytics:
                 "स्प्रिंट एनालिटिक्स देखने के लिए साइडबार से कोई प्रोजेक्ट चुनें",
-            tabOverall: "समग्र जानकारी",
-            tabSprint: "स्प्रिंट जानकारी",
+            tabProject: "प्रोजेक्ट",
+            project: {
+                summary: "{total} में से {closed} बंद · {overdue} विलंबित · {blocked} अवरुद्ध",
+                attentionTitle: "ध्यान देने योग्य",
+                attentionFilter: "इस सूची में दिखाएँ",
+                showAll: "सभी दिखाएँ ({count})",
+                showLess: "कम दिखाएँ",
+                emptyTop: "अभी किसी कार्य में प्राथमिकता या नियत तिथि नहीं है",
+                moreAnalytics: "और विश्लेषण",
+                sprintRemaining: "शेष",
+                milestonesAtRiskTitle: "जोखिम वाले माइलस्टोन",
+                allMilestones: "सभी माइलस्टोन",
+                noMilestonesAtRisk: "कोई माइलस्टोन जोखिम में नहीं है।",
+                openMilestoneFor: "{title} खोलें",
+            },
             tabMyTasks: "मेरे टास्क",
             tabMemberTasks: "सदस्य के टास्क",
             tabAgentActivity: "एजेंट गतिविधि",
@@ -5230,6 +5283,9 @@ export const hi: DeepPartial<Messages> = {
             malformedNdjsonLine: "गलत NDJSON लाइन: {line}",
             taskNotFound:
                 "यह टास्क या माइलस्टोन अब खोला नहीं जा सकता, इसलिए Genos जवाब नहीं दे सका।",
+            outOfCredits: "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए Genos अभी जवाब नहीं दे सकता।",
+            outOfCreditsBuy: "क्रेडिट खरीदें",
+            outOfCreditsUpgrade: "प्लान अपग्रेड करें",
             taskSessionLoadFailed: "इस टास्क के बारे में आपकी पिछली बातचीत लोड नहीं हो सकी।",
         },
         pwaInstall: {

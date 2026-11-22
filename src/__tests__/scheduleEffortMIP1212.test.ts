@@ -61,7 +61,8 @@ const schedule = (over: Partial<Schedule> = {}): Schedule => ({
     name: "Morning plan",
     job: "what_to_do_today",
     jobTitle: "What to do today",
-    params: {},
+    // A schedule with its AI sentences on (opt-in, MIP-1969; saved ones were pinned on).
+    params: { ai_sentences: true },
     when: "every day at 09:00",
     frequency: "daily",
     timeOfDay: "09:00",
@@ -96,7 +97,7 @@ describe("which levels and jobs count", () => {
     });
 
     it("draws the control only for a job that uses AI, and not while its AI switch is off", () => {
-        expect(showsEffort(AI_JOB, {})).toBe(true);
+        expect(showsEffort(AI_JOB, {})).toBe(false); // AI sentences are opt-in (MIP-1969)
         expect(showsEffort(AI_JOB, { ai_sentences: "true" })).toBe(true);
         expect(showsEffort(AI_JOB, { ai_sentences: "false" })).toBe(false);
         expect(showsEffort(PLAIN_JOB, {})).toBe(false);
@@ -182,7 +183,11 @@ describe("a true/false parameter", () => {
 });
 
 describe("what is sent", () => {
-    const base = { ...emptyForm([AI_JOB]), name: "Morning plan" };
+    const base = {
+        ...emptyForm([AI_JOB]),
+        name: "Morning plan",
+        params: { ai_sentences: "true" },
+    };
 
     it("sends no effort on a create until the member chooses one", () => {
         expect(buildCreate(base, AI_JOB)).not.toHaveProperty("aiEffort");

@@ -11,8 +11,7 @@ export const DASHBOARD_VIEW_PARAM = "view";
 
 export const DASHBOARD_TABS: readonly TaskDashboardTab[] = [
     "today",
-    "overall",
-    "sprint",
+    "project",
     "milestones",
     "mytasks",
     "members",
@@ -21,6 +20,16 @@ export const DASHBOARD_TABS: readonly TaskDashboardTab[] = [
 
 export const isDashboardTab = (v: unknown): v is TaskDashboardTab =>
     typeof v === "string" && (DASHBOARD_TABS as readonly string[]).includes(v);
+
+/** Tab ids the address or a saved value may still hold: Overall and Sprint became Project. */
+const LEGACY_TABS: Record<string, TaskDashboardTab> = { overall: "project", sprint: "project" };
+
+/** A current tab id, or the tab an old id (`overall`, `sprint`) now lives in; else null. */
+export const parseDashboardTab = (v: unknown): TaskDashboardTab | null => {
+    if (typeof v !== "string") return null;
+    if (isDashboardTab(v)) return v;
+    return Object.prototype.hasOwnProperty.call(LEGACY_TABS, v) ? LEGACY_TABS[v] : null;
+};
 
 const storageKey = (userId: string) => `genos.taskStats.lastTab.${userId}`;
 
@@ -37,7 +46,7 @@ export const readLastTab = (
         const raw = window.localStorage.getItem(storageKey(userId));
         if (!raw) return "today";
         const saved = JSON.parse(raw) as { tab?: unknown; day?: unknown };
-        return saved.day === todayIso && isDashboardTab(saved.tab) ? saved.tab : "today";
+        return saved.day === todayIso ? (parseDashboardTab(saved.tab) ?? "today") : "today";
     } catch {
         return "today";
     }
@@ -66,12 +75,12 @@ export const useDashboardTab = (userId: string) => {
     const location = useLocation();
     const navigate = useNavigate();
     const onTasks = location.pathname.startsWith(TASKS_PATH);
-    const viewParam = new URLSearchParams(location.search).get(DASHBOARD_VIEW_PARAM);
-    const [localTab, setLocalTab] = useState<TaskDashboardTab>(() =>
-        isDashboardTab(viewParam) ? viewParam : readLastTab(userId)
+    const rawView = new URLSearchParams(location.search).get(DASHBOARD_VIEW_PARAM);
+    const viewParam = parseDashboardTab(rawView);
+    const [localTab, setLocalTab] = useState<TaskDashboardTab>(
+        () => viewParam ?? readLastTab(userId)
     );
-    const activeTab: TaskDashboardTab =
-        onTasks && isDashboardTab(viewParam) ? viewParam : localTab;
+    const activeTab: TaskDashboardTab = onTasks && viewParam ? viewParam : localTab;
 
     // The latest address, for the writes and the cleanup below (never a stale render's).
     const latest = useRef({ pathname: location.pathname, search: location.search });
@@ -93,15 +102,17 @@ export const useDashboardTab = (userId: string) => {
 
     // The address names a tab: remember it (and keep the local copy for off-route renders).
     useEffect(() => {
-        if (!onTasks || !isDashboardTab(viewParam)) return;
+        if (!onTasks || !viewParam) return;
         setLocalTab(viewParam);
         writeLastTab(userId, viewParam);
+        // An old id in the link (`overall`, `sprint`) is rewritten to the tab it moved to.
+        if (rawView !== viewParam) writeView(viewParam);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [viewParam, onTasks]);
+    }, [viewParam, rawView, onTasks]);
 
     // The address names none (a route change dropped it): put the open tab back.
     useEffect(() => {
-        if (onTasks && !isDashboardTab(viewParam)) writeView(localTab);
+        if (onTasks && !viewParam) writeView(localTab);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [viewParam, onTasks]);
 

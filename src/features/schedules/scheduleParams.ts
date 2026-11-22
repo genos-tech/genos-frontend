@@ -25,7 +25,7 @@ export interface KnownParam {
     requiredHint?: keyof ScheduleStrings;
     picker?: ParamPicker;
     /** A true/false parameter, drawn as a switch. `defaultOn`: what "not set" means, because the
-     *  catalog states no default (`ai_sentences` is on unless turned off). */
+     *  catalog states no default (`ai_sentences` is OFF unless turned on, MIP-1969). */
     boolean?: { defaultOn: boolean };
     /** This switch turns the job's AI step off: the AI effort control is hidden while it is off. */
     aiSwitch?: boolean;
@@ -53,7 +53,7 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
     ai_sentences: {
         label: "paramAiSentences",
         hint: "paramAiSentencesHint",
-        boolean: { defaultOn: true },
+        boolean: { defaultOn: false },
         aiSwitch: true,
         preferOwnHint: true,
     },

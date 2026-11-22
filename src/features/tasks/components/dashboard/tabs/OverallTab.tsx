@@ -1,11 +1,15 @@
+/**
+ * "More analytics" body of the Project tab (MIP-1963): status, priority and effort bars, then
+ * Team Capacity, Assignee Workload and Tag Insights. Capacity and Workload move to People in a
+ * later PR; their internals are unchanged here. The overdue / due-this-week / top-by-weight
+ * lists and the status cards moved into the Project tab's Needs attention and stat strip.
+ */
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import WorkRoundedIcon from "@mui/icons-material/WorkRounded";
 import { Box, Card, Chip, Grid, Stack, Table, Typography } from "@mui/joy";
 
@@ -13,26 +17,34 @@ import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../../components/ui/avatars/BaseAvatar";
 import { UserAvatar } from "../../../../../components/ui/avatars/UserAvatar";
+import {
+    DashboardCard,
+    DashboardGrid,
+    ProportionBar,
+    useNumberFormat,
+    type ProportionSegment,
+} from "../../../../../components/ui/dashboard";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { type } from "../../../../../theme/tokens";
-import { STATUS_TONE, toneCss } from "../../../meta/taskTone";
+import {
+    EFFORT_TONE,
+    PRIORITY_TONE,
+    STATUS_TONE,
+    toneCss,
+    type Tone,
+} from "../../../meta/taskTone";
 import { taskMetaLabel } from "../../../utils/taskMeta";
 import { DueBucket } from "../../../utils/taskWeight";
-import { TaskListItem, TaskListPanel } from "../../card";
 import { getStatusIcon } from "../../meta/statusIcons";
-import { StatusLabel } from "../../meta/StatusLabel";
 import { ProjectTagChip } from "../../ProjectTagChip";
-import { DashboardTaskRow } from "../DashboardTaskRow";
 import { STATUS_LABEL_KEYS, statusColor } from "../taskHomeHelpers";
 import type { TaskHomeContentProps } from "../taskHomeTypes";
 import type { TaskHomeData } from "../useTaskHomeData";
 
-type OverallTabProps = Pick<
+type ProjectAnalyticsProps = Pick<
     TaskHomeData,
     | "isDark"
-    | "topWeightSort"
-    | "setTopWeightSort"
     | "stats"
     | "assigneeWorkload"
     | "tagStats"
@@ -40,11 +52,6 @@ type OverallTabProps = Pick<
     | "effortBreakdown"
     | "teamCapacity"
     | "maxCapacityTotal"
-    | "topByWeight"
-    | "topByWeightRows"
-    | "overdueAndUpcoming"
-    | "sprintNameFor"
-    | "handleTaskClick"
     | "cardBg"
     | "cardBorder"
     | "textPrimary"
@@ -54,10 +61,8 @@ type OverallTabProps = Pick<
 > &
     Pick<TaskHomeContentProps, "useTEM" | "myself" | "setMyself" | "useCM" | "useUISM" | "socket">;
 
-export const OverallTab = ({
+export const ProjectAnalytics = ({
     isDark,
-    topWeightSort,
-    setTopWeightSort,
     stats,
     assigneeWorkload,
     tagStats,
@@ -65,11 +70,6 @@ export const OverallTab = ({
     effortBreakdown,
     teamCapacity,
     maxCapacityTotal,
-    topByWeight,
-    topByWeightRows,
-    overdueAndUpcoming,
-    sprintNameFor,
-    handleTaskClick,
     cardBg,
     cardBorder,
     textPrimary,
@@ -82,7 +82,7 @@ export const OverallTab = ({
     useCM,
     useUISM,
     socket,
-}: OverallTabProps) => {
+}: ProjectAnalyticsProps) => {
     const { t } = useTranslation();
     // ── Stacked bar helper ──
     const renderStackedBar = (segments: { color: string; value: number }[], total: number) => (
@@ -111,100 +111,6 @@ export const OverallTab = ({
         </Box>
     );
 
-    // ── Mini distribution bar (for priority / effort) ──
-    const renderDistributionCard = (
-        title: string,
-        icon: React.ReactNode,
-        data: Record<string, number>,
-        colorMap: Record<string, string>
-    ) => {
-        const total = Object.values(data).reduce((a, b) => a + b, 0);
-        return (
-            <Card
-                variant="outlined"
-                sx={{
-                    p: 2.5,
-                    flex: 1,
-                    background: cardBg,
-                    borderColor: cardBorder,
-                }}
-            >
-                <Stack spacing={2}>
-                    <Stack alignItems="center" direction="row" spacing={1}>
-                        {icon}
-                        <Typography level="title-sm" sx={{ fontWeight: 600, color: textPrimary }}>
-                            {title}
-                        </Typography>
-                        <Chip size="sm" sx={{ ml: "auto" }} variant="soft">
-                            {total}
-                            {t.tasks.dashboard.tasksSuffix}
-                        </Chip>
-                    </Stack>
-                    {total > 0 &&
-                        renderStackedBar(
-                            Object.entries(data)
-                                .filter(([, v]) => v > 0)
-                                .map(([k, v]) => ({
-                                    color: colorMap[k] || "#94a3b8",
-                                    value: v,
-                                })),
-                            total
-                        )}
-                    <Stack spacing={0.75}>
-                        {Object.entries(data).map(([label, count]) => (
-                            <Stack
-                                key={label}
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="space-between"
-                            >
-                                <Stack alignItems="center" direction="row" spacing={1}>
-                                    <Box
-                                        sx={{
-                                            width: 8,
-                                            height: 8,
-                                            borderRadius: "50%",
-                                            backgroundColor: colorMap[label] || "#94a3b8",
-                                        }}
-                                    />
-                                    <Typography level="body-xs" sx={{ color: textSecondary }}>
-                                        {label === "None"
-                                            ? t.tasks.meta.none
-                                            : taskMetaLabel(label, t.tasks.filters)}
-                                    </Typography>
-                                </Stack>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ fontWeight: 600, color: textPrimary }}
-                                >
-                                    {count}
-                                </Typography>
-                            </Stack>
-                        ))}
-                    </Stack>
-                </Stack>
-            </Card>
-        );
-    };
-
-    const priorityColors: Record<string, string> = {
-        Critical: "#EF4444",
-        High: "#F59E0B",
-        Normal: "#3B82F6",
-        Low: "#34D399",
-        Minimal: "#9CA3AF",
-        None: "#94a3b8",
-    };
-
-    const effortColors: Record<string, string> = {
-        Extensive: "#EF4444",
-        High: "#F59E0B",
-        Moderate: "#3B82F6",
-        Low: "#34D399",
-        Minimal: "#9CA3AF",
-        None: "#94a3b8",
-    };
-
     // Due-window segments for the Team Capacity bars, in "soonest first"
     // order so a member's bar reads left-to-right as overdue → later. Same
     // red→amber→blue→gray heat language as the rest of the dashboard.
@@ -220,398 +126,69 @@ export const OverallTab = ({
         },
     ];
 
+    const nf = useNumberFormat();
+    const statusSegments: ProportionSegment[] = [
+        { key: "Open", n: stats.openCount },
+        { key: "WIP", n: stats.wipCount },
+        { key: "Blocked", n: stats.blockedCount },
+        { key: "Pending", n: stats.pendingCount },
+        { key: "Closed", n: stats.closedCount },
+    ].map(({ key, n }) => ({
+        key,
+        label: taskMetaLabel(key, t.tasks.filters) || key,
+        value: n,
+        tone: STATUS_TONE[key as keyof typeof STATUS_TONE],
+        // "3 · 60%": the old status cards showed each share.
+        display: `${nf.number(n)} · ${nf.percent(stats.totalTasks > 0 ? n / stats.totalTasks : 0)}`,
+    }));
+    const levelSegments = (
+        data: Record<string, number>,
+        tones: Record<string, Tone>
+    ): ProportionSegment[] =>
+        Object.entries(data).map(([key, n]) => ({
+            key,
+            label: key === "None" ? t.tasks.meta.none : taskMetaLabel(key, t.tasks.filters),
+            value: n,
+            tone: tones[key] ?? "neutral",
+            display: nf.number(n),
+        }));
+    const prioritySegments = levelSegments(priorityBreakdown, PRIORITY_TONE);
+    const effortSegments = levelSegments(effortBreakdown, EFFORT_TONE);
+    const prioritySum = prioritySegments.reduce((a, x) => a + x.value, 0);
+    const effortSum = effortSegments.reduce((a, x) => a + x.value, 0);
+    // "Open 3, WIP 2, Closed 0" for assistive tech: the numbers are never hover-only.
+    const segmentsLabel = (segs: ProportionSegment[]) =>
+        segs.map((x) => `${x.label} ${x.display ?? x.value}`).join(", ");
+
     return (
         <>
-            {/* ════════ Section B: Status Distribution ════════ */}
-            <Box>
-                <Typography
-                    level="title-sm"
-                    sx={{
-                        fontWeight: 600,
-                        mb: 2,
-                        color: sectionHeaderColor,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                    }}
+            {/* ════════ Status, priority and effort (MIP-1963): one ProportionBar each ════════ */}
+            <DashboardGrid>
+                <DashboardCard title={t.tasks.dashboard.statusDistribution}>
+                    <ProportionBar
+                        ariaLabel={segmentsLabel(statusSegments)}
+                        segments={statusSegments}
+                    />
+                </DashboardCard>
+                <DashboardCard
+                    count={nf.number(prioritySum)}
+                    title={t.tasks.dashboard.priorityDistribution}
                 >
-                    <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
-                    {t.tasks.dashboard.statusDistribution}
-                </Typography>
-
-                {/* Stacked bar */}
-                {stats.totalTasks > 0 && (
-                    <Box sx={{ mb: 2 }}>
-                        {renderStackedBar(
-                            [
-                                {
-                                    color: statusColor("Open"),
-                                    value: stats.openCount,
-                                },
-                                {
-                                    color: statusColor("WIP"),
-                                    value: stats.wipCount,
-                                },
-                                {
-                                    color: statusColor("Blocked"),
-                                    value: stats.blockedCount,
-                                },
-                                {
-                                    color: statusColor("Pending"),
-                                    value: stats.pendingCount,
-                                },
-                                {
-                                    color: statusColor("Closed"),
-                                    value: stats.closedCount,
-                                },
-                            ],
-                            stats.totalTasks
-                        )}
-                    </Box>
-                )}
-
-                {/* Status cards — one equal-width card per
-                    status, all on a single row. A CSS grid
-                    (not the 12-column MUI Grid): 12 isn't
-                    divisible by 5, so the 5th card wrapped to
-                    a second row. */}
-                <Box
-                    sx={{
-                        display: "grid",
-                        gridTemplateColumns: {
-                            xs: "repeat(2, 1fr)",
-                            md: "repeat(5, 1fr)",
-                        },
-                        gap: 1.5,
-                    }}
+                    <ProportionBar
+                        ariaLabel={segmentsLabel(prioritySegments)}
+                        segments={prioritySegments}
+                    />
+                </DashboardCard>
+                <DashboardCard
+                    count={nf.number(effortSum)}
+                    title={t.tasks.dashboard.effortDistribution}
                 >
-                    {(
-                        [
-                            { key: "Open", count: stats.openCount },
-                            { key: "WIP", count: stats.wipCount },
-                            { key: "Blocked", count: stats.blockedCount },
-                            { key: "Pending", count: stats.pendingCount },
-                            { key: "Closed", count: stats.closedCount },
-                        ] as const
-                    ).map((s) => {
-                        const pct =
-                            stats.totalTasks > 0
-                                ? Math.round((s.count / stats.totalTasks) * 100)
-                                : 0;
-                        // The table's status (icon in the status color,
-                        // word neutral) on a plain card: no per-status wash.
-                        return (
-                            <Card
-                                key={s.key}
-                                data-status-card={s.key}
-                                variant="outlined"
-                                sx={{
-                                    p: 2,
-                                    borderColor: cardBorder,
-                                }}
-                            >
-                                <Stack spacing={1}>
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        justifyContent="space-between"
-                                        sx={{ gap: 1, minWidth: 0 }}
-                                    >
-                                        <StatusLabel iconSize={16} status={s.key} />
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{
-                                                color: textSecondary,
-                                                fontWeight: 500,
-                                            }}
-                                        >
-                                            {pct}%
-                                        </Typography>
-                                    </Stack>
-                                    <Typography
-                                        level="h3"
-                                        sx={{
-                                            fontWeight: 600,
-                                            fontSize: "1.4rem",
-                                            color: textPrimary,
-                                        }}
-                                    >
-                                        {s.count}
-                                    </Typography>
-                                </Stack>
-                            </Card>
-                        );
-                    })}
-                </Box>
-            </Box>
-
-            {/* ════════ Section F: Overdue & Upcoming ════════ */}
-            {(overdueAndUpcoming.overdue.length > 0 || overdueAndUpcoming.upcoming.length > 0) && (
-                <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-                    {/* Overdue */}
-                    <Card
-                        variant="outlined"
-                        sx={{
-                            flex: 1,
-                            p: 2.5,
-                            background: isDark ? "rgba(239,68,68,0.04)" : "rgba(239,68,68,0.03)",
-                            borderColor: isDark ? "rgba(239,68,68,0.2)" : "rgba(239,68,68,0.15)",
-                        }}
-                    >
-                        <Stack spacing={1.5}>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="space-between"
-                            >
-                                <Stack alignItems="center" direction="row" spacing={1}>
-                                    <WarningAmberRoundedIcon
-                                        sx={{
-                                            fontSize: 16,
-                                            color: "#ef4444",
-                                        }}
-                                    />
-                                    <Typography
-                                        level="title-sm"
-                                        sx={{
-                                            fontWeight: 600,
-                                            color: "#ef4444",
-                                        }}
-                                    >
-                                        {t.tasks.dashboard.kpiOverdue}
-                                    </Typography>
-                                </Stack>
-                                <Chip
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        backgroundColor: "rgba(239,68,68,0.12)",
-                                        color: "#ef4444",
-                                        fontWeight: 700,
-                                    }}
-                                >
-                                    {overdueAndUpcoming.overdue.length}
-                                </Chip>
-                            </Stack>
-                            <Stack spacing={0}>
-                                {overdueAndUpcoming.overdue.slice(0, 5).map((task) => (
-                                    <TaskListItem
-                                        key={task.id}
-                                        status={task.effectiveStatus}
-                                        task={task}
-                                        untitled={t.tasks.dashboard.untitledTask}
-                                        variant="compact"
-                                        onOpen={() => handleTaskClick(Number(task.id))}
-                                    />
-                                ))}
-                                {overdueAndUpcoming.overdue.length > 5 && (
-                                    <Typography level="body-xs" sx={{ color: textMuted, pl: 1 }}>
-                                        {fmt(t.tasks.dashboard.moreCount, {
-                                            count: overdueAndUpcoming.overdue.length - 5,
-                                        })}
-                                    </Typography>
-                                )}
-                                {overdueAndUpcoming.overdue.length === 0 && (
-                                    <Typography level="body-xs" sx={{ color: textMuted }}>
-                                        {t.tasks.dashboard.noOverdueTasks}
-                                    </Typography>
-                                )}
-                            </Stack>
-                        </Stack>
-                    </Card>
-
-                    {/* Upcoming (due this week) */}
-                    <Card
-                        variant="outlined"
-                        sx={{
-                            flex: 1,
-                            p: 2.5,
-                            background: isDark ? "rgba(59,130,246,0.04)" : "rgba(59,130,246,0.03)",
-                            borderColor: isDark ? "rgba(59,130,246,0.2)" : "rgba(59,130,246,0.15)",
-                        }}
-                    >
-                        <Stack spacing={1.5}>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="space-between"
-                            >
-                                <Stack alignItems="center" direction="row" spacing={1}>
-                                    <CalendarMonthRoundedIcon
-                                        sx={{
-                                            fontSize: 16,
-                                            color: "#3b82f6",
-                                        }}
-                                    />
-                                    <Typography
-                                        level="title-sm"
-                                        sx={{
-                                            fontWeight: 600,
-                                            color: "#3b82f6",
-                                        }}
-                                    >
-                                        {t.tasks.dashboard.kpiDueThisWeek}
-                                    </Typography>
-                                </Stack>
-                                <Chip
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        backgroundColor: "rgba(59,130,246,0.12)",
-                                        color: "#3b82f6",
-                                        fontWeight: 700,
-                                    }}
-                                >
-                                    {overdueAndUpcoming.upcoming.length}
-                                </Chip>
-                            </Stack>
-                            <Stack spacing={0}>
-                                {overdueAndUpcoming.upcoming.slice(0, 5).map((task) => (
-                                    <TaskListItem
-                                        key={task.id}
-                                        status={task.effectiveStatus}
-                                        task={task}
-                                        untitled={t.tasks.dashboard.untitledTask}
-                                        variant="compact"
-                                        onOpen={() => handleTaskClick(Number(task.id))}
-                                    />
-                                ))}
-                                {overdueAndUpcoming.upcoming.length > 5 && (
-                                    <Typography level="body-xs" sx={{ color: textMuted, pl: 1 }}>
-                                        {fmt(t.tasks.dashboard.moreCount, {
-                                            count: overdueAndUpcoming.upcoming.length - 5,
-                                        })}
-                                    </Typography>
-                                )}
-                                {overdueAndUpcoming.upcoming.length === 0 && (
-                                    <Typography level="body-xs" sx={{ color: textMuted }}>
-                                        {t.tasks.dashboard.noTasksDueThisWeek}
-                                    </Typography>
-                                )}
-                            </Stack>
-                        </Stack>
-                    </Card>
-                </Stack>
-            )}
-            {/* ════════ Section E: Priority & Effort Breakdown ════════ */}
-            <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-                {renderDistributionCard(
-                    t.tasks.dashboard.priorityDistribution,
-                    <WarningAmberRoundedIcon sx={{ fontSize: 16, color: "#f97316" }} />,
-                    priorityBreakdown,
-                    priorityColors
-                )}
-                {renderDistributionCard(
-                    t.tasks.dashboard.effortDistribution,
-                    <TrendingUpRoundedIcon sx={{ fontSize: 16, color: "var(--gp-brand-700)" }} />,
-                    effortBreakdown,
-                    effortColors
-                )}
-            </Stack>
-
-            {/* ════════ Section F: Top by Weight ════════ */}
-            {topByWeight.length > 0 && (
-                <Box>
-                    {/* Title and sort chips are siblings inside a
-                        flex row: the chip Stack renders a <div>,
-                        which can't live inside the <p> a Joy
-                        Typography renders. */}
-                    <Stack alignItems="center" direction="row" sx={{ gap: 1, mb: 0.5 }}>
-                        <Typography
-                            level="title-sm"
-                            sx={{
-                                fontWeight: 600,
-                                color: sectionHeaderColor,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}
-                        >
-                            <WarningAmberRoundedIcon sx={{ fontSize: 16, color: "#ef4444" }} />
-                            {t.tasks.dashboard.topWeight.title}
-                            <AppTooltip
-                                title={
-                                    <Box sx={{ maxWidth: 260 }}>
-                                        <b>{t.tasks.dashboard.topWeight.help.title}</b>
-                                        <br />
-                                        {t.tasks.dashboard.topWeight.help.body}
-                                    </Box>
-                                }
-                            >
-                                <HelpOutlineRoundedIcon
-                                    sx={{
-                                        fontSize: 15,
-                                        color: textMuted,
-                                        cursor: "help",
-                                    }}
-                                />
-                            </AppTooltip>
-                        </Typography>
-                        {/* Sort selector — reorders the
-                            shortlist. Same options as the
-                            "Up Next" list: order by Task
-                            Weight (default) or by the
-                            deadline rule. */}
-                        <Stack direction="row" spacing={0.5} sx={{ ml: { sm: "auto" } }}>
-                            {(
-                                [
-                                    {
-                                        key: "weight" as const,
-                                        label: t.tasks.dashboard.upNext.byWeight,
-                                    },
-                                    {
-                                        key: "urgency" as const,
-                                        label: t.tasks.dashboard.upNext.byUrgency,
-                                    },
-                                ] as const
-                            ).map((opt) => {
-                                const active = topWeightSort === opt.key;
-                                return (
-                                    <Chip
-                                        key={opt.key}
-                                        size="sm"
-                                        variant={active ? "solid" : "soft"}
-                                        sx={{
-                                            cursor: "pointer",
-                                            fontSize: "0.7rem",
-                                            fontWeight: 600,
-                                            backgroundColor: active
-                                                ? "var(--gp-brand-700)"
-                                                : isDark
-                                                  ? "rgba(255,255,255,0.06)"
-                                                  : "rgba(0,0,0,0.05)",
-                                            color: active ? "white" : textSecondary,
-                                            "&:hover": {
-                                                backgroundColor: active
-                                                    ? "var(--gp-brand-800)"
-                                                    : isDark
-                                                      ? "rgba(255,255,255,0.1)"
-                                                      : "rgba(0,0,0,0.08)",
-                                            },
-                                        }}
-                                        onClick={() => setTopWeightSort(opt.key)}
-                                    >
-                                        {opt.label}
-                                    </Chip>
-                                );
-                            })}
-                        </Stack>
-                    </Stack>
-                    <Typography level="body-xs" sx={{ color: textMuted, mb: 1.5 }}>
-                        {t.tasks.dashboard.topWeight.subtitle}
-                    </Typography>
-                    <TaskListPanel>
-                        {topByWeightRows.map(({ task }) => (
-                            <DashboardTaskRow
-                                key={task.id}
-                                sprintName={sprintNameFor(task.sprintId)}
-                                task={task}
-                                onClick={() => handleTaskClick(Number(task.id))}
-                            />
-                        ))}
-                    </TaskListPanel>
-                </Box>
-            )}
+                    <ProportionBar
+                        ariaLabel={segmentsLabel(effortSegments)}
+                        segments={effortSegments}
+                    />
+                </DashboardCard>
+            </DashboardGrid>
 
             {/* ════════ Section G: Team Capacity ════════ */}
             <Box>

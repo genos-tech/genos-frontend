@@ -1,3 +1,4 @@
+import type { Messages } from "../../../../i18n/types";
 import { STATUS_TONE, toneSolid } from "../../meta/taskTone";
 import { Milestone } from "../../sprint-milestone/types";
 import { EffectiveTask } from "../../utils/effectiveTasks";
@@ -84,4 +85,16 @@ export const taskUpdatedAtById = (
     const out: Record<number, string | null | undefined> = {};
     for (const t of tasks) out[Number(t.id)] = t.updatedAt;
     return out;
+};
+
+export type StatusLabels = Messages["tasks"]["dashboard"]["statusLabels"];
+
+/**
+ * The dashboard's own word for a status ("Completed", not the stored "Closed"); a status it has
+ * no word for (or the "Other" bucket) falls back to the caller's text.
+ */
+export const statusText = (status: string, labels: StatusLabels, other: string): string => {
+    if (status === "Other") return other;
+    const key = status.toLowerCase() as keyof StatusLabels;
+    return labels[key] ?? status;
 };
