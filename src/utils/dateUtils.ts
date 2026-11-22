@@ -8,6 +8,7 @@
 // via their handlers, so the barrel edge here took the task table's entire
 // data path down. `getMessages.ts` is a React-free leaf — keep it that way.
 import { getMessages } from "../i18n/getMessages";
+import { localCalendarIso } from "./calendarDate";
 
 export const getLocalCurrentTimestamp = () => {
     const now = new Date();
@@ -169,14 +170,13 @@ export const extractYYYYMMDD = (ts: string) => {
 };
 
 export const getFormattedTodayDateStr = (): string => {
-    const today = new Date();
-    return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
+    return localCalendarIso(new Date()); // the viewer's calendar day, not the UTC one (MIP-1898)
 };
 
 export const getFormattedNDaysAfterDateStr = (n: number): string => {
     const today = new Date();
     today.setDate(today.getDate() + n);
-    return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
+    return localCalendarIso(today);
 };
 
 export const getFormattedDateStr = (date: Date): string => {

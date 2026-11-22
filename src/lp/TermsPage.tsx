@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { CONTACT_EMAIL } from "./kit/links";
 import { LpShell } from "./kit/LpShell";
 import {
@@ -32,9 +33,10 @@ import {
  * the header and footer only.
  *
  * Every word lives in `termsContent.ts`; this file only lays it out. The route
- * exists only when `VITE_SHOW_TERMS_PAGE=true` (termsRoute.tsx).
+ * is mounted at `/terms` from main.tsx.
  */
 export default function TermsPage() {
+    useDocumentTitle(`${TERMS_TITLE_JA} | Genos`);
     return (
         <LpShell active={null}>
             {() => (

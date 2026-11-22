@@ -38,7 +38,7 @@ export const ChildNoteCreator = memo(function ChildNoteCreator({
     };
 
     return (
-        <ListItem sx={{ p: 0 }} nested>
+        <ListItem component="li" sx={{ p: 0 }} nested>
             <NavItem
                 as="div"
                 icon={<AddRoundedIcon />}

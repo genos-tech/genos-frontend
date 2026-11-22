@@ -67,7 +67,6 @@ function RecentNoteItemComponent({
             // The star takes the time's place while the row is hovered or focused, so the row
             // is the same width either way (MIP-1430). A lit star stays beside the time.
             actions={<NoteFavoriteStar noteId={note.noteId} noteType={noteType} useNM={useNM} />}
-            as="div"
             icon={<NoteOriginIcon noteType={noteType} />}
             label={note.title || t.notes.defaults.untitled}
             lines={subLabel ? 2 : 1}

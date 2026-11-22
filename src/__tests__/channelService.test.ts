@@ -160,6 +160,50 @@ describe("channelService reactive store", () => {
         expect(arr[0].deletedAt).toBeTruthy();
     });
 
+    it("handleMessagesDeleted (bulk force delete, MIP-1951) blanks the named rows and only those", () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        for (const id of ["m-1", "m-2", "m-3"]) {
+            svc.handleMessageCreated(
+                makeMessage({
+                    id,
+                    bodyText: "secret",
+                    body: [{ type: "paragraph", content: "secret" }] as never,
+                })
+            );
+        }
+        svc.handleMessagesDeleted({
+            channelId: "ch-1",
+            channelKind: ChannelKind.GM,
+            messageIds: ["m-1", "m-3", "not-loaded"],
+        });
+        const arr = svc.getSnapshot().messagesByChannel.get("ch-1") ?? [];
+        expect(arr).toHaveLength(3);
+        const byId = new Map(arr.map((m) => [m.id, m]));
+        for (const id of ["m-1", "m-3"]) {
+            const m = byId.get(id)!;
+            expect(m.deletedAt).toBeTruthy();
+            expect(m.bodyText).toBe("");
+            expect(m.body).toEqual([]);
+            expect(m.attachments).toEqual([]);
+        }
+        expect(byId.get("m-2")!.bodyText).toBe("secret");
+        expect(byId.get("m-2")!.deletedAt).toBeFalsy();
+    });
+
+    it("handleMessagesDeleted refreshes the chat's latest-message preview when it was blanked", () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        svc.handleMessageCreated(makeMessage({ id: "m-new", bodyText: "secret" }));
+        expect(svc.getSnapshot().channels.get("ch-1")?.latestMessage?.bodyText).toBe("secret");
+        svc.handleMessagesDeleted({
+            channelId: "ch-1",
+            channelKind: ChannelKind.GM,
+            messageIds: ["m-new"],
+        });
+        const latest = svc.getSnapshot().channels.get("ch-1")?.latestMessage;
+        expect(latest?.bodyText).toBe("");
+        expect(latest?.deletedAt).toBeTruthy();
+    });
+
     it("handleReactionAdded is idempotent on duplicate event delivery", () => {
         svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
         svc.handleMessageCreated(makeMessage({ id: "m-1" }));

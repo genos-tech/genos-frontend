@@ -19,6 +19,7 @@ import {
 } from "../../../agentActivity/agentActivityFilters";
 import { useAgentWork } from "../../../hooks/useAgentWork";
 import { AgentWorkUserAgentRow } from "../../../services/loadAgentWork";
+import type { ProjectIdentity } from "../../ProjectIdentityRow";
 import { familyKind, formatAgentWhen } from "./agentActivityLinks";
 import { AgentConnectionsList } from "./AgentConnectionsList";
 import { AgentDecisionsList } from "./AgentDecisionsList";
@@ -31,6 +32,11 @@ const TASKS_PATH = "/workspace/tasks";
 
 type Props = {
     projects: { id: number; name: string }[];
+    /** The full project records (labels, lock, share mark), so the Project filter looks like the
+     *  other project pickers (MIP-1916). Optional: a project without one shows its name only. */
+    projectRecords?: readonly ProjectIdentity[];
+    /** Project id -> avatar url (`projectAvatarSrcMap`); a project missing from it gets the icon. */
+    projectAvatars?: Map<number, string>;
     /** The team the tab shows. The API needs it on every request; a change refetches. */
     teamId: string;
 };
@@ -49,7 +55,7 @@ const peopleFrom = (rows: AgentWorkUserAgentRow[]): { id: string; name: string }
  * Genos, and for what. Filters live in the URL query so a view can be shared. Every
  * failure is a calm state here; nothing in this tab throws into the dashboard.
  */
-export const AgentActivityTab = ({ projects, teamId }: Props) => {
+export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, teamId }: Props) => {
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.agentActivity;
     const location = useLocation();
@@ -99,13 +105,25 @@ export const AgentActivityTab = ({ projects, teamId }: Props) => {
 
     const page = view.page;
     const filtered = hasActiveAgentFilters(filters);
-    const people = useMemo(() => {
-        const list = peopleFrom(page?.by_user_agent ?? []);
-        if (filters.userId && !list.some((p) => p.id === filters.userId)) {
-            list.push({ id: filters.userId, name: "—" });
+    // The api filters `by_user_agent` by person and agent, so the list is accumulated from the
+    // responses that were not narrowed (a filtered one adds only the chosen person), and reset on
+    // a team change: picking A must not drop B from the Person list (MIP-1896). The merge is
+    // idempotent, so doing it during render is safe.
+    const peopleSeen = useRef<{ teamId: string; byId: Map<string, string> }>({
+        teamId,
+        byId: new Map(),
+    });
+    if (peopleSeen.current.teamId !== teamId) peopleSeen.current = { teamId, byId: new Map() };
+    if (page) {
+        const narrowed = filters.userId != null || filters.agent != null;
+        for (const p of peopleFrom(page.by_user_agent)) {
+            if (!narrowed || p.id === filters.userId) peopleSeen.current.byId.set(p.id, p.name);
         }
-        return list;
-    }, [page, filters.userId]);
+    }
+    const people = [...peopleSeen.current.byId].map(([id, name]) => ({ id, name }));
+    if (filters.userId && !people.some((p) => p.id === filters.userId)) {
+        people.push({ id: filters.userId, name: "—" });
+    }
 
     const sectionLabel = a.heading;
 
@@ -139,7 +157,12 @@ export const AgentActivityTab = ({ projects, teamId }: Props) => {
             />
         );
     } else if (page) {
-        const nothingInWindow = page.totals.changes === 0 && page.decisions.length === 0;
+        // The api builds `totals` from every filter except the agent, so under an agent filter
+        // the agent's own count is what says whether anything matches (MIP-1896).
+        const changesShown = filters.agent
+            ? (page.totals.by_agent[filters.agent] ?? 0)
+            : page.totals.changes;
+        const nothingInWindow = changesShown === 0 && page.decisions.length === 0;
         const latestConnection = [...page.connections].sort((x, y) =>
             (y.last_used_at ?? "").localeCompare(x.last_used_at ?? "")
         )[0];
@@ -233,6 +256,8 @@ export const AgentActivityTab = ({ projects, teamId }: Props) => {
                 <AgentFilterBar
                     filters={filters}
                     people={people}
+                    projectAvatars={projectAvatars}
+                    projectRecords={projectRecords}
                     projects={projects}
                     onChange={applyFilters}
                     onClear={clearFilters}

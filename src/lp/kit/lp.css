@@ -604,7 +604,7 @@ body.lp-body {
 .lp-caption {
     margin-top: 12px;
     font-size: 0.8125rem;
-    color: var(--lp-text-tertiary);
+    color: var(--lp-text-secondary);
 }
 
 /* ---------- hero ---------- */
@@ -1125,7 +1125,7 @@ a.lp-row:hover .lp-row__arrow {
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 12px;
-    color: var(--lp-text-tertiary);
+    color: var(--lp-text-secondary);
 }
 
 .lp-footer__analytics {
@@ -1704,7 +1704,7 @@ a.lp-row:hover .lp-row__arrow {
     align-items: center;
     gap: 6px;
     font-size: 0.8125rem;
-    color: var(--lp-text-tertiary);
+    color: var(--lp-text-secondary);
 }
 
 .lp-cast {

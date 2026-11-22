@@ -19,7 +19,6 @@ export const FavoriteFolderItem = ({
     useNM: NoteManagementState;
 }) => (
     <NavItem
-        as="div"
         data-testid={`favorite-folder-${folder.folderId}`}
         icon={<FolderRoundedIcon />}
         label={folder.name}

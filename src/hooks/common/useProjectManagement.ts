@@ -4,7 +4,8 @@ import {
     PROJECT_DELETED_EVENT,
     type ProjectDeletedDetail,
 } from "../../features/agentQA/approvedProjectWrites";
-import { setArchivedProjects } from "../../features/archive/archiveState";
+import { archivedJoinedProjects } from "../../features/archive/archiveApi";
+import { getArchiveSnapshot, setArchivedProjects } from "../../features/archive/archiveState";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { isProjectGoneError } from "../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
@@ -136,7 +137,7 @@ export const useProjectManagement = (
         }
         syncStatus.report("projects", true);
         // The archived projects sit in their own section (MIP-1693), taken from the same read.
-        setArchivedProjects(allTeamProjects?.filter((p) => p.archived) ?? []);
+        setArchivedProjects(archivedJoinedProjects(allTeamProjects ?? []));
         // A project the list no longer holds (deleted, left, access lost) has no
         // task load worth retrying: its failure must not hold the banner up for a
         // stale `lastProjectId` (MIP-1323).
@@ -161,6 +162,17 @@ export const useProjectManagement = (
             targetProjectId !== -1 &&
             !loadedTeamProjects.some((p) => p.projectId === targetProjectId)
         ) {
+            // The active list never holds an archived project, which stays openable for
+            // reading (MIP-1920): the archived section came from the same read.
+            const archived = getArchiveSnapshot().archivedProjects.find(
+                (p) => p.projectId === targetProjectId
+            );
+            if (archived) {
+                setTeamProjects([...loadedTeamProjects]);
+                setCurrentProject(toCurrentProject(archived));
+                await loadPickedProjectTasks(archived.projectId);
+                return;
+            }
             forgetLastProject(targetProjectId);
             targetProjectId = -1;
         }

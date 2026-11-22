@@ -39,3 +39,11 @@ export const unarchiveProject = async (
     );
     markProjectArchived(project, false);
 };
+
+/**
+ * The archived projects the member can open, from the rows of the full list (MIP-1853: each row
+ * says whether it is archived). Only projects the member joined: the team list also holds projects
+ * they never joined (private ones too), which they cannot open (MIP-1921).
+ */
+export const archivedJoinedProjects = (all: readonly ProjectProps[]): ProjectProps[] =>
+    all.filter((p) => p.archived === true && p.isJoined === true);

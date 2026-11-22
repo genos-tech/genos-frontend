@@ -24,13 +24,13 @@ type Processor = {
 export const PROCESSORS: Processor[] = [
     {
         name: "Railway",
-        ja: "ホスティング・データ保管。本サービスの本番環境は Railway 上で稼働しており、アカウント情報やコンテンツなど、サービスのデータはここに保存されます（AI 利用料の集計ページを除きます。下記の Google Cloud Storage を参照）。",
-        en: "Hosting and storage. Production runs on Railway, and service data, including account details and your content, is stored there (AI cost reports are the exception; see Google Cloud Storage below).",
+        ja: "ホスティング・データ保管。本サービスの本番環境は Railway 上で稼働しており、アカウント情報やコンテンツなど、サービスのデータは主にここに保存されます。AI 機能は Google の Vertex AI を呼び出して処理します（下記の Google を参照）。AI 利用料の集計ページは Google Cloud Storage に保存していました（下記を参照）。",
+        en: "Hosting and storage. Production runs on Railway, and service data, including account details and your content, is mainly stored there. AI features call Google Vertex AI (see Google below). AI cost reports were kept in Google Cloud Storage (see below).",
     },
     {
         name: "Google Cloud Storage",
-        ja: "AI 利用料の集計ページを毎日保存します。保存されるのは AI の利用量と費用の集計で、利用者の ID を含みます。",
-        en: "Stores the daily AI cost reports. These hold AI usage and cost totals, including user IDs.",
+        ja: "AI 利用料の集計ページを毎日保存します。以前のページには利用者の ID が含まれていましたが、現在のページは利用量と費用の合計のみで、利用者単位の集計は保存しません。バケットには 400 日で削除する保存期間ルールを設定する手順が用意されていますが、このルールの適用と、以前のページの削除は、作業が完了するまで反映されていない場合があります。",
+        en: "Stores the daily AI cost reports. Earlier pages included user IDs; current pages hold usage and cost totals only, with no per-user breakdown. A lifecycle rule that deletes pages after 400 days, and a purge of the earlier pages, have been prepared and take effect only once applied to the bucket.",
     },
     {
         name: "Google（Gemini）",
@@ -59,8 +59,8 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "Stripe",
-        ja: "決済・請求。メールアドレス、ユーザー名、内部 ID、プラン、チームの課金ではチーム名とチームのメールアドレスが送信されます。クレジットカード番号は Stripe のページで直接入力され、当サービスのサーバーには届きません。アカウントを削除しても、Stripe 上の顧客情報と請求履歴は削除されず、保持されます。",
-        en: "Payments and billing. Your email address, username, internal IDs and plan are sent, and for team billing the team name and team email. Card numbers are entered on Stripe's own page and never reach our servers. Deleting your account does not delete your customer record or billing history at Stripe; they are kept.",
+        ja: "決済・請求。メールアドレス、ユーザー名、内部 ID、プランが送信されます。チームの課金では、チームの請求担当者（チームのオーナー）のメールアドレスとチーム名が送信されます（チーム用の別のメールアドレスは送信しません）。クレジットカード番号は Stripe のページで直接入力され、当サービスのサーバーには届きません。アカウントを削除しても、Stripe 上の顧客情報と請求履歴は削除されず、保持されます。",
+        en: "Payments and billing. Your email address, username, internal IDs and plan are sent. For team billing, the email address of the billing owner (the team owner) and the team name are sent; no separate team email address is sent. Card numbers are entered on Stripe's own page and never reach our servers. Deleting your account does not delete your customer record or billing history at Stripe; they are kept.",
     },
     {
         name: "Resend",
