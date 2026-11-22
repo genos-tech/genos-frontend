@@ -167,7 +167,7 @@ describe("DeveloperSettingsSection", () => {
         createWebhook.mockResolvedValue({ status: "limit", limit: 3, used: 3 });
         render(<DeveloperSettingsSection teamId="t1" />);
         await user.type(
-            screen.getByPlaceholderText(/your-app.example.com/i),
+            screen.getByPlaceholderText(/your-app\.example\.com/i),
             "https://x.example/h"
         );
         await user.click(screen.getByRole("button", { name: /Add webhook/i }));
@@ -181,7 +181,7 @@ describe("DeveloperSettingsSection", () => {
         createWebhook.mockResolvedValue({ status: "limit", limit: 0, used: 0 });
         render(<DeveloperSettingsSection teamId="t1" />);
         await user.type(
-            screen.getByPlaceholderText(/your-app.example.com/i),
+            screen.getByPlaceholderText(/your-app\.example\.com/i),
             "https://x.example/h"
         );
         await user.click(screen.getByRole("button", { name: /Add webhook/i }));
