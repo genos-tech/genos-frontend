@@ -392,9 +392,9 @@ export const ProjectAnalytics = ({
                                             <tr key={row.tagName}>
                                                 <td>
                                                     <ProjectTagChip
-                                                        fontSize="0.8rem"
                                                         isDark={isDark}
                                                         label={row.tagName}
+                                                        size="md"
                                                         tagColor={row.tagColor}
                                                     />
                                                 </td>

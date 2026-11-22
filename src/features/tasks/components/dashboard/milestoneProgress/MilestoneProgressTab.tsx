@@ -1,11 +1,11 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import { Box, Button, IconButton, Stack, Typography } from "@mui/joy";
+import { Box, Button, Stack, Typography } from "@mui/joy";
 import { Link } from "react-router-dom";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
-import { AvatarGroup, BaseAvatar } from "../../../../../components/ui/avatars/BaseAvatar";
+import { AvatarGroup } from "../../../../../components/ui/avatars/BaseAvatar";
+import { UserAvatar } from "../../../../../components/ui/avatars/UserAvatar";
 import {
     DashboardCard,
     ProportionBar,
@@ -19,7 +19,7 @@ import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/AuthContext";
 import { fmt, useTranslation } from "../../../../../i18n";
-import { g } from "../../../../../theme/tokens";
+import { focusRing, g } from "../../../../../theme/tokens";
 import { TaskProgressPage } from "../../../../../types/tasks";
 import { requestAskGenosWithDraft } from "../../../../spotlight/askGenosAbout";
 import { useAskGenosAvailable } from "../../../../spotlight/useAskGenosAvailable";
@@ -35,11 +35,12 @@ import {
     summarizeMilestoneProgressOverview,
 } from "../../../utils/milestoneProgressSummary";
 import { formatRelativeAge } from "../../../utils/relativeAge";
+import { TagStrip } from "../../card/parts";
 import { SourceTaskLine } from "../../contents/base/sub/TaskProgressFeed";
+import { PriorityIcon } from "../../meta/PriorityIcon";
 import { StatusLabel } from "../../meta/StatusLabel";
+import { TaskMentionHoverCard } from "../../TaskMentionHoverCard";
 import { statusText, type StatusLabels } from "../taskHomeHelpers";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type Msgs = ReturnType<typeof useTranslation>["t"]["tasks"]["dashboard"]["milestoneProgress"];
 type AgeMsgs = ReturnType<typeof useTranslation>["t"]["tasks"]["activity"];
@@ -384,253 +385,315 @@ const MilestoneCard = ({
     const { t: tr } = useTranslation();
     const openLabel = tr.tasks.dashboard.project.openMilestoneFor;
     return (
-        <DashboardCard
-            headingLevel="h4"
-            title={milestone.title}
-            actions={
-                <Stack alignItems="center" direction="row" spacing={1}>
-                    {(milestone.assignees?.length ?? 0) > 0 && (
-                        <AvatarGroup size="sm">
-                            {(milestone.assignees ?? []).slice(0, 4).map((a, idx) => (
-                                <BaseAvatar
-                                    key={a.userId != null ? String(a.userId) : `idx-${idx}`}
-                                    alt={a.username ?? ""}
-                                    name={a.username}
-                                    src={
-                                        a.profileImageUrl
-                                            ? `${media_url}${a.profileImageUrl}`
-                                            : undefined
-                                    }
-                                />
-                            ))}
-                        </AvatarGroup>
-                    )}
-                    <StatusLabel status={milestone.status} />
-                    {onOpenMilestone && (
-                        <AppTooltip title={fmt(openLabel, { title: milestone.title })}>
-                            <IconButton
-                                aria-label={fmt(openLabel, { title: milestone.title })}
-                                size="sm"
-                                variant="plain"
-                                onClick={() => onOpenMilestone(milestone.milestoneId)}
-                            >
-                                <OpenInNewRoundedIcon />
-                            </IconButton>
-                        </AppTooltip>
-                    )}
-                </Stack>
-            }
+        // The whole card opens the milestone (Ken, 2026-11-22). A real <button>
+        // laid over the card (not a role on the card) keeps the controls inside
+        // it (Show details, task links) valid HTML; they sit above it.
+        <Box
+            data-testid="milestone-card"
+            sx={{
+                position: "relative",
+                borderRadius: g.radius.md,
+                ...(onOpenMilestone
+                    ? {
+                          "& > section": {
+                              position: "relative",
+                              pointerEvents: "none",
+                              transition: "background-color 120ms ease, border-color 120ms ease",
+                          },
+                          "&:hover > section": {
+                              background: g.surface.raised,
+                              borderColor: g.border.default,
+                          },
+                          "& .ms-card-hit": {
+                              position: "absolute",
+                              inset: 0,
+                              zIndex: 0,
+                              m: 0,
+                              p: 0,
+                              border: 0,
+                              borderRadius: "inherit",
+                              background: "transparent",
+                              cursor: "pointer",
+                              "&:focus-visible": { ...focusRing, outlineOffset: -2 },
+                          },
+                          "& > section a, & > section button, & > section [data-hover-card]": {
+                              position: "relative",
+                              zIndex: 1,
+                              pointerEvents: "auto",
+                          },
+                      }
+                    : {}),
+            }}
         >
-            <Stack
-                alignItems="baseline"
-                direction="row"
-                justifyContent="space-between"
-                spacing={1}
-                sx={{ flexWrap: "wrap" }}
-            >
-                <Typography
-                    level="body-xs"
-                    sx={{ color: dueColor, fontWeight: dueTone === "muted" ? 400 : 600 }}
-                >
-                    {dueText}
-                </Typography>
-                <Typography
-                    level="body-xs"
-                    sx={{ color: g.text.secondary, fontVariantNumeric: "tabular-nums" }}
-                >
-                    {total === 0
-                        ? m.noTasks
-                        : fmt(m.closedOfTotal, {
-                              closed: nf.number(summary.closed),
-                              total: nf.number(total),
-                          })}
-                </Typography>
-            </Stack>
-
-            {total > 0 && (
-                <Box sx={{ mt: 1 }}>
-                    <ProportionBar
-                        ariaLabel={fmt(m.closedOfTotal, {
-                            closed: nf.number(summary.closed),
-                            total: nf.number(total),
-                        })}
-                        segments={summary.entries.map((e) => ({
-                            key: e.status,
-                            label: statusText(e.status, statusLabels, m.otherStatus),
-                            value: e.count,
-                            tone:
-                                e.status === "Other"
-                                    ? "muted"
-                                    : (STATUS_TONE[e.status as StatusName] ?? "muted"),
-                            display: nf.number(e.count),
-                        }))}
-                    />
-                </Box>
+            {onOpenMilestone && (
+                <button
+                    aria-label={fmt(openLabel, { title: milestone.title })}
+                    className="ms-card-hit"
+                    type="button"
+                    onClick={() => onOpenMilestone(milestone.milestoneId)}
+                />
             )}
-
-            <Typography
-                level="body-xs"
-                sx={{
-                    mt: 1,
-                    color: summary.stalled ? toneCss("warning").text : g.text.secondary,
-                    fontWeight: summary.stalled ? 600 : 400,
-                }}
-            >
-                {summary.stalled
-                    ? fmt(m.stalled, { count: summary.idleDays ?? 0 })
-                    : summary.lastProgressAt
-                      ? fmt(m.lastProgress, {
-                            age: formatRelativeAge(
-                                summary.lastProgressAt,
-                                age,
-                                now.getTime(),
-                                locale
-                            ),
-                        })
-                      : m.noProgress}
-            </Typography>
-
-            <Button
-                aria-controls={detailsId}
-                aria-expanded={open}
-                color="neutral"
-                size="sm"
-                sx={{ mt: 1, px: 0, color: g.text.secondary }}
-                variant="plain"
-                aria-label={fmt(open ? m.detailsHideFor : m.detailsShowFor, {
-                    title: milestone.title,
-                })}
-                onClick={() => setOpen((v) => !v)}
-            >
-                {open ? m.detailsHide : m.detailsShow}
-            </Button>
-
-            {open && (
-                <Stack
-                    id={detailsId}
-                    spacing={2}
-                    sx={{ mt: 1.5, pt: 1.5, borderTop: "1px solid", borderColor: g.border.subtle }}
-                >
-                    <Box>
-                        <Typography
-                            level="title-sm"
-                            sx={{ color: g.text.primary, fontWeight: 600, mb: 0.5 }}
-                        >
-                            {m.attentionHeading}
-                        </Typography>
-                        {shownAttention.length === 0 ? (
-                            <EmptyState
-                                body={m.attentionNone}
-                                data-empty="milestone-attention-none"
-                                size="xs"
-                            />
-                        ) : (
-                            <Stack
-                                component="ul"
-                                spacing={0.75}
-                                sx={{ listStyle: "none", m: 0, p: 0 }}
-                            >
-                                {shownAttention.map((t) => {
-                                    const reason = reasonFor(t);
-                                    return (
-                                        <Stack
-                                            key={String(t.id)}
-                                            alignItems="baseline"
-                                            component="li"
-                                            direction="row"
-                                            spacing={1}
-                                            sx={{ minWidth: 0 }}
-                                        >
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: toneCss(reason.tone).text,
-                                                    fontWeight: 600,
-                                                    whiteSpace: "nowrap",
-                                                    minWidth: 72,
-                                                }}
-                                            >
-                                                {reason.label}
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: g.text.primary,
-                                                    minWidth: 0,
-                                                    overflow: "hidden",
-                                                    textOverflow: "ellipsis",
-                                                    whiteSpace: "nowrap",
-                                                    flex: 1,
-                                                }}
-                                            >
-                                                <Link
-                                                    to={`/workspace/tasks/project/${milestone.projectId}/task/${t.id}`}
-                                                    style={{
-                                                        color: "inherit",
-                                                        textDecoration: "none",
-                                                    }}
-                                                >
-                                                    {t.title}
-                                                </Link>
-                                            </Typography>
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{
-                                                    color: g.text.tertiary,
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {assigneeOf(t)}
-                                            </Typography>
-                                        </Stack>
-                                    );
-                                })}
-                                {hiddenAttention > 0 && (
-                                    <Typography level="body-xs" sx={{ color: g.text.secondary }}>
-                                        {fmt(m.attentionMore, { count: hiddenAttention })}
-                                    </Typography>
-                                )}
-                            </Stack>
+            <DashboardCard
+                headingLevel="h4"
+                title={milestone.title}
+                actions={
+                    <Stack alignItems="center" direction="row" spacing={1}>
+                        {(milestone.assignees?.length ?? 0) > 0 && (
+                            <AvatarGroup size="sm">
+                                {(milestone.assignees ?? []).slice(0, 4).map((a, idx) => (
+                                    <UserAvatar
+                                        key={a.userId != null ? String(a.userId) : `idx-${idx}`}
+                                        clickable={false}
+                                        fallbackName={a.username}
+                                        showPulseDot={false}
+                                        size="sm"
+                                        userId={a.userId}
+                                    />
+                                ))}
+                            </AvatarGroup>
                         )}
-                    </Box>
+                        <StatusLabel status={milestone.status} />
+                    </Stack>
+                }
+            >
+                <Stack
+                    alignItems="baseline"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={1}
+                    sx={{ flexWrap: "wrap" }}
+                >
+                    <Typography
+                        level="body-xs"
+                        sx={{ color: dueColor, fontWeight: dueTone === "muted" ? 400 : 600 }}
+                    >
+                        {dueText}
+                    </Typography>
+                    <Typography
+                        level="body-xs"
+                        sx={{ color: g.text.secondary, fontVariantNumeric: "tabular-nums" }}
+                    >
+                        {total === 0
+                            ? m.noTasks
+                            : fmt(m.closedOfTotal, {
+                                  closed: nf.number(summary.closed),
+                                  total: nf.number(total),
+                              })}
+                    </Typography>
+                </Stack>
 
-                    {taskId != null && (
+                {total > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                        <ProportionBar
+                            ariaLabel={fmt(m.closedOfTotal, {
+                                closed: nf.number(summary.closed),
+                                total: nf.number(total),
+                            })}
+                            segments={summary.entries.map((e) => ({
+                                key: e.status,
+                                label: statusText(e.status, statusLabels, m.otherStatus),
+                                value: e.count,
+                                tone:
+                                    e.status === "Other"
+                                        ? "muted"
+                                        : (STATUS_TONE[e.status as StatusName] ?? "muted"),
+                                display: nf.number(e.count),
+                            }))}
+                        />
+                    </Box>
+                )}
+
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        mt: 1,
+                        color: summary.stalled ? toneCss("warning").text : g.text.secondary,
+                        fontWeight: summary.stalled ? 600 : 400,
+                    }}
+                >
+                    {summary.stalled
+                        ? fmt(m.stalled, { count: summary.idleDays ?? 0 })
+                        : summary.lastProgressAt
+                          ? fmt(m.lastProgress, {
+                                age: formatRelativeAge(
+                                    summary.lastProgressAt,
+                                    age,
+                                    now.getTime(),
+                                    locale
+                                ),
+                            })
+                          : m.noProgress}
+                </Typography>
+
+                <Button
+                    aria-controls={detailsId}
+                    aria-expanded={open}
+                    color="neutral"
+                    size="sm"
+                    sx={{ mt: 1, px: 0, color: g.text.secondary }}
+                    variant="plain"
+                    aria-label={fmt(open ? m.detailsHideFor : m.detailsShowFor, {
+                        title: milestone.title,
+                    })}
+                    onClick={() => setOpen((v) => !v)}
+                >
+                    {open ? m.detailsHide : m.detailsShow}
+                </Button>
+
+                {open && (
+                    <Stack
+                        id={detailsId}
+                        spacing={2}
+                        sx={{
+                            mt: 1.5,
+                            pt: 1.5,
+                            borderTop: "1px solid",
+                            borderColor: g.border.subtle,
+                        }}
+                    >
                         <Box>
                             <Typography
                                 level="title-sm"
                                 sx={{ color: g.text.primary, fontWeight: 600, mb: 0.5 }}
                             >
-                                {m.recentHeading}
+                                {m.attentionHeading}
                             </Typography>
-                            <DataState
-                                error={failed}
-                                hasData={page != null && page.entries.length > 0}
-                                loading={loading}
-                                size="xs"
-                                skeleton={<SkeletonLines lines={3} />}
-                                empty={{
-                                    body: m.recentNone,
-                                    "data-empty": "milestone-recent-none",
-                                }}
-                                errorState={{
-                                    title: m.recentFailed,
-                                    onRetry: () => setAttempt((n) => n + 1),
-                                    "data-error": "milestone-recent",
-                                }}
-                            >
-                                <RecentProgress
-                                    entries={page?.entries ?? []}
-                                    labels={{ m, age }}
-                                    locale={locale}
-                                    now={now}
-                                    projectId={milestone.projectId}
+                            {shownAttention.length === 0 ? (
+                                <EmptyState
+                                    body={m.attentionNone}
+                                    data-empty="milestone-attention-none"
+                                    size="xs"
                                 />
-                            </DataState>
+                            ) : (
+                                <Stack
+                                    component="ul"
+                                    spacing={0.75}
+                                    sx={{ listStyle: "none", m: 0, p: 0 }}
+                                >
+                                    {shownAttention.map((t) => {
+                                        const reason = reasonFor(t);
+                                        return (
+                                            <Stack
+                                                key={String(t.id)}
+                                                alignItems="center"
+                                                component="li"
+                                                data-testid="milestone-attention-row"
+                                                direction="row"
+                                                spacing={1}
+                                                sx={{ minWidth: 0, flexWrap: "wrap", rowGap: 0.5 }}
+                                            >
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        color: toneCss(reason.tone).text,
+                                                        fontWeight: 600,
+                                                        whiteSpace: "nowrap",
+                                                        minWidth: 72,
+                                                    }}
+                                                >
+                                                    {reason.label}
+                                                </Typography>
+                                                <AppTooltip
+                                                    enterDelay={250}
+                                                    placement="top-start"
+                                                    surface="none"
+                                                    title={
+                                                        <TaskMentionHoverCard
+                                                            displayId={t.displayId || String(t.id)}
+                                                            projectId={String(milestone.projectId)}
+                                                            taskId={String(t.id)}
+                                                            title={t.title ?? ""}
+                                                        />
+                                                    }
+                                                >
+                                                    <Typography
+                                                        data-hover-card=""
+                                                        level="body-xs"
+                                                        sx={{
+                                                            color: g.text.primary,
+                                                            minWidth: 0,
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            whiteSpace: "nowrap",
+                                                            flex: "1 1 160px",
+                                                        }}
+                                                    >
+                                                        <Link
+                                                            to={`/workspace/tasks/project/${milestone.projectId}/task/${t.id}`}
+                                                            style={{
+                                                                color: "inherit",
+                                                                textDecoration: "none",
+                                                            }}
+                                                        >
+                                                            {t.title}
+                                                        </Link>
+                                                    </Typography>
+                                                </AppTooltip>
+                                                <StatusLabel status={t.effectiveStatus} />
+                                                <PriorityIcon priority={t.priority} />
+                                                <TagStrip max={2} tags={t.tags} />
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        color: g.text.tertiary,
+                                                        whiteSpace: "nowrap",
+                                                    }}
+                                                >
+                                                    {assigneeOf(t)}
+                                                </Typography>
+                                            </Stack>
+                                        );
+                                    })}
+                                    {hiddenAttention > 0 && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: g.text.secondary }}
+                                        >
+                                            {fmt(m.attentionMore, { count: hiddenAttention })}
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            )}
                         </Box>
-                    )}
-                </Stack>
-            )}
-        </DashboardCard>
+
+                        {taskId != null && (
+                            <Box>
+                                <Typography
+                                    level="title-sm"
+                                    sx={{ color: g.text.primary, fontWeight: 600, mb: 0.5 }}
+                                >
+                                    {m.recentHeading}
+                                </Typography>
+                                <DataState
+                                    error={failed}
+                                    hasData={page != null && page.entries.length > 0}
+                                    loading={loading}
+                                    size="xs"
+                                    skeleton={<SkeletonLines lines={3} />}
+                                    empty={{
+                                        body: m.recentNone,
+                                        "data-empty": "milestone-recent-none",
+                                    }}
+                                    errorState={{
+                                        title: m.recentFailed,
+                                        onRetry: () => setAttempt((n) => n + 1),
+                                        "data-error": "milestone-recent",
+                                    }}
+                                >
+                                    <RecentProgress
+                                        entries={page?.entries ?? []}
+                                        labels={{ m, age }}
+                                        locale={locale}
+                                        now={now}
+                                        projectId={milestone.projectId}
+                                    />
+                                </DataState>
+                            </Box>
+                        )}
+                    </Stack>
+                )}
+            </DashboardCard>
+        </Box>
     );
 };
 
