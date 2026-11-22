@@ -11,7 +11,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SchedulesSection } from "../components/layout/schedules/SchedulesSection";
 import { HashMentionDataProvider } from "../context/HashMentionDataContext";
-import { withoutAi } from "../features/schedules/scheduleEffort";
 import { requestAppNavigate } from "../services/appNavigate";
 import type { EffortCost, ScheduleJob } from "../services/schedules";
 
