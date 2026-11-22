@@ -108,7 +108,8 @@ export function MessageComposerV3({
         channelService.getSnapshot,
         channelService.getSnapshot
     );
-    const members = snapshot.membersByChannel.get(channelId) ?? [];
+    const channelMembers = snapshot.membersByChannel.get(channelId);
+    const members = useMemo(() => channelMembers ?? [], [channelMembers]);
 
     // Build the schema once per (currentUserId, placeholder). The
     // mention spec captures currentUserId at creation time for the

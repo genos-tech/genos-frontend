@@ -68,7 +68,7 @@ export const EmojiPicker = ({
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [showEmojiPicker]);
+    }, [showEmojiPicker, setShowEmojiPicker, setSelectedEmoji]);
 
     const pickerContent = showEmojiPicker && (
         <div
