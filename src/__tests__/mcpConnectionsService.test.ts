@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+    fetchAgentQuiet,
     getConsentContext,
     listMcpConnections,
     revokeMcpConnection,
@@ -192,6 +193,19 @@ describe("connections", () => {
         expect(await revokeMcpConnection("tok", "c1")).toMatchObject({ ok: false, gone: true });
         del.mockRejectedValue(new Error("x"));
         expect(await revokeMcpConnection("tok", "c1")).toMatchObject({ ok: false, gone: false });
+    });
+
+    it("reads the no-activity check quietly, and any odd answer is no answer (MIP-2022)", async () => {
+        get.mockResolvedValue({ data: { connected: true, quiet: true, days: 3 } });
+        expect(await fetchAgentQuiet("tok")).toEqual({ connected: true, quiet: true, days: 3 });
+        expect(get).toHaveBeenCalledWith("/mcp/connections/quiet/", { suppressErrorToast: true });
+        get.mockResolvedValue({ data: { connected: true, quiet: true } });
+        expect(await fetchAgentQuiet("tok")).toMatchObject({ days: 3 });
+        get.mockResolvedValue({ data: {} });
+        expect(await fetchAgentQuiet("tok")).toBeNull();
+        get.mockRejectedValue(new Error("x"));
+        expect(await fetchAgentQuiet("tok")).toBeNull();
+        expect(await fetchAgentQuiet(null)).toBeNull();
     });
 
     it("does nothing without a token", async () => {

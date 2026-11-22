@@ -16,6 +16,8 @@ vi.mock("../services/mcpConnections", () => ({
     listMcpConnections: (...a: unknown[]) => listMcpConnections(...a),
     updateMcpConnection: (...a: unknown[]) => updateMcpConnection(...a),
     revokeMcpConnection: (...a: unknown[]) => revokeMcpConnection(...a),
+    // The no-activity check (MIP-2022) is not what this file is about: it answers "not quiet".
+    fetchAgentQuiet: async () => ({ connected: true, quiet: false, days: 3 }),
 }));
 
 const render = (ui: React.ReactElement) => rtlRender(<CssVarsProvider>{ui}</CssVarsProvider>);

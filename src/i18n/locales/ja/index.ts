@@ -4047,6 +4047,8 @@ export const ja: DeepPartial<Messages> = {
                 statusActivity: "エージェントの動作を確認しました（{when}）",
                 statusNoActivity:
                     "まだエージェントの動作は確認されていません。AI に Genos のタスクについて聞いて試してみてください。",
+                quietLine: "AI アプリがこの {days} 日間、何も記録していません。",
+                quietAction: "設定を確認する",
                 freePlan: "Genos コネクタには Core プラン以上が必要です。現在は Free プランです。",
                 tabsAria: "使う AI アプリを選ぶ",
                 tabClaudeCode: "Claude Code",

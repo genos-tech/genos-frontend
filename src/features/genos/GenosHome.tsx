@@ -22,7 +22,10 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AgentQuietNotice } from "../../components/layout/AgentQuietNotice";
+import { requestConnectSetup } from "../../components/layout/connectAppPanelHelpers";
 import { SchedulesModal } from "../../components/layout/schedules/SchedulesModal";
+import { useAgentQuiet } from "../../components/layout/useAgentQuiet";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useIsDemoUser } from "../../hooks/common/useIsDemoUser";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
@@ -131,6 +134,10 @@ export const GenosHome = ({
     // only when there is something, and only before a conversation starts.
     const todayView = useBriefingToday(accessToken, teamId, userId, true, false);
     const openToday = useCallback(() => requestAppNavigate("/workspace/tasks?view=today"), []);
+
+    // "Your AI app hasn't recorded anything in N days" (MIP-2022): one quiet line, never for the
+    // demo account and only before a conversation starts.
+    const quiet = useAgentQuiet(accessToken, !isDemoUser);
 
     const handleOpenSchedules = useCallback(() => setSchedulesOpen(true), []);
 
@@ -376,6 +383,15 @@ export const GenosHome = ({
                                 />
                             </Box>
                         )}
+                    {!conversationActive && quiet?.quiet && (
+                        <Box sx={{ alignSelf: "center", width: "100%", maxWidth: 640, mb: 2 }}>
+                            <AgentQuietNotice
+                                days={quiet.days}
+                                testId="genos-agent-quiet-notice"
+                                onCheck={requestConnectSetup}
+                            />
+                        </Box>
+                    )}
                     <SpotlightContent
                         aiAnswersEnabled={spotlight.aiAnswersEnabled}
                         ask={spotlight.ask}

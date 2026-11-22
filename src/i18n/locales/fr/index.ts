@@ -4104,6 +4104,9 @@ export const fr: DeepPartial<Messages> = {
                 statusActivity: "Activité de l'agent vue {when}",
                 statusNoActivity:
                     "Aucune activité de l'agent vue pour l'instant. Interrogez votre IA sur vos tâches Genos pour l'essayer.",
+                quietLine:
+                    "Votre app d'IA n'a rien enregistré depuis {days, plural, one {# jour} other {# jours}}.",
+                quietAction: "Vérifier la configuration",
                 freePlan:
                     "Le connecteur Genos nécessite le forfait Core ou supérieur, et vous êtes sur Free.",
                 tabsAria: "Choisissez votre app d'IA",

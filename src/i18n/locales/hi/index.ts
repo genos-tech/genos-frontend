@@ -748,6 +748,8 @@ export const hi: DeepPartial<Messages> = {
                 statusActivity: "एजेंट की गतिविधि दिखी ({when})",
                 statusNoActivity:
                     "अभी तक एजेंट की कोई गतिविधि नहीं दिखी। आज़माने के लिए अपने AI से Genos के टास्क के बारे में पूछें।",
+                quietLine: "आपके AI ऐप ने {days} दिनों से कुछ भी दर्ज नहीं किया है।",
+                quietAction: "सेटअप जाँचें",
                 freePlan:
                     "Genos कनेक्टर के लिए Core या उससे ऊपर का प्लान चाहिए, और आप Free पर हैं।",
                 tabsAria: "अपना AI ऐप चुनें",

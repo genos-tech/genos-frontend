@@ -127,6 +127,11 @@ describe("Connect your AI has every string in every locale", () => {
         expect(own(name)?.chatgptSteps).toHaveLength(AI.chatgptSteps.length);
     });
 
+    it.each(NAMES)("%s keeps {days} in the no-activity line and has the link label", (name) => {
+        expect(own(name)?.quietLine).toContain("{days");
+        expect((own(name)?.quietAction ?? "").length).toBeGreaterThan(0);
+    });
+
     it.each(NAMES)("%s keeps {when} in the activity line", (name) => {
         expect(own(name)?.statusActivity).toContain("{when}");
     });

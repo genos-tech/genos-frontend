@@ -1566,6 +1566,9 @@ export const ar: DeepPartial<Messages> = {
                 statusActivity: "تم رصد نشاط الوكيل ({when})",
                 statusNoActivity:
                     "لم يُرصد أي نشاط للوكيل بعد. جرّب أن تسأل الذكاء الاصطناعي عن مهامك في Genos.",
+                quietLine:
+                    "لم يسجّل تطبيق الذكاء الاصطناعي لديك أي شيء منذ {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}.",
+                quietAction: "تحقق من الإعداد",
                 freePlan: "يحتاج موصّل Genos إلى خطة Core أو أعلى، وأنت على خطة Free.",
                 tabsAria: "اختر تطبيق الذكاء الاصطناعي",
                 tabClaudeCode: "Claude Code",

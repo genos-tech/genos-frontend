@@ -3898,6 +3898,8 @@ export const zh: DeepPartial<Messages> = {
                 statusActivity: "已检测到智能体活动（{when}）",
                 statusNoActivity:
                     "尚未检测到智能体活动。可以让你的 AI 查询 Genos 中的任务来试一试。",
+                quietLine: "你的 AI 应用已 {days} 天没有记录任何内容。",
+                quietAction: "检查设置",
                 freePlan: "Genos 连接器需要 Core 或更高套餐，而你目前是 Free 套餐。",
                 tabsAria: "选择你的 AI 应用",
                 tabClaudeCode: "Claude Code",

@@ -30,7 +30,14 @@ import {
     PLUGIN_REPO_URL,
     PLUGIN_ZIP_URL,
 } from "../../utils/mcpConnect";
-import { CONNECT_APP_PANEL_ID, OPEN_EVENT, openPlanUsage } from "./connectAppPanelHelpers";
+import { smoothScrollBehavior } from "../../utils/motion";
+import { AgentQuietNotice } from "./AgentQuietNotice";
+import {
+    CONNECT_APP_PANEL_ID,
+    OPEN_EVENT,
+    openPlanUsage,
+    takePendingSetup,
+} from "./connectAppPanelHelpers";
 
 const COPIED_MS = 1500;
 
@@ -244,8 +251,12 @@ export const ConnectAppPanel = ({
     connectionCount,
     lastActivityAt,
     listKnown,
+    quietDays,
 }: {
     address: string;
+    /** Set when connected but no agent has written anything for this many days (MIP-2022):
+     *  one quiet line under the header, shown collapsed or open. */
+    quietDays?: number | null;
     defaultOpen: boolean;
     /** False when the connections list failed to load: the status is then unknown, not "none". */
     listKnown: boolean;
@@ -267,11 +278,23 @@ export const ConnectAppPanel = ({
     const bodyId = useId();
     const titleId = useId();
 
+    // The quiet line's link: open the steps and bring the panel into view.
+    const openSetup = useCallback(() => {
+        setChosen(true);
+        window.requestAnimationFrame(() => {
+            document
+                .getElementById(CONNECT_APP_PANEL_ID)
+                ?.scrollIntoView?.({ block: "start", behavior: smoothScrollBehavior() });
+        });
+    }, []);
+
     useEffect(() => {
         const onOpen = () => setChosen(true);
         window.addEventListener(OPEN_EVENT, onOpen);
+        // "Check the setup" on the Genos page asked for this panel before it was mounted.
+        if (takePendingSetup()) openSetup();
         return () => window.removeEventListener(OPEN_EVENT, onOpen);
-    }, []);
+    }, [openSetup]);
 
     // The plan decides one notice only, so a failed read just leaves the notice out.
     useEffect(() => {
@@ -335,6 +358,11 @@ export const ConnectAppPanel = ({
                     </Chip>
                 )}
             </Button>
+            {connected && quietDays ? (
+                <Box sx={{ px: 1.25, pb: open ? 1 : 1.25 }}>
+                    <AgentQuietNotice days={quietDays} onCheck={openSetup} />
+                </Box>
+            ) : null}
             <Box
                 aria-labelledby={open ? titleId : undefined}
                 id={bodyId}

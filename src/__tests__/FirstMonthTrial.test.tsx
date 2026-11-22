@@ -38,6 +38,7 @@ const mcp = vi.hoisted(() => ({
     listMcpConnections: vi.fn(),
     updateMcpConnection: vi.fn(),
     revokeMcpConnection: vi.fn(),
+    fetchAgentQuiet: vi.fn().mockResolvedValue({ connected: true, quiet: false, days: 3 }),
 }));
 vi.mock("../services/mcpConnections", () => mcp);
 
