@@ -15,18 +15,19 @@ import { afterEach, describe, expect, it } from "vitest";
 import { TAB_INDENT_OPTIONS, tabStaysInEditor } from "../components/editors/sub/tabIndent";
 
 type Shape = (string | Shape[])[];
-const shape = (blocks: any[]): Shape =>
+type ShapeBlock = { id: string; children: ShapeBlock[] };
+const shape = (blocks: ShapeBlock[]): Shape =>
     blocks
         .filter((b) => b.id.length === 1)
         .map((b) => (b.children.length ? [b.id, shape(b.children)] : b.id)) as Shape;
 
 const mounted: HTMLElement[] = [];
-const make = (ids: string[], options: Record<string, unknown> = {}, blocks?: any[]) => {
+const make = (ids: string[], options: Record<string, unknown> = {}, blocks?: unknown[]) => {
     const editor = BlockNoteEditor.create({
         initialContent: (blocks ??
-            ids.map((id) => ({ id, type: "paragraph", content: id }))) as any,
+            ids.map((id) => ({ id, type: "paragraph", content: id }))) as never,
         ...options,
-    } as any);
+    } as never) as unknown as BlockNoteEditor;
     const el = document.createElement("div");
     document.body.appendChild(el);
     mounted.push(el);
@@ -35,7 +36,7 @@ const make = (ids: string[], options: Record<string, unknown> = {}, blocks?: any
 };
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()));
 
-const press = (editor: BlockNoteEditor<any, any, any>, key: string, shiftKey = false) => {
+const press = (editor: BlockNoteEditor, key: string, shiftKey = false) => {
     const event = new KeyboardEvent("keydown", { key, shiftKey, bubbles: true, cancelable: true });
     editor.prosemirrorView.dom.dispatchEvent(event);
     return event.defaultPrevented;

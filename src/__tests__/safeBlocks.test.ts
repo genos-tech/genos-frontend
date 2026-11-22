@@ -5,7 +5,12 @@
  * lost every other block with it. `sanitizeBlocksForEditor` degrades such a block to plain
  * text (or skips it when it has none) and keeps the rest. Real editors and a real Yjs write.
  */
-import { BlockNoteEditor } from "@blocknote/core";
+import {
+    BlockNoteEditor,
+    type BlockSchema,
+    type InlineContentSchema,
+    type StyleSchema,
+} from "@blocknote/core";
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
 
@@ -18,11 +23,21 @@ import {
 import { applyBlocksToFragment } from "../features/notes/common/services/applyNoteBodyToYjs";
 
 const schema = createHeadlessNoteSchema();
-const mount = (initialContent: unknown): BlockNoteEditor<any, any, any> => {
-    const editor = BlockNoteEditor.create({ schema, initialContent } as never) as never;
-    (editor as BlockNoteEditor<any, any, any>).mount(
-        document.body.appendChild(document.createElement("div"))
-    );
+type LooseBlock = {
+    id?: string;
+    type?: string;
+    props?: Record<string, unknown>;
+    content?: unknown;
+    children?: LooseBlock[];
+};
+const mount = (
+    initialContent: unknown
+): BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema> => {
+    const editor = BlockNoteEditor.create({
+        schema,
+        initialContent,
+    } as never) as unknown as BlockNoteEditor<BlockSchema, InlineContentSchema, StyleSchema>;
+    editor.mount(document.body.appendChild(document.createElement("div")));
     return editor;
 };
 const p = (content: string) => ({ type: "paragraph", content });
@@ -110,9 +125,9 @@ describe("sanitizeBlocksForEditor", () => {
                 children: [{ type: "fancy", content: "child" }, p("sibling")],
             },
         ];
-        const safe = sanitizeBlocksForEditor(body, holder) as any[];
+        const safe = sanitizeBlocksForEditor(body, holder) as LooseBlock[];
         expect(safe[0].type).toBe("bulletListItem");
-        expect(safe[0].children.map((c: any) => [c.type, c.content])).toEqual([
+        expect(safe[0].children?.map((c) => [c.type, c.content])).toEqual([
             ["paragraph", "child"],
             ["paragraph", "sibling"],
         ]);
@@ -123,10 +138,10 @@ describe("sanitizeBlocksForEditor", () => {
         const safe = sanitizeBlocksForEditor(
             [{ type: "fancy", content: "parent", children: [p("child")] }],
             holder
-        ) as any[];
+        ) as LooseBlock[];
         expect(safe).toHaveLength(1);
         expect(safe[0].type).toBe("paragraph");
-        expect(safe[0].children[0].content).toBe("child");
+        expect(safe[0].children?.[0].content).toBe("child");
     });
 
     it("resolves a code language and keeps the code, in the same pass", () => {
@@ -134,8 +149,8 @@ describe("sanitizeBlocksForEditor", () => {
         const safe = sanitizeBlocksForEditor(
             [{ type: "codeBlock", props: { language: "ts" }, content: "let a;" }],
             holder
-        ) as any[];
-        expect(safe[0].props.language).toBe("typescript");
+        ) as LooseBlock[];
+        expect(safe[0].props?.language).toBe("typescript");
         expect(safe[0].content).toBe("let a;");
     });
 });

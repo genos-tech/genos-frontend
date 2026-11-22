@@ -66,12 +66,12 @@ vi.mock("../utils/mediaAuth", async (importOriginal) => ({
 }));
 
 const ctx = {
-    myself: { userId: "u1" } as any,
+    myself: { userId: "u1" } as never,
     setMyself: () => {},
     socket: null,
-    useCM: {} as any,
-    useTEM: { teamMemberProfiles: {} } as any,
-    useUISM: {} as any,
+    useCM: {} as never,
+    useTEM: { teamMemberProfiles: {} } as never,
+    useUISM: {} as never,
 };
 
 const BnReference = ({ content }: { content: any[] }) => {
@@ -908,6 +908,6 @@ describe("canRenderLight routing", () => {
 
     it("rejects a non-array body", () => {
         expect(canRenderLight(undefined)).toBe(false);
-        expect(canRenderLight({} as any)).toBe(false);
+        expect(canRenderLight({} as never)).toBe(false);
     });
 });

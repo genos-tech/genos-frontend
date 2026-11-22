@@ -141,7 +141,10 @@ describe("saving an answer as a note", () => {
         const sources = buildSourcesById([event(TOKEN)]);
 
         const content = (
-            markdownToBlocks(`Your [standup](${TOKEN}) and ${`[${TOKEN}]`}.`, sources)[0] as any
+            markdownToBlocks(
+                `Your [standup](${TOKEN}) and ${`[${TOKEN}]`}.`,
+                sources
+            )[0] as unknown as { content: unknown }
         ).content as Array<{ type: string; text?: string }>;
         expect(content.some((n) => n.type === "link")).toBe(false);
         const text = content.map((n) => n.text ?? "").join("");

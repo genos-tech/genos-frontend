@@ -660,7 +660,7 @@ describe("TaskDashboard tab strip", () => {
                                 socket: null,
                                 useCM: { allChats: [] },
                                 useUISM: {},
-                            } as any
+                            } as never
                         }
                     >
                         <MemoryRouter initialEntries={["/workspace/tasks"]}>

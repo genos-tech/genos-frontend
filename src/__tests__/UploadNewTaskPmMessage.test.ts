@@ -29,7 +29,7 @@ vi.mock("../features/tasks/services/addTask", () => ({
 
 const PM = { id: "pm-uuid", kind: ChannelKind.PM, projectId: 7 };
 
-const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as any;
+const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as never;
 
 const makeTaskContent = (over = {}) =>
     ({
@@ -50,7 +50,7 @@ const makeTaskContent = (over = {}) =>
         rootTaskId: null,
         attachments: [],
         ...over,
-    }) as any;
+    }) as never;
 
 // Thread not visible → the DM/GM/MDM cross-post branch stays out of the
 // way, leaving only the PM sends under test.
@@ -59,7 +59,7 @@ const useCM = {
     currentMainChat: null,
     currentThreadChat: null,
     setCurrentThreadChat: vi.fn(),
-} as any;
+} as never;
 
 const baseInput = () => ({
     socket: null,
@@ -86,10 +86,10 @@ describe("uploadNewTask → PM channel", () => {
         );
         vi.spyOn(channelService, "getSnapshot").mockReturnValue({
             channels: new Map([[PM.id, PM]]),
-        } as any);
-        vi.spyOn(channelService, "listChannels").mockResolvedValue([PM] as any);
+        } as never);
+        vi.spyOn(channelService, "listChannels").mockResolvedValue([PM] as never);
         vi.spyOn(channelService, "handleChannelCreated").mockImplementation(() => undefined);
-        vi.spyOn(channelService, "send").mockResolvedValue({ id: "msg-1" } as any);
+        vi.spyOn(channelService, "send").mockResolvedValue({ id: "msg-1" } as never);
     });
 
     it("posts the task card to the project's PM channel", async () => {
@@ -148,7 +148,7 @@ describe("uploadNewTask → PM channel", () => {
                 currentMainChat: { chatId: "dm-uuid", chatType: 1 },
                 currentThreadChat: { threadId: "thread-uuid" },
                 setCurrentThreadChat: vi.fn(),
-            } as any,
+            } as never,
         });
 
         const send = channelService.send as unknown as ReturnType<typeof vi.fn>;

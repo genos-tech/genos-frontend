@@ -18,7 +18,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock the BlockNote comment hooks the sidebar consumes. ──────────────────
 const selectThread = vi.fn();
-let threads = new Map<string, any>();
+let threads = new Map<string, Record<string, unknown>>();
 let threadPositions = new Map<string, { from: number; to: number }>();
 let selectedThreadId: string | undefined;
 const users = new Map<string, { id: string; username: string; avatarUrl: string }>();
@@ -64,7 +64,7 @@ const makeComment = (id: string, text: string, createdAt: Date) => ({
     body: [{ type: "paragraph", content: [{ type: "text", text }] }],
 });
 
-const makeThread = (id: string, opts: Partial<any> = {}) => ({
+const makeThread = (id: string, opts: Record<string, unknown> = {}) => ({
     type: "thread",
     id,
     createdAt: new Date("2026-08-11T00:00:00Z"),

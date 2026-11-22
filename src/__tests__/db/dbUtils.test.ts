@@ -540,12 +540,12 @@ describe("ValidationUtils", () => {
     describe("validateArray", () => {
         it("keeps only items passing the validator", () => {
             const items = [1, "two", 3, null, 4];
-            const isNumber = (x: any): x is number => typeof x === "number";
+            const isNumber = (x: unknown): x is number => typeof x === "number";
             expect(ValidationUtils.validateArray(items, isNumber)).toEqual([1, 3, 4]);
         });
 
         it("returns empty when nothing passes", () => {
-            const isNumber = (x: any): x is number => typeof x === "number";
+            const isNumber = (x: unknown): x is number => typeof x === "number";
             expect(ValidationUtils.validateArray(["a", "b"], isNumber)).toEqual([]);
         });
     });
@@ -737,8 +737,8 @@ describe("DatabaseUtils", () => {
         });
 
         it("returns 0 when indexedDB.databases is unavailable (degraded path)", async () => {
-            const original = (indexedDB as any).databases;
-            (indexedDB as any).databases = undefined;
+            const original = (indexedDB as unknown as { databases?: unknown }).databases;
+            (indexedDB as unknown as { databases?: unknown }).databases = undefined;
             try {
                 const deleted = await DatabaseUtils.sweepOrphanYjsDatabases({
                     taskIds: new Set<number>(),
@@ -748,13 +748,15 @@ describe("DatabaseUtils", () => {
                 });
                 expect(deleted).toBe(0);
             } finally {
-                (indexedDB as any).databases = original;
+                (indexedDB as unknown as { databases?: unknown }).databases = original;
             }
         });
 
         it("returns 0 when databases() throws", async () => {
-            const original = (indexedDB as any).databases;
-            (indexedDB as any).databases = vi.fn().mockRejectedValue(new Error("boom"));
+            const original = (indexedDB as unknown as { databases?: unknown }).databases;
+            (indexedDB as unknown as { databases?: unknown }).databases = vi
+                .fn()
+                .mockRejectedValue(new Error("boom"));
             try {
                 const deleted = await DatabaseUtils.sweepOrphanYjsDatabases({
                     taskIds: new Set<number>(),
@@ -764,7 +766,7 @@ describe("DatabaseUtils", () => {
                 });
                 expect(deleted).toBe(0);
             } finally {
-                (indexedDB as any).databases = original;
+                (indexedDB as unknown as { databases?: unknown }).databases = original;
             }
         });
 

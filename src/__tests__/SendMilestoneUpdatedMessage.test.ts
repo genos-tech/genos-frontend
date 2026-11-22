@@ -18,9 +18,9 @@ vi.mock("../features/tasks/utils/TaskMessageTemplate", () => ({
     milestoneMessageTemplate: () => [{ type: "paragraph", content: "milestone card" }],
 }));
 
-const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as any;
+const USER = { userId: "u1", userName: "Me", teamId: "t1", teamName: "T" } as never;
 const makeMilestone = (over = {}) =>
-    ({ taskId: 42, status: "WIP", title: "M1", milestoneId: 1, ...over }) as any;
+    ({ taskId: 42, status: "WIP", title: "M1", milestoneId: 1, ...over }) as never;
 
 const baseInput = () => ({
     myself: USER,
@@ -34,7 +34,7 @@ const baseInput = () => ({
 describe("sendMilestoneUpdatedMessage", () => {
     beforeEach(() => {
         vi.restoreAllMocks();
-        vi.spyOn(channelService, "updateTaskCard").mockResolvedValue(undefined as any);
+        vi.spyOn(channelService, "updateTaskCard").mockResolvedValue(undefined as never);
     });
 
     it("rewrites the milestone card via updateTaskCard, keyed by the backing task id", async () => {
