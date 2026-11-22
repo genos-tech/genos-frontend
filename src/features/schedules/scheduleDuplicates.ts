@@ -4,7 +4,8 @@
 // answer is instant and a suggestion the member already has is not offered again.
 //
 // "Same" is the API's notion:
-//   - the same job, the same parameters, the same recurrence and time; or
+//   - the same job, the same parameters, the same recurrence and time, and the same place it is
+//     sent to (the Inbox or one chat, MIP-1420); or
 //   - the same name, ignoring case and surrounding spaces.
 // The name is the member's own label, so two reports with different names but
 // identical content are still the same schedule, and two with the same name are
@@ -23,6 +24,8 @@ export type ScheduleShape = Pick<ScheduleFields, "name" | "job" | "params" | "fr
     weekdays?: number[];
     monthDay?: number;
     runDate?: string;
+    /** The chat the report is posted in; absent or null = the Inbox. */
+    deliverChannelId?: string | null;
 };
 
 export type Duplicate = { kind: "same" | "name"; schedule: Schedule };
@@ -49,7 +52,8 @@ const recurrenceKey = (s: ScheduleShape): string => {
 export const isSameSchedule = (a: ScheduleShape, b: ScheduleShape): boolean =>
     a.job === b.job &&
     paramsKey(a.params) === paramsKey(b.params) &&
-    recurrenceKey(a) === recurrenceKey(b);
+    recurrenceKey(a) === recurrenceKey(b) &&
+    (a.deliverChannelId ?? "") === (b.deliverChannelId ?? "");
 
 /** The schedule in `existing` that `candidate` would duplicate, if any. Same content
  *  is reported ahead of same name, since it is the stronger statement. `ignoreId`

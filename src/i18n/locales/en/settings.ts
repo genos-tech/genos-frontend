@@ -243,6 +243,14 @@ export const settings = {
         errorProject: "Choose a project.",
         errorProjectUnavailable: "This project is no longer available to you. Choose another.",
         projectNone: "There are no projects to choose from.",
+        // A schedule can post its report in a chat instead of the Inbox (MIP-1420).
+        deliverLabel: "Send the report to",
+        deliverInbox: "My Inbox",
+        deliverProjectChat: "{name} (project chat)",
+        deliverChatHint:
+            "The report is posted in this chat as a message, with no AI and no notification. Everyone in the chat can read it, so a project report can only go to a chat of that project's members.",
+        rowDeliver: "Posts in: {name}",
+        reportPosted: "Report posted in {chat}",
         rowProject: "Project: {name}",
         rowMilestone: "Milestone: {name}",
         paramAiSentences: "AI sentences",

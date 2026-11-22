@@ -58,7 +58,15 @@ describe("every call names the member's team", () => {
             jobs: [],
             schedules: [],
             suggestions: [],
+            // An API that predates MIP-1420 sends no chats: the form offers no choice.
+            chatTargets: [],
         });
+    });
+
+    it("GET carries the chats a report can be posted in (MIP-1420)", async () => {
+        const chat = { id: "c1", title: "Squad", kind: "group", projectId: null };
+        api.get.mockResolvedValue({ data: { jobs: [], schedules: [], chatTargets: [chat] } });
+        expect((await listSchedules("tok", TEAM))?.chatTargets).toEqual([chat]);
     });
 
     it("GET carries aiCreditsOut; only an explicit true means out of credits (MIP-1967)", async () => {

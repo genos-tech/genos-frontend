@@ -235,7 +235,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
             accessToken,
             teamId,
             sch.id,
-            () => mounted.current
+            () => mounted.current,
+            sch.deliverChannel ? sch.deliverChannel.title || s.unavailable : null
         );
         let notice: RunNotice;
         if (!res.ok && res.planRequired) {
@@ -345,6 +346,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
     const form = (existing: Schedule | null) => (
         <ScheduleFormPanel
             aiCreditsOut={data?.aiCreditsOut === true}
+            chatTargets={data?.chatTargets ?? []}
             existing={schedules}
             jobs={data?.jobs ?? []}
             schedule={existing}
@@ -561,6 +563,17 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     sx={{ overflowWrap: "anywhere" }}
                                 >
                                     {target}
+                                </Typography>
+                            )}
+                            {sch.deliverChannel && (
+                                <Typography
+                                    data-testid="schedule-row-deliver"
+                                    level="body-sm"
+                                    sx={{ overflowWrap: "anywhere" }}
+                                >
+                                    {fmt(s.rowDeliver, {
+                                        name: sch.deliverChannel.title || s.unavailable,
+                                    })}
                                 </Typography>
                             )}
                             {effort && (

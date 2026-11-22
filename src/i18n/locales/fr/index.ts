@@ -4796,6 +4796,13 @@ export const fr: DeepPartial<Messages> = {
             errorProjectUnavailable:
                 "Ce projet n’est plus disponible pour vous. Choisissez-en un autre.",
             projectNone: "Aucun projet à choisir.",
+            deliverLabel: "Envoyer le rapport à",
+            deliverInbox: "Ma boîte de réception",
+            deliverProjectChat: "{name} (chat du projet)",
+            deliverChatHint:
+                "Le rapport est publié dans ce chat sous forme de message, sans IA et sans notification. Tous les membres du chat peuvent le lire : un rapport de projet ne peut donc aller que dans un chat réservé aux membres de ce projet.",
+            rowDeliver: "Publié dans : {name}",
+            reportPosted: "Rapport publié dans {chat}",
             rowProject: "Projet : {name}",
             rowMilestone: "Jalon : {name}",
             paramAiSentences: "Phrases de l'IA",

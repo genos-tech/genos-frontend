@@ -4721,6 +4721,13 @@ export const ja: DeepPartial<Messages> = {
             errorProjectUnavailable:
                 "このプロジェクトはもう利用できません。別のプロジェクトを選択してください。",
             projectNone: "選択できるプロジェクトがありません。",
+            deliverLabel: "レポートの送信先",
+            deliverInbox: "自分の受信トレイ",
+            deliverProjectChat: "{name}（プロジェクトのチャット）",
+            deliverChatHint:
+                "レポートはメッセージとしてこのチャットに投稿されます。AI は使わず、通知も送りません。チャットの全員が読めるため、プロジェクトのレポートはそのプロジェクトのメンバーだけのチャットにしか送れません。",
+            rowDeliver: "投稿先: {name}",
+            reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
             rowMilestone: "マイルストーン: {name}",
             paramAiSentences: "AI による一文",

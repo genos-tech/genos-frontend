@@ -28,17 +28,27 @@ type RunResult = Awaited<ReturnType<typeof runScheduleNow>>;
  * member lost). Then a failure is not announced twice. Success is always
  * announced: the Inbox button is useful with the dialog open too.
  *
+ * `postedIn` is the title of the chat a schedule posts its report in (MIP-1420), null for the
+ * Inbox. A report in a chat is not in the Inbox: nothing is resynced, and the toast says where it
+ * went instead of offering the Inbox.
+ *
  * Returns the raw result so the dialog can still draw its own notice.
  */
 export const runScheduleAndAnnounce = async (
     accessToken: string | null,
     teamId: string,
     id: string,
-    stillShown: () => boolean = () => false
+    stillShown: () => boolean = () => false,
+    postedIn: string | null = null
 ): Promise<RunResult> => {
     const res = await runScheduleNow(accessToken, teamId, id);
     const s = getMessages().settings.schedules;
     const toastId = `schedule-run-${id}`;
+
+    if (res.ok && res.outcome.status === "ok" && postedIn) {
+        toast.success(fmt(s.reportPosted, { chat: postedIn }), { id: toastId });
+        return res;
+    }
 
     if (res.ok && res.outcome.status === "ok") {
         // Best-effort and never rejects: a failed sync costs the member the live

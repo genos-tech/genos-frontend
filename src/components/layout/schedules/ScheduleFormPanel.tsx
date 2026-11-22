@@ -52,6 +52,7 @@ import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { fmt, useTranslation } from "../../../i18n";
 import { requestAppNavigate } from "../../../services/appNavigate";
 import type {
+    ChatTarget,
     EffortLevel,
     Schedule,
     ScheduleChange,
@@ -67,6 +68,8 @@ type Props = {
     /** The schedule being edited; null to create one. */
     schedule: Schedule | null;
     jobs: ScheduleJob[];
+    /** The chats a report can be posted in (MIP-1420). With none, the form offers no choice. */
+    chatTargets?: ChatTarget[];
     /** No AI credits left (MIP-1967): the AI switch is drawn off and disabled, with the reason. */
     aiCreditsOut?: boolean;
     /** The member's schedules on screen, for the instant "you already have this" check. */
@@ -99,6 +102,7 @@ const FREQUENCY_KEYS = {
 export const ScheduleFormPanel = ({
     schedule,
     jobs,
+    chatTargets = [],
     aiCreditsOut = false,
     existing = [],
     timeZone,
@@ -198,6 +202,21 @@ export const ScheduleFormPanel = ({
                 name: follows ? (nextJob?.title ?? cur.name) : cur.name,
             };
         });
+    };
+
+    // Where the report goes (MIP-1420): the Inbox, or a chat. The chat a schedule already posts in
+    // stays selectable even when it is no longer offered (archived, left), so the form never shows
+    // a blank for what is saved; the server decides on save.
+    const INBOX = "inbox";
+    const deliverOptions: ChatTarget[] = useMemo(() => {
+        const saved = schedule?.deliverChannel;
+        if (!saved || chatTargets.some((c) => c.id === saved.id)) return chatTargets;
+        return [{ ...saved, projectId: null }, ...chatTargets];
+    }, [chatTargets, schedule]);
+    const chosenChat = deliverOptions.find((c) => c.id === form.deliverChannelId);
+    const chatLabel = (c: ChatTarget) => {
+        const name = c.title || s.unavailable;
+        return c.kind === "project" ? fmt(s.deliverProjectChat, { name }) : name;
     };
 
     const toggleDay = (day: number) =>
@@ -560,6 +579,29 @@ export const ScheduleFormPanel = ({
                     </FormControl>
                 )}
 
+                {deliverOptions.length > 0 && (
+                    <FormControl data-testid="schedule-deliver" sx={{ minWidth: 0 }}>
+                        <FormLabel>{s.deliverLabel}</FormLabel>
+                        <Select
+                            sx={{ minWidth: 0 }}
+                            value={form.deliverChannelId || INBOX}
+                            onChange={(_, v) => v && set("deliverChannelId", v === INBOX ? "" : v)}
+                        >
+                            <Option value={INBOX}>{s.deliverInbox}</Option>
+                            {deliverOptions.map((c) => (
+                                <Option key={c.id} value={c.id}>
+                                    {chatLabel(c)}
+                                </Option>
+                            ))}
+                        </Select>
+                        {chosenChat && (
+                            <FormHelperText sx={{ color: g.text.secondary }}>
+                                {s.deliverChatHint}
+                            </FormHelperText>
+                        )}
+                    </FormControl>
+                )}
+
                 <Typography level="title-sm">{s.when}</Typography>
 
                 <FormControl sx={{ minWidth: 0 }}>
@@ -681,14 +723,17 @@ export const ScheduleFormPanel = ({
                     )}
                 </FormControl>
 
-                <FormControl orientation="horizontal" sx={{ gap: 1, alignItems: "center" }}>
-                    <Switch
-                        checked={form.deliverPush}
-                        size="sm"
-                        onChange={(e) => set("deliverPush", e.target.checked)}
-                    />
-                    <FormLabel sx={{ m: 0 }}>{s.push}</FormLabel>
-                </FormControl>
+                {/* A report in a chat sends no push: it is a message the chat's members read. */}
+                {!form.deliverChannelId && (
+                    <FormControl orientation="horizontal" sx={{ gap: 1, alignItems: "center" }}>
+                        <Switch
+                            checked={form.deliverPush}
+                            size="sm"
+                            onChange={(e) => set("deliverPush", e.target.checked)}
+                        />
+                        <FormLabel sx={{ m: 0 }}>{s.push}</FormLabel>
+                    </FormControl>
+                )}
 
                 {duplicate?.kind === "same" && (
                     <Alert color="warning" role="status" size="sm">

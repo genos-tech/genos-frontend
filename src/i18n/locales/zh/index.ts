@@ -4543,6 +4543,13 @@ export const zh: DeepPartial<Messages> = {
             errorProject: "请选择一个项目。",
             errorProjectUnavailable: "你已无法使用此项目。请选择其他项目。",
             projectNone: "没有可选择的项目。",
+            deliverLabel: "报告发送到",
+            deliverInbox: "我的收件箱",
+            deliverProjectChat: "{name}（项目聊天）",
+            deliverChatHint:
+                "报告会作为消息发布到此聊天，不使用 AI，也不发送通知。聊天中的所有人都能看到它，因此项目报告只能发到该项目成员的聊天中。",
+            rowDeliver: "发布到：{name}",
+            reportPosted: "报告已发布到 {chat}",
             rowProject: "项目：{name}",
             rowMilestone: "里程碑：{name}",
             paramAiSentences: "AI 一句话说明",

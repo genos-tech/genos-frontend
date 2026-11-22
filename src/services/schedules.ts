@@ -59,6 +59,18 @@ export interface ScheduleJob {
     effortDefault?: EffortLevel | null;
     /** Null without AI. */
     effortCost?: EffortCost | null;
+    /** The report is about one project, so it may be posted in a chat of that project's people
+     *  (MIP-1420). Absent on a server that predates it: read it as false. */
+    shareable?: boolean;
+}
+
+/** A chat a report can be posted in (MIP-1420). Whether a given report may go to it is decided
+ *  by the server when the schedule is saved, and refused with a sentence. */
+export interface ChatTarget {
+    id: string;
+    title: string;
+    kind: "group" | "project";
+    projectId: number | null;
 }
 
 export type ParamValue = string | number | boolean;
@@ -79,6 +91,9 @@ export interface Schedule {
     enabled: boolean;
     pausedReason?: string;
     deliverPush: boolean;
+    /** Where the report is posted instead of the Inbox (MIP-1420). Absent = the Inbox. */
+    deliverChannelId?: string;
+    deliverChannel?: { id: string; title: string; kind: "group" | "project" };
     /** The member's own choice of effort; null = the job's default. Only on a schedule of an AI
      *  job. */
     aiEffort?: EffortLevel | null;
@@ -126,6 +141,9 @@ export interface ScheduleList {
     jobs: ScheduleJob[];
     schedules: Schedule[];
     suggestions: ScheduleSuggestion[];
+    /** The chats the member can point a report at (MIP-1420). Absent on a server that predates
+     *  it: the form then shows no choice and the report goes to the Inbox. */
+    chatTargets: ChatTarget[];
 }
 
 /** What the member can set. Fields a frequency does not use are not sent. */
@@ -139,6 +157,8 @@ export interface ScheduleFields {
     monthDay?: number;
     runDate?: string;
     deliverPush: boolean;
+    /** A chat to post the report in; null goes back to the Inbox; omitted leaves it alone. */
+    deliverChannelId?: string | null;
     /** AI jobs only. null goes back to the job's default; omitted leaves it alone. */
     aiEffort?: EffortLevel | null;
 }
@@ -215,6 +235,7 @@ export const listSchedules = async (
             jobs: res.data.jobs ?? [],
             schedules: res.data.schedules ?? [],
             suggestions: res.data.suggestions ?? [],
+            chatTargets: res.data.chatTargets ?? [],
         };
     } catch {
         return null;
