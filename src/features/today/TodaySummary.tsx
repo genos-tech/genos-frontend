@@ -121,13 +121,13 @@ export const TodaySummary = ({ data: d, copy: a, anchors }: Props) => {
                             segments={[
                                 {
                                     key: "done",
-                                    label: fmt(a.progress.done, { n: progress.done }),
+                                    label: a.progress.done,
                                     value: progress.done,
                                     tone: "success",
                                 },
                                 {
                                     key: "left",
-                                    label: fmt(a.progress.toGo, { n: progress.left }),
+                                    label: a.progress.toGo,
                                     value: progress.left,
                                     tone: "warning",
                                 },

@@ -3459,8 +3459,8 @@ export const ar: DeepPartial<Messages> = {
                 progress: {
                     label: "تقدّم اليوم",
                     allDone: "اكتمل كل شيء لهذا اليوم",
-                    done: "اكتمل {n}",
-                    toGo: "تبقّى {n}",
+                    done: "اكتمل",
+                    toGo: "تبقّى",
                     aria: "اكتمل {done} من {total} اليوم",
                 },
                 row: {

@@ -1414,8 +1414,8 @@ export const tasks = {
             progress: {
                 label: "Today's progress",
                 allDone: "All done for today",
-                done: "{n} done",
-                toGo: "{n} to go",
+                done: "Done",
+                toGo: "To go",
                 aria: "{done} of {total} done today",
             },
             row: {

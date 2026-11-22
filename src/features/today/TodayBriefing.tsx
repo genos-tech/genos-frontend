@@ -160,6 +160,19 @@ const Section = ({
     </Box>
 );
 
+/** Delegated and suggested rows come without a project name: the loaded project list has it. */
+const withProjectName = (
+    task: BriefingTask,
+    projects: { projectId: number; projectName: string }[]
+) =>
+    task.projectName || task.projectId == null
+        ? task
+        : {
+              ...task,
+              projectName:
+                  projects.find((p) => p.projectId === task.projectId)?.projectName ?? null,
+          };
+
 const taskMeta = (task: BriefingTask, a: TodayCopy): string => {
     const days = task.daysUntilDue;
     if (days == null) return "";
@@ -192,7 +205,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
     const a = t.tasks.dashboard.today;
     const card = variant === "card";
     const open = (href: string) => requestAppNavigate(href);
-    const { allChats } = useHashMentionData();
+    const { allChats, projects } = useHashMentionData();
     const avatars = useMemo(() => projectAvatarSrcMap(allChats), [allChats]);
 
     const header = (
@@ -305,7 +318,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                 copy={a}
                 href={taskHref(task)}
                 projectAvatarSrc={task.projectId != null ? avatars.get(task.projectId) : undefined}
-                task={task}
+                task={withProjectName(task, projects)}
                 onOpen={open}
             />
         );

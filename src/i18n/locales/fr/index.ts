@@ -6723,8 +6723,8 @@ export const fr: DeepPartial<Messages> = {
                 progress: {
                     label: "Progression du jour",
                     allDone: "Tout est fait pour aujourd'hui",
-                    done: "{n} terminées",
-                    toGo: "{n} à faire",
+                    done: "Terminées",
+                    toGo: "À faire",
                     aria: "{done} sur {total} terminées aujourd'hui",
                 },
                 row: {

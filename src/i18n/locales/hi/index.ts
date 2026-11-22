@@ -3744,8 +3744,8 @@ export const hi: DeepPartial<Messages> = {
                 progress: {
                     label: "आज की प्रगति",
                     allDone: "आज का सारा काम पूरा",
-                    done: "{n} पूरे",
-                    toGo: "{n} बाकी",
+                    done: "पूरे",
+                    toGo: "बाकी",
                     aria: "आज {total} में से {done} पूरे",
                 },
                 row: {

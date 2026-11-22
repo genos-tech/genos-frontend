@@ -6638,8 +6638,8 @@ export const ja: DeepPartial<Messages> = {
                 progress: {
                     label: "今日の進み具合",
                     allDone: "今日の分はすべて完了",
-                    done: "完了 {n}",
-                    toGo: "残り {n}",
+                    done: "完了",
+                    toGo: "残り",
                     aria: "今日 {total} 件中 {done} 件完了",
                 },
                 row: {

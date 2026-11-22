@@ -6389,8 +6389,8 @@ export const zh: DeepPartial<Messages> = {
                 progress: {
                     label: "今日进度",
                     allDone: "今天的事项已全部完成",
-                    done: "已完成 {n}",
-                    toGo: "还剩 {n}",
+                    done: "已完成",
+                    toGo: "还剩",
                     aria: "今天共 {total} 项，已完成 {done} 项",
                 },
                 row: {
