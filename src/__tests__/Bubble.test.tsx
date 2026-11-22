@@ -393,6 +393,43 @@ describe("Bubble toolbar side (bubble look)", () => {
     });
 });
 
+describe("Bubble toolbar on the row's top edge (task comments, MIP-2026)", () => {
+    const toolbarCss = (toolbarOnEdge: boolean) => {
+        const { unmount } = render(
+            <Bubble
+                actions={<button>act</button>}
+                layout="compact"
+                toolbarOnEdge={toolbarOnEdge}
+                actionsOpen
+            >
+                body
+            </Bubble>
+        );
+        const tb = screen.getByText("act").closest(".bubble-toolbar") as HTMLElement;
+        const cls = Array.from(tb.classList).find((c) => c.startsWith("css-"));
+        const css = Array.from(document.querySelectorAll("style"))
+            .map((s) => s.textContent ?? "")
+            .join("")
+            .split("}")
+            .filter((r) => r.includes(`.${cls}`))
+            .join("}");
+        unmount();
+        return css;
+    };
+
+    // jsdom has no layout: this pins the rule (the toolbar is lifted by its own
+    // height instead of sitting 4px inside the row on the text); the look was
+    // checked in a real browser.
+    it("lifts the toolbar above the row's top edge only when asked", () => {
+        expect(toolbarCss(false)).toMatch(/top:\s*4px/);
+        expect(toolbarCss(false)).not.toContain("translateY");
+        const lifted = toolbarCss(true);
+        expect(lifted).toMatch(/top:\s*0/);
+        expect(lifted).toContain("translateY(-100%)");
+        expect(lifted).toContain("translateY(-60%)");
+    });
+});
+
 describe("Bubble actions at the bottom (the Genos answer)", () => {
     const css = (el: Element) => {
         // The reveal rules live on an ancestor (the root), keyed by class.

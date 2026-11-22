@@ -731,6 +731,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
                     )}
                 </>
             }
+            toolbarOnEdge
             onClick={handleCommentClick}
             onDoubleClick={doubleClickTodoEnabled ? addToTodo : undefined}
             onMouseEnter={() => setShowUnderBarOption(true)}
