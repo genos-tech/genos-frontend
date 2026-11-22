@@ -62,7 +62,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                             joiningProjectId: openJoinProject.projectId,
                             joiningProjectName: openJoinProject.projectName,
                         },
-                        async (ack: any) => {
+                        async () => {
                             const item_body = [
                                 {
                                     type: "paragraph",

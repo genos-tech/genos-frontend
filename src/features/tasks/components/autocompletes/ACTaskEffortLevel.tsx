@@ -36,7 +36,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
             )}
             renderTags={(tags, getTagProps) =>
                 tags.slice(-1).map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    const { key } = getTagProps({ index }); // only the 'key' is needed
                     return <EffortLabel key={key} level={item.level ?? ""} />;
                 })
             }

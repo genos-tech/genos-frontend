@@ -29,7 +29,6 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { GifPicker } from "../ui/gif/GifPicker";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { insertEmojiValue } from "./CustomEmoji";
-import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosDocumentToolbar } from "./genos/GenosToolbars";
 import { useGenosCollabEditor } from "./genos/useGenosEditor";
@@ -211,9 +210,9 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         userInteractedRef.current = false;
     }, [taskId]);
 
-    const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
-    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [selectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
         // ":name:" shortcodes from the picker's Team Emoji category
         // become customEmoji inline nodes; unicode stays plain text.

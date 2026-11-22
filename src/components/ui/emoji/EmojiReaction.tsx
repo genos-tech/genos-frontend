@@ -54,13 +54,9 @@ type EmojiReactionProps = {
 };
 export const EmojiReaction = (props: EmojiReactionProps) => {
     const {
-        socket,
         myself,
         chatType,
-        chatName,
         isThread,
-        numReplies,
-        dmPartnerUser,
         message,
         showUnderBarOption,
         reactions,

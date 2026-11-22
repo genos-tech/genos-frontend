@@ -854,15 +854,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         return columnWidths[field] || allColumns.find((c) => c.field === field)?.width || 100;
     };
 
-    // Reset column widths to default
-    const resetColumnWidths = () => {
-        const widths: Record<string, number> = {};
-        defaultColumns.forEach((col) => {
-            widths[col.field] = col.width;
-        });
-        setColumnWidths(widths);
-    };
-
     // Load team members on mount
     const getTeamMembers = () => {
         (async () => {

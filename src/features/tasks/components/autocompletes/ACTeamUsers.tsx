@@ -11,7 +11,6 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { personFilterOptions, personLabel } from "../../../../utils/personLabel";
 

@@ -1645,21 +1645,19 @@ const AutoSyncCalendarSection = () => {
 // Tab keys mirror the i18n keys under `settings.tabs.*` and are kept
 // as a plain string union (rather than numeric indices) so reordering
 // or inserting a new tab doesn't silently shift selection.
-const SETTINGS_TAB_KEYS = [
-    "general",
-    "planUsage",
-    "chat",
-    "tasks",
-    "spotlight",
-    "notifications",
-    "mentionGroups",
-    "customEmoji",
-    "shortcuts",
-    "integrations",
-    "developer",
-    "account",
-] as const;
-export type SettingsTabKey = (typeof SETTINGS_TAB_KEYS)[number];
+export type SettingsTabKey =
+    | "general"
+    | "planUsage"
+    | "chat"
+    | "tasks"
+    | "spotlight"
+    | "notifications"
+    | "mentionGroups"
+    | "customEmoji"
+    | "shortcuts"
+    | "integrations"
+    | "developer"
+    | "account";
 
 /**
  * Settings → Integrations panel. Renders the same Connections UI

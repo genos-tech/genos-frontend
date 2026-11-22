@@ -56,10 +56,8 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
         chatType,
         isThread,
         message,
-        showUnderBarOption,
         reactions,
         setReactions,
-        setShowEmojiPicker,
         setUniqueReactionEmojiCount,
     } = props;
     const { t } = useTranslation();

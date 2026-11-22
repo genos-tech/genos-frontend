@@ -50,7 +50,6 @@ export const TaskHomeModals = ({
     usePM,
     useTM,
     useCM,
-    useSM,
     socket,
     openJoinProject,
     setOpenJoinProject,

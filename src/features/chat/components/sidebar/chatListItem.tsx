@@ -10,7 +10,6 @@ import { Box } from "@mui/joy";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { anchoredInvisibleHitAreaSx } from "../../../../components/ui/touchTargets";
-import { useAuth } from "../../../../context/AuthContext";
 import { prefetchChannel } from "../../../../services/channel/channelPrefetch";
 import { useChatListItem } from "../../hooks/useChatListItem";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
@@ -43,11 +42,9 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         useTEM,
         useCM,
         liveRef,
-        useTM,
         selected,
     } = props;
 
-    const { accessToken } = useAuth();
     const [openAddMembers, setOpenAddMembers] = useState(false);
     const [openAssignTags, setOpenAssignTags] = useState(false);
 

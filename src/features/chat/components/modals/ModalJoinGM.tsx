@@ -43,7 +43,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                         joiningGMId: openJoinGM.chatId,
                         joiningGMName: openJoinGM.chatName,
                     },
-                    async (ack: any) => {
+                    async () => {
                         const item_body = [
                             {
                                 type: "paragraph",

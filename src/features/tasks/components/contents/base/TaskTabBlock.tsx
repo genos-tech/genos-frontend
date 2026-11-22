@@ -148,7 +148,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         useTM,
         useTEM,
         useNM,
-        setTodoFromMessageBubble,
         hostZIndex,
     } = props;
     const urlLinkModal = useUrlLinkModal();

@@ -294,7 +294,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             // Clear the input but keep it open + focused for the next
             // rapid add. Power-user pattern.
             setQuickTitle("");
-        } catch (err) {
+        } catch {
             setQuickError(t.tasks.subTasks.quickAddError);
         } finally {
             setIsSubmittingQuick(false);

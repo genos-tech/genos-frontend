@@ -9,7 +9,6 @@ import { Socket } from "socket.io-client";
 
 import { withTrailingBlank } from "./utils/messageBlocks";
 
-import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -60,8 +59,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         setMyself,
         socket,
         thread,
-        setCurrentThreadChat,
-        setCurrentChat,
         useUISM,
         setNumEditorLines,
         useCM,
@@ -69,7 +66,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         clearPendingFiles,
     } = props;
     const { mode } = useColorScheme();
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
     const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();

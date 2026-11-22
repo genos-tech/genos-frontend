@@ -41,7 +41,6 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     setCurrentChat,
     currentThreadChat,
     setCurrentThreadChat,
-    flaggedMessages,
     setFlaggedMessages,
 }) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);

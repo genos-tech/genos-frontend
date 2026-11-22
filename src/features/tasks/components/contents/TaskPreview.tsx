@@ -1066,15 +1066,15 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                     setMyself={setMyself}
                                     setTaskBodyEdited={taskEditState.setTaskBodyEdited}
                                     setTaskBodySaved={taskEditState.setTaskBodySaved}
+                                    socket={socket}
+                                    // Non-empty: this view only renders when the pane state has a working copy.
+                                    taskId={taskEditState.tmpCurrentTaskContent.id as number}
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
                                     projectId={
                                         taskEditState.tmpCurrentTaskContent.project?.projectId
                                     }
-                                    socket={socket}
-                                    // Non-empty: this view only renders when the pane state has a working copy.
-                                    taskId={taskEditState.tmpCurrentTaskContent.id as number}
                                 />
                             </Box>
 
@@ -2734,13 +2734,12 @@ const MilestonePreviewInner = ({
                             key={`MilestoneBody-${milestone.milestoneId}`}
                             body={bodyDraft}
                             myself={myself}
+                            projectId={milestone.projectId}
                             setBody={handleMilestoneBodySync}
                             setMyself={setMyself}
                             setTaskBodyEdited={setBodyEdited}
                             setTaskBodySaved={setBodySaved}
                             socket={socket}
-                            taskId={milestone.taskId ?? milestone.milestoneId}
-                            projectId={milestone.projectId}
                             // Body-attachment uploads (`POST /task/body/attachment/`)
                             // resolve through `TaskBodyAttachmentFact.task` →
                             // `TaskMaster.task_id`. Milestones don't have their
@@ -2753,6 +2752,7 @@ const MilestonePreviewInner = ({
                             // accepts. We fall back to `milestoneId` only as a
                             // belt-and-suspenders for partial server payloads
                             // where `taskId` hasn't been backfilled yet.
+                            taskId={milestone.taskId ?? milestone.milestoneId}
                             useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}

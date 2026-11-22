@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { channelService } from "../../../services/channel/channelService";
@@ -37,7 +36,6 @@ type UseChatRoutingProps = {
 };
 
 export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatRoutingProps) => {
-    const { accessToken } = useAuth();
     const rawNavigate = useNavigate();
     // Keep-alive gate. chat/tasks/notes Homes now stay mounted while hidden so
     // their heavy editors/tables survive a service switch (no rebuild → no

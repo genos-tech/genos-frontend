@@ -9,7 +9,6 @@ import { Socket } from "socket.io-client";
 
 import { withTrailingBlank } from "./utils/messageBlocks";
 
-import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { sendChatMessage } from "../../features/chat/services/sendChatMessage";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -65,7 +64,6 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         clearPendingFiles,
     } = props;
     const { mode } = useColorScheme();
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
     const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();

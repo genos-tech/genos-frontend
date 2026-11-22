@@ -115,7 +115,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setTaskStatusUpdated,
         setTaskClosed,
         useCM,
-        useUISM,
         useTM,
         useNM,
         usePM,
