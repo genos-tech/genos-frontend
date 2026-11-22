@@ -324,6 +324,9 @@ export const ProjectAnalytics = ({
                             <Table
                                 size="sm"
                                 sx={{
+                                    // Scrolls inside the card on a phone instead of squeezing the
+                                    // (now larger) tag chips to nothing.
+                                    minWidth: 520,
                                     "& thead th": {
                                         backgroundColor: "transparent",
                                         color: textSecondary,
@@ -392,9 +395,9 @@ export const ProjectAnalytics = ({
                                             <tr key={row.tagName}>
                                                 <td>
                                                     <ProjectTagChip
-                                                        fontSize="0.8rem"
                                                         isDark={isDark}
                                                         label={row.tagName}
+                                                        size="md"
                                                         tagColor={row.tagColor}
                                                     />
                                                 </td>
