@@ -677,6 +677,7 @@ export const tasks = {
         quickAddLabel: "Quick Task",
         quickAddPlaceholder: "Type a title and press Enter…",
         quickAddError: "Couldn't create — try again",
+        showHidden: "Show {count} closed sub tasks",
     },
 
     // Field labels used in TaskMainBlock.

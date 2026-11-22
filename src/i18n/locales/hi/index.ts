@@ -3068,6 +3068,7 @@ export const hi: DeepPartial<Messages> = {
             quickAddLabel: "क्विक टास्क",
             quickAddPlaceholder: "टाइटल लिखें और Enter दबाएँ",
             quickAddError: "बना नहीं सका — फिर से कोशिश करें",
+            showHidden: "{count} पूर्ण उप-कार्य दिखाएँ",
         },
         fields: {
             assignee: "असाइनी",

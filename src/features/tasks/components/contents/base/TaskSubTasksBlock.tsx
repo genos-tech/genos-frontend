@@ -30,6 +30,11 @@ import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 import { joinOpenLanding, useTaskOpenLanding } from "../../../hooks/TaskOpenLandingContext";
+import {
+    ACTIVE_CHILD_STATUSES,
+    HIDDEN_CHILD_STATUSES,
+    isScopedChildTasks,
+} from "../../../services/childTaskStatuses";
 import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import {
@@ -106,6 +111,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     // and another task's rows are not drawn while this one's list is loading.
     const [childrenOf, setChildrenOf] = useState<string | null>(null);
     const childrenOfRef = useRef<string | null>(null);
+    // MIP-1994: the first request carries only the active statuses; the Closed (and Deleted)
+    // sub-tasks, usually most of a big milestone, are fetched when the user asks for them.
+    // `hiddenCount` is the server's count of them; `showHidden` is per task.
+    const [showHidden, setShowHidden] = useState(false);
+    const [hiddenCount, setHiddenCount] = useState(0);
+    const [hiddenLoaded, setHiddenLoaded] = useState(false);
     const openLanding = useTaskOpenLanding();
 
     // Inline quick-create state. The button up top toggles `isQuickAdding`;
@@ -192,12 +203,20 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         (async () => {
             if (!ticket) return;
             const key = `${currentTaskContent.id}:${currentTaskContent.project!.projectId}`;
-            const result = await loadSpecificChildTasks(
+            const answer = await loadSpecificChildTasks(
                 myself,
                 currentTaskContent.project!.projectId,
                 currentTaskContent.id!,
-                accessToken
+                accessToken,
+                showHidden
+                    ? [...ACTIVE_CHILD_STATUSES, ...HIDDEN_CHILD_STATUSES]
+                    : ACTIVE_CHILD_STATUSES
             );
+            // A scoped answer is `{ tasks, statusCounts }`; an older server answers the bare list.
+            const result = isScopedChildTasks(answer) ? answer.tasks : answer;
+            const hidden = isScopedChildTasks(answer)
+                ? HIDDEN_CHILD_STATUSES.reduce((n, s) => n + (answer.statusCounts?.[s] ?? 0), 0)
+                : 0;
             ticket.land(() => {
                 if (cancelled) return;
                 if (result === undefined) {
@@ -214,6 +233,8 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 childrenOfRef.current = key;
                 setChildrenOf(key);
                 setChildTasks(result?.length ? result : []);
+                setHiddenCount(hidden);
+                setHiddenLoaded(showHidden || !isScopedChildTasks(answer));
                 setChildLoad({ key, failed: false });
             });
         })();
@@ -231,7 +252,15 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         currentTaskContent.project?.projectId,
         forceLoad,
         childRefreshNonce,
+        showHidden,
     ]);
+
+    // Another task starts with its Closed sub-tasks hidden again.
+    useEffect(() => {
+        setShowHidden(false);
+        setHiddenCount(0);
+        setHiddenLoaded(false);
+    }, [currentTaskContent.id]);
 
     // Reset the quick-add UI when the user navigates between preview
     // cards. Without this, an open input on task A would survive a click
@@ -255,6 +284,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const childrenFailed = childAnswer?.failed === true;
     // Rows only count as "something to show" for the task they belong to.
     const hasChildRows = childTasks.length > 0 && (loadKey === null || childrenOf === loadKey);
+
+    // The "show closed" button waits for this task's answer, so it never names another task's count.
+    const hasChildRowsOrEmpty = childAnswer !== null && !childrenFailed;
 
     const submitQuickTask = async () => {
         const trimmed = quickTitle.trim();
@@ -494,12 +526,25 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     </Stack>
                 )}
 
-                {childTasks.length === 0 && (
+                {childTasks.length === 0 && hiddenCount === 0 && (
                     <Typography level="body-sm" sx={{ mb: 2, textAlign: "center" }}>
                         {emptyText}
                     </Typography>
                 )}
             </DataState>
+            {hiddenCount > 0 && !hiddenLoaded && hasChildRowsOrEmpty && (
+                <Button
+                    data-testid="sub-tasks-show-hidden"
+                    size="sm"
+                    variant="plain"
+                    color="neutral"
+                    loading={showHidden}
+                    onClick={() => setShowHidden(true)}
+                    sx={{ alignSelf: "flex-start", mb: 1 }}
+                >
+                    {t.tasks.subTasks.showHidden.replace("{count}", String(hiddenCount))}
+                </Button>
+            )}
             {/* A refresh that failed after rows were shown keeps them (DataState ignores the
                 error then): say the list may be stale, with a way to ask again. */}
             {childrenFailed && hasChildRows && (

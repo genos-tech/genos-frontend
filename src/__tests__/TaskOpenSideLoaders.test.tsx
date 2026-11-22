@@ -465,7 +465,7 @@ describe("task open: the same requests", () => {
         expect(network.all.map((r) => r.url).sort()).toEqual([
             "/note/task/?team_id=t1&project_id=7&task_id=11",
             "/task/activity/?team_id=t1&task_id=11",
-            "/task/childTasks/?team_id=t1&project_id=7&current_task_id=11",
+            "/task/childTasks/?team_id=t1&project_id=7&current_task_id=11&statuses=Open%2CWIP%2CBlocked%2CPending",
             "/task/comment/?user_id=u1&task_id=11",
             "/task/deliveries/?team_id=t1&task_id=11",
             "/task/dependency/list/?task_id=11",
@@ -477,7 +477,7 @@ describe("task open: the same requests", () => {
         expect(network.all.map((r) => r.url).sort()).toEqual([
             "/note/task/?team_id=t1&project_id=7&task_id=12",
             "/task/activity/?team_id=t1&task_id=12",
-            "/task/childTasks/?team_id=t1&project_id=7&current_task_id=12",
+            "/task/childTasks/?team_id=t1&project_id=7&current_task_id=12&statuses=Open%2CWIP%2CBlocked%2CPending",
             "/task/comment/?user_id=u1&task_id=12",
             "/task/deliveries/?team_id=t1&task_id=12",
             "/task/dependency/list/?task_id=12",
