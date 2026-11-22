@@ -13,6 +13,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
+import type { Socket } from "socket.io-client";
 
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
@@ -41,7 +42,7 @@ interface ModalNoteSharingProps {
     // these (they come from `AvatarContextProvider`), but the type still
     // requires them so we keep the prop surface explicit.
     setMyself: (me: UserProps) => void;
-    socket: any;
+    socket: Socket | null;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     teamMembers: UserProps[];

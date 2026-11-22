@@ -69,8 +69,8 @@ type Props = {
     isYou: boolean;
     user?: UserProps;
     setShowEmojiPicker: (value: boolean) => void;
-    selectedEmoji: any;
-    setSelectedEmoji: (value: any) => void;
+    selectedEmoji: string | null;
+    setSelectedEmoji: (value: string | null) => void;
 };
 
 export const UserProfileStatus = ({

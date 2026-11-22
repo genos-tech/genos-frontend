@@ -139,8 +139,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
-    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
-    const insertEmoji = (emoji: any) => {
+    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+    const insertEmoji = (emoji: string) => {
         // ":name:" shortcodes from the picker's Team Emoji category
         // become customEmoji inline nodes; unicode stays plain text.
         insertEmojiValue(editor, emoji);

@@ -205,7 +205,7 @@ const TaskCommentBubbleImpl = (props: TaskCommentBubbleProps) => {
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
-    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
     // Per-bubble wrap toggles. Same CSS-class approach as the chat
     // message bubbles — class lives on a wrapper Box around the
     // preview, App.css drives the actual wrap/scroll behaviour.

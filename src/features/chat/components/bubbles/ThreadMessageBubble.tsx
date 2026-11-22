@@ -127,7 +127,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const showUnderBarOption = isHovered || isMoreMenuOpen;
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
-    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
     // Per-bubble wrap toggles. Same pattern as `MessageBubble`.
     const [unwrapAll, setUnwrapAll] = useState<boolean>(false);

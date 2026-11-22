@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import { Box, Button, Chip, Divider, Stack, Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
+import type { Socket } from "socket.io-client";
 
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -29,7 +30,7 @@ interface ModalNoteHistoryProps {
     noteId: number;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    socket: any;
+    socket: Socket | null;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
 }

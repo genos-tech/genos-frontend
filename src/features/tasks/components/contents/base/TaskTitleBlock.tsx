@@ -637,8 +637,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                                     parentTaskId: taskContent.id,
                                                     rootTaskId: taskContent.rootTaskId,
                                                     creationKind: "task",
-                                                    milestoneId:
-                                                        (taskContent as any).milestoneId ?? null,
+                                                    milestoneId: taskContent.milestoneId ?? null,
                                                 });
                                             }
                                             useTM.setIsTaskTableVisible(false);

@@ -18,6 +18,7 @@ import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
+import type { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -60,7 +61,7 @@ interface NoteHeaderActionsProps {
     setMyself: (me: UserProps) => void;
     useTEM: TeamManagementState;
     useNM: NoteManagementState;
-    socket: any;
+    socket: Socket | null;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     onCreateNewNote: () => void;

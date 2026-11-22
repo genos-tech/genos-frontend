@@ -850,11 +850,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         </FieldLabel>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <SprintMilestonePicker
-                                milestoneId={(taskContent as any)?.milestoneId ?? null}
+                                milestoneId={taskContent?.milestoneId ?? null}
                                 projectId={taskContent?.project?.projectId}
                                 showMilestone={isMilestone !== true}
                                 showSprint={isMilestone === true}
-                                sprintId={(taskContent as any)?.sprintId ?? null}
+                                sprintId={taskContent?.sprintId ?? null}
                                 useSM={useSM}
                                 onChangeMilestone={(mid, taskId, nextSprintId) => {
                                     // One `setTaskContent` for the milestone, its
@@ -889,7 +889,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         if (sprint) nextDueDate = sprint.endDate;
                                     }
                                     setTaskContent({
-                                        ...(taskContent as any),
+                                        ...taskContent,
                                         sprintId: sid,
                                         dueDate: nextDueDate,
                                     } as TaskProps);
@@ -907,12 +907,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <FieldLabel isDark={isDark}>{t.tasks.fields.folder}</FieldLabel>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <MilestoneFolderPicker
-                                folderId={(taskContent as any)?.folderId ?? null}
+                                folderId={taskContent?.folderId ?? null}
                                 projectId={taskContent?.project?.projectId}
                                 useSM={useSM}
                                 onChangeFolder={(fid) => {
                                     setTaskContent({
-                                        ...(taskContent as any),
+                                        ...taskContent,
                                         folderId: fid,
                                     } as TaskProps);
                                     setTaskUpdated?.(true);
@@ -1253,9 +1253,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 // this path common: every top-level plan task
                                 // has the milestone backing task as parent).
                                 const parentMilestoneId =
-                                    (parentTask as any).isMilestone === true &&
-                                    (parentTask as any).milestoneId != null
-                                        ? Number((parentTask as any).milestoneId)
+                                    parentTask.isMilestone === true &&
+                                    parentTask.milestoneId != null
+                                        ? Number(parentTask.milestoneId)
                                         : null;
                                 // Modal-hosted → re-target the modal (keeps
                                 // its stacking level; see

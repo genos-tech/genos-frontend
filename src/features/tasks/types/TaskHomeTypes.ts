@@ -10,6 +10,7 @@ import { SprintMilestoneManagementState } from "../../../hooks/tasks/useSprintMi
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
+import { ProjectProps } from "../../../types/tasks";
 
 export interface TaskHomeProps {
     useTEM: TeamManagementState;
@@ -69,9 +70,9 @@ export interface TaskHeaderProps {
     setMyself: (me: UserProps) => void;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
-    teamMemberProfiles: any[];
+    teamMemberProfiles: UserProps[];
     funcSetAllChats: () => Promise<void>;
-    currentProject: any;
+    currentProject: ProjectProps | undefined;
     teamTaskSearchOptions: any[];
     loading: boolean;
     openSearch: boolean;
@@ -114,7 +115,7 @@ export interface TaskHomeLayoutProps {
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void,
+        setCurrentProject: (project: ProjectProps) => void,
         messageId?: number
     ) => void;
     socket: Socket | null;

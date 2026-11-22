@@ -1,6 +1,7 @@
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
+import type { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -18,7 +19,7 @@ interface CreateTaskPanelProps {
     usePM: ProjectManagementState;
     useTEM: TeamManagementState;
     myself: UserProps;
-    socket: any;
+    socket: Socket | null;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
     useNM: NoteManagementState;
