@@ -105,11 +105,13 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
     return (
         <Box
+            // No role of its own: the `li` inside is the list item (MIP-1955).
+            role="none"
             sx={{
                 position: "relative",
             }}
         >
-            <ListItem sx={{ p: 0, m: 0 }} nested>
+            <ListItem component="li" sx={{ p: 0, m: 0 }} nested>
                 {/* The row is the shared NavItem. It does NOT expand on click:
                     opening a note should reveal the note, not unfold its child
                     notes (the chevron, or the arrow keys, are the control for
@@ -160,7 +162,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     CSS-grid trick: loses the slide animation but unmounts
                     deep subtrees entirely, which dominates at heavy scale. */}
                 {open && hasChildren && (
-                    <List sx={navNestedListSx}>
+                    <List component="div" role="list" sx={navNestedListSx}>
                         {node.children.map((child) => (
                             <NoteTreeRenderer
                                 key={child.noteId}

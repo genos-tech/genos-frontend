@@ -25,6 +25,7 @@ const get = (tree: unknown, path: string): string | undefined =>
 const KEYS = [
     "common.feedback.loading",
     "common.feedback.toast.region",
+    "common.feedback.toast.bannerRegion",
     "common.feedback.toast.undo",
     "common.feedback.loadFailedBody",
     "common.feedback.sync.banner",

@@ -13,7 +13,7 @@
  * colours here. It is switched off below and contrast is covered by
  * `lpContrast.test.ts` (MIP-1828), which measures the real --lp pairs.
  */
-import { writeFileSync } from "node:fs";
+import { appendFileSync, writeFileSync } from "node:fs";
 import type { ReactElement } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, render } from "@testing-library/react";
@@ -26,6 +26,7 @@ import AccessibilityPage from "../lp/AccessibilityPage";
 import BlogPage from "../lp/BlogPage";
 import ChangelogPage from "../lp/ChangelogPage";
 import ContactPage from "../lp/ContactPage";
+import CookiesPage from "../lp/CookiesPage";
 import DemoPage from "../lp/DemoPage";
 import DevelopersPage from "../lp/DevelopersPage";
 import DocsPage from "../lp/DocsPage";
@@ -37,7 +38,9 @@ import PlansPage from "../lp/PlansPage";
 import PrivacyPage from "../lp/PrivacyPage";
 import SecurityPage from "../lp/SecurityPage";
 import SegmentLandingPage from "../lp/SegmentLandingPage";
+import SubprocessorsPage from "../lp/SubprocessorsPage";
 import SupportPage from "../lp/SupportPage";
+import TermsPage from "../lp/TermsPage";
 
 const ENABLED = process.env.A11Y_REPORT === "1";
 
@@ -51,6 +54,9 @@ vi.mock("../context/AuthContext", () => ({
 const PAGES: [string, ReactElement][] = [
     ["/", <LandingPage key="p" />],
     ["/for-teams", <SegmentLandingPage key="p" segment="teams" />],
+    ["/for-research", <SegmentLandingPage key="p" segment="research" />],
+    ["/for-projects", <SegmentLandingPage key="p" segment="projects" />],
+    ["/for-students", <SegmentLandingPage key="p" segment="students" />],
     ["/features-guide", <FeaturesPage key="p" />],
     ["/demo-guide", <DemoPage key="p" />],
     ["/plans", <PlansPage key="p" />],
@@ -63,6 +69,9 @@ const PAGES: [string, ReactElement][] = [
     ["/accessibility", <AccessibilityPage key="p" />],
     ["/changelog", <ChangelogPage key="p" />],
     ["/privacy", <PrivacyPage key="p" />],
+    ["/terms", <TermsPage key="p" />],
+    ["/subprocessors", <SubprocessorsPage key="p" />],
+    ["/cookies", <CookiesPage key="p" />],
     ["/legal", <LegalPage key="p" />],
     ["/blog", <BlogPage key="p" />],
     [
@@ -135,4 +144,36 @@ afterAll(() => {
         console.log(
             `  ${s.page}\t${s.elements} el\t${s.violations} violations\t${s.incompleteRules.join(",")}`
         );
+    // Make the result visible without opening the artifact (MIP-1901): a table in the job
+    // summary and one workflow annotation per page with a violation. Still never fails.
+    for (const s of summaries) {
+        if (s.violations > 0) {
+            const rules = Object.entries(s.rules)
+                .map(([id, n]) => `${id} x${n}`)
+                .join(", ");
+            console.log(`::warning title=axe::${s.page} ${rules}`);
+        }
+    }
+    const summaryFile = process.env.GITHUB_STEP_SUMMARY;
+    if (summaryFile) {
+        const rows = summaries
+            .filter((s) => s.violations > 0)
+            .map(
+                (s) =>
+                    `| ${s.page} | ${Object.entries(s.rules)
+                        .map(([id, n]) => `${id} (${n})`)
+                        .join(", ")} | ${s.violations} |`
+            );
+        appendFileSync(
+            summaryFile,
+            [
+                `### axe-core: ${total} violation node(s) across ${summaries.length} pages (report-only)`,
+                "",
+                ...(rows.length > 0
+                    ? ["| Page | Rule | Nodes |", "| --- | --- | --- |", ...rows]
+                    : ["No violations."]),
+                "",
+            ].join("\n")
+        );
+    }
 });

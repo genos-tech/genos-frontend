@@ -17,6 +17,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
+import { refuseCreateTaskInArchivedChat } from "../../../archive/createTaskGuard";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { HeaderUserName } from "./HeaderUserName";
 
@@ -182,6 +183,8 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                 size="sm"
                                 variant="solid"
                                 onClick={() => {
+                                    if (refuseCreateTaskInArchivedChat(useCM.currentSubChat!))
+                                        return;
                                     useCM.setIsMainChatVisible(true);
                                     useCM.setIsThreadVisible(false);
                                     useTM.setIsTaskPreviewVisible(false);

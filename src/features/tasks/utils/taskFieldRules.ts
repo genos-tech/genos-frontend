@@ -1,4 +1,5 @@
 import { TagListProps } from "../../../types/tasks";
+import { localCalendarIso } from "../../../utils/calendarDate";
 import { TaskKind } from "./taskKind";
 import { effortLevels, priorities } from "./taskMeta";
 
@@ -73,11 +74,11 @@ export type RuleDefaultsContext = {
 
 const isSet = (value: string | null | undefined): value is string => value != null && value !== "";
 
-// Matches the app-wide date convention (dateUtils uses toISOString).
+// The viewer's calendar day (MIP-1898), the same as dateUtils.getFormattedTodayDateStr.
 const formatOffsetDate = (offsetDays: number, today?: Date): string => {
     const d = today ? new Date(today.getTime()) : new Date();
     d.setDate(d.getDate() + offsetDays);
-    return d.toISOString().split("T")[0];
+    return localCalendarIso(d);
 };
 
 const resolvePersonDefault = (

@@ -1312,7 +1312,6 @@ const DesignSystemPage = () => {
             </Box>
 
             <Box
-                component="main"
                 sx={{
                     maxWidth: 1120,
                     mx: "auto",
