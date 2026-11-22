@@ -6,12 +6,15 @@ import IconButton from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 import { alpha } from "@mui/system";
+import { flushSync } from "react-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { ROVING_ITEM_ATTR } from "../../../../hooks/common/roving";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { Milestone } from "../../sprint-milestone/types";
+import { useRenderOnScroll } from "../../utils/renderOnScroll";
 import { SprintBoardCard } from "./SprintBoardCard";
 import { BOARD_DRAGGING_ATTR } from "./useBoardDragScrollLock";
 
@@ -136,6 +139,21 @@ const SprintBoardColumnImpl = ({
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const columnTitle = t.tasks.board[column.titleKey];
+    // A very long column (the Closed one) draws its cards as far down as it has been scrolled.
+    const { limit, grow, onScroll, scroller } = useRenderOnScroll(tasks.length);
+    const shownTasks = limit < tasks.length ? tasks.slice(0, limit) : tasks;
+    // The keyboard reaches the last drawn card: draw the next ones BEFORE the board's own key
+    // handler (a bubbling listener on the board) looks for the card to move to.
+    const onKeyDownCapture = (event: React.KeyboardEvent<HTMLElement>) => {
+        if (limit >= tasks.length) return;
+        const down = event.key === "ArrowDown" || event.key === "PageDown";
+        if (!down && event.key !== "End") return;
+        const card = (event.target as HTMLElement).closest(`[${ROVING_ITEM_ATTR}]`);
+        const cards = event.currentTarget.querySelectorAll(`[${ROVING_ITEM_ATTR}]`);
+        if (card && (event.key === "End" || card === cards[cards.length - 1])) {
+            flushSync(() => grow(event.key === "End" ? "all" : "chunk"));
+        }
+    };
 
     return (
         <div style={getColumnStyles(mode)}>
@@ -229,7 +247,10 @@ const SprintBoardColumnImpl = ({
                     )} 50%, transparent 65%, transparent 100%)`;
                     return (
                         <Box
-                            ref={provided.innerRef}
+                            ref={(el: HTMLElement | null) => {
+                                provided.innerRef(el);
+                                scroller.current = el;
+                            }}
                             aria-label={columnTitle}
                             className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             role="group"
@@ -283,6 +304,8 @@ const SprintBoardColumnImpl = ({
                                     },
                                 }),
                             }}
+                            onKeyDownCapture={onKeyDownCapture}
+                            onScroll={onScroll}
                         >
                             {tasks.length === 0 ? (
                                 <Box
@@ -332,7 +355,7 @@ const SprintBoardColumnImpl = ({
                                     </Typography>
                                 </Box>
                             ) : (
-                                tasks.map((task, index) => {
+                                shownTasks.map((task, index) => {
                                     // For a milestone backing row, the
                                     // matching preview is keyed off the
                                     // milestone id, not the backing task's
