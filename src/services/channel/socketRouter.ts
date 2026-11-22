@@ -115,7 +115,15 @@ export function registerSocketRouter(socket: Socket): () => void {
         }
     });
 
-    on<Channel>("channel.created", (c) => channelService.handleChannelCreated(c));
+    on<Channel>("channel.created", (c) => {
+        channelService.handleChannelCreated(c);
+        // The announce carries no latest message, so a reopened hidden chat (which has history)
+        // would show a row without its preview (MIP-1999). Re-read the list, coalesced with any
+        // other notice; the list rows carry `latestMessage`.
+        if (!c.latestMessage) {
+            handleChannelAppeared({ teamId: c.teamId ?? "", channelId: c.id, kind: c.kind });
+        }
+    });
     on<Channel>("channel.updated", (c) => channelService.handleChannelUpdated(c));
     on<{
         channelId: string;
