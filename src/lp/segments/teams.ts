@@ -101,7 +101,7 @@ export const teams: SegmentConfig = {
         coming: [
             "AIへの質問にPDFや画像を直接添付する",
             "ルーティン：よく使う指示を保存して、スケジュールで実行する",
-            "チャットの返信下書き（送信するのはいつもあなた）",
+            "チャットの返信下書き（送信するのはあなた）",
         ],
         audience: {
             title: "毎週同じ確認と転記を繰り返している、小さな業務チームへ。",
@@ -242,7 +242,7 @@ export const teams: SegmentConfig = {
         coming: [
             "Attach a PDF or image directly to an AI question",
             "Routines: save an instruction and run it on a schedule",
-            "Reply drafts in chat (you always press send)",
+            "Reply drafts in chat (you press send)",
         ],
         audience: {
             title: "For small teams that repeat the same follow-up and copy work every week.",

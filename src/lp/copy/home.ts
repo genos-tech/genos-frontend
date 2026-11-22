@@ -394,7 +394,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     plan: "Core以上",
                 },
                 { text: "ルーティン：よく使う指示を保存して、スケジュールで実行", coming: true },
-                { text: "チャットの返信下書き。送信するのはいつもあなた", coming: true },
+                { text: "チャットの返信下書き。送信するのはあなた", coming: true },
             ],
             privacy:
                 "Genosが記録するあなたの活動は、あなただけが見られます。オフにすれば削除されます。",
@@ -421,7 +421,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     to: "/for-students",
                     title: "学生・ゼミ",
-                    body: "講義・ノート・課題を、ひとつの場所に。",
+                    body: "講義・ノート・課題が、つながる。",
                 },
             ],
         },
@@ -744,7 +744,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     plan: "Core and up",
                 },
                 { text: "Routines: save an instruction and run it on a schedule", coming: true },
-                { text: "Reply drafts in chat; you always press send", coming: true },
+                { text: "Reply drafts in chat; you press send", coming: true },
             ],
             privacy:
                 "What Genos notes about your work is visible only to you. Turn it off and it's deleted.",
