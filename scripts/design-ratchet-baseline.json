@@ -60,11 +60,11 @@
     "features/notes:literalColors": 60,
     "features/spotlight:backdropFilter": 1,
     "features/tasks:backdropFilter": 5,
-    "features/tasks:brandVars": 119,
+    "features/tasks:brandVars": 106,
     "features/tasks:gradients": 26,
-    "features/tasks:heavyFontWeights": 51,
-    "features/tasks:isDarkTernaries": 354,
-    "features/tasks:literalColors": 649,
+    "features/tasks:heavyFontWeights": 47,
+    "features/tasks:isDarkTernaries": 342,
+    "features/tasks:literalColors": 623,
     "other:literalColors": 37,
     "other:muiMaterial": 1
 }

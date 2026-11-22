@@ -30,7 +30,7 @@ const SURFACES = [
     "src/features/notes/common/components/ModalNoteSharing.tsx",
     "src/features/tasks/components/contents/base/CustomFieldsBlock.tsx",
     "src/features/tasks/components/dashboard/TaskHomeContent.tsx",
-    "src/features/tasks/components/dashboard/tabs/MemberTasksTab.tsx",
+    "src/features/tasks/components/dashboard/tabs/PeopleTab.tsx",
     "src/features/tasks/components/dashboard/useTaskHomeData.ts",
     "src/features/tasks/components/dashboard/TaskHomeHeader.tsx",
     "src/features/tasks/components/dashboard/TaskHomeTabBar.tsx",

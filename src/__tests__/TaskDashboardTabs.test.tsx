@@ -138,7 +138,10 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         expect(screen.getByRole("tab", { name: /Project/ })).toBeInTheDocument();
         expect(screen.queryByRole("tab", { name: /Overall Insights/ })).not.toBeInTheDocument();
         expect(screen.queryByRole("tab", { name: /Sprint Insights/ })).not.toBeInTheDocument();
-        expect(screen.getByRole("tab", { name: /My Tasks/ })).toBeInTheDocument();
+        // My Tasks and Member's Tasks are one People tab (MIP-1963).
+        expect(screen.getByRole("tab", { name: /People/ })).toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: /My Tasks/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole("tab", { name: /Member's Tasks/ })).not.toBeInTheDocument();
     });
 
     it("shows the project and sprint toolbar only on the tabs it changes (MIP-1963)", () => {
@@ -165,20 +168,24 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         expect(screen.queryByText("Tag Insights")).not.toBeInTheDocument();
     });
 
-    it("reads the team's tasks only when More analytics is open (not on Today or Project)", async () => {
+    it("reads the team's tasks only when Team load is open on People (not on Today, Project or More analytics)", async () => {
         const { loadTeamTasks } = await import("../features/tasks/services/loadTeamTasks");
         vi.mocked(loadTeamTasks).mockClear();
         renderDashboard();
         await Promise.resolve();
         expect(loadTeamTasks).not.toHaveBeenCalled();
         fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        fireEvent.click(screen.getByRole("button", { name: /More analytics/ }));
         await Promise.resolve();
         expect(loadTeamTasks).not.toHaveBeenCalled();
-        fireEvent.click(screen.getByRole("button", { name: /More analytics/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
+        await Promise.resolve();
+        expect(loadTeamTasks).not.toHaveBeenCalled();
+        fireEvent.click(screen.getByRole("button", { name: "Show team load" }));
         await Promise.resolve();
         expect(loadTeamTasks).toHaveBeenCalledTimes(1);
         fireEvent.click(screen.getByRole("tab", { name: /Today/ }));
-        fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
         await Promise.resolve();
         expect(loadTeamTasks).toHaveBeenCalledTimes(1);
     });
@@ -203,9 +210,40 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         fireEvent.click(screen.getByRole("tab", { name: /Project/ }));
         fireEvent.click(screen.getByRole("button", { name: /More analytics/ }));
         expect(screen.getByText("Tag Insights")).toBeInTheDocument();
-        fireEvent.click(screen.getByRole("tab", { name: /My Tasks/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
         // The Project tab body (with Tag Insights) unmounts on switch.
         expect(screen.queryByText("Tag Insights")).not.toBeInTheDocument();
+    });
+});
+
+describe("People tab (MIP-1963)", () => {
+    beforeEach(() => window.localStorage.clear());
+
+    it("opens on me, with Team load collapsed", () => {
+        renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
+        expect(screen.getByRole("combobox", { name: "Person" })).toHaveValue(
+            `${myself.userName} (Me)`
+        );
+        expect(screen.getByTestId("people-heading").textContent).toContain(myself.userName);
+        expect(screen.getByRole("button", { name: "Show team load" })).toHaveAttribute(
+            "aria-expanded",
+            "false"
+        );
+        // The fixture gives me no task: it says so (the same card My Tasks showed).
+        expect(screen.getByText("Nothing assigned to you yet")).toBeInTheDocument();
+    });
+
+    it("shows the person rows and the status breakdown once Team load is open", () => {
+        renderDashboard();
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
+        fireEvent.click(screen.getByRole("button", { name: "Show team load" }));
+        expect(screen.getByRole("button", { name: "Hide team load" })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Show status breakdown" }));
+        const table = screen.getByRole("table", { name: /Assignee Workload/i });
+        expect(within(table).getByRole("columnheader", { name: "Total" })).toBeInTheDocument();
+        // My row: my task count is in the table (the fixture gives people their own rows).
+        expect(within(table).getAllByRole("row").length).toBeGreaterThan(1);
     });
 });
 
@@ -358,7 +396,7 @@ describe("TaskDashboard Assigned Milestones (MIP-1004)", () => {
             milestoneFor(2, "Closed no-sprint MS", "Closed", "me"),
             milestoneFor(3, "Closed active-sprint MS", "Closed", "me", ACTIVE_SPRINT),
         ]);
-        fireEvent.click(screen.getByRole("tab", { name: /My Tasks/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
 
         expect(screen.getByText("Open MS")).toBeInTheDocument();
         expect(screen.queryByText("Closed no-sprint MS")).not.toBeInTheDocument();
@@ -372,7 +410,7 @@ describe("TaskDashboard Assigned Milestones (MIP-1004)", () => {
             milestoneFor(2, "Blocked MS", "Blocked", "me", ACTIVE_SPRINT),
             milestoneFor(3, "Closed MS", "Closed", "me"),
         ]);
-        fireEvent.click(screen.getByRole("tab", { name: /My Tasks/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
 
         expect(screen.getByText("Pending MS")).toBeInTheDocument();
         expect(screen.getByText("Blocked MS")).toBeInTheDocument();
@@ -385,21 +423,33 @@ describe("TaskDashboard Assigned Milestones (MIP-1004)", () => {
             milestoneFor(2, "Closed no-sprint MS", "Closed", "me"),
             milestoneFor(3, "Closed active-sprint MS", "Closed", "me", ACTIVE_SPRINT),
         ]);
-        fireEvent.click(screen.getByRole("tab", { name: /My Tasks/ }));
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
 
         expect(screen.getByText("Nothing assigned to you yet")).toBeInTheDocument();
         expect(screen.queryByText("Assigned Milestones")).not.toBeInTheDocument();
         expect(screen.queryByText("Closed no-sprint MS")).not.toBeInTheDocument();
     });
 
-    it("applies the same rule on the Member's Tasks tab", () => {
+    it("switches person with the picker and back to me", () => {
+        renderWith([]);
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
+        const input = screen.getByRole("combobox", { name: "Person" });
+        fireEvent.mouseDown(input);
+        fireEvent.click(screen.getByRole("option", { name: /Other Person/ }));
+        expect(screen.getByTestId("people-heading").textContent).toContain("Other Person");
+        fireEvent.mouseDown(input);
+        fireEvent.click(screen.getByRole("option", { name: /\(Me\)/ }));
+        expect(screen.getByTestId("people-heading").textContent).toContain(myself.userName);
+    });
+
+    it("applies the same rule when another person is picked on People", () => {
         renderWith([
             milestoneFor(1, "Other open MS", "Open", "other"),
             milestoneFor(2, "Other closed MS", "Closed", "other"),
             milestoneFor(3, "Other closed sprint MS", "Closed", "other", ACTIVE_SPRINT),
         ]);
-        fireEvent.click(screen.getByRole("tab", { name: /Member's Tasks/ }));
-        const input = screen.getByPlaceholderText("Search a member…");
+        fireEvent.click(screen.getByRole("tab", { name: /People/ }));
+        const input = screen.getByRole("combobox", { name: "Person" });
         fireEvent.mouseDown(input);
         fireEvent.click(screen.getByRole("option", { name: /Other Person/ }));
 

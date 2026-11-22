@@ -3645,6 +3645,15 @@ export const hi: DeepPartial<Messages> = {
             },
             tabMyTasks: "मेरे टास्क",
             tabMemberTasks: "सदस्य के टास्क",
+            tabPeople: "लोग",
+            people: {
+                person: "व्यक्ति",
+                me: "मैं",
+                statusBreakdownShow: "स्थिति का विवरण दिखाएँ",
+                statusBreakdownHide: "स्थिति का विवरण छिपाएँ",
+                teamLoadShow: "टीम का कार्यभार दिखाएँ",
+                teamLoadHide: "टीम का कार्यभार छिपाएँ",
+            },
             tabAgentActivity: "एजेंट गतिविधि",
             tabToday: "आज",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

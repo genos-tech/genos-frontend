@@ -31,7 +31,7 @@ export const MeterRow = ({
     >
         {avatar}
         <Typography sx={{ ...type("body-sm"), color: g.text.primary }} title={name} noWrap>
-            {name}
+            <bdi className="g-bidi-island">{name}</bdi>
         </Typography>
         <ProportionBar ariaLabel={ariaLabel} legend={false} segments={segments} total={total} />
         <Typography

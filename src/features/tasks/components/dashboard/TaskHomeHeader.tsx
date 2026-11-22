@@ -16,12 +16,7 @@ import type { TaskDashboardTab, TaskHomeContentProps } from "./taskHomeTypes";
 import type { TaskHomeData } from "./useTaskHomeData";
 
 /** The tabs whose numbers follow the picked project and sprint. Today and Agent activity do not. */
-const PROJECT_SCOPED_TABS: readonly TaskDashboardTab[] = [
-    "project",
-    "milestones",
-    "mytasks",
-    "members",
-];
+const PROJECT_SCOPED_TABS: readonly TaskDashboardTab[] = ["project", "milestones", "people"];
 
 type TaskHomeHeaderProps = Pick<
     TaskHomeData,
