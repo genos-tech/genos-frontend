@@ -5,6 +5,64 @@ import type { DeepPartial, Messages } from "../../types";
  */
 export const zh: DeepPartial<Messages> = {
     admin: {
+        slackImport: {
+            title: "从 Slack 导入",
+            panelDescription: "将 Slack 导出中的频道、消息和主题串导入此团队，作为群聊。",
+            button: "从 Slack 导入…",
+            description: "上传 Slack 工作区导出的 ZIP，检查后再导入。",
+            howTo: "在 Slack 中，由所有者导出工作区数据(设置 → 导入/导出数据)，然后在此上传该 ZIP。点击“导入”之前不会创建任何内容。",
+            limits: "限制:每次导入 {mb} MB、{channels} 个频道、{messages} 条消息。不导入私信。",
+            filesNote:
+                "文件不会被复制。每个文件会变成指向 Slack 的链接，需要登录 Slack，并且可能过期。",
+            chooseFile: "选择导出的 ZIP",
+            close: "关闭",
+            back: "返回",
+            import: "导入 {count} 条消息",
+            importing: "正在导入…",
+            summary:
+                "将导入 {channels} 个频道、{threads} 个主题串中的 {messages} 条消息(已导入 {skipped} 条)。",
+            channelsHeading: "频道",
+            private: "私有",
+            archived: "已归档",
+            channelLine: "{messages} 条消息 → 聊天“{title}”",
+            existing: "添加到之前导入创建的聊天",
+            targetArchived: "已跳过:该聊天已归档",
+            peopleHeading: "成员",
+            peopleHint:
+                "按电子邮件地址与团队成员匹配。不会邀请任何人，也不会创建账号:未匹配的人的消息仍显示其 Slack 名称。",
+            colName: "Slack 名称",
+            colMatch: "在 Genos 中",
+            colMessages: "消息数",
+            matchedTo: "匹配到 {name}",
+            warnFiles: "文件会变成指向 Slack 的链接。需要登录 Slack，并且可能过期。",
+            warnUnmatched: "{count} 条消息来自未匹配的人:只显示 Slack 名称。",
+            warnOrphans: "{count} 条回复找不到原消息，将作为普通消息导入。",
+            warnDms: "导出中的私信和群组私信不会被导入。",
+            resultSummary:
+                "已将 {messages} 条消息导入 {channels} 个新聊天。失败的聊天:{failed} 个。",
+            undoHint: "不是你想要的？撤销会删除此次导入添加的内容。",
+            undo: "撤销此次导入…",
+            undoConfirm:
+                "这将删除 {messages} 条消息和 {channels} 个聊天。之后被编辑或被回复的 {kept} 条会保留。",
+            undoConfirmButton: "删除",
+            undone: "已删除 {removed} 条消息。{kept} 条保留。",
+            errFileTooLarge: "该文件超过 {limit} MB。",
+            errNotExport:
+                "这看起来不是 Slack 导出的 ZIP(缺少 users.json 和 channels.json，或无法读取)。",
+            errUnsafe: "无法安全地读取该 ZIP。",
+            errTooMany: "导出超过了 {limit} 的上限。请导出较短的时间段。",
+            errNothing: "该导出中没有可导入的内容。",
+            errBusy: "此团队正在进行另一次导入。请几分钟后再试。",
+            errForbidden: "只有团队所有者可以从 Slack 导入。",
+            errGeneric: "导入失败。请重试。",
+            status: {
+                matched: "已匹配",
+                unmatched: "不是团队成员",
+                no_email: "导出中没有电子邮件",
+                bot: "机器人",
+                deleted: "在 Slack 中已停用",
+            },
+        },
         sampleData: {
             title: "示例数据",
             description:
