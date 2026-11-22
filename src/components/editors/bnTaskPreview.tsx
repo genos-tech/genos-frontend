@@ -12,6 +12,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
+import { isNoteCommentingArchived, useArchiveState } from "../../features/archive/archiveState";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -71,6 +72,8 @@ type BnTaskPreviewProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     taskId: number;
+    /** The task's project: an archived project closes the body's comments (MIP-1693). */
+    projectId?: number | null;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setTaskBodyEdited?: (value: boolean) => void;
@@ -89,6 +92,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         setMyself,
         socket,
         taskId,
+        projectId,
         body,
         setBody,
         setTaskBodyEdited,
@@ -176,6 +180,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     // `projectId` is unknown in this editor (only `taskId` is a prop), so
     // Django backfills it from the task FK — the same point it backfills
     // `displayId`.
+    // An archived project is read-only, comments included (MIP-1693): no comment button. The server
+    // refuses the write either way.
+    const archiveState = useArchiveState();
+    const commentsArchived = isNoteCommentingArchived(archiveState, { projectId });
+
     useCommentMentionEmitter({
         threadStore,
         socket,
@@ -407,7 +416,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         formattingToolbar={() => (
                             <GenosDocumentToolbar
                                 editor={editor}
-                                hasComments={!!threadStore}
+                                hasComments={!!threadStore && !commentsArchived}
                                 setShowGifPicker={setShowGifPicker}
                             />
                         )}

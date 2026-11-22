@@ -1068,6 +1068,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                     socket={socket}
                                     // Non-empty: this view only renders when the pane state has a working copy.
                                     taskId={taskEditState.tmpCurrentTaskContent.id as number}
+                                    projectId={
+                                        taskEditState.tmpCurrentTaskContent.project?.projectId
+                                    }
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
@@ -2733,6 +2736,7 @@ const MilestonePreviewInner = ({
                             setTaskBodySaved={setBodySaved}
                             socket={socket}
                             taskId={milestone.taskId ?? milestone.milestoneId}
+                            projectId={milestone.projectId}
                             // Body-attachment uploads (`POST /task/body/attachment/`)
                             // resolve through `TaskBodyAttachmentFact.task` →
                             // `TaskMaster.task_id`. Milestones don't have their
