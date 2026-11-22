@@ -3923,7 +3923,7 @@ export const ja: DeepPartial<Messages> = {
             selectPrompt: "左側でグループを選択して、そのメンバーを管理します。",
             modalHeading: "メンショングループ",
             notFound: "グループが見つかりません。",
-            deleteGroup: "グループの削除",
+            deleteGroup: "グループを削除",
             deleted: "@{name} を削除しました",
             deleteFailed: "@{name} を削除できませんでした。元に戻しました。",
             addDescription: "説明を追加…",
