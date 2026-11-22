@@ -726,9 +726,9 @@ export const hi: DeepPartial<Messages> = {
                 revoke: "किसी ऐप को डिसकनेक्ट करने के लिए सेटिंग्स → डेवलपर → कनेक्टेड ऐप में उसे रद्द करें।",
                 trap: "पूरा पता चिपकाएँ, अंत के पाथ सहित। इसके बिना Claude बताता है कि साइन इन हो गया, फिर रिपोर्ट करता है कि Genos ने उसका अनुरोध अस्वीकार कर दिया।",
                 // TODO(copy): plugin wording (MIP-1870), English draft until it is translated.
-                pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+                pluginTitle: "Or add the Genos plugin: the connection plus ready-made skills",
                 pluginIntro:
-                    "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+                    "The plugin bundles this connection with Genos skills you call by name, such as /genos:catchup, and with /genos:setup, which saves the Genos rules to your memory file. Optional: the address above works on its own.",
                 pluginCodeLabel: "Claude Code: run these two commands in the chat",
                 pluginCopyAria: "Copy the plugin commands",
                 pluginDesktopLabel:
@@ -759,6 +759,7 @@ export const hi: DeepPartial<Messages> = {
                 claudeCodeSteps: [
                     "Claude Code की चैट में ये दोनों कमांड एक के बाद एक चलाएँ।",
                     "/mcp चलाएँ, Genos में साइन इन करें, फिर टीम चुनें और यह भी कि Claude क्या कर सकता है।",
+                    "/genos:setup चलाएँ। यह कनेक्शन जाँचता है और आपकी हाँ के बाद Genos के नियम आपकी मेमोरी फ़ाइल में सहेज देता है।",
                 ],
                 claudeCodeCommandLabel: "Claude Code की चैट के लिए कमांड",
                 claudeCodeCommandAria: "दोनों प्लगइन कमांड कॉपी करें",
@@ -784,7 +785,7 @@ export const hi: DeepPartial<Messages> = {
                 prefText: "जब मैं काम करूँ, Genos को अप-टू-डेट रखो: टास्क, फ़ैसले और प्रगति।",
                 prefCopyAria: "प्राथमिकता कॉपी करें",
                 prefWhereClaudeCode:
-                    "Claude Code: इसे अपनी CLAUDE.md में जोड़ें (होम की .claude फ़ोल्डर वाली सभी प्रोजेक्ट पर लागू होती है)।",
+                    "Claude Code: /genos:setup आपके लिए Genos के पूरे नियम आपकी मेमोरी फ़ाइल में सहेज देता है। सिर्फ़ यह पंक्ति खुद जोड़नी हो, तो इसे अपनी CLAUDE.md में रखें (होम की .claude फ़ोल्डर वाली सभी प्रोजेक्ट पर लागू होती है)।",
                 prefWhereClaudeDesktop:
                     "claude.ai और Claude Desktop: इसे Settings → Profile में personal preferences में चिपकाएँ।",
                 prefWhereChatgpt:

@@ -3877,9 +3877,9 @@ export const zh: DeepPartial<Messages> = {
                 revoke: "要断开某个应用，请在“设置 → 开发者 → 已连接的应用”中撤销。",
                 trap: "请粘贴完整的地址，包括末尾的路径。缺少路径时，Claude 会显示已登录成功，随后报告 Genos 拒绝了它的请求。",
                 // TODO(copy): plugin wording (MIP-1870), English draft until it is translated.
-                pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+                pluginTitle: "Or add the Genos plugin: the connection plus ready-made skills",
                 pluginIntro:
-                    "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+                    "The plugin bundles this connection with Genos skills you call by name, such as /genos:catchup, and with /genos:setup, which saves the Genos rules to your memory file. Optional: the address above works on its own.",
                 pluginCodeLabel: "Claude Code: run these two commands in the chat",
                 pluginCopyAria: "Copy the plugin commands",
                 pluginDesktopLabel:
@@ -3908,6 +3908,7 @@ export const zh: DeepPartial<Messages> = {
                 claudeCodeSteps: [
                     "在 Claude Code 聊天中依次运行下面两条命令。",
                     "运行 /mcp，登录 Genos，然后选择团队以及 Claude 可以做什么。",
+                    "运行 /genos:setup。它会检查连接，并在你确认后，把 Genos 的规则保存到你的记忆文件中。",
                 ],
                 claudeCodeCommandLabel: "在 Claude Code 聊天中运行的命令",
                 claudeCodeCommandAria: "复制两条插件命令",
@@ -3932,7 +3933,7 @@ export const zh: DeepPartial<Messages> = {
                 prefText: "我工作时，请随时更新 Genos：任务、决定和进展。",
                 prefCopyAria: "复制偏好",
                 prefWhereClaudeCode:
-                    "Claude Code：添加到你的 CLAUDE.md（主目录 .claude 文件夹中的那个对所有项目生效）。",
+                    "Claude Code：/genos:setup 会替你把完整的 Genos 规则保存到记忆文件。如果只想自己添加这一行，请添加到你的 CLAUDE.md（主目录 .claude 文件夹中的那个对所有项目生效）。",
                 prefWhereClaudeDesktop:
                     "claude.ai 和 Claude Desktop：粘贴到 Settings → Profile 的 personal preferences 中。",
                 prefWhereChatgpt: "ChatGPT：粘贴到自定义指令中（设置 → 个性化）。",

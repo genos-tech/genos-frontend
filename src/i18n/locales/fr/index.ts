@@ -4082,9 +4082,9 @@ export const fr: DeepPartial<Messages> = {
                 revoke: "Pour déconnecter une app, révoquez-la dans Réglages → Développeur → Apps connectées.",
                 trap: "Collez l'adresse complète, avec le chemin à la fin. Sans lui, Claude indique qu'il s'est connecté, puis signale que Genos a refusé sa requête.",
                 // TODO(copy): plugin wording (MIP-1870), English draft until it is translated.
-                pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+                pluginTitle: "Or add the Genos plugin: the connection plus ready-made skills",
                 pluginIntro:
-                    "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+                    "The plugin bundles this connection with Genos skills you call by name, such as /genos:catchup, and with /genos:setup, which saves the Genos rules to your memory file. Optional: the address above works on its own.",
                 pluginCodeLabel: "Claude Code: run these two commands in the chat",
                 pluginCopyAria: "Copy the plugin commands",
                 pluginDesktopLabel:
@@ -4116,6 +4116,7 @@ export const fr: DeepPartial<Messages> = {
                 claudeCodeSteps: [
                     "Exécutez ces deux commandes dans le chat de Claude Code, l'une après l'autre.",
                     "Exécutez /mcp, connectez-vous à Genos, puis choisissez l'équipe et ce que Claude peut faire.",
+                    "Lancez /genos:setup. Il vérifie la connexion et, après votre accord, enregistre les règles de Genos dans votre fichier de mémoire.",
                 ],
                 claudeCodeCommandLabel: "Commandes pour le chat de Claude Code",
                 claudeCodeCommandAria: "Copier les deux commandes du plugin",
@@ -4142,7 +4143,7 @@ export const fr: DeepPartial<Messages> = {
                     "Quand je travaille, tiens Genos à jour : tâches, décisions et avancement.",
                 prefCopyAria: "Copier la préférence",
                 prefWhereClaudeCode:
-                    "Claude Code : ajoutez-la à votre CLAUDE.md (celui du dossier .claude de votre dossier personnel s'applique à tous les projets).",
+                    "Claude Code : /genos:setup enregistre pour vous les règles complètes de Genos dans votre fichier de mémoire. Pour n'ajouter que cette ligne vous-même, mettez-la dans votre CLAUDE.md (celui du dossier .claude de votre dossier personnel s'applique à tous les projets).",
                 prefWhereClaudeDesktop:
                     "claude.ai et Claude Desktop : collez-la dans Settings → Profile, sous personal preferences.",
                 prefWhereChatgpt:

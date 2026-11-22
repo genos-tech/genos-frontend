@@ -35,6 +35,7 @@ export const connectAi = {
     claudeCodeSteps: [
         "Run these two commands in the Claude Code chat, one after the other.",
         "Run /mcp, sign in to Genos, then choose the team and what Claude may do.",
+        "Run /genos:setup. It checks the connection and, after your yes, saves the Genos rules to your memory file.",
     ],
     claudeCodeCommandLabel: "Commands for the Claude Code chat",
     claudeCodeCommandAria: "Copy the two plugin commands",
@@ -63,7 +64,7 @@ export const connectAi = {
     prefText: "When I work, keep Genos up to date: tasks, decisions and progress.",
     prefCopyAria: "Copy the preference",
     prefWhereClaudeCode:
-        "Claude Code: add it to your CLAUDE.md (the one in your home .claude folder applies to every project).",
+        "Claude Code: /genos:setup saves the full Genos rules to your memory file for you. To add only this line yourself, put it in your CLAUDE.md (the one in your home .claude folder applies to every project).",
     prefWhereClaudeDesktop:
         "claude.ai and Claude Desktop: paste it under Settings → Profile, in personal preferences.",
     prefWhereChatgpt:
