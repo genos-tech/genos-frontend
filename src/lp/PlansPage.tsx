@@ -13,24 +13,12 @@ import { PRICING_SECURITY_LINK } from "./copy/security";
 import { LpShell } from "./kit/LpShell";
 import { useSyncAppLocale } from "./kit/useSyncAppLocale";
 import type { Lang } from "./lpLang";
+import { PLANS_META } from "./seo/pageHeads";
 import { useDocumentMeta } from "./useDocumentMeta";
 
 const CONTACT_SALES_MAILTO = "mailto:genos.support@genosai.dev?subject=Genos%20Enterprise";
 
 type PlanStrings = Messages["settings"]["planUsage"];
-
-const META: Record<Lang, { title: string; description: string }> = {
-    ja: {
-        title: "料金 | Genos",
-        description:
-            "Free・Core・Pro・Max・Enterprise。プランごとの上限と機能を一覧で比べられます。",
-    },
-    en: {
-        title: "Pricing | Genos",
-        description:
-            "Free, Core, Pro, Max and Enterprise: compare the limits and features of every plan in one table.",
-    },
-};
 
 /** One matrix cell: included, not included, or a value. Icons are decoration, the words are the content. */
 const Cell = ({ cell, p }: { cell: MatrixCell; p: PlanStrings }) => {
@@ -67,10 +55,10 @@ function PlansBody({ lang }: { lang: Lang }) {
     const { currency } = useCurrencyPreference();
     useSyncAppLocale(lang);
     useDocumentMeta({
-        title: META[lang].title,
-        description: META[lang].description,
-        ogTitle: META[lang].title,
-        ogDescription: META[lang].description,
+        title: PLANS_META[lang].title,
+        description: PLANS_META[lang].description,
+        ogTitle: PLANS_META[lang].title,
+        ogDescription: PLANS_META[lang].description,
         lang,
     });
 

@@ -12,6 +12,9 @@ buildCommand = "npm run build"
 
 [deploy]
 # `exec` + the local binary, not `npx`: npm sat between Railway and `serve` and logged
-# "npm error signal SIGTERM" on every deploy (MIP-921). `serve` is a dependency.
-startCommand = "exec ./node_modules/.bin/serve -s dist -l $PORT"
+# "npm error signal SIGTERM" on every deploy (MIP-921). The server handles SIGTERM itself.
+# MIP-1988: scripts/serve-spa.mjs instead of `serve -s`. Same behaviour (SPA fallback,
+# serve.json headers, gzip) plus per-page head HTML for public routes by path and ?lang=.
+# Rollback = put the `serve -s dist -l $PORT` command back; `serve` stays a dependency.
+startCommand = "exec node scripts/serve-spa.mjs dist"
 restartPolicyType = "ON_FAILURE"
