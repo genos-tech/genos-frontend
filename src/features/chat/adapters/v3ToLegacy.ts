@@ -352,6 +352,7 @@ export function channelToLegacyChat(args: {
         latestMessageText: latest.contentText,
         TSLastMessage: latest.tsSent,
         isPrivate: channel.isPrivate,
+        description: channel.description || undefined,
         isExternal: channel.isExternal,
         hostTeamName: channel.hostTeamName ?? null,
         profileImagePath: channel.profileImageUrl || undefined,

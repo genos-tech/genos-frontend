@@ -109,3 +109,18 @@ describe("accessibility page render", () => {
         expect(screen.getAllByRole("link", { name: SUPPORT_EMAIL }).length).toBeGreaterThan(0);
     });
 });
+
+describe("/accessibility copy claims the code backs (MIP-1900)", () => {
+    it("does not say no scan runs, and does not pair AA with tertiary text", () => {
+        const all = JSON.stringify(ACCESSIBILITY_COPY);
+        expect(all).not.toContain("No automated accessibility scan");
+        expect(all).not.toContain("axe などの自動アクセシビリティ検査は行っていません");
+        for (const lang of ["en", "ja"] as const) {
+            for (const section of Object.values(ACCESSIBILITY_COPY[lang].sections)) {
+                for (const sentence of section.body) {
+                    expect(sentence).not.toMatch(/AA[^.]*tertiary[^.]*3:1/);
+                }
+            }
+        }
+    });
+});

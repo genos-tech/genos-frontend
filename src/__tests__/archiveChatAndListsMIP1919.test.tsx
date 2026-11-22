@@ -5,7 +5,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { refreshArchivedProjects } from "../features/archive/archiveApi";
+import { archivedJoinedProjects } from "../features/archive/archiveApi";
 import { ArchivedBanner } from "../features/archive/ArchivedBanner";
 import {
     getArchiveSnapshot,
@@ -34,8 +34,9 @@ vi.mock("../db", () => ({
 }));
 vi.mock("../features/tasks/services/loadTeamProjects", () => ({ loadTeamProjects: vi.fn() }));
 
-const channel = (id: string, projectId: number | null) => ({
+const channel = (id: string, projectId: number | null, archived = false) => ({
     id,
+    archived,
     kind: 2,
     title: id,
     profileImageUrl: "",
@@ -65,7 +66,7 @@ describe("a project's chat after the project is restored (MIP-1919)", () => {
         get.mockImplementation(async (_url: string, cfg: { params: Record<string, string> }) => ({
             data: {
                 channels: cfg.params.include_archived
-                    ? [channel("pm1", 7), channel("g1", null), channel("live", null)]
+                    ? [channel("pm1", 7, true), channel("g1", null, true), channel("live", null)]
                     : [channel("live", null)],
             },
         }));
@@ -82,13 +83,10 @@ describe("a project's chat after the project is restored (MIP-1919)", () => {
 
 describe("the Archived section (MIP-1921)", () => {
     it("holds joined projects only", async () => {
-        (loadTeamProjects as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
-            proj(1, true),
-            proj(2, true),
-            proj(3, false),
-        ]);
-        await refreshArchivedProjects({ teamId: "t", userId: "u" }, "tok", [proj(1, true)]);
-        expect(getArchiveSnapshot().archivedProjects.map((p) => p.projectId)).toEqual([2]);
+        const archivedRow = (projectId: number, isJoined: boolean) =>
+            ({ ...(proj(projectId, isJoined) as object), archived: true }) as never;
+        const rows = [proj(1, true), archivedRow(2, true), archivedRow(3, false)];
+        expect(archivedJoinedProjects(rows).map((p) => p.projectId)).toEqual([2]);
     });
 
     it("builds its count labels from a {count} placeholder", () => {

@@ -140,6 +140,19 @@ export const useIsProjectArchived = (projectId: number | null | undefined): bool
     return projectId != null && state.archivedProjects.some((p) => p.projectId === projectId);
 };
 
+/**
+ * Whether a note's comments are closed because its project or chat is archived (MIP-1693, Ken
+ * 2026-11-22: sharing stays allowed, comments do not). `host` is the note's comment host: a task note
+ * carries a `projectId`, a chat note a `chatId`. A chat note's chat is matched by its id as text.
+ */
+export const isNoteCommentingArchived = (
+    state: ArchiveSnapshot,
+    host: { projectId?: number | null; chatId?: number | string | null }
+): boolean =>
+    (host.projectId != null &&
+        state.archivedProjects.some((p) => p.projectId === host.projectId)) ||
+    (host.chatId != null && state.archivedChannelIds.has(String(host.chatId)));
+
 /** React binding: re-renders the caller whenever the archive state changes. */
 export const useArchiveState = (): ArchiveSnapshot =>
     useSyncExternalStore(subscribeArchive, getArchiveSnapshot, getArchiveSnapshot);

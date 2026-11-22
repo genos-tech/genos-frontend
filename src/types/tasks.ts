@@ -97,6 +97,10 @@ export type ProjectProps = {
     isPrivate?: boolean;
     isHidden?: boolean;
     isJoined?: boolean;
+    /** Archived by its owner (MIP-1693). The list returns archived rows only with
+     *  `include_archived=true`, and each row says so (MIP-1853). */
+    archived?: boolean;
+    archivedAt?: string | null;
     systemUserId?: string;
     /**
      * Another team owns this project and shared it with yours.

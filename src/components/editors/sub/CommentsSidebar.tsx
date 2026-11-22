@@ -73,6 +73,8 @@ type CommentsSidebarProps = {
     open: boolean;
     /** Lay the panel over the editor instead of docking it beside it: a phone. */
     overlay?: boolean;
+    /** The note's project or chat is archived: say so; nobody can comment or reply (MIP-1693). */
+    archived?: boolean;
     /** Close the panel (the overlay's Close, Escape, a tapped row). The editor takes focus
      *  back to its "Show comments" button here. Only used with `overlay`. */
     onClose?: () => void;
@@ -321,7 +323,12 @@ ThreadRow.displayName = "ThreadRow";
  * Must be rendered inside `<BlockNoteView>` (it uses the comment hooks). Renders
  * nothing when `open` is false.
  */
-export const CommentsSidebar = ({ open, overlay = false, onClose }: CommentsSidebarProps) => {
+export const CommentsSidebar = ({
+    open,
+    overlay = false,
+    archived = false,
+    onClose,
+}: CommentsSidebarProps) => {
     const { t } = useTranslation();
     const copy = t.common.editor.commentsSidebar;
     const editor = useBlockNoteEditor();
@@ -568,6 +575,16 @@ export const CommentsSidebar = ({ open, overlay = false, onClose }: CommentsSide
                     </IconButton>
                 )}
             </Box>
+
+            {archived && (
+                <Typography
+                    level="body-xs"
+                    role="note"
+                    sx={{ px: 1.5, py: 1, color: "text.tertiary" }}
+                >
+                    {t.common.archive.projectBannerBody}
+                </Typography>
+            )}
 
             <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", p: 1 }}>
                 {rows.length === 0 ? (

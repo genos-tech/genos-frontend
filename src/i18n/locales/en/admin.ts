@@ -221,6 +221,69 @@ export const admin = {
         newTeam: "New Team",
         comingSoon: "Coming soon",
     },
+    // Import a Slack export into group chats (MIP-1836). Owner only.
+    slackImport: {
+        title: "Import from Slack",
+        panelDescription:
+            "Bring the channels, messages and threads of a Slack export into this team as group chats.",
+        button: "Import from Slack…",
+        description:
+            "Upload the ZIP that Slack's workspace export gives you, review it, then import.",
+        howTo: "In Slack, an owner exports the workspace data (Settings, Import/Export Data). Upload the ZIP here. Nothing is created until you press Import.",
+        limits: "Limits: {mb} MB, {channels} channels, {messages} messages per import. Direct messages are not imported.",
+        filesNote:
+            "Files are not copied. Each one becomes a link to Slack, which needs a Slack login and may expire.",
+        chooseFile: "Choose the export ZIP",
+        close: "Close",
+        back: "Back",
+        import: "Import {count} messages",
+        importing: "Importing…",
+        summary:
+            "{channels} channels, {messages} messages to import in {threads} threads ({skipped} already imported).",
+        channelsHeading: "Channels",
+        private: "Private",
+        archived: "Archived",
+        channelLine: '{messages} messages → chat "{title}"',
+        existing: "added to the chat made by an earlier import",
+        targetArchived: "skipped: that chat is archived",
+        peopleHeading: "People",
+        peopleHint:
+            "People are matched to team members by e-mail address. Nobody is invited and no account is created: messages from anyone else keep their Slack name.",
+        colName: "Slack name",
+        colMatch: "In Genos",
+        colMessages: "Messages",
+        matchedTo: "Matched to {name}",
+        status: {
+            matched: "Matched",
+            unmatched: "Not a team member",
+            no_email: "No e-mail in the export",
+            bot: "Bot",
+            deleted: "Deactivated in Slack",
+        },
+        warnFiles: "Files become links to Slack. They need a Slack login and may expire.",
+        warnUnmatched:
+            "{count} messages are from people who are not matched: they show a Slack name only.",
+        warnOrphans:
+            "{count} replies lost their first message and are imported as normal messages.",
+        warnDms: "Direct messages and group DMs in the export are not imported.",
+        resultSummary:
+            "Imported {messages} messages into {channels} new chats. {failed} chats failed.",
+        undoHint: "Not what you wanted? Undo removes what this import added.",
+        undo: "Undo this import…",
+        undoConfirm:
+            "This removes {messages} messages and {channels} chats. {kept} that were edited or answered since stay.",
+        undoConfirmButton: "Remove them",
+        undone: "Removed {removed} messages. {kept} stay.",
+        errFileTooLarge: "That file is larger than {limit} MB.",
+        errNotExport:
+            "That does not look like a Slack export ZIP (users.json and channels.json are missing or unreadable).",
+        errUnsafe: "That ZIP cannot be read safely.",
+        errTooMany: "The export is larger than the limit of {limit}. Export a shorter period.",
+        errNothing: "There is nothing to import in that export.",
+        errBusy: "Another import is running for this team. Try again in a few minutes.",
+        errForbidden: "Only the team owner can import from Slack.",
+        errGeneric: "The import failed. Try again.",
+    },
     // Remove everything the sample-data box made at team creation, in one action (MIP-1706).
     // Owner only; the dialog lists what goes and what stays, and why.
     sampleData: {

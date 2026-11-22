@@ -39,6 +39,8 @@ export type AllChatProps = {
     TSLastMessage: string;
     project?: ProjectProps;
     isPrivate?: boolean;
+    /** The group chat's one-line topic (MIP-1694). */
+    description?: string;
     /** A cross-team chat — drives the sidebar badge. Optional because
      *  every other chat kind and every cached pre-feature row lacks it. */
     isExternal?: boolean;
@@ -68,6 +70,8 @@ export type ChatProps = {
     moveToSpecificIndex?: string;
     notMove?: boolean;
     isPrivate?: boolean;
+    /** The group chat's one-line topic (MIP-1694). */
+    description?: string;
     profileImagePath?: string;
     isPinned?: boolean;
     tsLastAllReadActivity?: string;

@@ -16,6 +16,7 @@ import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineR
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
+import TodayRoundedIcon from "@mui/icons-material/TodayRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import ViewKanbanRoundedIcon from "@mui/icons-material/ViewKanbanRounded";
@@ -65,6 +66,8 @@ import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { startOfTodayMs, todayCalendarIso } from "../../../../utils/calendarDate";
 import { isDeletedUser } from "../../../../utils/teamRoster";
+import { TodayBriefing } from "../../../today/TodayBriefing";
+import { useBriefingToday } from "../../../today/useBriefingToday";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { STATUS_TONE, toneCss, toneSolid } from "../../meta/taskTone";
 import { loadTeamTasks } from "../../services/loadTeamTasks";
@@ -98,7 +101,14 @@ import { MilestoneProgressTab } from "./milestoneProgress/MilestoneProgressTab";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
 /** The dashboard's tabs. `agent` is the Agent Activity tab (MIP-1613). */
-type TaskDashboardTab = "overall" | "sprint" | "milestones" | "mytasks" | "members" | "agent";
+type TaskDashboardTab =
+    | "today"
+    | "overall"
+    | "sprint"
+    | "milestones"
+    | "mytasks"
+    | "members"
+    | "agent";
 
 type TaskHomeContentProps = {
     useTM: TaskManagementState;
@@ -239,7 +249,14 @@ export const TaskHomeContent = ({
         typeof window !== "undefined" &&
         new URLSearchParams(window.location.search).get("view") === "agent"
             ? "agent"
-            : "overall"
+            : "today"
+    );
+    // The Today tab's data (MIP-1005): loaded only while that tab is open.
+    const todayView = useBriefingToday(
+        accessToken,
+        myself.teamId,
+        myself.userId,
+        activeTab === "today"
     );
     // How the My Tasks "Up Next" list is ordered. Default "weight" so the
     // most pressing task (priority × urgency) surfaces first — the whole
@@ -1561,6 +1578,10 @@ export const TaskHomeContent = ({
                                             },
                                         }}
                                     >
+                                        <Tab value="today" indicatorInset>
+                                            <TodayRoundedIcon sx={{ fontSize: 16 }} />
+                                            {t.tasks.dashboard.tabToday}
+                                        </Tab>
                                         <Tab value="overall" indicatorInset>
                                             <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
                                             {t.tasks.dashboard.tabOverall}
@@ -2576,6 +2597,11 @@ export const TaskHomeContent = ({
                                         </Box>
                                     )}
                                 </>
+                            )}
+
+                            {/* Today (MIP-1005): what is due, what waits on me, what changed. */}
+                            {!tasksUnread && activeTab === "today" && (
+                                <TodayBriefing view={todayView} />
                             )}
 
                             {/* ════════ TAB: Overall Insights ════════ */}
