@@ -22,8 +22,8 @@ function FavoriteNoteSectionComponent({
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
     return (
-        <Box key={groupKey}>
-            <ListItem sx={{ p: 0 }} nested>
+        <Box key={groupKey} role="none">
+            <ListItem component="li" sx={{ p: 0 }} nested>
                 <NavItem
                     as="div"
                     expanded={isExpanded}
@@ -43,7 +43,9 @@ function FavoriteNoteSectionComponent({
                         },
                     }}
                 >
-                    <List sx={navNestedListSx}>{children}</List>
+                    <List component="div" role="list" sx={navNestedListSx}>
+                        {children}
+                    </List>
                 </Box>
             </ListItem>
         </Box>

@@ -136,6 +136,10 @@ export interface SprintMilestoneManagementState {
     // Milestones, keyed by projectId.
     projectMilestones: Record<number, Milestone[]>;
     setProjectMilestones: (next: Record<number, Milestone[]>) => void;
+    /** Per project: the LAST milestone load failed (MIP-1906). `projectMilestones` then still
+     *  holds the previous list, or has no key at all when the first load failed: never an
+     *  invented empty list. A screen shows an error state with Retry from this. */
+    milestonesFailed: Record<number, boolean>;
     currentMilestone: Milestone | null;
     setCurrentMilestone: (m: Milestone | null) => void;
 
@@ -266,6 +270,10 @@ export const useSprintMilestoneManagement = (
         () => overlayPendingMilestoneDeletes(rawProjectMilestones, undoHidden),
         [rawProjectMilestones, undoHidden]
     );
+    // The newest raw list, for a loader that must hand back what is already loaded.
+    const rawMilestonesRef = useRef(rawProjectMilestones);
+    rawMilestonesRef.current = rawProjectMilestones;
+    const [milestonesFailed, setMilestonesFailed] = useState<Record<number, boolean>>({});
     const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
     const [projectFolders, setProjectFolders] = useState<Record<number, MilestoneFolder[]>>({});
 
@@ -388,8 +396,19 @@ export const useSprintMilestoneManagement = (
     const loadMilestonesForProject = useCallback(
         async (projectId: number, opts?: LoadProjectMilestonesOptions): Promise<Milestone[]> => {
             const res = await loadProjectMilestones(projectId, accessToken, opts);
-            const milestones = res?.milestones ?? [];
+            // A failed request (`undefined`) is not an empty project (MIP-1906): keep what
+            // was loaded, leave the key absent when nothing was, and say the load failed.
+            if (!res) {
+                setMilestonesFailed((prev) =>
+                    prev[projectId] ? prev : { ...prev, [projectId]: true }
+                );
+                return rawMilestonesRef.current[projectId] ?? [];
+            }
+            const milestones = res.milestones ?? [];
             setProjectMilestonesState((prev) => ({ ...prev, [projectId]: milestones }));
+            setMilestonesFailed((prev) =>
+                prev[projectId] === false ? prev : { ...prev, [projectId]: false }
+            );
             setTsLastMilestonesLoaded(Date.now());
             return milestones;
         },
@@ -824,6 +843,7 @@ export const useSprintMilestoneManagement = (
         setCurrentSprint,
         projectMilestones,
         setProjectMilestones,
+        milestonesFailed,
         currentMilestone,
         setCurrentMilestone,
         projectFolders,

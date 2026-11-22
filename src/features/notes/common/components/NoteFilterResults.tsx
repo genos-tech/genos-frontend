@@ -59,7 +59,7 @@ export const NoteFilterResults = ({
                 />
             ))}
             {result.total === 0 && (
-                <Box sx={{ px: 1.5 }}>
+                <Box component="li" sx={{ px: 1.5 }}>
                     <EmptyState
                         body={fmt(t.notes.sidebar.filterNoMatch, { query: query.trim() })}
                         data-empty="note-filter"
@@ -68,7 +68,7 @@ export const NoteFilterResults = ({
                 </Box>
             )}
             {result.total > result.hits.length && (
-                <Box sx={{ px: 1.5 }}>
+                <Box component="li" sx={{ px: 1.5 }}>
                     <EmptyState
                         size="xs"
                         body={fmt(t.notes.sidebar.filterMore, {

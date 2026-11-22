@@ -28,6 +28,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
+import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 import { fmt, useTranslation } from "../../../i18n";
 import { trackSignupCompleted } from "../../../services/marketingFunnel";
 import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
@@ -66,6 +67,7 @@ export const SignUpForm = () => {
     const [searchParams] = useSearchParams();
     const { setAccessToken } = useAuth();
     const { t } = useTranslation();
+    useDocumentTitle(`${t.admin.auth.signUp.title} | Genos`);
 
     // Invite context — keyed strictly off the `invite_email` query param
     // that AcceptInviteHandler always sets when routing here. We do NOT

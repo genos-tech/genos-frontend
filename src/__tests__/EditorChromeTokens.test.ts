@@ -120,7 +120,7 @@ describe("what stays as it was (MIP-1011)", () => {
         for (const box of ["bn-task-body-box", "bn-note-body-box"]) {
             for (const mode of ["light", "dark"]) {
                 const body = ruleBody(`.${box}-${mode} .bn-editor img`);
-                expect(body).toContain("max-width: 600px");
+                expect(body).toContain("max-width: min(600px, 100%)"); // MIP-1953: still 600, never past the container
                 expect(body).toContain("max-height: 600px");
             }
         }

@@ -90,12 +90,7 @@ function PromptButton({
     };
 
     return (
-        <button
-            aria-label={`${copyLabel}: ${text}`}
-            className="lp-prompt-btn"
-            type="button"
-            onClick={onCopy}
-        >
+        <button className="lp-prompt-btn" type="button" onClick={onCopy}>
             <span>{text}</span>
             <span aria-live="polite" className="lp-prompt-btn__state">
                 {copied ? (

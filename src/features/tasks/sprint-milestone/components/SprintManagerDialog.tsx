@@ -9,9 +9,11 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
+import { todayCalendarIso } from "../../../../utils/calendarDate";
 import { StatusLabel } from "../../components/meta/StatusLabel";
 import { Sprint } from "../types";
 import { MILESTONE_LIST_STATUSES } from "../utils/sortMilestones";
+import { sprintBucketOf } from "../utils/sprintBucket";
 import { DeleteSprintModal } from "./DeleteSprintModal";
 
 type Props = {
@@ -21,13 +23,7 @@ type Props = {
     useSM: SprintMilestoneManagementState;
 };
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
-
-const sprintBucket = (s: Sprint, today: string): "past" | "current" | "upcoming" => {
-    if (s.endDate < today) return "past";
-    if (s.startDate <= today && today <= s.endDate) return "current";
-    return "upcoming";
-};
+const todayIso = () => todayCalendarIso();
 
 const SprintRow = ({
     sprint,
@@ -257,7 +253,7 @@ export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) 
             current: [],
             upcoming: [],
         };
-        for (const s of sprints) out[sprintBucket(s, today)].push(s);
+        for (const s of sprints) out[sprintBucketOf(s, today)].push(s);
         return out;
     }, [sprints, today]);
 
