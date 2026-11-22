@@ -69,7 +69,6 @@ import { useSpotlight } from "./features/spotlight/useSpotlight";
 import { TaskAskHost } from "./features/taskAsk";
 import { LazyTaskDiagram } from "./features/tasks/diagram/components/LazyTaskDiagram";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
-import { loadTeamTaskList } from "./features/tasks/services/loadTaskSearchList";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { projectAvatarSrcMap } from "./features/tasks/utils/projectAvatar";
 import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
@@ -128,9 +127,7 @@ import { refreshAllData } from "./services/refreshAllData";
 import { useRuntimeConfigBootstrap } from "./services/runtimeConfig/useRuntimeConfig";
 import { switchService } from "./services/serviceSwitch/serviceSwitchStore";
 import { syncStatus } from "./services/syncStatus";
-import { SearchTeamTasksResponse } from "./types/tasks";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
-import { keepIfEqual } from "./utils/keepIfEqual";
 import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
 import { spotlightFolderPath, spotlightNotePath } from "./utils/spotlightNotePath";
@@ -145,7 +142,6 @@ import { ColorThemeProvider } from "./theme/ColorThemeProvider";
 // load on-demand when the user navigates to that route — initial paint
 // for the workspace shell stays small.
 /** The agent pickers' team task list is reloaded on mount when older than this. */
-const TEAM_TASKS_TTL_MS = 5 * 60_000;
 
 const ChatHome = lazy(() =>
     import("./features/chat/chatHome").then((m) => ({ default: m.ChatHome }))
@@ -348,54 +344,6 @@ const AppBody = () => {
     // in another tab) stayed missing from the `#` menu until a page
     // reload. Tasks ride along via the open project's task refresh.
     //
-    // The team-wide task list lives here rather than in `useTaskManagement`
-    // because it belongs to the `#` menu alone: `useTM.allTasks` is the
-    // OPEN project's table data, and widening that would change what every
-    // table / dashboard / sort reads.
-    const [hashTeamTasks, setHashTeamTasks] = useState<SearchTeamTasksResponse[]>([]);
-    // Team-wide task list — the only source that spans projects.
-    // `project_id=-1` + `top_n=-1` is the same call the task search
-    // bars make, including their active-work scope
-    // (`include_all=false` hides tasks under a closed parent or
-    // milestone), so `#` offers exactly what task search offers.
-    const loadHashTeamTasks = async () => {
-        const teamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
-            myself,
-            -1,
-            "open,wip,blocked,pending",
-            -1,
-            accessToken,
-            false
-        );
-        // `false` for a failed request (the loader resolves undefined): the
-        // change-driven refresh records no token for a load that did not work.
-        if (!Array.isArray(teamTasks)) return false;
-        // Keep the previous array when nothing changed: this runs on the
-        // 60 s refresh, and a new identity re-renders every `#` consumer.
-        setHashTeamTasks((prev) => keepIfEqual(prev, teamTasks));
-        return true;
-    };
-    const loadHashTeamTasksRef = useRef(loadHashTeamTasks);
-    loadHashTeamTasksRef.current = loadHashTeamTasks;
-    // MIP-1995: the full list is no longer loaded at sign-in nor re-pulled by the
-    // 60 s change refresh. The editors' `#` menu asks the server's task search per
-    // query instead. Only the agent-input pickers (Spotlight, Ask, to-do pane) still
-    // read it, synchronously, so they call `ensureTeamTasks` when they mount: one
-    // load, reused for `TEAM_TASKS_TTL_MS`, never polled.
-    const teamTasksLoadedAt = useRef<{ team: unknown; at: number } | null>(null);
-    const teamTasksBusy = useRef(false);
-    const ensureHashTeamTasks = useCallback(() => {
-        if (!accessToken || !myself?.teamId || teamTasksBusy.current) return;
-        const last = teamTasksLoadedAt.current;
-        if (last && last.team === myself.teamId && Date.now() - last.at < TEAM_TASKS_TTL_MS) {
-            return;
-        }
-        teamTasksBusy.current = true;
-        void loadHashTeamTasksRef.current().then((ok) => {
-            teamTasksBusy.current = false;
-            if (ok) teamTasksLoadedAt.current = { team: myself.teamId, at: Date.now() };
-        });
-    }, [accessToken, myself?.teamId]);
     // One entry point for every trigger (window focus, `visibilitychange`, the
     // 60 s tick while visible, the `#` menu's `refresh`): ONE `GET /changes/`
     // call, then only the loaders of the collections whose token moved. See
@@ -460,8 +408,6 @@ const AppBody = () => {
         tasks: useTM.allTasks,
         taskNoteMeta: useNM.taskNoteMeta,
         teamNoteMeta: useNM.teamNoteMeta,
-        teamTasks: hashTeamTasks,
-        ensureTeamTasks: ensureHashTeamTasks,
         todoGroups: useTG.groups,
     });
 

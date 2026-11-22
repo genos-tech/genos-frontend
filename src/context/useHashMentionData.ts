@@ -9,13 +9,12 @@ import {
     TaskNoteMetaProps,
     TeamNoteMetaProps,
 } from "../types/notes";
-import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
+import { ProjectProps, TaskTableProps } from "../types/tasks";
 import { HashMentionData } from "./HashMentionDataContext";
 
 export type UseHashMentionDataInputs = {
     allChats: AllChatProps[];
     chatNoteMeta: ChatNoteMetaProps[];
-    ensureTeamTasks: HashMentionData["ensureTeamTasks"];
     myNoteMeta: MyNoteMetaProps[];
     myself: UserProps | null;
     projects: ProjectProps[];
@@ -24,7 +23,6 @@ export type UseHashMentionDataInputs = {
     tasks: TaskTableProps[];
     taskNoteMeta: TaskNoteMetaProps[];
     teamNoteMeta: TeamNoteMetaProps[];
-    teamTasks: SearchTeamTasksResponse[];
     todoGroups: TodoGroupProps[];
 };
 
@@ -44,7 +42,6 @@ export type UseHashMentionDataInputs = {
 export const useHashMentionData = ({
     allChats,
     chatNoteMeta,
-    ensureTeamTasks,
     myNoteMeta,
     myself,
     projects,
@@ -53,14 +50,11 @@ export const useHashMentionData = ({
     tasks,
     taskNoteMeta,
     teamNoteMeta,
-    teamTasks,
     todoGroups,
 }: UseHashMentionDataInputs): HashMentionData =>
     useMemo(
         () => ({
             tasks,
-            teamTasks,
-            ensureTeamTasks,
             notes: [
                 ...myNoteMeta.map((m) => ({ kind: "my" as const, ...m })),
                 ...taskNoteMeta.map((m) => ({ kind: "task" as const, ...m })),
@@ -77,13 +71,11 @@ export const useHashMentionData = ({
         }),
         [
             tasks,
-            teamTasks,
             myNoteMeta,
             taskNoteMeta,
             chatNoteMeta,
             sharedNoteMeta,
             teamNoteMeta,
-            ensureTeamTasks,
             allChats,
             projects,
             todoGroups,

@@ -16,8 +16,9 @@
 //                  Project one-to-one, so the Project candidate stands in
 //                  for it (a PM row would just duplicate the project).
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
+import { searchHashTasks } from "../../../components/editors/hashTaskSearch";
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { useOptionalAccessToken } from "../../../context/AuthContext";
 import { useHashMentionData, type HashNoteEntry } from "../../../context/HashMentionDataContext";
@@ -118,17 +119,6 @@ const chatDisplayName = (c: AllChatProps): string => {
 export interface UseAgentMentionSourcesArgs {
     membersOverride?: UserProps[];
     groupsOverride?: MentionGroup[];
-    /**
-     * Also offer `teamTasks` — every active task in the team — merged with
-     * the open project's rows, the way the BlockNote "#" menu does.
-     *
-     * The list is loaded on demand when the picker's `#` opens (`ensureTeamTasks`
-     * from this hook, App.tsx), not at sign-in and not polled. Spotlight, the Ask modals and the to-do pane all opt
-     * in: open-project rows alone made every other project's tasks
-     * unmentionable (MIP-788), and with no project open "#" offered no
-     * tasks at all.
-     */
-    includeTeamTasks?: boolean;
 }
 
 // Completed todos older than this stop being offered — a done chore
@@ -159,9 +149,10 @@ export interface AgentMentionSources {
     entities: AgentMentionCandidate[];
     /** One task by its exact display id, any status (MIP-739). */
     lookupTask?: (displayId: string) => Promise<AgentMentionCandidate | null>;
-    /** Loads the team-wide task list for `#` when it is not loaded lately (MIP-1995): the
-     *  list is no longer fetched at sign-in, so a picker calls this when its `#` opens. */
-    ensureTeamTasks: () => void;
+    /** Tasks of any project whose title or id matches a `#` query, from the server's task
+     *  search (MIP-2002): debounced, the previous query is cancelled. Same call as the
+     *  editors' `#` menu. Resolves to no rows when superseded or failed. */
+    searchTasks: (query: string) => Promise<AgentMentionCandidate[]>;
 }
 
 type TaskRow = {
@@ -217,7 +208,6 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
     const groupsCtx = useMentionGroupsContext();
     const membersOverride = args?.membersOverride;
     const groupsOverride = args?.groupsOverride;
-    const includeTeamTasks = args?.includeTeamTasks ?? false;
     // Only to flag your own `@` row with a "YOU" chip, as the BlockNote
     // menu does. Null outside HashMentionDataProvider, which just means
     // no row is flagged.
@@ -290,17 +280,6 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
                 projectName: "",
                 status: t.status || "",
             })),
-            ...(includeTeamTasks
-                ? hash.teamTasks.map((t) => ({
-                      taskId: Number(t.taskId),
-                      projectId: t.projectId,
-                      title: t.title,
-                      displayId: t.displayId,
-                      isMilestone: t.isMilestone,
-                      projectName: t.projectName || "",
-                      status: t.status?.status || "",
-                  }))
-                : []),
         ];
         // Two sources can carry the same task, and `mentionKey` is
         // `task:<id>` — an un-deduped merge would put duplicate rows (and
@@ -363,15 +342,7 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
             out.push(candidate({ kind: "todo", itemId: t.itemId, label: t.title }, "#"));
         }
         return out;
-    }, [
-        hash.tasks,
-        hash.teamTasks,
-        hash.notes,
-        hash.allChats,
-        hash.projects,
-        hash.todoGroups,
-        includeTeamTasks,
-    ]);
+    }, [hash.tasks, hash.notes, hash.allChats, hash.projects, hash.todoGroups]);
 
     const accessToken = useOptionalAccessToken();
     const myself = hash.myself;
@@ -402,9 +373,37 @@ export const useAgentMentionSources = (args?: UseAgentMentionSourcesArgs): Agent
         [myself, accessToken, projects]
     );
 
-    const ensureTeamTasks = hash.ensureTeamTasks;
+    // One debounce/cancel slot per hook instance (per picker), like one per editor.
+    const searchSlot = useRef({});
+    const searchTasks = useCallback(
+        async (query: string): Promise<AgentMentionCandidate[]> => {
+            const rows = await searchHashTasks(searchSlot.current, myself, accessToken, query);
+            const projectNameById = new Map<number, string>(
+                projects
+                    .filter((p) => p.projectId != null)
+                    .map((p) => [Number(p.projectId), p.projectName || ""])
+            );
+            return rows
+                .filter((row) => row.title && Number.isFinite(Number(row.taskId)))
+                .map((row) =>
+                    taskCandidate(
+                        {
+                            taskId: Number(row.taskId),
+                            projectId: row.projectId,
+                            title: row.title,
+                            displayId: row.displayId,
+                            isMilestone: row.isMilestone,
+                            projectName: row.projectName || "",
+                            status: row.status?.status || "",
+                        },
+                        projectNameById
+                    )
+                );
+        },
+        [myself, accessToken, projects]
+    );
     return useMemo(
-        () => ({ members, entities, lookupTask, ensureTeamTasks }),
-        [members, entities, lookupTask, ensureTeamTasks]
+        () => ({ members, entities, lookupTask, searchTasks }),
+        [members, entities, lookupTask, searchTasks]
     );
 };

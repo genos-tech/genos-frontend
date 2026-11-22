@@ -37,8 +37,6 @@ const todoGroup = (localDate: string, items: TodoItemProps[]): TodoGroupProps =>
 
 const DATA: HashMentionData = {
     tasks: [],
-    teamTasks: [],
-    ensureTeamTasks: () => {},
     notes: [],
     // The editors' GM-only list — the agent picker must NOT read this.
     chats: [chat({ chatType: 2, chatId: "gm-1", chatName: "backend-team" })],

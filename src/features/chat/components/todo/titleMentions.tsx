@@ -61,7 +61,8 @@ import { type AgentMentionCandidate, type AgentMentionRef } from "../../../agent
 import { type MentionTokenMatch } from "../../../agentQA/mentions/useAgentMentionDraft";
 import { useAgentMentionSources } from "../../../agentQA/mentions/useAgentMentionSources";
 import { TaskMentionHoverCard } from "../../../tasks/components/TaskMentionHoverCard";
-import { TodoMentionsContext } from "./titleMentionsHelpers";
+import { displayIdEquals } from "../../../tasks/utils/taskDisplayId";
+import { savedTaskIds, TodoMentionsContext } from "./titleMentionsHelpers";
 
 /* ------------------------------------------------------------------ */
 /* Candidate pool (built once per pane)                                */
@@ -108,27 +109,47 @@ export interface TodoMentionPool {
  */
 export const TodoMentionsProvider = ({ children }: { children: ReactNode }) => {
     const hash = useHashMentionData();
-    // Team-wide tasks, not just the open project's: the pane lives in the
-    // chat area, where often no project is open at all and `#` would
-    // otherwise offer no tasks whatsoever.
-    const sources = useAgentMentionSources({ includeTeamTasks: true });
+    // Tasks of every project, not just the open one: `#` asks the server search per
+    // query (MIP-2002), so the pane never loads the team's task list.
+    const sources = useAgentMentionSources();
     const refresh = hash.refresh;
-    // Saved `#Task` tokens in titles resolve from the team list, so the pane loads it once.
-    const ensureTeamTasks = sources.ensureTeamTasks;
-    useEffect(() => {
-        ensureTeamTasks();
-    }, [ensureTeamTasks]);
-
-    // Note/project metadata are fetched lazily on first demand (`teamTasks`
-    // loads through `useAgentMentionSources`), so without this a SAVED `#Task` token in an existing title
-    // would render as plain text until something else happened to pull
-    // them. Throttled app-wide, so one call per pane mount is free.
+    // Note/project metadata are fetched lazily on first demand, so without this a
+    // SAVED `#Task` token in an existing title would render as plain text until
+    // something else happened to pull them. Throttled app-wide, so one call per pane
+    // mount is free.
     useEffect(() => {
         refresh();
     }, [refresh]);
 
+    // A saved `#MIP-12` token (picked by id) names a task the open project may not
+    // hold: resolve it by that id (one cached request each), not from a full list.
+    const { lookupTask } = sources;
+    const savedIds = useMemo(() => savedTaskIds(hash.todoGroups), [hash.todoGroups]);
+    const [looked, setLooked] = useState<Map<string, AgentMentionCandidate>>(() => new Map());
+    useEffect(() => {
+        let live = true;
+        for (const id of savedIds) {
+            if (sources.entities.some((c) => displayIdEquals(id, c.subtitle))) continue;
+            void lookupTask?.(id).then((c) => {
+                if (!live || !c) return;
+                setLooked((prev) => {
+                    const key = id.toUpperCase();
+                    if (prev.get(key)?.key === c.key) return prev;
+                    return new Map(prev).set(key, c);
+                });
+            });
+        }
+        return () => {
+            live = false;
+        };
+    }, [savedIds, lookupTask, sources.entities]);
+
     const value = useMemo<TodoMentionPool>(() => {
-        const all = [...sources.members, ...sources.entities];
+        const byId = [...looked.entries()].map(([id, c]) => ({
+            ...c,
+            ref: { ...c.ref, label: id },
+        }));
+        const all = [...sources.members, ...sources.entities, ...byId];
         const hrefByKey = new Map<string, string>();
         const taskCardByKey = new Map<string, TitleTaskCard>();
         for (const c of all) {
@@ -152,7 +173,7 @@ export const TodoMentionsProvider = ({ children }: { children: ReactNode }) => {
             taskCardByKey,
             refreshEntities: refresh,
         };
-    }, [sources.members, sources.entities, refresh]);
+    }, [sources.members, sources.entities, looked, refresh]);
 
     return <TodoMentionPoolProvider pool={value}>{children}</TodoMentionPoolProvider>;
 };

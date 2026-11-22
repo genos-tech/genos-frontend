@@ -38,8 +38,6 @@ const PROJECTS: ProjectProps[] = [
 
 const mention = (): HashMentionData => ({
     tasks: [],
-    teamTasks: [],
-    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],

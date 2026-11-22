@@ -90,8 +90,10 @@ export interface UseAgentMentionDraftArgs {
     /** One task by its exact display id, whatever its status (MIP-739):
      *  the entity pool holds open work only. */
     lookupTask?: (displayId: string) => Promise<AgentMentionCandidate | null>;
-    /** Called when a `#` trigger opens: the host loads the entity pool lazily (MIP-1995). */
-    onHashOpen?: () => void;
+    /** Tasks of any project matching a `#` query, from the server task search (MIP-2002).
+     *  The host debounces and cancels; the hook asks once per query and merges the rows
+     *  into the suggestions beside the pool's own. */
+    searchTasks?: (query: string) => Promise<AgentMentionCandidate[]>;
 }
 
 export interface MentionTokenMatch {
@@ -191,7 +193,7 @@ export function useAgentMentionDraft({
     members,
     entities,
     lookupTask,
-    onHashOpen,
+    searchTasks,
 }: UseAgentMentionDraftArgs): UseAgentMentionDraftReturn {
     const [caret, setCaretPos] = useState(0);
     // Trigger start the user dismissed with Escape — the picker stays
@@ -214,10 +216,6 @@ export function useAgentMentionDraft({
         query: string;
         candidate: AgentMentionCandidate;
     } | null>(null);
-    const hashOpen = trigger?.char === "#";
-    useEffect(() => {
-        if (hashOpen) onHashOpen?.();
-    }, [hashOpen, onHashOpen]);
     const lookupQuery = trigger?.char === "#" ? trigger.query : "";
     useEffect(() => {
         const id = fullDisplayIdIn(lookupQuery);
@@ -236,6 +234,24 @@ export function useAgentMentionDraft({
         };
     }, [lookupQuery, lookupTask, entities]);
 
+    // Server task-search rows for the `#` query they were asked for. A newer query
+    // replaces them; rows for an older query are never shown.
+    const [searched, setSearched] = useState<{
+        query: string;
+        rows: AgentMentionCandidate[];
+    } | null>(null);
+    const searchQuery = trigger?.char === "#" ? trigger.query.trim() : "";
+    useEffect(() => {
+        if (!searchQuery || !searchTasks) return;
+        let live = true;
+        void searchTasks(searchQuery).then((rows) => {
+            if (live && rows.length > 0) setSearched({ query: searchQuery, rows });
+        });
+        return () => {
+            live = false;
+        };
+    }, [searchQuery, searchTasks]);
+
     const suggestions = useMemo(() => {
         if (!trigger) return [];
         if (dismissedStart === trigger.start) return [];
@@ -249,7 +265,14 @@ export function useAgentMentionDraft({
             !entities.some((c) => c.key === lookedUp.candidate.key)
                 ? [lookedUp.candidate]
                 : [];
-        const pool = trigger.char === "@" ? members : [...extra, ...entities];
+        // Pool rows win a duplicate: the open project's copy is the fresher one.
+        const served =
+            trigger.char === "#" && searched?.query === trigger.query.trim()
+                ? searched.rows.filter(
+                      (c) => !entities.some((e) => e.key === c.key) && c.key !== extra[0]?.key
+                  )
+                : [];
+        const pool = trigger.char === "@" ? members : [...extra, ...entities, ...served];
         // Substring filter + exact→prefix→substring rank, on the RAW
         // query — deliberately not `filterAndRankByText`, which trims.
         // Keeping trailing spaces significant makes multi-word narrowing
@@ -283,7 +306,7 @@ export function useAgentMentionDraft({
                 )
                 .slice(0, MAX_SUGGESTIONS)
         );
-    }, [trigger, dismissedStart, members, entities, lookedUp]);
+    }, [trigger, dismissedStart, members, entities, lookedUp, searched]);
 
     // Keep the highlight inside the list as it refilters, and reset it
     // whenever the trigger query changes so the top match is primed.

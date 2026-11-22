@@ -9,7 +9,7 @@ import {
     TaskNoteMetaProps,
     TeamNoteMetaProps,
 } from "../types/notes";
-import { ProjectProps, SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
+import { ProjectProps, TaskTableProps } from "../types/tasks";
 
 // One note row for the "#" mention menu, tagged with its note kind so the
 // chip can rebuild the correct deep-link URL (the four note kinds use
@@ -34,15 +34,9 @@ export type HashNoteEntry =
 export type HashMentionData = {
     // The OPEN project's task rows, in full table shape. Instant and
     // always current (optimistic creates land here first), but one
-    // project only — `teamTasks` is what makes the menu team-wide.
+    // project only; other projects' tasks come from the server task search per query
+    // (MIP-1995, MIP-2002).
     tasks: TaskTableProps[];
-    // Every active task in the team, across all projects, from
-    // `/search/teamTasks/`. Empty until `ensureTeamTasks` runs. Only the
-    // agent-input pickers (Spotlight, Ask, to-do pane) read it: the editors'
-    // `#` menu searches the server per query instead (MIP-1995).
-    teamTasks: SearchTeamTasksResponse[];
-    // Loads `teamTasks` if it has not been loaded lately. Never polled.
-    ensureTeamTasks: () => void;
     notes: HashNoteEntry[];
     // Already filtered to GM (chatType === 2) by the provider. The
     // editors' "#" menu keeps this GM-only scope deliberately (notes
@@ -78,8 +72,6 @@ export type HashMentionData = {
 
 const EMPTY: HashMentionData = {
     tasks: [],
-    teamTasks: [],
-    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],

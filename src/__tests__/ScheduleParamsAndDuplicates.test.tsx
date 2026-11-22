@@ -44,8 +44,6 @@ const PROJECTS = [
 
 const mention = (over: Partial<HashMentionData> = {}): HashMentionData => ({
     tasks: [],
-    teamTasks: [],
-    ensureTeamTasks: () => {},
     notes: [],
     chats: [],
     allChats: [],
