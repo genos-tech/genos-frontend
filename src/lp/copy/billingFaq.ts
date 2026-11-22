@@ -116,12 +116,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
             {
                 id: "discounts",
                 q: "Are there discounts?",
-                a: [
-                    // TODO(copy): MIP-1250. Ken's policy D9: no discounts at launch except the first free month.
-                    // Mismatch: checkout sets allow_promotion_codes (stripe_billing.py create_checkout_session), so
-                    // the box exists. Ken to confirm there are no active promotion codes in Stripe, or to have the flag removed.
-                    "At launch, the only offer is the first free month. Checkout has a promotion-code box, and a code works only if we have issued it.",
-                ],
+                a: ["There are no discount or promotion codes at launch."],
             },
         ],
     },
@@ -200,11 +195,7 @@ export const BILLING_FAQ: Record<Lang, BillingFaqCopy> = {
             {
                 id: "discounts",
                 q: "割引はありますか？",
-                a: [
-                    // TODO(copy): MIP-1250. Ken の方針 D9: リリース時は最初の 1 か月の無料以外に割引なし。
-                    // 不一致: create_checkout_session が allow_promotion_codes を立てている。Stripe に有効なコードが無いことを Ken が確認するか、フラグを外す。
-                    "リリース時点で提供している特典は、最初の 1 か月の無料だけです。決済画面にはプロモーションコードの入力欄がありますが、当社が発行したコードだけが使えます。",
-                ],
+                a: ["リリース時点では、割引やプロモーションコードはありません。"],
             },
         ],
     },
