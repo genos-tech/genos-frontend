@@ -6709,10 +6709,41 @@ export const fr: DeepPartial<Messages> = {
                         prs: "{n, plural, one {# événement de PR} other {# événements de PR}}",
                     },
                 },
+                greeting: {
+                    morning: "Bonjour",
+                    afternoon: "Bon après-midi",
+                    evening: "Bonsoir",
+                },
+                summary: {
+                    overdue: "{n} en retard",
+                    dueToday: "{n} pour aujourd'hui",
+                    waiting: "{n} attendent votre réponse",
+                    changed: "{n} modifiées",
+                    join: ", ",
+                    clear: "Rien n'est dû aujourd'hui.",
+                },
+                tiles: {
+                    overdue: "En retard",
+                    changed: "Modifiées",
+                },
+                progress: {
+                    label: "Progression du jour",
+                    allDone: "Tout est fait pour aujourd'hui",
+                    done: "Terminées",
+                    toGo: "À faire",
+                    aria: "{done} sur {total} terminées aujourd'hui",
+                },
+                row: {
+                    milestone: "Jalon",
+                    task: "Tâche",
+                    blocked: "Bloquée",
+                    waitingOn: "Attend {ids}",
+                },
                 empty: {
-                    title: "Rien n'attend votre réponse",
-                    body: "Rien à rendre, rien à répondre, rien n'a changé.",
+                    title: "Votre journée est dégagée",
+                    body: "Rien n'est dû, rien n'attend de réponse et rien n'a changé. Un bon moment pour travailler en profondeur.",
                     section: "Rien ici.",
+                    doneToday: "Vous avez terminé {n} aujourd'hui.",
                 },
                 states: {
                     loading: "Chargement d'Aujourd'hui",

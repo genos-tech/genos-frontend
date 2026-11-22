@@ -3730,10 +3730,41 @@ export const hi: DeepPartial<Messages> = {
                         prs: "PR घटनाएँ {n}",
                     },
                 },
+                greeting: {
+                    morning: "सुप्रभात",
+                    afternoon: "नमस्कार",
+                    evening: "शुभ संध्या",
+                },
+                summary: {
+                    overdue: "{n} की समय-सीमा निकल गई",
+                    dueToday: "{n} आज देय",
+                    waiting: "{n} आपके उत्तर की प्रतीक्षा में",
+                    changed: "{n} बदले",
+                    join: ", ",
+                    clear: "आज कुछ देय नहीं है।",
+                },
+                tiles: {
+                    overdue: "समय-सीमा निकली",
+                    changed: "बदले",
+                },
+                progress: {
+                    label: "आज की प्रगति",
+                    allDone: "आज का सारा काम पूरा",
+                    done: "पूरे",
+                    toGo: "बाकी",
+                    aria: "आज {total} में से {done} पूरे",
+                },
+                row: {
+                    milestone: "माइलस्टोन",
+                    task: "टास्क",
+                    blocked: "अवरुद्ध",
+                    waitingOn: "{ids} की प्रतीक्षा",
+                },
                 empty: {
-                    title: "आपके जवाब का इंतज़ार कोई नहीं कर रहा",
-                    body: "कुछ देय नहीं, कोई जवाब बाकी नहीं, कुछ बदला नहीं।",
+                    title: "आपका दिन खाली है",
+                    body: "कुछ देय नहीं, किसी उत्तर की प्रतीक्षा नहीं और कुछ बदला नहीं। गहन काम के लिए अच्छा समय।",
                     section: "यहाँ कुछ नहीं।",
+                    doneToday: "आज आपने {n} पूरे किए।",
                 },
                 states: {
                     loading: "आज लोड हो रहा है",

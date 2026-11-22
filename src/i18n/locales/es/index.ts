@@ -3504,10 +3504,41 @@ export const es: DeepPartial<Messages> = {
                         prs: "{n, plural, one {# evento de PR} other {# eventos de PR}}",
                     },
                 },
+                greeting: {
+                    morning: "Buenos días",
+                    afternoon: "Buenas tardes",
+                    evening: "Buenas noches",
+                },
+                summary: {
+                    overdue: "{n} vencidas",
+                    dueToday: "{n} vencen hoy",
+                    waiting: "{n} esperan tu respuesta",
+                    changed: "{n} con cambios",
+                    join: ", ",
+                    clear: "Nada vence hoy.",
+                },
+                tiles: {
+                    overdue: "Vencidas",
+                    changed: "Con cambios",
+                },
+                progress: {
+                    label: "Progreso de hoy",
+                    allDone: "Todo hecho por hoy",
+                    done: "Hechas",
+                    toGo: "Por hacer",
+                    aria: "{done} de {total} hechas hoy",
+                },
+                row: {
+                    milestone: "Hito",
+                    task: "Tarea",
+                    blocked: "Bloqueada",
+                    waitingOn: "Espera a {ids}",
+                },
                 empty: {
-                    title: "Nada espera tu respuesta",
-                    body: "Nada vence, nada requiere respuesta y nada cambió.",
+                    title: "Tu día está despejado",
+                    body: "No vence nada, nada necesita respuesta y nada cambió. Buen momento para trabajar a fondo.",
                     section: "Nada aquí.",
+                    doneToday: "Hoy cerraste {n}.",
                 },
                 states: {
                     loading: "Cargando Hoy",

@@ -23,6 +23,11 @@ export type BriefingTask = {
     daysUntilDue?: number;
     projectName?: string | null;
     projectId?: number;
+    /** Optional: sent by a newer API (MIP-1992); the row draws without them. */
+    isMilestone?: boolean;
+    assigneeId?: string | null;
+    assigneeName?: string | null;
+    tags?: { tagName: string; tagColor: string; tagTextColor: string }[];
     /** Why the briefing suggests it first (only on `suggestedNext`): the English sentences. */
     reasons?: string[];
     /** The same reasons as data, one per sentence, for the page to say in the viewer's language. */
@@ -110,6 +115,8 @@ export type BriefingToday = {
     blocked: BriefingBlocked[];
     delegated: BriefingTask[];
     delegatedTotal: number;
+    /** Tasks of mine closed today (MIP-1992); absent on an older API, then no progress bar. */
+    doneToday?: { count: number };
 };
 
 export type BriefingTodayResult =
@@ -137,6 +144,7 @@ export const normaliseBriefing = (raw: Partial<BriefingToday>): BriefingToday =>
     blocked: list(raw.blocked).map((b) => ({ ...b, waitingFor: list(b.waitingFor) })),
     delegated: list(raw.delegated),
     delegatedTotal: raw.delegatedTotal ?? list(raw.delegated).length,
+    ...(typeof raw.doneToday?.count === "number" ? { doneToday: raw.doneToday } : {}),
 });
 
 /** Load the briefing. Never throws: 404 is `unavailable`, anything else `error`. */

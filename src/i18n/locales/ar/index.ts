@@ -3445,10 +3445,41 @@ export const ar: DeepPartial<Messages> = {
                         prs: "{n} أحداث PR",
                     },
                 },
+                greeting: {
+                    morning: "صباح الخير",
+                    afternoon: "مساء الخير",
+                    evening: "مساء الخير",
+                },
+                summary: {
+                    overdue: "{n} متأخرة",
+                    dueToday: "{n} مستحقة اليوم",
+                    waiting: "{n} تنتظر ردك",
+                    changed: "{n} تغيّرت",
+                    join: "، ",
+                    clear: "لا شيء مستحق اليوم.",
+                },
+                tiles: {
+                    overdue: "متأخرة",
+                    changed: "تغيّرت",
+                },
+                progress: {
+                    label: "تقدّم اليوم",
+                    allDone: "اكتمل كل شيء لهذا اليوم",
+                    done: "اكتمل",
+                    toGo: "تبقّى",
+                    aria: "اكتمل {done} من {total} اليوم",
+                },
+                row: {
+                    milestone: "معلم",
+                    task: "مهمة",
+                    blocked: "متوقفة",
+                    waitingOn: "بانتظار {ids}",
+                },
                 empty: {
-                    title: "لا شيء بانتظار ردك",
-                    body: "لا شيء مستحق ولا شيء يحتاج رداً ولم يتغير شيء.",
+                    title: "يومك خالٍ",
+                    body: "لا شيء مستحق ولا شيء ينتظر ردًا ولم يتغيّر شيء. وقت مناسب للعمل المركّز.",
                     section: "لا شيء هنا.",
+                    doneToday: "أنهيت اليوم {n}.",
                 },
                 states: {
                     loading: "جارٍ تحميل اليوم",

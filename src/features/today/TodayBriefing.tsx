@@ -1,13 +1,16 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
 import { Box, Button, IconButton, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
+import { useHashMentionData } from "../../context/HashMentionDataContext";
 import { fmt, useTranslation } from "../../i18n";
 import { requestAppNavigate } from "../../services/appNavigate";
 import { focusRing, g } from "../../theme/tokens";
 import { formatAgentWhen } from "../tasks/components/dashboard/agentActivity/agentActivityLinks";
+import { projectAvatarSrcMap } from "../tasks/utils/projectAvatar";
 import {
     BriefingMention,
     BriefingTask,
@@ -17,6 +20,8 @@ import {
     taskHref,
 } from "./briefingToday";
 import { changeLine, reasonLine } from "./briefingWords";
+import { TodaySummary } from "./TodaySummary";
+import { TodayTaskRow } from "./TodayTaskRow";
 import { BriefingTodayView } from "./useBriefingToday";
 
 /** `page` is the Tasks dashboard tab; `card` is the compact block on the Genos page. */
@@ -123,15 +128,18 @@ const Row = ({ href, primary, secondary, meta, onOpen, noLink }: RowProps) => {
 const Section = ({
     title,
     count,
+    id,
     children,
 }: {
     title: string;
     count: number;
+    id?: string;
     children: ReactNode;
 }) => (
     <Box
         aria-label={title}
         component="section"
+        id={id}
         sx={{
             minWidth: 0,
             border: `1px solid ${g.border.subtle}`,
@@ -151,6 +159,19 @@ const Section = ({
         </Box>
     </Box>
 );
+
+/** Delegated and suggested rows come without a project name: the loaded project list has it. */
+const withProjectName = (
+    task: BriefingTask,
+    projects: { projectId: number; projectName: string }[]
+) =>
+    task.projectName || task.projectId == null
+        ? task
+        : {
+              ...task,
+              projectName:
+                  projects.find((p) => p.projectId === task.projectId)?.projectName ?? null,
+          };
 
 const taskMeta = (task: BriefingTask, a: TodayCopy): string => {
     const days = task.daysUntilDue;
@@ -184,6 +205,8 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
     const a = t.tasks.dashboard.today;
     const card = variant === "card";
     const open = (href: string) => requestAppNavigate(href);
+    const { allChats, projects } = useHashMentionData();
+    const avatars = useMemo(() => projectAvatarSrcMap(allChats), [allChats]);
 
     const header = (
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1, minWidth: 0 }}>
@@ -285,30 +308,74 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                 </Box>
             );
         }
-        const due = [...d.overdue, ...d.dueToday];
-        const dueCount = d.overdueCount + d.dueTodayCount;
         const waitingCount = d.requests.length + d.mentions.length;
-        const sections: ReactNode[] = [];
-        if (dueCount > 0) {
-            sections.push(
-                <Section key="due" count={dueCount} title={a.sections.due}>
-                    {due.map((task) => (
-                        <Row
-                            key={task.taskId}
-                            href={taskHref(task)}
-                            meta={taskMeta(task, a)}
-                            noLink={a.noLink}
-                            primary={`${task.displayId} ${task.title}`}
-                            secondary={task.projectName}
-                            onOpen={open}
-                        />
-                    ))}
+        const blockedBy = new Map(d.blocked.map((b) => [b.taskId, b.waitingFor]));
+        const taskRow = (task: BriefingTask, context?: ReactNode) => (
+            <TodayTaskRow
+                key={task.taskId}
+                blockedBy={blockedBy.get(task.taskId)}
+                context={context}
+                copy={a}
+                href={taskHref(task)}
+                projectAvatarSrc={task.projectId != null ? avatars.get(task.projectId) : undefined}
+                task={withProjectName(task, projects)}
+                onOpen={open}
+            />
+        );
+        const groupLabel = (text: string, count: number) => (
+            <Box component="li" sx={{ listStyle: "none", px: 1.25, pt: 0.75 }}>
+                <Typography level="body-xs" sx={{ color: g.text.secondary, fontWeight: 600 }}>
+                    {text} · {count}
+                </Typography>
+            </Box>
+        );
+        const anchors = {
+            overdue: "today-due",
+            dueToday: "today-due",
+            waiting: "today-waiting",
+            changed: "today-changed",
+        };
+        const mainSections: ReactNode[] = [];
+        const sideSections: ReactNode[] = [];
+        const bandSections: ReactNode[] = [];
+        if (d.overdueCount + d.dueTodayCount > 0) {
+            mainSections.push(
+                <Section
+                    key="due"
+                    count={d.overdueCount + d.dueTodayCount}
+                    id="today-due"
+                    title={a.sections.due}
+                >
+                    {d.overdue.length > 0 ? (
+                        <>
+                            {groupLabel(a.tiles.overdue, d.overdueCount)}
+                            {d.overdue.map((task) => taskRow(task))}
+                        </>
+                    ) : null}
+                    {d.dueToday.length > 0 ? (
+                        <>
+                            {groupLabel(a.dueToday, d.dueTodayCount)}
+                            {d.dueToday.map((task) => taskRow(task))}
+                        </>
+                    ) : null}
+                </Section>
+            );
+        }
+        if (d.suggestedNext.length > 0) {
+            mainSections.push(
+                <Section key="next" count={d.suggestedNext.length} title={a.sections.next}>
+                    {d.suggestedNext.map((task) => taskRow(task, reasonLine(task, a, locale)))}
                 </Section>
             );
         }
         if (waitingCount > 0) {
-            sections.push(
-                <Section key="waiting" count={waitingCount} title={a.sections.waiting}>
+            sideSections.push(
+                <Section
+                    key="waiting"
+                    count={waitingCount}
+                    id="today-waiting"
+                    title={a.sections.waiting}
+                >
                     {d.requests.map((r) => (
                         <Row
                             key={`r${r.itemId}`}
@@ -335,8 +402,13 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
             );
         }
         if (d.changed.total > 0) {
-            sections.push(
-                <Section key="changed" count={d.changed.total} title={a.sections.changed}>
+            sideSections.push(
+                <Section
+                    key="changed"
+                    count={d.changed.total}
+                    id="today-changed"
+                    title={a.sections.changed}
+                >
                     {d.changed.items.map((c, i) => (
                         <Row
                             key={`c${i}${c.latestAt}`}
@@ -351,24 +423,8 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
                 </Section>
             );
         }
-        if (d.suggestedNext.length > 0) {
-            sections.push(
-                <Section key="next" count={d.suggestedNext.length} title={a.sections.next}>
-                    {d.suggestedNext.map((task) => (
-                        <Row
-                            key={task.taskId}
-                            href={taskHref(task)}
-                            noLink={a.noLink}
-                            primary={`${task.displayId} ${task.title}`}
-                            secondary={reasonLine(task, a, locale)}
-                            onOpen={open}
-                        />
-                    ))}
-                </Section>
-            );
-        }
         if (d.blocked.length > 0) {
-            sections.push(
+            bandSections.push(
                 <Section key="blocked" count={d.blocked.length} title={a.sections.blocked}>
                     {d.blocked.map((b) => (
                         <Row
@@ -386,38 +442,73 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday }: Props) =>
             );
         }
         if (d.delegatedTotal > 0) {
-            sections.push(
+            bandSections.push(
                 <Section key="delegated" count={d.delegatedTotal} title={a.sections.delegated}>
-                    {d.delegated.map((task) => (
-                        <Row
-                            key={task.taskId}
-                            href={taskHref(task)}
-                            noLink={a.noLink}
-                            primary={`${task.displayId} ${task.title}`}
-                            secondary={task.projectName}
-                            onOpen={open}
-                        />
-                    ))}
+                    {d.delegated.map((task) => taskRow(task))}
                 </Section>
             );
         }
-        body =
-            total(d) === 0 && d.suggestedNext.length === 0 ? (
-                <EmptyState body={a.empty.body} size="sm" title={a.empty.title} />
-            ) : (
-                <Box
-                    sx={{
-                        display: "grid",
-                        gap: 1.5,
-                        gridTemplateColumns: {
-                            xs: "minmax(0, 1fr)",
-                            md: "repeat(2, minmax(0, 1fr))",
-                        },
-                    }}
-                >
-                    {sections}
+        const quiet = total(d) === 0;
+        const column = (items: ReactNode[]) =>
+            items.length > 0 ? (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, minWidth: 0 }}>
+                    {items}
                 </Box>
-            );
+            ) : null;
+        body = (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                <TodaySummary anchors={anchors} copy={a} data={d} />
+                {quiet ? (
+                    <EmptyState
+                        icon={<WbSunnyOutlinedIcon />}
+                        size="sm"
+                        title={a.empty.title}
+                        body={[
+                            a.empty.body,
+                            d.doneToday && d.doneToday.count > 0
+                                ? fmt(a.empty.doneToday, { n: d.doneToday.count })
+                                : "",
+                        ]
+                            .filter(Boolean)
+                            .join(" ")}
+                    />
+                ) : null}
+                {mainSections.length + sideSections.length > 0 ? (
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gap: 1.5,
+                            alignItems: "start",
+                            gridTemplateColumns: {
+                                xs: "minmax(0, 1fr)",
+                                lg:
+                                    mainSections.length > 0 && sideSections.length > 0
+                                        ? "minmax(0, 2fr) minmax(0, 1fr)"
+                                        : "minmax(0, 1fr)",
+                            },
+                        }}
+                    >
+                        {column(mainSections)}
+                        {column(sideSections)}
+                    </Box>
+                ) : null}
+                {bandSections.length > 0 ? (
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gap: 1.5,
+                            alignItems: "start",
+                            gridTemplateColumns: {
+                                xs: "minmax(0, 1fr)",
+                                md: "repeat(2, minmax(0, 1fr))",
+                            },
+                        }}
+                    >
+                        {bandSections}
+                    </Box>
+                ) : null}
+            </Box>
+        );
     }
 
     return (
