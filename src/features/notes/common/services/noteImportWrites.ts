@@ -12,6 +12,16 @@ import { UserProps } from "../../../../types/admin";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 const DJANGO_URL = import.meta.env.VITE_DJANGO_URL;
 
+/** Which kind of note the import writes into. Each kind has its own
+ *  attachment and update endpoint (and ACL); a chat note's upload also
+ *  carries its channel, as the editor's own upload does. */
+export type NoteWriteTarget =
+    | { kind: "personal" }
+    | { kind: "task" }
+    | { kind: "chat"; chatType: number; chatId: number; isThread: boolean; threadId: number };
+
+const baseOf = (target?: NoteWriteTarget): string => `/note/${target?.kind ?? "personal"}`;
+
 /**
  * Upload one file against an existing note.
  *
@@ -27,13 +37,20 @@ export const uploadNoteAsset = async (args: {
     file: File;
     uploaderId: string;
     accessToken: string;
+    target?: NoteWriteTarget;
 }): Promise<string> => {
     const form = new FormData();
     form.append("note_attachment_file", args.file);
     form.append("note_id", String(args.noteId));
+    if (args.target?.kind === "chat") {
+        form.append("chat_type", String(args.target.chatType));
+        form.append("chat_id", String(args.target.chatId));
+        form.append("is_thread", String(args.target.isThread));
+        form.append("thread_id", String(args.target.threadId));
+    }
     form.append("uploader", args.uploaderId);
 
-    const res = await fetch(`${API_BASE}/note/personal/attachment/`, {
+    const res = await fetch(`${API_BASE}${baseOf(args.target)}/attachment/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${args.accessToken}` },
         body: form,
@@ -59,10 +76,11 @@ export const putNoteBody = async (args: {
     title: string;
     body: unknown[];
     accessToken: string;
+    target?: NoteWriteTarget;
 }): Promise<void> => {
     const api = authApi(args.accessToken);
     if (!api) throw new Error("no auth token");
-    await api.put("/note/personal/", {
+    await api.put(`${baseOf(args.target)}/`, {
         user_id: args.myself.userId,
         note_id: args.noteId,
         title: args.title,
