@@ -20,6 +20,7 @@ import {
     taskHref,
 } from "./briefingToday";
 import { changeLine, reasonLine } from "./briefingWords";
+import { rowDivider } from "./rowDivider";
 import { TodayAction } from "./todayActions";
 import { TodaySummary } from "./TodaySummary";
 import { TodayTaskRow } from "./TodayTaskRow";
@@ -102,7 +103,7 @@ const Row = ({ href, primary, secondary, meta, onOpen, noLink }: RowProps) => {
     } as const;
     if (!href) {
         return (
-            <Box component="li" sx={{ listStyle: "none" }}>
+            <Box component="li" sx={{ listStyle: "none", ...rowDivider }}>
                 <Box sx={sx} title={noLink}>
                     {body}
                 </Box>
@@ -110,7 +111,7 @@ const Row = ({ href, primary, secondary, meta, onOpen, noLink }: RowProps) => {
         );
     }
     return (
-        <Box component="li" sx={{ listStyle: "none" }}>
+        <Box component="li" sx={{ listStyle: "none", ...rowDivider }}>
             <Box
                 component="button"
                 type="button"
@@ -439,18 +440,12 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction }:
         if (d.blocked.length > 0) {
             bandSections.push(
                 <Section key="blocked" count={d.blocked.length} title={a.sections.blocked}>
-                    {d.blocked.map((b) => (
-                        <Row
-                            key={b.taskId}
-                            href={taskHref(b)}
-                            noLink={a.noLink}
-                            primary={`${b.displayId} ${b.title}`}
-                            secondary={b.waitingFor
-                                .map((w) => `${w.displayId} ${w.title}`)
-                                .join(" · ")}
-                            onOpen={open}
-                        />
-                    ))}
+                    {d.blocked.map((b) =>
+                        taskRow(
+                            { ...b, taskId: b.taskId, status: "Blocked" },
+                            b.waitingFor.map((w) => w.title).join(" · ")
+                        )
+                    )}
                 </Section>
             );
         }

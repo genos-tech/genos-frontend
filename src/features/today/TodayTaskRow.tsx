@@ -19,9 +19,9 @@ import { PriorityIcon } from "../tasks/components/meta/PriorityIcon";
 import { StatusLabel } from "../tasks/components/meta/StatusLabel";
 import { ToneLabel } from "../tasks/components/meta/ToneLabel";
 import { ProjectAvatar } from "../tasks/components/ProjectIdentityRow";
-import { TaskMentionHoverCard } from "../tasks/components/TaskMentionHoverCard";
 import type { BriefingBlocked, BriefingTask } from "./briefingToday";
 import type { TodayCopy } from "./briefingWords";
+import { rowDivider } from "./rowDivider";
 import { TodayAction } from "./todayActions";
 import { dueOf } from "./todaySummary";
 
@@ -32,9 +32,8 @@ import { dueOf } from "./todaySummary";
  * lives and why it is here.
  *
  * The whole row is ONE button that opens the task (a row with no path is plain text, never a
- * dead link). Hovering it for 250 ms shows the same preview card a `#task` chip shows; the card
- * fetches only then, so a page of rows costs no extra request. Hover does not exist on a phone,
- * so everything that matters is on the row itself.
+ * dead link). There is no hover preview (the maintainer found it too much): everything that
+ * matters is on the row itself. Rows are separated by a hairline divider, visible at rest.
  */
 
 const visuallyHidden = {
@@ -206,7 +205,7 @@ export const TodayTaskRow = ({
 
     if (!href) {
         return (
-            <Box component="li" data-kind={kind} sx={{ listStyle: "none" }}>
+            <Box component="li" data-kind={kind} sx={{ listStyle: "none", ...rowDivider }}>
                 <Box sx={sx} title={a.noLink}>
                     {body}
                 </Box>
@@ -229,27 +228,6 @@ export const TodayTaskRow = ({
             {body}
         </Box>
     );
-    const card =
-        task.projectId != null ? (
-            <AppTooltip
-                enterDelay={250}
-                placement="top-start"
-                surface="none"
-                title={
-                    <TaskMentionHoverCard
-                        displayId={task.displayId}
-                        projectId={String(task.projectId)}
-                        taskId={String(task.taskId)}
-                        title={task.title}
-                    />
-                }
-            >
-                {/* A bare span anchors the tooltip: it injects props into its child. */}
-                <span style={{ display: "block" }}>{button}</span>
-            </AppTooltip>
-        ) : (
-            button
-        );
     // A milestone, a row of someone else's and the card variant get no actions: closing a
     // milestone goes through its own record (sprint, sub-tasks), which this row cannot name.
     const canAct = onAction != null && !task.isMilestone && task.projectId != null;
@@ -261,6 +239,7 @@ export const TodayTaskRow = ({
             data-kind={kind}
             sx={{
                 listStyle: "none",
+                ...rowDivider,
                 display: "flex",
                 alignItems: "center",
                 gap: 0.25,
@@ -279,7 +258,7 @@ export const TodayTaskRow = ({
                 },
             }}
         >
-            <Box sx={{ minWidth: 0, flex: 1 }}>{card}</Box>
+            <Box sx={{ minWidth: 0, flex: 1 }}>{button}</Box>
             {canAct ? (
                 <Box
                     aria-label={fmt(a.actions.group, { task: `${task.displayId} ${task.title}` })}
