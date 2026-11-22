@@ -240,8 +240,8 @@ describe("the agent-record top of /home", () => {
         const { container } = renderHome("en");
         const ids = [...container.querySelectorAll("main section[id]")].map((el) => el.id);
         expect(ids).toEqual([
-            "idea",
             "how",
+            "idea",
             "record",
             "works",
             "questions",

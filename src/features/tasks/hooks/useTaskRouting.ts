@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { findProject, useArchiveState } from "../../archive/archiveState";
 
 type UseTaskRoutingProps = {
     usePM: ProjectManagementState;
@@ -40,6 +41,8 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
         [isActiveRoute, rawNavigate]
     ) as unknown as typeof rawNavigate;
     const location = useLocation();
+    // Archived projects arrive after the active list; the lookups below re-run when they do.
+    const archivedProjects = useArchiveState().archivedProjects;
 
     // Ref to track if we're currently navigating from URL (to avoid circular updates)
     const isNavigatingFromUrl = useRef(false);
@@ -142,7 +145,7 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
 
         // If there's a projectId in the URL, set it
         if (projectId && usePM.teamProjects.length > 0) {
-            const project = usePM.teamProjects.find((p) => p.projectId === projectId);
+            const project = findProject(usePM.teamProjects, projectId);
             if (project && usePM.currentProject?.projectId !== projectId) {
                 isNavigatingFromUrl.current = true;
                 usePM.setCurrentProject(project);
@@ -190,7 +193,7 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
                 useTM.setIsTaskPreviewVisible(true);
             }
         }
-    }, [location.pathname, usePM.teamProjects.length]);
+    }, [location.pathname, usePM.teamProjects.length, archivedProjects]);
 
     // Update URL when task preview opens/closes
     useEffect(() => {
@@ -303,7 +306,7 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
             usePM.teamProjects.length > 0 &&
             usePM.currentProject?.projectId !== targetId
         ) {
-            const project = usePM.teamProjects.find((p) => p.projectId === targetId);
+            const project = findProject(usePM.teamProjects, targetId);
             if (project) {
                 isNavigatingFromUrl.current = true;
                 usePM.setCurrentProject(project);
@@ -312,7 +315,7 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
                 }, 100);
             }
         }
-    }, [usePM.currentProject?.projectId, usePM.teamProjects]);
+    }, [usePM.currentProject?.projectId, usePM.teamProjects, archivedProjects]);
 
     return {
         parseCurrentRoute,

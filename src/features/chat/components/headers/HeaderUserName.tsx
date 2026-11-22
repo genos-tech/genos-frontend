@@ -68,6 +68,14 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
               )
             : chat?.chatName;
 
+    // A group chat's one-line topic (MIP-1694), read off the live `allChats` row so an edit shows
+    // at once; the `chat` prop is a snapshot taken when the chat was opened.
+    const gmDescription =
+        chat?.chatType === 2
+            ? (useCM.allChats.find((c) => c.chatId === chat.chatId && c.chatType === 2)
+                  ?.description ?? chat.description)
+            : undefined;
+
     const headerUser: UserProps | undefined = chat
         ? useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]
         : undefined;
@@ -263,6 +271,22 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         </Chip>
                     )}
                 </Stack>
+
+                {gmDescription && (
+                    <AppTooltip placement="bottom-start" title={gmDescription}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: styles.subtitleColor,
+                                fontWeight: 500,
+                                maxWidth: { xs: 200, md: 420 },
+                            }}
+                            noWrap
+                        >
+                            {gmDescription}
+                        </Typography>
+                    </AppTooltip>
+                )}
 
                 {/* Custom status */}
                 {chat && chat.dmPartnerUser.userId !== "" && (

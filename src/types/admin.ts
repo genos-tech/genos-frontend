@@ -130,6 +130,9 @@ export type DemoSignInResponse = SignInResponse & {
     // side — so this is the authority on what the visitor is looking at.
     // Optional: a server that predates the bilingual seeder omits it.
     lang?: string;
+    // "pending" while the api builds the sample workspace in the background
+    // (MIP-1879), "ready" when it is already there. Optional: an older api omits it.
+    workspace_status?: "pending" | "ready";
 };
 
 export type SignUpResponse = {

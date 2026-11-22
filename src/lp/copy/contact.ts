@@ -40,7 +40,10 @@ export interface ContactCopy {
         heading: string;
         body: string;
     };
-    privacy: string;
+    /** The privacy sentence is split so the policy name can be a link (MIP-1902). */
+    privacyBefore: string;
+    privacyLink: string;
+    privacyAfter: string;
     fallbackIntro: string;
 }
 
@@ -83,8 +86,10 @@ export const CONTACT_COPY: Record<Lang, ContactCopy> = {
         },
         // TODO(copy): MIP-1261. Verified against the API: the message is mailed, not stored by
         // Genos; the mail provider (Resend) keeps delivery logs; the support inbox keeps the email.
-        privacy:
-            "We use your message only to reply to you. Genos does not store it, but it is sent by email to our support inbox, and our email provider keeps delivery logs. See the privacy policy.",
+        privacyBefore:
+            "We use your message only to reply to you. Genos does not store it, but it is sent by email to our support inbox, and our email provider keeps delivery logs. See the ",
+        privacyLink: "privacy policy",
+        privacyAfter: ".",
         fallbackIntro: "You can also email us directly at",
     },
     ja: {
@@ -125,8 +130,10 @@ export const CONTACT_COPY: Record<Lang, ContactCopy> = {
         },
         // TODO(copy): MIP-1261. 実装に合わせた文面。Genos はメッセージを保存せず、メール送信のみ行います。
         // メール配信サービス（Resend）は配信ログを保持し、サポート受信箱にはメールとして残ります。
-        privacy:
-            "いただいたメッセージは、ご返信のためだけに使います。Genos では保存しませんが、サポートの受信箱へメールで送られ、メール配信サービスが配信ログを保持します。詳しくはプライバシーポリシーをご覧ください。",
+        privacyBefore:
+            "いただいたメッセージは、ご返信のためだけに使います。Genos では保存しませんが、サポートの受信箱へメールで送られ、メール配信サービスが配信ログを保持します。詳しくは",
+        privacyLink: "プライバシーポリシー",
+        privacyAfter: "をご覧ください。",
         fallbackIntro: "直接メールでお問い合わせいただくこともできます：",
     },
 };

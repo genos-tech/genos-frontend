@@ -8,6 +8,7 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
+import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import { Button, IconButton, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -33,6 +34,7 @@ import { useArchiveState } from "../../../archive/archiveState";
 import { isOwnerOfProject } from "../../../archive/projectOwner";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
+import { ModalImportTasksCsv } from "../modals/ModalImportTasksCsv";
 import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
 import { TaskRefreshButton } from "./TaskRefreshButton";
 
@@ -82,6 +84,7 @@ export const TaskHeader = ({
         myself.userId
     );
     const [openCustomizeFields, setOpenCustomizeFields] = useState(false);
+    const [openImportCsv, setOpenImportCsv] = useState(false);
 
     // Archive state (MIP-1693). The open project is archived when the archived set lists it.
     const archiveState = useArchiveState();
@@ -216,6 +219,15 @@ export const TaskHeader = ({
             onClick: () => setOpenCustomizeFields(true),
         },
         {
+            // MIP-1835: not offered on an archived project (the server refuses it too).
+            id: "importCsv",
+            kind: "import",
+            label: t.tasks.importCsv.menuItem,
+            icon: <UploadFileRoundedIcon sx={{ fontSize: 18 }} />,
+            visible: !archived && currentProjectId != null,
+            onClick: () => setOpenImportCsv(true),
+        },
+        {
             id: "newProject",
             kind: "newProject",
             label: t.tasks.header.newProjectMenuItem,
@@ -242,6 +254,9 @@ export const TaskHeader = ({
             label: t.tasks.header.deleteProjectMenuItem,
             icon: <DeleteIcon sx={{ fontSize: 18 }} />,
             danger: true,
+            // An archive is read-only: unarchive first, then delete (MIP-1693).
+            disabled: archived,
+            hint: archived ? t.common.archive.deleteDisabled : undefined,
             onClick: onDeleteProject,
         },
     ];
@@ -355,6 +370,14 @@ export const TaskHeader = ({
                     busy={archiveBusy}
                     kind="project"
                     onRestore={isProjectOwner ? toggleArchive : undefined}
+                />
+            )}
+            {currentProjectId != null && openImportCsv && (
+                <ModalImportTasksCsv
+                    projectId={currentProjectId}
+                    open
+                    onChanged={() => void usePM.refreshProjectTasks(currentProjectId)}
+                    onClose={() => setOpenImportCsv(false)}
                 />
             )}
             <ModalCustomizeTaskFields

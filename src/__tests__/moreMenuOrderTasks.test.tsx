@@ -82,6 +82,8 @@ describe("task preview menu", () => {
             m.manageTags,
             en.services.notifications.muteButton.mute,
             m.deleteTask,
+            // MIP-1584: the real delete sits last, after the soft one.
+            en.common.forceDelete.menu,
         ]);
     });
 });
@@ -137,7 +139,7 @@ describe("task preview menu: convert to milestone", () => {
         expect(labels.indexOf(m.convertToMilestone)).toBeLessThan(
             labels.indexOf(en.services.notifications.muteButton.mute)
         );
-        expect(labels[labels.length - 1]).toBe(m.deleteTask);
+        expect(labels.slice(-2)).toEqual([m.deleteTask, en.common.forceDelete.menu]);
     });
 
     it("is not offered for a sub-task", () => {
@@ -201,6 +203,8 @@ describe("project header menu", () => {
             h.customizeFieldsMenuItem,
             // The owner's archive item (MIP-1693) sits before Delete, which is always last.
             "Archive project",
+            // MIP-1835: the CSV task import is a "content" action, after the organize group.
+            en.tasks.importCsv.menuItem,
             h.deleteProjectMenuItem,
         ]);
     });

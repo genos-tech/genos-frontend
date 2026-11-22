@@ -63,6 +63,8 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     // The href of the task or milestone the notice names, built from its ids (MIP-1755). Null when
     // the ids are missing, so the row falls back to its page.
     const itemHref = (): string | null => {
+        // A deleted item has nothing left to open: the modal would say "unavailable" (MIP-1923).
+        if (notice.verb === "deleted") return null;
         const item = notice.items[0];
         const projectId = item?.projectId ?? null;
         if (!item || projectId == null) return null;

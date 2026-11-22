@@ -124,7 +124,7 @@ export function NoteTypeSection({
     );
 
     return (
-        <ListItem sx={{ mt: 0.5, p: 0 }} nested>
+        <ListItem component="li" sx={{ mt: 0.5, p: 0 }} nested>
             {dropTarget ? (
                 <DroppableHeader containerId={dropTarget.containerId} kind={dropTarget.kind}>
                     {(isDraggingOver) => header(isDraggingOver)}
@@ -144,7 +144,9 @@ export function NoteTypeSection({
                     },
                 }}
             >
-                <List sx={navNestedListSx}>{children}</List>
+                <List component="div" role="list" sx={navNestedListSx}>
+                    {children}
+                </List>
             </Box>
         </ListItem>
     );

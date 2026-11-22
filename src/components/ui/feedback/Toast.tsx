@@ -134,7 +134,10 @@ const laneFor = (region: HTMLElement, tone: ToastTone): HTMLElement =>
 const useToastRegion = (placement: ToastPlacement = "bottom"): HTMLElement | null => {
     const { t } = useTranslation();
     const region = getToastRegion(placement);
-    const label = t.common.feedback.toast.region;
+    const label =
+        placement === "top"
+            ? t.common.feedback.toast.bannerRegion
+            : t.common.feedback.toast.region;
     useEffect(() => {
         region?.setAttribute("aria-label", label);
     }, [region, label]);

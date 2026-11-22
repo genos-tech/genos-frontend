@@ -110,3 +110,9 @@ describe("DocsPage", () => {
         expect(container.querySelector("section#connect")).toBeNull();
     });
 });
+
+describe("docs links (MIP-1902)", () => {
+    it.each(["en", "ja"] as const)("%s links /migrate from the other-guides list", (lang) => {
+        expect(DOCS_COPY[lang].other.links.map((l) => l.to)).toContain("/migrate");
+    });
+});

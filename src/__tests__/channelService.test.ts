@@ -160,6 +160,50 @@ describe("channelService reactive store", () => {
         expect(arr[0].deletedAt).toBeTruthy();
     });
 
+    it("handleMessagesDeleted (bulk force delete, MIP-1951) blanks the named rows and only those", () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        for (const id of ["m-1", "m-2", "m-3"]) {
+            svc.handleMessageCreated(
+                makeMessage({
+                    id,
+                    bodyText: "secret",
+                    body: [{ type: "paragraph", content: "secret" }] as never,
+                })
+            );
+        }
+        svc.handleMessagesDeleted({
+            channelId: "ch-1",
+            channelKind: ChannelKind.GM,
+            messageIds: ["m-1", "m-3", "not-loaded"],
+        });
+        const arr = svc.getSnapshot().messagesByChannel.get("ch-1") ?? [];
+        expect(arr).toHaveLength(3);
+        const byId = new Map(arr.map((m) => [m.id, m]));
+        for (const id of ["m-1", "m-3"]) {
+            const m = byId.get(id)!;
+            expect(m.deletedAt).toBeTruthy();
+            expect(m.bodyText).toBe("");
+            expect(m.body).toEqual([]);
+            expect(m.attachments).toEqual([]);
+        }
+        expect(byId.get("m-2")!.bodyText).toBe("secret");
+        expect(byId.get("m-2")!.deletedAt).toBeFalsy();
+    });
+
+    it("handleMessagesDeleted refreshes the chat's latest-message preview when it was blanked", () => {
+        svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
+        svc.handleMessageCreated(makeMessage({ id: "m-new", bodyText: "secret" }));
+        expect(svc.getSnapshot().channels.get("ch-1")?.latestMessage?.bodyText).toBe("secret");
+        svc.handleMessagesDeleted({
+            channelId: "ch-1",
+            channelKind: ChannelKind.GM,
+            messageIds: ["m-new"],
+        });
+        const latest = svc.getSnapshot().channels.get("ch-1")?.latestMessage;
+        expect(latest?.bodyText).toBe("");
+        expect(latest?.deletedAt).toBeTruthy();
+    });
+
     it("handleReactionAdded is idempotent on duplicate event delivery", () => {
         svc.handleChannelCreated(makeChannel({ id: "ch-1" }));
         svc.handleMessageCreated(makeMessage({ id: "m-1" }));
@@ -616,8 +660,8 @@ describe("channelService.listChannels in-flight dedup", () => {
         // Token arrives. The next call must actually hit the network.
         svc.setAccessToken("tok-1");
         await expect(svc.listChannels()).resolves.toHaveLength(1);
-        // One list call is two pages-walks: the default list and the one with archived chats (MIP-1693).
-        expect(get).toHaveBeenCalledTimes(2);
+        // One list call is one read of the full list, archived chats included (MIP-1693, MIP-1853).
+        expect(get).toHaveBeenCalledTimes(1);
     });
 
     it("still coalesces concurrent callers into one request", async () => {
@@ -628,9 +672,9 @@ describe("channelService.listChannels in-flight dedup", () => {
 
         const [a, b] = await Promise.all([svc.listChannels(), svc.listChannels()]);
 
-        // Coalesced: one default list and one with archived chats, however many callers.
-        expect(get).toHaveBeenCalledTimes(2);
-        expect(get.mock.calls[1][1].params.include_archived).toBe("true");
+        // Coalesced: one read of the full list, however many callers.
+        expect(get).toHaveBeenCalledTimes(1);
+        expect(get.mock.calls[0][1].params.include_archived).toBe("true");
         expect(a).toEqual(b);
     });
 
@@ -644,9 +688,9 @@ describe("channelService.listChannels in-flight dedup", () => {
         svc.setAccessToken("tok-1");
 
         await expect(svc.listChannels()).rejects.toThrow();
-        // A retry must re-issue rather than replay the cached failure: two requests per attempt.
+        // A retry must re-issue rather than replay the cached failure: one request per attempt.
         await expect(svc.listChannels()).resolves.toHaveLength(1);
-        expect(get).toHaveBeenCalledTimes(4);
+        expect(get).toHaveBeenCalledTimes(2);
     });
 });
 

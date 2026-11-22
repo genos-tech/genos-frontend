@@ -1,4 +1,4 @@
-import { Key, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -16,6 +16,7 @@ import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineR
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
+import TodayRoundedIcon from "@mui/icons-material/TodayRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import ViewKanbanRoundedIcon from "@mui/icons-material/ViewKanbanRounded";
@@ -29,8 +30,6 @@ import {
     Grid,
     IconButton,
     LinearProgress,
-    ListItemContent,
-    ListItemDecorator,
     Option,
     Select,
     Stack,
@@ -40,7 +39,6 @@ import {
     Typography,
 } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
-import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
 import Tab, { tabClasses } from "@mui/joy/Tab";
 import { Socket } from "socket.io-client";
@@ -66,8 +64,10 @@ import { useSyncFailure, useTasksSyncFailure } from "../../../../services/syncSt
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
-import { startOfTodayMs } from "../../../../utils/calendarDate";
+import { startOfTodayMs, todayCalendarIso } from "../../../../utils/calendarDate";
 import { isDeletedUser } from "../../../../utils/teamRoster";
+import { TodayBriefing } from "../../../today/TodayBriefing";
+import { useBriefingToday } from "../../../today/useBriefingToday";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { STATUS_TONE, toneCss, toneSolid } from "../../meta/taskTone";
 import { loadTeamTasks } from "../../services/loadTeamTasks";
@@ -76,13 +76,19 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import { selectVisibleMilestones } from "../../sprint-milestone/utils/sortMilestones";
+import { sprintBucketOf } from "../../sprint-milestone/utils/sprintBucket";
 import { computeAssigneeStats, computeUpNext } from "../../utils/dashboardStats";
 import { isDueWithin, isOverdueDate, sprintWindowMs } from "../../utils/dueWindow";
 import { deriveEffectiveTasks, EffectiveTask } from "../../utils/effectiveTasks";
-import { projectAvatarSrc } from "../../utils/projectAvatar";
+import { projectAvatarSrc, projectAvatarSrcMap } from "../../utils/projectAvatar";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { computeTaskWeight, dueBucket, DueBucket, effortPoints } from "../../utils/taskWeight";
 import { sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
+import {
+    isSameMember,
+    memberOptionLabel,
+    renderMemberOption,
+} from "../autocompletes/MemberPickerParts";
 import { TaskCard, TaskListItem, TaskListPanel } from "../card";
 import { getStatusIcon } from "../meta/statusIcons";
 import { StatusLabel } from "../meta/StatusLabel";
@@ -91,10 +97,18 @@ import { ProjectTagChip } from "../ProjectTagChip";
 import { AgentActivityTab } from "./agentActivity/AgentActivityTab";
 import { AssignedMilestoneCard } from "./AssignedMilestoneCard";
 import { DashboardTaskRow } from "./DashboardTaskRow";
+import { MilestoneProgressTab } from "./milestoneProgress/MilestoneProgressTab";
 import { TaskVelocitySection } from "./TaskVelocitySection";
 
 /** The dashboard's tabs. `agent` is the Agent Activity tab (MIP-1613). */
-type TaskDashboardTab = "overall" | "sprint" | "mytasks" | "members" | "agent";
+type TaskDashboardTab =
+    | "today"
+    | "overall"
+    | "sprint"
+    | "milestones"
+    | "mytasks"
+    | "members"
+    | "agent";
 
 type TaskHomeContentProps = {
     useTM: TaskManagementState;
@@ -161,12 +175,6 @@ const buildCapacityMap = (
     return map;
 };
 
-const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upcoming" => {
-    if (s.endDate < todayIso) return "past";
-    if (s.startDate <= todayIso && todayIso <= s.endDate) return "current";
-    return "upcoming";
-};
-
 // "Ongoing" for the Assigned Milestones section: anything not Closed
 // (Pending and Blocked count as ongoing). Applied ON TOP of
 // `selectVisibleMilestones` (MIP-1004) and kept local on purpose: that
@@ -228,6 +236,7 @@ export const TaskHomeContent = ({
     const isDark = mode === "dark";
     const { t } = useTranslation();
     const projectsSync = useSyncFailure("projects");
+    const projectAvatars = useMemo(() => projectAvatarSrcMap(useCM.allChats), [useCM.allChats]);
     // The open project's rows: the cards below are computed from them, so a read that
     // is still running or failed must not draw as "no tasks / nothing assigned" (MIP-1323).
     const tasksSync = useTasksSyncFailure(usePM.currentProject?.projectId);
@@ -240,7 +249,14 @@ export const TaskHomeContent = ({
         typeof window !== "undefined" &&
         new URLSearchParams(window.location.search).get("view") === "agent"
             ? "agent"
-            : "overall"
+            : "today"
+    );
+    // The Today tab's data (MIP-1005): loaded only while that tab is open.
+    const todayView = useBriefingToday(
+        accessToken,
+        myself.teamId,
+        myself.userId,
+        activeTab === "today"
     );
     // How the My Tasks "Up Next" list is ordered. Default "weight" so the
     // most pressing task (priority × urgency) surfaces first — the whole
@@ -267,7 +283,7 @@ export const TaskHomeContent = ({
         return useSM.projectSprints[usePM.currentProject.projectId] ?? [];
     }, [usePM.currentProject?.projectId, useSM.projectSprints]);
 
-    const todayIso = new Date().toISOString().slice(0, 10);
+    const todayIso = todayCalendarIso();
     const groupedSprints = useMemo(() => {
         const out: Record<"past" | "current" | "upcoming", Sprint[]> = {
             past: [],
@@ -715,6 +731,18 @@ export const TaskHomeContent = ({
         });
         return { overdue, upcoming };
     }, [effectiveTasks]);
+
+    // ── Milestones tab (MIP-1187) ──
+    // The current project's ongoing milestones, in the sidebar's order. Same visibility rule
+    // as the sprint section above (`selectVisibleMilestones`), then Closed ones are dropped.
+    const ongoingProjectMilestones = useMemo<Milestone[]>(() => {
+        const projectId = usePM.currentProject?.projectId;
+        if (!projectId) return [];
+        return selectVisibleMilestones(
+            useSM.projectMilestones[projectId] ?? [],
+            useSM.projectSprints[projectId] ?? []
+        ).filter(isOngoingMilestone);
+    }, [usePM.currentProject?.projectId, useSM.projectMilestones, useSM.projectSprints]);
 
     // ── My Tasks (badge) + Focus user (shared tasks body) ──
     // `myTasks`/`myStats` stay pinned to the logged-in user so the "My Tasks"
@@ -1473,17 +1501,21 @@ export const TaskHomeContent = ({
                             project + sprint selectors stay pinned above because
                             the Overall tab's "Closed (Sprint)" column depends on
                             the selected sprint. */}
+                            {/* MIP-1187: the row wraps on md+ so the quick actions move to their own
+                            line when the tabs (now six) no longer fit beside them; before, the
+                            tabs scrolled Member's Tasks and Agent Activity out of view at 1440. */}
                             <Stack
                                 alignItems={{ md: "center" }}
                                 direction={{ xs: "column", md: "row" }}
+                                flexWrap={{ md: "wrap" }}
                                 spacing={1.5}
-                                sx={{ mt: 1 }}
+                                sx={{ mt: 1, rowGap: 1.5 }}
                             >
                                 <Tabs
                                     aria-label={t.tasks.dashboard.sectionsAriaLabel}
                                     value={activeTab}
                                     sx={{
-                                        flex: 1,
+                                        flex: { xs: 1, md: "1 1 auto" },
                                         minWidth: 0,
                                         width: { xs: "100%", md: "auto" },
                                         backgroundColor: "transparent",
@@ -1546,6 +1578,10 @@ export const TaskHomeContent = ({
                                             },
                                         }}
                                     >
+                                        <Tab value="today" indicatorInset>
+                                            <TodayRoundedIcon sx={{ fontSize: 16 }} />
+                                            {t.tasks.dashboard.tabToday}
+                                        </Tab>
                                         <Tab value="overall" indicatorInset>
                                             <TrendingUpRoundedIcon sx={{ fontSize: 16 }} />
                                             {t.tasks.dashboard.tabOverall}
@@ -1553,6 +1589,10 @@ export const TaskHomeContent = ({
                                         <Tab value="sprint" indicatorInset>
                                             <CalendarMonthRoundedIcon sx={{ fontSize: 16 }} />
                                             {t.tasks.dashboard.tabSprint}
+                                        </Tab>
+                                        <Tab value="milestones" indicatorInset>
+                                            <FlagRoundedIcon sx={{ fontSize: 16 }} />
+                                            {t.tasks.dashboard.tabMilestones}
                                         </Tab>
                                         <Tab value="mytasks" indicatorInset>
                                             <PersonRoundedIcon sx={{ fontSize: 16 }} />
@@ -1682,6 +1722,21 @@ export const TaskHomeContent = ({
                                         onRetry: tasksSync.retry,
                                         title: t.common.feedback.sync.tasksFailed,
                                     }}
+                                />
+                            )}
+
+                            {/* ════════ TAB: Milestones — progress check (MIP-1187) ════════ */}
+                            {!tasksUnread && activeTab === "milestones" && (
+                                <MilestoneProgressTab
+                                    effectiveTasks={effectiveTasks}
+                                    milestones={ongoingProjectMilestones}
+                                    projectName={usePM.currentProject?.projectName}
+                                    sprints={projectSprints}
+                                    milestonesLoaded={
+                                        usePM.currentProject?.projectId != null &&
+                                        useSM.projectMilestones[usePM.currentProject.projectId] !==
+                                            undefined
+                                    }
                                 />
                             )}
 
@@ -2014,60 +2069,16 @@ export const TaskHomeContent = ({
                                                     {t.tasks.dashboard.memberTasks.pickLabel}
                                                 </Typography>
                                                 <Autocomplete
-                                                    getOptionLabel={(o) => o.name}
-                                                    isOptionEqualToValue={(o, v) => o.id === v.id}
+                                                    getOptionLabel={memberOptionLabel}
+                                                    isOptionEqualToValue={isSameMember}
                                                     options={projectMembers}
+                                                    renderOption={renderMemberOption()}
                                                     size="sm"
                                                     value={selectedMember}
                                                     placeholder={
                                                         t.tasks.dashboard.memberTasks
                                                             .pickPlaceholder
                                                     }
-                                                    renderOption={(optProps, o) => {
-                                                        // MUI derives the option key from
-                                                        // getOptionLabel (the NAME), so two members
-                                                        // with the same name collide. Drop that key
-                                                        // (extract it out of the spread) and key by
-                                                        // the unique member id instead.
-                                                        const { key: _labelKey, ...rest } =
-                                                            optProps as typeof optProps & {
-                                                                key?: Key;
-                                                            };
-                                                        void _labelKey;
-                                                        return (
-                                                            <AutocompleteOption
-                                                                key={o.id}
-                                                                {...rest}
-                                                            >
-                                                                <ListItemDecorator>
-                                                                    <UserAvatar
-                                                                        clickable={false}
-                                                                        showPulseDot={false}
-                                                                        size={22}
-                                                                        userId={o.id}
-                                                                    />
-                                                                </ListItemDecorator>
-                                                                <ListItemContent
-                                                                    sx={{ minWidth: 0 }}
-                                                                >
-                                                                    <Typography
-                                                                        level="body-sm"
-                                                                        sx={{
-                                                                            fontWeight: 600,
-                                                                        }}
-                                                                        noWrap
-                                                                    >
-                                                                        <bdi className="g-bidi-island">
-                                                                            {o.name}
-                                                                        </bdi>
-                                                                    </Typography>
-                                                                </ListItemContent>
-                                                                <Chip size="sm" variant="soft">
-                                                                    {o.count}
-                                                                </Chip>
-                                                            </AutocompleteOption>
-                                                        );
-                                                    }}
                                                     startDecorator={
                                                         <PersonRoundedIcon sx={{ fontSize: 16 }} />
                                                     }
@@ -2588,10 +2599,17 @@ export const TaskHomeContent = ({
                                 </>
                             )}
 
+                            {/* Today (MIP-1005): what is due, what waits on me, what changed. */}
+                            {!tasksUnread && activeTab === "today" && (
+                                <TodayBriefing view={todayView} />
+                            )}
+
                             {/* ════════ TAB: Overall Insights ════════ */}
                             {/* Agent Activity tab (MIP-1613): who uses which AI agent, for what. */}
                             {!tasksUnread && activeTab === "agent" && (
                                 <AgentActivityTab
+                                    projectAvatars={projectAvatars}
+                                    projectRecords={usePM.teamProjects}
                                     teamId={myself.teamId}
                                     projects={usePM.teamProjects.map((p) => ({
                                         id: p.projectId,

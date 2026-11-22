@@ -10,7 +10,9 @@ import { describe, expect, it } from "vitest";
 
 import {
     claudeCodeAddCommand,
+    MCP_CORE_PATH,
     MCP_PATH,
+    mcpCoreUrl,
     mcpServerUrl,
     PLUGIN_REPO_URL,
     PLUGIN_ZIP_URL,
@@ -57,6 +59,24 @@ describe("mcpServerUrl", () => {
     it.each([undefined, null, "", "   "])("gives nothing for an unknown origin: %j", (origin) => {
         // The caller hides the address: a relative one would be pasted into an app and fail.
         expect(mcpServerUrl(origin)).toBe("");
+    });
+});
+
+describe("mcpCoreUrl", () => {
+    it("is the origin plus the core path, exactly, with the same cleaning as the full address", () => {
+        expect(MCP_CORE_PATH).toBe("/api/public/v1/mcp/core");
+        expect(mcpCoreUrl("https://api.example.test")).toBe(
+            "https://api.example.test/api/public/v1/mcp/core"
+        );
+        expect(mcpCoreUrl(" https://api.example.test/?team_id=abc#x ")).toBe(
+            "https://api.example.test/api/public/v1/mcp/core"
+        );
+    });
+
+    it("is empty when the origin is unknown, never a relative address", () => {
+        expect(mcpCoreUrl("")).toBe("");
+        expect(mcpCoreUrl(null)).toBe("");
+        expect(mcpCoreUrl(undefined)).toBe("");
     });
 });
 

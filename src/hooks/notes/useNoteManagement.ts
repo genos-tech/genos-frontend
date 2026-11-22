@@ -19,10 +19,21 @@ import { bumpVersionsHead } from "../../features/notes/common/services/bumpVersi
 // that chunk in the entry's critical path for every page load,
 // including signin. See vite.config.ts' manualChunks comments.
 import { deleteNoteRole } from "../../features/notes/common/services/deleteNoteRole";
+import {
+    dataImageWarnings,
+    externalizeDataUriImages,
+    withoutDataUriImages,
+    type DataUriImageReport,
+} from "../../features/notes/common/services/importDataUriImages";
 import { loadNoteRoles } from "../../features/notes/common/services/loadNoteRoles";
 import { loadNoteVersions } from "../../features/notes/common/services/loadNoteVersions";
 import { loadSharedNotesMeta } from "../../features/notes/common/services/loadSharedNotesMeta";
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
+import {
+    putNoteBody,
+    uploadNoteAsset,
+    type NoteWriteTarget,
+} from "../../features/notes/common/services/noteImportWrites";
 import { restoreNoteVersion as restoreNoteVersionApi } from "../../features/notes/common/services/restoreNoteVersion";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
 import { folderChain } from "../../features/notes/common/utils/folderChain";
@@ -140,6 +151,16 @@ export interface NoteCreateOverrides {
      *  the next time the user visits the notes page. Cache/sidebar
      *  bookkeeping still runs. */
     skipOpenTab?: boolean;
+    /** Markdown import (MIP-1946; task and chat notes MIP-1952): after the note is
+     *  created and BEFORE its tab opens, upload the body's `data:` images
+     *  as note files and rewrite the stored body to point at them, so a
+     *  Google Docs export does not leave a multi-MB body behind. Writing
+     *  before the editor first opens is what makes the REST write enough:
+     *  a never-opened note's Yjs doc is still empty and seeds from it. */
+    dataImages?: {
+        uploadLimitBytes: number | null;
+        onReport?: (report: DataUriImageReport) => void;
+    };
 }
 
 /**
@@ -622,6 +643,59 @@ export const useNoteManagement = (
     }, []);
 
     // Chat Note related
+    /**
+     * Markdown import (MIP-1946/1952): the note was just created WITHOUT its
+     * `data:` images; upload them as files of that note (the endpoint of its
+     * own kind, so its own ACL applies) and rewrite the stored body to point
+     * at them. Mutates `newNote.body`; reports per image through `onReport`.
+     */
+    const moveImportedImages = async (
+        newNote: { noteId: number; body?: unknown },
+        noteTitle: string,
+        opts: NoteCreateOverrides | undefined,
+        target: NoteWriteTarget
+    ): Promise<void> => {
+        if (!opts?.dataImages || !opts.body || !accessToken) return;
+        try {
+            const moved = await externalizeDataUriImages({
+                body: opts.body,
+                uploadLimitBytes: opts.dataImages.uploadLimitBytes,
+                placeholderText: (n) =>
+                    fmt(getMessages().notes.importMd.imagePlaceholder, { index: n }),
+                upload: (file) =>
+                    uploadNoteAsset({
+                        noteId: newNote.noteId,
+                        file,
+                        uploaderId: myself.userId,
+                        accessToken,
+                        target,
+                    }),
+            });
+            if (moved.body !== opts.body) {
+                await putNoteBody({
+                    myself,
+                    noteId: newNote.noteId,
+                    title: noteTitle,
+                    body: moved.body,
+                    accessToken,
+                    target,
+                });
+                newNote.body = moved.body;
+            }
+            opts.dataImages.onReport?.(moved.report);
+        } catch (error) {
+            // The note exists, but its images are still the blank
+            // placeholders it was created with: say so, per image.
+            console.error("Moving imported images out of the note body failed:", error);
+            opts.dataImages.onReport?.({
+                uploaded: 0,
+                bytesBefore: 0,
+                bytesAfter: 0,
+                warnings: dataImageWarnings(opts.body, "upload-failed"),
+            });
+        }
+    };
+
     const handleCreateNewChatNote = async (
         parentNoteId: number | null,
         chatType: number,
@@ -649,8 +723,18 @@ export const useNoteManagement = (
                 threadId,
                 title,
                 accessToken,
-                opts?.body
+                opts?.dataImages && opts.body ? withoutDataUriImages(opts.body) : opts?.body
             );
+
+            if (newNote?.noteId) {
+                await moveImportedImages(newNote, title, opts, {
+                    kind: "chat",
+                    chatType,
+                    chatId,
+                    isThread,
+                    threadId,
+                });
+            }
 
             if (newNote) {
                 const chatNote: ChatNoteProps = { noteType: 3, ...newNote };
@@ -789,8 +873,12 @@ export const useNoteManagement = (
                 taskId,
                 noteTitle,
                 accessToken,
-                opts?.body
+                opts?.dataImages && opts.body ? withoutDataUriImages(opts.body) : opts?.body
             );
+
+            if (newNote?.noteId) {
+                await moveImportedImages(newNote, noteTitle, opts, { kind: "task" });
+            }
 
             if (newNote) {
                 const taskNote: TaskNoteProps = { noteType: 2, ...newNote };
@@ -909,8 +997,14 @@ export const useNoteManagement = (
                 noteTitle,
                 accessToken,
                 folderId,
-                opts?.body
+                // The API refuses a request body over ~2.5 MB, so the note
+                // is created without the pixels and given them as files.
+                opts?.dataImages && opts.body ? withoutDataUriImages(opts.body) : opts?.body
             );
+
+            if (newNote?.noteId) {
+                await moveImportedImages(newNote, noteTitle, opts, { kind: "personal" });
+            }
 
             if (newNote) {
                 const myNote: MyNoteProps = { noteType: 1, ...newNote };

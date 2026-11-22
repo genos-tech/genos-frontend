@@ -41,6 +41,7 @@ import { usePanelSizes } from "../../hooks/usePanelSizes";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserProps } from "../../types/admin";
+import { useCreateTaskBlockedByArchive } from "../archive/createTaskGuard";
 import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalManageTagsHost } from "../tasks/components/modals/ModalManageTagsHost";
@@ -86,6 +87,12 @@ export const ChatHome = (props: ChatHomeProps) => {
         useTG,
         isActiveRoute,
     } = props;
+
+    const createBlocked = useCreateTaskBlockedByArchive(
+        usePM.currentProject?.projectId,
+        useTM.isCreatingTask.flag === true,
+        useTM.setIsCreatingTask
+    );
 
     // Common
     const { mode } = useColorScheme();
@@ -461,23 +468,25 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 its own, and the two instances race over
                                 the shared `initialEmptyTaskId` — the
                                 loser hangs on "Preparing task…". */}
-                            {useTM.isCreatingTask.flag === true && isActiveRoute && (
-                                <>
-                                    <ResizeHandle key="create-task-resize-handle" />
-                                    <CreateTaskPanel
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        useCM={useCM}
-                                        useNM={useNM}
-                                        usePM={usePM}
-                                        useSM={useSM}
-                                        useTEM={useTEM}
-                                        useTM={useTM}
-                                        useUISM={useUISM}
-                                    />
-                                </>
-                            )}
+                            {useTM.isCreatingTask.flag === true &&
+                                isActiveRoute &&
+                                !createBlocked && (
+                                    <>
+                                        <ResizeHandle key="create-task-resize-handle" />
+                                        <CreateTaskPanel
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useCM={useCM}
+                                            useNM={useNM}
+                                            usePM={usePM}
+                                            useSM={useSM}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useUISM={useUISM}
+                                        />
+                                    </>
+                                )}
 
                             {/* Task Preview Pane. See `isTaskPreviewPaneVisible`
                         above for the derivation: to OPEN, it asks whether
