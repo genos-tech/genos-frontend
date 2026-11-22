@@ -25,6 +25,11 @@ const ACTION_CATEGORY: Record<string, string> = {
     "deleted:note": "ai_app_note_deleted",
     "created:todo": "ai_app_todo_created",
     "deleted:todo": "ai_app_todo_deleted",
+    // The risky kinds that are not a write of an item (MIP-2063): all on by default.
+    "sharing:note": "ai_app_note_sharing",
+    "members:project": "ai_app_project_members",
+    "refused:burst": "ai_app_refusal_burst",
+    "connected:app": "ai_app_app_connected",
 };
 
 /** An action no rule names answers to the group's lead entry (the master alone). A BULK change
@@ -56,6 +61,14 @@ export interface AiAppStrings {
     deletedNote: string;
     deletedMilestone: string;
     deletedTodo: string;
+    sharedNote: string;
+    unsharedNote: string;
+    projectMemberAdded: string;
+    projectMemberRole: string;
+    projectMemberRemoved: string;
+    refusalBurst: string;
+    appConnected: string;
+    apiKeyCreated: string;
     fallback: string;
     moreItems: string;
 }
@@ -105,6 +118,7 @@ export function parseAiAppNotice(meta: Record<string, unknown>): AiAppNotice {
         count,
         ...(meta.bulk === true ? { bulk: true } : {}),
         status: str(meta.status),
+        action: str(meta.action),
         taskCount: typeof meta.taskCount === "number" ? meta.taskCount : undefined,
         url: str(meta.url) ?? "",
         items,
@@ -170,6 +184,28 @@ export function aiAppSentence(notice: AiAppNotice, s: AiAppStrings): string {
                     return fill(s.deletedMilestone, { name });
                 case "todo":
                     return fill(s.deletedTodo, { name });
+            }
+            break;
+        // Who can open a note, who is in a project, a burst of refused calls, a new app or key
+        // (MIP-2063). Facts only from the API; `action` says which of the acts it was.
+        case "sharing":
+            if (notice.kind === "note") {
+                return notice.action === "unshare" ? s.unsharedNote : s.sharedNote;
+            }
+            break;
+        case "members":
+            if (notice.kind === "project") {
+                if (notice.action === "remove") return fill(s.projectMemberRemoved, { name });
+                if (notice.action === "set_role") return fill(s.projectMemberRole, { name });
+                return fill(s.projectMemberAdded, { name });
+            }
+            break;
+        case "refused":
+            if (notice.kind === "burst") return s.refusalBurst;
+            break;
+        case "connected":
+            if (notice.kind === "app") {
+                return notice.action === "api_key" ? s.apiKeyCreated : s.appConnected;
             }
             break;
     }

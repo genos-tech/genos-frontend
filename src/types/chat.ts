@@ -230,6 +230,9 @@ export type AiAppNotice = {
     kind: string;
     count: number;
     status?: string;
+    /** What was done, for a verb that covers several acts (MIP-2063): `share` | `unshare`,
+     *  `add` | `set_role` | `remove`, `oauth` | `api_key`. */
+    action?: string;
     taskCount?: number;
     /** 10+ items changed at once (MIP-2009): alerted whatever its action switch says. */
     bulk?: boolean;
