@@ -2478,7 +2478,6 @@ export const zh: DeepPartial<Messages> = {
                     bullets: [
                         "当你工作时浏览器推送，当你离开时发送邮箱",
                         "按类别控制：提及、回复、任务评论、反应",
-                        "在你每天或每周查看之前收到的摘要",
                         "读取状态跟随你，因此不会两次宣布任何内容",
                     ],
                 },
@@ -3656,9 +3655,6 @@ export const zh: DeepPartial<Messages> = {
                 emailHeading: "邮件通知",
                 emailDescription:
                     "当你离开时，Genos 会把错过的通知汇总为一封邮件发送给你（不会每条事件发一封）。",
-                emailDigestHeading: "每日邮件摘要",
-                emailDigestDescription:
-                    "每天早上8点（当地时间）将未读更新汇总为一封邮件发送，仅在有新内容时发送。",
                 mutedChatsHeading: "已静音的聊天（{count}）",
                 noMutedChats: "暂无静音的聊天。点击任意聊天顶部的铃铛图标即可静音。",
                 mutedTargetsHeading: "静音项目 ({count})",

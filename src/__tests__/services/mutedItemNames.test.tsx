@@ -28,13 +28,6 @@ import { AllChatProps } from "../../types/chat";
 vi.mock("../../services/notifications/NotificationPausePicker", () => ({
     NotificationPauseSection: () => null,
 }));
-vi.mock("../../hooks/common/useDigestPreference", () => ({
-    useDigestPreference: () => ({
-        emailDigestEnabled: false,
-        setEmailDigestEnabled: () => undefined,
-    }),
-}));
-
 const MDM_CHAT_ID = "c252bc6d-3c43-4ca2-8d4c-b7ea6af14803";
 const DM_CHAT_ID = "a1111111-2222-3333-4444-555555555555";
 const THREAD_ID = "9f8e7d6c-5b4a-3210-9876-543210fedcba";
