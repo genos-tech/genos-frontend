@@ -3,6 +3,71 @@ import type { DeepPartial, Messages } from "../../types";
 /** Japanese dictionary. Kept in canonical English-key order for complete coverage. */
 export const ja: DeepPartial<Messages> = {
     admin: {
+        slackImport: {
+            title: "Slack からインポート",
+            panelDescription:
+                "Slack のエクスポートにあるチャンネル、メッセージ、スレッドを、このチームのグループチャットとして取り込みます。",
+            button: "Slack からインポート…",
+            description:
+                "Slack のワークスペースエクスポートの ZIP をアップロードし、内容を確認してからインポートします。",
+            howTo: "Slack でオーナーがワークスペースのデータをエクスポートします(設定 → データのインポート/エクスポート)。その ZIP をここにアップロードしてください。インポートを押すまで何も作成されません。",
+            limits: "上限: 1 回あたり {mb} MB、{channels} チャンネル、{messages} メッセージ。ダイレクトメッセージはインポートされません。",
+            filesNote:
+                "ファイルはコピーされません。それぞれ Slack へのリンクになり、Slack へのログインが必要で、期限切れになることがあります。",
+            chooseFile: "エクスポートの ZIP を選択",
+            close: "閉じる",
+            back: "戻る",
+            import: "{count} 件のメッセージをインポート",
+            importing: "インポート中…",
+            summary:
+                "{channels} チャンネル、{threads} スレッドを含む {messages} 件のメッセージをインポートします(インポート済み {skipped} 件)。",
+            channelsHeading: "チャンネル",
+            private: "非公開",
+            archived: "アーカイブ済み",
+            channelLine: "{messages} 件のメッセージ → チャット「{title}」",
+            existing: "以前のインポートで作成したチャットに追加",
+            targetArchived: "スキップ: そのチャットはアーカイブされています",
+            peopleHeading: "メンバー",
+            peopleHint:
+                "メールアドレスでチームメンバーと照合します。誰も招待されず、アカウントも作成されません。照合されなかった人のメッセージは Slack の名前のまま表示されます。",
+            colName: "Slack の名前",
+            colMatch: "Genos での扱い",
+            colMessages: "メッセージ数",
+            matchedTo: "{name} に対応",
+            warnFiles:
+                "ファイルは Slack へのリンクになります。Slack へのログインが必要で、期限切れになることがあります。",
+            warnUnmatched:
+                "{count} 件のメッセージは照合されなかった人のもので、Slack の名前のみ表示されます。",
+            warnOrphans:
+                "{count} 件の返信は元のメッセージがないため、通常のメッセージとしてインポートされます。",
+            warnDms:
+                "エクスポートに含まれるダイレクトメッセージとグループ DM はインポートされません。",
+            resultSummary:
+                "{channels} 件の新しいチャットに {messages} 件のメッセージをインポートしました。失敗したチャット: {failed} 件。",
+            undoHint: "意図と違いましたか? 元に戻すと、このインポートで追加したものを削除します。",
+            undo: "このインポートを元に戻す…",
+            undoConfirm:
+                "{messages} 件のメッセージと {channels} 件のチャットを削除します。その後に編集または返信されたもの {kept} 件は残ります。",
+            undoConfirmButton: "削除する",
+            undone: "{removed} 件のメッセージを削除しました。{kept} 件は残ります。",
+            errFileTooLarge: "そのファイルは {limit} MB を超えています。",
+            errNotExport:
+                "Slack のエクスポート ZIP ではないようです(users.json と channels.json が見つからないか、読み取れません)。",
+            errUnsafe: "その ZIP は安全に読み取れません。",
+            errTooMany:
+                "エクスポートが上限 {limit} を超えています。期間を短くして再度エクスポートしてください。",
+            errNothing: "そのエクスポートにはインポートするものがありません。",
+            errBusy: "このチームでは別のインポートが実行中です。数分後にもう一度お試しください。",
+            errForbidden: "Slack からインポートできるのはチームオーナーのみです。",
+            errGeneric: "インポートに失敗しました。もう一度お試しください。",
+            status: {
+                matched: "照合済み",
+                unmatched: "チームメンバーではありません",
+                no_email: "エクスポートにメールがありません",
+                bot: "ボット",
+                deleted: "Slack で無効化済み",
+            },
+        },
         sampleData: {
             title: "サンプルデータ",
             description:
@@ -6262,6 +6327,44 @@ export const ja: DeepPartial<Messages> = {
             tabMyTasks: "自分のタスク",
             tabMemberTasks: "メンバーのタスク",
             tabAgentActivity: "エージェントの活動",
+            tabToday: "今日",
+            // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
+            today: {
+                heading: "今日",
+                subtitle: "全プロジェクトの、期限、あなたの返事待ち、変更点。",
+                sinceFirst: "今日これまでの変更",
+                since: "{time} 以降の変更",
+                refresh: "更新",
+                openToday: "今日を開く",
+                sections: {
+                    due: "期限と期限切れ",
+                    waiting: "あなたの返事待ち",
+                    changed: "変更があったもの",
+                    next: "最初に見るもの",
+                    blocked: "あなたが待っているもの",
+                    delegated: "他の人に渡したもの",
+                },
+                overdueBy: "{n} 日超過",
+                overdueByOne: "1 日超過",
+                dueToday: "今日が期限",
+                request: "依頼",
+                mentionIn: "{where}であなたがメンションされました",
+                mentionChat: "チャット",
+                mentionNote: "ノート",
+                moreCount: "他 {n} 件",
+                noLink: "ここからは開けません",
+                empty: {
+                    title: "返事待ちはありません",
+                    body: "期限、返事待ち、変更はありません。",
+                    section: "ありません。",
+                },
+                states: {
+                    loading: "今日を読み込み中",
+                    error: "今日を読み込めませんでした。",
+                    retry: "再試行",
+                    unavailable: "このサーバーではまだ今日を表示できません。",
+                },
+            },
             tabMilestones: "マイルストーン",
             // TODO(copy): MIP-1187 draft for a native reader.
             milestoneProgress: {

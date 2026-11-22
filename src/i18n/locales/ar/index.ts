@@ -3162,6 +3162,44 @@ export const ar: DeepPartial<Messages> = {
             tabMyTasks: "مهامي",
             tabMemberTasks: "مهام الأعضاء",
             tabAgentActivity: "نشاط الوكلاء",
+            tabToday: "اليوم",
+            // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
+            today: {
+                heading: "اليوم",
+                subtitle: "المستحق وما ينتظرك وما تغيّر في كل مشاريعك.",
+                sinceFirst: "تغييرات اليوم حتى الآن",
+                since: "تغييرات منذ {time}",
+                refresh: "تحديث",
+                openToday: "فتح اليوم",
+                sections: {
+                    due: "المستحق والمتأخر",
+                    waiting: "بانتظار ردك",
+                    changed: "ما الذي تغيّر",
+                    next: "انظر إلى هذه أولاً",
+                    blocked: "أنت تنتظر",
+                    delegated: "سُلّم للآخرين",
+                },
+                overdueBy: "متأخر {n} أيام",
+                overdueByOne: "متأخر يوم واحد",
+                dueToday: "مستحق اليوم",
+                request: "طلب",
+                mentionIn: "تمت الإشارة إليك في {where}",
+                mentionChat: "محادثة",
+                mentionNote: "ملاحظة",
+                moreCount: "+{n} أخرى",
+                noLink: "لا يمكن فتحه من هنا",
+                empty: {
+                    title: "لا شيء بانتظار ردك",
+                    body: "لا شيء مستحق ولا شيء يحتاج رداً ولم يتغير شيء.",
+                    section: "لا شيء هنا.",
+                },
+                states: {
+                    loading: "جارٍ تحميل اليوم",
+                    error: "تعذّر تحميل اليوم.",
+                    retry: "أعد المحاولة",
+                    unavailable: "اليوم غير متاح على هذا الخادم بعد.",
+                },
+            },
             tabMilestones: "المعالم",
             // TODO(copy): MIP-1187 draft for a native reader.
             milestoneProgress: {
@@ -4740,6 +4778,66 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     admin: {
+        slackImport: {
+            title: "الاستيراد من Slack",
+            panelDescription:
+                "أحضر قنوات ورسائل وسلاسل تصدير Slack إلى هذا الفريق كمحادثات جماعية.",
+            button: "الاستيراد من Slack…",
+            description: "ارفع ملف ZIP الخاص بتصدير مساحة عمل Slack، وراجعه، ثم استورده.",
+            howTo: "في Slack، يصدّر المالك بيانات مساحة العمل (الإعدادات، استيراد/تصدير البيانات). ارفع ملف ZIP هنا. لا يُنشأ أي شيء حتى تضغط استيراد.",
+            limits: "الحدود: {mb} ميغابايت و{channels} قناة و{messages} رسالة لكل عملية استيراد. لا تُستورد الرسائل المباشرة.",
+            filesNote:
+                "لا تُنسخ الملفات. يصبح كل ملف رابطًا إلى Slack، ويتطلب تسجيل الدخول إلى Slack وقد تنتهي صلاحيته.",
+            chooseFile: "اختر ملف ZIP للتصدير",
+            close: "إغلاق",
+            back: "رجوع",
+            import: "استيراد {count} رسالة",
+            importing: "جارٍ الاستيراد…",
+            summary:
+                "سيتم استيراد {messages} رسالة في {channels} قناة ضمن {threads} سلسلة ({skipped} مستوردة مسبقًا).",
+            channelsHeading: "القنوات",
+            private: "خاصة",
+            archived: "مؤرشفة",
+            channelLine: "{messages} رسالة ← المحادثة «{title}»",
+            existing: "تُضاف إلى المحادثة التي أنشأها استيراد سابق",
+            targetArchived: "تم التخطي: هذه المحادثة مؤرشفة",
+            peopleHeading: "الأشخاص",
+            peopleHint:
+                "تتم مطابقة الأشخاص مع أعضاء الفريق عبر البريد الإلكتروني. لا تتم دعوة أحد ولا يُنشأ أي حساب: تحتفظ رسائل الآخرين باسمهم في Slack.",
+            colName: "الاسم في Slack",
+            colMatch: "في Genos",
+            colMessages: "الرسائل",
+            matchedTo: "مطابق لـ {name}",
+            warnFiles:
+                "تصبح الملفات روابط إلى Slack. تتطلب تسجيل الدخول إلى Slack وقد تنتهي صلاحيتها.",
+            warnUnmatched: "{count} رسالة من أشخاص غير مطابقين: يظهر اسمهم في Slack فقط.",
+            warnOrphans: "فقدت {count} ردود رسالتها الأولى وسيتم استيرادها كرسائل عادية.",
+            warnDms: "لا تُستورد الرسائل المباشرة ومحادثات المجموعات الخاصة في التصدير.",
+            resultSummary:
+                "تم استيراد {messages} رسالة إلى {channels} محادثة جديدة. محادثات فاشلة: {failed}.",
+            undoHint: "ليس ما أردته؟ التراجع يزيل ما أضافه هذا الاستيراد.",
+            undo: "التراجع عن هذا الاستيراد…",
+            undoConfirm:
+                "سيزيل هذا {messages} رسالة و{channels} محادثة. تبقى {kept} رسالة عُدّلت أو رُدّ عليها لاحقًا.",
+            undoConfirmButton: "إزالتها",
+            undone: "تمت إزالة {removed} رسالة. تبقى {kept}.",
+            errFileTooLarge: "هذا الملف أكبر من {limit} ميغابايت.",
+            errNotExport:
+                "لا يبدو هذا ملف ZIP لتصدير Slack (ملفا users.json وchannels.json مفقودان أو غير قابلين للقراءة).",
+            errUnsafe: "لا يمكن قراءة ملف ZIP هذا بأمان.",
+            errTooMany: "التصدير أكبر من الحد {limit}. صدّر فترة أقصر.",
+            errNothing: "لا يوجد ما يُستورد في هذا التصدير.",
+            errBusy: "هناك عملية استيراد أخرى جارية لهذا الفريق. حاول مجددًا بعد بضع دقائق.",
+            errForbidden: "يمكن لمالك الفريق فقط الاستيراد من Slack.",
+            errGeneric: "فشل الاستيراد. حاول مجددًا.",
+            status: {
+                matched: "مطابق",
+                unmatched: "ليس عضوًا في الفريق",
+                no_email: "لا بريد إلكتروني في التصدير",
+                bot: "روبوت",
+                deleted: "معطّل في Slack",
+            },
+        },
         sampleData: {
             title: "بيانات تجريبية",
             description:

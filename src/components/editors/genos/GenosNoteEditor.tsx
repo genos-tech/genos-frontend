@@ -27,6 +27,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../context/AuthContext";
 import { useMentionGroupsContext } from "../../../context/MentionGroupsContext";
+import { isNoteCommentingArchived, useArchiveState } from "../../../features/archive/archiveState";
 import { getMyNoteRoleId, isNoteEditable } from "../../../features/notes/common/utils/noteRoles";
 import { useAskGenosAvailable } from "../../../features/spotlight/useAskGenosAvailable";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
@@ -258,6 +259,10 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         body,
     });
     const isEditable = isNoteEditable(myRoleId, collabScope);
+    // An archived project or chat is read-only, comments included (MIP-1693): the comment button is
+    // not offered and the sidebar says why. The server refuses the write either way.
+    const archiveState = useArchiveState();
+    const commentsArchived = isNoteCommentingArchived(archiveState, note.commentHost);
 
     // Fan @-mentions left in inline comments out to the activity system, exactly as a note
     // body mention does. `note.commentHost` is the surface (6 my note, 7 task note, 8 chat
@@ -589,7 +594,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                     formattingToolbar={() => (
                                         <GenosDocumentToolbar
                                             editor={editor}
-                                            hasComments={!!threadStore}
+                                            hasComments={!!threadStore && !commentsArchived}
                                             isEditable={isEditable}
                                             setShowGifPicker={setShowGifPicker}
                                             askSource={
@@ -630,6 +635,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                         </div>
                         {threadStore && (
                             <CommentsSidebar
+                                archived={commentsArchived}
                                 open={showComments}
                                 overlay={isMobile}
                                 onClose={closeComments}

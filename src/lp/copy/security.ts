@@ -53,7 +53,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                     // Evidence: genos-api/apis/settings.py (HSTS, SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE, SECURE_PROXY_SSL_HEADER);
                     // origin/services/crypto.py (Fernet, FIELD_ENCRYPTION_KEYS); origin/services/blind_index.py (HMAC keyed by BLIND_INDEX_KEYS).
                     "In transit: connections to Genos use HTTPS. The Genos service sends HTTP Strict Transport Security, and its session and CSRF cookies are marked Secure.",
-                    "In the database: personal details are encrypted before they are saved. These are your email address, phone number, location and profile text; the email addresses on team invitations, on connected accounts and on team billing; the access and refresh tokens of connected Google and GitHub accounts; the keys of push subscriptions; and the secrets of outgoing webhooks. The encryption keys are kept apart from the data.",
+                    "In the database: personal details are encrypted before they are saved. These are your email address, phone number, location and profile text; the email addresses on team invitations and on connected accounts, and the generated email address of each team; the access and refresh tokens of connected Google and GitHub accounts; the keys of push subscriptions; and the secrets of outgoing webhooks. The encryption keys are kept apart from the data.",
                     "To find an account by email address without decrypting every address, we store a keyed hash of it (a blind index).",
                 ],
             },
@@ -65,7 +65,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                     // (ACCESS 24 h, REFRESH 7 d, rotation, blacklist, CHECK_REVOKE_TOKEN, CHECK_USER_IS_ACTIVE default True);
                     // auth_views.py throttles and _record_signin_failed.
                     "Passwords are never stored in readable form. They are hashed with PBKDF2 and a salt. A password must be at least 8 characters, and common or all-numeric passwords are refused.",
-                    "Signing in gives you a short-lived access token (24 hours) and a refresh token (7 days) that is rotated each time it is used. Signing out revokes your refresh token. Changing or resetting your password signs out existing sessions. A deactivated account is refused on its next request.",
+                    "Signing in gives you an access token valid for 24 hours and a refresh token (7 days) that is rotated each time it is used. Signing out revokes your refresh token. Changing or resetting your password signs out existing sessions. A deactivated account is refused on its next request.",
                     "Sign-in, sign-up and password-reset requests are rate-limited per network address. Failed sign-in attempts are recorded.",
                 ],
             },
@@ -135,7 +135,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
         privacy: "Privacy Policy",
         legal: "Legal Notice",
         reportLabel: "Report by email",
-        reportButton: "Email the security team",
+        reportButton: "Email us about security",
     },
     ja: {
         title: "セキュリティとデータの扱い",
@@ -154,7 +154,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 heading: "暗号化",
                 body: [
                     "通信中：Genos への接続は HTTPS を使います。Genos は HTTP Strict Transport Security を送り、セッションと CSRF の Cookie には Secure 属性を付けています。",
-                    "データベース内：個人情報は保存される前に暗号化されます。メールアドレス、電話番号、所在地、プロフィールの文章、チームへの招待・接続したアカウント・チームの請求に使うメールアドレス、接続した Google と GitHub のアクセストークンとリフレッシュトークン、プッシュ通知の鍵、送信 Webhook の秘密情報が対象です。暗号化の鍵はデータとは別に保管しています。",
+                    "データベース内：個人情報は保存される前に暗号化されます。メールアドレス、電話番号、所在地、プロフィールの文章、チームへの招待と接続したアカウントのメールアドレス、チームごとに生成されるメールアドレス、接続した Google と GitHub のアクセストークンとリフレッシュトークン、プッシュ通知の鍵、送信 Webhook の秘密情報が対象です。暗号化の鍵はデータとは別に保管しています。",
                     "メールアドレスで利用者を探すときは、全件を復号せず、鍵つきのハッシュ（ブラインドインデックス）で照合しています。",
                 ],
             },
@@ -222,7 +222,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
         privacy: "プライバシーポリシー",
         legal: "特定商取引法に基づく表記",
         reportLabel: "メールで報告",
-        reportButton: "セキュリティ担当にメールする",
+        reportButton: "セキュリティについてメールする",
     },
 };
 

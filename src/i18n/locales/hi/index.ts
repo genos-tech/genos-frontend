@@ -3446,6 +3446,44 @@ export const hi: DeepPartial<Messages> = {
             tabMyTasks: "मेरे टास्क",
             tabMemberTasks: "सदस्य के टास्क",
             tabAgentActivity: "एजेंट गतिविधि",
+            tabToday: "आज",
+            // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
+            today: {
+                heading: "आज",
+                subtitle: "सभी प्रोजेक्ट में क्या देय है, किसका इंतज़ार है और क्या बदला।",
+                sinceFirst: "आज अब तक के बदलाव",
+                since: "{time} के बाद के बदलाव",
+                refresh: "रीफ़्रेश",
+                openToday: "आज खोलें",
+                sections: {
+                    due: "देय और विलंबित",
+                    waiting: "आपके जवाब का इंतज़ार",
+                    changed: "क्या बदला",
+                    next: "पहले यह देखें",
+                    blocked: "आप इंतज़ार कर रहे हैं",
+                    delegated: "दूसरों को सौंपा",
+                },
+                overdueBy: "{n} दिन विलंबित",
+                overdueByOne: "1 दिन विलंबित",
+                dueToday: "आज देय",
+                request: "अनुरोध",
+                mentionIn: "{where} में आपका उल्लेख हुआ",
+                mentionChat: "चैट",
+                mentionNote: "नोट",
+                moreCount: "+{n} और",
+                noLink: "यहाँ से खोला नहीं जा सकता",
+                empty: {
+                    title: "आपके जवाब का इंतज़ार कोई नहीं कर रहा",
+                    body: "कुछ देय नहीं, कोई जवाब बाकी नहीं, कुछ बदला नहीं।",
+                    section: "यहाँ कुछ नहीं।",
+                },
+                states: {
+                    loading: "आज लोड हो रहा है",
+                    error: "आज लोड नहीं हो सका।",
+                    retry: "फिर कोशिश करें",
+                    unavailable: "इस सर्वर पर आज अभी उपलब्ध नहीं है।",
+                },
+            },
             tabMilestones: "माइलस्टोन",
             // TODO(copy): MIP-1187 draft for a native reader.
             milestoneProgress: {
@@ -5208,6 +5246,70 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     admin: {
+        slackImport: {
+            title: "Slack से इंपोर्ट करें",
+            panelDescription:
+                "Slack एक्सपोर्ट के चैनल, संदेश और थ्रेड को इस टीम में ग्रुप चैट के रूप में लाएँ।",
+            button: "Slack से इंपोर्ट करें…",
+            description:
+                "Slack वर्कस्पेस एक्सपोर्ट की ZIP अपलोड करें, उसे जाँचें, फिर इंपोर्ट करें।",
+            howTo: "Slack में, ओनर वर्कस्पेस का डेटा एक्सपोर्ट करता है (सेटिंग्स, डेटा इंपोर्ट/एक्सपोर्ट)। वह ZIP यहाँ अपलोड करें। इंपोर्ट दबाने तक कुछ भी नहीं बनता।",
+            limits: "सीमाएँ: प्रति इंपोर्ट {mb} MB, {channels} चैनल और {messages} संदेश। डायरेक्ट मैसेज इंपोर्ट नहीं होते।",
+            filesNote:
+                "फ़ाइलें कॉपी नहीं होतीं। हर फ़ाइल Slack का लिंक बन जाती है, जिसके लिए Slack लॉगिन चाहिए और जो समाप्त हो सकता है।",
+            chooseFile: "एक्सपोर्ट की ZIP चुनें",
+            close: "बंद करें",
+            back: "वापस",
+            import: "{count} संदेश इंपोर्ट करें",
+            importing: "इंपोर्ट हो रहा है…",
+            summary:
+                "{threads} थ्रेड में {channels} चैनल और {messages} संदेश इंपोर्ट होंगे ({skipped} पहले से इंपोर्ट हैं)।",
+            channelsHeading: "चैनल",
+            private: "निजी",
+            archived: "आर्काइव किया हुआ",
+            channelLine: '{messages} संदेश → चैट "{title}"',
+            existing: "पिछले इंपोर्ट से बनी चैट में जोड़ा जाएगा",
+            targetArchived: "छोड़ा गया: वह चैट आर्काइव है",
+            peopleHeading: "लोग",
+            peopleHint:
+                "लोगों को ईमेल पते से टीम के सदस्यों से मिलाया जाता है। किसी को आमंत्रित नहीं किया जाता और कोई खाता नहीं बनता: बाकी लोगों के संदेश उनके Slack नाम के साथ ही रहते हैं।",
+            colName: "Slack नाम",
+            colMatch: "Genos में",
+            colMessages: "संदेश",
+            matchedTo: "{name} से मिलाया गया",
+            warnFiles:
+                "फ़ाइलें Slack के लिंक बन जाती हैं। इनके लिए Slack लॉगिन चाहिए और ये समाप्त हो सकती हैं।",
+            warnUnmatched:
+                "{count} संदेश उन लोगों के हैं जिनका मिलान नहीं हुआ: केवल Slack नाम दिखेगा।",
+            warnOrphans:
+                "{count} जवाबों का पहला संदेश नहीं मिला, वे सामान्य संदेश के रूप में इंपोर्ट होंगे।",
+            warnDms: "एक्सपोर्ट में मौजूद डायरेक्ट मैसेज और ग्रुप DM इंपोर्ट नहीं होते।",
+            resultSummary:
+                "{channels} नई चैट में {messages} संदेश इंपोर्ट हुए। विफल चैट: {failed}।",
+            undoHint:
+                "यह वह नहीं था जो चाहिए था? पूर्ववत करने पर इस इंपोर्ट से जुड़ा सब कुछ हट जाता है।",
+            undo: "यह इंपोर्ट पूर्ववत करें…",
+            undoConfirm:
+                "इससे {messages} संदेश और {channels} चैट हट जाएँगी। बाद में संपादित या जवाब पाए {kept} संदेश रहेंगे।",
+            undoConfirmButton: "उन्हें हटाएँ",
+            undone: "{removed} संदेश हटाए गए। {kept} रहेंगे।",
+            errFileTooLarge: "वह फ़ाइल {limit} MB से बड़ी है।",
+            errNotExport:
+                "यह Slack एक्सपोर्ट की ZIP नहीं लगती (users.json और channels.json नहीं मिले या पढ़े नहीं जा सके)।",
+            errUnsafe: "उस ZIP को सुरक्षित रूप से नहीं पढ़ा जा सकता।",
+            errTooMany: "एक्सपोर्ट {limit} की सीमा से बड़ा है। कम अवधि का एक्सपोर्ट करें।",
+            errNothing: "उस एक्सपोर्ट में इंपोर्ट करने के लिए कुछ नहीं है।",
+            errBusy: "इस टीम के लिए दूसरा इंपोर्ट चल रहा है। कुछ मिनट बाद फिर कोशिश करें।",
+            errForbidden: "केवल टीम ओनर ही Slack से इंपोर्ट कर सकता है।",
+            errGeneric: "इंपोर्ट विफल रहा। फिर कोशिश करें।",
+            status: {
+                matched: "मिलान हुआ",
+                unmatched: "टीम के सदस्य नहीं",
+                no_email: "एक्सपोर्ट में ईमेल नहीं",
+                bot: "बॉट",
+                deleted: "Slack में निष्क्रिय",
+            },
+        },
         sampleData: {
             title: "नमूना डेटा",
             description:
