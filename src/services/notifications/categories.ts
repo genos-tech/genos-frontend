@@ -194,7 +194,9 @@ export const NOTIFICATION_CATEGORIES = [
         // none of the notifications another member's write would. Their own group (the
         // `enable_ai_apps` column), whose master hard-gates a switch per ACTION (13; the table is genos-api's
         // `services/ai_app_switches.py`, mirrored by `aiAppCategory`).
-        // Off stops the notice being made at all (feed row, toast and push): the API reads
+        // Since MIP-2009 only the RISKY actions start on (the four deletes; the API also
+        // alerts for any call that changes 10+ items at once): the rest start off and show
+        // in the Today card. Off stops the notice being made at all (feed row, toast and push): the API reads
         // the same keys (`mcp_notice._enabled`, `webpush_gating`). This lead entry only
         // titles the group, like `mentions`; the rows below are the switches.
         key: "ai_apps",
@@ -209,21 +211,21 @@ export const NOTIFICATION_CATEGORIES = [
         group: "ai_apps",
         labelKey: "aiAppTaskCreated",
         descriptionKey: "aiAppTaskCreated",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         key: "ai_app_task_status",
         group: "ai_apps",
         labelKey: "aiAppTaskStatus",
         descriptionKey: "aiAppTaskStatus",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         key: "ai_app_task_commented",
         group: "ai_apps",
         labelKey: "aiAppTaskCommented",
         descriptionKey: "aiAppTaskCommented",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         key: "ai_app_comment_deleted",
@@ -237,14 +239,14 @@ export const NOTIFICATION_CATEGORIES = [
         group: "ai_apps",
         labelKey: "aiAppMilestoneCreated",
         descriptionKey: "aiAppMilestoneCreated",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         key: "ai_app_milestone_status",
         group: "ai_apps",
         labelKey: "aiAppMilestoneStatus",
         descriptionKey: "aiAppMilestoneStatus",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         key: "ai_app_milestone_deleted",
@@ -258,7 +260,7 @@ export const NOTIFICATION_CATEGORIES = [
         group: "ai_apps",
         labelKey: "aiAppNoteCreated",
         descriptionKey: "aiAppNoteCreated",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         // Off until the member opts in: an app can edit one note dozens of times in a row.
@@ -274,7 +276,7 @@ export const NOTIFICATION_CATEGORIES = [
         group: "ai_apps",
         labelKey: "aiAppNoteCommented",
         descriptionKey: "aiAppNoteCommented",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         key: "ai_app_note_deleted",
@@ -288,7 +290,7 @@ export const NOTIFICATION_CATEGORIES = [
         group: "ai_apps",
         labelKey: "aiAppTodoCreated",
         descriptionKey: "aiAppTodoCreated",
-        defaultEnabled: true,
+        defaultEnabled: false,
     },
     {
         key: "ai_app_todo_deleted",

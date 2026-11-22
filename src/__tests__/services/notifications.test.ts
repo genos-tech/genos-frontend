@@ -391,10 +391,17 @@ describe("NotificationManager", () => {
 
         it("every registry category is enabled by default, bar the named exceptions", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
-            // "Note edited" (MIP-1452): an AI app can edit one note dozens of times in a row.
-            const offByDefault = new Set(["ai_app_note_edited"]);
+            // AI-app actions (MIP-2009): only the risky ones (deletes) start on; the rest show in the
+            // Today card. Mirrors genos-api `ai_app_switches.ON_BY_DEFAULT`.
+            const aiAppOn = new Set([
+                "ai_app_comment_deleted",
+                "ai_app_milestone_deleted",
+                "ai_app_note_deleted",
+                "ai_app_todo_deleted",
+            ]);
             for (const c of NOTIFICATION_CATEGORIES) {
-                expect(mgr.isCategoryEnabled(c.key), c.key).toBe(!offByDefault.has(c.key));
+                const expected = c.key.startsWith("ai_app_") ? aiAppOn.has(c.key) : true;
+                expect(mgr.isCategoryEnabled(c.key), c.key).toBe(expected);
             }
         });
 

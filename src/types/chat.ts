@@ -231,6 +231,8 @@ export type AiAppNotice = {
     count: number;
     status?: string;
     taskCount?: number;
+    /** 10+ items changed at once (MIP-2009): alerted whatever its action switch says. */
+    bulk?: boolean;
     url: string;
     items: AiAppNoticeItem[];
 };

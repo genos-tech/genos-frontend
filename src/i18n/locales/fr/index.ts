@@ -3900,7 +3900,7 @@ export const fr: DeepPartial<Messages> = {
                         "Lorsqu'un rappel que vous avez défini sur un message arrive à échéance. En désactivant cette option, le rappel reste dans votre boîte de réception sans notification.",
                     todoReminder:
                         "Lorsqu'un rappel que vous avez défini sur une tâche arrive à échéance. En désactivant cette option, le rappel reste dans votre boîte de réception sans notification.",
-                    aiApps: "Avis sur ce qu'une app IA connectée via MCP (Claude Code, Claude Desktop…) fait pour vous. Choisissez les actions qui vous intéressent.",
+                    aiApps: "Avis sur ce qu'une app IA connectée via MCP (Claude Code, Claude Desktop…) fait pour vous. Par défaut, vous n'êtes alerté que pour les actions à risque : suppressions et modifications de 10 éléments ou plus d'un coup. Activez une autre action pour être aussi alerté ; tout ce qu'elles font figure aussi dans votre carte Aujourd'hui.",
                     aiAppNoteEdited:
                         "Désactivé par défaut : une app IA peut modifier la même note de nombreuses fois d'affilée, et chaque modification est un avis.",
                 },

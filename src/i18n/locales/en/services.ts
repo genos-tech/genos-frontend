@@ -218,7 +218,7 @@ export const services = {
                     "When a reminder you set on a message comes due. Turning this off keeps the reminder in your inbox without a notification.",
                 todoReminder:
                     "When a reminder you set on a to-do comes due. Turning this off keeps the reminder in your inbox without a notification.",
-                aiApps: "What AI apps connected over MCP (Claude Code, Claude Desktop…) do for you. Choose which actions you want to hear about.",
+                aiApps: "What AI apps connected over MCP (Claude Code, Claude Desktop…) do for you. You are alerted by default only for risky actions: deletes and changes to 10 or more items at once. Turn on any other action to be alerted about it too; everything they do is also on your Today card.",
                 aiAppNoteEdited:
                     "Off by default: an AI app can edit the same note many times in a row, and each edit is a notice.",
             },

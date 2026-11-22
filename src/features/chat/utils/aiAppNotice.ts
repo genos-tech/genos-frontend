@@ -27,9 +27,12 @@ const ACTION_CATEGORY: Record<string, string> = {
     "deleted:todo": "ai_app_todo_deleted",
 };
 
-/** An action no rule names answers to the group's lead entry (the master alone). */
-export const aiAppCategory = (verb: string, kind: string): string =>
-    ACTION_CATEGORY[`${verb}:${kind}`] ?? "ai_apps";
+/** An action no rule names answers to the group's lead entry (the master alone). A BULK change
+ *  (10+ items at once, `meta.bulk`, MIP-2009) is alerted whatever its action's switch default is:
+ *  the API only makes the row when the member did not switch that action off, so the toast answers to the
+ *  group master alone. */
+export const aiAppCategory = (verb: string, kind: string, bulk = false): string =>
+    bulk ? "ai_apps" : (ACTION_CATEGORY[`${verb}:${kind}`] ?? "ai_apps");
 
 /** Activity `surface_type` of an AI-app notice (mirrors SURFACE_AI_APP in genos-api). */
 export const AI_APP_SURFACE = 10;
@@ -100,6 +103,7 @@ export function parseAiAppNotice(meta: Record<string, unknown>): AiAppNotice {
         verb: str(meta.verb) ?? "",
         kind: str(meta.kind) ?? "",
         count,
+        ...(meta.bulk === true ? { bulk: true } : {}),
         status: str(meta.status),
         taskCount: typeof meta.taskCount === "number" ? meta.taskCount : undefined,
         url: str(meta.url) ?? "",

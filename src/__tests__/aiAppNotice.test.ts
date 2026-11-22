@@ -3,7 +3,7 @@
  * facts in the activity `meta` -> adapter -> feed filters / aggregation ->
  * words in the member's language -> notification intent -> manager.
  */
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { v3ActivityToLegacy } from "../features/chat/adapters/v3ActivityToLegacy";
 import { aggregateActivityMessages } from "../features/chat/utils/activityAggregation";
@@ -247,7 +247,7 @@ describe("notification", () => {
     const useCM = { allChats: [] } as never;
     const row = () => v3ActivityToLegacy(wire(), myself);
 
-    it("has its own group: a lead entry and one switch per action, only note-edited off", () => {
+    it("has its own group: a lead entry and one switch per action, only the deletes on", () => {
         const entries = NOTIFICATION_CATEGORIES.filter((c) => c.group === "ai_apps");
         expect(entries.map((e) => e.key)).toEqual([
             "ai_apps",
@@ -265,8 +265,13 @@ describe("notification", () => {
             "ai_app_todo_created",
             "ai_app_todo_deleted",
         ]);
-        expect(entries.filter((e) => !e.defaultEnabled).map((e) => e.key)).toEqual([
-            "ai_app_note_edited",
+        // Only the risky actions (deletes) start on (MIP-2009); the rest show in the Today card.
+        expect(entries.filter((e) => e.defaultEnabled).map((e) => e.key)).toEqual([
+            "ai_apps",
+            "ai_app_comment_deleted",
+            "ai_app_milestone_deleted",
+            "ai_app_note_deleted",
+            "ai_app_todo_deleted",
         ]);
         // The lead only titles the group; the thirteen below it are the switches.
         expect(entries.filter((e) => !("hideSubToggle" in e && e.hideSubToggle))).toHaveLength(13);
@@ -332,28 +337,58 @@ describe("notification", () => {
         );
     });
 
-    it("toasts by default and stays silent once the member switches it off", () => {
+    const rowOf = (m: Record<string, unknown>) => v3ActivityToLegacy(wire(m), myself);
+    const deletedRow = () => rowOf(meta({ verb: "deleted", kind: "note" }));
+
+    it("toasts a delete by default and stays silent once the member switches it off", () => {
         const mgr = new NotificationManager({ currentUserId: "me" });
-        const toast = vi.fn();
-        mgr.subscribeToasts(toast);
-        const intent = buildActivityIntent(row(), myself, useTEM, useCM)!;
+        const intent = buildActivityIntent(deletedRow(), myself, useTEM, useCM)!;
         expect(mgr.notify(intent)).toBe("toast");
 
         const off = new NotificationManager({ currentUserId: "me" });
         off.hydratePreferences({
             ...DEFAULT_NOTIFICATION_PREFERENCE,
-            categorySettings: { ai_app_task_created: false },
+            categorySettings: { ai_app_note_deleted: false },
         });
-        expect(off.notify({ ...intent, id: "ai_app_task_created:other" })).toBe(
+        expect(off.notify({ ...intent, id: "ai_app_note_deleted:other" })).toBe(
             "ignored-disabled"
         );
     });
 
-    it("one action off leaves the others on: mute task-created, keep task-commented", () => {
+    it("a plain create is silent by default and toasts once the member turns it on", () => {
+        const intent = buildActivityIntent(row(), myself, useTEM, useCM)!;
+        expect(new NotificationManager({ currentUserId: "me" }).notify(intent)).toBe(
+            "ignored-disabled"
+        );
+        const on = new NotificationManager({ currentUserId: "me" });
+        on.hydratePreferences({
+            ...DEFAULT_NOTIFICATION_PREFERENCE,
+            categorySettings: { ai_app_task_created: true },
+        });
+        expect(on.notify(intent)).toBe("toast");
+    });
+
+    it("a bulk change (10+ items) toasts by default whatever its action", () => {
+        const bulk = buildActivityIntent(
+            rowOf(meta({ count: 12, bulk: true })),
+            myself,
+            useTEM,
+            useCM
+        )!;
+        expect(bulk.category).toBe("ai_apps");
+        expect(bulk.id.startsWith("ai_app:")).toBe(true);
+        expect(new NotificationManager({ currentUserId: "me" }).notify(bulk)).toBe("toast");
+        // The group master still silences it.
+        const off = new NotificationManager({ currentUserId: "me" });
+        off.setGroupEnabled("ai_apps", false);
+        expect(off.notify({ ...bulk, id: "ai_app:2" })).toBe("ignored-disabled");
+    });
+
+    it("one action on leaves the others off: turn on task-created only", () => {
         const mgr = new NotificationManager({ currentUserId: "me" });
         mgr.hydratePreferences({
             ...DEFAULT_NOTIFICATION_PREFERENCE,
-            categorySettings: { ai_app_task_created: false },
+            categorySettings: { ai_app_task_created: true },
         });
         const intentFor = (id: string, m: Record<string, unknown>) =>
             buildActivityIntent(
@@ -365,9 +400,9 @@ describe("notification", () => {
         const created = intentFor("c1", meta());
         const commented = intentFor("c2", meta({ verb: "commented", kind: "comment" }));
         const status = intentFor("c3", meta({ verb: "status", status: "WIP" }));
-        expect(mgr.notify(created)).toBe("ignored-disabled");
-        expect(mgr.notify(commented)).toBe("toast");
-        expect(mgr.notify(status)).toBe("toast");
+        expect(mgr.notify(created)).toBe("toast");
+        expect(mgr.notify(commented)).toBe("ignored-disabled");
+        expect(mgr.notify(status)).toBe("ignored-disabled");
     });
 
     it("note edited starts off and turns on when the member opts in", () => {
@@ -393,7 +428,7 @@ describe("notification", () => {
     });
 
     it("is a group of its own: the group off silences every kind, the Inbox group does not", () => {
-        const intent = buildActivityIntent(row(), myself, useTEM, useCM)!;
+        const intent = buildActivityIntent(deletedRow(), myself, useTEM, useCM)!;
         const inboxOff = new NotificationManager({ currentUserId: "me" });
         inboxOff.setGroupEnabled("inbox", false);
         expect(inboxOff.notify(intent)).toBe("toast");
