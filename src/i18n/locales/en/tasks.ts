@@ -1330,6 +1330,14 @@ export const tasks = {
             since: "Changes since {time}",
             refresh: "Refresh",
             openToday: "Open Today",
+            agents: {
+                title: "Your agents today",
+                sessions: "Sessions",
+                changes: "Changes",
+                decisions: "Decisions",
+                refused: "Refused",
+                open: "Open Agent Activity",
+            },
             sections: {
                 due: "Due and overdue",
                 waiting: "Waits on you",

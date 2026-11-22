@@ -6726,6 +6726,14 @@ export const fr: DeepPartial<Messages> = {
                 since: "Changements depuis {time}",
                 refresh: "Actualiser",
                 openToday: "Ouvrir Aujourd'hui",
+                agents: {
+                    title: "Vos agents aujourd'hui",
+                    sessions: "Sessions",
+                    changes: "Modifications",
+                    decisions: "Décisions",
+                    refused: "Refusées",
+                    open: "Ouvrir l'activité des agents",
+                },
                 sections: {
                     due: "À échéance et en retard",
                     waiting: "Attend votre réponse",

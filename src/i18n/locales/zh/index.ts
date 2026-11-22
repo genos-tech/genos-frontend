@@ -6385,6 +6385,14 @@ export const zh: DeepPartial<Messages> = {
                 since: "自 {time} 以来的变化",
                 refresh: "刷新",
                 openToday: "打开“今天”",
+                agents: {
+                    title: "你的智能体今天",
+                    sessions: "会话",
+                    changes: "变更",
+                    decisions: "决定",
+                    refused: "已拒绝",
+                    open: "打开智能体活动",
+                },
                 sections: {
                     due: "到期和已逾期",
                     waiting: "等你处理",

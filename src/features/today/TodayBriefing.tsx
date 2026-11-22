@@ -36,6 +36,8 @@ type Props = {
     variant?: Variant;
     /** Card only: where "Open Today" goes (the dashboard tab). */
     onOpenToday?: () => void;
+    /** Page only: one more block under the day's summary (the "Your agents today" card, MIP-2004). */
+    extra?: ReactNode;
 };
 
 const CARD_ROWS = 3;
@@ -204,7 +206,7 @@ const total = (d: BriefingToday): number =>
     d.blocked.length +
     d.delegatedTotal;
 
-export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction }: Props) => {
+export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction, extra }: Props) => {
     const { t, locale } = useTranslation();
     const a = t.tasks.dashboard.today;
     const card = variant === "card";
@@ -466,6 +468,7 @@ export const TodayBriefing = ({ view, variant = "page", onOpenToday, onAction }:
         body = (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                 <TodaySummary anchors={anchors} copy={a} data={d} />
+                {extra}
                 {quiet ? (
                     <EmptyState
                         icon={<WbSunnyOutlinedIcon />}
