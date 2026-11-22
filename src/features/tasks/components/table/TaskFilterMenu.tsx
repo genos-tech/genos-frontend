@@ -1699,11 +1699,20 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const isMount = milestoneScopeMountRef.current;
         milestoneScopeMountRef.current = false;
         if (useTM.tableMilestoneFilterId == null) return;
-        if (selectedMilestoneKeys.length === 1 && selectedMilestoneKeys[0] === MILESTONE_ALL) {
-            return;
-        }
-        const cleared: FilterSelection = { ...selection, milestoneKeys: [MILESTONE_ALL] };
+        const milestoneClear =
+            selectedMilestoneKeys.length === 1 && selectedMilestoneKeys[0] === MILESTONE_ALL;
+        const sprintClear =
+            selectedSprintKeys.length === 1 && selectedSprintKeys[0] === SPRINT_ALL;
+        if (milestoneClear && sprintClear) return;
+        // MIP-1897: the header sprint multi-select is ANDed with the scope too, and its
+        // dropdown is hidden while a scope is active, so a leftover must be cleared as well.
+        const cleared: FilterSelection = {
+            ...selection,
+            milestoneKeys: [MILESTONE_ALL],
+            sprintKeys: [SPRINT_ALL],
+        };
         setSelectedMilestoneKeys(cleared.milestoneKeys);
+        setSelectedSprintKeys(cleared.sprintKeys);
         applyFilters(cleared);
         if (!isMount) persistFilters(cleared);
         // eslint-disable-next-line react-hooks/exhaustive-deps

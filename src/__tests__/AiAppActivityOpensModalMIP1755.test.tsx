@@ -244,4 +244,21 @@ describe("AI-app activity row opens the item in the chat modal (MIP-1755)", () =
 
         expect(navigateMock).toHaveBeenCalledWith("/workspace/tasks");
     });
+
+    it("a deleted milestone opens no modal: its page is gone (MIP-1923)", () => {
+        renderRow(
+            row({
+                verb: "deleted",
+                kind: "milestone",
+                count: 1,
+                url: "",
+                items: [{ kind: "milestone", id: 5, projectId: 1, title: "Old", url: "" }],
+            })
+        );
+
+        fireEvent.click(rowButton());
+
+        expect(openModalByHrefMock).not.toHaveBeenCalled();
+        expect(navigateMock).not.toHaveBeenCalled();
+    });
 });

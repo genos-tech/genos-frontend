@@ -839,7 +839,11 @@ export class ChannelService {
             this._fetchChannelPages(true),
         ]);
         const activeIds = new Set(active.map((c) => c.id));
-        setArchivedChannelIds(all.filter((c) => !activeIds.has(c.id)).map((c) => c.id));
+        // Group chats only: a project's chat follows its project (`isChatArchivedIn`), so it
+        // must not be pinned here, or it stays archived after the project is restored (MIP-1919).
+        setArchivedChannelIds(
+            all.filter((c) => !activeIds.has(c.id) && c.projectId == null).map((c) => c.id)
+        );
         return all;
     }
 
