@@ -3,12 +3,8 @@ import { Link } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
-import {
-    resolveTitleMentions,
-    TitleMentionChip,
-    useTodoMentionPool,
-    type ResolvedTitleMention,
-} from "./titleMentions";
+import { TitleMentionChip, type ResolvedTitleMention } from "./titleMentions";
+import { resolveTitleMentions, useTodoMentionPool } from "./titleMentionsHelpers";
 
 // Two link forms are recognized inside the otherwise-plain title:
 //   * Markdown links — [label](https://…) → the *label* becomes clickable.

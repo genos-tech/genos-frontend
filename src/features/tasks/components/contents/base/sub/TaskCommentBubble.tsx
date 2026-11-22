@@ -50,8 +50,8 @@ import {
 import {
     BubblePinnedActions,
     PinnedBubbleAction,
-    splitPinned,
 } from "../../../../../chat/components/bubbles/BubblePinnedActions";
+import { splitPinned } from "../../../../../chat/components/bubbles/bubblePinnedActionsHelpers";
 import {
     MARK_DONE_ACTION,
     pinnedForFlagState,

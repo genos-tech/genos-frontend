@@ -13,11 +13,11 @@
 import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { MessageComposerV3 } from "../features/channel/components/MessageComposerV3";
 import {
     deriveBodyText,
     draftKeyFor,
-    MessageComposerV3,
-} from "../features/channel/components/MessageComposerV3";
+} from "../features/channel/components/messageComposerV3Helpers";
 import { channelService } from "../services/channel/channelService";
 import { ChannelKind, type Channel } from "../types/channel";
 

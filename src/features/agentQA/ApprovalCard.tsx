@@ -56,7 +56,8 @@ import {
     REJECT_REASON_MAX,
 } from "../../services/agentRejectReason";
 import { g } from "../../theme/tokens";
-import { BulkRowField, controlSx, EditFieldList } from "./approval/ApprovalEditFields";
+import { BulkRowField, EditFieldList } from "./approval/ApprovalEditFields";
+import { controlSx } from "./approval/approvalEditFieldsHelpers";
 import { getApprovalRenderer } from "./approval/approvalRenderers";
 import { BulkUpdatePreview } from "./approval/BulkUpdatePreview";
 import { withoutEditable } from "./approval/editableFields";

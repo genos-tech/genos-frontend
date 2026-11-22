@@ -30,7 +30,8 @@ import { useChannel } from "../hooks/useChannel";
 import { MessageAttachments, type ImportableAttachment } from "./MessageAttachments";
 import { MessageBody } from "./MessageBody";
 import { MessageComposerV3 } from "./MessageComposerV3";
-import { MessageRowHoverToolbar, useCopyMessageLink } from "./MessageRowHoverToolbar";
+import { MessageRowHoverToolbar } from "./MessageRowHoverToolbar";
+import { useCopyMessageLink } from "./messageRowHoverToolbarHelpers";
 
 interface MessagesPaneV3Props {
     channelId: string;

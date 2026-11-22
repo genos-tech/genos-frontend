@@ -19,7 +19,7 @@ import {
 } from "../../../../components/ui/MoreMenu";
 import { useTranslation } from "../../../../i18n";
 import { TodoCategoryProps } from "../../../../types/chat";
-import { useTodoDialogLayer } from "./TodoHostLayer";
+import { useTodoDialogLayer } from "./todoHostLayerHooks";
 import { TodoTagMenuRows } from "./TodoTagMenuRows";
 
 interface TodoItemMoreMenuProps {

@@ -37,7 +37,8 @@ import type {
     ReportSectionV2,
 } from "../utils/genosReportV2";
 import { chatMarkKey, parseReportChatLink, type ReportChatMark } from "../utils/reportChatMarks";
-import { CHAT_ICON_SLOT, ReportChatIcon, reportChatSlotWidth } from "./ReportChatIcon";
+import { ReportChatIcon } from "./ReportChatIcon";
+import { CHAT_ICON_SLOT, reportChatSlotWidth } from "./reportChatIconHelpers";
 import { ANSWER_SLOT_WIDTH, ReportRowAnswers } from "./ReportRowAnswers";
 
 /** Sections open on first draw; the rest are folded so the card stays short. */

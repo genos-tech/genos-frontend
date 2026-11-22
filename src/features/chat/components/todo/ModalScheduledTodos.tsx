@@ -42,7 +42,7 @@ import {
     type RecurrenceSpec,
 } from "../../../calendar/utils/rrule";
 import { TodoTitleText } from "./titleRender";
-import { useTodoDialogLayer } from "./TodoHostLayer";
+import { useTodoDialogLayer } from "./todoHostLayerHooks";
 import { useTodoTitleField } from "./useTodoTitleField";
 
 type ModalScheduledTodosProps = {

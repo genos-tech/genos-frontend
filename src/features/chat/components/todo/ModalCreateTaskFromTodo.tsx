@@ -30,7 +30,7 @@ import { emitTasksBulkChanged } from "../../../tasks/services/taskEvents";
 import { SprintMilestonePicker } from "../../../tasks/sprint-milestone/components/SprintMilestonePicker";
 import { MILESTONE_LIST_STATUSES } from "../../../tasks/sprint-milestone/utils/sortMilestones";
 import { projectAvatarSrc } from "../../../tasks/utils/projectAvatar";
-import { useTodoDialogLayer } from "./TodoHostLayer";
+import { useTodoDialogLayer } from "./todoHostLayerHooks";
 
 // Remembers the last project a to-do was promoted into. Most people
 // funnel their to-dos into the same project, and the picker defaulting

@@ -28,7 +28,8 @@ import { formatReminderTime } from "../../utils/reminderPresets";
 import { reportFlagFailure } from "../../utils/reportFlagFailure";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 import { ModalRemindMe } from "../modals/ModalRemindMe";
-import { BubblePinnedActions, PinnedBubbleAction, splitPinned } from "./BubblePinnedActions";
+import { BubblePinnedActions, PinnedBubbleAction } from "./BubblePinnedActions";
+import { splitPinned } from "./bubblePinnedActionsHelpers";
 import { MARK_DONE_ACTION, pinnedForFlagState, withMarkDone } from "./markDoneAction";
 
 type BubbleThreadMoreMenuProps = {

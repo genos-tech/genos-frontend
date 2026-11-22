@@ -13,7 +13,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { formatSize, MessageAttachments } from "../features/channel/components/MessageAttachments";
+import { MessageAttachments } from "../features/channel/components/MessageAttachments";
+import { formatSize } from "../features/channel/components/messageAttachmentsHelpers";
 import { MessagesPaneV3 } from "../features/channel/components/MessagesPaneV3";
 import { v3MessageToLegacy } from "../features/chat/adapters/v3ToLegacy";
 import { channelService } from "../services/channel/channelService";

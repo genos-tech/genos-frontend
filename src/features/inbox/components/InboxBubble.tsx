@@ -26,7 +26,7 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
-import { fmt, getMessages, useTranslation } from "../../../i18n";
+import { fmt, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { g } from "../../../theme/tokens";
 import { UserProps } from "../../../types/admin";
@@ -886,49 +886,4 @@ export const InboxBubble = (props: InboxBubbleProps) => {
             </Stack>
         </Bubble>
     );
-};
-
-// Export helper for generating approval notification body
-export const getItemBody = (requestType: number, targetName: string) => {
-    const messages = getMessages();
-    const requestNameLookUp: Record<number, string> = {
-        1: messages.inbox.requestTargets.team,
-        2: messages.inbox.requestTargets.project,
-    };
-
-    return [
-        {
-            type: "paragraph",
-            props: {
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
-            content: [
-                {
-                    text: fmt(messages.inbox.notification.approvalBody, {
-                        target: requestNameLookUp[requestType],
-                    }),
-                    type: "text",
-                    styles: {},
-                },
-                {
-                    text: targetName,
-                    type: "text",
-                    styles: { bold: true, textColor: "pink" },
-                },
-            ],
-            children: [],
-        },
-        {
-            type: "paragraph",
-            props: {
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
-            content: [],
-            children: [],
-        },
-    ];
 };

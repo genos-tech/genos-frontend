@@ -28,6 +28,7 @@ import type { MessageAttachment } from "../../../types/channel";
 import { downloadFile } from "../../../utils/downloadUtils";
 import { AttachmentActionsMenu } from "../../notes/common/components/AttachmentActionsMenu";
 import { isImportableTextFile } from "../../notes/common/services/importableAttachment";
+import { formatSize } from "./messageAttachmentsHelpers";
 
 /** The bits of an attachment the "Import as note" flow needs. */
 export type ImportableAttachment = { url: string; name: string };
@@ -182,20 +183,4 @@ function extractFilename(fileUrl: string): string {
     const stripped = fileUrl.split(/[?#]/)[0];
     const last = stripped.split("/").filter(Boolean).pop();
     return last ? decodeURIComponent(last) : "attachment";
-}
-
-/** Format bytes as a human-readable size. Mirrors the production
- *  formatter (KB/MB/GB with one decimal, dropped for whole numbers). */
-export function formatSize(bytes: number): string {
-    if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
-    const units = ["B", "KB", "MB", "GB", "TB"];
-    let i = 0;
-    let n = bytes;
-    while (n >= 1024 && i < units.length - 1) {
-        n /= 1024;
-        i += 1;
-    }
-    if (i === 0) return `${n} ${units[i]}`;
-    const rounded = Math.round(n * 10) / 10;
-    return `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)} ${units[i]}`;
 }

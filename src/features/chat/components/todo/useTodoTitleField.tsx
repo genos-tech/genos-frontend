@@ -1,7 +1,8 @@
 import { ChangeEvent, KeyboardEvent, useCallback, useRef, useState } from "react";
 
 import { useLinkifyPaste } from "./titleLinks";
-import { TodoTitleMentionLayer, useTodoTitleMentions } from "./titleMentions";
+import { TodoTitleMentionLayer } from "./titleMentions";
+import { useTodoTitleMentions } from "./titleMentionsHelpers";
 
 type Args = {
     value: string;
