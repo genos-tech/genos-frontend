@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
-import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
+import { clearUserScopedLocalStorage, useAuth } from "../../../context/authState";
 import { DatabaseUtils } from "../../../db/utils";
 import { fmt, useTranslation } from "../../../i18n";
 import { authApi } from "../../../services/api";

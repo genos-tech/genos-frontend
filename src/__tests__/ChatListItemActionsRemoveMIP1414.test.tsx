@@ -15,7 +15,7 @@ const hideChannel = vi.fn();
 vi.mock("../services/channel/channelService", () => ({
     channelService: { hideChannel: (id: string) => hideChannel(id) },
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useOptionalAccessToken: () => "token",
 }));
 const toastSuccess = vi.fn();

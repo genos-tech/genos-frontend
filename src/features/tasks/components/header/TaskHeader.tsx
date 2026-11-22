@@ -16,7 +16,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { PageHeader } from "../../../../components/ui/page/PageHeader";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

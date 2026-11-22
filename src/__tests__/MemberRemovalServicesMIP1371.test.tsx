@@ -17,7 +17,7 @@ import { handleMembershipRemoved } from "../services/channel/membershipRemoved";
 import { listTeamInvites, revokeTeamInvite } from "../services/teamIntegrations";
 
 vi.mock("../services/api", () => ({ authApi: vi.fn(), nonAuthApi: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 // `refreshChannels` is the call that ingests the list and EVICTS the chats it no longer names;
 // `listChannels` only returns it. The notice must use the first.
 const refreshChannels = vi.fn().mockResolvedValue(undefined);

@@ -68,7 +68,7 @@ vi.mock("../features/tasks/diagram/services/loadTaskGraph", () => ({
 }));
 vi.mock("../features/tasks/services/addTask", () => ({ addTask: vi.fn() }));
 vi.mock("../db/services/task-full.service", () => ({ invalidateCachedFullTask: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 // Stub cards: a plain focusable-free body, so the node wrapper React Flow draws is
 // the only focus target (the real card is covered by the TaskNodeView test below).
 vi.mock("../features/tasks/diagram/components/TaskNodeCard", async (importOriginal) => ({

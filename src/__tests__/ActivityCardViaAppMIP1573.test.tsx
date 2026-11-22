@@ -21,7 +21,7 @@ import type { ActivityMessageProps } from "../types/chat";
 vi.mock("../features/chat/components/sidebar/activity/ActivityAvatar", () => ({
     ActivityAvatar: () => <span data-testid="avatar" />,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/chat/hooks/useActivityStatus", () => ({
     useActivityStatus: () => ({ updateActivityReadStatus: vi.fn() }),
 }));

@@ -23,7 +23,7 @@ import type { NoteVersionMeta } from "../types/notes";
 
 let isMobileViewport = false;
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => isMobileViewport }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/ui/avatars/avatarWithStatus", () => ({
     AvatarWithStatus: () => <span data-testid="avatar" />,
 }));

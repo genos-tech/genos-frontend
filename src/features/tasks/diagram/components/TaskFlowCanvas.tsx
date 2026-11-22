@@ -35,7 +35,7 @@ import {
 } from "@xyflow/react";
 
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { invalidateCachedFullTask } from "../../../../db/services/task-full.service";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";

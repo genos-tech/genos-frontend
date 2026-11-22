@@ -35,7 +35,7 @@ vi.mock("../features/admin/services/addInboxItem", () => ({
     addInboxItem: (...args: unknown[]) => persist(...args),
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

@@ -203,7 +203,7 @@ vi.mock("../features/integrations/services/calendar", async (importOriginal) => 
         await importOriginal<typeof import("../features/integrations/services/calendar")>();
     return { ...actual, getEvent };
 });
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const GOOGLE_EVENT = {
     id: "abc123def",

@@ -22,7 +22,7 @@ import { SpotlightProjectFilter } from "../features/spotlight/SpotlightProjectFi
 import type { ProjectProps } from "../types/tasks";
 
 vi.setConfig({ testTimeout: 30000 });
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const PROJECTS: ProjectProps[] = [
     {

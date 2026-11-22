@@ -26,7 +26,7 @@ import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDi
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

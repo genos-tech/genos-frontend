@@ -22,7 +22,7 @@ import type { InboxItemProps } from "../types/common";
 vi.mock("../components/editors/bnChatPreview", () => ({
     BnChatPreview: () => <div data-testid="bn-preview" />,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 afterEach(() => localStorage.removeItem(LOCALE_STORAGE_KEY));
 

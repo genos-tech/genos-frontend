@@ -10,7 +10,7 @@ import { AiCreditUsageSection } from "../components/layout/settings/AiCreditUsag
 import { I18nProvider } from "../i18n";
 
 const navigate = vi.fn();
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
 
 const fetchCreditUsage = vi.fn();

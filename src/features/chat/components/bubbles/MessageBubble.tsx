@@ -10,7 +10,7 @@ import { Bubble } from "../../../../components/ui/bubble";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/bubbleStylePreferenceState";
 import { useDoubleClickTodoPreference } from "../../../../hooks/common/doubleClickTodoPreferenceState";

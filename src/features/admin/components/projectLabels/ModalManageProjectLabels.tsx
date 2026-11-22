@@ -20,7 +20,7 @@ import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { ProjectLabelProps } from "../../../../types/tasks";

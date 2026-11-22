@@ -35,7 +35,7 @@ vi.mock("../features/inbox/services/patchInboxAiSource", () => ({
 vi.mock("../components/editors/bnChatPreview", () => ({
     BnChatPreview: () => <div data-testid="bn-preview" />,
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

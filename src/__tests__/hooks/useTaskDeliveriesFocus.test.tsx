@@ -26,7 +26,7 @@ vi.mock("../../services/api", async (importOriginal) => ({
         },
     }),
 }));
-vi.mock("../../context/AuthContext", () => ({
+vi.mock("../../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

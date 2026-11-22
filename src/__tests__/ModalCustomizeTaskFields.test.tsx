@@ -23,7 +23,7 @@ vi.mock("../features/tasks/services/loadProjectTags", () => ({
 vi.mock("../features/tasks/services/projectTaskFieldRules", () => ({
     saveProjectTaskFieldRules: vi.fn(),
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

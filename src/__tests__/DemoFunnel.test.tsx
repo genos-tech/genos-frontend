@@ -37,7 +37,7 @@ import { act, render, renderHook, screen, waitFor } from "@testing-library/react
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import { SignInForm } from "../features/admin/components/SignInForm";
 import { demoSignIn } from "../features/admin/services/demoSignin";
 import { useSpotlight } from "../features/spotlight/useSpotlight";
@@ -80,8 +80,8 @@ vi.mock("../db/utils", () => ({
     DatabaseUtils: { clearTeamScopedStores: vi.fn(async () => undefined) },
 }));
 
-vi.mock("../context/AuthContext", async (importOriginal) => ({
-    ...(await importOriginal<typeof import("../context/AuthContext")>()),
+vi.mock("../context/authState", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("../context/authState")>()),
     useAuth: vi.fn(),
 }));
 

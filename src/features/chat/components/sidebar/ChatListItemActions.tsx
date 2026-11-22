@@ -20,7 +20,7 @@ import {
     NAV_KEEP_CLASS,
 } from "../../../../components/ui/nav/navStyles";
 import { anchoredTallHitAreaSx } from "../../../../components/ui/touchTargets";
-import { useOptionalAccessToken } from "../../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../../context/authState";
 import { useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { forceDeleteAllMyMessages } from "../../../../services/forceDelete";

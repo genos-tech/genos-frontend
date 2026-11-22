@@ -10,7 +10,7 @@ import {
     Typography,
 } from "@mui/joy";
 
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
 import { g } from "../../../../../theme/tokens";

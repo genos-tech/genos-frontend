@@ -27,7 +27,7 @@ vi.mock("../components/editors/bnLocalBodyEditor", () => ({
     BnLocalBodyEditor: () => <div data-testid="bn-local-body" />,
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

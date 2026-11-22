@@ -29,7 +29,7 @@ import type { AgentTurnLabels } from "./agentTurnLabels";
 import type { AskSelection } from "./askSelection";
 import { buildSourcesById, sourceToUrl } from "./citationUtils";
 import type { AgentMentionRef } from "./mentions/types";
-import { renderSaveAnswerActions, renderSaveAnswerStatus } from "./saveAnswer/SaveAnswerActions";
+import { renderSaveAnswerActions, renderSaveAnswerStatus } from "./saveAnswer/renderSaveAnswer";
 import type { AgentQALabels, UseAgentQAReturn } from "./types";
 import type { UndoRequest } from "./undoSteps";
 

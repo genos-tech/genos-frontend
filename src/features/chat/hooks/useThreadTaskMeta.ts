@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";

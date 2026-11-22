@@ -15,7 +15,7 @@ import { en } from "../i18n/locales/en";
 import { errorMessageFrom } from "../utils/errorMessage";
 
 const del = vi.hoisted(() => vi.fn());
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../services/api", () => ({ authApi: () => ({ delete: del }) }));
 
 afterEach(() => {

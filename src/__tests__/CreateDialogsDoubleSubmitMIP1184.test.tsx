@@ -12,7 +12,7 @@ import { createChatGroup } from "../features/chat/services/createChatGroup";
 import { ModalCreateProject } from "../features/tasks/components/modals/ModalCreateProject";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/admin/services/popTeamMembers", () => ({
     popTeamMembers: vi.fn().mockResolvedValue([]),
 }));

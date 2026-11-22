@@ -45,7 +45,7 @@ vi.mock("../features/tasks/services/projectSavedFilters", async (importActual) =
     deleteProjectSavedFilter: vi.fn(),
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

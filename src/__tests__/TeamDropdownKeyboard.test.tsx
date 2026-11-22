@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { TeamDropdown } from "../features/admin/components/teamDropdown";
 
 const loadMyTeams = vi.fn();
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../features/admin/services/loadMyTeams", () => ({
     loadMyTeams: (...a: unknown[]) => loadMyTeams(...a),
     membershipTeams: (x: unknown[]) => x,

@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MilestoneProgressTab } from "../features/tasks/components/dashboard/milestoneProgress/MilestoneProgressTab";
 import { I18nProvider } from "../i18n";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "t" }),
 }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({

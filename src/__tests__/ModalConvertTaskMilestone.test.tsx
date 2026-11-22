@@ -18,7 +18,7 @@ const convert = vi.hoisted(() => ({
 vi.mock("../features/tasks/hooks/useConvertTaskMilestone", () => ({
     useConvertTaskMilestone: () => convert,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../services/notifications/notificationsContextState", () => ({
     useNotificationsContext: () => ({
         isTargetMutedByKey: () => false,

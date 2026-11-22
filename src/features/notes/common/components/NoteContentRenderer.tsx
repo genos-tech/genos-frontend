@@ -4,7 +4,7 @@ import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";

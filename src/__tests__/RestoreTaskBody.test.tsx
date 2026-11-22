@@ -19,7 +19,7 @@ import { onTaskTouched } from "../features/tasks/services/taskEvents";
 import { authApi } from "../services/api";
 import { keepsPreviousBody, type TaskActivityProps } from "../types/tasks";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../services/api", () => ({ authApi: vi.fn() }));
 vi.mock("../components/ui/avatars/avatarWithStatus", () => ({
     AvatarWithStatus: () => <span />,

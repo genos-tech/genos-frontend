@@ -11,7 +11,7 @@ import { I18nProvider } from "../i18n";
 // MIP-1909: the Milestones tab groups its cards by sprint, and "Ask Genos" opens the ordinary ask
 // with a written question (project or sprint). Nothing is sent by the tab.
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../features/tasks/services/loadTaskProgress", () => ({ loadTaskProgress: vi.fn() }));
 
 const ms = (milestoneId: number, title: string, sprintId: number | null) =>

@@ -32,7 +32,7 @@ import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
 // The body renders PR unfurls, which read the access token. Keep the
 // rest of AuthContext real so the surrounding module graph is unchanged.
 const authState = vi.hoisted(() => ({ accessToken: null as string | null }));
-vi.mock("../context/AuthContext", async (importOriginal) => ({
+vi.mock("../context/authState", async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     useAuth: () => ({ accessToken: authState.accessToken }),
 }));

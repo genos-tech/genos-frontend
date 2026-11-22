@@ -13,7 +13,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";

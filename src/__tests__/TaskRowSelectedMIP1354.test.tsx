@@ -25,7 +25,7 @@ import { buildRoles, type Mode } from "../theme/tokens/roles";
 import type { UserProps } from "../types/admin";
 import type { TaskTableProps } from "../types/tasks";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 
 describe("the selected row's tint", () => {
     it("is the theme's accent mixed into the shared selected tint, tokens only", () => {

@@ -11,7 +11,7 @@ import { GifSearchPage } from "../services/gifApi";
 
 const { searchGifs } = vi.hoisted(() => ({ searchGifs: vi.fn() }));
 vi.mock("../services/gifApi", () => ({ searchGifs }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const gif = (id: string): GifSearchPage["results"][number] => ({
     id,

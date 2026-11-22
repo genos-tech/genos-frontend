@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { recordTaskOpen } from "../services/recentTasks";
 import { emitTaskOpened } from "../services/taskEvents";
 

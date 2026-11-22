@@ -26,7 +26,7 @@ import {
 } from "../components/ui/touchTargets";
 import { TodoTagFilterBar } from "../features/chat/components/todo/TodoTagFilterBar";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 
 afterEach(cleanup);
 

@@ -48,7 +48,7 @@ const httpError = (status: number) =>
 const reply = (match: string, out: unknown) => answers.queue.push({ match, out });
 const hits = (match: string) => calls.urls.filter((u) => u.includes(match)).length;
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => <span /> }));
 vi.mock("../db/services/note.service", () => ({
     NoteService: class {

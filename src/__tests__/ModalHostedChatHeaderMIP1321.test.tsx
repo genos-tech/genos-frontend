@@ -21,7 +21,7 @@ import type { ChatProps } from "../types/chat";
 const mobile = vi.hoisted(() => ({ value: true }));
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => mobile.value }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "token" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "token" }) }));
 vi.mock("../context/CalendarModalContext", () => ({ useCalendarModal: () => null }));
 vi.mock("../i18n", async () => {
     const { en } = await import("../i18n/locales/en");

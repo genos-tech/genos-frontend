@@ -27,7 +27,7 @@ const api = vi.hoisted(() => ({
     previewUndoTaskImport: vi.fn(),
     undoTaskImport: vi.fn(),
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
     useOptionalAccessToken: () => "tok",
 }));

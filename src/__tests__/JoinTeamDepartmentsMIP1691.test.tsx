@@ -11,7 +11,7 @@ import { JoinTeam } from "../features/admin/components/joinTeamFrom";
 import { createTeam } from "../features/admin/services/createTeam";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok", setAccessToken: vi.fn() }),
 }));
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));

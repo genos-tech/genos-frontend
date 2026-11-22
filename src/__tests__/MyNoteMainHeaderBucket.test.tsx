@@ -14,7 +14,7 @@ import { MyNoteMain } from "../features/notes/my-notes/components/MyNoteMain";
 import { NoteManagementState } from "../hooks/notes/useNoteManagement";
 import { UserProps } from "../types/admin";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => false }));
 vi.mock("../features/notes/team-notes/components/TeamNoteHeader", () => ({
     TeamNoteHeader: () => <div data-testid="team-header" />,

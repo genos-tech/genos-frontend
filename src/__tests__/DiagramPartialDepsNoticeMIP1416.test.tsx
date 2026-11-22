@@ -15,7 +15,7 @@ const loadTaskGraph = vi.fn();
 vi.mock("../features/tasks/diagram/services/loadTaskGraph", () => ({
     loadTaskGraph: (...args: unknown[]) => loadTaskGraph(...args),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 vi.stubGlobal(
     "ResizeObserver",

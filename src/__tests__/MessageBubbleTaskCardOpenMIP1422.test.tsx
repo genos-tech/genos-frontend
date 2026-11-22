@@ -32,7 +32,7 @@ vi.mock("../components/ui/emoji/EmojiPicker", () => ({ EmojiPicker: () => null }
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => null }));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../hooks/common/bubbleStylePreferenceState", () => ({
     useBubbleStylePreference: () => ({ setStyle: () => {}, style: "bubble" }),
 }));

@@ -42,7 +42,7 @@ vi.mock("@hello-pangea/dnd", () => ({
         <>{children({}, {})}</>
     ),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/components/board/SprintBoardColumn", () => ({
     COLUMN_MIN_WIDTH: 240,
     SprintBoardColumn: ({

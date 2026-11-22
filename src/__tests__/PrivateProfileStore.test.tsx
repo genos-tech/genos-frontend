@@ -19,7 +19,8 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AuthProvider, clearUserScopedLocalStorage, useAuth } from "../context/AuthContext";
+import { AuthProvider } from "../context/AuthContext";
+import { clearUserScopedLocalStorage, useAuth } from "../context/authState";
 import { AcceptInviteHandler } from "../features/admin/components/AcceptInviteHandler";
 import { SignInForm } from "../features/admin/components/SignInForm";
 import { previewInvite } from "../features/admin/services/teamInvite";

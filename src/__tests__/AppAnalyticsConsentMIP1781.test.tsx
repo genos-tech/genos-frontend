@@ -45,7 +45,7 @@ const load = async () => {
         useAnalyticsPageviews: (await import("../hooks/common/useAnalyticsPageviews"))
             .useAnalyticsPageviews,
         PrivacySection: (await import("../components/layout/SettingsModal")).PrivacySection,
-        auth: await import("../context/AuthContext"),
+        auth: await import("../context/authState"),
     };
 };
 type Loaded = Awaited<ReturnType<typeof load>>;

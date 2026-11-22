@@ -21,7 +21,7 @@ import { en } from "../i18n/locales/en";
 import { ja } from "../i18n/locales/ja";
 import { LOCALE_STORAGE_KEY } from "../i18n/localeSource";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../services/api", () => ({

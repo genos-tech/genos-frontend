@@ -10,7 +10,7 @@ import SvgIcon from "@mui/joy/SvgIcon";
 import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../../../components/ui/Clickable";
 import { Toast } from "../../../../../../components/ui/feedback/Toast";
-import { useOptionalAccessToken } from "../../../../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../../../../context/authState";
 import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { isWebUrl, safeWebHref } from "../../../../../../utils/safeHref";

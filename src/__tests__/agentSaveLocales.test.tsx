@@ -16,7 +16,7 @@ import { buildAgentTurnLabels } from "../features/agentQA/agentTurnLabels";
 import {
     renderSaveAnswerActions,
     renderSaveAnswerStatus,
-} from "../features/agentQA/saveAnswer/SaveAnswerActions";
+} from "../features/agentQA/saveAnswer/renderSaveAnswer";
 import { resetSaveStore } from "../features/agentQA/saveAnswer/saveAnswerStore";
 import { I18nProvider, loadLocale, type Locale } from "../i18n";
 import { ar } from "../i18n/locales/ar";
@@ -28,7 +28,7 @@ import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 import { LOCALE_STORAGE_KEY } from "../i18n/localeSource";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
     useOptionalAccessToken: () => "tok",
 }));

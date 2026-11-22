@@ -28,7 +28,7 @@ vi.mock("@hello-pangea/dnd", () => ({
         <>{children({}, {})}</>
     ),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 let openDiagram: (task: TaskTableProps, scope: TaskGraphScope) => void = () => {};
 vi.mock("../features/tasks/components/table/TaskTableRows", () => ({

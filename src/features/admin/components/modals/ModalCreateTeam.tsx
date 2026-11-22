@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Alert, Button, FormControl, FormHelperText, Input } from "@mui/joy";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { useTeamSetupFields } from "../../../../hooks/common/useTeamSetupFields";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";

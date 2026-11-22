@@ -30,7 +30,7 @@ vi.mock("../services/channel/channelService", () => ({
         listChannels: (...args: unknown[]) => listChannels(...args),
     },
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "token-1" }),
 }));
 

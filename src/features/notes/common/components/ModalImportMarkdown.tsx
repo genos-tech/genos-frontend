@@ -15,7 +15,7 @@ import Autocomplete, { createFilterOptions } from "@mui/joy/Autocomplete";
 import { useTheme } from "@mui/joy/styles";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useOptionalAccessToken } from "../../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../../context/authState";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { resolveUploadLimitBytes } from "../../../../services/uploadLimit";

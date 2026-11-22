@@ -6,7 +6,7 @@ import { Alert, Box, Button, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { getMessages, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";

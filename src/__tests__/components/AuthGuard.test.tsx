@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { AuthGuard } from "../../features/admin/authGuard";
 
-vi.mock("../../context/AuthContext", () => ({
+vi.mock("../../context/authState", () => ({
     useAuth: vi.fn(),
 }));
 

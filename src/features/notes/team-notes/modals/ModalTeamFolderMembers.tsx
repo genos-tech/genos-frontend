@@ -22,7 +22,7 @@ import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PersonPicker } from "../../../../components/ui/PersonPicker";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

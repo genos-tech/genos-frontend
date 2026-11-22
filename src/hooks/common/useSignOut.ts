@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { DatabaseUtils } from "../../db/utils/database";
 import { resetProjectScopes } from "../../features/tasks/state/projectStatusScopeStore";
 import { analytics } from "../../services/analytics";

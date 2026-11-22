@@ -15,7 +15,7 @@ import { ReactNode } from "react";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import {
     HIDEABLE_SIDEBAR_ITEMS,
     useSidebarVisibility,
@@ -28,7 +28,7 @@ vi.mock("../services/api", () => ({
     nonAuthApi: vi.fn(),
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: vi.fn(),
 }));
 

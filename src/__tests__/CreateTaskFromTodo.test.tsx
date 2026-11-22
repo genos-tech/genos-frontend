@@ -16,7 +16,7 @@ import { ModalCreateTaskFromTodo } from "../features/chat/components/todo/ModalC
 import { onTasksBulkChanged } from "../features/tasks/services/taskEvents";
 import { UserProps } from "../types/admin";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 const openModalByHref = vi.fn();
 vi.mock("../hooks/common/UrlLinkModalContext", () => ({

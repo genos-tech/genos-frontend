@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { useTranslation } from "../../i18n";
 import { listMySecurityEvents, SecurityEvent } from "../../services/developerApi";
 import { DataState } from "../ui/feedback/DataState";

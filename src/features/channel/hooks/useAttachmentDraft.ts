@@ -30,7 +30,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { useOptionalAccessToken } from "../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { resolveUploadLimitBytes } from "../../../services/uploadLimit";

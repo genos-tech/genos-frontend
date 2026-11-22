@@ -25,7 +25,7 @@ import { Box, Chip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useMentionGroupsContext } from "../../../context/MentionGroupsContext";
 import { isNoteCommentingArchived, useArchiveState } from "../../../features/archive/archiveState";
 import { getMyNoteRoleId, isNoteEditable } from "../../../features/notes/common/utils/noteRoles";

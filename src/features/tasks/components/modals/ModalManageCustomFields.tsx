@@ -25,7 +25,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import {
     refreshProjectCustomFields,
     useProjectCustomFields,

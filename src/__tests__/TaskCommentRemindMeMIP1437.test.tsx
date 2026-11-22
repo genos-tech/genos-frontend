@@ -51,7 +51,7 @@ vi.mock("../components/ui/emoji/TaskCommentEmojiReaction", () => ({
     TaskCommentEmojiReaction: () => <div />,
 }));
 vi.mock("../components/ui/emoji/EmojiPicker", () => ({ EmojiPicker: () => null }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => <div /> }));
 
 const MIRROR = "1f23d65f-3379-5e81-985f-04a54d143ddb";

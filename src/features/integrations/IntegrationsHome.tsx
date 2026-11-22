@@ -51,7 +51,7 @@ import { AppTooltip } from "../../components/ui/AppTooltip";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../components/ui/feedback/Skeleton";
 import { ConfirmDialog } from "../../components/ui/modal/ConfirmDialog";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { fmt, useTranslation } from "../../i18n";
 import { fetchAgentFeatures } from "../../services/agentApi";
 import { useCalendarSources } from "../calendar/hooks/useCalendarSources";

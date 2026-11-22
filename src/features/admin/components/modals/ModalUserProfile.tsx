@@ -24,7 +24,7 @@ import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSize
 import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { PROFILE_MODAL_Z_INDEX } from "../../../../components/ui/styles/commonStyle";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { UserRepository } from "../../../../db/repositories/user";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

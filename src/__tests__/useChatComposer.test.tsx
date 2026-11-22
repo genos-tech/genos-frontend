@@ -20,7 +20,7 @@ vi.mock("../db/config/schema", () => ({
 vi.mock("../components/editors/genos/useGenosEditor", async () =>
     (await import("./helpers_composerHarness")).useGenosEditorMock()
 );
-vi.mock("../context/AuthContext", () => ({ useOptionalAccessToken: () => "tok" }));
+vi.mock("../context/authState", () => ({ useOptionalAccessToken: () => "tok" }));
 vi.mock("../services/uploadLimit", () => ({
     resolveUploadLimitBytes: vi.fn(async () => 1024),
     invalidateUploadLimit: vi.fn(),

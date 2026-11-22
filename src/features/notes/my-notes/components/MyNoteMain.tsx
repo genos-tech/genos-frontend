@@ -8,7 +8,7 @@ import { Socket } from "socket.io-client";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChrome";
 import { touchTargetSx } from "../../../../components/ui/touchTargets";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

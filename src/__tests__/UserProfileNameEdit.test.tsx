@@ -11,7 +11,7 @@ import { UserProps } from "../types/admin";
 // `useAuth` throws outside an AuthProvider, so stub it. `useTranslation`
 // already falls back to the English message tree when no I18nProvider is
 // mounted, so it needs no mock here.
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

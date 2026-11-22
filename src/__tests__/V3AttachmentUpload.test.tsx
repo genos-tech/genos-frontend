@@ -30,7 +30,7 @@ vi.mock("../db/config/schema", () => ({
 // flat 25 MiB they used to assert against was itself the bug (it sat
 // ABOVE free's 5 MB server cap, so a free user's 20 MB file uploaded in
 // full before being rejected).
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useOptionalAccessToken: () => "test-token",
 }));
 

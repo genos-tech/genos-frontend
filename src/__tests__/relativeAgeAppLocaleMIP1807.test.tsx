@@ -32,7 +32,7 @@ import type { TaskActivityProps, TaskTableProps } from "../types/tasks";
 vi.mock("../components/ui/avatars/avatarWithStatus", () => ({
     AvatarWithStatus: () => <span />,
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 vi.mock("../features/integrations/components/PrStatusCell", () => ({

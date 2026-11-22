@@ -30,7 +30,7 @@ vi.mock("../features/tasks/components/contents/base/sub/TaskCommentEditorBlock",
 vi.mock("../features/tasks/components/contents/base/sub/TaskActivityFeed", () => ({
     TaskActivityFeed: () => <div data-testid="activity-feed" />,
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
     useOptionalAccessToken: () => "tok",
 }));

@@ -15,8 +15,8 @@ import { signUp } from "../features/admin/services/signup";
 import { oauthLoginUrl, redirectToOAuthLogin } from "../features/integrations/services/oauth";
 import { en } from "../i18n/locales/en";
 
-vi.mock("../context/AuthContext", async (importOriginal) => ({
-    ...(await importOriginal<typeof import("../context/AuthContext")>()),
+vi.mock("../context/authState", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("../context/authState")>()),
     useAuth: () => ({ setAccessToken: vi.fn() }),
 }));
 vi.mock("../features/admin/services/signup", () => ({ signUp: vi.fn() }));

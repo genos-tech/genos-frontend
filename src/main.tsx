@@ -4,9 +4,8 @@ import "./index.css";
 
 import { ComponentType, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import { Outlet, Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
-import { AuthProvider } from "./context/AuthContext";
 import { AnalyticsRouteGate } from "./components/AnalyticsRouteGate";
 import { startAnalyticsOutsideMarketing } from "./components/analyticsRouteGateHelpers";
 import { PageNotFound } from "./components/layout/pageNotFound";
@@ -27,6 +26,7 @@ import { startLongTaskObserver } from "./services/perfObserver";
 import { startLabellingExternalLinks } from "./utils/labelExternalLinks";
 
 import { App } from "./App";
+import { AuthLayout } from "./AuthLayout";
 import { applyDocumentLocale, bootI18n, resolveInitialLocale } from "./i18n";
 import type { SegmentKey } from "./lp/segments";
 import { PRERENDER_ATTR } from "./lp/seo/injectHead";
@@ -84,17 +84,6 @@ registerServiceWorkerOnBoot();
 if (import.meta.env.DEV) {
     startLongTaskObserver();
 }
-
-// Layout for everything that needs access to AuthContext (the sign-in /
-// sign-up flows, the authenticated workspace, join-team, the 404 page).
-// Public marketing pages such as /home are intentionally rendered OUTSIDE
-// this layout so AuthProvider never mounts on them — that means no token
-// refresh, no forced sign-out redirect, and no useAuth dependency.
-const AuthLayout = () => (
-    <AuthProvider>
-        <Outlet />
-    </AuthProvider>
-);
 
 // Suspense boundary for the lazy marketing pages. Deliberately wrapped
 // per-route rather than around the whole <Routes>: an outer boundary

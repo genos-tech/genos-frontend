@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Button, FormHelperText, Stack, Textarea, Typography } from "@mui/joy";
 
 import { ProfileMarkdown } from "../../../../../components/ui/misc/ProfileMarkdown";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
 import { g } from "../../../../../theme/tokens";

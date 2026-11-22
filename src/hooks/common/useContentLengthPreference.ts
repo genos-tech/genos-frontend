@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { authApi } from "../../services/api";
 
 const PREF_URL = "/user/preferences/content-length/";

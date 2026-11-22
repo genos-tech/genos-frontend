@@ -29,7 +29,7 @@ const api = {
     delete: vi.fn(),
 };
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../services/api", () => ({ authApi: () => api }));
 vi.mock("../services/agentApi", async (importOriginal) => {
     const actual = await importOriginal<typeof import("../services/agentApi")>();

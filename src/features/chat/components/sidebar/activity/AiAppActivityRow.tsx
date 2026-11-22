@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { ViaAppIcon } from "../../../../../components/ui/misc/ViaAppIcon";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { useTranslation } from "../../../../../i18n";

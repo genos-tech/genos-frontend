@@ -4,7 +4,7 @@ import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { runScheduleAndAnnounce } from "../../../features/schedules/runScheduleAndAnnounce";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import { rowEffort, withoutAi } from "../../../features/schedules/scheduleEffort";

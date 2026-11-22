@@ -12,7 +12,7 @@ import { predefinedStatusFilters } from "../features/tasks/types/TaskTableTypes"
 import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 import type { TaskTableProps } from "../types/tasks";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/services/projectSavedFilters", () => ({
     loadProjectSavedFilters: vi.fn().mockResolvedValue([]),
     createProjectSavedFilter: vi.fn(),

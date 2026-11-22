@@ -3,7 +3,7 @@ import { AutocompleteOption, ListItemContent, Stack, Typography } from "@mui/joy
 import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
-import { sortMembersMyselfFirst } from "../../../../components/editors/Mention";
+import { sortMembersMyselfFirst } from "../../../../components/editors/mentionHelpers";
 import { resolveDisplayName } from "../../../../components/ui/avatars/avatarContextHelpers";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";

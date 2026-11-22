@@ -16,7 +16,7 @@ import { Alert, Box, Button, FormControl, FormLabel, Typography } from "@mui/joy
 
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { g } from "../../../../theme/tokens";

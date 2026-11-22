@@ -29,7 +29,7 @@ import { ModalGMProfile } from "../features/chat/components/modals/ModalGMProfil
 import type { UserProps } from "../types/admin";
 import type { AllChatProps } from "../types/chat";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "token" }),
     useOptionalAccessToken: () => "token",
 }));

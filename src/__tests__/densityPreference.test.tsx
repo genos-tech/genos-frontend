@@ -11,7 +11,7 @@ import { act, fireEvent, render, renderHook, waitFor } from "@testing-library/re
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DensitySetting } from "../components/layout/DensitySetting";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authState";
 import { useDensityPreference } from "../hooks/common/densityContext";
 import { DensityPreferenceProvider } from "../hooks/common/useDensityPreference";
 import { UiSettingsProvider } from "../hooks/common/useUiSettings";
@@ -23,7 +23,7 @@ import { ROW } from "../theme/tokens/scales";
 import { buildTokenStylesheet } from "../theme/tokens/tokenStyles";
 
 vi.mock("../services/api", () => ({ authApi: vi.fn(), nonAuthApi: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: vi.fn() }));
+vi.mock("../context/authState", () => ({ useAuth: vi.fn() }));
 
 const attr = () => document.documentElement.dataset.density;
 

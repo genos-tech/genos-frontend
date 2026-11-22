@@ -21,7 +21,7 @@ import { MobileAccountSheet } from "../components/layout/MobileAccountSheet";
 import type { TeamProfileProps, UserProps } from "../types/admin";
 
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => true }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "token" }),
     useOptionalAccessToken: () => "token",
 }));

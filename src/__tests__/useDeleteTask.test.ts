@@ -23,7 +23,7 @@ const updateTaskCard = vi.fn(async () => undefined);
 const invalidateCachedFullTask = vi.fn(async (_id: number) => undefined);
 
 const auth = vi.hoisted(() => ({ token: "tok" }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: auth.token }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: auth.token }) }));
 vi.mock("../services/api", () => ({
     authApi: (token: string) => ({ put: (...a: unknown[]) => put(token, ...a) }),
 }));

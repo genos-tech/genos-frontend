@@ -3,7 +3,7 @@ import { Box, Stack, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { SkeletonLines } from "../../../components/ui/feedback/Skeleton";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { fmt, useTranslation, type Locale } from "../../../i18n";
 import { g } from "../../../theme/tokens";

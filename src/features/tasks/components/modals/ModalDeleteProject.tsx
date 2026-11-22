@@ -5,7 +5,7 @@ import { Box, Button, Typography } from "@mui/joy";
 import axios from "axios";
 
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../i18n";
 import { authApi } from "../../../../services/api";

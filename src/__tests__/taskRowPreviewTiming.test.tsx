@@ -36,7 +36,7 @@ vi.mock("@hello-pangea/dnd", () => ({
         <>{children({}, {})}</>
     ),
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 // What the table hands to its rows.
 let requestPreview: (row: TaskTableProps) => void = () => {};

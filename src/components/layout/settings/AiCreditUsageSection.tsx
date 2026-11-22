@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     CreditCharge,

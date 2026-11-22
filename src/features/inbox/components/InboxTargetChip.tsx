@@ -30,7 +30,7 @@ import { Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { ModalProjectProfile } from "../../../features/admin/components/modals/ModalProjectProfile";
 import { ModalTeamProfile } from "../../../features/admin/components/modals/ModalTeamProfile";
 import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";

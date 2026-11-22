@@ -11,7 +11,7 @@ import { Box, Button, Divider, Drawer, ModalClose, Sheet, Stack, Typography } fr
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { ModalTeamProfile } from "../../features/admin/components/modals/ModalTeamProfile";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { loadMyTeams, membershipTeams } from "../../features/admin/services/loadMyTeams";

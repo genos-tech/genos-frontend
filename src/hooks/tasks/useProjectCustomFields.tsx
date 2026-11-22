@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { loadProjectCustomFields } from "../../features/tasks/services/projectCustomFields";
 import { ProjectCustomFieldDef } from "../../types/tasks";
 

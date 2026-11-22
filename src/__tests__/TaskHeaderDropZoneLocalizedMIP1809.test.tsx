@@ -24,7 +24,7 @@ import { hi } from "../i18n/locales/hi";
 import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "t" }),
     useOptionalAccessToken: () => "t",
 }));

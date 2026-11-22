@@ -24,7 +24,7 @@ import { ModalJoinProject } from "../features/tasks/components/modals/ModalJoinP
 import { ModalManageCustomFields } from "../features/tasks/components/modals/ModalManageCustomFields";
 import { UserProps } from "../types/admin";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => false }));

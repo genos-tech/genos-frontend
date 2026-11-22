@@ -22,7 +22,7 @@ import { PRESENCE_COLOR } from "../../../../../components/ui/misc/presenceColor"
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MenuDivider, MenuRow, MenuSurface } from "../../../../../components/ui/MoreMenu";
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { UserRepository } from "../../../../../db/repositories/user";
 import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
 import { fmt, useTranslation } from "../../../../../i18n";

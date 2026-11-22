@@ -21,7 +21,7 @@ import type { AllChatProps } from "../types/chat";
 const onClickHandler = vi.fn();
 const prefetchChannel = vi.fn();
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../services/channel/channelPrefetch", () => ({
     prefetchChannel: (id: string) => prefetchChannel(id),
 }));

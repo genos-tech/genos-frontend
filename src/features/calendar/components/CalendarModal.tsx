@@ -10,7 +10,7 @@ import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useCalendarViewPreference } from "../../../hooks/common/useCalendarViewPreference";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { useTranslation } from "../../../i18n";

@@ -18,7 +18,7 @@ import type { ProjectManagementState } from "../hooks/common/useProjectManagemen
 import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 import type { ProjectProps, TaskProps, TaskTableProps } from "../types/tasks";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/services/loadProjectTasksFromApi", () => ({
     loadProjectTasksFromApi: vi.fn(),
 }));

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import ExtensionRoundedIcon from "@mui/icons-material/ExtensionRounded";
 import { Alert, Box, Button, Checkbox, Chip, Radio, Sheet, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import {
     addableTeams,
     addTeam,

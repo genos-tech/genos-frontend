@@ -19,6 +19,7 @@ import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
+import { mentionChipSx, sortMembersMyselfFirst } from "./mentionHelpers";
 import { MENTION_ICONS } from "./mentionIcons";
 import {
     MentionCountChip,
@@ -34,28 +35,6 @@ import {
     type MentionPalette,
 } from "./mentionPalettes";
 import { MENTION_SPEC_CONFIG, mentionGroupSpecConfig } from "./schemaSpecConfigs";
-
-// Shared visual treatment for every mention chip (user OR group). The
-// only difference between variants is the colour palette; the pill
-// shape, padding, hover transition, and typography stay identical so
-// the two kinds of mention read as siblings instead of unrelated
-// styles. To change the look of a mention, change `mentionChipSx`
-// here and both chips update together.
-export const mentionChipSx = (palette: MentionPalette) =>
-    ({
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 0.5,
-        backgroundColor: palette.bg,
-        borderRadius: "12px",
-        px: 1,
-        py: 0.5,
-        cursor: "pointer",
-        userSelect: "none",
-        fontSize: "0.875rem",
-        transition: "background-color 0.15s ease",
-        "&:hover": { backgroundColor: palette.bgHover },
-    }) as const;
 
 // The Mention inline content
 export const CreateMentionSpec = (
@@ -158,23 +137,6 @@ export const CreateMentionGroupSpec = () =>
             },
         }
     );
-
-// Sort rule shared with the assignee/reporter picker (`ACTeamUsers`)
-// so the same ordering shows up on every member-selection surface:
-// self first (you almost always mean to mention/assign yourself when
-// reaching for the picker), then everyone else by display name,
-// case-insensitive. Pure — caller passes a fresh array, we never
-// mutate the input.
-export const sortMembersMyselfFirst = <T extends { userId: string; userName: string }>(
-    members: T[],
-    myselfUserId: string
-): T[] => {
-    return [...members].sort((a, b) => {
-        if (a.userId === myselfUserId) return -1;
-        if (b.userId === myselfUserId) return 1;
-        return compareText(a.userName || "", b.userName || "", { sensitivity: "base" });
-    });
-};
 
 // Cache the entire built menu (sorted users + JSX rows + group rows)
 // per editor instance. `MentionMenuItems` is called by BlockNote's

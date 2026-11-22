@@ -3,7 +3,7 @@ import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import { Button, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
 import { grantTeamFolderMembers } from "../../features/notes/team-notes/services/teamNoteFolderMembers";
 import { fmt, useTranslation } from "../../i18n";

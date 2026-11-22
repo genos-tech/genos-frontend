@@ -15,7 +15,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PlanUsageSection } from "../components/layout/settings/PlanUsageSection";
 import type { BillingSubscription } from "../services/billingApi";
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 

@@ -32,7 +32,7 @@ import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import { Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { LazyPrCard } from "../../features/integrations/components/LazyPrCard";
@@ -50,8 +50,8 @@ import { UserProps } from "../../types/admin";
 import { downloadFile } from "../../utils/downloadUtils";
 import { entityRefToHref, HashEntityRef } from "../../utils/entityHref";
 import { CustomEmojiImg } from "../editors/CustomEmojiImg";
-import { hashMentionTextSx } from "../editors/HashMention";
-import { mentionChipSx } from "../editors/Mention";
+import { hashMentionTextSx } from "../editors/hashMentionHelpers";
+import { mentionChipSx } from "../editors/mentionHelpers";
 import {
     CHAT_PALETTE,
     GROUP_PALETTE,

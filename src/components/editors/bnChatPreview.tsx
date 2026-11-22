@@ -10,7 +10,7 @@ import { Socket } from "socket.io-client";
 
 import { withoutTrailingBlank } from "./utils/messageBlocks";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { LazyPrCard } from "../../features/integrations/components/LazyPrCard";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";

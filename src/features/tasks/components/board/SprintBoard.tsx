@@ -9,7 +9,7 @@ import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { DataState } from "../../../../components/ui/feedback/DataState";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { useTaskSortPreferences } from "../../../../hooks/common/taskSortPreferencesState";
 import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";

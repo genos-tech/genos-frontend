@@ -29,7 +29,7 @@ import { LOCALE_STORAGE_KEY } from "../i18n/localeSource";
 import type { UserProps } from "../types/admin";
 import { isDeletedUser } from "../utils/teamRoster";
 
-vi.mock("../context/AuthContext", async (importOriginal) => ({
+vi.mock("../context/authState", async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     useAuth: () => ({ accessToken: null }),
 }));

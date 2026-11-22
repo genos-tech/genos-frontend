@@ -11,7 +11,7 @@ import { loadProjectTaskFieldRules } from "./services/projectTaskFieldRules";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { MobileTaskHome } from "./MobileTaskHome";
 

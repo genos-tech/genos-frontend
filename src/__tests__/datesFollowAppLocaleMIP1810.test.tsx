@@ -45,7 +45,7 @@ import type { UserProps } from "../types/admin";
 import type { TaskTableProps } from "../types/tasks";
 
 vi.mock("../services/api", () => ({ authApi: vi.fn(), nonAuthApi: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/notes/common/services/loadNoteVersion", () => ({
     loadNoteVersion: vi.fn(async () => ({
         versionNo: 1,

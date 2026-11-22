@@ -46,7 +46,7 @@ vi.mock("../services/agentApi", async (importOriginal) => {
 vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "t" }),
     useOptionalAccessToken: () => "t",
 }));

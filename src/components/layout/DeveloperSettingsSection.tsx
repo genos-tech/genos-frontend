@@ -22,7 +22,7 @@ import {
     Typography,
 } from "@mui/joy";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/authState";
 import { fmt, useTranslation } from "../../i18n";
 import {
     API_KEY_EXPIRY_DAYS,

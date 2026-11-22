@@ -21,7 +21,7 @@ import { alpha } from "@mui/system";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";

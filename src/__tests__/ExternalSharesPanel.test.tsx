@@ -34,7 +34,7 @@ vi.mock("../features/admin/services/teamConnections", () => ({
     revokeExternalShare: vi.fn().mockResolvedValue(0),
 }));
 
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "token" }),
 }));
 

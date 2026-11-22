@@ -32,7 +32,7 @@ vi.mock("../services/api", async (orig) => ({
     }),
 }));
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => <span /> }));
 const idb = vi.hoisted(() => ({ personal: undefined as unknown }));
 const phone = vi.hoisted(() => ({ value: false }));

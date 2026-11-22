@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { loadProjectMilestones } from "../../../features/tasks/sprint-milestone/services/loadProjectMilestones";
 import type { Milestone } from "../../../features/tasks/sprint-milestone/types";

@@ -37,7 +37,7 @@ import { Box, Button, IconButton, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
-import { useOptionalAccessToken } from "../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../context/authState";
 import { useTranslation } from "../../../i18n";
 import type { SpotlightResult } from "../../spotlight/types";
 import type { AgentTurnActionContext } from "../AgentTurn";
@@ -64,7 +64,7 @@ const ModalCreateTaskFromTodo = lazy(() =>
 );
 
 // Above the Spotlight overlay (13100); Joy's pickers are lifted with it.
-export const SAVE_TASK_DIALOG_LAYER = 13200;
+const SAVE_TASK_DIALOG_LAYER = 13200;
 
 // What sign-in and `switchTeam` leave in localStorage.
 const readIdentity = () => ({
@@ -72,17 +72,7 @@ const readIdentity = () => ({
     userId: localStorage.getItem("userId") ?? "",
 });
 
-/** A finished answer worth saving: text, no error, nothing still streaming or
- *  waiting on a decision, and a completed run behind it (a cancelled turn keeps
- *  its partial text but has no run id, and half an answer is not worth a note). */
-export const canSaveAnswer = (ctx: AgentTurnActionContext): boolean =>
-    !ctx.hasError &&
-    !ctx.isStreaming &&
-    !ctx.awaitingApproval &&
-    Boolean(ctx.runId) &&
-    ctx.answer.trim() !== "";
-
-interface SaveProps {
+export interface SaveProps {
     turnKey: string;
     askedQuery: string;
     answer: string;
@@ -138,7 +128,7 @@ const useSaveState = (turnKey: string, kind: SaveKind) => {
 const buttonSx = { minWidth: 0, p: "3px" } as const;
 const iconSx = { fontSize: 14 } as const;
 
-const SaveAnswerButtons = memo((props: SaveProps) => {
+export const SaveAnswerButtons = memo((props: SaveProps) => {
     const { turnKey, askedQuery, answer, answerSources, sourcesById } = props;
     const { t } = useTranslation();
     const s = t.agentSave;
@@ -304,7 +294,7 @@ const failureText = (
     return s.note.failed;
 };
 
-const SaveAnswerStatus = memo((props: SaveProps) => {
+export const SaveAnswerStatus = memo((props: SaveProps) => {
     const { turnKey, onPreview } = props;
     const { t } = useTranslation();
     const s = t.agentSave;
@@ -384,21 +374,3 @@ const SaveAnswerStatus = memo((props: SaveProps) => {
     return <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25, mt: 0.5 }}>{rows}</Box>;
 });
 SaveAnswerStatus.displayName = "SaveAnswerStatus";
-
-const propsOf = (ctx: AgentTurnActionContext): SaveProps => ({
-    turnKey: turnKeyOf(ctx.runId, ctx.askedQuery, ctx.answer),
-    askedQuery: ctx.askedQuery,
-    answer: ctx.answer,
-    answerSources: ctx.answerSources,
-    sourcesById: ctx.sourcesById,
-    onPreview: ctx.onPreview,
-});
-
-// MODULE-LEVEL, so every host hands `AgentTurn` the same two functions for ever: a
-// finished turn re-renders for nothing because of them. The components they return
-// are `memo`, keyed on values that only change when the turn itself does.
-export const renderSaveAnswerActions = (ctx: AgentTurnActionContext): ReactNode =>
-    canSaveAnswer(ctx) ? <SaveAnswerButtons {...propsOf(ctx)} /> : null;
-
-export const renderSaveAnswerStatus = (ctx: AgentTurnActionContext): ReactNode =>
-    canSaveAnswer(ctx) ? <SaveAnswerStatus {...propsOf(ctx)} /> : null;

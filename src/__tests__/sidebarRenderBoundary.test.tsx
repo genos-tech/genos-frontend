@@ -140,7 +140,7 @@ vi.mock("../features/tasks/services/recentTasks", () => ({
     loadRecentTasks: vi.fn(async () => RECENT),
     recordTaskOpen: vi.fn(async () => true),
 }));
-vi.mock("../context/AuthContext", () => ({
+vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
 }));
 

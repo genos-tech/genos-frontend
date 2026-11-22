@@ -23,7 +23,7 @@ import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 
 const api = vi.hoisted(() => ({ get: vi.fn(), patch: vi.fn() }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../services/api", () => ({ authApi: () => api }));
 
 const s = en.settings.contentLength;

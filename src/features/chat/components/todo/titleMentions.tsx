@@ -38,7 +38,7 @@ import {
     type RefObject,
 } from "react";
 
-import { mentionChipSx } from "../../../../components/editors/Mention";
+import { mentionChipSx } from "../../../../components/editors/mentionHelpers";
 import {
     CHAT_PALETTE,
     GROUP_PALETTE,

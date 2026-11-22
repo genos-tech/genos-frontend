@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import LocalPhoneRoundedIcon from "@mui/icons-material/LocalPhoneRounded";
 import { Button, Input, Stack, Typography } from "@mui/joy";
 
-import { useAuth } from "../../../../../context/AuthContext";
+import { useAuth } from "../../../../../context/authState";
 import { useTranslation } from "../../../../../i18n";
 import { patchPrivateProfile } from "../../../../../services/privateProfileStore";
 import { g } from "../../../../../theme/tokens";

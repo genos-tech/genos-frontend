@@ -3,7 +3,7 @@ import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import { Alert, Box, Button, Checkbox, Chip, Stack, Typography } from "@mui/joy";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useOptionalAccessToken } from "../../../../context/AuthContext";
+import { useOptionalAccessToken } from "../../../../context/authState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { g } from "../../../../theme/tokens";

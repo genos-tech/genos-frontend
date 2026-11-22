@@ -9,7 +9,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Chip, Input, Stack, Typography } from "@mui/joy";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { useAuth } from "../../../../context/AuthContext";
+import { useAuth } from "../../../../context/authState";
 import { ValidationUtils } from "../../../../db/utils/validation";
 import { useTranslation } from "../../../../i18n";
 import { fmt } from "../../../../i18n/interpolate";

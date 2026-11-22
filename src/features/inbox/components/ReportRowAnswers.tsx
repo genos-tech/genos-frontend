@@ -29,7 +29,7 @@ import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import { Box, Button, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../components/ui/AppTooltip";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import {

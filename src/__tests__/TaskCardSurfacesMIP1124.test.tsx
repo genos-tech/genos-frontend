@@ -37,7 +37,7 @@ const hover = vi.hoisted(() => ({
     result: { kind: "error" } as { kind: "ok"; payload: unknown } | { kind: "error" },
     tasks: [] as unknown[],
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../context/HashMentionDataContext", () => ({
     useHashMentionData: () => ({
         myself: { userId: "me", teamId: "t" },

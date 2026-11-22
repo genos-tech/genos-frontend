@@ -14,7 +14,7 @@ vi.mock("../features/tasks/services/recentTasks", () => ({
     recordTaskOpen: (...a: unknown[]) => recordTaskOpen(...a),
 }));
 let token: string | null = "tok";
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: token }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: token }) }));
 
 const flush = () => act(async () => {});
 
