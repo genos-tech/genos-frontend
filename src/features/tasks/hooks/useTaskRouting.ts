@@ -148,7 +148,12 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
             const project = findProject(usePM.teamProjects, projectId);
             if (project && usePM.currentProject?.projectId !== projectId) {
                 isNavigatingFromUrl.current = true;
-                usePM.setCurrentProject(project);
+                // `openProject`, not the bare setter: it also fetches the project's rows.
+                // Boot loads only `lastProjectId` (or the first joined project), so on a
+                // cold load or a link to another project the bare setter left the table
+                // with whatever IndexedDB held, often nothing, until the 60 s change tick
+                // (MIP-1337).
+                usePM.openProject(project);
 
                 setTimeout(() => {
                     isNavigatingFromUrl.current = false;
@@ -309,7 +314,8 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
             const project = findProject(usePM.teamProjects, targetId);
             if (project) {
                 isNavigatingFromUrl.current = true;
-                usePM.setCurrentProject(project);
+                // Fetches the rows too, as above (MIP-1337).
+                usePM.openProject(project);
                 setTimeout(() => {
                     isNavigatingFromUrl.current = false;
                 }, 100);
