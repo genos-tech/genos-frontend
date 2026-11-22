@@ -64,18 +64,22 @@ export const useFirstRunPromptGate = (): boolean => {
         if (seenAppBefore) setOpen(true);
     }, []);
 
-    // A first press or tap in this visit opens the prompts for the rest of the session. Keyboard
-    // input is not listened to here: keydown listeners go through the shortcut registry (the
-    // keydown ratchet), and a keyboard-only visitor still gets the prompts on the second visit.
+    // A first click or tap in this visit opens the prompts for the rest of the session. It waits
+    // for `click`, not `pointerdown`: the bar pushes the page down, and if it appeared between
+    // the press and the release the release would land on another element and the person's first
+    // click would be lost (seen at 1440 px: the first click on "Tasks" did nothing). The click's
+    // target is fixed before this runs, so the click still reaches it. Keyboard input is not
+    // listened to here: keydown listeners go through the shortcut registry (the keydown
+    // ratchet), and a keyboard-only visitor still gets the prompts on the second visit.
     useEffect(() => {
         if (open) return undefined;
         const onAction = () => {
             writeDecision("open");
             setOpen(true);
         };
-        window.addEventListener("pointerdown", onAction, { once: true, capture: true });
+        window.addEventListener("click", onAction, { once: true, capture: true });
         return () => {
-            window.removeEventListener("pointerdown", onAction, { capture: true });
+            window.removeEventListener("click", onAction, { capture: true });
         };
     }, [open]);
 

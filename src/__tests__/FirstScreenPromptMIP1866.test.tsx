@@ -58,7 +58,7 @@ describe("FirstScreenPrompt (MIP-1866)", () => {
     it("shows the install prompt after the first action of the first visit", () => {
         renderPrompt();
         act(() => {
-            fireEvent.pointerDown(document.body);
+            fireEvent.click(document.body);
         });
         expect(queryInstall()).not.toBeNull();
         expect(queryNotif()).toBeNull();
@@ -84,7 +84,7 @@ describe("FirstScreenPrompt (MIP-1866)", () => {
     it("keeps the decision for the rest of the session, so a remount does not show it again on the first visit", () => {
         const first = renderPrompt();
         act(() => {
-            fireEvent.pointerDown(document.body);
+            fireEvent.click(document.body);
         });
         expect(queryInstall()).not.toBeNull();
         first.unmount();
