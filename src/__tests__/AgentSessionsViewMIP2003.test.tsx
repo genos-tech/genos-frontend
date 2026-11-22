@@ -26,7 +26,7 @@ import { authApi } from "../services/api";
 vi.mock("../components/ui/avatars/UserAvatar", () => ({
     UserAvatar: ({ userId }: { userId: string }) => <span data-testid={`user-avatar-${userId}`} />,
 }));
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
+vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../services/api", () => ({ authApi: vi.fn() }));
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => false }));
 vi.mock("../features/tasks/services/loadTeamTasks", () => ({
