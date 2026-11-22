@@ -213,6 +213,9 @@ export const revokeTeamApiKey = async (
 
 // ── Security log ─────────────────────────────────────────────────────
 
+/** Rows per page of a security log: short first, older rows on "Load more" (MIP-2024). */
+export const SECURITY_PAGE = 8;
+
 /** One row of the team's security audit log. `actionLabel` is the
  *  server's English label, the fallback for an action this client has
  *  no translation for yet. */
@@ -252,7 +255,7 @@ export const listTeamSecurityEvents = async (
     if (!api) return null;
     try {
         const res = await api.get<SecurityEventPage>("/team/security-events/", {
-            params: { team_id: teamId, ...(before ? { before } : {}) },
+            params: { team_id: teamId, limit: SECURITY_PAGE, ...(before ? { before } : {}) },
             // A non-owner's 404 is the normal answer, not a failure.
             suppressErrorToast: true,
         });
@@ -278,7 +281,7 @@ export const listMySecurityEvents = async (
     if (!api) return null;
     try {
         const res = await api.get<SecurityEventPage>("/user/security-events/", {
-            params: before ? { before } : {},
+            params: { limit: SECURITY_PAGE, ...(before ? { before } : {}) },
         });
         return { events: res.data.events ?? [], nextBefore: res.data.nextBefore ?? null };
     } catch {

@@ -684,7 +684,17 @@ export const es: DeepPartial<Messages> = {
                 other: "Otro uso de IA",
             },
             recentHeading: "Cargos recientes",
-            recentCap: "Tus últimos 50 cargos, del más reciente al más antiguo",
+            // TODO(copy): MIP-2024 draft wording for a native reader.
+            recentCap: "Del más reciente al más antiguo.",
+            recentListAria: "Cargos recientes",
+            loadMore: "Cargar más",
+            shown: "Mostrando {n} cargos",
+            end: "No hay más cargos.",
+            sourceOther: "Otro uso de IA ({source})",
+            connectedAppHint:
+                "Búsquedas de IA que hicieron en Genos tus apps conectadas, como Claude, ChatGPT o una clave de API.",
+            otherHint:
+                "Uso de IA que aún no tiene nombre propio. Puede incluir funciones nuevas o uso registrado antes de nombrarlas.",
             emptyTitle: "Aún no has usado la IA este mes",
             emptyBody:
                 "Cuando Genos responda una pregunta o escriba un resumen o una frase de informe, los créditos usados aparecerán aquí.",
@@ -1694,7 +1704,10 @@ export const es: DeepPartial<Messages> = {
                 title: "Registro de seguridad",
                 blurb: "Cambios sensibles en este equipo, del más reciente al más antiguo: miembros que se unen y se van, cambios de rol y de propiedad, invitaciones, claves de API, webhooks y alertas. Se conserva durante 365 días.",
                 empty: "Aún no hay nada registrado.",
-                loadMore: "Mostrar anteriores",
+                loadMore: "Cargar más",
+                // TODO(copy): MIP-2024 draft wording for a native reader.
+                end: "No hay más registros.",
+                shown: "Mostrando {n}",
                 loadFailed: "No se pudo cargar el registro de seguridad.",
                 retry: "Reintentar",
                 byWhen: "{actor} · {when}",

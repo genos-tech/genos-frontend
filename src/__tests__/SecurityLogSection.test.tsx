@@ -57,7 +57,7 @@ describe("SecurityLogSection", () => {
         expect(screen.getByText(/203\.0\.113\.7/)).toBeInTheDocument();
         expect(screen.getByText("App")).toBeInTheDocument();
         // One page only: nothing older to ask for.
-        expect(screen.queryByRole("button", { name: /Show older/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Load more/i })).not.toBeInTheDocument();
     });
 
     /**
@@ -90,14 +90,14 @@ describe("SecurityLogSection", () => {
             });
         render(<SecurityLogSection teamId="t1" />);
 
-        await user.click(await screen.findByRole("button", { name: /Show older/i }));
+        await user.click(await screen.findByRole("button", { name: /Load more/i }));
 
         expect(await screen.findByText(/older@example\.com/)).toBeInTheDocument();
         expect(listTeamSecurityEvents).toHaveBeenLastCalledWith("tok", "t1", 9);
         // Appended, not replaced.
         expect(screen.getByText(/new@example\.com/)).toBeInTheDocument();
         expect(screen.getAllByTestId("security-event")).toHaveLength(2);
-        expect(screen.queryByRole("button", { name: /Show older/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Load more/i })).not.toBeInTheDocument();
     });
 
     it("keeps what it has and offers a retry when an older page fails", async () => {
@@ -107,7 +107,7 @@ describe("SecurityLogSection", () => {
             .mockResolvedValueOnce(null);
         render(<SecurityLogSection teamId="t1" />);
 
-        await user.click(await screen.findByRole("button", { name: /Show older/i }));
+        await user.click(await screen.findByRole("button", { name: /Load more/i }));
 
         expect(await screen.findByText(/Couldn't load the security log/i)).toBeInTheDocument();
         expect(screen.getByText(/new@example\.com/)).toBeInTheDocument();

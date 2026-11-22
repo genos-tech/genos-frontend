@@ -25,7 +25,7 @@ describe("listTeamSecurityEvents", () => {
     it("asks for the team's first page without the error toast", async () => {
         await listTeamSecurityEvents("tok", "t1");
         expect(get).toHaveBeenCalledWith("/team/security-events/", {
-            params: { team_id: "t1" },
+            params: { team_id: "t1", limit: 8 },
             suppressErrorToast: true,
         });
     });
@@ -33,7 +33,7 @@ describe("listTeamSecurityEvents", () => {
     it("passes the cursor for an older page", async () => {
         await listTeamSecurityEvents("tok", "t1", 42);
         expect(get).toHaveBeenCalledWith("/team/security-events/", {
-            params: { team_id: "t1", before: 42 },
+            params: { team_id: "t1", limit: 8, before: 42 },
             suppressErrorToast: true,
         });
     });

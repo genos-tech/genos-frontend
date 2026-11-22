@@ -4201,7 +4201,10 @@ export const fr: DeepPartial<Messages> = {
                 title: "Journal de sécurité",
                 blurb: "Modifications sensibles de cette équipe, les plus récentes d'abord : arrivées et départs de membres, changements de rôle et de propriété, invitations, clés API, webhooks et alertes. Conservé 365 jours.",
                 empty: "Rien d'enregistré pour l'instant.",
-                loadMore: "Afficher les plus anciens",
+                loadMore: "Charger plus",
+                // TODO(copy): MIP-2024 draft wording for a native reader.
+                end: "Il n'y a pas d'autres entrées.",
+                shown: "{n} affichées",
                 loadFailed: "Impossible de charger le journal de sécurité.",
                 retry: "Réessayer",
                 byWhen: "{actor} · {when}",
@@ -4345,7 +4348,17 @@ export const fr: DeepPartial<Messages> = {
                 other: "Autre usage de l'IA",
             },
             recentHeading: "Débits récents",
-            recentCap: "Vos 50 derniers débits, du plus récent au plus ancien",
+            // TODO(copy): MIP-2024 draft wording for a native reader.
+            recentCap: "Du plus récent au plus ancien.",
+            recentListAria: "Débits récents",
+            loadMore: "Charger plus",
+            shown: "{n} débits affichés",
+            end: "Il n'y a pas d'autres débits.",
+            sourceOther: "Autre usage de l'IA ({source})",
+            connectedAppHint:
+                "Recherches d'IA lancées dans Genos par vos applications connectées, comme Claude, ChatGPT ou une clé API.",
+            otherHint:
+                "Usage de l'IA qui n'a pas encore de nom propre. Peut inclure de nouvelles fonctions ou un usage enregistré avant leur nom.",
             emptyTitle: "Aucun usage de l'IA ce mois-ci",
             emptyBody:
                 "Quand Genos répond à une question ou rédige un résumé ou une phrase de rapport, les crédits utilisés apparaissent ici.",

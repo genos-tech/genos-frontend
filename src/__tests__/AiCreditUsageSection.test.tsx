@@ -14,8 +14,10 @@ vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" 
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
 
 const fetchCreditUsage = vi.fn();
+const fetchCreditCharges = vi.fn();
 vi.mock("../services/agentApi", () => ({
     fetchCreditUsage: (...a: unknown[]) => fetchCreditUsage(...a),
+    fetchCreditCharges: (...a: unknown[]) => fetchCreditCharges(...a),
 }));
 
 const credits = {
@@ -38,15 +40,17 @@ const usage = (over: Record<string, unknown> = {}) => ({
     ],
     month_total_credits: 10,
     recent: [
-        { id: 2, at: new Date().toISOString(), job: "ask", credits: 3.5, detail: "" },
+        { id: 2, at: new Date().toISOString(), job: "ask", credits: 3.5, detail: "", source: "" },
         {
             id: 1,
             at: new Date().toISOString(),
             job: "schedule",
             credits: 0.1,
             detail: "x".repeat(200),
+            source: "",
         },
     ],
+    next_cursor: null,
     ...over,
 });
 
@@ -61,6 +65,7 @@ describe("AiCreditUsageSection", () => {
     beforeEach(() => {
         navigate.mockReset();
         fetchCreditUsage.mockReset();
+        fetchCreditCharges.mockReset();
     });
 
     it("shows balance, jobs (unknown key as Other AI use) and recent charges", async () => {
@@ -115,5 +120,82 @@ describe("AiCreditUsageSection", () => {
         renderIt();
         await screen.findByRole("button", { name: "Buy credits" });
         expect(screen.queryByRole("button", { name: "Upgrade plan" })).toBeNull();
+    });
+
+    it("names connected apps and explains Other AI use under its line", async () => {
+        fetchCreditUsage.mockResolvedValue(
+            usage({
+                by_job: [
+                    { job: "connected_app", count: 3, credits: 1 },
+                    { job: "brand_new", count: 1, credits: 2 },
+                ],
+            })
+        );
+        renderIt();
+        await screen.findByText("Credits left");
+        expect(screen.getAllByText("AI searches from connected apps").length).toBeGreaterThan(0);
+        expect(screen.getByText(/ran in Genos/)).toBeTruthy();
+        expect(screen.getByText(/no name of its own yet/)).toBeTruthy();
+    });
+
+    it("a charge no job names shows its raw source", async () => {
+        fetchCreditUsage.mockResolvedValue(
+            usage({
+                recent: [
+                    {
+                        id: 9,
+                        at: new Date().toISOString(),
+                        job: "other",
+                        credits: 0.2,
+                        detail: "",
+                        source: "new_thing",
+                    },
+                ],
+            })
+        );
+        renderIt();
+        expect(await screen.findByText("Other AI use (new_thing)")).toBeTruthy();
+    });
+
+    it("Recent charges: Load more appends the next page, then the button is gone", async () => {
+        fetchCreditUsage.mockResolvedValue(usage({ next_cursor: 1 }));
+        fetchCreditCharges.mockResolvedValue({
+            recent: [
+                {
+                    id: 0,
+                    at: new Date().toISOString(),
+                    job: "summary",
+                    credits: 0.7,
+                    detail: "",
+                    source: "",
+                },
+            ],
+            next_cursor: null,
+        });
+        renderIt();
+        fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+        await waitFor(() => expect(screen.getByText("0.7")).toBeTruthy());
+        expect(fetchCreditCharges).toHaveBeenCalledWith("tok", 1);
+        expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
+        expect(screen.getByRole("status").textContent).toBe("No more charges.");
+        // focus lands on the first NEW row
+        const rows = screen.getByRole("list", { name: "Recent charges" }).children;
+        expect(document.activeElement).toBe(rows[2]);
+    });
+
+    it("Recent charges: a failed page keeps the rows and offers Try again", async () => {
+        fetchCreditUsage.mockResolvedValue(usage({ next_cursor: 1 }));
+        fetchCreditCharges.mockResolvedValueOnce(null);
+        renderIt();
+        fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+        expect(await screen.findByRole("button", { name: "Try again" })).toBeTruthy();
+        expect(screen.getByText("3.5")).toBeTruthy();
+    });
+
+    it("no Load more when the first page is everything", async () => {
+        fetchCreditUsage.mockResolvedValue(usage());
+        renderIt();
+        await screen.findByText("Credits left");
+        expect(screen.queryByRole("button", { name: "Load more" })).toBeNull();
     });
 });
