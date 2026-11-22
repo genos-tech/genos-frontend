@@ -22,7 +22,6 @@ import { ToneLabel } from "../../components/meta/ToneLabel";
 import { DIAGRAM_DEFAULT_Z_INDEX, DiagramZIndexProvider } from "../diagramZIndex";
 import { ScheduleOverview, TaskGraphScope } from "../types";
 import { HEALTH_TONE } from "../utils/scheduleStatus";
-import { BurndownSparkline } from "./BurndownSparkline";
 import { HEALTH_COLOR } from "./nodeTone";
 import { TaskFlowCanvas } from "./TaskFlowCanvas";
 

@@ -17,7 +17,7 @@ import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Button, Divider, IconButton, Stack, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -1066,15 +1066,15 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                     setMyself={setMyself}
                                     setTaskBodyEdited={taskEditState.setTaskBodyEdited}
                                     setTaskBodySaved={taskEditState.setTaskBodySaved}
-                                    socket={socket}
-                                    // Non-empty: this view only renders when the pane state has a working copy.
-                                    taskId={taskEditState.tmpCurrentTaskContent.id as number}
-                                    projectId={
-                                        taskEditState.tmpCurrentTaskContent.project?.projectId
-                                    }
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
+                                    projectId={
+                                        taskEditState.tmpCurrentTaskContent.project?.projectId
+                                    }
+                                    socket={socket}
+                                    // Non-empty: this view only renders when the pane state has a working copy.
+                                    taskId={taskEditState.tmpCurrentTaskContent.id as number}
                                 />
                             </Box>
 
