@@ -49,7 +49,7 @@ export type MoreMenuProps = {
     /** Width/height of the trigger button in px. Default: 28. */
     triggerSize?: number;
     /** Extra sx merged onto the trigger IconButton (after the shared trigger style). */
-    triggerSx?: Record<string, any>;
+    triggerSx?: Record<string, unknown>;
     /** Default: 200. */
     menuMinWidth?: number;
     ariaLabel?: string;

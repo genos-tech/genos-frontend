@@ -100,7 +100,7 @@ export const TaskSidebarSearchBox = memo(function TaskSidebarSearchBox(
         [teamTaskSearchOptions, lookedUp]
     );
 
-    function onChangeHandler(value: any) {
+    function onChangeHandler(value: { taskId: number } | null) {
         if (value !== null) {
             setOpenSearch(false);
             useTM.setCurrentPreviewTaskId(value.taskId);

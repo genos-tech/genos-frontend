@@ -30,7 +30,10 @@ export const useMessageManagement = ({ chat, isThread = false }: UseMessageManag
     const indexMap = useMemo(() => {
         const messageIdKey = isThread ? "messageIdWithChatIdAndThreadId" : "messageIdWithChatId";
         return Object.fromEntries(
-            messages.map((message, idx) => [(message as any)[messageIdKey], idx])
+            messages.map((message, idx) => [
+                (message as unknown as Record<string, unknown>)[messageIdKey],
+                idx,
+            ])
         );
     }, [messages, isThread]);
 

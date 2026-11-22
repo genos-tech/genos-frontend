@@ -63,7 +63,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
     const [options, setOptions] = useState<SearchListProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
-    const onChangeHandler = async (value: any) => {
+    const onChangeHandler = async (value: SearchListProps | null) => {
         if (value === null) return;
         const isGroup = value.type === "Group";
         const _chatType = isGroup ? 2 : 1;

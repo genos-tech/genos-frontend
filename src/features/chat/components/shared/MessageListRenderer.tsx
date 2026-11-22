@@ -32,7 +32,7 @@ interface MessageListRendererProps {
     chat: ChatProps | ThreadProps;
     currentChatId: number;
     height: number;
-    indexMap?: { [k: string]: any };
+    indexMap?: Record<string, number>;
     isThread: boolean;
     messages: MessageProps[] | ThreadMessageProps[];
     myself: UserProps;

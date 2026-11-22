@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type AxiosResponse } from "axios";
 
 import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
@@ -13,7 +13,7 @@ export const loadSpecificNote = async (
         const api = authApi(accessToken);
         if (api) {
             const query: string = `team_id=${myself.teamId}&user_id=${myself.userId}&note_id=${noteId}`;
-            let res: any;
+            let res: AxiosResponse | undefined;
             if (noteType === 1) {
                 res = await api.get(`/note/personal/single/?${query}`);
             } else if (noteType === 2) {
@@ -21,6 +21,8 @@ export const loadSpecificNote = async (
             } else if (noteType === 3) {
                 res = await api.get(`/note/chat/single/?${query}`);
             }
+            // Unknown noteType: same TypeError the untyped `res.data` threw.
+            if (!res) throw new TypeError("Unknown note type");
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

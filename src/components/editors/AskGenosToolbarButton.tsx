@@ -17,7 +17,7 @@ import { useTranslation } from "../../i18n";
  */
 export const AskGenosToolbarButton = ({ source }: { source: AgentMentionRef | null }) => {
     const Components = useComponentsContext()!;
-    const editor = useBlockNoteEditor<any, any, any>();
+    const editor = useBlockNoteEditor();
     const { t } = useTranslation();
 
     return (
