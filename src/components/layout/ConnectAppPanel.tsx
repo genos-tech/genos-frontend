@@ -85,8 +85,9 @@ const visuallyHidden = {
     position: "absolute",
     top: 0,
     insetInlineStart: 0,
-    width: 1,
-    height: 1,
+    // Strings: a bare 1 in `sx` is 100% (MIP-2059).
+    width: "1px",
+    height: "1px",
     overflow: "hidden",
     clip: "rect(0 0 0 0)",
     whiteSpace: "nowrap",

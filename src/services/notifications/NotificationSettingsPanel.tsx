@@ -1,3 +1,5 @@
+import { ReactNode, useState } from "react";
+import ExpandMoreRounded from "@mui/icons-material/ExpandMoreRounded";
 import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRounded from "@mui/icons-material/NotificationsOffRounded";
 import {
@@ -17,6 +19,7 @@ import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { SettingRow } from "../../components/ui/settings/SettingRow";
 import { chatDisplayName } from "../../features/chat/utils/chatDisplayName";
 import { fmt, Messages, useTranslation } from "../../i18n";
+import { g as tokens } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
 import { AllChatProps } from "../../types/chat";
 import { CATEGORY_BY_KEY, CATEGORY_GROUPS, CoarseGroup, NotificationCategory } from "./categories";
@@ -153,6 +156,57 @@ const mutedTargetName = (target: MutedTargetRef, lookup: NameLookup, t: Messages
 };
 
 /**
+ * The title of a group that has sub-rows, as the button that shows or hides them (MIP-2059).
+ * The group's own switch stays beside it: a button never holds the switch, and a click on the
+ * description still flips the switch (see `toggleRowSwitch`). Collapsed by default, the sub-rows
+ * are not mounted, so they are out of the tab order too. To add a collapsible group (the "What my
+ * AI apps do" risky-only alerts of MIP-2009 will), pass its key to `GroupDisclosure`.
+ */
+const GroupDisclosure = ({
+    open,
+    onToggle,
+    controlsId,
+    children,
+}: {
+    open: boolean;
+    onToggle: () => void;
+    controlsId: string;
+    children: ReactNode;
+}) => (
+    <Button
+        aria-controls={open ? controlsId : undefined}
+        aria-expanded={open}
+        color="neutral"
+        size="sm"
+        variant="plain"
+        startDecorator={
+            <ExpandMoreRounded
+                sx={{
+                    fontSize: 20,
+                    transform: open ? "none" : "rotate(-90deg)",
+                    transition: `transform ${tokens.motion.fast}`,
+                    "[dir='rtl'] &": { transform: open ? "none" : "rotate(90deg)" },
+                }}
+            />
+        }
+        sx={{
+            alignSelf: "flex-start",
+            minHeight: 0,
+            px: 0.5,
+            py: 0.25,
+            ml: -0.5,
+            maxWidth: "100%",
+            justifyContent: "flex-start",
+            textAlign: "start",
+        }}
+        data-group-disclosure
+        onClick={onToggle}
+    >
+        {children}
+    </Button>
+);
+
+/**
  * Self-contained notification settings UI. Drops into any modal/page that
  * lives inside `<NotificationsProvider>`. Renders nothing if no provider is
  * mounted.
@@ -177,6 +231,9 @@ export const NotificationSettingsPanel = ({
     const ctx = useNotificationsContext();
     const { t } = useTranslation();
     const nameLookup: NameLookup = { allChats, myself, teamMemberProfiles };
+    // Which groups show their sub-rows. Empty = every group collapsed (the default).
+    const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+    const toggleGroup = (key: string) => setExpanded((cur) => ({ ...cur, [key]: !cur[key] }));
     if (!ctx) return null;
 
     const {
@@ -286,9 +343,21 @@ export const NotificationSettingsPanel = ({
                                 spacing={2}
                             >
                                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                                    <Typography level="title-sm">
-                                        {groupLabel(g.group, t)}
-                                    </Typography>
+                                    {subEntries.length > 0 ? (
+                                        <GroupDisclosure
+                                            controlsId={`notif-sub-${g.group}`}
+                                            open={!!expanded[g.group]}
+                                            onToggle={() => toggleGroup(g.group)}
+                                        >
+                                            <Typography level="title-sm">
+                                                {groupLabel(g.group, t)}
+                                            </Typography>
+                                        </GroupDisclosure>
+                                    ) : (
+                                        <Typography level="title-sm">
+                                            {groupLabel(g.group, t)}
+                                        </Typography>
+                                    )}
                                     <Typography level="body-xs">{headRowDesc}</Typography>
                                 </Box>
                                 <Switch
@@ -301,8 +370,12 @@ export const NotificationSettingsPanel = ({
                                 />
                             </SettingRow>
 
-                            {subEntries.length > 0 && (
-                                <Stack spacing={0} sx={{ mt: 0.5, pl: 2 }}>
+                            {subEntries.length > 0 && expanded[g.group] && (
+                                <Stack
+                                    id={`notif-sub-${g.group}`}
+                                    spacing={0}
+                                    sx={{ mt: 0.5, pl: 2 }}
+                                >
                                     {subEntries.map((entry) => {
                                         const subOn =
                                             preferences.categorySettings[entry.key] ??
@@ -368,7 +441,13 @@ export const NotificationSettingsPanel = ({
                 sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}
             >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">{settingsMessages.emailHeading}</Typography>
+                    <GroupDisclosure
+                        controlsId="notif-sub-email"
+                        open={!!expanded.email}
+                        onToggle={() => toggleGroup("email")}
+                    >
+                        <Typography level="title-sm">{settingsMessages.emailHeading}</Typography>
+                    </GroupDisclosure>
                     <Typography level="body-xs">{settingsMessages.emailDescription}</Typography>
                 </Box>
                 <Switch
@@ -378,49 +457,52 @@ export const NotificationSettingsPanel = ({
                     onChange={(e) => setEmailEnabled(e.target.checked)}
                 />
             </SettingRow>
-            <Stack
-                spacing={0}
-                sx={{
-                    mt: 0.5,
-                    pl: 2,
-                    opacity: masterDisabled || !preferences.emailEnabled ? 0.5 : 1,
-                }}
-            >
-                {EMAIL_CATEGORIES.map((entry) => {
-                    const on = isEmailCategoryEnabled(preferences.categorySettings, entry);
-                    const labels = t.services.notifications.emailCategories as Record<
-                        string,
-                        string
-                    >;
-                    return (
-                        <SettingRow
-                            key={entry.serverKey}
-                            alignItems="center"
-                            direction="row"
-                            disabled={masterDisabled || !preferences.emailEnabled}
-                            justifyContent="space-between"
-                            spacing={2}
-                        >
-                            <Typography level="body-sm" sx={{ minWidth: 0, flex: 1 }}>
-                                {labels[entry.labelKey] || entry.serverKey}
-                            </Typography>
-                            <Switch
-                                checked={on}
+            {expanded.email && (
+                <Stack
+                    id="notif-sub-email"
+                    spacing={0}
+                    sx={{
+                        mt: 0.5,
+                        pl: 2,
+                        opacity: masterDisabled || !preferences.emailEnabled ? 0.5 : 1,
+                    }}
+                >
+                    {EMAIL_CATEGORIES.map((entry) => {
+                        const on = isEmailCategoryEnabled(preferences.categorySettings, entry);
+                        const labels = t.services.notifications.emailCategories as Record<
+                            string,
+                            string
+                        >;
+                        return (
+                            <SettingRow
+                                key={entry.serverKey}
+                                alignItems="center"
+                                direction="row"
                                 disabled={masterDisabled || !preferences.emailEnabled}
-                                size="sm"
-                                slotProps={{
-                                    input: {
-                                        "aria-label": `${settingsMessages.emailHeading}: ${labels[entry.labelKey] || entry.serverKey}`,
-                                    },
-                                }}
-                                onChange={(e) =>
-                                    setEmailCategoryEnabled(entry.serverKey, e.target.checked)
-                                }
-                            />
-                        </SettingRow>
-                    );
-                })}
-            </Stack>
+                                justifyContent="space-between"
+                                spacing={2}
+                            >
+                                <Typography level="body-sm" sx={{ minWidth: 0, flex: 1 }}>
+                                    {labels[entry.labelKey] || entry.serverKey}
+                                </Typography>
+                                <Switch
+                                    checked={on}
+                                    disabled={masterDisabled || !preferences.emailEnabled}
+                                    size="sm"
+                                    slotProps={{
+                                        input: {
+                                            "aria-label": `${settingsMessages.emailHeading}: ${labels[entry.labelKey] || entry.serverKey}`,
+                                        },
+                                    }}
+                                    onChange={(e) =>
+                                        setEmailCategoryEnabled(entry.serverKey, e.target.checked)
+                                    }
+                                />
+                            </SettingRow>
+                        );
+                    })}
+                </Stack>
+            )}
 
             {/* Muted chats */}
             <Divider sx={{ mt: 2 }} />

@@ -10,6 +10,11 @@
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Every test re-imports the whole Settings tree after `vi.resetModules()`. On a busy CI shard
+// the first import takes longer than the 5 s default, the test times out, and its half-mounted
+// prompt then makes the next test see two "Accept" buttons (MIP-2059).
+vi.setConfig({ testTimeout: 30_000 });
+
 const posthog = vi.hoisted(() => ({
     init: vi.fn(),
     capture: vi.fn(),
