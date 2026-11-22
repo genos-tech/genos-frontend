@@ -4174,7 +4174,7 @@ export const fr: DeepPartial<Messages> = {
             cancelPlan: "Résilier l'abonnement",
             changeTeamPlan: "Changer de forfait",
             planChangeHint:
-                "Choisissez un forfait ci-dessous pour changer — Stripe calcule la différence au prorata. En cas de résiliation, votre forfait reste actif jusqu'à la fin de la période de facturation en cours.",
+                "Choisissez un forfait ci-dessous pour changer. Une montée en gamme prend effet immédiatement et est facturée à la différence. Une rétrogradation prend effet à la fin de la période de facturation en cours, sans crédit. En cas de résiliation, votre forfait reste actif jusqu'à la fin de la période de facturation en cours.",
             manageBilling: "Gérer la facturation",
             manageBillingHint:
                 "Changez de forfait, de moyen de paiement ou résiliez via le portail sécurisé Stripe.",
