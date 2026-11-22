@@ -136,6 +136,24 @@ describe("TaskDashboard tabs + Tag Insights", () => {
         expect(screen.getByRole("tab", { name: /My Tasks/ })).toBeInTheDocument();
     });
 
+    it("shows the project and sprint toolbar only on the tabs it changes (MIP-1963)", () => {
+        renderDashboard();
+        // Today covers every project: no project picker there.
+        expect(screen.queryByTestId("task-dashboard-toolbar")).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole("tab", { name: /Overall/ }));
+        expect(screen.getByTestId("task-dashboard-toolbar")).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("tab", { name: /Agent Activity/ }));
+        expect(screen.queryByTestId("task-dashboard-toolbar")).not.toBeInTheDocument();
+    });
+
+    it("keeps the quick actions, now in the page header", () => {
+        renderDashboard();
+        const header = screen.getByTestId("task-dashboard-header");
+        expect(within(header).getByRole("button", { name: "New Task" })).toBeInTheDocument();
+        expect(within(header).getByRole("button", { name: "Task Table" })).toBeInTheDocument();
+        expect(within(header).getByRole("button", { name: "Sprint Board" })).toBeInTheDocument();
+    });
+
     it("opens on the Today tab (MIP-1005), not on Overall", () => {
         renderDashboard();
         expect(screen.getByRole("tab", { name: /Today/, selected: true })).toBeInTheDocument();

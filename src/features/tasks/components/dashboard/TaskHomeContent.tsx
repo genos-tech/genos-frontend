@@ -1,5 +1,8 @@
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { Box, IconButton, Stack, Typography } from "@mui/joy";
+import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
+import ViewKanbanRoundedIcon from "@mui/icons-material/ViewKanbanRounded";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { DataState } from "../../../../components/ui/feedback/DataState";
@@ -152,6 +155,46 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                 <Typography level="body-sm" sx={{ color: g.text.secondary }}>
                                     {fmt(t.tasks.dashboard.projectsCount, { count: projectCount })}
                                 </Typography>
+                                {/* The quick actions: one primary New task, two icon buttons. They used to
+                                    be three tinted buttons in their own row under the tabs. */}
+                                {usePM.currentProject && (
+                                    // The phone's own top bar already has table, board and "+": below
+                                    // sm these would show twice.
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        spacing={0.5}
+                                        sx={{ display: { xs: "none", sm: "flex" } }}
+                                    >
+                                        <Button
+                                            size="sm"
+                                            startDecorator={<AddRoundedIcon />}
+                                            onClick={handleCreateTask}
+                                        >
+                                            {t.tasks.dashboard.newTask}
+                                        </Button>
+                                        <AppTooltip title={t.tasks.sidebar.taskTable}>
+                                            <IconButton
+                                                aria-label={t.tasks.sidebar.taskTable}
+                                                size="sm"
+                                                variant="plain"
+                                                onClick={handleGoToTable}
+                                            >
+                                                <FolderOpenRoundedIcon />
+                                            </IconButton>
+                                        </AppTooltip>
+                                        <AppTooltip title={t.tasks.sidebar.sprintBoard}>
+                                            <IconButton
+                                                aria-label={t.tasks.sidebar.sprintBoard}
+                                                size="sm"
+                                                variant="plain"
+                                                onClick={handleGoToBoard}
+                                            >
+                                                <ViewKanbanRoundedIcon />
+                                            </IconButton>
+                                        </AppTooltip>
+                                    </Stack>
+                                )}
                                 {(useTM.isTaskPreviewVisible === true ||
                                     useTM.isCreatingTask.flag === true) && (
                                     <AppTooltip title={t.tasks.dashboard.closePanel}>
@@ -171,10 +214,18 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                     />
                 </Box>
                 <Stack spacing={3} sx={{ maxWidth: 1200, mx: "auto" }}>
+                    {usePM.currentProject && (
+                        <TaskHomeTabBar
+                            activeTab={activeTab}
+                            myStats={myStats}
+                            setActiveTab={setActiveTab}
+                        />
+                    )}
+
                     <TaskHomeHeader
+                        activeTab={activeTab}
                         groupedSprints={groupedSprints}
                         handleProjectChange={handleProjectChange}
-                        isDark={isDark}
                         joinedProjects={joinedProjects}
                         myself={myself}
                         projectSprints={projectSprints}
@@ -194,16 +245,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                     {/* Only render remaining sections if a project is selected */}
                     {usePM.currentProject && (
                         <>
-                            <TaskHomeTabBar
-                                activeTab={activeTab}
-                                handleCreateTask={handleCreateTask}
-                                handleGoToBoard={handleGoToBoard}
-                                handleGoToTable={handleGoToTable}
-                                isDark={isDark}
-                                myStats={myStats}
-                                setActiveTab={setActiveTab}
-                            />
-
                             {/* The cards are counted from the project's rows. While the first read
                             is in flight, or failed with nothing cached, say so instead of
                             "No tasks" / "Nothing assigned" / zeroed charts. The member picker
