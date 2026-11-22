@@ -10,7 +10,7 @@
  * evidence page).
  */
 import { CssVarsProvider } from "@mui/joy/styles";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { cssWithMediaOf } from "./utils/cssOf";
@@ -55,7 +55,7 @@ const renderPanel = (over: Record<string, unknown> = {}) => {
         resume: noop,
         setSchedule: noop,
     };
-    return render(
+    const view = render(
         <CssVarsProvider>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <NotificationsProvider value={ctx as any}>
@@ -63,6 +63,11 @@ const renderPanel = (over: Record<string, unknown> = {}) => {
             </NotificationsProvider>
         </CssVarsProvider>
     );
+    // The groups start collapsed (MIP-2059); these tests are about every row, so open them all.
+    view.container
+        .querySelectorAll<HTMLElement>('button[data-group-disclosure][aria-expanded="false"]')
+        .forEach((b) => fireEvent.click(b));
+    return view;
 };
 
 const cssOfRow = (props: { disabled?: boolean; filled?: boolean } = {}) => {
