@@ -4,31 +4,22 @@ import { Link } from "react-router-dom";
 import type { ConsentChoice } from "../../services/marketingConsent";
 import type { Lang } from "../lpLang";
 
-// TODO(copy): MIP-1778. Every string in this table is DRAFT wording for Ken's lawyer, not
-// approved text (the privacy page row is the approved wording; this is not). Keep the claim
-// in step with that row: what is counted, that it needs a cookie and browser storage, and
-// that "Reject" stores and sends nothing.
+// Banner wording: confirmed by Ken on 2026-11-22 (MIP-1800). Keep the claim in step with the
+// privacy page row: what is counted, that it needs a cookie and browser storage, and that
+// "Reject" stores and sends nothing.
 const BANNER = {
     ja: {
         region: "Cookie と分析の同意",
-        // TODO(copy)
         text: "同意いただいた場合のみ、分析用の Cookie とブラウザのストレージを使い、このサイトでのページの閲覧、ボタンのクリック、サインアップ、アクセス元を集計して、Genos を試していただくうえで役立つ内容を調べます。拒否した場合は、分析のための保存・送信は行わず、選択内容のみを保存します。",
-        // TODO(copy)
         accept: "同意する",
-        // TODO(copy)
         reject: "拒否する",
-        // TODO(copy)
         privacy: "プライバシーポリシー",
     },
     en: {
         region: "Cookie and analytics consent",
-        // TODO(copy)
         text: "If you accept, we use an analytics cookie and browser storage to count page views, button clicks, sign-ups and where visitors come from on this site, to learn what helps people try Genos. If you reject, nothing is stored or sent for analytics; only your choice is remembered.",
-        // TODO(copy)
         accept: "Accept",
-        // TODO(copy)
         reject: "Reject",
-        // TODO(copy)
         privacy: "Privacy policy",
     },
 } as const;

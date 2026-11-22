@@ -1101,8 +1101,6 @@ export const settings = {
         shareLabel: "Share usage data",
         shareHelper:
             "Off until you accept. When on, sends your user ID, team ID and role plus the pages you visit, linked to your account. No message content, no clicks tracked. Turn off to stop sending and to delete what analytics stored in this browser.",
-        // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
-        // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
         consent: {
             region: "Analytics consent",
             title: "Allow usage analytics?",

@@ -1301,8 +1301,6 @@ export const es: DeepPartial<Messages> = {
             shareLabel: "Compartir datos de uso",
             shareHelper:
                 "Desactivado hasta que aceptes. Si lo activas, envía tu ID de usuario, el ID del equipo y tu rol, junto con las páginas que visitas, vinculados a tu cuenta. No se registra el contenido de los mensajes ni los clics. Desactívalo para dejar de enviar y borrar lo que las analíticas guardaron en este navegador.",
-            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
-            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
             consent: {
                 region: "Consentimiento de analíticas",
                 title: "¿Permitir analíticas de uso?",

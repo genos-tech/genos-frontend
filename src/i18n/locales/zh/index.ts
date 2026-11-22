@@ -4758,8 +4758,6 @@ export const zh: DeepPartial<Messages> = {
             shareLabel: "分享使用数据",
             shareHelper:
                 "同意前保持关闭。开启后，会发送你的用户 ID、团队 ID 和角色，以及你访问的页面，并与你的账号关联。不会记录消息内容或点击行为。关闭后会停止发送，并删除分析在此浏览器中保存的内容。",
-            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
-            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
             consent: {
                 region: "分析授权",
                 title: "允许使用情况分析吗？",

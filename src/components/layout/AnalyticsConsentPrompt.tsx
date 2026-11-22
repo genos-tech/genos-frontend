@@ -17,9 +17,8 @@ import { touchTargetSx } from "../ui/touchTargets";
  *
  * A region in the page, not a dialog: nothing is covered, nothing takes focus, the workspace
  * stays usable while it is open. "Accept" and "Reject" are the same component with the same
- * variant and size, so neither is the louder choice. All wording is a DRAFT for Ken's lawyer
- * (`TODO(copy): MIP-1781` in the locale files), as is the privacy page's row on signed-in
- * analytics, which this does not change.
+ * variant and size, so neither is the louder choice. The wording was confirmed by Ken on
+ * 2026-11-22 (MIP-1800); the privacy page's row on signed-in analytics is not changed here.
  */
 export const AnalyticsConsentPrompt = () => {
     const { t } = useTranslation();

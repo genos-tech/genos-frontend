@@ -61,11 +61,8 @@ const SHELL = {
             contact: "お問い合わせ",
         },
         rights: "Genos. All rights reserved.",
-        // TODO(copy): MIP-1778 DRAFT wording for counsel and Ken, not approved text.
         analyticsSettings: "Cookie・分析の設定",
-        // TODO(copy)
         analyticsIsOff: "このブラウザでは分析は停止中です。",
-        // TODO(copy)
         analyticsIsOn: "このブラウザでは分析を許可しています。",
     },
     en: {
@@ -113,11 +110,8 @@ const SHELL = {
             contact: "Contact",
         },
         rights: "Genos. All rights reserved.",
-        // TODO(copy): MIP-1778 DRAFT wording for counsel and Ken, not approved text.
         analyticsSettings: "Cookie and analytics settings",
-        // TODO(copy)
         analyticsIsOff: "Analytics is off in this browser.",
-        // TODO(copy)
         analyticsIsOn: "Analytics is on in this browser.",
     },
 } as const;

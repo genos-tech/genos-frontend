@@ -1,8 +1,8 @@
 /**
  * The consent banner and the footer control of the marketing pages (MIP-1778). Counsel
  * (2026-11-21): for EU/UK visitors a banner is needed. Until "Accept": the library is not
- * started, nothing of PostHog's is stored, nothing is sent. All wording is a DRAFT for counsel
- * and the owner (marked TODO(copy) in ConsentBanner / LpShell).
+ * started, nothing of PostHog's is stored, nothing is sent. The wording was confirmed by the owner
+ * on 2026-11-22 (MIP-1800).
  *
  * `services/analytics` is replaced by an in-memory stand-in that keeps the real contract
  * (the stored preference key, `startWithConsent`, `forgetStoredIdentifiers`); the real wrapper

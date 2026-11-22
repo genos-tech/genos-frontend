@@ -1272,8 +1272,6 @@ export const ar: DeepPartial<Messages> = {
             shareLabel: "مشاركة بيانات الاستخدام",
             shareHelper:
                 "متوقف حتى توافق. عند تفعيله يُرسل معرّف المستخدم ومعرّف الفريق والدور بالإضافة إلى الصفحات التي تزورها، مرتبطة بحسابك. لا يتم تتبّع محتوى الرسائل أو النقرات. أوقفه لإيقاف الإرسال وحذف ما خزّنته التحليلات في هذا المتصفح.",
-            // TODO(copy): MIP-1781. DRAFT wording for Ken's lawyer, not approved text: the helper above and everything
-            // in `consent` (the first-load prompt, `components/layout/AnalyticsConsentPrompt.tsx`).
             consent: {
                 region: "الموافقة على التحليلات",
                 title: "هل تسمح بتحليلات الاستخدام؟",
