@@ -41,11 +41,16 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
     useEffect(() => {
         if (!accessToken) return;
         let cancelled = false;
-        setState("loading");
+        // Loading only when nothing is shown yet: a refreshed token refetches in the background.
+        setState((prev) => (prev === "ready" ? prev : "loading"));
         void fetchCreditUsage(accessToken).then((usage) => {
             if (cancelled) return;
-            setData(usage);
-            setState(usage ? "ready" : "error");
+            if (usage) {
+                setData(usage);
+                setState("ready");
+            } else {
+                setState((prev) => (prev === "ready" ? prev : "error"));
+            }
         });
         return () => {
             cancelled = true;
@@ -87,7 +92,9 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
         navigate(`/workspace/plans${hash}`);
     };
 
-    const noUse = state === "ready" && (data?.recent.length ?? 0) === 0;
+    const noUse = state === "ready" && (data?.by_job.length ?? 0) === 0;
+    const hasRecent = (data?.recent.length ?? 0) > 0;
+    const numberFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
 
     return (
         <Stack spacing={2}>
@@ -228,7 +235,7 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
                                             fontVariantNumeric: "tabular-nums",
                                         }}
                                     >
-                                        {fmt(u.jobCount, { n: String(r.count) })}
+                                        {fmt(u.jobCount, { n: numberFormat.format(r.count) })}
                                     </Typography>
                                     <Typography
                                         sx={{
@@ -249,7 +256,7 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
                 )}
             </DashboardCard>
 
-            {state === "ready" && !noUse && data && (
+            {state === "ready" && hasRecent && data && (
                 <DashboardCard subtitle={u.recentCap} title={u.recentHeading} variant="flush">
                     <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
                         {data.recent.map((r) => {
@@ -279,7 +286,12 @@ export const AiCreditUsageSection = ({ onNavigateAway }: { onNavigateAway?: () =
                                             noWrap
                                         >
                                             {u.jobs[job]}
-                                            {r.detail ? ` · ${r.detail}` : ""}
+                                            {r.detail ? (
+                                                <>
+                                                    {" · "}
+                                                    <bdi>{r.detail}</bdi>
+                                                </>
+                                            ) : null}
                                         </Typography>
                                         <Typography
                                             component="time"
