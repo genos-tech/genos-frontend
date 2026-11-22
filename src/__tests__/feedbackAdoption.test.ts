@@ -203,8 +203,10 @@ describe("feedback adoption", () => {
                 "fallback of a value",
             "features/tasks/components/dashboard/agentActivity/AgentProjectGroups.tsx":
                 "the name of the group of work on no project (a label, not an empty state)",
-            "features/tasks/components/dashboard/TaskHomeContent.tsx":
-                "value labels and the tiny 'no overdue / none due this week / no members' lines inside dashboard cards",
+            "features/tasks/components/dashboard/tabs/OverallTab.tsx":
+                "value labels and the tiny 'no overdue / none due this week' lines inside dashboard cards",
+            "features/tasks/components/dashboard/tabs/MemberTasksTab.tsx":
+                "the tiny 'no members' line inside the member picker card",
             "features/chat/components/modals/ModalGMProfile.tsx":
                 "the group description field's 'No description' value (MIP-1694), not an empty panel",
             "features/chat/components/modals/ModalGroupDirectory.tsx":
