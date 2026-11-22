@@ -81,7 +81,7 @@ describe("GifPicker", () => {
 
 describe("gifSlashMenuItem", () => {
     it("is findable as /gif and opens the picker on click", async () => {
-        const { gifSlashMenuItem } = await import("../components/editors/GifToolbarButton");
+        const { gifSlashMenuItem } = await import("../components/editors/gifSlashItems");
         const setShowGifPicker = vi.fn();
         const item = gifSlashMenuItem(setShowGifPicker);
 
