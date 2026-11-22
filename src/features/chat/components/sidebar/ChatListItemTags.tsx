@@ -1,7 +1,7 @@
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
+import { usePersonalGMTags } from "../../../../hooks/common/personalGMTagsState";
 import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
 

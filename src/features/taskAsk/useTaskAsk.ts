@@ -31,7 +31,7 @@ import {
     isRunBeingWatched,
     notifyAgentRunComplete,
 } from "../../services/notifications/agentRunNotice";
-import { useNotificationsContext } from "../../services/notifications/NotificationsContext";
+import { useNotificationsContext } from "../../services/notifications/notificationsContextState";
 import {
     deletionCoversSession,
     mentionKey,

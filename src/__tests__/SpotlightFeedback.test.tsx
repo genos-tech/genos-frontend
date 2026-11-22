@@ -26,7 +26,7 @@ vi.mock("../services/searchApi", () => ({
 
 // The preferences hook reads Settings state that needs a provider tree;
 // pin both gates open so onAsk actually fires.
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 

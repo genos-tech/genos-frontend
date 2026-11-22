@@ -26,7 +26,7 @@ vi.mock("../features/chat/components/modals/ModalRecentlyDeletedChats", () => ({
     ModalRecentlyDeletedChats: (p: { open: boolean; teamId: string }) =>
         p.open ? <div data-team={p.teamId} data-testid="recently-deleted" /> : null,
 }));
-vi.mock("../hooks/common/usePersonalGMTags", () => ({
+vi.mock("../hooks/common/personalGMTagsState", () => ({
     usePersonalGMTags: () => ({ tags: [], assignmentsByChannelId: {} }),
 }));
 vi.mock("../features/chat/hooks/useMarkFilteredActivityRead", () => ({

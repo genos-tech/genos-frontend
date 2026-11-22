@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
     tableSortOverrideFor,
-    TaskSortPreferencesProvider,
     useTaskSortPreferences,
-} from "../hooks/common/useTaskSortPreferences";
+} from "../hooks/common/taskSortPreferencesState";
+import { TaskSortPreferencesProvider } from "../hooks/common/useTaskSortPreferences";
 
 const wrapper = ({ children }: { children: ReactNode }) => (
     <TaskSortPreferencesProvider>{children}</TaskSortPreferencesProvider>

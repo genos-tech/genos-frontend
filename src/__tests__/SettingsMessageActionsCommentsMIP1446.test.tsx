@@ -10,7 +10,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { MessageActionsSection } from "../components/layout/SettingsModal";
-import { PINNABLE_BUBBLE_ACTIONS } from "../hooks/common/useBubbleActionsPreference";
+import { PINNABLE_BUBBLE_ACTIONS } from "../hooks/common/bubbleActionsPreferenceState";
 import { en } from "../i18n/locales/en";
 
 afterEach(cleanup);

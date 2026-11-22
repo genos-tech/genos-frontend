@@ -39,7 +39,7 @@ import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSp
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { forceDeleteTask } from "../../../../../services/forceDelete";
-import { useNotificationsContext } from "../../../../../services/notifications/NotificationsContext";
+import { useNotificationsContext } from "../../../../../services/notifications/notificationsContextState";
 import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";

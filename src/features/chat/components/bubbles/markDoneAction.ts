@@ -1,7 +1,7 @@
 import {
     PINNABLE_BUBBLE_ACTIONS,
     PinnableBubbleAction,
-} from "../../../../hooks/common/useBubbleActionsPreference";
+} from "../../../../hooks/common/bubbleActionsPreferenceState";
 import type { PinnedBubbleAction } from "./BubblePinnedActions";
 
 /** The toolbar's "Mark done" on a flagged message (MIP-1423). Never pinnable: it is

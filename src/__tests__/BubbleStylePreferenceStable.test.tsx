@@ -13,14 +13,12 @@ import { memo } from "react";
 import { act, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import {
-    BubbleStylePreferenceProvider,
-    useBubbleStylePreference,
-} from "../hooks/common/useBubbleStylePreference";
+import { useBubbleStylePreference } from "../hooks/common/bubbleStylePreferenceState";
+import { BubbleStylePreferenceProvider } from "../hooks/common/useBubbleStylePreference";
 
 // The real UiSettingsProvider hands out a stable `set`; without it the hook gets a
 // stand-in that is new on every render, which is not what the app has.
-vi.mock("../hooks/common/useUiSettings", () => {
+vi.mock("../hooks/common/uiSettingsState", () => {
     const stable = { loaded: false, get: (_k: string, f: unknown) => f, set: () => {} };
     return { useUiSettings: () => stable };
 });

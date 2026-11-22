@@ -4,7 +4,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { useBubbleStylePreference } from "../../../../hooks/common/useBubbleStylePreference";
+import { useBubbleStylePreference } from "../../../../hooks/common/bubbleStylePreferenceState";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

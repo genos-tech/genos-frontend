@@ -27,7 +27,7 @@ vi.mock("../features/chat/components/modals/ModalCreateMDM", () => ({
     ModalCreateMDM: () => null,
 }));
 vi.mock("../features/chat/components/modals/ModalJoinGM", () => ({ ModalJoinGM: () => null }));
-vi.mock("../hooks/common/usePersonalGMTags", () => ({
+vi.mock("../hooks/common/personalGMTagsState", () => ({
     usePersonalGMTags: () => ({ tags: [], assignmentsByChannelId: {} }),
 }));
 vi.mock("../features/chat/hooks/useMarkFilteredActivityRead", () => ({

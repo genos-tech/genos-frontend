@@ -33,10 +33,8 @@ import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { AuthProvider } from "../context/AuthContext";
-import {
-    SpotlightPreferencesProvider,
-    useSpotlightPreferences,
-} from "../hooks/common/useSpotlightPreferences";
+import { useSpotlightPreferences } from "../hooks/common/spotlightPreferencesState";
+import { SpotlightPreferencesProvider } from "../hooks/common/useSpotlightPreferences";
 
 const SRC = resolve(__dirname, "..");
 const appSource = readFileSync(resolve(SRC, "App.tsx"), "utf8");

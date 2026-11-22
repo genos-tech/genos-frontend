@@ -5,7 +5,7 @@ import { IconButton } from "@mui/joy";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useTranslation } from "../../i18n";
 import { NotificationCategory } from "./categories";
-import { useNotificationsContext } from "./NotificationsContext";
+import { useNotificationsContext } from "./notificationsContextState";
 import { MutedTargetType } from "./types";
 
 interface MuteTargetButtonProps {

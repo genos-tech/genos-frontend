@@ -8,7 +8,7 @@ import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
-import { useNoteUnread } from "../context/NoteUnreadContext";
+import { useNoteUnread } from "../context/noteUnreadState";
 import { isNoteOpen } from "../utils/openNote";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";
 import { NoteOriginIcon } from "./noteOrigin";

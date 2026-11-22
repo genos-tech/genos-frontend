@@ -17,7 +17,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import {
     PinnableBubbleAction,
     useBubbleActionsPreference,
-} from "../../../../hooks/common/useBubbleActionsPreference";
+} from "../../../../hooks/common/bubbleActionsPreferenceState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";

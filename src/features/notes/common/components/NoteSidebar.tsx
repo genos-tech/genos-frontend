@@ -79,7 +79,7 @@ import {
     type ResolvedTemplate,
     type TemplatePick,
 } from "../../templates/templateMenuItems";
-import { useNoteUnread } from "../context/NoteUnreadContext";
+import { useNoteUnread } from "../context/noteUnreadState";
 import {
     chatContainerId,
     DraggableNoteRow,

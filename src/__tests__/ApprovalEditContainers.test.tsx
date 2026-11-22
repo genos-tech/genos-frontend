@@ -56,7 +56,7 @@ vi.mock("../services/agentApi", async (importOriginal) => {
     };
 });
 
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 

@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { GMTagFilterRow } from "../features/chat/components/sidebar/GMTagFilterRow";
 import { AttachmentActionsMenu } from "../features/notes/common/components/AttachmentActionsMenu";
 
-vi.mock("../hooks/common/usePersonalGMTags", () => ({
+vi.mock("../hooks/common/personalGMTagsState", () => ({
     usePersonalGMTags: () => ({
         tags: [
             {

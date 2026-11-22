@@ -33,7 +33,7 @@ import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
-vi.mock("../services/notifications/NotificationsContext", () => ({
+vi.mock("../services/notifications/notificationsContextState", () => ({
     useNotificationsContext: () => ({
         isTargetMutedByKey: () => false,
         setTargetMutedByKey: vi.fn(),

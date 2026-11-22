@@ -7,7 +7,7 @@ import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
-import { useNoteUnread } from "../context/NoteUnreadContext";
+import { useNoteUnread } from "../context/noteUnreadState";
 import { BaseNoteTreeNode } from "../types/noteTypes";
 import { isNoteOpen } from "../utils/openNote";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";

@@ -10,7 +10,7 @@ import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
 import { InlineTitleEdit } from "../../../../components/ui/fields/InlineTitleEdit";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
+import { usePersonalGMTags } from "../../../../hooks/common/personalGMTagsState";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { PersonalTag } from "../../../../types/personalTags";

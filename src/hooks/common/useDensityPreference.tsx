@@ -9,7 +9,7 @@ import {
     storeDensity,
 } from "../../theme/density";
 import { DensityPreferenceContext } from "./densityContext";
-import { useUiSettings } from "./useUiSettings";
+import { useUiSettings } from "./uiSettingsState";
 
 /**
  * Row density preference (MIP-1119): Compact 32px, Default 36px,

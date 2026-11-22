@@ -2,8 +2,8 @@ import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ThemePreference, ThemePreferenceContext } from "./themePreferenceContext";
+import { useUiSettings } from "./uiSettingsState";
 import { DensityPreferenceProvider } from "./useDensityPreference";
-import { useUiSettings } from "./useUiSettings";
 
 /**
  * Theme preference layer that wraps `useColorScheme` from MUI Joy.

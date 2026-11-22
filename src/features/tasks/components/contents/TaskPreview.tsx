@@ -45,7 +45,7 @@ import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTaskSaveTriggers } from "../../../../hooks/tasks/useTaskSaveTriggers";
 import { fmt, useTranslation } from "../../../../i18n";
-import { useNotificationsContext } from "../../../../services/notifications/NotificationsContext";
+import { useNotificationsContext } from "../../../../services/notifications/notificationsContextState";
 import { shortcutText } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";

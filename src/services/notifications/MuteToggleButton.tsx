@@ -6,7 +6,7 @@ import type { SxProps } from "@mui/joy/styles/types";
 import { AppTooltip } from "../../components/ui/AppTooltip";
 import { MenuRow } from "../../components/ui/MoreMenu";
 import { useTranslation } from "../../i18n";
-import { useNotificationsContext } from "./NotificationsContext";
+import { useNotificationsContext } from "./notificationsContextState";
 
 interface MuteToggleButtonProps {
     chatType: number;

@@ -23,7 +23,7 @@ vi.mock("../i18n", async () => {
     const { en } = await import("../i18n/locales/en");
     return { useTranslation: () => ({ t: en }) };
 });
-vi.mock("../features/chat/context/ChatContext", () => ({
+vi.mock("../features/chat/context/chatContextState", () => ({
     useChatContext: () => ({
         currentThreadTaskId: thread.taskId,
         usePM: { currentProject: null, setCurrentProject: vi.fn() },

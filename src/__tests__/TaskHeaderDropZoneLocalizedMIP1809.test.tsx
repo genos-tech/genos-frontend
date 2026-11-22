@@ -28,7 +28,7 @@ vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "t" }),
     useOptionalAccessToken: () => "t",
 }));
-vi.mock("../services/notifications/NotificationsContext", () => ({
+vi.mock("../services/notifications/notificationsContextState", () => ({
     useNotificationsContext: () => ({
         isTargetMutedByKey: () => false,
         muteTarget: vi.fn(),

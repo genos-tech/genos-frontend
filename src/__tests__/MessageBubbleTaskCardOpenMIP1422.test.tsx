@@ -33,7 +33,7 @@ vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => null }
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("react-router-dom", () => ({ useNavigate: () => navigate }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
-vi.mock("../hooks/common/useBubbleStylePreference", () => ({
+vi.mock("../hooks/common/bubbleStylePreferenceState", () => ({
     useBubbleStylePreference: () => ({ setStyle: () => {}, style: "bubble" }),
 }));
 

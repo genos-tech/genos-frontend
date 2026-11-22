@@ -28,9 +28,9 @@ import { ChatManagementState } from "../../../../../../hooks/chats/useChatManage
 import {
     PinnableBubbleAction,
     useBubbleActionsPreference,
-} from "../../../../../../hooks/common/useBubbleActionsPreference";
-import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
-import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/useDoubleClickTodoPreference";
+} from "../../../../../../hooks/common/bubbleActionsPreferenceState";
+import { useBubbleStylePreference } from "../../../../../../hooks/common/bubbleStylePreferenceState";
+import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/doubleClickTodoPreferenceState";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { useUndoableAction } from "../../../../../../hooks/common/useUndoableAction";

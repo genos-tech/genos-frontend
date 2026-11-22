@@ -22,10 +22,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
     ChatHistoryEntry,
     HistoryEntry,
-    HistoryProvider,
     ThreadHistoryEntry,
     useHistory,
-} from "../hooks/common/useHistory";
+} from "../hooks/common/historyState";
+import { HistoryProvider } from "../hooks/common/useHistory";
 
 const TEAM = "team-1";
 const STORAGE_KEY = `genos.history.v1.${TEAM}`;

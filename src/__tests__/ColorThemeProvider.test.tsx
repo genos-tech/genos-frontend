@@ -18,7 +18,8 @@ import { ReactNode } from "react";
 import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ColorThemeProvider, useColorTheme } from "../theme/ColorThemeProvider";
+import { ColorThemeProvider } from "../theme/ColorThemeProvider";
+import { useColorTheme } from "../theme/colorThemeState";
 import { DEFAULT_THEME_ID, THEME_PRIMITIVES } from "../theme/themePalettes";
 import { THEME_STORAGE_KEY } from "../theme/themeStyles";
 import { resolvedPrimitives } from "../theme/tokens/primitives";

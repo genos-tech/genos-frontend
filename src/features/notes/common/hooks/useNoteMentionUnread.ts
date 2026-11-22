@@ -7,7 +7,7 @@ import {
     forgetNoteActivities,
     withoutNoteActivities,
 } from "../../../chat/components/sidebar/activity/services/dropNoteActivities";
-import { NoteUnreadValue, UnreadNote } from "../context/NoteUnreadContext";
+import { NoteUnreadValue, UnreadNote } from "../context/noteUnreadState";
 import { useNoteDeleted, type NoteDeletedDetail } from "../utils/noteDeleted";
 import { toBackendNoteType } from "../utils/noteTypeAlias";
 

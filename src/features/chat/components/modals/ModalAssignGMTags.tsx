@@ -5,7 +5,7 @@ import { Alert, Box, Button, Checkbox, Typography } from "@mui/joy";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
-import { usePersonalGMTags } from "../../../../hooks/common/usePersonalGMTags";
+import { usePersonalGMTags } from "../../../../hooks/common/personalGMTagsState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";

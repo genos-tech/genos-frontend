@@ -5,7 +5,7 @@ import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryA
 import { Box, IconButton, Typography } from "@mui/joy";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/useQuickAddRequiredFieldsPreference";
+import { useQuickAddRequiredFieldsPreference } from "../../../../hooks/common/quickAddRequiredFieldsPreferenceState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { LimitReachedError } from "../../../../services/limitErrors";
 import { g } from "../../../../theme/tokens";

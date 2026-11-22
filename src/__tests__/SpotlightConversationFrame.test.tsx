@@ -22,7 +22,7 @@ import { EMPTY_ASK_STATE, type CompletedTurn } from "../features/agentQA/types";
 import { SpotlightOverlay } from "../features/spotlight/SpotlightOverlay";
 import type { AgentSessionDetail } from "../services/agentApi";
 
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 

@@ -50,7 +50,7 @@ import { Bubble, type BubbleLayout } from "../../components/ui/bubble";
 import { EmptyState } from "../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../components/ui/feedback/ErrorState";
 import { SkeletonLines, SkeletonRows, Spinner } from "../../components/ui/feedback/Skeleton";
-import { useBubbleStylePreference } from "../../hooks/common/useBubbleStylePreference";
+import { useBubbleStylePreference } from "../../hooks/common/bubbleStylePreferenceState";
 import { fmt, useTranslation, type Locale, type Messages } from "../../i18n";
 import type {
     AgentSessionDetail,

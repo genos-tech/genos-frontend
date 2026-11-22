@@ -28,7 +28,7 @@ vi.mock("../context/AuthContext", () => ({
     useAuth: () => ({ accessToken: "tok" }),
 }));
 vi.mock("../hooks/common/useIsMobile", () => ({ useIsMobile: () => false }));
-vi.mock("../hooks/common/usePersonalGMTags", () => ({
+vi.mock("../hooks/common/personalGMTagsState", () => ({
     usePersonalGMTags: () => ({
         tags: [],
         assignmentsByChannelId: {},

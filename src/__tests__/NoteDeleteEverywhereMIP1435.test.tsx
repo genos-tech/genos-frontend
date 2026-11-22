@@ -23,7 +23,8 @@ import { deleteMyNoteFolder } from "../features/notes/my-notes/services/deleteMy
 import { deleteTaskNote } from "../features/notes/task-notes/services/deleteTaskNote";
 import { deleteTeamNoteFolder } from "../features/notes/team-notes/services/deleteTeamNoteFolder";
 import { loadTeamNotesMeta } from "../features/notes/team-notes/services/loadTeamNotesMeta";
-import { HistoryProvider, useHistory } from "../hooks/common/useHistory";
+import { useHistory } from "../hooks/common/historyState";
+import { HistoryProvider } from "../hooks/common/useHistory";
 import { useHistoryTracker } from "../hooks/common/useHistoryTracker";
 import { clearNoteCache, getCachedNote, upsertNoteCache } from "../hooks/notes/useNoteData";
 import { useNoteManagement } from "../hooks/notes/useNoteManagement";
@@ -41,7 +42,7 @@ vi.mock("../services/agentApi", () => ({
 vi.mock("../services/searchApi", () => ({
     searchSpotlight: vi.fn(async () => ({ results: [] })),
 }));
-vi.mock("../hooks/common/useSpotlightPreferences", () => ({
+vi.mock("../hooks/common/spotlightPreferencesState", () => ({
     useSpotlightPreferences: () => ({ aiAnswers: true, webSearch: true }),
 }));
 

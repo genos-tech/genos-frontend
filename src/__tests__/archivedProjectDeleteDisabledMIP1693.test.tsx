@@ -13,7 +13,7 @@ import { en } from "../i18n/locales/en";
 import type { ProjectProps } from "../types/tasks";
 
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "t" }) }));
-vi.mock("../services/notifications/NotificationsContext", () => ({
+vi.mock("../services/notifications/notificationsContextState", () => ({
     useNotificationsContext: () => ({
         isTargetMutedByKey: () => false,
         muteTarget: vi.fn(),

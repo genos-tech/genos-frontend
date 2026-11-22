@@ -65,34 +65,34 @@ import {
 } from "../../features/integrations/services/connections";
 import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
 import { useAnalyticsPreferences } from "../../hooks/common/analyticsPreferenceState";
-import { useQuickReactionsPreference } from "../../hooks/common/quickReactionsState";
-import { ThemePreference, useThemePreference } from "../../hooks/common/themePreferenceContext";
-import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
-import { useAutoSyncCalendarPreference } from "../../hooks/common/useAutoSyncCalendarPreference";
 import {
     MAX_PINNED_BUBBLE_ACTIONS,
     PINNABLE_BUBBLE_ACTIONS,
     PinnableBubbleAction,
     useBubbleActionsPreference,
-} from "../../hooks/common/useBubbleActionsPreference";
+} from "../../hooks/common/bubbleActionsPreferenceState";
 import {
     BubbleStyle,
     useBubbleStylePreference,
-} from "../../hooks/common/useBubbleStylePreference";
-import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickTodoPreference";
+} from "../../hooks/common/bubbleStylePreferenceState";
+import { useDoubleClickTodoPreference } from "../../hooks/common/doubleClickTodoPreferenceState";
+import { useQuickAddRequiredFieldsPreference } from "../../hooks/common/quickAddRequiredFieldsPreferenceState";
+import { useQuickReactionsPreference } from "../../hooks/common/quickReactionsState";
+import { useSpotlightPreferences } from "../../hooks/common/spotlightPreferencesState";
+import { ThemePreference, useThemePreference } from "../../hooks/common/themePreferenceContext";
+import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
+import { useAutoSyncCalendarPreference } from "../../hooks/common/useAutoSyncCalendarPreference";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference";
-import { useQuickAddRequiredFieldsPreference } from "../../hooks/common/useQuickAddRequiredFieldsPreference";
 import {
     HIDEABLE_SIDEBAR_ITEMS,
     SidebarItemKey,
     useSidebarVisibility,
 } from "../../hooks/common/useSidebarVisibility";
-import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { fmt, Locale, useTranslation } from "../../i18n";
 import { SubscriptionTier } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
-import { useColorTheme } from "../../theme/ColorThemeProvider";
+import { useColorTheme } from "../../theme/colorThemeState";
 import { THEME_IDS, themeSwatch } from "../../theme/themePalettes";
 import { g } from "../../theme/tokens";
 import { AppTooltip } from "../ui/AppTooltip";

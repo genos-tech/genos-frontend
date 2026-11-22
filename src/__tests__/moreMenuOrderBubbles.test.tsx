@@ -15,10 +15,10 @@ import { orderMoreMenuItems } from "../components/ui/moreMenuOrder";
 import { BubbleMoreMenu } from "../features/chat/components/bubbles/BubbleMoreMenu";
 import { BubbleThreadMoreMenu } from "../features/chat/components/bubbles/BubbleThreadMoreMenu";
 import {
-    BubbleActionsPreferenceProvider,
     normalizePinnedBubbleActions,
     PINNABLE_BUBBLE_ACTIONS,
-} from "../hooks/common/useBubbleActionsPreference";
+} from "../hooks/common/bubbleActionsPreferenceState";
+import { BubbleActionsPreferenceProvider } from "../hooks/common/useBubbleActionsPreference";
 import { en } from "../i18n/locales/en";
 
 vi.mock("../features/chat/components/modals/ModalDeleteMessage", () => ({

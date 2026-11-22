@@ -8,7 +8,7 @@ import {
     NoteHistoryEntry,
     TaskHistoryEntry,
     ThreadHistoryEntry,
-} from "../../hooks/common/useHistory";
+} from "../../hooks/common/historyState";
 import { useHistoryTracker } from "../../hooks/common/useHistoryTracker";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";

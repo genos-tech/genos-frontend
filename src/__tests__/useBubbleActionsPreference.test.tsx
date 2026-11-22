@@ -17,11 +17,11 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
-    BubbleActionsPreferenceProvider,
     MAX_PINNED_BUBBLE_ACTIONS,
     normalizePinnedBubbleActions,
     useBubbleActionsPreference,
-} from "../hooks/common/useBubbleActionsPreference";
+} from "../hooks/common/bubbleActionsPreferenceState";
+import { BubbleActionsPreferenceProvider } from "../hooks/common/useBubbleActionsPreference";
 
 const STORAGE_KEY = "genos-bubble-pinned-actions-v1";
 

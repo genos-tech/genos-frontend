@@ -26,7 +26,7 @@ vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 
 let style: "compact" | "bubble" = "compact";
-vi.mock("../hooks/common/useBubbleStylePreference", () => ({
+vi.mock("../hooks/common/bubbleStylePreferenceState", () => ({
     useBubbleStylePreference: () => ({ setStyle: () => {}, style }),
 }));
 

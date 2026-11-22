@@ -16,7 +16,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { GMTagFilterRow } from "../features/chat/components/sidebar/GMTagFilterRow";
 
-vi.mock("../hooks/common/usePersonalGMTags", () => ({
+vi.mock("../hooks/common/personalGMTagsState", () => ({
     usePersonalGMTags: () => ({
         tags: [
             {
