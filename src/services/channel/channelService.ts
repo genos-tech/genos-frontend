@@ -85,6 +85,22 @@ function v3BaseURL(): string {
 }
 
 /** A soft-deleted group the caller may restore (`GET /api/v3/channels/deleted/`, MIP-1715). */
+export type ChannelDirectoryRow = {
+    id: string;
+    title: string;
+    description: string;
+    profileImageUrl: string | null;
+    memberCount: number;
+    isJoined: boolean;
+    tsCreated: string;
+};
+
+export type ChannelDirectoryPage = {
+    results: ChannelDirectoryRow[];
+    total: number;
+    hasMore: boolean;
+};
+
 export type DeletedChannel = {
     id: string;
     title: string;
@@ -841,18 +857,14 @@ export class ChannelService {
     }
 
     private async _doListChannels(): Promise<Channel[]> {
-        // The default list leaves archived group chats out (MIP-1693). The full list keeps them,
-        // so an archived chat can still be opened. What the default list lacks is the archived
-        // set, and it is recorded here for every pane and banner to read.
-        const [active, all] = await Promise.all([
-            this._fetchChannelPages(false),
-            this._fetchChannelPages(true),
-        ]);
-        const activeIds = new Set(active.map((c) => c.id));
-        // Group chats only: a project's chat follows its project (`isChatArchivedIn`), so it
-        // must not be pinned here, or it stays archived after the project is restored (MIP-1919).
+        // One read of the full list (MIP-1693): archived chats stay in it so an archived chat can
+        // still be opened, and each row says whether it is archived (MIP-1853). A chat whose
+        // project is archived is covered by the project's own row, not listed here, and it must
+        // not be pinned here either: a project's chat follows its project (`isChatArchivedIn`), or
+        // it stays archived after the project is restored (MIP-1919).
+        const all = await this._fetchChannelPages(true);
         setArchivedChannelIds(
-            all.filter((c) => !activeIds.has(c.id) && c.projectId == null).map((c) => c.id)
+            all.filter((c) => c.archived === true && c.projectId == null).map((c) => c.id)
         );
         return all;
     }
@@ -2125,6 +2137,8 @@ export class ChannelService {
         channelKind: ChannelKind,
         patch: {
             title?: string;
+            /** The group chat's one-line topic (MIP-1694); "" clears it. */
+            description?: string;
             profileImageUrl?: string;
             isPrivate?: boolean;
             /** Transfer ownership to a current member. The backend
@@ -2141,6 +2155,7 @@ export class ChannelService {
             channel_kind: channelKind,
         };
         if (patch.title !== undefined) payload.title = patch.title;
+        if (patch.description !== undefined) payload.description = patch.description;
         if (patch.profileImageUrl !== undefined) {
             payload.profile_image_url = patch.profileImageUrl;
         }
@@ -2242,6 +2257,30 @@ export class ChannelService {
         // what evicts what the server no longer lists. Best-effort and never throws: the chat is
         // gone either way, and a failed refresh is reconciled by the next sync.
         await this.refreshChannels();
+    }
+
+    /**
+     * The team's public group chats, a page at a time (MIP-1694). The server decides what is
+     * listed (never private, external, archived or deleted chats); this is a read, not part of
+     * the chat store. Joining goes through `joinChannel`.
+     */
+    async listChannelDirectory(
+        teamId: string,
+        opts: { q?: string; offset?: number; limit?: number } = {}
+    ): Promise<ChannelDirectoryPage> {
+        try {
+            const res = await this.api().get<ChannelDirectoryPage>("/api/v3/channels/directory/", {
+                params: {
+                    team_id: teamId,
+                    q: opts.q || undefined,
+                    offset: opts.offset,
+                    limit: opts.limit,
+                },
+            });
+            return res.data;
+        } catch (e) {
+            throw unwrapAxiosError(e);
+        }
     }
 
     /**

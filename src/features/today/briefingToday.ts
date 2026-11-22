@@ -23,9 +23,17 @@ export type BriefingTask = {
     daysUntilDue?: number;
     projectName?: string | null;
     projectId?: number;
-    /** Why the briefing suggests it first (only on `suggestedNext`). */
+    /** Why the briefing suggests it first (only on `suggestedNext`): the English sentences. */
     reasons?: string[];
+    /** The same reasons as data, one per sentence, for the page to say in the viewer's language. */
+    reasonCodes?: BriefingReasonCode[];
 };
+
+/** A reason as data: a `code` and its parts (days, counts, a priority...). MIP-1936. */
+export type BriefingReasonCode = { code: string; [part: string]: string | number | null };
+
+/** What the latest event was, as data: a `code` and its parts (field, old, new...). MIP-1936. */
+export type BriefingEventData = { code: string; [part: string]: string | number | null };
 
 export type BriefingRequest = {
     itemId: number | string;
@@ -70,7 +78,15 @@ export type BriefingChange = {
     threadId?: string | null;
     latestAt: string;
     eventsTotal: number;
-    latest: { at?: string; what?: string; summary?: string; by?: string; text?: string };
+    latest: {
+        at?: string;
+        what?: string;
+        /** The English sentence: shown only for a `data.code` this build does not know. */
+        summary?: string;
+        data?: BriefingEventData;
+        by?: string;
+        text?: string;
+    };
 };
 
 export type BriefingBlocked = {
@@ -268,3 +284,8 @@ export const sinceForView = (userId: string, teamId: string, now = Date.now()): 
 export const markLooked = (userId: string, teamId: string, now = Date.now()): void => {
     write(() => window.localStorage, lastLookedKey(userId, teamId), new Date(now).toISOString());
 };
+
+/** Whether the answer has anything to show (the Genos page shows its card only then). */
+export const hasBriefingNews = (d: BriefingToday | null): boolean =>
+    d != null &&
+    d.overdueCount + d.dueTodayCount + d.requests.length + d.mentions.length + d.changed.total > 0;

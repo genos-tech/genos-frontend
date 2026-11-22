@@ -205,6 +205,10 @@ describe("feedback adoption", () => {
                 "the name of the group of work on no project (a label, not an empty state)",
             "features/tasks/components/dashboard/TaskHomeContent.tsx":
                 "value labels and the tiny 'no overdue / none due this week / no members' lines inside dashboard cards",
+            "features/chat/components/modals/ModalGMProfile.tsx":
+                "the group description field's 'No description' value (MIP-1694), not an empty panel",
+            "features/chat/components/modals/ModalGroupDirectory.tsx":
+                "a row's 'No description' value (MIP-1694); the empty list itself is a DataState",
             "features/tasks/components/modals/ModalCreateProject.tsx":
                 "no match in a member picker",
             "features/tasks/components/sidebar/ProjectsListItem.tsx": "one dense sidebar row",

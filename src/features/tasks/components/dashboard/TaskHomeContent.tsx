@@ -252,7 +252,12 @@ export const TaskHomeContent = ({
             : "today"
     );
     // The Today tab's data (MIP-1005): loaded only while that tab is open.
-    const todayView = useBriefingToday(myself.teamId, myself.userId, activeTab === "today");
+    const todayView = useBriefingToday(
+        accessToken,
+        myself.teamId,
+        myself.userId,
+        activeTab === "today"
+    );
     // How the My Tasks "Up Next" list is ordered. Default "weight" so the
     // most pressing task (priority × urgency) surfaces first — the whole
     // point of the pointing system. "urgency" keeps the older overdue →

@@ -11,8 +11,10 @@ import { fireEvent, render, renderHook, screen, waitFor } from "@testing-library
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+    BriefingTask,
     BriefingToday,
     changeHref,
+    hasBriefingNews,
     loadBriefingToday,
     markLooked,
     mentionHref,
@@ -20,6 +22,7 @@ import {
     sinceForView,
     taskHref,
 } from "../features/today/briefingToday";
+import { changeLine, reasonLine, type TodayCopy } from "../features/today/briefingWords";
 import { TodayBriefing } from "../features/today/TodayBriefing";
 import { BriefingTodayStatus, useBriefingToday } from "../features/today/useBriefingToday";
 import { ar } from "../i18n/locales/ar";
@@ -31,7 +34,6 @@ import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 import { authApi } from "../services/api";
 
-vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../services/api", () => ({ authApi: vi.fn() }));
 const navigate = vi.hoisted(() => vi.fn());
 vi.mock("../services/appNavigate", () => ({ requestAppNavigate: navigate }));
@@ -209,7 +211,7 @@ describe("useBriefingToday", () => {
     it("loads once, becomes ready, and marks the view as looked when it goes away", async () => {
         const get = vi.fn().mockResolvedValue({ data: answer() });
         vi.mocked(authApi).mockReturnValue({ get } as never);
-        const { result, unmount } = renderHook(() => useBriefingToday("t", "u"));
+        const { result, unmount } = renderHook(() => useBriefingToday("tok", "t", "u"));
         expect(result.current.status).toBe("loading");
         await waitFor(() => expect(result.current.status).toBe("ready"));
         expect(get).toHaveBeenCalledTimes(1);
@@ -220,7 +222,7 @@ describe("useBriefingToday", () => {
     it("does not call the API while disabled", () => {
         const get = vi.fn();
         vi.mocked(authApi).mockReturnValue({ get } as never);
-        renderHook(() => useBriefingToday("t", "u", false));
+        renderHook(() => useBriefingToday("tok", "t", "u", false));
         expect(get).not.toHaveBeenCalled();
     });
 });
@@ -273,7 +275,7 @@ describe("TodayBriefing", () => {
         expect(failed.refresh).toHaveBeenCalled();
     });
 
-    it("the card shows the top three of a section, the rest as a count, and a way in", () => {
+    it("the card is one short list across the sections, the rest as a count, and a way in", () => {
         const many = Array.from({ length: 5 }, (_, i) => ({
             taskId: 100 + i,
             projectId: 1,
@@ -283,9 +285,29 @@ describe("TodayBriefing", () => {
         }));
         renderToday(view(answer({ overdue: many, overdueCount: 5 })), "card");
         expect(screen.getByTestId("today-card")).toBeInTheDocument();
+        expect(screen.getByText("P-0 T0")).toBeInTheDocument();
         expect(screen.queryByText("P-3 T3")).toBeNull();
-        expect(screen.getByText("+3 more")).toBeInTheDocument(); // 6 due in all, 3 shown
+        expect(screen.getByText("+5 more")).toBeInTheDocument(); // 8 things in all, 3 shown
         expect(screen.getByRole("button", { name: "Open Today" })).toBeInTheDocument();
+        fireEvent.click(screen.getByText("P-1 T1"));
+        expect(navigate).toHaveBeenCalledWith("/workspace/tasks/project/1/task/101");
+    });
+
+    it("hasBriefingNews is false for an empty answer, so the Genos page shows no card", () => {
+        expect(hasBriefingNews(null)).toBe(false);
+        expect(
+            hasBriefingNews(
+                answer({
+                    overdue: [],
+                    overdueCount: 0,
+                    dueToday: [],
+                    dueTodayCount: 0,
+                    mentions: [],
+                    changed: { items: [], total: 0, truncated: false },
+                })
+            )
+        ).toBe(false);
+        expect(hasBriefingNews(answer())).toBe(true);
     });
 });
 
@@ -306,4 +328,114 @@ describe("Today copy exists in every locale", () => {
             expect(today(catalog).tabToday).toBeTruthy();
         });
     }
+});
+
+describe("the briefing's own sentences are said in the viewer's language (MIP-1936)", () => {
+    const item = (data: Record<string, string | number | null>, extra = {}) =>
+        ({
+            type: "task",
+            latestAt: "2026-11-22T08:30:00Z",
+            eventsTotal: 1,
+            latest: { by: "ana", summary: "ENGLISH SENTENCE", data, ...extra },
+        }) as never;
+    const copyOf = (c: unknown) =>
+        (c as { tasks: { dashboard: { today: TodayCopy } } }).tasks.dashboard.today;
+
+    it("says a status change from field, old and new, in ja and en", () => {
+        const c = item({ code: "field_changed", field: "status", old: "Open", new: "Review" });
+        expect(changeLine(c, copyOf(en))).toBe("ana changed status: Open → Review");
+        expect(changeLine(c, copyOf(ja))).toBe(
+            "ana さんがステータスを変更しました: Open → Review"
+        );
+        expect(changeLine(c, copyOf(ja))).not.toContain("ENGLISH");
+    });
+
+    it("translates the server's English stand-ins for an unknown person and automation", () => {
+        const data = { code: "created" };
+        expect(changeLine(item(data, { by: "someone" }), copyOf(ja))).toBe(
+            "誰か さんが作成しました"
+        );
+        expect(changeLine(item(data, { by: "system" }), copyOf(ja))).toContain("システム");
+    });
+
+    it("keeps a short quote after the sentence", () => {
+        const c = item({ code: "comment" }, { text: "ok" });
+        expect(changeLine(c, copyOf(ja))).toBe("ana さんがコメントしました: ok");
+    });
+
+    it("falls back to the English sentence for a code it does not know, or no data", () => {
+        expect(changeLine(item({ code: "from_the_future" }), copyOf(ja))).toBe(
+            "ana ENGLISH SENTENCE"
+        );
+        const old = { latest: { by: "ana", summary: "commented" } } as never;
+        expect(changeLine(old, copyOf(ja))).toBe("ana commented");
+    });
+
+    it("says every reason code in the viewer's language", () => {
+        const task: BriefingTask = {
+            taskId: 1,
+            displayId: "A-1",
+            title: "t",
+            reasons: ["overdue by 4 days", "x", "priority High"],
+            reasonCodes: [
+                { code: "overdue", days: 4 },
+                { code: "activity", comments: 1, changes: 2, since: "2026-11-22T00:00:00Z" },
+                { code: "priority", priority: "High" },
+            ],
+        };
+        const ja_ = reasonLine(task, copyOf(ja), "ja");
+        expect(ja_).toContain("4 日超過");
+        expect(ja_).toContain("コメント 1 件");
+        expect(ja_).toContain("変更 2 件");
+        expect(ja_).toContain("優先度 High");
+        expect(ja_).not.toMatch(/overdue|comment|change/);
+        expect(reasonLine(task, copyOf(en), "en")).toContain(
+            "1 comment and 2 changes from others"
+        );
+        // an older server without codes: the English sentences, as before
+        expect(reasonLine({ ...task, reasonCodes: undefined }, copyOf(ja), "ja")).toBe(
+            "overdue by 4 days · x · priority High"
+        );
+    });
+
+    it("renders the page with no server English next to Japanese headings", () => {
+        const v = view(
+            answer({
+                suggestedNext: [
+                    {
+                        taskId: 14,
+                        projectId: 3,
+                        displayId: "WEB-9",
+                        title: "Fix",
+                        reasons: ["overdue by 4 days"],
+                        reasonCodes: [{ code: "overdue", days: 4 }],
+                    },
+                ],
+                changed: {
+                    items: [
+                        {
+                            type: "task",
+                            taskId: 13,
+                            projectId: 3,
+                            displayId: "WEB-7",
+                            title: "Pricing page",
+                            latestAt: "2026-11-22T08:30:00Z",
+                            eventsTotal: 1,
+                            latest: {
+                                by: "Ben",
+                                summary: "commented",
+                                data: { code: "comment" },
+                            },
+                        },
+                    ],
+                    total: 1,
+                    truncated: false,
+                },
+            })
+        );
+        renderToday(v);
+        // The test provider is English: the sentence is the en copy, not the server's "commented".
+        expect(screen.getByText(/Ben commented/)).toBeTruthy();
+        expect(screen.getByText(/4 days overdue/)).toBeTruthy();
+    });
 });

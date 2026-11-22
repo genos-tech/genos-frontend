@@ -4,8 +4,8 @@ import {
     PROJECT_DELETED_EVENT,
     type ProjectDeletedDetail,
 } from "../../features/agentQA/approvedProjectWrites";
-import { refreshArchivedProjects } from "../../features/archive/archiveApi";
-import { getArchiveSnapshot } from "../../features/archive/archiveState";
+import { archivedJoinedProjects } from "../../features/archive/archiveApi";
+import { getArchiveSnapshot, setArchivedProjects } from "../../features/archive/archiveState";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { isProjectGoneError } from "../../features/tasks/services/loadProjectTasksFromApi";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
@@ -112,10 +112,14 @@ export const useProjectManagement = (
 
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
-        const loadedTeamProjects: ProjectProps[] | undefined = await loadTeamProjects(
+        // One read for both sections (MIP-1853): the list with the archived rows, each of which says it
+        // is archived. The active list is the rows that are not; the archived section takes the rest.
+        const allTeamProjects: ProjectProps[] | undefined = await loadTeamProjects(
             myself,
-            accessToken
+            accessToken,
+            { includeArchived: true }
         );
+        const loadedTeamProjects = allTeamProjects?.filter((p) => !p.archived);
         // Only stamp the throttle timestamp on a real response. If
         // `loadTeamProjects` early-returned (missing teamId, auth
         // error, network failure), updating the timestamp would block
@@ -132,13 +136,8 @@ export const useProjectManagement = (
             return;
         }
         syncStatus.report("projects", true);
-        // The archived projects sit in their own section (MIP-1693). Read beside the active list,
-        // never awaited: a slow archive read must not hold the projects up.
-        const archivedRead = refreshArchivedProjects(
-            myself,
-            accessToken,
-            loadedTeamProjects
-        ).catch((error: unknown) => console.error("Failed to read the archived projects", error));
+        // The archived projects sit in their own section (MIP-1693), taken from the same read.
+        setArchivedProjects(archivedJoinedProjects(allTeamProjects ?? []));
         // A project the list no longer holds (deleted, left, access lost) has no
         // task load worth retrying: its failure must not hold the banner up for a
         // stale `lastProjectId` (MIP-1323).
@@ -164,8 +163,7 @@ export const useProjectManagement = (
             !loadedTeamProjects.some((p) => p.projectId === targetProjectId)
         ) {
             // The active list never holds an archived project, which stays openable for
-            // reading (MIP-1920): only once the archived read has answered is the id stale.
-            await archivedRead;
+            // reading (MIP-1920): the archived section came from the same read.
             const archived = getArchiveSnapshot().archivedProjects.find(
                 (p) => p.projectId === targetProjectId
             );
