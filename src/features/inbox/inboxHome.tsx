@@ -11,9 +11,15 @@ import { InboxHomeProps } from "./types/inboxTypes";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { useTranslation } from "../../i18n";
+import { InboxItemProps } from "../../types/common";
 
 // Wrapper component for Activities section with item routing
-const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
+const ActivitiesSection = (
+    props: InboxHomeProps & {
+        items: InboxItemProps[];
+        virtuosoRef: ReturnType<typeof useInboxScroll>;
+    }
+) => {
     const { itemId } = useParams<{ itemId?: string }>();
     const { items, virtuosoRef, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
     const { t } = useTranslation();
@@ -43,7 +49,12 @@ const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: 
 };
 
 // Wrapper component for Requests section with item routing
-const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
+const RequestsSection = (
+    props: InboxHomeProps & {
+        items: InboxItemProps[];
+        virtuosoRef: ReturnType<typeof useInboxScroll>;
+    }
+) => {
     const { itemId } = useParams<{ itemId?: string }>();
     const { items, virtuosoRef, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
     const { t } = useTranslation();
