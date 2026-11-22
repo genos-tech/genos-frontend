@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 import { useLocation, useSearchParams } from "react-router-dom";
 
@@ -8,8 +8,6 @@ import { useTranslation } from "../../../../../i18n";
 import { fmt } from "../../../../../i18n/interpolate";
 import { g } from "../../../../../theme/tokens";
 import {
-    AGENT_VIEW_PARAM,
-    AGENT_VIEW_VALUE,
     AgentFilters,
     agentFiltersToQuery,
     DEFAULT_AGENT_FILTERS,
@@ -69,34 +67,6 @@ export const AgentActivityTab = ({ projects, projectRecords, projectAvatars, tea
 
     const filters = useMemo(() => parseAgentFilters(search), [search]);
     const view = useAgentWork(agentFiltersToQuery(filters, teamId), onTasks);
-
-    // Mark the URL with `view=agent` while this tab is open, so the view can be shared.
-    useEffect(() => {
-        if (!onTasks) return undefined;
-        if (search.get(AGENT_VIEW_PARAM) !== AGENT_VIEW_VALUE) {
-            setSearch(
-                (prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.set(AGENT_VIEW_PARAM, AGENT_VIEW_VALUE);
-                    return next;
-                },
-                { replace: true }
-            );
-        }
-        return () => {
-            if (!pathRef.current.startsWith(TASKS_PATH)) return;
-            setSearch(
-                (prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.delete(AGENT_VIEW_PARAM);
-                    return next;
-                },
-                { replace: true }
-            );
-        };
-        // Only the tab's presence on the tasks route matters here.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [onTasks]);
 
     const applyFilters = (next: AgentFilters) => {
         setSearch((prev) => writeAgentFilters(prev, next), { replace: true });

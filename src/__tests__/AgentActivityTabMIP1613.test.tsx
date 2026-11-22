@@ -17,7 +17,7 @@ import {
     waitFor,
     within,
 } from "@testing-library/react";
-import { MemoryRouter, Route, Routes, useSearchParams } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OPEN_SETTINGS_EVENT } from "../components/layout/settingsEvents";
@@ -577,32 +577,7 @@ describe("AgentActivityTab (rendered)", () => {
         expect(within(sheet).getByRole("combobox", { name: "Period" })).toBeTruthy();
         expect(within(sheet).getByRole("combobox", { name: "Kind of work" })).toBeTruthy();
     });
-
-    it("keeps view=agent in the address bar while the tab is open", async () => {
-        get.mockResolvedValueOnce(okWith(makePage()));
-        let seen = "";
-        const Probe = () => {
-            const [params] = useSearchParams();
-            seen = params.toString();
-            return null;
-        };
-        render(
-            <CssVarsProvider>
-                <ThemeProvider theme={{ [THEME_ID]: createTheme({ cssVariables: true }) }}>
-                    <MemoryRouter initialEntries={["/workspace/tasks"]}>
-                        <Probe />
-                        <Routes>
-                            <Route
-                                element={<AgentActivityTab projects={projects} teamId={TEAM} />}
-                                path="/workspace/tasks"
-                            />
-                        </Routes>
-                    </MemoryRouter>
-                </ThemeProvider>
-            </CssVarsProvider>
-        );
-        await waitFor(() => expect(seen).toContain("view=agent"));
-    });
+    // `view=agent` is written by the dashboard's tab hook now (DashboardTabUrlMIP1966.test.tsx).
 });
 
 describe("TaskDashboard tab strip", () => {

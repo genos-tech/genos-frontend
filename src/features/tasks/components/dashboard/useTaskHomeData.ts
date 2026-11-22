@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -18,8 +18,9 @@ import { deriveEffectiveTasks, EffectiveTask } from "../../utils/effectiveTasks"
 import { projectAvatarSrcMap } from "../../utils/projectAvatar";
 import { computeTaskWeight } from "../../utils/taskWeight";
 import { sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort";
+import { useDashboardTab } from "./dashboardTab";
 import { buildCapacityMap, isOngoingMilestone, taskUpdatedAtById } from "./taskHomeHelpers";
-import type { TaskDashboardTab, TaskHomeContentProps } from "./taskHomeTypes";
+import type { TaskHomeContentProps } from "./taskHomeTypes";
 
 export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const { useTM, usePM, useSM, myself, useCM } = props;
@@ -34,14 +35,9 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const { accessToken } = useAuth();
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
-    // `?view=agent` (written by the Agent Activity tab, MIP-1613) opens that tab on a
-    // shared link. Read once, from the address bar, so this component needs no router.
-    const [activeTab, setActiveTab] = useState<TaskDashboardTab>(() =>
-        typeof window !== "undefined" &&
-        new URLSearchParams(window.location.search).get("view") === "agent"
-            ? "agent"
-            : "today"
-    );
+    // The open tab lives in the address (`?view=today`, `?view=agent`, ...): see dashboardTab.ts.
+    // With no tab named, Today on the first open of each day, then the one used last.
+    const [activeTab, setActiveTab] = useDashboardTab(myself.userId);
     // The Today tab's data (MIP-1005): loaded only while that tab is open.
     const todayView = useBriefingToday(
         accessToken,
@@ -142,19 +138,25 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // refreshes it. Fails soft: an error (or the pre-load window) just
     // leaves the capacity bars on this project's numbers.
     const [teamWideTasks, setTeamWideTasks] = useState<TaskTableProps[]>([]);
+    // Only the Overall tab shows Team Capacity, so the (up to 500 row) read waits for it: opening
+    // the dashboard on Today no longer fetches it. Read once per team, then kept.
+    const teamTasksLoadedFor = useRef<string | null>(null);
+    const needsTeamTasks = activeTab === "overall";
     useEffect(() => {
-        if (!myself.teamId || !accessToken) return;
+        if (!needsTeamTasks || !myself.teamId || !accessToken) return;
+        if (teamTasksLoadedFor.current === myself.teamId) return;
         let cancelled = false;
         (async () => {
             const rows: TaskTableProps[] = (await loadTeamTasks(myself, accessToken)) ?? [];
             if (cancelled) return;
+            teamTasksLoadedFor.current = myself.teamId;
             setTeamWideTasks(Array.isArray(rows) ? rows : []);
         })();
         return () => {
             cancelled = true;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myself.teamId, accessToken]);
+    }, [myself.teamId, accessToken, needsTeamTasks]);
 
     // Same closed/deleted rollup as `effectiveTasks`, over the team-wide set.
     const teamEffectiveTasks = useMemo<EffectiveTask[]>(() => {

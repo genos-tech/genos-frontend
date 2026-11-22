@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useSearchParams } from "react-router-dom";
 
+import { DASHBOARD_VIEW_PARAM, isDashboardTab } from "./components/dashboard/dashboardTab";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskRouting } from "./hooks/useTaskRouting";
@@ -30,6 +32,23 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     // URL-based routing for tasks
     useTaskRouting({ usePM, useTM, isActiveRoute });
+
+    // A link to `/workspace/tasks?view=<tab>` ("Open Today" on the Genos page) opens the
+    // dashboard on that tab. The dashboard flag is plain state that only the sidebar's Home item
+    // set, so without this the link landed on the Task Table (MIP-1966). The dashboard removes
+    // the parameter when it closes, so this never re-opens it behind the user's back.
+    const [search] = useSearchParams();
+    const requestedView = search.get(DASHBOARD_VIEW_PARAM);
+    const dashboardVisible = useTM.isTaskDashboardVisible;
+    const { setIsTaskDashboardVisible, setIsTaskTableVisible, setIsSprintBoardVisible } = useTM;
+    useEffect(() => {
+        if (!isActiveRoute || !isDashboardTab(requestedView) || dashboardVisible) return;
+        setIsTaskDashboardVisible(true);
+        setIsTaskTableVisible(false);
+        setIsSprintBoardVisible(false);
+        // Only arriving on the link counts, not later flag changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isActiveRoute, requestedView]);
 
     // Keep the focused project's task-field rules (owner-configured
     // required metadata + defaults) cached in useTM for the header's
