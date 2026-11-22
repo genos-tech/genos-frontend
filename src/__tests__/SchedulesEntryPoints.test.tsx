@@ -148,7 +148,11 @@ describe("Settings > Genos > Genos Assist Schedules", () => {
     it("no longer carries the schedules in the Developer tab", async () => {
         renderSettings();
         await userEvent.click(screen.getByRole("tab", { name: en.settings.tabs.developer }));
-        const panel = screen.getByRole("tabpanel");
+        // "Connect your AI" nests its own tabs in this panel (MIP-2020): the Settings
+        // panel is the one that holds the developer section.
+        const panel = screen
+            .getAllByRole("tabpanel")
+            .find((el) => el.querySelector('[data-testid="developer-section"]'))!;
         expect(within(panel).getByTestId("developer-section")).toBeInTheDocument();
         expect(within(panel).queryByTestId("schedules-section")).toBeNull();
     });
