@@ -114,7 +114,7 @@ describe("forceDeleteAllMyMessages never claims success it did not get (MIP-1943
 const renderDialog = (
     onConfirm: () => Promise<unknown>,
     onClose = vi.fn(),
-    kind?: "task" | "message" | "comment"
+    kind?: "task" | "message" | "comment" | "note"
 ) =>
     render(
         <CssVarsProvider>
@@ -163,6 +163,29 @@ describe("ForceDeleteDialog", () => {
         fireEvent.change(screen.getByRole("textbox"), { target: { value: "DELETE" } });
         fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
         await screen.findByText(/Only its author/);
+    });
+
+    it("words a note 403 and a note with sub-pages (409 has_children) clearly (MIP-1937)", async () => {
+        const first = renderDialog(
+            () => Promise.reject(new ForceDeleteError(403, "forbidden", "no")),
+            vi.fn(),
+            "note"
+        );
+        fireEvent.change(screen.getByRole("textbox"), { target: { value: "DELETE" } });
+        fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+        await screen.findByText(/Only the note's owner/);
+        first.unmount();
+        const onClose = vi.fn();
+        renderDialog(
+            () =>
+                Promise.reject(new ForceDeleteError(409, "has_children", "Delete the sub-pages.")),
+            onClose,
+            "note"
+        );
+        fireEvent.change(screen.getByRole("textbox"), { target: { value: "DELETE" } });
+        fireEvent.click(screen.getByRole("button", { name: "Delete permanently" }));
+        await screen.findByText(/Delete or move its sub-pages first/);
+        expect(onClose).not.toHaveBeenCalled();
     });
 
     it("says some are left when the batch loop gave up", async () => {

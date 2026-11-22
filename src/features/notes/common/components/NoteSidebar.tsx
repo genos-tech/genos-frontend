@@ -2,6 +2,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
@@ -21,6 +22,7 @@ import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { toast } from "../../../../components/ui/feedback/toastStore";
+import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDialog";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
@@ -401,6 +403,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         hasChildren: boolean;
     } | null>(null);
 
+    const [forceDeleteNoteModal, setForceDeleteNoteModal] = useState<{
+        noteId: number;
+        title: string;
+    } | null>(null);
+
     // "Import Markdown…" opened from a sidebar folder row: the folder IS
     // the destination, so the dialog gets a fixed context and shows no
     // destination picker (unlike the note-header path).
@@ -530,6 +537,21 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             }),
     });
 
+    // "Delete permanently" (MIP-1937) for my own notes (bucket 1); task, chat and team notes use
+    // their header menu, where the owner role is known. The server decides again (403 / 409).
+    const buildForceDeleteMenuItem = (node: { noteId: number; title: string }): MoreMenuItem => ({
+        id: "force-delete-note",
+        kind: "delete",
+        label: t.common.forceDelete.menu,
+        icon: <DeleteForeverRoundedIcon sx={{ fontSize: 16 }} />,
+        danger: true,
+        onClick: () =>
+            setForceDeleteNoteModal({
+                noteId: node.noteId,
+                title: node.title || t.notes.defaults.untitled,
+            }),
+    });
+
     const folderActions: FolderActionHandlers = {
         onCreateNoteHere: (folderId) => {
             void useNM.handleCreateNewMyNote(null, folderId);
@@ -597,6 +619,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 },
                 buildExportMenuItem(1, node),
                 buildDeleteMenuItem(1, node),
+                buildForceDeleteMenuItem(node),
             ]}
         />
     );
@@ -1922,6 +1945,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     void deleted.then((ok) => {
                         if (!ok) toast.error(t.notes.deleteModal.failed);
                     });
+                }}
+            />
+
+            <ForceDeleteDialog
+                description={t.common.forceDelete.noteDescription}
+                entityName={forceDeleteNoteModal?.title}
+                kind="note"
+                open={forceDeleteNoteModal !== null}
+                title={t.common.forceDelete.noteTitle}
+                onClose={() => setForceDeleteNoteModal(null)}
+                onConfirm={() => {
+                    if (!forceDeleteNoteModal) return Promise.resolve();
+                    return useNM.forceDeleteNoteById("personal", forceDeleteNoteModal.noteId);
                 }}
             />
 

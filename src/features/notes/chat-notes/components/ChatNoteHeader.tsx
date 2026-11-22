@@ -4,6 +4,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
@@ -24,6 +25,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDialog";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
@@ -57,6 +59,7 @@ import {
     isChatNoteFocused,
     isTaskNoteFocused,
 } from "../../common/utils/noteFocus";
+import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../../common/utils/noteRoles";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 /** Backend note type for the notes this header owns. Part of the identity of
@@ -175,6 +178,10 @@ export const ChatNoteHeader = ({
     // Import creates a NEW chat note anchored to the same chat/thread as
     // the open one; export downloads the open note's latest saved body.
     const [importMdOpen, setImportMdOpen] = useState(false);
+    const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
+    // Owner only; the server decides again (403) and refuses a note with sub-pages (409).
+    const isNoteOwner =
+        getMyNoteRoleId(useNM.currentNoteMembers ?? [], myself.userId) === NOTE_ROLE_OWNER;
     const importContext: ImportMarkdownContext | null = useNM.currentChatNote
         ? {
               kind: "chat",
@@ -583,6 +590,15 @@ export const ChatNoteHeader = ({
                             danger: true,
                             onClick: onDeleteNote,
                         },
+                        {
+                            id: "forceDeleteNote",
+                            kind: "delete",
+                            label: t.common.forceDelete.menu,
+                            icon: <DeleteForeverRoundedIcon sx={{ fontSize: 18 }} />,
+                            danger: true,
+                            visible: isNoteOwner && activeChatNoteId != null,
+                            onClick: () => setForceDeleteOpen(true),
+                        },
                     ];
                     return (
                         <MoreMenu
@@ -670,6 +686,19 @@ export const ChatNoteHeader = ({
                         useNM={useNM}
                         useUISM={useUISM}
                         onClose={() => setHistoryOpen(false)}
+                    />
+                )}
+
+                {activeChatNoteId != null && (
+                    <ForceDeleteDialog
+                        description={t.common.forceDelete.noteDescription}
+                        entityName={useNM.currentChatNote?.title}
+                        hostZIndex={hostZIndex}
+                        kind="note"
+                        open={forceDeleteOpen}
+                        title={t.common.forceDelete.noteTitle}
+                        onClose={() => setForceDeleteOpen(false)}
+                        onConfirm={() => useNM.forceDeleteNoteById("chat", activeChatNoteId)}
                     />
                 )}
 

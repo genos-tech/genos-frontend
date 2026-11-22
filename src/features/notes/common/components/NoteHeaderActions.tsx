@@ -4,6 +4,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
@@ -21,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { ForceDeleteDialog } from "../../../../components/ui/modal/ForceDeleteDialog";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
 import { headerTouchTargetsSx, tallHitAreaSx } from "../../../../components/ui/touchTargets";
@@ -141,6 +143,7 @@ export const NoteHeaderActions = ({
     const overflowCount = Math.max(members.length - MAX_AVATARS_INLINE, 0);
 
     const [shareOpen, setShareOpen] = useState(false);
+    const [forceDeleteOpen, setForceDeleteOpen] = useState(false);
     // Version-history modal. Used to live in a header chip
     // (NoteHistoryChip in TaskNoteHeader); now opened from the ⋮ menu for
     // task notes so the header stays uncluttered.
@@ -698,6 +701,17 @@ export const NoteHeaderActions = ({
                         danger: true,
                         onClick: onDeleteNote,
                     },
+                    {
+                        // Owner only; the server decides again (403) and refuses a note with
+                        // sub-pages (409), which the dialog says (MIP-1937).
+                        id: "forceDeleteNote",
+                        kind: "delete",
+                        label: t.common.forceDelete.menu,
+                        icon: <DeleteForeverRoundedIcon sx={{ fontSize: 18 }} />,
+                        danger: true,
+                        visible: isOwner && activeNoteId != null,
+                        onClick: () => setForceDeleteOpen(true),
+                    },
                 ];
                 return (
                     <MoreMenu
@@ -711,6 +725,28 @@ export const NoteHeaderActions = ({
                     />
                 );
             })()}
+
+            {activeNoteId != null && (
+                <ForceDeleteDialog
+                    description={t.common.forceDelete.noteDescription}
+                    entityName={activeNoteTitle}
+                    hostZIndex={hostZIndex}
+                    kind="note"
+                    open={forceDeleteOpen}
+                    title={t.common.forceDelete.noteTitle}
+                    onClose={() => setForceDeleteOpen(false)}
+                    onConfirm={() =>
+                        useNM.forceDeleteNoteById(
+                            isPersonalNoteBucket(noteType)
+                                ? "personal"
+                                : noteType === 2
+                                  ? "task"
+                                  : "chat",
+                            activeNoteId
+                        )
+                    }
+                />
+            )}
 
             {/* Markdown import — creates a NEW note on this surface from a
                 local .md file (title defaults to the file name; my-notes

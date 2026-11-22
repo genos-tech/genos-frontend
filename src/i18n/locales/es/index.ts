@@ -323,6 +323,11 @@ export const es: DeepPartial<Messages> = {
             myMessagesDescription:
                 "Todos los mensajes que escribiste aquí, con sus archivos y reacciones, se borran ahora y no se pueden recuperar. Los mensajes de la otra persona no se tocan y el chat se mantiene.",
             myMessagesDone: "Se eliminaron tus mensajes.",
+            noteTitle: "¿Eliminar esta nota definitivamente?",
+            noteDescription:
+                "La nota, su historial, sus comentarios, archivos y entradas de búsqueda se borran ahora, junto con su copia colaborativa. No se puede deshacer. Quienes la vieron pueden haberla copiado.",
+            notAllowedNote: "Solo el propietario de la nota puede eliminarla definitivamente.",
+            hasChildren: "Elimina o mueve primero sus subpáginas.",
         },
         deleteChat: {
             button: "Eliminar grupo",

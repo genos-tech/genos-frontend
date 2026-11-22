@@ -139,7 +139,19 @@ describe("note header menu", () => {
             header.exportMarkdown,
             mute,
             header.deleteNote,
+            en.common.forceDelete.menu,
         ]);
+    });
+
+    it("offers Delete permanently to the note's owner only (MIP-1937)", () => {
+        const asEditor = {
+            ...(useNM as object),
+            currentNoteMembers: [{ userId: "u1", roleId: 2 }],
+        } as never;
+        renderHeader({ noteType: 1, useNM: asEditor });
+        const labels = menuLabels();
+        expect(labels).toContain(header.deleteNote);
+        expect(labels).not.toContain(en.common.forceDelete.menu);
     });
 
     it("leads a task note's menu with the ways to open it", () => {
@@ -155,7 +167,8 @@ describe("note header menu", () => {
             header.shareEllipsis,
             header.copyNoteLink,
         ]);
-        expect(labels.at(-1)).toBe(header.deleteNote);
+        expect(labels.at(-2)).toBe(header.deleteNote);
+        expect(labels.at(-1)).toBe(en.common.forceDelete.menu);
     });
 });
 
@@ -174,6 +187,48 @@ describe("chat note header menu", () => {
         currentNoteVersions: [{ versionId: 1 }],
         loadNote: vi.fn(),
     } as never;
+
+    const renderChatHeader = (nm: unknown) =>
+        render(
+            <MemoryRouter>
+                <CssVarsProvider>
+                    <ChatNoteHeader
+                        chat={undefined as never}
+                        isInChatPage={true}
+                        isInTaskPage={false}
+                        myself={{ userId: "u1", teamId: "t1" } as never}
+                        openDeleteNote={false}
+                        openSearchBox={false}
+                        setMyself={vi.fn()}
+                        setOpenDeleteNote={vi.fn()}
+                        setOpenSearchBox={vi.fn()}
+                        socket={null}
+                        useCM={{} as never}
+                        useNM={nm as never}
+                        usePM={{} as never}
+                        useTEM={{ teamMemberProfiles: [] } as never}
+                        useTM={{} as never}
+                        useUISM={{} as never}
+                        onCreateChildNote={vi.fn()}
+                        onDeleteNote={vi.fn()}
+                    />
+                </CssVarsProvider>
+            </MemoryRouter>
+        );
+
+    it("offers a chat note's owner Delete permanently, and nobody else (MIP-1937)", () => {
+        const { unmount } = renderChatHeader({
+            ...(useNM as object),
+            currentNoteMembers: [{ userId: "u1", roleId: 1 }],
+        });
+        expect(menuLabels().at(-1)).toBe(en.common.forceDelete.menu);
+        unmount();
+        renderChatHeader({
+            ...(useNM as object),
+            currentNoteMembers: [{ userId: "u1", roleId: 2 }],
+        });
+        expect(menuLabels()).not.toContain(en.common.forceDelete.menu);
+    });
 
     it("lists a chat note's actions in the shared order, agreeing with the note header", () => {
         render(

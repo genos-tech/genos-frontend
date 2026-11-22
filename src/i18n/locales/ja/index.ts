@@ -1953,6 +1953,11 @@ export const ja: DeepPartial<Messages> = {
             myMessagesDescription:
                 "ここで書いたすべてのメッセージを、ファイルやリアクションとともに今すぐ消去します。元に戻せません。相手のメッセージには影響せず、チャットは残ります。",
             myMessagesDone: "自分のメッセージを削除しました。",
+            noteTitle: "このノートを完全に削除しますか?",
+            noteDescription:
+                "ノート、その履歴、コメント、ファイル、検索エントリがすぐに消去され、共同編集用のコピーも削除されます。元に戻すことはできません。閲覧した人がコピーしている可能性があります。",
+            notAllowedNote: "完全に削除できるのは、ノートのオーナーのみです。",
+            hasChildren: "先にサブページを削除するか移動してください。",
         },
         deleteChat: {
             button: "グループを削除",
