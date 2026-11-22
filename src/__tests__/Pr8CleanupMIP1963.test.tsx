@@ -47,7 +47,9 @@ describe("Velocity with nothing in the window", () => {
 });
 
 describe("ProjectAvatar in a picker (MIP-1981)", () => {
-    const props = {
+    // The real props are a dozen app-state objects; the test only needs the two it reads.
+    const Avatar = ProjectAvatar as unknown as (p: Record<string, unknown>) => JSX.Element;
+    const props: Record<string, unknown> = {
         socket: null,
         useTEM: { teamMemberProfiles: {} },
         myself: { userId: "me" },
@@ -55,19 +57,19 @@ describe("ProjectAvatar in a picker (MIP-1981)", () => {
         pmChat: { profileImagePath: null },
         useCM: { allChats: [] },
         useUISM: {},
-    } as never;
+    };
 
     it("is clickable by default and a plain picture with clickable={false}", () => {
         const { container, rerender } = render(
             <CssVarsProvider>
-                <ProjectAvatar {...(props as object)} />
+                <Avatar {...props} />
             </CssVarsProvider>
         );
         const clickable = container.querySelector('[role="button"], button');
         expect(clickable).toBeTruthy();
         rerender(
             <CssVarsProvider>
-                <ProjectAvatar {...(props as object)} clickable={false} />
+                <Avatar {...props} clickable={false} />
             </CssVarsProvider>
         );
         expect(container.querySelector('[role="button"], button')).toBeNull();
