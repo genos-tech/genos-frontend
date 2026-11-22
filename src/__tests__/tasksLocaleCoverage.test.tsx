@@ -90,8 +90,7 @@ describe("tasks catalog: every locale has every English key", () => {
 const PR_KEYS = [
     "dashboard.currentProject",
     "dashboard.selectProjectForAnalytics",
-    "dashboard.tabOverall",
-    "dashboard.tabSprint",
+    "dashboard.tabProject",
     "dashboard.tabMyTasks",
     "dashboard.tabMemberTasks",
     "dashboard.newTask",

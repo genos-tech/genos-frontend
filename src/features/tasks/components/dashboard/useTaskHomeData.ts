@@ -21,6 +21,7 @@ import { sortTopWeightRows, TopWeightSortMode } from "../../utils/topWeightSort"
 import { useDashboardTab } from "./dashboardTab";
 import { buildCapacityMap, isOngoingMilestone, taskUpdatedAtById } from "./taskHomeHelpers";
 import type { TaskHomeContentProps } from "./taskHomeTypes";
+import { useMoreAnalyticsOpen } from "./useMoreAnalyticsOpen";
 
 export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const { useTM, usePM, useSM, myself, useCM } = props;
@@ -38,6 +39,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // The open tab lives in the address (`?view=today`, `?view=agent`, ...): see dashboardTab.ts.
     // With no tab named, Today on the first open of each day, then the one used last.
     const [activeTab, setActiveTab] = useDashboardTab(myself.userId);
+    const [moreAnalyticsOpen, setMoreAnalyticsOpen] = useMoreAnalyticsOpen(myself.userId);
     // The Today tab's data (MIP-1005): loaded only while that tab is open.
     const todayView = useBriefingToday(
         accessToken,
@@ -141,7 +143,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // Only the Overall tab shows Team Capacity, so the (up to 500 row) read waits for it: opening
     // the dashboard on Today no longer fetches it. Read once per team, then kept.
     const teamTasksLoadedFor = useRef<string | null>(null);
-    const needsTeamTasks = activeTab === "overall";
+    const needsTeamTasks = activeTab === "project" && moreAnalyticsOpen;
     useEffect(() => {
         if (!needsTeamTasks || !myself.teamId || !accessToken) return;
         if (teamTasksLoadedFor.current === myself.teamId) return;
@@ -761,6 +763,8 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         effectiveTasks,
         stats,
         sprintStats,
+        moreAnalyticsOpen,
+        setMoreAnalyticsOpen,
         assigneeWorkload,
         tagStats,
         recentTasks,

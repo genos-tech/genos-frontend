@@ -3357,8 +3357,18 @@ export const es: DeepPartial<Messages> = {
             currentProject: "Proyecto actual",
             selectProjectForAnalytics:
                 "Selecciona un proyecto en la barra lateral para ver las analíticas del sprint",
-            tabOverall: "Resumen general",
-            tabSprint: "Análisis del sprint",
+            tabProject: "Proyecto",
+            project: {
+                summary:
+                    "{closed} de {total} cerradas · {overdue} vencidas · {blocked} bloqueadas",
+                attentionTitle: "Requiere atención",
+                attentionFilter: "Mostrar en esta lista",
+                showAll: "Ver todas ({count})",
+                showLess: "Ver menos",
+                emptyTop: "Aún no hay tareas con prioridad o fecha límite",
+                moreAnalytics: "Más análisis",
+                sprintRemaining: "Restantes",
+            },
             tabMyTasks: "Mis tareas",
             tabMemberTasks: "Tareas de miembros",
             tabAgentActivity: "Actividad de agentes",

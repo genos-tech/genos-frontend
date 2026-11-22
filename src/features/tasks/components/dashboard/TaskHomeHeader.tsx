@@ -17,8 +17,7 @@ import type { TaskHomeData } from "./useTaskHomeData";
 
 /** The tabs whose numbers follow the picked project and sprint. Today and Agent activity do not. */
 const PROJECT_SCOPED_TABS: readonly TaskDashboardTab[] = [
-    "overall",
-    "sprint",
+    "project",
     "milestones",
     "mytasks",
     "members",

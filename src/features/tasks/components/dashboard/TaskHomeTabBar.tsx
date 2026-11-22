@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
@@ -26,14 +25,9 @@ export const TaskHomeTabBar = ({ activeTab, setActiveTab, myStats }: TaskHomeTab
         () => [
             { id: "today", label: t.tasks.dashboard.tabToday, icon: <TodayRoundedIcon /> },
             {
-                id: "overall",
-                label: t.tasks.dashboard.tabOverall,
+                id: "project",
+                label: t.tasks.dashboard.tabProject,
                 icon: <TrendingUpRoundedIcon />,
-            },
-            {
-                id: "sprint",
-                label: t.tasks.dashboard.tabSprint,
-                icon: <CalendarMonthRoundedIcon />,
             },
             {
                 id: "milestones",
