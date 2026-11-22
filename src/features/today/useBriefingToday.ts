@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 
-import { useAuth } from "../../context/AuthContext";
 import { BriefingToday, loadBriefingToday, markLooked, sinceForView } from "./briefingToday";
 
 export type BriefingTodayStatus = "loading" | "ready" | "unavailable" | "error";
@@ -21,11 +20,14 @@ export type BriefingTodayView = {
  * visit lists what changed in between. Failures are a status, never an exception.
  */
 export const useBriefingToday = (
+    accessToken: string | null,
     teamId: string | null | undefined,
     userId: string | null | undefined,
-    enabled = true
+    enabled = true,
+    // The Today tab shows everything, so leaving it counts as having looked. The Genos page
+    // card shows three rows: leaving it must not use up the changes the viewer never saw.
+    markOnLeave = true
 ): BriefingTodayView => {
-    const { accessToken } = useAuth();
     const [status, setStatus] = useState<BriefingTodayStatus>("loading");
     const [data, setData] = useState<BriefingToday | null>(null);
     const [reload, setReload] = useState(0);
@@ -35,8 +37,8 @@ export const useBriefingToday = (
 
     useEffect(() => {
         if (!enabled || !teamId || !userId) return undefined;
-        return () => markLooked(userId, teamId);
-    }, [enabled, teamId, userId]);
+        return markOnLeave ? () => markLooked(userId, teamId) : undefined;
+    }, [enabled, markOnLeave, teamId, userId]);
 
     useEffect(() => {
         if (!enabled || !teamId || !userId) return undefined;
