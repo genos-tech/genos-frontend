@@ -17,6 +17,7 @@ import {
     SECURITY_META,
     SUBPROCESSORS_META,
     SUPPORT_META,
+    TERMS_META,
 } from "./pageMeta";
 import { LP_ROUTES, routeFor } from "./routes";
 
@@ -106,9 +107,8 @@ const SINGLE_META: Record<string, Meta> = {
     "/subprocessors": SUBPROCESSORS_META,
     "/cookies": COOKIES_META,
     "/legal": LEGAL_META,
+    "/terms": TERMS_META,
 };
-
-/** `/terms` has no meta of its own yet: it keeps index.html's generic head (listed for the maintainer). */
 
 /** The head spec of a public page, or undefined when the page has no meta of its own. */
 export const headSpecFor = (

@@ -30,7 +30,7 @@ const sitemapArticles = articles
     .map((a) => ({ slug: a.slug, publishedAt: a.publishedAt }));
 
 /** Pages that have no meta of their own yet: they keep index.html's generic head. Listed so a new gap fails here. */
-const NO_OWN_META = ["/terms"];
+const NO_OWN_META: string[] = [];
 
 const sitemapUrls = [...buildSitemapXml(sitemapArticles).matchAll(/<loc>([^<]+)<\/loc>/g)].map(
     (m) => m[1].replace(/&amp;/g, "&")
