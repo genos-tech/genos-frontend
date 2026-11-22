@@ -180,7 +180,6 @@ describe("the migrated files do not re-declare the old status hexes", () => {
         "features/tasks/components/table/DraggableTaskRow.tsx",
         "features/tasks/sprint-milestone/utils/sortMilestones.ts",
         "features/tasks/sprint-milestone/components/SprintManagerDialog.tsx",
-        "features/tasks/sprint-milestone/components/SprintMilestonesSection.tsx",
         "features/tasks/utils/TaskMessageTemplate.ts",
         "components/layout/HistoryModal.tsx",
     ])("%s", (file) => {

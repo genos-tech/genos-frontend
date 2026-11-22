@@ -94,6 +94,7 @@ export const TaskHomeHeader = ({
                                 pmChat ? (
                                     <ProjectAvatar
                                         avatarSize={20}
+                                        clickable={false}
                                         myself={myself}
                                         pmChat={pmChat}
                                         setMyself={setMyself}

@@ -5807,9 +5807,6 @@ export const fr: DeepPartial<Messages> = {
             tasksSuffix: " tâches",
         },
         milestones: {
-            sectionInSprint: "Jalons dans {name}",
-            sectionNoSprint: "Jalons (aucun sprint)",
-            noMilestones: "Aucun jalon dans ce sprint pour le moment.",
             untitled: "Jalon sans titre",
         },
         deleteSprint: {
@@ -6481,13 +6478,6 @@ export const fr: DeepPartial<Messages> = {
                 lastProgress: "Dernière progression {when}",
             },
             memberTasks: {
-                pickLabel: "Membre",
-                pickPlaceholder: "Rechercher un membre…",
-                viewing: "Visualisation",
-                pickHint: "Choisissez un membre pour voir ses statistiques de tâche.",
-                noMembers: "Aucun autre membre n'a de tâches dans ce projet.",
-                promptTitle: "Choisissez un membre",
-                promptBody: "Choisissez un membre ci-dessus pour voir ses statistiques de tâche.",
                 nothingAssignedTitle: "Rien n'est attribué à ce membre",
                 nothingAssignedBody:
                     "Assignez une tâche de ce projet à ce membre pour la voir ici.",
@@ -6516,7 +6506,6 @@ export const fr: DeepPartial<Messages> = {
             topWeight: {
                 title: "Haut en poids",
                 subtitle: "Commencez-les maintenant",
-                sortFlip: "Cliquez à nouveau pour inverser l'ordre",
                 help: {
                     title: "Qu'est-ce que le poids de la tâche ?",
                     body: "Un score de 1 à 25 indiquant combien une tâche doit être démarrée maintenant. Poids = priorité × pression de temps pour commencer. Des niveaux d'effort plus importants commencent à créer cette pression plus tôt - une tâche importante commence à grimper environ une semaine avant sa date d'échéance, une tâche rapide seulement au cours des derniers jours - de sorte que de gros travaux font surface alors qu'il reste encore de la place pour y travailler. Plus le numéro est élevé, plus il faudra le récupérer rapidement.",
@@ -6552,9 +6541,6 @@ export const fr: DeepPartial<Messages> = {
             pickASprint: "Choisir un sprint",
             sprintSettingsTooltip: "Paramètres du sprint",
             manageSprintsTooltip: "Gérer les sprints",
-            burndownTooltip: "Clôturées dans le sprint / Créées dans le sprint",
-            milestoneTooltip: "Jalon",
-            projectsCount: "{count} projets",
             statusLabels: {
                 open: "Ouvert",
                 wip: "En cours",
@@ -6617,8 +6603,6 @@ export const fr: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "Aucun jalon n'est à risque.",
                 openMilestoneFor: "Ouvrir {title}",
             },
-            tabMyTasks: "Mes tâches",
-            tabMemberTasks: "Tâches des membres",
             tabPeople: "Personnes",
             people: {
                 person: "Personne",

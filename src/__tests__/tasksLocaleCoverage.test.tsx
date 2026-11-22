@@ -91,8 +91,6 @@ const PR_KEYS = [
     "dashboard.currentProject",
     "dashboard.selectProjectForAnalytics",
     "dashboard.tabProject",
-    "dashboard.tabMyTasks",
-    "dashboard.tabMemberTasks",
     "dashboard.newTask",
     "dashboard.sprintProgress",
     "dashboard.sprintClosedOfTotal",

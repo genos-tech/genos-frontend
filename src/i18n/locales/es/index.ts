@@ -2857,9 +2857,6 @@ export const es: DeepPartial<Messages> = {
                 "No hay nadie a quien agregar. Los colaboradores deben ser miembros de este proyecto.",
         },
         milestones: {
-            sectionInSprint: "Hitos en {name}",
-            sectionNoSprint: "Hitos (sin sprint)",
-            noMilestones: "Aún no hay hitos en este sprint.",
             untitled: "Hito sin título",
         },
         deleteSprint: {
@@ -3269,9 +3266,6 @@ export const es: DeepPartial<Messages> = {
             pickASprint: "Elige un sprint",
             sprintSettingsTooltip: "Ajustes del sprint",
             manageSprintsTooltip: "Gestionar sprints",
-            burndownTooltip: "Cerradas en el sprint / Creadas en el sprint",
-            milestoneTooltip: "Hito",
-            projectsCount: "{count} proyectos",
             statusLabels: {
                 open: "Abierta",
                 wip: "En progreso",
@@ -3312,13 +3306,6 @@ export const es: DeepPartial<Messages> = {
                 lastProgress: "Último avance {when}",
             },
             memberTasks: {
-                pickLabel: "Miembro",
-                pickPlaceholder: "Buscar un miembro…",
-                viewing: "Visita",
-                pickHint: "Elige un miembro para ver las estadísticas de sus tareas.",
-                noMembers: "Ningún otro miembro tiene tareas en este proyecto.",
-                promptTitle: "Elige un miembro",
-                promptBody: "Elige un miembro arriba para ver las estadísticas de sus tareas.",
                 nothingAssignedTitle: "No hay nada asignado a este miembro.",
                 nothingAssignedBody:
                     "Asigna una tarea de este proyecto a este miembro para verla aquí.",
@@ -3348,7 +3335,6 @@ export const es: DeepPartial<Messages> = {
             topWeight: {
                 title: "Arriba por peso",
                 subtitle: "Empieza por estas",
-                sortFlip: "Haz clic nuevamente para invertir el orden.",
                 help: {
                     title: "¿Qué es el peso de la tarea?",
                     body: "Una puntuación de 1 a 25 de cuánto se debe iniciar una tarea ahora. Peso = prioridad × presión de tiempo para empezar. Los niveles de esfuerzo más intensos comienzan a generar esa presión antes (una tarea extensa comienza a aumentar aproximadamente una semana antes de su fecha de entrega, una rápida solo en los últimos días), por lo que los trabajos grandes surgen mientras todavía hay espacio para trabajar en ellos. Cuanto mayor sea el número, antes se deberá recoger.",
@@ -3414,8 +3400,6 @@ export const es: DeepPartial<Messages> = {
                 noMilestonesAtRisk: "Ningún hito está en riesgo.",
                 openMilestoneFor: "Abrir {title}",
             },
-            tabMyTasks: "Mis tareas",
-            tabMemberTasks: "Tareas de miembros",
             tabPeople: "Personas",
             people: {
                 person: "Persona",
