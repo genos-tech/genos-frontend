@@ -6369,10 +6369,41 @@ export const zh: DeepPartial<Messages> = {
                         prs: "PR 事件 {n} 个",
                     },
                 },
+                greeting: {
+                    morning: "早上好",
+                    afternoon: "下午好",
+                    evening: "晚上好",
+                },
+                summary: {
+                    overdue: "{n} 项已逾期",
+                    dueToday: "{n} 项今天到期",
+                    waiting: "{n} 项等你处理",
+                    changed: "{n} 项有更新",
+                    join: "，",
+                    clear: "今天没有到期的事项。",
+                },
+                tiles: {
+                    overdue: "已逾期",
+                    changed: "有更新",
+                },
+                progress: {
+                    label: "今日进度",
+                    allDone: "今天的事项已全部完成",
+                    done: "已完成 {n}",
+                    toGo: "还剩 {n}",
+                    aria: "今天共 {total} 项，已完成 {done} 项",
+                },
+                row: {
+                    milestone: "里程碑",
+                    task: "任务",
+                    blocked: "被阻塞",
+                    waitingOn: "等待 {ids}",
+                },
                 empty: {
-                    title: "没有等你处理的事",
-                    body: "没有到期事项，没有待答复，也没有变化。",
+                    title: "今天很清闲",
+                    body: "没有到期事项，没有待回复，也没有变更。适合专注工作。",
                     section: "暂无。",
+                    doneToday: "你今天已完成 {n} 项。",
                 },
                 states: {
                     loading: "正在加载“今天”",

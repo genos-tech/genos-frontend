@@ -6618,10 +6618,41 @@ export const ja: DeepPartial<Messages> = {
                         prs: "PR イベント {n} 件",
                     },
                 },
+                greeting: {
+                    morning: "おはようございます",
+                    afternoon: "こんにちは",
+                    evening: "こんばんは",
+                },
+                summary: {
+                    overdue: "期限切れ {n} 件",
+                    dueToday: "今日が期限 {n} 件",
+                    waiting: "あなた待ち {n} 件",
+                    changed: "変更 {n} 件",
+                    join: "、",
+                    clear: "今日が期限のものはありません。",
+                },
+                tiles: {
+                    overdue: "期限切れ",
+                    changed: "変更",
+                },
+                progress: {
+                    label: "今日の進み具合",
+                    allDone: "今日の分はすべて完了",
+                    done: "完了 {n}",
+                    toGo: "残り {n}",
+                    aria: "今日 {total} 件中 {done} 件完了",
+                },
+                row: {
+                    milestone: "マイルストーン",
+                    task: "タスク",
+                    blocked: "ブロック中",
+                    waitingOn: "{ids} 待ち",
+                },
                 empty: {
-                    title: "返事待ちはありません",
-                    body: "期限、返事待ち、変更はありません。",
+                    title: "今日は予定がありません",
+                    body: "期限も返事待ちも変更もありません。集中作業にぴったりの日です。",
                     section: "ありません。",
+                    doneToday: "今日は {n} 件完了しました。",
                 },
                 states: {
                     loading: "今日を読み込み中",

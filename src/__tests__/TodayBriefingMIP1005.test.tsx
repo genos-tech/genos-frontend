@@ -231,12 +231,13 @@ describe("TodayBriefing", () => {
     it("shows due, waiting and changed across projects; a click opens the row", () => {
         renderToday(view(answer()));
         expect(screen.getByRole("region", { name: "Due and overdue" })).toBeInTheDocument();
-        expect(screen.getByText("WEB-4 Fix login")).toBeInTheDocument();
+        expect(screen.getByText("Fix login")).toBeInTheDocument();
+        expect(screen.getByText("WEB-4")).toBeInTheDocument();
         expect(screen.getByText("2 days overdue")).toBeInTheDocument();
-        expect(screen.getByText("Due today")).toBeInTheDocument();
+        expect(screen.getAllByText("Due today").length).toBeGreaterThan(0);
         expect(screen.getByText("Mentioned you in Design")).toBeInTheDocument();
         expect(screen.getByText("Ben commented: ok")).toBeInTheDocument();
-        fireEvent.click(screen.getByText("API-9 Ship it"));
+        fireEvent.click(screen.getByText("Ship it"));
         expect(navigate).toHaveBeenCalledWith("/workspace/tasks/project/4/task/12");
     });
 
@@ -254,7 +255,7 @@ describe("TodayBriefing", () => {
             )
         );
         expect(screen.queryByRole("button", { name: /No project/ })).toBeNull();
-        expect(screen.getByText("X-1 No project")).toBeInTheDocument();
+        expect(screen.getByText("No project")).toBeInTheDocument();
     });
 
     it("says plainly when nothing is waiting, and offers a retry on an error", () => {
@@ -267,7 +268,7 @@ describe("TodayBriefing", () => {
             changed: { items: [], total: 0, truncated: false },
         });
         const { unmount } = renderToday(view(empty));
-        expect(screen.getByText("Nothing is waiting on you")).toBeInTheDocument();
+        expect(screen.getByText("Your day is clear")).toBeInTheDocument();
         unmount();
         const failed = view(null, "error");
         renderToday(failed);

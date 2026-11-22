@@ -1394,10 +1394,41 @@ export const tasks = {
                     prs: "{n, plural, one {# PR event} other {# PR events}}",
                 },
             },
+            greeting: {
+                morning: "Good morning",
+                afternoon: "Good afternoon",
+                evening: "Good evening",
+            },
+            summary: {
+                overdue: "{n} overdue",
+                dueToday: "{n} due today",
+                waiting: "{n} waiting on you",
+                changed: "{n} changed",
+                join: ", ",
+                clear: "Nothing due today.",
+            },
+            tiles: {
+                overdue: "Overdue",
+                changed: "Changed",
+            },
+            progress: {
+                label: "Today's progress",
+                allDone: "All done for today",
+                done: "{n} done",
+                toGo: "{n} to go",
+                aria: "{done} of {total} done today",
+            },
+            row: {
+                milestone: "Milestone",
+                task: "Task",
+                blocked: "Blocked",
+                waitingOn: "Waiting on {ids}",
+            },
             empty: {
-                title: "Nothing is waiting on you",
-                body: "Nothing is due, nothing needs an answer and nothing changed in your projects.",
+                title: "Your day is clear",
+                body: "Nothing is due, nothing needs an answer and nothing changed. A good time for deep work.",
                 section: "Nothing here.",
+                doneToday: "You closed {n} today.",
             },
             states: {
                 loading: "Loading today",
