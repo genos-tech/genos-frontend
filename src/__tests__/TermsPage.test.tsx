@@ -1,16 +1,17 @@
 /**
- * `/terms` — the interim Terms of Service (MIP-1843), behind `VITE_SHOW_TERMS_PAGE`.
+ * `/terms` — the interim Terms of Service (MIP-1843),, always routed (no build flag).
  *
  * Three halves. (1) The text: the same 15 articles in Japanese and English,
  * in the same order, with the same number of clauses; no sentence that names
  * ChatGPT, OpenAI or the Secretary; no liability cap, indemnity or arbitration
  * clause (those are for counsel: see termsContent.ts); no open 【placeholder】.
- * (2) The flag: OFF means no route (the URL is the 404 page), no footer link and
- * no sitemap entry; ON means the page, the footer link and the sitemap entry.
+ * (2) The route, the footer link and the sitemap entry exist with no env set.
  * (3) The page renders both languages for a visitor with no auth context.
  */
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { render, screen, within } from "@testing-library/react";
-import { MemoryRouter, Routes } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { CONTACT_EMAIL } from "../lp/kit/links";
@@ -24,7 +25,6 @@ import {
     TERMS_STATUS,
 } from "../lp/termsContent";
 import TermsPage from "../lp/TermsPage";
-import { termsRoutes } from "../lp/termsRoute";
 
 const JAPANESE = /[぀-ヿ一-鿿]/;
 
@@ -95,31 +95,9 @@ describe("interim terms: text structure", () => {
     });
 });
 
-describe("interim terms: the flag", () => {
-    it("registers no /terms route when VITE_SHOW_TERMS_PAGE is off (the default)", () => {
+describe("interim terms: always on, no build flag (MIP-1903)", () => {
+    it("always links /terms from the footer, with the legal notice beside it", () => {
         vi.stubEnv("VITE_SHOW_TERMS_PAGE", "");
-        expect(termsRoutes()).toBeNull();
-    });
-
-    it('registers no /terms route for any value other than the string "true"', () => {
-        vi.stubEnv("VITE_SHOW_TERMS_PAGE", "1");
-        expect(termsRoutes()).toBeNull();
-    });
-
-    it("shows no /terms link in the footer when the flag is off", () => {
-        vi.stubEnv("VITE_SHOW_TERMS_PAGE", "");
-        render(
-            <MemoryRouter>
-                <LpShell active={null}>{() => <p>body</p>}</LpShell>
-            </MemoryRouter>
-        );
-        expect(document.querySelector('a[href="/terms"]')).toBeNull();
-        // The footer keeps the one legal link it had before the flag existed.
-        expect(document.querySelector('a[href="/legal"]')).not.toBeNull();
-    });
-
-    it("shows the /terms link in the footer when the flag is on", () => {
-        vi.stubEnv("VITE_SHOW_TERMS_PAGE", "true");
         render(
             <MemoryRouter>
                 <LpShell active={null}>{() => <p>body</p>}</LpShell>
@@ -129,29 +107,20 @@ describe("interim terms: the flag", () => {
         expect(document.querySelector('a[href="/legal"]')).not.toBeNull();
     });
 
-    it("omits /terms from the sitemap when the flag is off, and lists it when on", () => {
-        const off = buildSitemapXml([], { includeTerms: false });
-        expect(off).not.toContain("/terms");
-        const on = buildSitemapXml([], { includeTerms: true });
-        expect(on).toContain("https://genosai.dev/terms");
+    it("lists /terms in the sitemap", () => {
+        expect(buildSitemapXml([])).toContain("https://genosai.dev/terms");
     });
 
-    it("renders the page at /terms when the flag is on", async () => {
-        vi.stubEnv("VITE_SHOW_TERMS_PAGE", "true");
-        render(
-            <MemoryRouter initialEntries={["/terms"]}>
-                <Routes>{termsRoutes()}</Routes>
-            </MemoryRouter>
-        );
-        const heading = await screen.findByRole("heading", { level: 1, name: "利用規約" });
-        expect(heading).toBeTruthy();
-        expect(screen.getByTestId("terms-interim-notice")).toBeTruthy();
+    it("mounts the /terms route in main.tsx with no env set", () => {
+        vi.stubEnv("VITE_SHOW_TERMS_PAGE", "");
+        const main = readFileSync(resolve(__dirname, "../main.tsx"), "utf8");
+        expect(main).toMatch(/path="\/terms"/);
+        expect(main).not.toContain("VITE_SHOW_TERMS_PAGE");
     });
 });
 
 describe("TermsPage", () => {
     it("renders all 15 articles in Japanese and English for a visitor with no auth context", () => {
-        vi.stubEnv("VITE_SHOW_TERMS_PAGE", "true");
         render(
             <MemoryRouter>
                 <TermsPage />

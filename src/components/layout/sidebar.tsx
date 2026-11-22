@@ -144,7 +144,11 @@ const RailButton = ({
     >
         <AppTooltip placement="right" size="sm" title={tooltip}>
             <ListItemButton
+                // The tooltip would otherwise become the name (Joy copies a string title into
+                // aria-label), and for some buttons it does not contain the visible label
+                // (WCAG 2.5.3): name = the label, then the shortcut hint.
                 aria-current={selected ? "page" : undefined}
+                aria-label={tooltip.startsWith(label) ? tooltip : `${label}, ${tooltip}`}
                 color="neutral"
                 selected={selected}
                 variant="plain"

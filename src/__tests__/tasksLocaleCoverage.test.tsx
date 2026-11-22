@@ -231,8 +231,10 @@ describe("names are bidi-isolated", () => {
         ["features/tasks/components/modals/ModalCreateProject.tsx", ["{member.userName}"]],
         [
             "features/tasks/components/dashboard/TaskHomeContent.tsx",
-            ["{selectedMember.name}", "{o.name}", "{m.name}", "{a.name}"],
+            ["{selectedMember.name}", "{m.name}", "{a.name}"],
         ],
+        // The member option row shared by Member's Tasks and the Agent Activity filter (MIP-1916).
+        ["features/tasks/components/autocompletes/MemberPickerParts.tsx", ["{o.name}"]],
     ];
     // The board card's assignee name now lives in the shared TaskCard (MIP-1124).
     it("TaskCard.tsx (the board card's assignee name)", () => {

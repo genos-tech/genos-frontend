@@ -36,4 +36,14 @@ describe("SkipToContent", () => {
         await user.keyboard("{Enter}");
         expect(document.activeElement).toBe(document.getElementById(APP_MAIN_ID));
     });
+
+    it("does not push a history entry: the hash stays empty (MIP-1928)", async () => {
+        const user = userEvent.setup();
+        window.location.hash = "";
+        render(<Shell />);
+        await user.tab();
+        await user.keyboard("{Enter}");
+        expect(window.location.hash).toBe("");
+        expect(document.activeElement).toBe(document.getElementById(APP_MAIN_ID));
+    });
 });
