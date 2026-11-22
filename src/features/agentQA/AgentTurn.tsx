@@ -84,7 +84,7 @@ import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { fmt } from "../../i18n";
 import type { DroppedReference, PendingApprovalPayload } from "../../services/agentApi";
 import { g } from "../../theme/tokens";
-import { entitySubtitle } from "../spotlight/SpotlightResultItem";
+import { entitySubtitle } from "../spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../spotlight/types";
 import { agentMarkdownComponents } from "./agentMarkdown";
 import type { AgentTurnLabels } from "./agentTurnLabels";

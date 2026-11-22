@@ -3,8 +3,8 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { act, fireEvent, render, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { COLUMNS } from "../features/tasks/components/board/SprintBoard";
 import { SprintBoardColumn } from "../features/tasks/components/board/SprintBoardColumn";
+import { COLUMNS } from "../features/tasks/components/board/sprintBoardHelpers";
 import {
     BOARD_DRAGGING_ATTR,
     useBoardDragScrollLock,

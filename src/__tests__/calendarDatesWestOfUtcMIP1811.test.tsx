@@ -20,7 +20,7 @@ import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { MilestoneCardBody } from "../features/tasks/components/MilestoneCardBody";
 import { MilestoneNodeView } from "../features/tasks/diagram/components/MilestoneNodeCard";
 import { ModalTaskDiagram } from "../features/tasks/diagram/components/ModalTaskDiagram";
-import { computeOverview } from "../features/tasks/diagram/components/TaskFlowCanvas";
+import { computeOverview } from "../features/tasks/diagram/components/taskFlowCanvasHelpers";
 import { TaskNodeView } from "../features/tasks/diagram/components/TaskNodeCard";
 import type { TaskGraph, TaskNodeData } from "../features/tasks/diagram/types";
 import { computeHealth, getScheduleStatus } from "../features/tasks/diagram/utils/scheduleStatus";

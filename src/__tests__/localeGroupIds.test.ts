@@ -38,7 +38,7 @@ import { fr } from "../i18n/locales/fr";
 import { hi } from "../i18n/locales/hi";
 import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
-import { GROUP_ORDER } from "../lp/DemoPage";
+import { GROUP_ORDER } from "../lp/demoPageHelpers";
 
 // Imported directly rather than through `localeLoaders`, which is async by
 // design. The property under test is a property of the source catalogs.

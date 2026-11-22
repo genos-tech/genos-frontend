@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 
 import { sourceChipLabel } from "../features/spotlight/SpotlightContent";
-import { badgeFor } from "../features/spotlight/SpotlightResultItem";
+import { badgeFor } from "../features/spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../features/spotlight/types";
 import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";

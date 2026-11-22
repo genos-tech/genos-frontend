@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "../../../../../i18n";
 import { g } from "../../../../../theme/tokens";
 import { MilestoneFolder } from "../../../sprint-milestone/types";
+import { FAVORITE_COLOR } from "./milestoneFolderMenusHelpers";
 import { ROW_ACTIONS_ENGAGED_ATTR } from "./milestoneRowEngaged";
 
 // The "..." menus of the milestone sidebar (MIP-847). Both stop the click
@@ -24,9 +25,6 @@ const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 // Joy's plain neutral icon is ~3:1 on the row, which read as "invisible" (MIP-1156): the row
 // actions use the secondary text role. `--Icon-color` too: Joy icons colour themselves from it.
 const ACTION_ICON_SX = { color: g.text.secondary, "--Icon-color": g.text.secondary } as const;
-
-// The amber the notes sidebar's favorite stars use.
-export const FAVORITE_COLOR = g.warning.solid;
 
 type MilestoneRowMenuProps = {
     milestoneTitle: string;
