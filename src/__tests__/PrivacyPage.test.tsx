@@ -170,6 +170,14 @@ describe("PrivacyPage", () => {
         );
     });
 
+    it("states the backup retention in both languages (MIP-1976)", () => {
+        const { container } = renderPage();
+        const { ja, en } = splitText(container.textContent ?? "");
+        expect(ja).toMatch(/バックアップ[^]*?最長27日間[^]*?既存のバックアップからは/);
+        expect(en).toMatch(/backups of our database and of uploaded files for up to\s+27 days/);
+        expect(en).toContain("does not remove it from existing backups until they expire");
+    });
+
     it("does not make claims that are unverified or placeholders", () => {
         const { container } = renderPage();
         const text = container.textContent ?? "";
