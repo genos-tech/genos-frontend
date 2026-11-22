@@ -146,6 +146,28 @@ export const LEGAL_META: Meta = {
         "特定商取引法に基づく表記と、解約・返金のご案内(英語の要約つき)。 Disclosure under Japan's Specified Commercial Transactions Act, with an English summary.",
 };
 
+/**
+ * The terms (approved wording, Ken 2026-11-22). The page shows both languages
+ * on one URL, so the served head joins the two (like the privacy page).
+ */
+export const TERMS_TEXT: Record<SeoLang, Meta> = {
+    ja: {
+        title: "利用規約 | Genos",
+        description:
+            "Genos をご利用いただく際の条件です。アカウント、データの取り扱い、禁止事項、プランとお支払い、サービスの変更や終了について定めています。",
+    },
+    en: {
+        title: "Terms of Service | Genos",
+        description:
+            "The terms for using Genos: your account, how your data is handled, what is not allowed, plans and payment, and how the service may change or end.",
+    },
+};
+
+export const TERMS_META: Meta = {
+    title: "利用規約 | Terms of Service | Genos",
+    description: `${TERMS_TEXT.ja.description} ${TERMS_TEXT.en.description}`,
+};
+
 /** A blog article's own title and excerpt are its meta. */
 export const articleMeta = (article: { title: string; excerpt: string }): Meta => ({
     title: `${article.title} | Genos`,
