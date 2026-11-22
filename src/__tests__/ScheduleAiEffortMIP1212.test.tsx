@@ -102,7 +102,7 @@ const AI_SCHEDULE = {
     name: "Morning plan",
     job: "what_to_do_today",
     jobTitle: "What to do today",
-    params: {},
+    params: { ai_sentences: true },
     when: "every day at 18:00",
     frequency: "daily" as const,
     // Not the form's default time, or creating one would be a duplicate of this.
@@ -142,6 +142,13 @@ const openNew = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.click(await screen.findByRole("button", { name: "New schedule" }));
     return screen.getByTestId("schedule-form");
 };
+// AI sentences are an opt-in (MIP-1969): the effort control shows once the switch is on.
+const openNewAiOn = async (user: ReturnType<typeof userEvent.setup>) => {
+    await openNew(user);
+    await user.click(
+        within(screen.getByTestId("schedule-params")).getByRole("switch", { name: "AI sentences" })
+    );
+};
 const pickJob = async (user: ReturnType<typeof userEvent.setup>, title: string) => {
     await user.click(screen.getByRole("combobox", { name: "Report" }));
     await user.click(await screen.findByRole("option", { name: title }));
@@ -155,7 +162,7 @@ describe("the control in the form", () => {
     it("is three plain levels, the job's default marked and chosen, in a labelled group", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
-        await openNew(user);
+        await openNewAiOn(user);
         // The first job of the catalog is the AI one.
         expect(screen.getByRole("radiogroup", { name: "AI effort" })).toBeTruthy();
         expect(radios().map((r) => r.labels?.[0]?.textContent)).toEqual([
@@ -169,7 +176,7 @@ describe("the control in the form", () => {
     it("gives the estimate of the chosen level, as an estimate, in credits", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
-        await openNew(user);
+        await openNewAiOn(user);
         const box = screen.getByTestId("schedule-effort");
         expect(
             within(box).getByText("About 0.02 credits per run. This is an estimate.")
@@ -187,7 +194,7 @@ describe("the control in the form", () => {
     it("never calls an estimate a charge or a saving, and never says AI is running", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
-        await openNew(user);
+        await openNewAiOn(user);
         const text = screen.getByTestId("schedule-form").textContent ?? "";
         for (const word of [
             /cheap/i,
@@ -200,14 +207,14 @@ describe("the control in the form", () => {
             expect(text).not.toMatch(word);
         }
         // The option is described as what it does; whether the operator has the AI on is not known.
-        expect(text).toMatch(/This uses AI\./);
+        expect(text).toMatch(/This uses AI/);
     });
 
     it("sends the member's level on a create, and none while the job's default is left", async () => {
         createSchedule.mockResolvedValue({ ok: true, schedule: AI_SCHEDULE });
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
-        await openNew(user);
+        await openNewAiOn(user);
         await user.click(
             within(screen.getByTestId("schedule-effort")).getByRole("radio", { name: "High" })
         );
@@ -223,7 +230,7 @@ describe("the control in the form", () => {
         createSchedule.mockResolvedValue({ ok: true, schedule: AI_SCHEDULE });
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
-        await openNew(user);
+        await openNewAiOn(user);
         const box = screen.getByTestId("schedule-effort");
         await user.click(within(box).getByRole("radio", { name: "High" }));
         await user.click(within(box).getByRole("radio", { name: "Low (default)" }));
@@ -236,7 +243,7 @@ describe("the control in the form", () => {
         createSchedule.mockResolvedValue({ ok: true, schedule: PLAIN_SCHEDULE });
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
-        await openNew(user);
+        await openNewAiOn(user);
         await user.click(
             within(screen.getByTestId("schedule-effort")).getByRole("radio", { name: "High" })
         );
@@ -250,12 +257,18 @@ describe("the control in the form", () => {
     it("forgets a level chosen for another report when the report changes", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
-        await openNew(user);
+        await openNewAiOn(user);
         await user.click(
             within(screen.getByTestId("schedule-effort")).getByRole("radio", { name: "High" })
         );
         await pickJob(user, "What you did");
         await pickJob(user, "What to do today");
+        // The switch went back to its default (off) with the report; turn it on again.
+        await user.click(
+            within(screen.getByTestId("schedule-params")).getByRole("switch", {
+                name: "AI sentences",
+            })
+        );
         expect(checked()).toBe("Low (default)");
     });
 
@@ -267,13 +280,14 @@ describe("the control in the form", () => {
         const sw = within(params).getByRole("switch", {
             name: "AI sentences",
         }) as HTMLInputElement;
-        // On unless turned off: the catalog states no default, the form knows it.
-        expect(sw.checked).toBe(true);
-        await user.click(sw);
+        // Off unless turned on (MIP-1969): the catalog states no default, the form knows it.
         expect(sw.checked).toBe(false);
         expect(effortBox()).toBeNull();
         await user.click(sw);
+        expect(sw.checked).toBe(true);
         expect(effortBox()).not.toBeNull();
+        await user.click(sw);
+        expect(effortBox()).toBeNull();
     });
 });
 
@@ -287,13 +301,13 @@ describe("the AI sentences switch", () => {
         expect(within(params).queryByRole("textbox", { name: "AI sentences" })).toBeNull();
         expect(
             within(params).getByText(
-                "Adds one short sentence under a task when its comments explain where it stands. This uses AI. Turn it off for a plain report."
+                "Adds one short sentence under a task when its comments explain where it stands. This uses AI and spends your AI credits. It is off unless you turn it on."
             )
         ).toBeTruthy();
         expect(within(params).queryByText(/AI-written/)).toBeNull();
     });
 
-    it("sends false (a boolean) when turned off, and nothing while left alone", async () => {
+    it("sends true (a boolean) when turned on, and nothing while left alone", async () => {
         createSchedule.mockResolvedValue({ ok: true, schedule: AI_SCHEDULE });
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
@@ -310,7 +324,7 @@ describe("the AI sentences switch", () => {
         );
         await user.click(screen.getByRole("button", { name: "Create schedule" }));
         await waitFor(() => expect(createSchedule).toHaveBeenCalledTimes(1));
-        expect(createSchedule.mock.calls[0][2].params).toEqual({ ai_sentences: false });
+        expect(createSchedule.mock.calls[0][2].params).toEqual({ ai_sentences: true });
     });
 });
 

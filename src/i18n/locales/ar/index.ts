@@ -1034,7 +1034,7 @@ export const ar: DeepPartial<Messages> = {
             rowMilestone: "المعلم: {name}",
             paramAiSentences: "جمل الذكاء الاصطناعي",
             paramAiSentencesHint:
-                "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي. أوقفه للحصول على تقرير عادي.",
+                "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي ويستهلك رصيدك منه. متوقف افتراضيًا؛ فعّله إن أردته.",
             aiOutOfCredits:
                 "لقد استخدمت كل رصيد الذكاء الاصطناعي، لذلك لا يمكن تشغيل جمل الذكاء الاصطناعي. اشترِ رصيدًا أو قم بالترقية لتفعيلها.",
             aiOutOfCreditsBuy: "شراء رصيد",
@@ -4816,6 +4816,9 @@ export const ar: DeepPartial<Messages> = {
             malformedNdjsonLine: "سطر NDJSON غير صالح: {line}",
             taskNotFound:
                 "لم يعد بالإمكان فتح هذه المهمة أو هذا المعلم، لذا لم يتمكن Genos من الإجابة.",
+            outOfCredits: "استنفدت كل رصيد الذكاء الاصطناعي، لذا لا يستطيع Genos الإجابة الآن.",
+            outOfCreditsBuy: "شراء رصيد",
+            outOfCreditsUpgrade: "ترقية الخطة",
             taskSessionLoadFailed: "تعذّر تحميل محادثتك السابقة حول هذه المهمة.",
         },
         pwaInstall: {

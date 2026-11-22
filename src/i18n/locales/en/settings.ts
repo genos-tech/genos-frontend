@@ -244,7 +244,7 @@ export const settings = {
         rowMilestone: "Milestone: {name}",
         paramAiSentences: "AI sentences",
         paramAiSentencesHint:
-            "Adds one short sentence under a task when its comments explain where it stands. This uses AI. Turn it off for a plain report.",
+            "Adds one short sentence under a task when its comments explain where it stands. This uses AI and spends your AI credits. It is off unless you turn it on.",
         aiOutOfCredits:
             "You've used all your AI credits, so AI sentences can't run. Buy credits or upgrade to turn them on.",
         aiOutOfCreditsBuy: "Buy credits",

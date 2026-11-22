@@ -3525,6 +3525,9 @@ export const zh: DeepPartial<Messages> = {
             streamInterrupted: "数据流中断：{message}",
             malformedNdjsonLine: "NDJSON 数据格式错误：{line}",
             taskNotFound: "此任务或里程碑已无法打开，因此 Genos 无法作答。",
+            outOfCredits: "您的 AI 额度已用完，Genos 暂时无法回答。",
+            outOfCreditsBuy: "购买额度",
+            outOfCreditsUpgrade: "升级套餐",
             taskSessionLoadFailed: "无法加载你之前关于此任务的对话。",
         },
         pwaInstall: {
@@ -4459,7 +4462,7 @@ export const zh: DeepPartial<Messages> = {
             rowMilestone: "里程碑：{name}",
             paramAiSentences: "AI 一句话说明",
             paramAiSentencesHint:
-                "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI。关闭后为普通报告。",
+                "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI 并消耗你的 AI 额度。默认关闭,开启后才会添加。",
             aiOutOfCredits:
                 "您的 AI 额度已用完，因此无法生成 AI 一句话说明。购买额度或升级套餐即可开启。",
             aiOutOfCreditsBuy: "购买额度",

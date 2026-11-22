@@ -208,11 +208,12 @@ describe("while AI can run, or the server does not say", () => {
         const user = userEvent.setup();
         await openNew(user);
         await pickJob(user, "What to do today");
+        const aiSwitch = within(screen.getByTestId("schedule-params")).getByRole("switch", {
+            name: "AI sentences",
+        });
+        expect(aiSwitch).toBeTruthy();
+        // Off by default (MIP-1969): the effort control follows the switch.
+        await user.click(aiSwitch);
         expect(screen.getByTestId("schedule-effort")).toBeTruthy();
-        expect(
-            within(screen.getByTestId("schedule-params")).getByRole("switch", {
-                name: "AI sentences",
-            })
-        ).toBeTruthy();
     });
 });

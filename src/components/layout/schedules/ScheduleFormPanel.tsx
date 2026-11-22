@@ -17,6 +17,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { CREDIT_PACKS_PATH, PLANS_PATH } from "../../../features/billing/billingPaths";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import {
     asEffortLevel,
@@ -64,9 +65,6 @@ import {
     ProjectParamSelect,
     useJoinedProjects,
 } from "./ScheduleParamPickers";
-
-const PLANS_PATH = "/workspace/plans";
-const CREDIT_PACKS_PATH = "/workspace/plans#credit-packs";
 
 type Props = {
     /** The schedule being edited; null to create one. */

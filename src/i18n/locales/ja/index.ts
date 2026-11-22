@@ -3666,6 +3666,9 @@ export const ja: DeepPartial<Messages> = {
             malformedNdjsonLine: "不正な NDJSON 行：{line}",
             taskNotFound:
                 "このタスクまたはマイルストーンはもう開けないため、Genosは回答できませんでした。",
+            outOfCredits: "AIクレジットを使い切ったため、現在Genosは回答できません。",
+            outOfCreditsBuy: "クレジットを購入",
+            outOfCreditsUpgrade: "プランをアップグレード",
             taskSessionLoadFailed: "このタスクについての以前の会話を読み込めませんでした。",
         },
         pwaInstall: {
@@ -4636,7 +4639,7 @@ export const ja: DeepPartial<Messages> = {
             rowMilestone: "マイルストーン: {name}",
             paramAiSentences: "AI による一文",
             paramAiSentencesHint:
-                "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用します。通常のレポートにするにはオフにしてください。",
+                "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用し、AI クレジットを消費します。初期設定ではオフで、オンにしたときだけ追加されます。",
             aiOutOfCredits:
                 "AIクレジットを使い切ったため、AIの一文は実行できません。クレジットを購入するかプランをアップグレードすると使えます。",
             aiOutOfCreditsBuy: "クレジットを購入",

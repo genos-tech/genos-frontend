@@ -31,6 +31,7 @@ import {
     TeamBillingConfig,
 } from "../../services/billingApi";
 import { formatPrice } from "../../utils/currency";
+import { smoothScrollBehavior } from "../../utils/motion";
 import { planCta } from "./planCta";
 import { MatrixCell, planMatrixGroups } from "./planMatrix";
 import { TrialEndNote } from "./TrialEndNote";
@@ -161,6 +162,14 @@ export const PlansHome = () => {
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
     const [subscription, setSubscription] = useState<BillingSubscription | null>(null);
     const [creditPacks, setCreditPacks] = useState<CreditPackCatalogue | null>(null);
+    // "Buy credits" from an out-of-credits answer lands here (`#credit-packs`): scroll to the
+    // section once it has loaded (the browser cannot, the section did not exist at navigation).
+    useEffect(() => {
+        if (!creditPacks?.packs?.length || window.location.hash !== "#credit-packs") return;
+        document
+            .getElementById("credit-packs")
+            ?.scrollIntoView({ block: "start", behavior: smoothScrollBehavior() });
+    }, [creditPacks]);
     // The BALANCE cannot come from the billing payload: `/billing/plans/`
     // is AllowAny and its key list says "never add a per-user value
     // here". So the packs section reads it from the agent features

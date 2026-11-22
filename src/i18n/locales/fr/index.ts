@@ -3710,6 +3710,10 @@ export const fr: DeepPartial<Messages> = {
             malformedNdjsonLine: "Ligne NDJSON mal formée : {line}",
             taskNotFound:
                 "Cette tâche ou ce jalon ne peut plus être ouvert, Genos n'a donc pas pu répondre.",
+            outOfCredits:
+                "Vous avez utilisé tous vos crédits d'IA : Genos ne peut pas répondre pour le moment.",
+            outOfCreditsBuy: "Acheter des crédits",
+            outOfCreditsUpgrade: "Changer de formule",
             taskSessionLoadFailed:
                 "Impossible de charger votre conversation précédente à propos de cette tâche.",
         },
@@ -4699,7 +4703,7 @@ export const fr: DeepPartial<Messages> = {
             rowMilestone: "Jalon : {name}",
             paramAiSentences: "Phrases de l'IA",
             paramAiSentencesHint:
-                "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA. Désactivez-la pour un rapport simple.",
+                "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA et dépense vos crédits d'IA. Désactivée par défaut : activez-la si vous la voulez.",
             aiOutOfCredits:
                 "Vous avez utilisé tous vos crédits d'IA, les phrases de l'IA ne peuvent donc pas s'exécuter. Achetez des crédits ou passez à un plan supérieur pour les activer.",
             aiOutOfCreditsBuy: "Acheter des crédits",

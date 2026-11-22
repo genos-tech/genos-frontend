@@ -149,6 +149,8 @@ describe("when the member has credits, or the server does not say", () => {
         }) as HTMLInputElement;
         expect(sw.disabled).toBe(false);
         expect(within(params).queryByRole("button", { name: "Buy credits" })).toBeNull();
+        // AI sentences are an opt-in (MIP-1969): the effort control shows once the switch is on.
+        await user.click(sw);
         expect(screen.getByTestId("schedule-effort")).toBeTruthy();
     });
 });
