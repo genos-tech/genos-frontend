@@ -18,7 +18,7 @@ import { en } from "../i18n/locales/en";
 import { ja } from "../i18n/locales/ja";
 import { SUPPORT_EMAIL, SUPPORT_MCP_ADDRESS, SUPPORT_UI_LABELS } from "../lp/supportLabels";
 import SupportPage from "../lp/SupportPage";
-import { mcpServerUrl } from "../utils/mcpConnect";
+import { mcpCoreUrl } from "../utils/mcpConnect";
 
 const renderPage = () =>
     render(
@@ -87,10 +87,10 @@ describe("SupportPage", () => {
         const address = screen.getByTestId("support-mcp-address").textContent ?? "";
         // Built by the shared function the Settings panel and /developers use.
         expect(address).toBe(SUPPORT_MCP_ADDRESS);
-        expect(address).toMatch(/\/api\/public\/v1\/mcp$/);
+        expect(address).toMatch(/\/api\/public\/v1\/mcp\/core$/);
         expect(address).not.toMatch(/[?#]|\/$/);
         expect(address).toBe(
-            mcpServerUrl(import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev")
+            mcpCoreUrl(import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev")
         );
         const text = container.textContent ?? "";
         expect(text).toContain("no API key is needed");

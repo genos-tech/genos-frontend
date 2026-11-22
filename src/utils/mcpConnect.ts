@@ -17,6 +17,13 @@
 export const MCP_PATH = "/api/public/v1/mcp";
 
 /**
+ * The CORE endpoint (MIP-1594, MIP-1877): the 22 tools for day-to-day work. It is what a
+ * person is told to paste into Claude, and what the Genos Claude plugin connects. The full
+ * `MCP_PATH` (every tool) stays valid and is what API-key scripts use.
+ */
+export const MCP_CORE_PATH = "/api/public/v1/mcp/core";
+
+/**
  * The MCP address for an API origin. Whatever trails the origin (slashes, a query,
  * a fragment) is dropped, so the result never ends in "/" and never carries a query.
  * An empty origin gives "" (the caller hides the address rather than show a relative
@@ -28,6 +35,12 @@ export const mcpServerUrl = (apiOrigin: string | null | undefined): string => {
         .replace(/[?#].*$/, "")
         .replace(/\/+$/, "");
     return origin ? `${origin}${MCP_PATH}` : "";
+};
+
+/** The address to paste into an AI app: the core endpoint, typed exactly like `mcpServerUrl`. */
+export const mcpCoreUrl = (apiOrigin: string | null | undefined): string => {
+    const full = mcpServerUrl(apiOrigin);
+    return full ? `${full.slice(0, -MCP_PATH.length)}${MCP_CORE_PATH}` : "";
 };
 
 /** The one-line Claude Code setup for OAuth: no `--header`, no key. */

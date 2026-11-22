@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { connectApp } from "../i18n/locales/en/connectApp";
 import {
     claudeCodeAddCommand,
+    mcpCoreUrl,
     mcpServerUrl,
     PLUGIN_COMMANDS,
     PLUGIN_REPO_URL,
@@ -56,7 +57,8 @@ const SPEC_URL = `${API_BASE}/api/public/v1/openapi.json`;
 // What an AI app is told to paste (OAuth, no key): the API origin + the MCP path, exactly. Built by the
 // same function as Settings → Connected apps, and its steps are the same English sentences
 // (`i18n/locales/en/connectApp.ts`), so the two cannot drift.
-const MCP_ADDRESS = mcpServerUrl(API_BASE);
+const MCP_ADDRESS = mcpCoreUrl(API_BASE);
+const MCP_FULL_ADDRESS = mcpServerUrl(API_BASE);
 
 // Consistent throughout so an example can be followed end to end.
 const TEAM_ID = "7f3a91c2-4d5e-4a1b-9c8d-2e6f0b4a7d13";
@@ -342,6 +344,17 @@ export default function DevelopersPage() {
                                 <h3 id="connect-an-ai-app">Connect an AI app (no API key)</h3>
                                 <p>{connectApp.intro}</p>
                                 <Pre label="the address to paste">{MCP_ADDRESS}</Pre>
+                                <p className="lp-small">
+                                    This is the core address: the 22 tools for day-to-day work
+                                    (briefing, search, tasks, notes). The same server also has an
+                                    address with every tool, <Code>{MCP_FULL_ADDRESS}</Code>, and
+                                    one per area (<Code>/mcp/tasks</Code>, <Code>/mcp/notes</Code>,{" "}
+                                    <Code>/mcp/projects</Code>, <Code>/mcp/me</Code>,{" "}
+                                    <Code>/mcp/calendar-chat</Code>, <Code>/mcp/analytics</Code>,{" "}
+                                    <Code>/mcp/github</Code>) for what core leaves out, such as
+                                    pull requests or restoring an earlier version. Each address you
+                                    add is one connected app on your plan.
+                                </p>
                                 <p>
                                     Type it exactly: no trailing slash and no query string. Unlike
                                     the API-key form below it carries no <Code>?team_id=</Code>:

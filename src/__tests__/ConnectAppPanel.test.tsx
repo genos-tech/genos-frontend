@@ -31,7 +31,7 @@ const render = (ui: React.ReactElement) => rtlRender(<CssVarsProvider>{ui}</CssV
 
 const c = en.settings.connectedApps.connect;
 const ORIGIN = "https://api.example.test";
-const ADDRESS = `${ORIGIN}/api/public/v1/mcp`;
+const ADDRESS = `${ORIGIN}/api/public/v1/mcp/core`;
 
 const CONN = {
     id: "c1",
