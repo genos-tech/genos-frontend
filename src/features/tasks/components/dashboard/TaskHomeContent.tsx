@@ -15,8 +15,7 @@ import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConf
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
 import { AgentActivityTab } from "./agentActivity/AgentActivityTab";
 import { MilestoneProgressTab } from "./milestoneProgress/MilestoneProgressTab";
-import { MemberTasksTab } from "./tabs/MemberTasksTab";
-import { MyTasksTab } from "./tabs/MyTasksTab";
+import { PeopleTab } from "./tabs/PeopleTab";
 import { ProjectTab } from "./tabs/ProjectTab";
 import { TodayTab } from "./tabs/TodayTab";
 import { TaskHomeHeader } from "./TaskHomeHeader";
@@ -63,6 +62,8 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         sprintStats,
         moreAnalyticsOpen,
         setMoreAnalyticsOpen,
+        teamLoadOpen,
+        setTeamLoadOpen,
         assigneeWorkload,
         tagStats,
         recentTasks,
@@ -77,7 +78,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         overdueAndUpcoming,
         ongoingProjectMilestones,
         sprintMilestones,
-        myStats,
         setSelectedMemberId,
         projectMembers,
         selectedMember,
@@ -216,11 +216,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                 </Box>
                 <Stack spacing={3} sx={{ maxWidth: 1200, mx: "auto" }}>
                     {usePM.currentProject && (
-                        <TaskHomeTabBar
-                            activeTab={activeTab}
-                            myStats={myStats}
-                            setActiveTab={setActiveTab}
-                        />
+                        <TaskHomeTabBar activeTab={activeTab} setActiveTab={setActiveTab} />
                     )}
 
                     <TaskHomeHeader
@@ -284,25 +280,10 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                 />
                             )}
 
-                            {/* ════════ TAB: Member's Tasks — picker + banner ════════ */}
-                            {activeTab === "members" && (
-                                <MemberTasksTab
-                                    cardBg={cardBg}
-                                    cardBorder={cardBorder}
-                                    isDark={isDark}
-                                    projectMembers={projectMembers}
-                                    selectedMember={selectedMember}
-                                    setSelectedMemberId={setSelectedMemberId}
-                                    textMuted={textMuted}
-                                    textPrimary={textPrimary}
-                                />
-                            )}
-
-                            {/* ════════ TAB: My Tasks / Member's Tasks (shared body) ════════ */}
+                            {/* ════════ TAB: People (My Tasks + Member's Tasks + Team load) ════════ */}
                             {showFocusBody && (
-                                <MyTasksTab
-                                    cardBg={cardBg}
-                                    cardBorder={cardBorder}
+                                <PeopleTab
+                                    assigneeWorkload={assigneeWorkload}
                                     focusAssignedMilestones={focusAssignedMilestones}
                                     focusStats={focusStats}
                                     focusTaskIds={focusTaskIds}
@@ -311,14 +292,22 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     handleTaskClick={handleTaskClick}
                                     isDark={isDark}
                                     isViewingSelf={isViewingSelf}
+                                    maxCapacityTotal={maxCapacityTotal}
                                     myself={myself}
+                                    projectMembers={projectMembers}
+                                    selectedMember={selectedMember}
                                     setDiagramMilestone={setDiagramMilestone}
+                                    setSelectedMemberId={setSelectedMemberId}
+                                    setTeamLoadOpen={setTeamLoadOpen}
                                     setUpNextSort={setUpNextSort}
                                     sprintNameFor={sprintNameFor}
+                                    teamCapacity={teamCapacity}
+                                    teamLoadOpen={teamLoadOpen}
                                     textMuted={textMuted}
                                     textPrimary={textPrimary}
                                     textSecondary={textSecondary}
                                     upNextSort={upNextSort}
+                                    usePM={usePM}
                                 />
                             )}
 
@@ -344,7 +333,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                             {/* ════════ TAB: Project (Overall + Sprint, MIP-1963) ════════ */}
                             {!tasksUnread && activeTab === "project" && (
                                 <ProjectTab
-                                    assigneeWorkload={assigneeWorkload}
                                     cardBg={cardBg}
                                     cardBorder={cardBorder}
                                     effectiveTasks={effectiveTasks}
@@ -352,7 +340,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     handleCreateTask={handleCreateTask}
                                     handleTaskClick={handleTaskClick}
                                     isDark={isDark}
-                                    maxCapacityTotal={maxCapacityTotal}
                                     moreAnalyticsOpen={moreAnalyticsOpen}
                                     myself={myself}
                                     overdueAndUpcoming={overdueAndUpcoming}
@@ -362,9 +349,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     selectedSprint={selectedSprint}
                                     setActiveTab={setActiveTab}
                                     setMoreAnalyticsOpen={setMoreAnalyticsOpen}
-                                    setMyself={setMyself}
                                     setTopWeightSort={setTopWeightSort}
-                                    socket={socket}
                                     sprintMembers={sprintMembers}
                                     sprintMilestones={sprintMilestones}
                                     sprintNameFor={sprintNameFor}
@@ -373,16 +358,12 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     sprintTaskUpdatedAt={sprintTaskUpdatedAt}
                                     stats={stats}
                                     tagStats={tagStats}
-                                    teamCapacity={teamCapacity}
                                     textMuted={textMuted}
                                     textPrimary={textPrimary}
                                     textSecondary={textSecondary}
                                     topByWeightRows={topByWeightRows}
                                     topWeightSort={topWeightSort}
-                                    useCM={useCM}
-                                    useTEM={useTEM}
                                     useTM={useTM}
-                                    useUISM={useUISM}
                                 />
                             )}
                         </>

@@ -10,13 +10,7 @@ import { UserProps } from "../../../../types/admin";
 import { DueBucket } from "../../utils/taskWeight";
 
 /** The dashboard's tabs. `agent` is the Agent Activity tab (MIP-1613). */
-export type TaskDashboardTab =
-    | "today"
-    | "project"
-    | "milestones"
-    | "mytasks"
-    | "members"
-    | "agent";
+export type TaskDashboardTab = "today" | "project" | "milestones" | "people" | "agent";
 
 export type TaskHomeContentProps = {
     useTM: TaskManagementState;

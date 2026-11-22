@@ -22,6 +22,7 @@ import { useDashboardTab } from "./dashboardTab";
 import { buildCapacityMap, isOngoingMilestone, taskUpdatedAtById } from "./taskHomeHelpers";
 import type { TaskHomeContentProps } from "./taskHomeTypes";
 import { useMoreAnalyticsOpen } from "./useMoreAnalyticsOpen";
+import { useTeamLoadOpen } from "./useTeamLoadOpen";
 
 export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const { useTM, usePM, useSM, myself, useCM } = props;
@@ -40,6 +41,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // With no tab named, Today on the first open of each day, then the one used last.
     const [activeTab, setActiveTab] = useDashboardTab(myself.userId);
     const [moreAnalyticsOpen, setMoreAnalyticsOpen] = useMoreAnalyticsOpen(myself.userId);
+    const [teamLoadOpen, setTeamLoadOpen] = useTeamLoadOpen(myself.userId);
     // The Today tab's data (MIP-1005): loaded only while that tab is open.
     const todayView = useBriefingToday(
         accessToken,
@@ -140,10 +142,11 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     // refreshes it. Fails soft: an error (or the pre-load window) just
     // leaves the capacity bars on this project's numbers.
     const [teamWideTasks, setTeamWideTasks] = useState<TaskTableProps[]>([]);
-    // Only the Overall tab shows Team Capacity, so the (up to 500 row) read waits for it: opening
-    // the dashboard on Today no longer fetches it. Read once per team, then kept.
+    // Only the People tab's "Team load" shows it, and only while that card is open, so the (up to
+    // 500 row) read waits for it: opening the dashboard, or the tab, no longer fetches it. Read
+    // once per team, then kept.
     const teamTasksLoadedFor = useRef<string | null>(null);
-    const needsTeamTasks = activeTab === "project" && moreAnalyticsOpen;
+    const needsTeamTasks = activeTab === "people" && teamLoadOpen;
     useEffect(() => {
         if (!needsTeamTasks || !myself.teamId || !accessToken) return;
         if (teamTasksLoadedFor.current === myself.teamId) return;
@@ -582,19 +585,12 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         ? (projectMembers.find((m) => m.id === selectedMemberId) ?? null)
         : null;
 
-    // The shared My Tasks / Member's Tasks body (hidden while the rows are unread).
-    const showFocusBody =
-        !tasksUnread &&
-        (activeTab === "mytasks" || (activeTab === "members" && selectedMember != null));
+    // The People tab's body (hidden while the rows are unread).
+    const showFocusBody = !tasksUnread && activeTab === "people";
 
-    // The user the shared tasks-body renders stats for: me on "My Tasks", the
-    // resolved member on "Member's Tasks" (null → the body isn't shown).
+    // The person the People tab shows: the picked member, else me (the default).
     const focusUserId: string | null =
-        activeTab === "members"
-            ? (selectedMember?.id ?? null)
-            : myself.userId != null
-              ? String(myself.userId)
-              : null;
+        selectedMember?.id ?? (myself.userId != null ? String(myself.userId) : null);
     const isViewingSelf = focusUserId != null && focusUserId === String(myself.userId);
 
     const focusTasks = useMemo(
@@ -765,6 +761,8 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         sprintStats,
         moreAnalyticsOpen,
         setMoreAnalyticsOpen,
+        teamLoadOpen,
+        setTeamLoadOpen,
         assigneeWorkload,
         tagStats,
         recentTasks,

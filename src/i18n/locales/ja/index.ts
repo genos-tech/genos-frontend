@@ -6494,6 +6494,15 @@ export const ja: DeepPartial<Messages> = {
             },
             tabMyTasks: "自分のタスク",
             tabMemberTasks: "メンバーのタスク",
+            tabPeople: "メンバー",
+            people: {
+                person: "メンバー",
+                me: "自分",
+                statusBreakdownShow: "ステータスの内訳を表示",
+                statusBreakdownHide: "ステータスの内訳を隠す",
+                teamLoadShow: "チームの負荷を表示",
+                teamLoadHide: "チームの負荷を隠す",
+            },
             tabAgentActivity: "エージェントの活動",
             tabToday: "今日",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

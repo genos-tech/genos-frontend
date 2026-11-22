@@ -13,18 +13,22 @@ export const DASHBOARD_TABS: readonly TaskDashboardTab[] = [
     "today",
     "project",
     "milestones",
-    "mytasks",
-    "members",
+    "people",
     "agent",
 ];
 
 export const isDashboardTab = (v: unknown): v is TaskDashboardTab =>
     typeof v === "string" && (DASHBOARD_TABS as readonly string[]).includes(v);
 
-/** Tab ids the address or a saved value may still hold: Overall and Sprint became Project. */
-const LEGACY_TABS: Record<string, TaskDashboardTab> = { overall: "project", sprint: "project" };
+/** Tab ids the address or a saved value may still hold: Overall and Sprint became Project; My Tasks and Member's Tasks became People. */
+const LEGACY_TABS: Record<string, TaskDashboardTab> = {
+    overall: "project",
+    sprint: "project",
+    mytasks: "people",
+    members: "people",
+};
 
-/** A current tab id, or the tab an old id (`overall`, `sprint`) now lives in; else null. */
+/** A current tab id, or the tab an old id (`overall`, `sprint`, `mytasks`, `members`) now lives in; else null. */
 export const parseDashboardTab = (v: unknown): TaskDashboardTab | null => {
     if (typeof v !== "string") return null;
     if (isDashboardTab(v)) return v;

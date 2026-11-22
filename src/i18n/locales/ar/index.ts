@@ -3318,6 +3318,15 @@ export const ar: DeepPartial<Messages> = {
             },
             tabMyTasks: "مهامي",
             tabMemberTasks: "مهام الأعضاء",
+            tabPeople: "الأشخاص",
+            people: {
+                person: "الشخص",
+                me: "أنا",
+                statusBreakdownShow: "عرض تفصيل الحالات",
+                statusBreakdownHide: "إخفاء تفصيل الحالات",
+                teamLoadShow: "عرض حمل الفريق",
+                teamLoadHide: "إخفاء حمل الفريق",
+            },
             tabAgentActivity: "نشاط الوكلاء",
             tabToday: "اليوم",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

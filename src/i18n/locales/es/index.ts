@@ -3375,6 +3375,15 @@ export const es: DeepPartial<Messages> = {
             },
             tabMyTasks: "Mis tareas",
             tabMemberTasks: "Tareas de miembros",
+            tabPeople: "Personas",
+            people: {
+                person: "Persona",
+                me: "Yo",
+                statusBreakdownShow: "Ver desglose por estado",
+                statusBreakdownHide: "Ocultar desglose por estado",
+                teamLoadShow: "Ver carga del equipo",
+                teamLoadHide: "Ocultar carga del equipo",
+            },
             tabAgentActivity: "Actividad de agentes",
             tabToday: "Hoy",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

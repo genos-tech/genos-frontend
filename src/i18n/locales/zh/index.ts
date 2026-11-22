@@ -6250,6 +6250,15 @@ export const zh: DeepPartial<Messages> = {
             },
             tabMyTasks: "我的任务",
             tabMemberTasks: "成员的任务",
+            tabPeople: "成员",
+            people: {
+                person: "成员",
+                me: "我",
+                statusBreakdownShow: "显示状态明细",
+                statusBreakdownHide: "隐藏状态明细",
+                teamLoadShow: "显示团队负载",
+                teamLoadHide: "隐藏团队负载",
+            },
             tabAgentActivity: "智能体活动",
             tabToday: "今天",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

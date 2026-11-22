@@ -1322,6 +1322,15 @@ export const tasks = {
         },
         tabMyTasks: "My Tasks",
         tabMemberTasks: "Member's Tasks",
+        tabPeople: "People",
+        people: {
+            person: "Person",
+            me: "Me",
+            statusBreakdownShow: "Show status breakdown",
+            statusBreakdownHide: "Hide status breakdown",
+            teamLoadShow: "Show team load",
+            teamLoadHide: "Hide team load",
+        },
         tabAgentActivity: "Agent Activity",
         tabToday: "Today",
         // MIP-1005 / MIP-1696: every string of the Today view is a DRAFT for a native reader (TODO(copy)).
