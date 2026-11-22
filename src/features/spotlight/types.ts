@@ -45,6 +45,9 @@ export interface SpotlightResult {
     // bolding matches.
     matched_terms: string[];
     updated_at: string | null;
+    // True when the item lives in an archived project or group chat (MIP-1852). Still found, still
+    // ranked as before; the row says so. Absent (not false) on every live item.
+    archived?: boolean;
 
     // Chat-specific (present when entity_type === "chat")
     chat_type: ChatTypeLabel | null;

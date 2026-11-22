@@ -34,6 +34,20 @@ describe("BillingFaq", () => {
         expect(screen.getByText(FIRST_MONTH_JA)).toBeTruthy();
     });
 
+    it("never mentions the first month while the offer is off, nor a removed promotion-code box (MIP-1895)", () => {
+        for (const lang of ["en", "ja"] as const) {
+            const { container, unmount } = render(
+                <BillingFaq firstMonthOffer={false} lang={lang} />
+            );
+            const text = container.textContent ?? "";
+            expect(text).not.toMatch(/first (free )?month|最初の 1 か月/i);
+            unmount();
+        }
+        expect(JSON.stringify(BILLING_FAQ)).not.toMatch(
+            /promotion-code box|プロモーションコードの入力欄/
+        );
+    });
+
     it("has the same questions, in the same order, in ja and en", () => {
         expect(BILLING_FAQ.ja.items.map((i) => i.id)).toEqual(
             BILLING_FAQ.en.items.map((i) => i.id)

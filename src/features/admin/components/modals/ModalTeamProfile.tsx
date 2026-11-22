@@ -51,6 +51,7 @@ import { updateTeamProfile } from "../../services/updateTeamProfile";
 import { ConnectedTeamsPanel } from "../team/ConnectedTeamsPanel";
 import { ModalRequestOwnership } from "../team/ModalRequestOwnership";
 import { SampleDataPanel } from "../team/SampleDataPanel";
+import { SlackImportPanel } from "../team/SlackImportPanel";
 import { TeamOwnershipClaimPanel } from "../team/TeamOwnershipClaimPanel";
 import { useOwnershipClaim } from "../team/useOwnershipClaim";
 import { useTeamConnections } from "../team/useTeamConnections";
@@ -986,6 +987,14 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 data deletes projects, chats and notes in bulk.
                                                 The panel renders nothing for anyone else. */}
                                     <SampleDataPanel
+                                        isOwner={isTeamOwner && !teamProfile.isGuest}
+                                        teamId={teamProfile.teamId}
+                                        zIndex={PROFILE_MODAL_Z_INDEX + 2}
+                                    />
+
+                                    {/* Owner only, like the server: the import writes
+                                                messages under other members' names. */}
+                                    <SlackImportPanel
                                         isOwner={isTeamOwner && !teamProfile.isGuest}
                                         teamId={teamProfile.teamId}
                                         zIndex={PROFILE_MODAL_Z_INDEX + 2}

@@ -12,6 +12,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { getArchiveSnapshot } from "../features/archive/archiveState";
 import { channelService } from "../services/channel/channelService";
 
 const get = vi.fn();
@@ -68,12 +69,8 @@ const serve = (total: number, pageSize: number) => {
 
 const ids = () => [...channelService.getSnapshot().channels.keys()].sort();
 
-/**
- * The calls of the default list's walk. A list call also walks the archived chats (MIP-1693,
- * `include_archived=true`), in parallel; the paging contract below is about the default walk, so
- * its calls are told apart by the flag, and the archived walk has its own test.
- */
-const pageCalls = () => get.mock.calls.filter((call) => !call[1]?.params?.include_archived);
+/** The calls of the list's walk: one walk of the full list, archived chats included (MIP-1853). */
+const pageCalls = () => get.mock.calls;
 
 describe("listChannels follows the pages", () => {
     beforeEach(() => {
@@ -253,32 +250,31 @@ describe("refreshChannels never evicts a real channel", () => {
         expect(ids()).toEqual(before);
     });
 
-    it("also walks the archived chats, and keeps the ones the default list does not name", async () => {
+    it("records the archived chats from the flag each row carries", async () => {
         const all = serve(12, 10);
-        // The default list leaves out chat 3, which is archived.
+        // Chat 3 is archived: the list still returns it, and its row says so.
         const archived = all[2].id;
         const original = get.getMockImplementation()!;
         get.mockImplementation(
             async (url: string, config?: { params?: Record<string, string> }) => {
-                if (!config?.params?.include_archived) {
-                    const page = await original(url, config);
-                    return {
-                        data: {
-                            ...page.data,
-                            channels: page.data.channels.filter(
-                                (c: { id: string }) => c.id !== archived
-                            ),
-                        },
-                    };
-                }
-                return original(url, config);
+                const page = await original(url, config);
+                return {
+                    data: {
+                        ...page.data,
+                        channels: page.data.channels.map((c: { id: string }) =>
+                            c.id === archived ? { ...c, archived: true } : c
+                        ),
+                    },
+                };
             }
         );
 
         const list = await channelService.listChannels();
 
         expect(list).toHaveLength(12);
-        expect(get.mock.calls.some((call) => call[1]?.params?.include_archived === "true")).toBe(
+        expect(getArchiveSnapshot().archivedChannelIds.has(archived)).toBe(true);
+        expect(getArchiveSnapshot().archivedChannelIds.size).toBe(1);
+        expect(get.mock.calls.every((call) => call[1]?.params?.include_archived === "true")).toBe(
             true
         );
     });

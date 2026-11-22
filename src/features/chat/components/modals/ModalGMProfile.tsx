@@ -247,6 +247,44 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         }
     };
 
+    // The one-line topic (MIP-1694), edited by the owner or an editor like the name.
+    const [descEditMode, setDescEditMode] = useState(false);
+    const [descDraft, setDescDraft] = useState("");
+    const [descError, setDescError] = useState<string | null>(null);
+    const [descSaving, setDescSaving] = useState(false);
+
+    const handleDescriptionSave = async () => {
+        const next = descDraft.trim();
+        if (next === (liveChat.description ?? "")) {
+            setDescEditMode(false);
+            setDescError(null);
+            return;
+        }
+        setDescSaving(true);
+        setDescError(null);
+        let ok = false;
+        try {
+            await channelService.updateChannel(gmChat.chatId, ChannelKind.GM, {
+                description: next,
+            });
+            ok = true;
+        } catch (e) {
+            console.error("[ModalGMProfile] description save failed:", e);
+            setDescError(t.chat.groupDirectory.descriptionSaveError);
+        }
+        setDescSaving(false);
+        if (ok) {
+            useCM.setAllChats((prev) =>
+                prev.map((c) =>
+                    c.chatType === gmChat.chatType && c.chatId === gmChat.chatId
+                        ? { ...c, description: next || undefined }
+                        : c
+                )
+            );
+            setDescEditMode(false);
+        }
+    };
+
     const handleTransferConfirm = async (newOwnerId: string) => {
         if (!gmProfile) return false;
         try {
@@ -745,6 +783,124 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                         )}
                                     </FormControl>
 
+                                    {/* Description (MIP-1694) */}
+                                    <FormControl>
+                                        <FormLabel
+                                            sx={{
+                                                color: g.text.secondary,
+                                                fontSize: "0.75rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            {t.chat.groupDirectory.descriptionLabel}
+                                        </FormLabel>
+                                        {descEditMode ? (
+                                            <Stack alignItems="center" direction="row" spacing={1}>
+                                                <Input
+                                                    size="sm"
+                                                    sx={{ flex: 1, "--Input-radius": g.radius.md }}
+                                                    value={descDraft}
+                                                    aria-label={
+                                                        t.chat.groupDirectory.descriptionLabel
+                                                    }
+                                                    placeholder={
+                                                        t.chat.groupDirectory
+                                                            .descriptionPlaceholder
+                                                    }
+                                                    slotProps={{
+                                                        input: {
+                                                            maxLength: 280,
+                                                            onKeyDown: (e) => {
+                                                                if (e.key === "Enter") {
+                                                                    e.preventDefault();
+                                                                    void handleDescriptionSave();
+                                                                }
+                                                                if (e.key === "Escape") {
+                                                                    setDescEditMode(false);
+                                                                    setDescError(null);
+                                                                }
+                                                            },
+                                                        },
+                                                    }}
+                                                    autoFocus
+                                                    onChange={(e) => setDescDraft(e.target.value)}
+                                                />
+                                                <Button
+                                                    loading={descSaving}
+                                                    size="sm"
+                                                    variant="solid"
+                                                    onClick={handleDescriptionSave}
+                                                >
+                                                    {t.common.profileEdit.save}
+                                                </Button>
+                                                <Button
+                                                    color="neutral"
+                                                    size="sm"
+                                                    variant="plain"
+                                                    onClick={() => {
+                                                        setDescEditMode(false);
+                                                        setDescError(null);
+                                                    }}
+                                                >
+                                                    {t.common.profileEdit.cancel}
+                                                </Button>
+                                            </Stack>
+                                        ) : (
+                                            <Stack alignItems="center" direction="row" spacing={1}>
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{
+                                                        userSelect: "text",
+                                                        color: liveChat.description
+                                                            ? g.text.primary
+                                                            : g.text.tertiary,
+                                                        overflowWrap: "anywhere",
+                                                    }}
+                                                >
+                                                    {liveChat.description ||
+                                                        t.chat.groupDirectory.noDescription}
+                                                </Typography>
+                                                {canManage && (
+                                                    <AppTooltip
+                                                        size="sm"
+                                                        title={
+                                                            t.chat.groupDirectory.descriptionEdit
+                                                        }
+                                                    >
+                                                        <IconButton
+                                                            size="sm"
+                                                            variant="plain"
+                                                            aria-label={
+                                                                t.chat.groupDirectory
+                                                                    .descriptionEdit
+                                                            }
+                                                            onClick={() => {
+                                                                setDescDraft(
+                                                                    liveChat.description ?? ""
+                                                                );
+                                                                setDescError(null);
+                                                                setDescEditMode(true);
+                                                            }}
+                                                        >
+                                                            <EditIcon sx={{ fontSize: 16 }} />
+                                                        </IconButton>
+                                                    </AppTooltip>
+                                                )}
+                                            </Stack>
+                                        )}
+                                        {descError && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: g.danger.text, mt: 0.5 }}
+                                            >
+                                                {descError}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
+
                                     {/* Owner */}
                                     <FormControl>
                                         <FormLabel
@@ -1233,11 +1389,16 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 open={openDeleteConfirm}
                 onCancel={() => setOpenDeleteConfirm(false)}
                 onConfirm={handleDeleteGM}
-                onArchive={async () => {
-                    const ok = await handleArchiveGM();
-                    if (ok) setOpenDeleteConfirm(false);
-                    return ok;
-                }}
+                onArchive={
+                    // An archived group is already archived: the button would restore it.
+                    gmArchived
+                        ? undefined
+                        : async () => {
+                              const ok = await handleArchiveGM();
+                              if (ok) setOpenDeleteConfirm(false);
+                              return ok;
+                          }
+                }
             />
             <ModalTransferOwner
                 candidates={transferCandidates}

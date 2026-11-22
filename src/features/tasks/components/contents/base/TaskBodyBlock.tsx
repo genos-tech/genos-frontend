@@ -14,6 +14,7 @@ type TaskBodyBlockProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     taskId: number;
+    projectId?: number | null;
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
     setTaskBodyEdited: (value: boolean) => void;
@@ -28,6 +29,7 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
         setMyself,
         socket,
         taskId,
+        projectId,
         body,
         setBody,
         setTaskBodyEdited,
@@ -47,6 +49,7 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
                     setTaskBodySaved={setTaskBodySaved}
                     socket={socket}
                     taskId={taskId}
+                    projectId={projectId}
                     useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}

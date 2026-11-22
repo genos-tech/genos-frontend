@@ -8,6 +8,11 @@ export const common = {
     feedback: {
         loading: "Loading…",
         loadFailedBody: "Check your connection, then try again.",
+        demoSetup: {
+            preparing: "Setting up your sample workspace…",
+            failed: "Couldn't set up the sample workspace.",
+            retry: "Try again",
+        },
         sync: {
             banner: "Couldn't sync your workspace.",
             bannerRetrying: "Syncing your workspace…",
@@ -21,6 +26,8 @@ export const common = {
         },
         toast: {
             region: "Notifications",
+            // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+            bannerRegion: "Status alerts",
             undo: "Undo",
         },
     },
@@ -84,16 +91,18 @@ export const common = {
         ownerOnly: "Only the owner can archive or unarchive.",
         projectBannerTitle: "This project is archived",
         chatBannerTitle: "This group is archived",
+        chatBannerProjectTitle: "This project's chat is archived",
         projectBannerBody:
             "It is read-only: no new tasks, edits or comments until it is unarchived. Nothing has been removed.",
         chatBannerBody:
             "It is read-only: no new messages until it is unarchived. Nothing has been removed.",
         unarchiveAction: "Unarchive",
-        showArchived: "Show archived",
+        showArchived: "Show archived ({count})",
         hideArchived: "Hide archived",
-        archivedSection: "Archived",
+        archivedSection: "Archived ({count})",
         archivedBadge: "Archived",
         newTaskDisabled: "Unarchive this project to add tasks.",
+        deleteDisabled: "Unarchive this project to delete it.",
         composerDisabled: "This group is archived. Unarchive it to send messages.",
         archiveFailed: "Couldn't archive it. Please try again.",
         unarchiveFailed: "Couldn't unarchive it. Please try again.",

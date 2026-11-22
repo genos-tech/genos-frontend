@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { connectApp } from "../i18n/locales/en/connectApp";
 import {
     claudeCodeAddCommand,
+    mcpCoreUrl,
     mcpServerUrl,
     PLUGIN_COMMANDS,
     PLUGIN_REPO_URL,
@@ -56,7 +57,8 @@ const SPEC_URL = `${API_BASE}/api/public/v1/openapi.json`;
 // What an AI app is told to paste (OAuth, no key): the API origin + the MCP path, exactly. Built by the
 // same function as Settings → Connected apps, and its steps are the same English sentences
 // (`i18n/locales/en/connectApp.ts`), so the two cannot drift.
-const MCP_ADDRESS = mcpServerUrl(API_BASE);
+const MCP_ADDRESS = mcpCoreUrl(API_BASE);
+const MCP_FULL_ADDRESS = mcpServerUrl(API_BASE);
 
 // Consistent throughout so an example can be followed end to end.
 const TEAM_ID = "7f3a91c2-4d5e-4a1b-9c8d-2e6f0b4a7d13";
@@ -108,8 +110,11 @@ const Pre = ({ children, label }: { children: string; label?: string }) => (
     <div className="lp-block">
         {label && <div className="lp-label">{label}</div>}
         {/* MIP-1851: a long line scrolls sideways. A keyboard user can only scroll a block
-            that can take focus, so the block is a Tab stop, named by its label when it has one. */}
-        <pre aria-label={label} tabIndex={0} translate="no">
+            that can take focus, so the block is a Tab stop. `aria-label` is not allowed on a bare
+            `pre` (axe aria-prohibited-attr, MIP-1901), so every block is a named `group` (a
+            `region` would be a landmark, and several blocks share a label). MIP-1928: a block with
+            no visible label is "Code example" (the page is English-only). */}
+        <pre aria-label={label ?? "Code example"} role="group" tabIndex={0} translate="no">
             {children}
         </pre>
     </div>
@@ -124,12 +129,7 @@ const Params = ({ rows, title }: { rows: Row[]; title: string }) => {
             </div>
             {/* MIP-1851: the table scrolls sideways on a narrow screen; keyboard users must be
                 able to focus the scroll region to reach the cells past the edge. */}
-            <div
-                aria-labelledby={labelId}
-                className="lp-params__scroll"
-                role="region"
-                tabIndex={0}
-            >
+            <div aria-labelledby={labelId} className="lp-params__scroll" role="group" tabIndex={0}>
                 <table aria-labelledby={labelId} role="table">
                     <tbody role="rowgroup">
                         {rows.map((r) => (
@@ -344,6 +344,17 @@ export default function DevelopersPage() {
                                 <h3 id="connect-an-ai-app">Connect an AI app (no API key)</h3>
                                 <p>{connectApp.intro}</p>
                                 <Pre label="the address to paste">{MCP_ADDRESS}</Pre>
+                                <p className="lp-small">
+                                    This is the core address: the 22 tools for day-to-day work
+                                    (briefing, search, tasks, notes). The same server also has an
+                                    address with every tool, <Code>{MCP_FULL_ADDRESS}</Code>, and
+                                    one per area (<Code>/mcp/tasks</Code>, <Code>/mcp/notes</Code>,{" "}
+                                    <Code>/mcp/projects</Code>, <Code>/mcp/me</Code>,{" "}
+                                    <Code>/mcp/calendar-chat</Code>, <Code>/mcp/analytics</Code>,{" "}
+                                    <Code>/mcp/github</Code>) for what core leaves out, such as
+                                    pull requests or restoring an earlier version. Each address you
+                                    add is one connected app on your plan.
+                                </p>
                                 <p>
                                     Type it exactly: no trailing slash and no query string. Unlike
                                     the API-key form below it carries no <Code>?team_id=</Code>:

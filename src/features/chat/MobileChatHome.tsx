@@ -19,6 +19,7 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
+import { useCreateTaskBlockedByArchive } from "../archive/createTaskGuard";
 import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
 import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
@@ -139,6 +140,12 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
         isTaskPreviewVisibleHere,
     } = props;
 
+    const createBlocked = useCreateTaskBlockedByArchive(
+        usePM.currentProject?.projectId,
+        useTM.isCreatingTask.flag === true,
+        useTM.setIsCreatingTask
+    );
+
     // URL-driven pane selection. Sidebar is the default; main chat takes
     // over once a chatId appears in the URL; thread replaces main once a
     // threadId appears.
@@ -229,7 +236,7 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                 Home may mount CreateTaskForm (each mount POSTs its own
                 empty task and writes the shared `initialEmptyTaskId`,
                 so a hidden second instance races the visible one). */}
-            {useTM.isCreatingTask.flag === true && isActiveRoute && (
+            {useTM.isCreatingTask.flag === true && isActiveRoute && !createBlocked && (
                 <MobileOverlay
                     onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >

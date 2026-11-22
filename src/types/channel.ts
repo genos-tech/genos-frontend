@@ -129,6 +129,9 @@ export interface Channel {
     projectId: number | null;
     ownerId: string | null;
     isPrivate: boolean;
+    /** A one-line topic a group chat's owner or editor wrote (MIP-1694). Absent on rows cached
+     *  before the field existed. */
+    description?: string;
     /** A cross-team chat: one host team owns it, and one or more guest
      *  teams hold a grant on it. Always private. Server-decided at
      *  creation and never editable, so treat it as a label, not a
@@ -138,6 +141,10 @@ export interface Channel {
     /** The owning team. Present because the chat list now mixes in chats
      *  another team shared with yours. */
     teamId?: string | null;
+    /** The owner archived this group chat (MIP-1853). A chat whose project is archived reads false
+     *  here: the project's own row covers it (see `isChatArchivedIn`). */
+    archived?: boolean;
+    archivedAt?: string | null;
     /** The owning team's name, set only when that team is not the one you
      *  are viewing — i.e. only on the guest side of a share, which is the
      *  only side that needs telling whose room this is. */

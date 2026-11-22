@@ -201,6 +201,7 @@ describe("TaskTabBlock — Import note (MIP-850)", () => {
         expect(handleCreateNewTaskNote).toHaveBeenCalledWith(null, 7, 42, undefined, {
             title: "plan",
             body: [{ type: "paragraph" }],
+            dataImages: expect.anything(),
         });
         // Page-hosted: the notes page comes up, as for New Note.
         await waitFor(() => expect(setIsTaskNoteVisible).toHaveBeenCalledWith(true));
@@ -232,6 +233,7 @@ describe("TaskTabBlock — Import note (MIP-850)", () => {
         expect(handleCreateNewTaskNote).toHaveBeenCalledWith(null, 7, 42, undefined, {
             title: "plan",
             body: [{ type: "paragraph" }],
+            dataImages: expect.anything(),
             skipOpenTab: true,
         });
         expect(setIsTaskNoteVisible).not.toHaveBeenCalled();

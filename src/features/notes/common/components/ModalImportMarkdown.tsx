@@ -23,6 +23,8 @@ import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
 import { decodeTextBytes } from "../../../../utils/decodeText";
 import { fetchMediaText } from "../../../../utils/downloadUtils";
+import { formatBytes } from "../../../../utils/uploadLimits";
+import type { DataUriImageWarning } from "../services/importDataUriImages";
 import {
     buildChatNoteDestinations,
     buildTaskNoteDestinations,
@@ -159,6 +161,10 @@ export const ModalImportMarkdown = ({
         null
     );
     const [importedTo, setImportedTo] = useState<string | null>(null);
+    // Images left out of an imported note (too large for the plan,
+    // undecodable, refused): shown after the import instead of closing,
+    // one line per image, so nothing is silent (MIP-1946).
+    const [imageWarnings, setImageWarnings] = useState<DataUriImageWarning[] | null>(null);
     const [fileLoading, setFileLoading] = useState(false);
 
     // Fresh state per open, seeded from `context`.
@@ -192,6 +198,7 @@ export const ModalImportMarkdown = ({
             setError(null);
             setMode("file");
             setImportedTo(null);
+            setImageWarnings(null);
             setAttachmentPick(null);
             // An attachment is seeded HERE, after the wipe above: the
             // reset would otherwise clear it on the very render that
@@ -225,7 +232,10 @@ export const ModalImportMarkdown = ({
     }, [open, initialFile?.url]);
 
     useEffect(() => {
-        if (mode !== "folder") return;
+        // Folder mode needs it for its plan; the single-file import needs
+        // it to leave an oversize embedded image out instead of costing a
+        // 413.
+        if (!open && mode !== "folder") return;
         let live = true;
         void resolveUploadLimitBytes(accessToken).then((bytes) => {
             if (live) setUploadLimitBytes(bytes);
@@ -233,7 +243,7 @@ export const ModalImportMarkdown = ({
         return () => {
             live = false;
         };
-    }, [mode, accessToken]);
+    }, [open, mode, accessToken]);
 
     // Task / chat destinations, keyed by their anchor. Only real tasks and
     // real chats can hold a note, so these lists carry no project or
@@ -317,7 +327,18 @@ export const ModalImportMarkdown = ({
         setError(null);
         try {
             const body = await markdownToNoteBlocks(fileText);
-            const opts = { title: title.trim(), body };
+            // Images embedded as `data:` URIs are uploaded as note files for
+            // every destination, through the upload of its note kind.
+            const warnings: DataUriImageWarning[] = [];
+            const opts = {
+                title: title.trim(),
+                body,
+                dataImages: {
+                    uploadLimitBytes,
+                    onReport: (r: { warnings: DataUriImageWarning[] }) =>
+                        warnings.push(...r.warnings),
+                },
+            };
             if (attachmentMode) {
                 if (!attachmentPick) return;
                 const dest = attachmentPick.destination;
@@ -365,6 +386,7 @@ export const ModalImportMarkdown = ({
                     if (!created) throw new Error("chat note was not created");
                 }
                 setImportedTo(attachmentPick.label);
+                if (warnings.length > 0) setImageWarnings(warnings);
                 return;
             }
             if (context.kind === "my") {
@@ -376,6 +398,10 @@ export const ModalImportMarkdown = ({
                         ? Number(destinationKey)
                         : null;
                 await useNM.handleCreateNewMyNote(null, folderId, opts);
+                if (warnings.length > 0) {
+                    setImageWarnings(warnings);
+                    return;
+                }
             } else if (context.kind === "task") {
                 // The picked destination when the user changed it, else
                 // the surface this dialog was opened from.
@@ -416,8 +442,29 @@ export const ModalImportMarkdown = ({
             {t.common.actions.cancel}
         </Button>
     );
+    const warningList =
+        imageWarnings != null && imageWarnings.length > 0 ? (
+            <Stack spacing={0.5} sx={{ mt: 1.5 }}>
+                <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                    {fmt(t.notes.importMd.imagesLeftOut, {})}
+                </Typography>
+                <Stack component="ul" spacing={0.25} sx={{ m: 0, pl: 2.5 }}>
+                    {imageWarnings.map((w) => (
+                        <Typography key={w.index} component="li" level="body-sm">
+                            {fmt(t.notes.importMd.imageWarning[w.reason], {
+                                index: w.index,
+                                size: formatBytes(w.bytes),
+                                limit: formatBytes(uploadLimitBytes ?? 0),
+                            })}
+                        </Typography>
+                    ))}
+                </Stack>
+            </Stack>
+        ) : null;
     let actions: ReactNode = null;
-    if (attachmentMode && initialFile) {
+    if (imageWarnings != null && !attachmentMode) {
+        actions = <Button onClick={onClose}>{t.common.actions.close}</Button>;
+    } else if (attachmentMode && initialFile) {
         actions =
             importedTo != null ? (
                 <Button onClick={onClose}>{t.common.actions.close}</Button>
@@ -468,7 +515,7 @@ export const ModalImportMarkdown = ({
         >
             {/* Folders only exist under my-notes, so a task or chat
                     note gets the single-file dialog it has always had. */}
-            {canImportFolder && (
+            {canImportFolder && imageWarnings == null && (
                 <Tabs
                     size="sm"
                     sx={{ bgcolor: "transparent", mt: 1 }}
@@ -493,7 +540,7 @@ export const ModalImportMarkdown = ({
                     (a note always lands somewhere): the previous pick
                     stays selected. Shared by both modes: a folder
                     import needs a destination just as much. */}
-            {destinationOptions.length > 0 && (
+            {destinationOptions.length > 0 && imageWarnings == null && !importedTo && (
                 <FormControl sx={{ mt: 2 }}>
                     <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
                     <Autocomplete
@@ -516,6 +563,7 @@ export const ModalImportMarkdown = ({
                         <Typography level="body-md">
                             {fmt(t.notes.importMd.importedTo, { where: importedTo })}
                         </Typography>
+                        {warningList}
                     </Stack>
                 ) : (
                     <Stack spacing={0} sx={{ mt: 1 }}>
@@ -542,6 +590,13 @@ export const ModalImportMarkdown = ({
                         </FormControl>
                     </Stack>
                 )
+            ) : imageWarnings != null ? (
+                <Stack spacing={1} sx={{ mt: 2 }}>
+                    <Typography level="body-md">
+                        {t.notes.importMd.importedWithWarnings}
+                    </Typography>
+                    {warningList}
+                </Stack>
             ) : mode === "folder" && accessToken ? (
                 <FolderImportPanel
                     accessToken={accessToken}

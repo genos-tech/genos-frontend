@@ -29,6 +29,7 @@ import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useTranslation } from "../../i18n";
 import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
+import { todayCalendarIso } from "../../utils/calendarDate";
 import { chatTypeCodeToSlug, entityRefToHref } from "../../utils/entityHref";
 import {
     agentMarkdownComponents,
@@ -151,7 +152,7 @@ export const ThreadAskModal = ({
         setSaveError(null);
         setSavedNoteId(null);
         try {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = todayCalendarIso();
             const title = t.threadAsk.saveAsNote.noteTitle
                 .replace("{chatName}", chatName || "Thread")
                 .replace("{date}", today);
