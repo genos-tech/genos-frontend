@@ -24,6 +24,10 @@ import { Socket } from "socket.io-client";
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../../../components/ui/avatars/BaseAvatar";
+import {
+    GenosAuthorAvatar,
+    isGenosAuthor,
+} from "../../../../../../components/ui/avatars/GenosAuthor";
 import { DataState } from "../../../../../../components/ui/feedback/DataState";
 import { ViaChip } from "../../../../../../components/ui/misc/ViaChip";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
@@ -1079,7 +1083,11 @@ export const TaskActivityFeed = ({
         if (row.actionType === "status_changed" && row.metadata?.closedByPrMerge === true) {
             return <PrMergeCloseActivityRow key={row.activityId} activity={row} isDark={isDark} />;
         }
-        const actorName = row.actor?.userName ?? t.tasks.activity.someone;
+        // An automatic row has no actor: Genos wrote it (MIP-2025).
+        const byGenos = isGenosAuthor(row.actor?.userId);
+        const actorName = byGenos
+            ? t.admin.brand.name
+            : (row.actor?.userName ?? t.tasks.activity.someone);
         const oldFmt = formatValue(
             row.oldValue,
             row.fieldName,
@@ -1143,17 +1151,21 @@ export const TaskActivityFeed = ({
                     spacing={1.25}
                     sx={{ py: 1, px: 1 }}
                 >
-                    <AvatarWithStatus
-                        avatarSize={30}
-                        avatarUser={avatarUser}
-                        isYou={actorId != null && String(myself.userId) === String(actorId)}
-                        myself={myself}
-                        setMyself={setMyself}
-                        showPulseDot={false}
-                        socket={socket}
-                        useCM={useCM}
-                        useUISM={useUISM}
-                    />
+                    {byGenos ? (
+                        <GenosAuthorAvatar size={30} />
+                    ) : (
+                        <AvatarWithStatus
+                            avatarSize={30}
+                            avatarUser={avatarUser}
+                            isYou={actorId != null && String(myself.userId) === String(actorId)}
+                            myself={myself}
+                            setMyself={setMyself}
+                            showPulseDot={false}
+                            socket={socket}
+                            useCM={useCM}
+                            useUISM={useUISM}
+                        />
+                    )}
                     <Box
                         sx={{
                             flex: 1,

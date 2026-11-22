@@ -5,7 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../../components/messageBody/MessageBody";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
-import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { AuthorAvatar } from "../../../../components/ui/avatars/GenosAuthor";
 import { Bubble } from "../../../../components/ui/bubble";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
@@ -622,7 +622,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             "reserve"
         ) : undefined
     ) : (
-        <UserAvatar
+        <AuthorAvatar
             fallbackName={isSent ? myself.userName : message.sender.userName}
             userId={isSent ? myself.userId : message.sender.userId}
         />
