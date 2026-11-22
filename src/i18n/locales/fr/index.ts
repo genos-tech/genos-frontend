@@ -1749,6 +1749,11 @@ export const fr: DeepPartial<Messages> = {
         feedback: {
             loading: "Chargement…",
             loadFailedBody: "Vérifiez votre connexion, puis réessayez.",
+            demoSetup: {
+                preparing: "Préparation de votre espace de travail d’exemple…",
+                failed: "Impossible de préparer l’espace de travail d’exemple.",
+                retry: "Réessayer",
+            },
             sync: {
                 banner: "Impossible de synchroniser votre espace de travail.",
                 bannerRetrying: "Synchronisation de votre espace de travail…",
@@ -5107,6 +5112,7 @@ export const fr: DeepPartial<Messages> = {
             thinking: "Réflexion…",
             streaming: "diffusion…",
             awaitingApproval: "en attente de votre approbation",
+            archived: "Archivé",
             untitled: "(sans titre)",
             noAnswer: "(aucune réponse)",
         },

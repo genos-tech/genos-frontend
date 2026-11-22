@@ -1729,6 +1729,11 @@ export const ja: DeepPartial<Messages> = {
         feedback: {
             loading: "読み込み中…",
             loadFailedBody: "接続を確認して、もう一度お試しください。",
+            demoSetup: {
+                preparing: "サンプルワークスペースを準備しています…",
+                failed: "サンプルワークスペースを準備できませんでした。",
+                retry: "もう一度試す",
+            },
             sync: {
                 banner: "ワークスペースを同期できませんでした。",
                 bannerRetrying: "ワークスペースを同期しています…",
@@ -5038,6 +5043,7 @@ export const ja: DeepPartial<Messages> = {
             thinking: "考え中…",
             streaming: "生成中…",
             awaitingApproval: "承認待ち",
+            archived: "アーカイブ済み",
             untitled: "（無題）",
             noAnswer: "（回答なし）",
         },

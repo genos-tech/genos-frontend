@@ -530,6 +530,15 @@ const SpotlightResultItemInner = ({
                             )}
                         </Box>
                     )}
+                    {result.archived && (
+                        <Chip
+                            size="sm"
+                            sx={{ alignSelf: "center", flexShrink: 0, color: g.text.secondary }}
+                            variant="soft"
+                        >
+                            {t.spotlight.states.archived}
+                        </Chip>
+                    )}
                 </Box>
                 {result.snippet && (
                     <Typography

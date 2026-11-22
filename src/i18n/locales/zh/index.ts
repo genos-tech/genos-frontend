@@ -1661,6 +1661,11 @@ export const zh: DeepPartial<Messages> = {
         feedback: {
             loading: "加载中…",
             loadFailedBody: "请检查网络连接后重试。",
+            demoSetup: {
+                preparing: "正在准备你的示例工作区…",
+                failed: "无法准备示例工作区。",
+                retry: "重试",
+            },
             sync: {
                 banner: "无法同步你的工作区。",
                 bannerRetrying: "正在同步你的工作区…",
@@ -4849,6 +4854,7 @@ export const zh: DeepPartial<Messages> = {
             thinking: "思考中…",
             streaming: "传输中…",
             awaitingApproval: "等待你的确认",
+            archived: "已归档",
             untitled: "（未命名）",
             noAnswer: "（无回答）",
         },

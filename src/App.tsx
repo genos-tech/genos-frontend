@@ -23,6 +23,7 @@ import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
 import { BillingReturnSnackbar } from "./components/layout/BillingReturnSnackbar";
 import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
+import { DemoWorkspaceSetupBanner } from "./components/layout/DemoWorkspaceSetupBanner";
 import { FreezeRouterWhenHidden } from "./components/layout/FreezeRouterWhenHidden";
 import { FreezeWhenHidden } from "./components/layout/FreezeWhenHidden";
 import { HistoryShell } from "./components/layout/HistoryShell";
@@ -1611,6 +1612,9 @@ const AppBody = () => {
                                                         />
                                                         <RequestErrorSnackbar />
                                                         <SyncStatusBanner hidden={showApiDown} />
+                                                        <DemoWorkspaceSetupBanner
+                                                            accessToken={accessToken}
+                                                        />
                                                         <NonMemberMentionSnackbar
                                                             myself={myself}
                                                             socket={socketInstance}

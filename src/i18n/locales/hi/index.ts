@@ -13,6 +13,11 @@ export const hi: DeepPartial<Messages> = {
         feedback: {
             loading: "लोड हो रहा है…",
             loadFailedBody: "अपना कनेक्शन जाँचें, फिर दोबारा कोशिश करें।",
+            demoSetup: {
+                preparing: "आपका नमूना वर्कस्पेस तैयार किया जा रहा है…",
+                failed: "नमूना वर्कस्पेस तैयार नहीं हो सका।",
+                retry: "फिर कोशिश करें",
+            },
             sync: {
                 banner: "आपका वर्कस्पेस सिंक नहीं हो सका।",
                 bannerRetrying: "आपका वर्कस्पेस सिंक हो रहा है…",
@@ -4612,6 +4617,7 @@ export const hi: DeepPartial<Messages> = {
             thinking: "सोच रहा है…",
             streaming: "स्ट्रीमिंग…",
             awaitingApproval: "आपकी मंज़ूरी का इंतज़ार",
+            archived: "संग्रहीत",
             untitled: "(बिना शीर्षक)",
             noAnswer: "(कोई जवाब नहीं)",
         },

@@ -8,6 +8,11 @@ export const common = {
     feedback: {
         loading: "Loading…",
         loadFailedBody: "Check your connection, then try again.",
+        demoSetup: {
+            preparing: "Setting up your sample workspace…",
+            failed: "Couldn't set up the sample workspace.",
+            retry: "Try again",
+        },
         sync: {
             banner: "Couldn't sync your workspace.",
             bannerRetrying: "Syncing your workspace…",

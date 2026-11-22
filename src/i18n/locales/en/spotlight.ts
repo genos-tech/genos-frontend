@@ -24,6 +24,7 @@ export const spotlight = {
         thinking: "Thinking…",
         streaming: "streaming…",
         awaitingApproval: "awaiting your approval",
+        archived: "Archived",
         untitled: "(untitled)",
         // A finished turn that has no answer text (cancelled before the first
         // word, or a run that ended on tool steps alone). The turn says so

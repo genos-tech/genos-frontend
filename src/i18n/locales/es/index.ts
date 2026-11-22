@@ -13,6 +13,11 @@ export const es: DeepPartial<Messages> = {
         feedback: {
             loading: "Cargando…",
             loadFailedBody: "Comprueba tu conexión e inténtalo de nuevo.",
+            demoSetup: {
+                preparing: "Preparando tu espacio de trabajo de ejemplo…",
+                failed: "No se pudo preparar el espacio de trabajo de ejemplo.",
+                retry: "Reintentar",
+            },
             sync: {
                 banner: "No se pudo sincronizar tu espacio de trabajo.",
                 bannerRetrying: "Sincronizando tu espacio de trabajo…",
@@ -4413,6 +4418,7 @@ export const es: DeepPartial<Messages> = {
             thinking: "Pensando…",
             streaming: "transmitiendo…",
             awaitingApproval: "esperando tu aprobación",
+            archived: "Archivado",
             untitled: "(sin título)",
             noAnswer: "(sin respuesta)",
         },
