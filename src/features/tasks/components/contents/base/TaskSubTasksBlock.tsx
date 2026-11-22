@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { Virtuoso } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
@@ -39,6 +40,11 @@ import {
 } from "../../../services/taskEvents";
 import { TaskIdText } from "../../card";
 import { StatusLabel } from "../../meta/StatusLabel";
+
+// A list this long is windowed (MIP-1985): a milestone with ~800 tasks drew ~590 rows (8,800 DOM nodes)
+// inside this 300px scroller. Shorter lists keep the plain markup.
+export const VIRTUALIZE_SUBTASKS_AT = 50;
+const SUBTASKS_MAX_HEIGHT = 300;
 
 type TaskSubTasksBlockProps = {
     SectionHeader: React.ComponentType<{ children: React.ReactNode; isDark: boolean }>;
@@ -306,6 +312,93 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         setQuickError(null);
     };
 
+    const renderChildRow = (
+        { assignee, project, id, displayId, title, status, tags }: (typeof childTasks)[number],
+        index: number
+    ) => (
+        <ListItem key={`listitem-${id}-${index}`}>
+            {/* Sub-tasks can be unassigned: with no `avatarUser`, AvatarWithStatus draws the
+                empty avatar. */}
+            <AvatarWithStatus
+                avatarUser={assignee ? useTEM.teamMemberProfiles[assignee.userId] : undefined}
+                isYou={!!assignee && myself.userId === assignee.userId}
+                myself={myself}
+                setMyself={setMyself}
+                showPulseDot={false}
+                socket={socket}
+                useCM={useCM}
+                useUISM={useUISM}
+            />
+            <ListItemButton
+                sx={{
+                    marginLeft: "10px",
+                }}
+                onClick={() => {
+                    if (!project?.projectId || !id) {
+                        console.error("Failed to set the current project");
+                        return;
+                    }
+                    // Modal-hosted → re-target
+                    // the modal; the global
+                    // preview id would change
+                    // the page BEHIND it.
+                    if (hostZIndex != null && urlLinkModal) {
+                        urlLinkModal.openModalByHref(
+                            `/workspace/tasks/project/${project.projectId}/task/${id}`
+                        );
+                        return;
+                    }
+                    useTM.setCurrentPreviewTaskId(id);
+                }}
+            >
+                <TaskIdText
+                    key={`id-chip-${id}-${index}`}
+                    copyable={false}
+                    task={{ id, displayId }}
+                />
+                <Box key={`status-chip-${id}-${index}`} sx={{ mx: "5px" }}>
+                    <StatusLabel status={status.status} />
+                </Box>
+                <Typography
+                    sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        width: "100%", // take full width of button
+                    }}
+                    noWrap
+                >
+                    {`${title}`}
+                </Typography>
+                <Box
+                    sx={{
+                        display: "flex",
+                        marginLeft: "auto",
+                        alignItems: "center",
+                    }}
+                >
+                    {tags.map(({ tagName, tagColor }, index) => (
+                        <Chip
+                            key={`${id}-${index}-${tagName}`}
+                            size="md"
+                            variant="outlined"
+                            sx={{
+                                marginX: "2px",
+                                color: mode === "dark" ? "white" : "black",
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                                borderWidth: "3px",
+                                borderColor: alpha(tagColor, mode === "dark" ? 0.5 : 0.75),
+                            }}
+                        >
+                            {`${tagName}`}
+                        </Chip>
+                    ))}
+                </Box>
+            </ListItemButton>
+        </ListItem>
+    );
+
     return (
         <>
             <Stack
@@ -379,121 +472,22 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     >
                         <ListItem sx={{ width: "100%" }} nested>
                             <List sx={{ gap: 0.5 }}>
-                                {childTasks.map(
-                                    (
-                                        { assignee, project, id, displayId, title, status, tags },
-                                        index
-                                    ) => {
-                                        return (
-                                            <ListItem key={`listitem-${id}-${index}`}>
-                                                <AvatarWithStatus
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    showPulseDot={false}
-                                                    socket={socket}
-                                                    useCM={useCM}
-                                                    useUISM={useUISM}
-                                                    // Sub-tasks can be unassigned —
-                                                    // fall back to the empty avatar
-                                                    // that AvatarWithStatus renders
-                                                    // when `avatarUser` is undefined.
-                                                    avatarUser={
-                                                        assignee
-                                                            ? useTEM.teamMemberProfiles[
-                                                                  assignee.userId
-                                                              ]
-                                                            : undefined
-                                                    }
-                                                    isYou={
-                                                        !!assignee &&
-                                                        myself.userId === assignee.userId
-                                                    }
-                                                />
-                                                <ListItemButton
-                                                    sx={{
-                                                        marginLeft: "10px",
-                                                    }}
-                                                    onClick={() => {
-                                                        if (!project?.projectId || !id) {
-                                                            console.error(
-                                                                "Failed to set the current project"
-                                                            );
-                                                            return;
-                                                        }
-                                                        // Modal-hosted → re-target
-                                                        // the modal; the global
-                                                        // preview id would change
-                                                        // the page BEHIND it.
-                                                        if (hostZIndex != null && urlLinkModal) {
-                                                            urlLinkModal.openModalByHref(
-                                                                `/workspace/tasks/project/${project.projectId}/task/${id}`
-                                                            );
-                                                            return;
-                                                        }
-                                                        useTM.setCurrentPreviewTaskId(id);
-                                                    }}
-                                                >
-                                                    <TaskIdText
-                                                        key={`id-chip-${id}-${index}`}
-                                                        copyable={false}
-                                                        task={{ id, displayId }}
-                                                    />
-                                                    <Box
-                                                        key={`status-chip-${id}-${index}`}
-                                                        sx={{ mx: "5px" }}
-                                                    >
-                                                        <StatusLabel status={status.status} />
-                                                    </Box>
-                                                    <Typography
-                                                        sx={{
-                                                            overflow: "hidden",
-                                                            textOverflow: "ellipsis",
-                                                            whiteSpace: "nowrap",
-                                                            width: "100%", // take full width of button
-                                                        }}
-                                                        noWrap
-                                                    >
-                                                        {`${title}`}
-                                                    </Typography>
-                                                    <Box
-                                                        sx={{
-                                                            display: "flex",
-                                                            marginLeft: "auto",
-                                                            alignItems: "center",
-                                                        }}
-                                                    >
-                                                        {tags.map(
-                                                            ({ tagName, tagColor }, index) => (
-                                                                <Chip
-                                                                    key={`${id}-${index}-${tagName}`}
-                                                                    size="md"
-                                                                    variant="outlined"
-                                                                    sx={{
-                                                                        marginX: "2px",
-                                                                        color:
-                                                                            mode === "dark"
-                                                                                ? "white"
-                                                                                : "black",
-                                                                        fontWeight: "bold",
-                                                                        borderRadius: "5px",
-                                                                        borderWidth: "3px",
-                                                                        borderColor: alpha(
-                                                                            tagColor,
-                                                                            mode === "dark"
-                                                                                ? 0.5
-                                                                                : 0.75
-                                                                        ),
-                                                                    }}
-                                                                >
-                                                                    {`${tagName}`}
-                                                                </Chip>
-                                                            )
-                                                        )}
-                                                    </Box>
-                                                </ListItemButton>
-                                            </ListItem>
-                                        );
-                                    }
+                                {childTasks.length >= VIRTUALIZE_SUBTASKS_AT ? (
+                                    <Virtuoso
+                                        data={childTasks}
+                                        defaultItemHeight={44}
+                                        style={{ height: SUBTASKS_MAX_HEIGHT }}
+                                        computeItemKey={(index, child) =>
+                                            `listitem-${child.id}-${index}`
+                                        }
+                                        itemContent={(index, child) => (
+                                            <Box sx={{ pb: 0.5 }}>
+                                                {renderChildRow(child, index)}
+                                            </Box>
+                                        )}
+                                    />
+                                ) : (
+                                    childTasks.map(renderChildRow)
                                 )}
                             </List>
                         </ListItem>
