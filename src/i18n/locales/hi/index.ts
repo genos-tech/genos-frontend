@@ -4082,6 +4082,15 @@ export const hi: DeepPartial<Messages> = {
             loadingDestinations: "लोड हो रहा है…",
             noDestinations: "यहाँ इंपोर्ट करने के लिए कुछ नहीं है।",
             importedTo: "{where} में नोट के रूप में इंपोर्ट किया गया।",
+            importedWithWarnings: "इंपोर्ट हो गया। कुछ इमेज नोट में शामिल नहीं हुईं।",
+            imagesLeftOut: "नोट से बाहर रही इमेज:",
+            imagePlaceholder: "[इमेज {index} इंपोर्ट नहीं हुई]",
+            imageWarning: {
+                "too-large":
+                    "इमेज {index} का आकार {size} है, जो आपकी {limit} अपलोड सीमा से अधिक है।",
+                "upload-failed": "इमेज {index} ({size}) अपलोड नहीं हो सकी।",
+                undecodable: "इमेज {index} पढ़ी नहीं जा सकी।",
+            },
         },
         exportZip: {
             menuItem: "फ़ोल्डर को .zip के रूप में निर्यात करें",

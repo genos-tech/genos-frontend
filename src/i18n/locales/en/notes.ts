@@ -324,6 +324,14 @@ export const notes = {
         loadingDestinations: "Loading…",
         noDestinations: "Nothing to import into here.",
         importedTo: "Imported as a note in {where}.",
+        importedWithWarnings: "Imported. Some images were left out of the note.",
+        imagesLeftOut: "Left out of the note:",
+        imagePlaceholder: "[Image {index} was not imported]",
+        imageWarning: {
+            "too-large": "Image {index} is {size}, over your {limit} upload limit.",
+            "upload-failed": "Image {index} ({size}) could not be uploaded.",
+            undecodable: "Image {index} could not be read.",
+        },
     },
     // Batch export of a folder tree — the mirror of importMd's folder
     // half, and deliberately laid out so its zip can be imported back.

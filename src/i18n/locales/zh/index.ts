@@ -3289,6 +3289,14 @@ export const zh: DeepPartial<Messages> = {
             loadingDestinations: "加载中…",
             noDestinations: "这里没有可导入的位置。",
             importedTo: "已作为笔记导入到 {where}。",
+            importedWithWarnings: "已导入。部分图片未包含在笔记中。",
+            imagesLeftOut: "未包含在笔记中的图片:",
+            imagePlaceholder: "[图片 {index} 未导入]",
+            imageWarning: {
+                "too-large": "图片 {index} 为 {size},超过 {limit} 的上传上限。",
+                "upload-failed": "图片 {index}({size})上传失败。",
+                undecodable: "无法读取图片 {index}。",
+            },
         },
         exportZip: {
             menuItem: "将文件夹导出为 .zip",

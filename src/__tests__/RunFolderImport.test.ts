@@ -216,6 +216,41 @@ describe("runFolderImport", () => {
         expect(fetch).not.toHaveBeenCalled();
     });
 
+    it("uploads a data: image after the note exists and writes only its URL back (MIP-1946)", async () => {
+        const put = vi.fn().mockResolvedValue({ data: {} });
+        mockAuthApi.mockReturnValue({ put } as never);
+        const uri = `data:image/png;base64,${"A".repeat(40000)}`;
+
+        const result = await run([at("Export/Doc.md", `!${uri}`)]);
+
+        expect(result.assetsUploaded).toBe(1);
+        expect(result.assetsFailed).toBe(0);
+        const form = vi.mocked(fetch).mock.calls[0][1]?.body as FormData;
+        expect(form.get("note_id")).toBe("2");
+        expect((form.get("note_attachment_file") as File).type).toBe("image/png");
+        expect(JSON.stringify(put.mock.calls[0][1].body)).not.toContain("data:");
+    });
+
+    it("leaves an oversize data: image out with a placeholder and counts it as failed", async () => {
+        const put = vi.fn().mockResolvedValue({ data: {} });
+        mockAuthApi.mockReturnValue({ put } as never);
+        const uri = `data:image/png;base64,${"A".repeat(40000)}`;
+
+        const result = await run([at("Export/Doc.md", `!${uri}`)], { uploadLimitBytes: 1000 });
+
+        expect(result.assetsFailed).toBe(1);
+        expect(fetch).not.toHaveBeenCalled();
+        const written = JSON.stringify(put.mock.calls[0][1].body);
+        expect(written).not.toContain("data:");
+        expect(written).toContain("Image 1 was not imported");
+    });
+
+    it("creates the note without the data: pixels: the API refuses a body over ~2.5 MB", async () => {
+        const uri = `data:image/png;base64,${"A".repeat(40000)}`;
+        await run([at("Export/Doc.md", `!${uri}`)]);
+        expect(JSON.stringify(mockCreateNote.mock.calls[0][5])).not.toContain("data:");
+    });
+
     it("reports progress across the whole run", async () => {
         const seen: string[] = [];
         await run([at("Export/Alpha.md"), at("Export/Beta.md")], {
