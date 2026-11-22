@@ -25,6 +25,7 @@ import { SprintSection } from "./SprintSection";
 type ProjectTabProps = Pick<
     TaskHomeData,
     | "isDark"
+    | "setActiveTab"
     | "stats"
     | "overdueAndUpcoming"
     | "topByWeightRows"
@@ -35,6 +36,7 @@ type ProjectTabProps = Pick<
     | "handleCreateTask"
     | "selectedSprint"
     | "sprintStats"
+    | "sprintMilestones"
     | "sprintMembers"
     | "sprintTaskIds"
     | "sprintTaskUpdatedAt"
@@ -57,15 +59,7 @@ type ProjectTabProps = Pick<
 > &
     Pick<
         TaskHomeContentProps,
-        | "useTM"
-        | "usePM"
-        | "useTEM"
-        | "useSM"
-        | "myself"
-        | "setMyself"
-        | "useCM"
-        | "useUISM"
-        | "socket"
+        "useTM" | "useTEM" | "myself" | "setMyself" | "useCM" | "useUISM" | "socket"
     >;
 
 type AttentionList = "overdue" | "week" | "weight";
@@ -89,6 +83,7 @@ export const ProjectTab = ({
     handleCreateTask,
     selectedSprint,
     sprintStats,
+    sprintMilestones,
     sprintMembers,
     sprintTaskIds,
     sprintTaskUpdatedAt,
@@ -96,14 +91,13 @@ export const ProjectTab = ({
     effectiveTasks,
     moreAnalyticsOpen,
     setMoreAnalyticsOpen,
+    setActiveTab,
     isDark,
     textPrimary,
     textSecondary,
     textMuted,
     useTM,
-    usePM,
     useTEM,
-    useSM,
     myself,
     setMyself,
     useCM,
@@ -263,19 +257,14 @@ export const ProjectTab = ({
             </DashboardCard>
 
             <SprintSection
+                effectiveTasks={effectiveTasks}
                 handleCreateTask={handleCreateTask}
-                myself={myself}
                 recentTasks={recentTasks}
                 selectedSprint={selectedSprint}
-                setMyself={setMyself}
-                socket={socket}
+                sprintMilestones={sprintMilestones}
                 sprintStats={sprintStats}
-                useCM={useCM}
-                usePM={usePM}
-                useSM={useSM}
-                useTEM={useTEM}
                 useTM={useTM}
-                useUISM={useUISM}
+                onShowAllMilestones={() => setActiveTab("milestones")}
             />
 
             {/* Mounted once, outside "More analytics": opening or closing it never remounts the

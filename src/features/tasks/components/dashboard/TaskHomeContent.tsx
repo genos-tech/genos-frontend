@@ -76,6 +76,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         topByWeightRows,
         overdueAndUpcoming,
         ongoingProjectMilestones,
+        sprintMilestones,
         myStats,
         setSelectedMemberId,
         projectMembers,
@@ -275,6 +276,11 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                         useSM.projectMilestones[usePM.currentProject.projectId] !==
                                             undefined
                                     }
+                                    onOpenMilestone={(milestoneId) => {
+                                        useTM.setCurrentPreviewKind("milestone");
+                                        useTM.setCurrentPreviewMilestoneId(milestoneId);
+                                        useTM.setIsTaskPreviewVisible(true);
+                                    }}
                                 />
                             )}
 
@@ -354,11 +360,13 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     recentTasks={recentTasks}
                                     sectionHeaderColor={sectionHeaderColor}
                                     selectedSprint={selectedSprint}
+                                    setActiveTab={setActiveTab}
                                     setMoreAnalyticsOpen={setMoreAnalyticsOpen}
                                     setMyself={setMyself}
                                     setTopWeightSort={setTopWeightSort}
                                     socket={socket}
                                     sprintMembers={sprintMembers}
+                                    sprintMilestones={sprintMilestones}
                                     sprintNameFor={sprintNameFor}
                                     sprintStats={sprintStats}
                                     sprintTaskIds={sprintTaskIds}
@@ -372,8 +380,6 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                     topByWeightRows={topByWeightRows}
                                     topWeightSort={topWeightSort}
                                     useCM={useCM}
-                                    usePM={usePM}
-                                    useSM={useSM}
                                     useTEM={useTEM}
                                     useTM={useTM}
                                     useUISM={useUISM}

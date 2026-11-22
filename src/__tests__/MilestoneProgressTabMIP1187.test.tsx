@@ -1,6 +1,6 @@
 import { act } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -104,6 +104,13 @@ const progressEntry = {
     },
 } as never;
 
+// A legend entry of the shared ProportionBar: the label and the count are two elements, so
+// match on the entry's own text ("Blocked 1").
+const legendItem = (text: string): HTMLElement | null =>
+    screen
+        .queryAllByRole("listitem")
+        .find((li) => li.textContent?.replace(/\s+/g, "") === text.replace(/\s+/g, "")) ?? null;
+
 describe("MilestoneProgressTab (MIP-1187)", () => {
     beforeEach(() => {
         vi.mocked(loadTaskProgress).mockReset();
@@ -112,10 +119,12 @@ describe("MilestoneProgressTab (MIP-1187)", () => {
 
     it("shows the summary numbers and the milestone's due line", () => {
         mount();
-        const tiles = screen.getByRole("list", { name: /Milestone progress/ });
-        expect(within(tiles).getByText("Tasks closed").previousSibling?.textContent).toBe("1/4");
-        expect(within(tiles).getByText("Overdue tasks").previousSibling?.textContent).toBe("1");
-        expect(within(tiles).getByText("Blocked").previousSibling?.textContent).toBe("1");
+        // Each StatTile is a value above its label ("1" with "/ 4" beside it for closed).
+        const value = (label: string) =>
+            screen.getAllByText(label)[0].previousElementSibling?.textContent;
+        expect(value("Tasks closed")).toBe("1/ 4");
+        expect(value("Overdue tasks")).toBe("1");
+        expect(value("Blocked")).toBe("1");
         expect(screen.getByText("Beta launch")).toBeTruthy();
         expect(screen.getByText("Overdue by 3 days")).toBeTruthy();
         expect(screen.getByText("1 of 4 closed")).toBeTruthy();
@@ -124,18 +133,18 @@ describe("MilestoneProgressTab (MIP-1187)", () => {
     it("reads the progress by status with an accessible bar", () => {
         mount();
         expect(screen.getByRole("img", { name: "1 of 4 closed" })).toBeTruthy();
-        expect(screen.getByText("Blocked 1")).toBeTruthy();
+        expect(legendItem("Blocked 1")).toBeTruthy();
         // The dashboard's word for Closed, not the stored status name.
-        expect(screen.getByText("Completed 1")).toBeTruthy();
-        expect(screen.getByText("In Progress 1")).toBeTruthy();
-        expect(screen.queryByText("Closed 1")).toBeNull();
+        expect(legendItem("Completed 1")).toBeTruthy();
+        expect(legendItem("In Progress 1")).toBeTruthy();
+        expect(legendItem("Closed 1")).toBeNull();
     });
 
     it("names the legend statuses in the active locale", async () => {
         await mountIn("fr");
         const fr = await loadLocale("fr");
-        expect(screen.getByText(`${fr.tasks.dashboard.statusLabels.blocked} 1`)).toBeTruthy();
-        expect(screen.queryByText("Blocked 1")).toBeNull();
+        expect(legendItem(`${fr.tasks.dashboard.statusLabels.blocked} 1`)).toBeTruthy();
+        expect(legendItem("Blocked 1")).toBeNull();
     });
 
     it("shows a skeleton, not the empty text, until the milestones have loaded", () => {

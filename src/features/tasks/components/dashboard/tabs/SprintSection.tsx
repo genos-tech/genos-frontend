@@ -10,51 +10,47 @@ import {
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { g, type } from "../../../../../theme/tokens";
-import { SprintMilestonesSection } from "../../../sprint-milestone/components/SprintMilestonesSection";
 import type { TaskHomeContentProps } from "../taskHomeTypes";
 import type { TaskHomeData } from "../useTaskHomeData";
+import { MilestonesAtRiskCard } from "./MilestonesAtRiskCard";
 
 type SprintSectionProps = Pick<
     TaskHomeData,
-    "selectedSprint" | "sprintStats" | "recentTasks" | "handleCreateTask"
+    | "selectedSprint"
+    | "sprintStats"
+    | "sprintMilestones"
+    | "recentTasks"
+    | "handleCreateTask"
+    | "effectiveTasks"
 > &
-    Pick<
-        TaskHomeContentProps,
-        | "useTM"
-        | "usePM"
-        | "useTEM"
-        | "useSM"
-        | "myself"
-        | "setMyself"
-        | "useCM"
-        | "useUISM"
-        | "socket"
-    >;
+    Pick<TaskHomeContentProps, "useTM"> & {
+        onShowAllMilestones: () => void;
+    };
 
 /**
- * The sprint part of the Project tab (MIP-1963): the progress card and the sprint's milestones.
+ * The sprint part of the Project tab (MIP-1963): the progress card and the milestones at risk.
  * The Sprint tab's velocity, recent-task grid and empty state moved to the Project tab and its
- * "More analytics"; the milestones merge into the Milestones tab in a later PR.
+ * "More analytics"; its "Milestones in sprint" list is now the Milestones tab.
  */
 export const SprintSection = ({
     selectedSprint,
     sprintStats,
+    sprintMilestones,
     recentTasks,
     handleCreateTask,
-    usePM,
-    useSM,
+    effectiveTasks,
     useTM,
-    useTEM,
-    myself,
-    setMyself,
-    useCM,
-    useUISM,
-    socket,
+    onShowAllMilestones,
 }: SprintSectionProps) => {
     const { t } = useTranslation();
     const nf = useNumberFormat();
-    // Closed vs total across the selected sprint's milestones: the same numerator and
-    // denominator as the per-milestone bars below, so every sprint figure tells one story.
+    const openMilestone = (milestoneId: number) => {
+        useTM.setCurrentPreviewKind("milestone");
+        useTM.setCurrentPreviewMilestoneId(milestoneId);
+        useTM.setIsTaskPreviewVisible(true);
+    };
+    // Closed vs total across the selected sprint's milestones (the server's counts, sub-tasks
+    // included). The milestone card's bars count the dashboard's own rows, so the two can differ.
     const pct = sprintStats.total > 0 ? Math.min(1, sprintStats.closed / sprintStats.total) : 0;
     const segments = [
         {
@@ -123,17 +119,11 @@ export const SprintSection = ({
                     }
                 />
             )}
-            <SprintMilestonesSection
-                myself={myself}
-                projectId={usePM.currentProject?.projectId}
-                selectedSprint={selectedSprint}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useSM={useSM}
-                useTEM={useTEM}
-                useTM={useTM}
-                useUISM={useUISM}
+            <MilestonesAtRiskCard
+                effectiveTasks={effectiveTasks}
+                milestones={sprintMilestones}
+                onOpenMilestone={openMilestone}
+                onShowAll={onShowAllMilestones}
             />
         </>
     );
