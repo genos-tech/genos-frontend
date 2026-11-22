@@ -4,6 +4,7 @@ import { Box, Button, Stack, Typography } from "@mui/joy";
 
 import { UserAvatar } from "../../../../../components/ui/avatars/UserAvatar";
 import { DashboardCard, MeterRow, useNumberFormat } from "../../../../../components/ui/dashboard";
+import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { focusRing, g, type } from "../../../../../theme/tokens";
 import { toneSolid, type Tone } from "../../../meta/taskTone";
@@ -81,9 +82,7 @@ export const TeamLoadCard = ({
         >
             <Box hidden={!open} id={regionId}>
                 {open && teamCapacity.length === 0 && (
-                    <Typography sx={{ ...type("body-sm"), color: g.text.secondary }}>
-                        {c.empty}
-                    </Typography>
+                    <EmptyState data-empty="home-capacity" size="xs" title={c.empty} />
                 )}
                 {open && teamCapacity.length > 0 && (
                     <Stack spacing={1.5}>

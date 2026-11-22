@@ -304,9 +304,9 @@ describe("the files stay on the shared pieces", () => {
         "features/tasks/components/dashboard/taskHomeHelpers.ts",
         "features/tasks/components/dashboard/useTaskHomeData.ts",
         "features/tasks/components/dashboard/tabs/OverallTab.tsx",
-        "features/tasks/components/dashboard/tabs/MyTasksTab.tsx",
+        "features/tasks/components/dashboard/tabs/PeopleTab.tsx",
+        "features/tasks/components/dashboard/tabs/TeamLoadCard.tsx",
         "features/tasks/components/dashboard/tabs/SprintSection.tsx",
-        "features/tasks/components/dashboard/tabs/MemberTasksTab.tsx",
         "features/tasks/components/dashboard/TaskHomeHeader.tsx",
         "features/tasks/components/dashboard/TaskHomeTabBar.tsx",
         "features/tasks/components/dashboard/AssignedMilestoneCard.tsx",
@@ -370,9 +370,8 @@ describe("the files stay on the shared pieces", () => {
                 source("features/tasks/components/dashboard/tabs/OverallTab.tsx")
         ).replace(/\s+/g, "");
         expect(text).toContain("toneSolid(STATUS_TONE[status])");
-        expect(text).toContain("toneCss(STATUS_TONE[cell.key])");
         expect(text).toContain("tone:STATUS_TONE[");
-        // The per-status count cell and the status card are not Chips or washes.
+        // The per-status counts (Team load) are plain numbers, not Chips or washes.
         expect(text).not.toMatch(/sc\.(bg|text)/);
     });
 });
