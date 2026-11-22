@@ -35,7 +35,7 @@ const SURFACES = [
     "src/features/tasks/components/dashboard/TaskHomeHeader.tsx",
     "src/features/tasks/components/dashboard/TaskHomeTabBar.tsx",
     "src/features/tasks/components/dashboard/tabs/OverallTab.tsx",
-    "src/features/tasks/components/dashboard/tabs/SprintTab.tsx",
+    "src/features/tasks/components/dashboard/tabs/SprintSection.tsx",
     "src/features/tasks/components/modals/ModalCreateProject.tsx",
     "src/features/tasks/components/table/cellEditors.tsx",
     "src/utils/personLabel.ts",

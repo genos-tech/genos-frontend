@@ -60,7 +60,6 @@ export const SegmentedChips = <T extends string>({
                                 role: "radio",
                                 "aria-checked": selected,
                                 tabIndex: i === active ? 0 : -1,
-                                onClick: () => onChange(o.value),
                                 onKeyDown: (e: KeyboardEvent) => onKeyDown(e, i),
                             },
                         }}
@@ -69,6 +68,8 @@ export const SegmentedChips = <T extends string>({
                             "&:has(:focus-visible)": focusRing,
                             "& .MuiChip-action:focus-visible": { outline: "none" },
                         }}
+                        // On the Chip itself: Joy overrides an onClick set on the action slot.
+                        onClick={() => onChange(o.value)}
                     >
                         {o.label}
                     </Chip>

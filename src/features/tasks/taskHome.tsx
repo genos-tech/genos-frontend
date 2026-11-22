@@ -3,7 +3,7 @@ import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useSearchParams } from "react-router-dom";
 
-import { DASHBOARD_VIEW_PARAM, isDashboardTab } from "./components/dashboard/dashboardTab";
+import { DASHBOARD_VIEW_PARAM, parseDashboardTab } from "./components/dashboard/dashboardTab";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskRouting } from "./hooks/useTaskRouting";
@@ -42,7 +42,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     const dashboardVisible = useTM.isTaskDashboardVisible;
     const { setIsTaskDashboardVisible, setIsTaskTableVisible, setIsSprintBoardVisible } = useTM;
     useEffect(() => {
-        if (!isActiveRoute || !isDashboardTab(requestedView) || dashboardVisible) return;
+        if (!isActiveRoute || parseDashboardTab(requestedView) === null || dashboardVisible)
+            return;
         setIsTaskDashboardVisible(true);
         setIsTaskTableVisible(false);
         setIsSprintBoardVisible(false);
