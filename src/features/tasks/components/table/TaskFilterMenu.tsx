@@ -753,7 +753,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         if (!useSM || currentProjectId == null) return [];
         return selectVisibleMilestones(
             useSM.projectMilestones[currentProjectId] ?? [],
-            useSM.projectSprints[currentProjectId] ?? []
+            useSM.projectSprints[currentProjectId] ?? [],
+            useSM.isMilestoneFavorited
         );
     }, [useSM, currentProjectId]);
 
