@@ -66,6 +66,27 @@ describe("channelService.hideChannel", () => {
         expect(held.has(KEPT)).toBe(true);
     });
 
+    it("drops my pin on the chat with it (MIP-1991) and keeps other pins", async () => {
+        post.mockResolvedValue({ status: 204 });
+        const svc = channelService as unknown as {
+            _upsertPin: (p: { id: string; channelId: string; tsCreated: string }) => void;
+        };
+        svc._upsertPin({ id: "p1", channelId: DM, tsCreated: "2026-01-01T00:00:00Z" });
+        svc._upsertPin({ id: "p2", channelId: KEPT, tsCreated: "2026-01-01T00:00:00Z" });
+        await channelService.hideChannel(DM);
+        const pins = channelService.getSnapshot().pins;
+        expect(pins.has("p1")).toBe(false);
+        expect(pins.has("p2")).toBe(true);
+    });
+
+    it("brings the chat back when it is announced again (reopened from search, MIP-1991)", async () => {
+        post.mockResolvedValue({ status: 204 });
+        await channelService.hideChannel(DM);
+        expect(channelService.getSnapshot().channels.has(DM)).toBe(false);
+        channelService.handleChannelCreated(channel(DM) as never);
+        expect(channelService.getSnapshot().channels.has(DM)).toBe(true);
+    });
+
     it("removes the chat before the server answers", async () => {
         let release: (v: unknown) => void = () => {};
         post.mockReturnValue(new Promise((r) => (release = r)));
