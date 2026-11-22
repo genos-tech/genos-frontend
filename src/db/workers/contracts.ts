@@ -34,11 +34,32 @@ export type NotesRequests = {
 
 // ---- tasks channel --------------------------------------------------------
 
+/** What a project load tells the caller: the statuses the store now holds for the project
+ *  (null = all) and the server's per-status counts over the whole project (null when the
+ *  answer carried none: an all-status load, or an API without the parameter). */
+export type LoadedProjectTasks = {
+    statuses: string[] | null;
+    statusCounts: Record<string, number> | null;
+};
+
 export type TasksRequests = {
     addTask: { req: { task: TaskTableProps }; res: void };
     loadProjectTasks: {
-        req: { myself: UserProps; accessToken: string; projectId: number };
-        res: void;
+        req: {
+            myself: UserProps;
+            accessToken: string;
+            projectId: number;
+            /** The statuses the caller needs held (MIP-2000); null = all of them. The store
+             *  keeps what it already holds when that is wider (see `StatusScope`). */
+            statuses: string[] | null;
+        };
+        res: LoadedProjectTasks;
+    };
+    /** Which statuses the stored rows of a project hold, from its watermark's record (MIP-2000):
+     *  `known` is false when the project has no watermark (never loaded here). */
+    readProjectTaskScope: {
+        req: { projectId: number };
+        res: { known: boolean; statuses: string[] | null };
     };
     loadTeamTasks: {
         req: { myself: UserProps; accessToken: string };

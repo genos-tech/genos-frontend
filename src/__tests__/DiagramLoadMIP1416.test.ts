@@ -60,7 +60,8 @@ describe("loadTaskGraph reads the synced project copy (MIP-1416)", () => {
     it("on a warm copy, never downloads the whole project", async () => {
         const graph = await loadTaskGraph(myself, 1, 1, "tok");
 
-        expect(loadProjectTasks).toHaveBeenCalledWith(myself, 1, "tok");
+        // The tree is drawn with its Closed subtasks: every status (MIP-2000).
+        expect(loadProjectTasks).toHaveBeenCalledWith(myself, 1, "tok", null);
         expect(loadProjectTasksFromApi).not.toHaveBeenCalled();
         expect(graph?.tasks.map((t) => t.id).sort()).toEqual(["1", "2", "3"]);
     });

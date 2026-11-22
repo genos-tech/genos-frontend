@@ -82,6 +82,7 @@ import {
 import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
 import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sendMilestoneUpdatedMessage";
 import { Milestone } from "../../sprint-milestone/types";
+import { useProjectStatusScope } from "../../state/projectStatusScopeStore";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { shouldFallBackToTable } from "../../utils/mainPanelVisibility";
 import {
@@ -96,9 +97,11 @@ import {
 import {
     countMilestoneTaskStatuses,
     milestoneTaskStatuses,
+    withServerClosedCount,
 } from "../../utils/milestoneTaskProgress";
 import { milestoneToTaskProps } from "../../utils/milestoneTaskProps";
 import { dropRefusedMove } from "../../utils/moveRefusal";
+import { scopeCovers } from "../../utils/projectStatusScope";
 import { getTaskKind } from "../../utils/taskKind";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
 import { StatusLabel } from "../meta/StatusLabel";
@@ -1277,12 +1280,19 @@ const MilestonePreviewInner = ({
     // "Other" (see countMilestoneTaskStatuses). Excludes the milestone's own
     // backing task row; a task under a Closed ancestor counts as Closed, one
     // under a Deleted ancestor is left out (milestoneTaskStatuses, MIP-1389).
+    // MIP-2000: while the project's Closed rows are not loaded, the Closed chip takes the
+    // server's count for the milestone.
+    const closedRowsHeld = scopeCovers(
+        useProjectStatusScope(milestone?.projectId ?? usePM.currentProject?.projectId).loaded,
+        ["Closed"]
+    );
     const milestoneTaskCounts = useMemo(() => {
         if (!milestone) return null;
-        return countMilestoneTaskStatuses(
+        const counted = countMilestoneTaskStatuses(
             milestoneTaskStatuses(useTM.allTasks, milestone.milestoneId)
         );
-    }, [milestone, useTM.allTasks]);
+        return closedRowsHeld ? counted : withServerClosedCount(counted, milestone.tasksClosed);
+    }, [milestone, useTM.allTasks, closedRowsHeld]);
 
     // Pull the latest copy from the server when this milestone is
     // first opened so child-task aggregates and assignees are fresh.

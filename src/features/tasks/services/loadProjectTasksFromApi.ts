@@ -28,6 +28,13 @@ export interface ProjectTasksDeltaResponse {
      * which case the caller compares the count alone.
      */
     idSum?: number;
+    /**
+     * How many live tasks the project has per status, whole project, whatever the request
+     * narrowed to (MIP-1994). Present only when the request carried `statuses`; an API
+     * that predates the parameter ignores it and leaves this out, which is how a caller
+     * learns the answer holds every status.
+     */
+    statusCounts?: Record<string, number>;
 }
 
 // Direct API call to `getProjectTasks`. Used by `loadProjectTasksWorker`
@@ -43,7 +50,10 @@ export const loadProjectTasksFromApi = async (
     projectId: number,
     accessToken: string | null,
     since: string | null,
-    failure?: { status?: number }
+    failure?: { status?: number },
+    // Only these statuses (MIP-2000), as the server's labels. null/undefined = every status:
+    // nothing is sent, which is the whole-list answer. Never pass "All" or "Expired" here.
+    statuses?: readonly string[] | null
 ): Promise<ProjectTasksDeltaResponse | undefined> => {
     try {
         const api = authApi(accessToken);
@@ -55,6 +65,9 @@ export const loadProjectTasksFromApi = async (
         if (since) {
             params.push(`since=${encodeURIComponent(since)}`);
         }
+        if (statuses && statuses.length > 0) {
+            params.push(`statuses=${encodeURIComponent(statuses.join(","))}`);
+        }
         const res = await api.get(`/task/getProjectTasks/?${params.join("&")}`);
         return {
             serverTime: res.data.server_time,
@@ -62,6 +75,7 @@ export const loadProjectTasksFromApi = async (
             forceFull: res.data.force_full_reload,
             totalCount: res.data.data.totalCount,
             idSum: res.data.data.idSum,
+            statusCounts: res.data.data.statusCounts,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

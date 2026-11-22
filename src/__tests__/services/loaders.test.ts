@@ -228,6 +228,8 @@ describe("refreshAllData", () => {
             myself,
             projectId: 42,
             accessToken: "tok",
+            // The ongoing statuses: what the table opens on (MIP-2000).
+            statuses: ["Open", "WIP", "Blocked", "Pending"],
         });
     });
 

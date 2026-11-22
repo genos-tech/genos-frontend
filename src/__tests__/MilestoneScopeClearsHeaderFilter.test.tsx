@@ -99,6 +99,7 @@ const makeTM = (tableMilestoneFilterId: number | null) =>
         tableMilestoneFilterId,
         tagsRevision: 0,
         setTableMilestoneFilter: vi.fn(),
+        ensureProjectStatuses: vi.fn(),
     }) as unknown as TaskManagementState;
 
 const renderMenu = (
@@ -171,6 +172,7 @@ describe("sidebar milestone scope vs the header milestone multi-select", () => {
             tableMilestoneFilterId: 20,
             tagsRevision: 0,
             setTableMilestoneFilter,
+            ensureProjectStatuses: vi.fn(),
         } as unknown as TaskManagementState;
         render(
             <CssVarsProvider>

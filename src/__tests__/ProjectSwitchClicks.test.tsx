@@ -93,6 +93,7 @@ const makeStubs = () => {
         setCurrentPreviewMilestoneId: vi.fn(rec("setCurrentPreviewMilestoneId")),
         setIsTaskPreviewVisible: vi.fn(rec("setIsTaskPreviewVisible")),
         fetchProjectTasks: vi.fn(),
+        ensureProjectStatuses: vi.fn(),
         currentPreviewKind: "task",
         currentPreviewMilestoneId: -1,
         tableMilestoneFilterId: null,

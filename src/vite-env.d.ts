@@ -27,6 +27,8 @@ interface ImportMetaEnv {
      * Production stays off until the v3 rewrite is fully wired.
      */
     readonly VITE_USE_V3_CHAT?: string;
+    /** "off" = every project load asks for all task statuses (MIP-2000 kill switch). */
+    readonly VITE_TASK_STATUS_SCOPE?: string;
     /**
      * VAPID public key (base64url) for Web Push. Same value as the
      * backend's `WEBPUSH_VAPID_PUBLIC_KEY`. When unset, the push subscribe

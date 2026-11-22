@@ -76,6 +76,7 @@ const baseProps = {
     useTM: {
         allTasks: tasks,
         fetchProjectTasks: vi.fn(),
+        ensureProjectStatuses: vi.fn(),
         isTaskPreviewVisible: false,
         isCreatingTask: { flag: false },
     },

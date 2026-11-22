@@ -43,6 +43,7 @@ import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents
 import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { endMilestoneSwitch, getPendingMilestoneSwitch } from "../../state/milestoneSwitchStore";
+import { isWidening, useProjectStatusScope } from "../../state/projectStatusScopeStore";
 import { FilterProps } from "../../types/TaskTableTypes";
 import {
     applyTreePositionToDescendants,
@@ -1698,8 +1699,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     useEffect(() => {
         if (scopeSettled && tableScopeId === getPendingMilestoneSwitch()) endMilestoneSwitch();
     }, [scopeSettled, tableScopeId]);
+    // MIP-2000: a status the filter now shows is on its way (Closed just turned on): the rows
+    // held are not the whole list, so the skeleton stands in until they land.
+    const statusWidening = isWidening(useProjectStatusScope(usePM.currentProject?.projectId));
     const showTaskSkeleton =
-        !scopeSettled || (displayRows.length === 0 && (useTM.isLoadingTasks || isFirstRead));
+        !scopeSettled ||
+        statusWidening ||
+        (displayRows.length === 0 && (useTM.isLoadingTasks || isFirstRead));
 
     return (
         <>
@@ -1927,7 +1933,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     </div>
 
                     {/* Draggable Table Body */}
-                    <MilestoneSwitchGate skeleton={switchSkeleton}>
+                    <MilestoneSwitchGate forcePending={statusWidening} skeleton={switchSkeleton}>
                         <DragDropContext
                             onDragEnd={handleDragEnd}
                             onDragStart={() => {
@@ -2027,11 +2033,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         FAILED: then it is the error with Retry, because "No tasks to
                         display" would be a claim nothing checked (MIP-1298). Rows that are
                         cached but all filtered out stay an empty FILTER, not a failure. */}
-                    {(displayRows.length === 0 || !scopeSettled) && (
+                    {(displayRows.length === 0 || !scopeSettled || statusWidening) && (
                         <DataState
                             error={syncFailure.failed && useTM.allTasks.length === 0}
                             hasData={false}
-                            loading={!scopeSettled || useTM.isLoadingTasks || isFirstRead}
                             empty={{
                                 body: t.tasks.table.emptyHint,
                                 "data-empty": "task-table",
@@ -2042,6 +2047,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 onRetry: syncFailure.retry,
                                 title: t.common.feedback.sync.tasksFailed,
                             }}
+                            loading={
+                                !scopeSettled ||
+                                statusWidening ||
+                                useTM.isLoadingTasks ||
+                                isFirstRead
+                            }
                             skeleton={
                                 <TaskTableSkeleton
                                     columns={columnsWithWidths}
