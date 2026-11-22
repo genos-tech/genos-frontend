@@ -28,6 +28,7 @@ import {
     useAuth,
 } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
+import { DEMO_WORKSPACE_PENDING_KEY } from "../../../hooks/common/useDemoWorkspaceSetup";
 import { useDocumentTitle } from "../../../hooks/useDocumentTitle";
 import { useTranslation } from "../../../i18n";
 import { markDemoStarted } from "../../../services/demoFunnel";
@@ -202,6 +203,18 @@ export const SignInForm = () => {
             // funnel's other half fires on the visitor's first answered ask —
             // see services/demoFunnel.ts for why arrival isn't the payoff.
             markDemoStarted(res.lang);
+
+            // The api returns before the sample workspace content exists (MIP-1879): leave the
+            // note the app's setup banner polls on.
+            try {
+                if (res.workspace_status === "pending") {
+                    sessionStorage.setItem(DEMO_WORKSPACE_PENDING_KEY, "1");
+                } else {
+                    sessionStorage.removeItem(DEMO_WORKSPACE_PENDING_KEY);
+                }
+            } catch {
+                /* storage unavailable: the workspace fills in on the next load */
+            }
 
             navigate("/workspace");
         } finally {

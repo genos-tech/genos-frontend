@@ -1,7 +1,7 @@
 import axios from "axios";
 
 import { getMessages, type Locale } from "../../../i18n";
-import { nonAuthApi } from "../../../services/api";
+import { authApi, nonAuthApi } from "../../../services/api";
 import { trackDemoSignInFailed } from "../../../services/demoFunnel";
 import { DemoSignInResponse } from "../../../types/admin";
 
@@ -19,9 +19,10 @@ export const demoSignIn = async (
 ): Promise<DemoSignInResponse | undefined> => {
     try {
         const api = nonAuthApi();
-        // The demo workspace is seeded synchronously by this request, so the
-        // language has to travel WITH it — there's no later call that could
-        // re-seed 3 months of Japanese chat history in the right language.
+        // The workspace content is built in the background after this request
+        // returns (MIP-1879), but its language is fixed by this call — there's
+        // no later call that could re-seed 3 months of Japanese chat history
+        // in the right language.
         const body = locale && DEMO_LANGS.has(locale) ? { lang: locale } : {};
         const res = await api.post<DemoSignInResponse>("/user/demo/", body);
         return res.data;
@@ -50,5 +51,26 @@ export const demoSignIn = async (
             setErrorMessage?.(m.unexpected);
             trackDemoSignInFailed("unexpected");
         }
+    }
+};
+
+/**
+ * Is the demo visitor's sample workspace built yet? (MIP-1879) `gone` means the api no longer
+ * knows a demo team for this user (404): nothing to wait for. A network error reads as `pending`,
+ * so one dropped request does not end the wait; the caller's own timeout does.
+ */
+export const postDemoWorkspaceStatus = async (
+    accessToken: string
+): Promise<"ready" | "pending" | "failed" | "gone"> => {
+    const api = authApi(accessToken);
+    if (!api) return "pending";
+    try {
+        const res = await api.post<{ status: "ready" | "pending" | "failed" }>(
+            "/user/demo/workspace/"
+        );
+        return res.data.status;
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) return "gone";
+        return "pending";
     }
 };

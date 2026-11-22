@@ -14,6 +14,7 @@ import { Socket } from "socket.io-client";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { TaskPreview } from "./components/contents/TaskPreview";
 import { TaskDashboard } from "./components/dashboard/TaskDashboard";
+import { ModalImportTasksCsv } from "./components/modals/ModalImportTasksCsv";
 import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 
 import { MobileOverlay } from "../../components/layout/MobileOverlay";
@@ -88,6 +89,13 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    // CSV task import (MIP-1835): not offered on an archived project.
+    const [openImportCsv, setOpenImportCsv] = useState(false);
+    const archiveState = useArchiveState();
+    const importProjectId = usePM.currentProject?.projectId;
+    const importArchived = archiveState.archivedProjects.some(
+        (p) => p.projectId === importProjectId
+    );
 
     // Pane selection: URL-driven for project, flag-driven for the
     // sub-views (dashboard vs task list). useTaskRouting reconciles URL
@@ -314,6 +322,11 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             <MenuRow onClick={() => useTM.setOpenManageTags(true)}>
                                 {t.tasks.mobile.manageTags}
                             </MenuRow>
+                            {importProjectId != null && !importArchived && (
+                                <MenuRow onClick={() => setOpenImportCsv(true)}>
+                                    {t.tasks.importCsv.menuItem}
+                                </MenuRow>
+                            )}
                             <MenuRow onClick={() => usePM.setOpenCreateProject(true)}>
                                 {t.tasks.mobile.newProject}
                             </MenuRow>
@@ -515,6 +528,14 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                         )}
                     </Box>
                 </MobileOverlay>
+            )}
+            {importProjectId != null && openImportCsv && (
+                <ModalImportTasksCsv
+                    projectId={importProjectId}
+                    open
+                    onChanged={() => void usePM.refreshProjectTasks(importProjectId)}
+                    onClose={() => setOpenImportCsv(false)}
+                />
             )}
         </Box>
     );

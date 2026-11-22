@@ -151,16 +151,16 @@ export type HomeCopy = {
 export const HOME_COPY: Record<Lang, HomeCopy> = {
     ja: {
         meta: {
-            title: "Genos — AIに任せる。仕事の記録は、あなたの手元に。",
+            title: "Genos — いつもどおりAIと仕事をするだけ。記録はGenosに残ります。",
             description:
                 "AIエージェントが作成したタスクやノートを、Genosに記録。あとから開いて、読んで、編集できる。Claudeで利用可能。ChatGPTも近日公開。",
         },
         hero: {
-            title: "AIに任せる。仕事の記録は、あなたの手元に。",
-            sub: "AIエージェントに、もっと仕事を任せよう。\n\nエージェントが進めた仕事は、タスクやノートとしてGenosに残ります。セッションが終わっても、あとから開いて確認できる。いつでも、続きから始められます。",
+            title: "いつもどおり、AIと仕事をするだけ。記録は、AIがGenosに残します。",
+            sub: "AIエージェント（Claudeなど）に、これまでどおり仕事を頼むだけ。特別な指示がなくても、エージェントは作業しながら、タスク・ノート・決めたこと・進み具合をGenosに書き留めます。\n\nAIが何をしたか見たくなったら、Genosを開くだけ。",
             primary: "Claudeを接続する",
             secondary: "デモを試す",
-            note: "現在はClaudeに対応。ChatGPTも近日公開。",
+            note: "現在はClaudeに対応。ChatGPTも近日公開。一度つなぐだけで使えます。",
             legend: "タスク・コメント・ノートでは、AIが作成したものに印が付きます。あなたが書いたものと見分けられます。",
             alt: "Genosのタスクのアクティビティ画面。Claudeが作成したコメントにはClaudeのマークが表示され、ユーザーが変更した優先度やコメントにはマークが付いていない。",
             // TODO(copy): draft wording of mine, not Ken's; the callouts drawn over the hero picture.
@@ -194,16 +194,16 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             title: "一度つなぐだけ。あとは、いつもどおり。",
             steps: [
                 {
-                    title: "エージェントをつなぐ",
-                    body: "ClaudeにGenosをコネクタとして追加し、Genosのアカウントでサインインします。",
+                    title: "いつもどおり、AIに頼む",
+                    body: "ClaudeなどのAIエージェントに、計画や調査、作業をこれまでどおり頼みます。Genosを開く必要はありません。",
                 },
                 {
-                    title: "いつもどおり、仕事を任せる",
-                    body: "特別な操作は必要ありません。これまでどおり計画や作業を頼めば、エージェントがタスク・コメント・ノートをGenosに記録します。",
+                    title: "AIが、Genosに書き留める",
+                    body: "エージェントは作業しながら、タスク、コメント、ノートをGenosに残します。決めたことは、理由と日付を添えたノートに。",
                 },
                 {
-                    title: "いつでも開いて、確認する",
-                    body: "Genosを開けば、エージェントが残した記録を読めます。編集も削除も自由。タスク・コメント・ノートでは、AIが書いたものに印が付くので、あなたの記録と混ざりません。",
+                    title: "見たいときに、Genosを開く",
+                    body: "AIが何をしたか、Genosで読めます。編集も削除も自由。AIが書いたものには印が付くので、あなたの記録と見分けられます。",
                 },
             ],
             plan: "エージェントの接続にはCoreプラン以上が必要です。",
@@ -452,22 +452,22 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
     en: {
         meta: {
             // TODO(copy: Ken's final English; Ken to review)
-            title: "Genos — Let AI do the work. Keep the record in your hands.",
+            title: "Genos — Just work with your AI as usual. It keeps the record in Genos.",
             // TODO(copy: Ken's final English; Ken to review)
             description:
                 "Genos saves the tasks, comments, and notes your AI agent creates, so you can open, review, and edit them anytime. Available with Claude. ChatGPT coming soon.",
         },
         hero: {
             // TODO(copy: Ken's final English; Ken to review)
-            title: "Let AI do the work. Keep the record in your hands.",
+            title: "Just work with your AI as usual. It keeps the record in Genos.",
             // TODO(copy: Ken's final English; Ken to review)
-            sub: "Give your AI agent more to do.\n\nThe work your agent does in Genos is saved as tasks, comments, and notes. Even after a session ends, you can come back, see what was done, and pick up where you left off.",
+            sub: "Keep asking your AI agent (like Claude) for work the way you do now. As it works, it writes the tasks, notes, decisions, and progress into Genos. No special prompts needed.\n\nWhen you want to see what your AI did, open Genos.",
             // TODO(copy: Ken's final English; Ken to review)
             primary: "Connect Claude",
             // TODO(copy: Ken's final English; Ken to review)
             secondary: "Try the demo",
             // TODO(copy: Ken's final English; Ken to review)
-            note: "Works with Claude today. ChatGPT coming soon.",
+            note: "Works with Claude today. ChatGPT coming soon. Connect once to start.",
             // TODO(copy: Ken's final English; Ken to review)
             // SOFTENED from Ken's draft by the lead (listed in the PR body).
             legend: "In tasks, comments and notes, what the AI created or updated carries a mark, so you can tell it apart from what you wrote.",
@@ -514,22 +514,22 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             steps: [
                 {
                     // TODO(copy: Ken's final English; Ken to review)
-                    title: "Connect your AI agent.",
+                    title: "Ask your AI as usual.",
                     // TODO(copy: Ken's final English; Ken to review)
-                    body: "Add Genos as a connector in Claude and sign in with your Genos account.",
+                    body: "Ask your AI agent (like Claude) to plan, research, or get things done, the way you do now. No need to open Genos.",
                 },
                 {
                     // TODO(copy: Ken's final English; Ken to review)
-                    title: "Work with AI as you normally do.",
+                    title: "It writes things down in Genos.",
                     // TODO(copy: Ken's final English; Ken to review)
-                    body: "No new workflow to learn. Ask your agent to plan, research, or get things done as usual. It can create tasks, comments, and notes directly in Genos.",
+                    body: "As it works, your agent creates tasks, comments, and notes in Genos. When something is decided, it goes into a note with the reason and the date.",
                 },
                 {
                     // TODO(copy: Ken's final English; Ken to review)
-                    title: "Come back and see what got done.",
+                    title: "Open Genos when you want to look.",
                     // TODO(copy: Ken's final English; Ken to review)
                     // SOFTENED from Ken's draft by the lead (listed in the PR body).
-                    body: "Open Genos to review the record your agent left behind. Edit or delete anything, just as you would with your own work. In tasks, comments and notes, AI-created content carries a mark, so it stays distinguishable from your own.",
+                    body: "See what your AI did, and edit or delete any of it. In tasks, comments and notes, what the AI wrote carries a mark, so you can tell it apart from your own.",
                 },
             ],
             // TODO(copy: Ken's final English; Ken to review)

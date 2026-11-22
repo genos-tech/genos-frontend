@@ -8,6 +8,11 @@ export const common = {
     feedback: {
         loading: "Loading…",
         loadFailedBody: "Check your connection, then try again.",
+        demoSetup: {
+            preparing: "Setting up your sample workspace…",
+            failed: "Couldn't set up the sample workspace.",
+            retry: "Try again",
+        },
         sync: {
             banner: "Couldn't sync your workspace.",
             bannerRetrying: "Syncing your workspace…",
@@ -97,6 +102,7 @@ export const common = {
         archivedSection: "Archived ({count})",
         archivedBadge: "Archived",
         newTaskDisabled: "Unarchive this project to add tasks.",
+        deleteDisabled: "Unarchive this project to delete it.",
         composerDisabled: "This group is archived. Unarchive it to send messages.",
         archiveFailed: "Couldn't archive it. Please try again.",
         unarchiveFailed: "Couldn't unarchive it. Please try again.",

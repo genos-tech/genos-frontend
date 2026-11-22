@@ -3,6 +3,7 @@ import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { Box, Dropdown, IconButton, MenuButton } from "@mui/joy";
 
 import { useTranslation } from "../../i18n";
+import { AppTooltip } from "./AppTooltip";
 import { MenuDivider, MenuRow, MenuSurface } from "./menu/MenuParts";
 import { menuTriggerSx } from "./menu/menuStyles";
 import { MoreMenuKind, orderMoreMenuItems } from "./moreMenuOrder";
@@ -34,6 +35,8 @@ export type MoreMenuItem = {
     active?: boolean;
     /** Shown but not clickable. */
     disabled?: boolean;
+    /** Why the item is disabled, as a tooltip on the row (and its accessible description). */
+    hint?: string;
     /** A rule above the item (a danger item always gets one), to set a group of
      *  actions apart. Ignored on the first visible item. */
     divider?: boolean;
@@ -80,6 +83,19 @@ export const MoreMenu = ({
     const { t } = useTranslation();
     const resolvedAriaLabel = ariaLabel ?? t.common.ui.moreMenu.ariaLabel;
     const visibleItems = orderMoreMenuItems(items);
+    const row = (item: MoreMenuItem) => (
+        <MenuRow
+            aria-description={item.hint}
+            danger={item.danger}
+            disabled={item.disabled}
+            icon={item.icon}
+            mark="dot"
+            selected={item.active}
+            onClick={item.onClick}
+        >
+            {item.label}
+        </MenuRow>
+    );
 
     return (
         <Box sx={{ position: "relative" }}>
@@ -111,16 +127,15 @@ export const MoreMenu = ({
                     {visibleItems.map((item, index) => (
                         <Fragment key={item.id}>
                             {(item.danger || item.divider) && index > 0 && <MenuDivider />}
-                            <MenuRow
-                                danger={item.danger}
-                                disabled={item.disabled}
-                                icon={item.icon}
-                                mark="dot"
-                                selected={item.active}
-                                onClick={item.onClick}
-                            >
-                                {item.label}
-                            </MenuRow>
+                            {item.hint ? (
+                                // A disabled row takes no pointer events, so the tooltip sits on a
+                                // wrapper around it.
+                                <AppTooltip title={item.hint}>
+                                    <span style={{ display: "block" }}>{row(item)}</span>
+                                </AppTooltip>
+                            ) : (
+                                row(item)
+                            )}
                         </Fragment>
                     ))}
                 </MenuSurface>

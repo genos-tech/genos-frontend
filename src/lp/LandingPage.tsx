@@ -3,12 +3,12 @@ import {
     ArrowRight,
     CheckCircle2,
     ClipboardCheck,
+    Eye,
     FileText,
     FolderOpen,
     History,
     Info,
     MessageSquareText,
-    Plug,
     Plus,
     ShieldCheck,
     TrendingUp,
@@ -54,7 +54,7 @@ const IDEA_ICON: Record<IdeaKey, typeof TrendingUp> = {
     keep: FolderOpen,
 };
 
-const HOW_ICON = [Plug, MessageSquareText, FileText] as const;
+const HOW_ICON = [MessageSquareText, FileText, Eye] as const;
 
 /** Where "Connect Claude" goes: the steps, which also say what the plan needs. */
 const CONNECT_PATH = "/developers#connect-an-ai-app";
@@ -644,8 +644,8 @@ function HomeBody({ lang, appHref }: { lang: Lang; appHref: (u: string) => strin
     return (
         <>
             <Hero appHref={appHref} lang={lang} t={t} />
-            <Idea t={t} />
             <HowItWorks t={t} />
+            <Idea t={t} />
             <AgentRecord lang={lang} t={t} />
             <WorksWith t={t} />
             <Faq id="questions" items={t.questions.items} title={t.questions.title} />
