@@ -158,7 +158,14 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                 {/* The quick actions: one primary New task, two icon buttons. They used to
                                     be three tinted buttons in their own row under the tabs. */}
                                 {usePM.currentProject && (
-                                    <>
+                                    // The phone's own top bar already has table, board and "+": below
+                                    // sm these would show twice.
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        spacing={0.5}
+                                        sx={{ display: { xs: "none", sm: "flex" } }}
+                                    >
                                         <Button
                                             size="sm"
                                             startDecorator={<AddRoundedIcon />}
@@ -186,7 +193,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                                 <ViewKanbanRoundedIcon />
                                             </IconButton>
                                         </AppTooltip>
-                                    </>
+                                    </Stack>
                                 )}
                                 {(useTM.isTaskPreviewVisible === true ||
                                     useTM.isCreatingTask.flag === true) && (
