@@ -4,10 +4,8 @@
  * the chat list.
  */
 import { authApi } from "../../services/api";
-import type { UserProps } from "../../types/admin";
 import type { ProjectProps } from "../../types/tasks";
-import { loadTeamProjects } from "../tasks/services/loadTeamProjects";
-import { markProjectArchived, setArchivedProjects } from "./archiveState";
+import { markProjectArchived } from "./archiveState";
 
 const projectApi = (accessToken: string | null) => {
     const api = authApi(accessToken);
@@ -43,20 +41,9 @@ export const unarchiveProject = async (
 };
 
 /**
- * Reads the archived projects: the full list (archived included) minus the active list the
- * caller already holds. A failed read leaves the state as it was.
+ * The archived projects the member can open, from the rows of the full list (MIP-1853: each row
+ * says whether it is archived). Only projects the member joined: the team list also holds projects
+ * they never joined (private ones too), which they cannot open (MIP-1921).
  */
-export const refreshArchivedProjects = async (
-    myself: Pick<UserProps, "teamId" | "userId">,
-    accessToken: string | null,
-    active: readonly ProjectProps[]
-): Promise<void> => {
-    const all: ProjectProps[] | undefined = await loadTeamProjects(myself, accessToken, {
-        includeArchived: true,
-    });
-    if (!all) return;
-    const activeIds = new Set(active.map((p) => p.projectId));
-    // Only projects the member joined: the team list also holds projects they never joined
-    // (private ones too), which they cannot open (MIP-1921).
-    setArchivedProjects(all.filter((p) => !activeIds.has(p.projectId) && p.isJoined === true));
-};
+export const archivedJoinedProjects = (all: readonly ProjectProps[]): ProjectProps[] =>
+    all.filter((p) => p.archived === true && p.isJoined === true);

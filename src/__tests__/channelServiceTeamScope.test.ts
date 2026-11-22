@@ -75,9 +75,10 @@ describe("channelService team scoping", () => {
     it("sends team_id on the channel list request", async () => {
         channelService.setCurrentTeamId(TEAM_A);
         await channelService.listChannels();
-        // `limit` is the page size (MIP-808); the team narrowing is what this checks.
+        // `limit` is the page size (MIP-808); the team narrowing is what this checks. The one
+        // read also asks for the archived chats (MIP-1693, MIP-1853).
         expect(get).toHaveBeenCalledWith("/api/v3/channels/", {
-            params: { team_id: TEAM_A, limit: 200 },
+            params: { team_id: TEAM_A, include_archived: "true", limit: 200 },
         });
     });
 
@@ -87,7 +88,9 @@ describe("channelService team scoping", () => {
         // list during the window before the team resolves.
         await channelService.listChannels();
         // Only the page size: no `team_id` key at all, which is the invariant.
-        expect(get).toHaveBeenCalledWith("/api/v3/channels/", { params: { limit: 200 } });
+        expect(get).toHaveBeenCalledWith("/api/v3/channels/", {
+            params: { include_archived: "true", limit: 200 },
+        });
         const sent = get.mock.calls[0][1].params as Record<string, unknown>;
         expect("team_id" in sent).toBe(false);
     });
@@ -97,11 +100,8 @@ describe("channelService team scoping", () => {
         await channelService.listChannels();
         channelService.setCurrentTeamId(TEAM_B);
         await channelService.listChannels();
-        expect(get).toHaveBeenCalledWith("/api/v3/channels/", {
-            params: { team_id: TEAM_B, limit: 200 },
-        });
-        // The archived chats are listed for the new team too (MIP-1693).
-        expect(get).toHaveBeenCalledWith("/api/v3/channels/", {
+        // The archived chats are listed for the new team too (MIP-1693): one read, not two.
+        expect(get).toHaveBeenLastCalledWith("/api/v3/channels/", {
             params: { team_id: TEAM_B, include_archived: "true", limit: 200 },
         });
     });

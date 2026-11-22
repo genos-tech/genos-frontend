@@ -3233,6 +3233,45 @@ export const es: DeepPartial<Messages> = {
             tabMyTasks: "Mis tareas",
             tabMemberTasks: "Tareas de miembros",
             tabAgentActivity: "Actividad de agentes",
+            tabToday: "Hoy",
+            // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
+            today: {
+                heading: "Hoy",
+                subtitle:
+                    "Lo que vence, lo que te espera y lo que cambió, en todos tus proyectos.",
+                sinceFirst: "Cambios de hoy hasta ahora",
+                since: "Cambios desde {time}",
+                refresh: "Actualizar",
+                openToday: "Abrir Hoy",
+                sections: {
+                    due: "Vencen y vencidas",
+                    waiting: "Esperan tu respuesta",
+                    changed: "Qué cambió",
+                    next: "Mira esto primero",
+                    blocked: "Estás esperando",
+                    delegated: "Entregadas a otros",
+                },
+                overdueBy: "{n} días de retraso",
+                overdueByOne: "1 día de retraso",
+                dueToday: "Vence hoy",
+                request: "Solicitud",
+                mentionIn: "Te mencionaron en {where}",
+                mentionChat: "un chat",
+                mentionNote: "una nota",
+                moreCount: "+{n} más",
+                noLink: "No se puede abrir desde aquí",
+                empty: {
+                    title: "Nada espera tu respuesta",
+                    body: "Nada vence, nada requiere respuesta y nada cambió.",
+                    section: "Nada aquí.",
+                },
+                states: {
+                    loading: "Cargando Hoy",
+                    error: "No se pudo cargar Hoy.",
+                    retry: "Reintentar",
+                    unavailable: "Hoy aún no está disponible en este servidor.",
+                },
+            },
             tabMilestones: "Hitos",
             // TODO(copy): MIP-1187 draft for a native reader.
             milestoneProgress: {
@@ -4822,6 +4861,71 @@ export const es: DeepPartial<Messages> = {
         },
     },
     admin: {
+        slackImport: {
+            title: "Importar desde Slack",
+            panelDescription:
+                "Trae los canales, mensajes e hilos de una exportación de Slack a este equipo como chats de grupo.",
+            button: "Importar desde Slack…",
+            description:
+                "Sube el ZIP de la exportación del espacio de trabajo de Slack, revísalo y luego importa.",
+            howTo: "En Slack, un propietario exporta los datos del espacio de trabajo (Ajustes, Importar/Exportar datos). Sube aquí el ZIP. No se crea nada hasta que pulses Importar.",
+            limits: "Límites: {mb} MB, {channels} canales y {messages} mensajes por importación. Los mensajes directos no se importan.",
+            filesNote:
+                "Los archivos no se copian. Cada uno pasa a ser un enlace a Slack, que requiere iniciar sesión en Slack y puede caducar.",
+            chooseFile: "Elegir el ZIP de la exportación",
+            close: "Cerrar",
+            back: "Atrás",
+            import: "Importar {count} mensajes",
+            importing: "Importando…",
+            summary:
+                "{channels} canales y {messages} mensajes para importar en {threads} hilos ({skipped} ya importados).",
+            channelsHeading: "Canales",
+            private: "Privado",
+            archived: "Archivado",
+            channelLine: "{messages} mensajes → chat «{title}»",
+            existing: "se añade al chat creado por una importación anterior",
+            targetArchived: "omitido: ese chat está archivado",
+            peopleHeading: "Personas",
+            peopleHint:
+                "Las personas se asocian con los miembros del equipo por correo electrónico. No se invita a nadie ni se crea ninguna cuenta: los mensajes de cualquier otra persona conservan su nombre de Slack.",
+            colName: "Nombre en Slack",
+            colMatch: "En Genos",
+            colMessages: "Mensajes",
+            matchedTo: "Asociado a {name}",
+            warnFiles:
+                "Los archivos pasan a ser enlaces a Slack. Requieren iniciar sesión en Slack y pueden caducar.",
+            warnUnmatched:
+                "{count} mensajes son de personas sin asociar: solo muestran un nombre de Slack.",
+            warnOrphans:
+                "{count} respuestas perdieron su primer mensaje y se importan como mensajes normales.",
+            warnDms: "Los mensajes directos y los DM de grupo de la exportación no se importan.",
+            resultSummary:
+                "Se importaron {messages} mensajes en {channels} chats nuevos. Chats con error: {failed}.",
+            undoHint: "¿No era lo que querías? Deshacer elimina lo que añadió esta importación.",
+            undo: "Deshacer esta importación…",
+            undoConfirm:
+                "Esto elimina {messages} mensajes y {channels} chats. Los {kept} que se editaron o respondieron después se conservan.",
+            undoConfirmButton: "Eliminarlos",
+            undone: "Se eliminaron {removed} mensajes. {kept} se conservan.",
+            errFileTooLarge: "Ese archivo supera los {limit} MB.",
+            errNotExport:
+                "No parece un ZIP de exportación de Slack (faltan users.json y channels.json, o no se pueden leer).",
+            errUnsafe: "Ese ZIP no se puede leer de forma segura.",
+            errTooMany:
+                "La exportación supera el límite de {limit}. Exporta un período más corto.",
+            errNothing: "No hay nada que importar en esa exportación.",
+            errBusy:
+                "Hay otra importación en curso para este equipo. Inténtalo de nuevo en unos minutos.",
+            errForbidden: "Solo el propietario del equipo puede importar desde Slack.",
+            errGeneric: "La importación falló. Inténtalo de nuevo.",
+            status: {
+                matched: "Asociado",
+                unmatched: "No es miembro del equipo",
+                no_email: "Sin correo en la exportación",
+                bot: "Bot",
+                deleted: "Desactivado en Slack",
+            },
+        },
         sampleData: {
             title: "Datos de muestra",
             description:

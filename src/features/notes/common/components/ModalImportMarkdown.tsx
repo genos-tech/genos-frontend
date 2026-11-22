@@ -328,8 +328,7 @@ export const ModalImportMarkdown = ({
         try {
             const body = await markdownToNoteBlocks(fileText);
             // Images embedded as `data:` URIs are uploaded as note files for
-            // My/Team notes (the destinations with a personal-note upload);
-            // task and chat notes ignore this and keep them inline for now.
+            // every destination, through the upload of its note kind.
             const warnings: DataUriImageWarning[] = [];
             const opts = {
                 title: title.trim(),

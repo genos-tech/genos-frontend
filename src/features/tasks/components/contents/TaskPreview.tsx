@@ -57,6 +57,7 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../types/tasks";
+import { ProjectReadOnlyGate } from "../../../archive/ProjectReadOnly";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { askGenosMenuItem } from "../../../spotlight/askGenosMenuItem";
 import { askGenosTaskRequest } from "../../../taskAsk/taskAskLink";
@@ -1141,10 +1142,13 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
 export const TaskPreview = (props: TaskPreviewProps) => {
     const [landing] = useState(createOpenLanding);
     useEffect(() => () => landing.dispose(), [landing]);
+    // Read-only is decided from the task's OWN project, not the host's selected one (MIP-1933).
     return (
-        <TaskOpenLandingContext.Provider value={landing}>
-            <TaskPreviewBody {...props} landing={landing} />
-        </TaskOpenLandingContext.Provider>
+        <ProjectReadOnlyGate projectId={props.useTM.currentPreviewTask?.project?.projectId}>
+            <TaskOpenLandingContext.Provider value={landing}>
+                <TaskPreviewBody {...props} landing={landing} />
+            </TaskOpenLandingContext.Provider>
+        </ProjectReadOnlyGate>
     );
 };
 

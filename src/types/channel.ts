@@ -141,6 +141,10 @@ export interface Channel {
     /** The owning team. Present because the chat list now mixes in chats
      *  another team shared with yours. */
     teamId?: string | null;
+    /** The owner archived this group chat (MIP-1853). A chat whose project is archived reads false
+     *  here: the project's own row covers it (see `isChatArchivedIn`). */
+    archived?: boolean;
+    archivedAt?: string | null;
     /** The owning team's name, set only when that team is not the one you
      *  are viewing — i.e. only on the guest side of a share, which is the
      *  only side that needs telling whose room this is. */
