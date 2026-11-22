@@ -139,13 +139,12 @@ describe("SupportPage", () => {
         );
     });
 
-    it("does not invent contact channels, response times or a terms link", () => {
+    it("does not invent contact channels, or response times", () => {
         const { container } = renderPage();
         const text = container.textContent ?? "";
         expect(text).not.toMatch(/\b(within|hours?|business days?|24\/7|SLA)\b/i);
         expect(text).not.toMatch(/phone|tel:|\blive chat\b|call us/i);
         expect(container.querySelector("form")).toBeNull();
-        expect(container.querySelector('a[href="/terms"]')).toBeNull();
         expect(container.querySelector('a[href^="tel:"]')).toBeNull();
     });
 });
@@ -161,7 +160,7 @@ describe("/support route registration", () => {
         expect(route).toBeLessThan(main.indexOf("<AuthLayout />"));
     });
 
-    it("does not register a /terms route (the terms are an unpublished draft)", () => {
-        expect(main).not.toContain('path="/terms"');
+    it("registers the /terms route (interim v1, MIP-1903)", () => {
+        expect(main).toContain('path="/terms"');
     });
 });

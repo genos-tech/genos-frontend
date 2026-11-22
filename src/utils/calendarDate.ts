@@ -43,6 +43,15 @@ export const calendarDaysUntil = (
     return Math.round((due.getTime() - today.getTime()) / 86_400_000);
 };
 
+const pad2 = (n: number): string => String(n).padStart(2, "0");
+
+/** `YYYY-MM-DD` of a date's LOCAL calendar day (`toISOString()` would give the UTC day, MIP-1898). */
+export const localCalendarIso = (date: Date): string =>
+    `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+
+/** The viewer's today as `YYYY-MM-DD`, in their own time zone. */
+export const todayCalendarIso = (now: Date = new Date()): string => localCalendarIso(now);
+
 /** Local midnight of the viewer's today, in ms. */
 export const startOfTodayMs = (now: Date = new Date()): number =>
     new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();

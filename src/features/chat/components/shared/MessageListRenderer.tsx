@@ -9,6 +9,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -23,6 +24,7 @@ import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
 import { ChatHistoryLoadFailed } from "./ChatHistoryLoadFailed";
+import { ChatLiveAnnouncer } from "./ChatLiveAnnouncer";
 import { ChatSelectionAsk } from "./ChatSelectionAsk";
 import { MessageListSkeleton } from "./MessageListSkeleton";
 
@@ -150,6 +152,7 @@ export const MessageListRenderer = ({
     fillContainer = false,
     setTodoFromMessageBubble,
 }: MessageListRendererProps) => {
+    const { t } = useTranslation();
     // Auto-follow only — jumping to a focused message is owned by
     // `useScrollManagement` (see that hook + `resolveJumpScroll`).
     //
@@ -558,6 +561,8 @@ export const MessageListRenderer = ({
     // once and this never fires for them.
     const hasRows = messages.length > 0;
 
+    const listLabel = isThread ? t.chat.liveRegion.threadListLabel : t.chat.liveRegion.listLabel;
+
     if (showSkeleton) {
         return (
             <Box sx={wrapperSx}>
@@ -568,9 +573,18 @@ export const MessageListRenderer = ({
 
     return (
         <Box ref={listWrapRef} sx={wrapperSx}>
+            {/* Tells a screen reader when someone else writes here (MIP-1956). Beside the list,
+                not on it: scrolling adds and removes rows and must announce nothing. */}
+            <ChatLiveAnnouncer
+                key={chatIdentityKey}
+                chatId={String(chat.chatId)}
+                myselfId={myself.userId}
+                threadId={isThread ? String((chat as ThreadProps).threadId) : undefined}
+            />
             <Virtuoso
                 key={`${bubbleStyle}:${chatIdentityKey}:${hasRows}`}
                 ref={virtuosoRef}
+                aria-label={listLabel}
                 atBottomThreshold={128}
                 atTopStateChange={handleAtTop}
                 atTopThreshold={64}

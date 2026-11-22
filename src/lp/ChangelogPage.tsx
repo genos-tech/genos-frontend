@@ -63,7 +63,7 @@ function ChangelogBody({ lang }: { lang: Lang }) {
                         <h2 id="updates-heading">{c.changelogHeading}</h2>
                         <p>{c.changelogLead}</p>
                         {CHANGELOG_ENTRIES.map((entry) => (
-                            <section
+                            <article
                                 key={entry.id}
                                 aria-labelledby={`${entry.id}-title`}
                                 id={entry.id}
@@ -75,7 +75,7 @@ function ChangelogBody({ lang }: { lang: Lang }) {
                                 </p>
                                 <h3 id={`${entry.id}-title`}>{entry[lang].title}</h3>
                                 <p>{entry[lang].body}</p>
-                            </section>
+                            </article>
                         ))}
                     </section>
                     <section aria-labelledby="rss-heading">

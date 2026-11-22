@@ -116,6 +116,7 @@ const UsageRow = ({
             </Stack>
             {!unlimited && (
                 <LinearProgress
+                    aria-label={label}
                     color={atCap ? "warning" : "primary"}
                     sx={{ mt: 0.5 }}
                     thickness={4}
@@ -190,7 +191,7 @@ export const PlanUsageSection = ({ onNavigateAway }: { onNavigateAway?: () => vo
     if (!data) {
         return (
             <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
-                <LinearProgress size="sm" />
+                <LinearProgress aria-label={t.common.feedback.loading} size="sm" />
             </Sheet>
         );
     }

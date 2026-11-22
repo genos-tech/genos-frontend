@@ -33,17 +33,23 @@ export const mergeAgentWorkPages = (first: AgentWorkPage, next: AgentWorkPage): 
     // A group is keyed by its project; the work on no project is its own group (`null`).
     const byProject = new Map<string, AgentWorkGroup>();
     const groups: AgentWorkGroup[] = [];
+    // The cursor is an offset, so activity written between two pages shifts rows onto the next
+    // one: a row already shown is skipped, never rendered (or keyed) twice (MIP-1896).
+    const shown = new Set<string>();
     for (const group of first.groups) {
         const copy = { ...group, items: [...group.items] };
+        for (const item of copy.items) shown.add(item.id);
         byProject.set(agentGroupKey(group), copy);
         groups.push(copy);
     }
     for (const group of next.groups) {
+        const fresh = group.items.filter((item) => !shown.has(item.id));
+        for (const item of fresh) shown.add(item.id);
         const hit = byProject.get(agentGroupKey(group));
         if (hit) {
-            hit.items.push(...group.items);
+            hit.items.push(...fresh);
         } else {
-            const copy = { ...group, items: [...group.items] };
+            const copy = { ...group, items: fresh };
             byProject.set(agentGroupKey(copy), copy);
             groups.push(copy);
         }
