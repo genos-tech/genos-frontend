@@ -1531,6 +1531,11 @@ const asFieldErrors = (raw: unknown): Record<string, string> | null => {
     return out;
 };
 
+/** True for the turn error `runNdjsonStream` files when the AI credits are used up: the turn then
+ *  shows the buy / upgrade actions. Compared by text, because a turn error is a plain string. */
+export const isOutOfCreditsError = (message: string | null | undefined): boolean =>
+    Boolean(message) && message === getMessages().services.agent.outOfCredits;
+
 // Shared NDJSON consumer. Used by both /ask/ and /decide/ — the wire
 // protocol is identical, only the request body differs.
 async function runNdjsonStream(
@@ -1570,9 +1575,13 @@ async function runNdjsonStream(
         // The answer has the platform's own `{error: "..."}` body (not Django's page, not DRF's
         // `{detail}`): only the API this client was built for answers like that.
         let platformError = false;
+        let outOfCredits = false;
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
+            // The AI credit gate (429 `{category: "ai_credits"}`): the turn ends in a sentence of ours
+            // with "Buy credits" / "Upgrade plan" next to it, never a dead end (MIP-1969).
+            outOfCredits = resp.status === 429 && data?.category === "ai_credits";
             platformError = typeof data?.error === "string";
             // /decide/ answers 422 `{error, field_errors}` when the person's
             // edits cannot be applied. Plain JSON, not an NDJSON stream, and
@@ -1599,6 +1608,10 @@ async function runNdjsonStream(
         if (resp.status === 404 && platformError && onTaskNotFound) {
             onTaskNotFound();
             handlers.onError(getMessages().services.agent.taskNotFound);
+            return;
+        }
+        if (outOfCredits) {
+            handlers.onError(getMessages().services.agent.outOfCredits);
             return;
         }
         handlers.onError(message);

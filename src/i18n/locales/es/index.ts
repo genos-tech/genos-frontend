@@ -1023,7 +1023,7 @@ export const es: DeepPartial<Messages> = {
             rowMilestone: "Hito: {name}",
             paramAiSentences: "Frases de IA",
             paramAiSentencesHint:
-                "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA. Desactívala para un informe sin IA.",
+                "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA y gasta tus créditos de IA. Viene desactivada: actívala si la quieres.",
             effortLabel: "Esfuerzo de la IA",
             effortDefaultMark: "{level} (predeterminado)",
             effortCostAbout: "Unos {credits} créditos por ejecución. Es una estimación.",
@@ -4830,6 +4830,10 @@ export const es: DeepPartial<Messages> = {
             malformedNdjsonLine: "Línea NDJSON malformada: {line}",
             taskNotFound:
                 "Esta tarea o hito ya no se puede abrir, así que Genos no pudo responder.",
+            outOfCredits:
+                "Has usado todos tus créditos de IA, así que Genos no puede responder ahora.",
+            outOfCreditsBuy: "Comprar créditos",
+            outOfCreditsUpgrade: "Mejorar el plan",
             taskSessionLoadFailed: "No se pudo cargar tu conversación anterior sobre esta tarea.",
         },
         pwaInstall: {

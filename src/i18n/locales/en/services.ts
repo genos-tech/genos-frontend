@@ -10,6 +10,9 @@ export const services = {
         malformedNdjsonLine: "Malformed NDJSON line: {line}",
         taskNotFound:
             "This task or milestone can't be opened any more, so Genos couldn't answer about it.",
+        outOfCredits: "You've used all your AI credits, so Genos can't answer right now.",
+        outOfCreditsBuy: "Buy credits",
+        outOfCreditsUpgrade: "Upgrade plan",
         taskSessionLoadFailed: "Couldn't load your earlier conversation about this task.",
     },
     // Install-to-home-screen banner (InstallBanner.tsx). `iosBody` is the

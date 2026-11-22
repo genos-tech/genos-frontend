@@ -243,7 +243,7 @@ export const settings = {
         rowMilestone: "Milestone: {name}",
         paramAiSentences: "AI sentences",
         paramAiSentencesHint:
-            "Adds one short sentence under a task when its comments explain where it stands. This uses AI. Turn it off for a plain report.",
+            "Adds one short sentence under a task when its comments explain where it stands. This uses AI and spends your AI credits. It is off unless you turn it on.",
         effortLabel: "AI effort",
         effortDefaultMark: "{level} (default)",
         effortCostAbout: "About {credits} credits per run. This is an estimate.",

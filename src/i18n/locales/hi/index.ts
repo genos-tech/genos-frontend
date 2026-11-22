@@ -1313,7 +1313,7 @@ export const hi: DeepPartial<Messages> = {
             rowMilestone: "माइलस्टोन: {name}",
             paramAiSentences: "AI के वाक्य",
             paramAiSentencesHint:
-                "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है। सामान्य रिपोर्ट के लिए इसे बंद करें।",
+                "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है और आपके AI क्रेडिट खर्च होते हैं। यह डिफ़ॉल्ट रूप से बंद है; चाहें तो चालू करें।",
             effortLabel: "AI की कोशिश",
             effortDefaultMark: "{level} (डिफ़ॉल्ट)",
             effortCostAbout: "प्रति रन लगभग {credits} क्रेडिट। यह एक अनुमान है।",
@@ -5233,6 +5233,9 @@ export const hi: DeepPartial<Messages> = {
             malformedNdjsonLine: "गलत NDJSON लाइन: {line}",
             taskNotFound:
                 "यह टास्क या माइलस्टोन अब खोला नहीं जा सकता, इसलिए Genos जवाब नहीं दे सका।",
+            outOfCredits: "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए Genos अभी जवाब नहीं दे सकता।",
+            outOfCreditsBuy: "क्रेडिट खरीदें",
+            outOfCreditsUpgrade: "प्लान अपग्रेड करें",
             taskSessionLoadFailed: "इस टास्क के बारे में आपकी पिछली बातचीत लोड नहीं हो सकी।",
         },
         pwaInstall: {

@@ -74,7 +74,7 @@ import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
-import { Box, IconButton, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Typography } from "@mui/joy";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -82,7 +82,12 @@ import { AppTooltip } from "../../components/ui/AppTooltip";
 import { Bubble, BubbleMeta, type BubbleLayout } from "../../components/ui/bubble";
 import { Spinner } from "../../components/ui/feedback/Skeleton";
 import { fmt } from "../../i18n";
-import type { DroppedReference, PendingApprovalPayload } from "../../services/agentApi";
+import {
+    isOutOfCreditsError,
+    type DroppedReference,
+    type PendingApprovalPayload,
+} from "../../services/agentApi";
+import { requestAppNavigate } from "../../services/appNavigate";
 import { g } from "../../theme/tokens";
 import { entitySubtitle } from "../spotlight/SpotlightResultItem";
 import type { SpotlightResult } from "../spotlight/types";
@@ -108,6 +113,9 @@ import { turnFrameSx, turnLabelSx } from "./turnFrame";
 import type { ToolEvent } from "./types";
 import { UndoSlot } from "./UndoControls";
 import { mergeUndoSteps, type UndoRequest, type UndoStepRef } from "./undoSteps";
+
+const PLANS_PATH = "/workspace/plans";
+const CREDIT_PACKS_PATH = "/workspace/plans#credit-packs";
 
 /** What a per-turn action needs to know about the turn it sits on. */
 export interface AgentTurnActionContext {
@@ -556,6 +564,32 @@ const AgentTurnInner = ({
                             <Typography level="body-md" sx={{ color: g.danger.text, mb: 0.5 }}>
                                 {askError}
                             </Typography>
+                        )}
+
+                        {isOutOfCreditsError(askError) && (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    gap: 1,
+                                    mb: 0.75,
+                                }}
+                            >
+                                <Button
+                                    size="sm"
+                                    variant="solid"
+                                    onClick={() => requestAppNavigate(CREDIT_PACKS_PATH)}
+                                >
+                                    {labels.outOfCredits.buy}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outlined"
+                                    onClick={() => requestAppNavigate(PLANS_PATH)}
+                                >
+                                    {labels.outOfCredits.upgrade}
+                                </Button>
+                            </Box>
                         )}
 
                         {answer && (

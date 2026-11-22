@@ -81,6 +81,8 @@ export interface AgentTurnLabels {
     dropped: DroppedLabels;
     // "Selected text": the quote of a passage the turn was asked about (MIP-1058).
     selectedText: string;
+    // Next to the "out of credits" sentence (MIP-1969): where to get more.
+    outOfCredits: { buy: string; upgrade: string };
 }
 
 export type AgentTurnHost = "spotlight" | "threadAsk" | "noteAsk" | "taskAsk";
@@ -129,5 +131,9 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
         undo: buildUndoLabels(t),
         dropped: sp.dropped,
         selectedText: sp.selection.label,
+        outOfCredits: {
+            buy: t.services.agent.outOfCreditsBuy,
+            upgrade: t.services.agent.outOfCreditsUpgrade,
+        },
     };
 };
