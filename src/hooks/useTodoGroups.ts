@@ -1,5 +1,4 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PartialBlock } from "@blocknote/core";
 
 import { TodoService } from "../db/services/todo.service";
 import { TODO_CHANGED_EVENT } from "../features/agentQA/todoWriteTools";

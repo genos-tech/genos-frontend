@@ -43,7 +43,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { useUndoHidden } from "../../../../hooks/common/useUndoableAction";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { useColorTheme } from "../../../../theme/ColorThemeProvider";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
@@ -64,7 +64,7 @@ import {
     selectAncestorVerdicts,
 } from "../../utils/closedByAncestor";
 import { overlayGraphDeletes, pendingDeleteSignature } from "../../utils/pendingTaskDelete";
-import { statuses } from "../../utils/taskMeta";
+import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { DIAGRAM_LIFT, URL_LINK_MODAL_DEFAULT_Z, useDiagramZIndex } from "../diagramZIndex";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { loadMilestoneBurndown } from "../services/loadMilestoneBurndown";
@@ -82,6 +82,7 @@ import {
     TaskGraphScope,
     TaskNodeData,
 } from "../types";
+import { cardGeometryOf, isCardArrowKey, linkedCardInDirection } from "../utils/cardKeyboard";
 import { computeAnchoredExternalIds, computeHiddenTaskIds } from "../utils/computeHiddenTaskIds";
 import { FIT_PADDING, planInitialViewport } from "../utils/initialViewport";
 import { BAND_LABEL_NODE_TYPE, layoutDiagramGraph } from "../utils/layoutDiagramGraph";
@@ -616,7 +617,7 @@ const CanvasInner = ({
     // exception to going through `purplePalette`.
     const { raw: rawTheme } = useColorTheme();
     const rawAccent = isDark ? rawTheme.dark.accent : rawTheme.light.accent;
-    const { fitView, setViewport, getNodes, deleteElements, getEdges } = useReactFlow();
+    const { fitView, setViewport, getNodes, getNode, deleteElements, getEdges } = useReactFlow();
     const flowStore = useStoreApi();
     // True once React Flow has measured every node (real dimensions). We
     // gate viewport fitting on this — see `pendingFitRef` and the fit
@@ -1271,6 +1272,40 @@ const CanvasInner = ({
         () => applyLineage(nodes, edges, connecting ? null : hoveredId),
         [nodes, edges, hoveredId, connecting]
     );
+    // MIP-1830: each card's accessible name and role, and React Flow's description of a
+    // card (its default text talks about moving the card with arrows, which no longer
+    // happens from the keyboard). The status is the word the card shows (MIP-1856: the same
+    // label source as StatusLabel, not the raw enum).
+    const cardNodes = useMemo(
+        () =>
+            drawn.nodes.map((n) => {
+                // MIP-1925: band caption nodes carry no task; leave them as they are.
+                const d = n.data as unknown as TaskNodeData | undefined;
+                if (n.type === BAND_LABEL_NODE_TYPE || !d?.task) return n;
+                const status = d.task.status ?? "";
+                return {
+                    ...n,
+                    ariaRole: "button",
+                    // MIP-1928: React Flow sets aria-roledescription="node" on every card, so a
+                    // screen reader said "node" (English) over the card's own role. domAttributes
+                    // is spread last, so undefined removes it and the role ("button") is read.
+                    domAttributes: { "aria-roledescription": undefined },
+                    ariaLabel: fmt(t.tasks.diagram.tooltips.cardAriaLabel, {
+                        id: d.task.displayId ?? String(d.task.id),
+                        title: d.task.title ?? "",
+                        status: taskMetaLabel(status, t.tasks.filters) || status,
+                    }),
+                };
+            }),
+        [drawn.nodes, t]
+    );
+    const cardAriaLabelConfig = useMemo(
+        () => ({
+            "node.a11yDescription.default": t.tasks.diagram.tooltips.cardAriaHint,
+            "node.a11yDescription.keyboardDisabled": t.tasks.diagram.tooltips.cardAriaHint,
+        }),
+        [t]
+    );
     const onNodeMouseEnter = useCallback((_: unknown, node: Node) => {
         setHoveredId(Number(node.id));
     }, []);
@@ -1317,6 +1352,43 @@ const CanvasInner = ({
             void deleteElements({ edges: selected });
         },
         [getEdges, deleteElements]
+    );
+
+    // MIP-1830 (decision note task:219, option A): the graph by keyboard. A card is one Tab
+    // stop (React Flow's own node wrapper). Enter or Space opens its preview; an arrow key
+    // moves focus to a linked card in that direction. Arrows never move a card here:
+    // React Flow would, so the key is taken in the capture phase, before it reaches the
+    // card. Mouse and touch dragging are untouched. Keys typed inside a card's own controls
+    // (its target is not the card's wrapper) are left alone.
+    const onCardKeyDownCapture = useCallback(
+        (event: ReactKeyboardEvent) => {
+            const card = event.target as HTMLElement;
+            if (!card.classList?.contains("react-flow__node")) return;
+            const id = card.getAttribute("data-id");
+            if (id == null) return;
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                event.stopPropagation();
+                const data = getNode(id)?.data as unknown as TaskNodeData | undefined;
+                data?.onOpenPreview?.();
+                return;
+            }
+            if (!isCardArrowKey(event.key)) return;
+            event.preventDefault();
+            event.stopPropagation();
+            const links = getEdges().map((e) => ({ source: e.source, target: e.target }));
+            const next = linkedCardInDirection(
+                id,
+                event.key,
+                getNodes().map(cardGeometryOf),
+                links
+            );
+            if (next == null) return;
+            document
+                .querySelector<HTMLElement>(`.react-flow__node[data-id="${CSS.escape(next)}"]`)
+                ?.focus();
+        },
+        [getNode, getNodes, getEdges]
     );
 
     const onEdgesChange = useCallback(
@@ -1487,18 +1559,29 @@ const CanvasInner = ({
                 "& .react-flow__panel.react-flow__controls": { top: 0, bottom: "auto" },
                 "& .react-flow__controls-button": { width: 44, height: 44 },
             },
+            // MIP-1830: the focused card's ring for keyboard users (React Flow draws none).
+            "& .react-flow__node:focus-visible": {
+                outline: `2px solid ${rawAccent}`,
+                outlineOffset: "3px",
+                borderRadius: "10px",
+            },
             "& .react-flow__minimap": {
                 background: P.surface,
                 border: `1px solid ${P.border}`,
                 borderRadius: "8px",
             },
         }),
-        [isDark, P]
+        [isDark, P, rawAccent]
     );
 
     return (
         // Focusable, so a click on the canvas puts the keyboard here (Backspace/Delete).
-        <Box sx={containerSx} tabIndex={-1} onKeyDown={onCanvasKeyDown}>
+        <Box
+            sx={containerSx}
+            tabIndex={-1}
+            onKeyDown={onCanvasKeyDown}
+            onKeyDownCapture={onCardKeyDownCapture}
+        >
             {loading && (
                 <Stack
                     alignItems="center"
@@ -1541,6 +1624,7 @@ const CanvasInner = ({
                 </Alert>
             )}
             <ReactFlow
+                ariaLabelConfig={cardAriaLabelConfig}
                 colorMode={isDark ? "dark" : "light"}
                 defaultEdgeOptions={{ animated: false }}
                 deleteKeyCode={null}
@@ -1548,7 +1632,7 @@ const CanvasInner = ({
                 edgeTypes={edgeTypes}
                 maxZoom={2}
                 minZoom={0.25}
-                nodes={drawn.nodes}
+                nodes={cardNodes}
                 nodeTypes={nodeTypes}
                 proOptions={{ hideAttribution: true }}
                 onBeforeDelete={onBeforeDelete}

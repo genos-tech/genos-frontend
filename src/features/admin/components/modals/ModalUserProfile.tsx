@@ -69,17 +69,7 @@ type UserProfileProps = {
     useUISM: UIStateManagementState;
 };
 export const UserProfile = (props: UserProfileProps) => {
-    const {
-        socket,
-        setMyself,
-        myself,
-        isYou,
-        user,
-        openUserProfile,
-        setOpenUserProfile,
-        useCM,
-        useUISM,
-    } = props;
+    const { setMyself, myself, isYou, user, openUserProfile, setOpenUserProfile, useCM } = props;
 
     const { accessToken } = useAuth();
     const navigate = useNavigate();
@@ -164,9 +154,8 @@ export const UserProfile = (props: UserProfileProps) => {
     const handleButtonClick = () => {
         inputRef.current?.click();
     };
-    const toProfileFileName = (originalFileName: string): string => {
+    const toProfileFileName = (_originalFileName: string): string => {
         // Get the extension (including dot, e.g. ".png")
-        const ext = originalFileName.substring(originalFileName.lastIndexOf("."));
         // return `profile${ext}`;
 
         // use always "jpg"

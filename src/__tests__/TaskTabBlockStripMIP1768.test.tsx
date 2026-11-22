@@ -68,11 +68,6 @@ const content = (id: number) =>
 const row = (id: number, over: Partial<TaskTableProps> = {}) =>
     ({ id: String(id), parentTaskId: null, lastProgressAt: null, ...over }) as TaskTableProps;
 
-const tree = (over: Partial<TaskTableProps> = {}) => [
-    row(42, over),
-    row(43, { parentTaskId: 42 as never }),
-];
-
 const tabs = (taskId: number, allTasks: TaskTableProps[]) => (
     <CssVarsProvider>
         <MemoryRouter>

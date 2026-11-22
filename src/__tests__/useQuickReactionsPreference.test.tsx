@@ -22,9 +22,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
     DEFAULT_QUICK_REACTIONS,
     QUICK_REACTION_SLOTS,
-    QuickReactionsPreferenceProvider,
     useQuickReactionsPreference,
-} from "../hooks/common/useQuickReactionsPreference";
+} from "../hooks/common/quickReactionsState";
+import { QuickReactionsPreferenceProvider } from "../hooks/common/useQuickReactionsPreference";
 
 const STORAGE_KEY = "genos-quick-reactions";
 

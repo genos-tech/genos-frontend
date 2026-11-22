@@ -423,7 +423,6 @@ describe("useTodoGroups — scheduled-todo materialization is not duplicated", (
     });
 
     it("creates the item once when two materialize passes race", async () => {
-        const today = getLocalCurrentDate();
         loadTodoGroupsMock.mockResolvedValue([]); // no group for today yet
         loadTodoSchedulesMock.mockResolvedValue([mkSchedule()]);
         // Cursor write echoes the row back (what the real service returns),

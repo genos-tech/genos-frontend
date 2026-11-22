@@ -24,7 +24,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation, type Messages } from "../../../../i18n";
+import { fmt, useTranslation, type Messages } from "../../../../i18n";
 import { useSyncFailure, type SyncScope } from "../../../../services/syncStatus";
 import { useShortcut } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
@@ -501,15 +501,15 @@ const ActivityListRenderer = ({
                     <Stack>
                         {activityMessage.aiApp ? (
                             <AiAppActivityRow
-                                key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                // No isRead in the key: marking the row read on click would remount it and
+                                // drop the focus the modal returns to on Escape (MIP-1755).
+                                key={activityMessage.activityId}
                                 activity={activityMessage}
                                 activityMessages={activityMessages}
                                 myself={data.myself}
                                 selectedActivityId={selectedActivityId}
-                                setCurrentProject={usePM.setCurrentProject}
                                 setSelectedActivityId={setSelectedActivityId}
                                 useCM={useCM}
-                                useTM={useTM}
                             />
                         ) : (
                             <ChatListItemForActivity
@@ -940,9 +940,9 @@ export const ChatList = (props: ChatListProps) => {
         if (targetChatType >= CHAT_TYPES.ACTIVITY || archivedInPane === 0) return null;
         const label = showArchivedChats
             ? t.common.archive.hideArchived
-            : `${t.common.archive.showArchived} (${archivedInPane})`;
+            : fmt(t.common.archive.showArchived, { count: archivedInPane });
         return (
-            <Box sx={{ px: 1.5, py: 0.75, flexShrink: 0 }}>
+            <Box component="li" sx={{ px: 1.5, py: 0.75, flexShrink: 0, listStyle: "none" }}>
                 <Button
                     aria-expanded={showArchivedChats}
                     size="sm"
@@ -1029,9 +1029,16 @@ export const ChatList = (props: ChatListProps) => {
         return null;
     };
 
+    // A div, not a `ul`: its children are the Virtuoso scrollers, never `li` (MIP-1955). No list
+    // role when the pane shows an empty state: that would be a list with no items.
+    const listRole =
+        targetChatType < CHAT_TYPES.ACTIVITY && targetChats.length === 0 ? undefined : "list";
+
     return (
         <List
             className="custom-scrollbar"
+            component="div"
+            role={listRole}
             size="sm"
             sx={{
                 p: 0,

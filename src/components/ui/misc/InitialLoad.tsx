@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { keyframes } from "@emotion/react";
 import { Box, Button, Typography } from "@mui/joy";
-import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
 import { useTranslation } from "../../../i18n";
@@ -49,7 +48,6 @@ export const InitialLoad = (props: InitialLoadProps) => {
     const { myself, setIsLoading, setCurrentMainChat, firstRefreshDone } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const [showSignIn, setShowSignIn] = useState(false);
     // Offline changes what the slow-boot prompt should say. The default
     // copy blames the session ("may have expired — sign in again"), which
@@ -258,12 +256,15 @@ export const InitialLoad = (props: InitialLoadProps) => {
                     >
                         {isOffline
                             ? t.common.initialLoad.offlineBody
-                            : t.common.initialLoad.sessionExpired}
+                            : t.common.initialLoad.stillConnecting}
                     </Typography>
-                    {/* No button offline: sign-in can't submit without a
-                        network, so offering it is a dead end. The `online`
-                        listener swaps the prompt back the moment the
-                        connection returns. */}
+                    {/* This screen only mounts with a valid access token. A
+                        session that really expires is signed out by AuthContext
+                        (forceSignOut), which redirects to /signin, so a slow
+                        load never has to blame the session. The button just
+                        retries the load. No button offline: a reload can't
+                        reach the server, so the `online` listener swaps the
+                        prompt back the moment the connection returns. */}
                     {!isOffline && (
                         <Button
                             variant="outlined"
@@ -286,9 +287,9 @@ export const InitialLoad = (props: InitialLoadProps) => {
                                     boxShadow: "0 8px 25px rgba(99, 102, 241, 0.25)",
                                 },
                             }}
-                            onClick={() => navigate("/signin")}
+                            onClick={() => window.location.reload()}
                         >
-                            {t.common.initialLoad.signInAgain}
+                            {t.common.initialLoad.reload}
                         </Button>
                     )}
                 </Box>

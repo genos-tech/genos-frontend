@@ -128,6 +128,18 @@ export const PRIVACY_META: Meta = {
         "Genosのプライバシーポリシー(日本語が正文、英語の要約つき)。 Privacy policy for Genos: the Japanese text is operative, with an English summary.",
 };
 
+export const SUBPROCESSORS_META: Meta = {
+    title: "サブプロセッサー一覧 | Subprocessors | Genos",
+    description:
+        "Genosがユーザーデータの処理を委託している事業者の一覧と、各事業者に送信される情報。 Subprocessors that process Genos user data, and what each receives.",
+};
+
+export const COOKIES_META: Meta = {
+    title: "Cookie と分析のお知らせ | Cookies & analytics | Genos",
+    description:
+        "Genosがブラウザに保存するもの（Cookie とストレージ）と、分析への同意の扱い。 What Genos stores in your browser, and how analytics consent works.",
+};
+
 export const LEGAL_META: Meta = {
     title: "特定商取引法に基づく表記 | Legal disclosure | Genos",
     description:

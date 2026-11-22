@@ -26,6 +26,8 @@ export const es: DeepPartial<Messages> = {
             },
             toast: {
                 region: "Notificaciones",
+                // TODO(copy): MIP-1826 draft wording, name of the top alert region (must differ from "region").
+                bannerRegion: "Alertas de estado",
                 undo: "Deshacer",
             },
         },
@@ -119,11 +121,12 @@ export const es: DeepPartial<Messages> = {
             loading: "Cargando",
             preparingWorkspace: "Preparando tu espacio de trabajo",
             takingLonger: "¿Está tardando más de lo esperado?",
-            sessionExpired: "Es posible que tu sesión haya caducado",
-            signInAgain: "Iniciar sesión de nuevo",
             offlineTitle: "Estás sin conexión",
             offlineBody:
                 "No se puede conectar con el servidor ahora mismo. Se reanudará automáticamente en cuanto vuelva la conexión.",
+            stillConnecting:
+                "Seguimos conectando con el servidor. Con una conexión lenta puede tardar un momento.",
+            reload: "Recargar",
         },
         modalView: {
             chatUnavailable: "Este chat no está disponible.",
@@ -267,19 +270,53 @@ export const es: DeepPartial<Messages> = {
             ownerOnly: "Solo el propietario puede archivar o desarchivar.",
             projectBannerTitle: "Este proyecto está archivado",
             chatBannerTitle: "Este grupo está archivado",
+            chatBannerProjectTitle: "El chat de este proyecto está archivado",
             projectBannerBody:
                 "Es de solo lectura: no se pueden crear tareas, editar ni comentar hasta desarchivarlo. No se ha eliminado nada.",
             chatBannerBody:
                 "Es de solo lectura: no se pueden enviar mensajes hasta desarchivarlo. No se ha eliminado nada.",
             unarchiveAction: "Desarchivar",
-            showArchived: "Mostrar archivados",
+            showArchived: "Mostrar archivados ({count})",
             hideArchived: "Ocultar archivados",
-            archivedSection: "Archivados",
+            archivedSection: "Archivados ({count})",
             archivedBadge: "Archivado",
             newTaskDisabled: "Desarchiva este proyecto para añadir tareas.",
             composerDisabled: "Este grupo está archivado. Desarchívalo para enviar mensajes.",
             archiveFailed: "No se pudo archivar. Inténtalo de nuevo.",
             unarchiveFailed: "No se pudo desarchivar. Inténtalo de nuevo.",
+        },
+        forceDelete: {
+            menu: "Eliminar definitivamente",
+            phrase: "DELETE",
+            typeLabel: "Escribe DELETE para confirmar",
+            confirm: "Eliminar definitivamente",
+            cancel: "Cancelar",
+            failed: "No se pudo eliminar. No se quitó nada. Inténtalo de nuevo.",
+            notAllowed:
+                "Solo su creador o el propietario del proyecto puede eliminarlo definitivamente.",
+            notAllowedMessage:
+                "Solo quien lo envió o el propietario del grupo puede eliminarlo definitivamente.",
+            notAllowedComment: "Solo su autor puede eliminarlo definitivamente.",
+            incomplete:
+                "Aún quedan algunos de tus mensajes. Inténtalo de nuevo para eliminar el resto.",
+            hasSubtasks: "Elimina o mueve antes sus subtareas.",
+            isMilestone: "La tarea de un hito se elimina con el hito.",
+            taskLinked: "Este mensaje pertenece a una tarea. Elimina la tarea o el comentario.",
+            done: "Eliminado definitivamente.",
+            messageTitle: "¿Eliminar este mensaje definitivamente?",
+            messageDescription:
+                "El texto, los archivos, las reacciones y los marcadores de este mensaje se borran ahora y no se pueden recuperar. Quien lo vio pudo haberlo copiado.",
+            commentTitle: "¿Eliminar este comentario definitivamente?",
+            commentDescription:
+                "El comentario, sus reacciones y su copia en el chat del proyecto se borran ahora y no se pueden recuperar.",
+            taskTitle: "¿Eliminar esta tarea definitivamente?",
+            taskDescription:
+                "La tarea, sus comentarios, archivos, notas, historial y entradas de búsqueda se borran ahora, sin los 30 días que se conserva una tarea eliminada. No se puede deshacer.",
+            myMessagesMenu: "Eliminar todos mis mensajes",
+            myMessagesTitle: "¿Eliminar todos tus mensajes de este chat?",
+            myMessagesDescription:
+                "Todos los mensajes que escribiste aquí, con sus archivos y reacciones, se borran ahora y no se pueden recuperar. Los mensajes de la otra persona no se tocan y el chat se mantiene.",
+            myMessagesDone: "Se eliminaron tus mensajes.",
         },
         deleteChat: {
             button: "Eliminar grupo",
@@ -1484,6 +1521,17 @@ export const es: DeepPartial<Messages> = {
                 plan: "Conectar requiere el plan Core o superior. En Free, la página de aprobación indica que no está incluido en tu plan.",
                 revoke: "Para desconectar una app, revócala en Ajustes → Desarrolladores → Apps conectadas.",
                 trap: "Pega la dirección completa, con la ruta del final. Sin ella, Claude dice que inició sesión y luego informa de que Genos rechazó su solicitud.",
+                // TODO(copy): plugin wording (MIP-1870), English draft until it is translated.
+                pluginTitle: "Or add the Genos plugin: the connection plus three skills",
+                pluginIntro:
+                    "The plugin bundles this connection with the Genos workflow skills, so Claude knows how to work in Genos, not only how to reach it. Optional: the address above works on its own.",
+                pluginCodeLabel: "Claude Code: run these two commands in the chat",
+                pluginCopyAria: "Copy the plugin commands",
+                pluginDesktopLabel:
+                    "claude.ai or Claude Desktop: download the zip, then upload it under Customize, Plugins.",
+                pluginRepoLink: "Plugin page on GitHub",
+                pluginZipLink: "Download the zip",
+                pluginNote: "The plugin needs the same plan as the connector: Core or above.",
                 menuNote:
                     "Los nombres de menú de otras apps cambian: busca conectores o servidores MCP personalizados.",
             },
@@ -1572,6 +1620,7 @@ export const es: DeepPartial<Messages> = {
                     "member.added": "Miembro añadido",
                     "member.removed": "Miembro que se fue",
                     "channel.deleted": "Chat grupal eliminado",
+                    "data.force_deleted": "Datos eliminados definitivamente",
                     "role.changed": "Rol cambiado",
                     "owner.transferred": "Propiedad transferida",
                     "invite.sent": "Invitación enviada",
@@ -1749,6 +1798,14 @@ export const es: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // TODO(copy): MIP-1956 — draft wording for a native reader.
+        liveRegion: {
+            newMessage: "{name}: {preview}",
+            more: "{count, plural, one {+# mensaje más} other {+# mensajes más}}",
+            attachment: "envió un archivo adjunto",
+            listLabel: "Mensajes",
+            threadListLabel: "Respuestas del hilo",
+        },
         retentionBanner:
             "Los mensajes de hace más de {days} días están ocultos en tu plan. Mejora tu plan para ver el historial completo.",
         composer: {
@@ -2433,6 +2490,7 @@ export const es: DeepPartial<Messages> = {
             clearLabelFilter: "Limpiar filtro",
             noLabels: "Aún no hay etiquetas de proyecto",
             noProjectsMatchFilter: "Ningún proyecto coincide con este filtro",
+            filterProjectsPlaceholder: "Filtrar proyectos…",
             pastMilestones: "Hitos pasados",
         },
         header: {
@@ -3150,6 +3208,47 @@ export const es: DeepPartial<Messages> = {
             tabMyTasks: "Mis tareas",
             tabMemberTasks: "Tareas de miembros",
             tabAgentActivity: "Actividad de agentes",
+            tabMilestones: "Hitos",
+            // TODO(copy): MIP-1187 draft for a native reader.
+            milestoneProgress: {
+                heading: "Progreso de hitos",
+                subtitle:
+                    "Hitos en curso de este proyecto: qué está cerrado, qué va tarde o está bloqueado, y cuándo se movió algo por última vez.",
+                summaryMilestones: "Hitos",
+                summaryClosed: "Tareas cerradas",
+                summaryOverdue: "Tareas vencidas",
+                summaryBlocked: "Bloqueadas",
+                summaryStalled: "Estancados",
+                empty: "No hay hitos en curso en este proyecto.",
+                noTasks: "Este hito aún no tiene tareas",
+                closedOfTotal: "{closed} de {total} cerradas",
+                dueNone: "Sin fecha límite",
+                dueToday: "Vence hoy",
+                dueIn: "Vence en {count} días",
+                dueInOne: "Vence mañana",
+                overdueBy: "Vencido hace {count} días",
+                overdueByOne: "Vencido hace 1 día",
+                lastProgress: "Último avance {age}",
+                noProgress: "Aún no hay avances registrados",
+                stalled: "Sin avances desde hace {count} días",
+                noSprint: "Sin sprint",
+                attentionHeading: "Requiere atención",
+                attentionNone: "Nada vencido, bloqueado ni con vencimiento esta semana.",
+                attentionMore: "{count} más",
+                reasonOverdue: "Vencida",
+                reasonBlocked: "Bloqueada",
+                reasonDueSoon: "Vence pronto",
+                noAssignee: "Sin asignar",
+                detailsShow: "Ver detalles",
+                detailsHide: "Ocultar detalles",
+                detailsShowFor: "Ver detalles: {title}",
+                detailsHideFor: "Ocultar detalles: {title}",
+                recentHeading: "Avances recientes",
+                recentNone: "Aún no ha cambiado nada en este hito.",
+                recentFailed: "No se pudieron cargar los avances recientes",
+                byActor: "por {name}",
+                otherStatus: "Otros",
+            },
             // TODO(copy): MIP-1613 draft for a native reader.
             agentActivity: {
                 heading: "Actividad de agentes",
@@ -3197,7 +3296,7 @@ export const es: DeepPartial<Messages> = {
                     sortByCount: "Ordenar por cambios",
                 },
                 groups: {
-                    changes: "{count} cambios",
+                    changes: "{count, plural, one {# cambio} other {# cambios}}",
                     loadMore: "Cargar más",
                     loadingMore: "Cargando…",
                     loadMoreFailed: "No se pudo cargar más. Inténtalo de nuevo.",
@@ -3570,6 +3669,9 @@ export const es: DeepPartial<Messages> = {
             },
             tooltips: {
                 tasksRemaining: "Quedan {remaining} de {total} tareas",
+                cardAriaLabel: "{id} {title}, {status}",
+                cardAriaHint:
+                    "Pulsa Intro o Espacio para abrir la vista previa. Las flechas llevan a una tarea enlazada.",
                 healthSummary: "Cerrado {actualPct}% · Esperado {expectedPct}%",
                 expectedByToday: "Esperado para hoy: {expectedPct}%",
                 openBlockerOne: "{count} bloqueador abierto",
@@ -3892,6 +3994,59 @@ export const es: DeepPartial<Messages> = {
                 childMyNote: "Niño Mi nota ({count})",
                 newTeamNote: "Nueva nota de equipo ({count})",
                 childTeamNote: "Nota del equipo infantil ({count})",
+            },
+        },
+        // TODO(copy): MIP-1697 — DRAFT wording for a native reader.
+        noteTemplates: {
+            meeting: {
+                label: "Notas de reunión",
+                title: "Notas de reunión {date}",
+                attendees: "Asistentes",
+                attendeesHint: "Quién estuvo presente.",
+                agenda: "Agenda",
+                agendaHint: "Lo que queríamos tratar.",
+                notes: "Notas",
+                notesHint: "Lo que se dijo, en breve.",
+                decisions: "Decisiones",
+                decisionsHint:
+                    "Lo que acordamos. Enlaza un registro de decisión si es importante.",
+                actions: "Tareas pendientes",
+                actionsHint: "Quién hace qué y para cuándo.",
+            },
+            decision: {
+                label: "Registro de decisión",
+                title: "Decisión: ",
+                meta: "Fecha: {date}   Estado: propuesta   Decidido por:",
+                decision: "Decisión",
+                decisionHint: "Lo que elegimos, en una o dos frases.",
+                why: "Por qué",
+                whyHint: "El motivo que decidió.",
+                context: "Contexto",
+                contextHint: "Por qué surgió esto, en dos o tres frases.",
+                options: "Opciones consideradas",
+                optionsHint: "A: … (pros / contras)",
+                consequences: "Consecuencias",
+                consequencesHint: "Qué resulta más fácil, qué más difícil, cuándo revisarlo.",
+                links: "Enlaces",
+                linksHint: "La tarea, notas relacionadas, el chat donde se dijo.",
+            },
+            brief: {
+                label: "Resumen del proyecto",
+                title: "Resumen del proyecto: ",
+                goal: "Objetivo",
+                goalHint: "Para qué sirve este proyecto, en una frase.",
+                background: "Antecedentes",
+                backgroundHint: "Por qué ahora y qué sabemos ya.",
+                scope: "Alcance",
+                scopeHint: "Qué entra y qué queda fuera.",
+                success: "Criterios de éxito",
+                successHint: "Cómo sabremos que funcionó.",
+                milestones: "Hitos",
+                milestonesHint: "Los pasos grandes y sus fechas.",
+                risks: "Riesgos y preguntas abiertas",
+                risksHint: "Qué podría salir mal y qué aún no sabemos.",
+                people: "Personas",
+                peopleHint: "Responsable, colaboradores, a quién preguntar.",
             },
         },
         labels: {

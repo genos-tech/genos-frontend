@@ -272,9 +272,9 @@
        ========================================================================== */
 
     @media (max-width: 480px) {
-        :root {
-            --min-width: 280px;
-        }
+        /* The layout floor is --min-width (320px, set once on :root above). The old phone rule
+           that repeated it here did nothing (MIP-1927). The app shell takes the same floor
+           (App.tsx), so below 320 px the whole layout scrolls sideways as one piece. */
 
         h1 {
             font-size: 2.5em;

@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useLayoutEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
@@ -91,6 +91,18 @@ export const TaskNodeView = ({
     // dimmed card still shows whose task it is and never mislabels itself.
     const isExternal = isGhost || !!isDimmed;
 
+    // MIP-1830: on the graph, the card is one Tab stop (React Flow's node wrapper, named by
+    // the card). The controls inside it (status, dates, open, add) are taken out of the Tab
+    // order: a keyboard user opens the preview, which has all of them. Mouse and touch are
+    // unchanged. Set after every render, so a control that appears later is covered too.
+    const cardRef = useRef<HTMLDivElement>(null);
+    useLayoutEffect(() => {
+        if (!withHandles) return;
+        cardRef.current
+            ?.querySelectorAll<HTMLElement>("button, input, select, textarea, [tabindex]")
+            .forEach((el) => el.setAttribute("tabindex", "-1"));
+    });
+
     const [editing, setEditing] = useState(false);
     const [dateEditorOpen, setDateEditorOpen] = useState(false);
     const [statusMenuOpen, setStatusMenuOpen] = useState(false);
@@ -118,6 +130,7 @@ export const TaskNodeView = ({
 
     return (
         <TaskCardFrame
+            ref={cardRef}
             clickable={false}
             emphasis={emphasis}
             ghost={isExternal}

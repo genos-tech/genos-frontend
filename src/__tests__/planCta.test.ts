@@ -60,6 +60,20 @@ describe("planCta", () => {
         expect(at({ ...sub, cardTier: "core" })).toEqual({ kind: "downgrade", plan: "core" });
     });
 
+    it("offers no switch to the plan a downgrade is already scheduled for", () => {
+        // MIP-1848: the plan row already says "Changes to Core on <date>".
+        // Switching to Core again is a no-op in Stripe (checked in test
+        // mode), so the card gets no button. Other cards are unchanged.
+        const pending: BillingSubscription = {
+            ...LIVE,
+            pending_plan: "core",
+            pending_change_at: 1789000000,
+        };
+        const sub = { subscription: pending, personalTier: "pro" as const };
+        expect(at({ ...sub, cardTier: "core" })).toEqual({ kind: "none" });
+        expect(at({ ...sub, cardTier: "max" })).toEqual({ kind: "upgrade", plan: "max" });
+    });
+
     it("turns the free card into a cancel for a subscriber", () => {
         expect(at({ cardTier: "free", personalTier: "core", subscription: LIVE })).toEqual({
             kind: "cancel",

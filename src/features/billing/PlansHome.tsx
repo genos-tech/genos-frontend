@@ -10,7 +10,6 @@ import { useAuth } from "../../context/AuthContext";
 import { useCurrencyPreference } from "../../hooks/common/useCurrencyPreference";
 import { fmt, useTranslation } from "../../i18n";
 import type { Messages } from "../../i18n/types";
-import { SUPPORT_EMAIL } from "../../lp/supportLabels";
 import { CreditsBlock, fetchAgentFeatures, SubscriptionTier } from "../../services/agentApi";
 import {
     BillingConfig,
@@ -24,7 +23,6 @@ import {
     fetchTeamBillingConfig,
     openBillingPortal,
     openTeamBillingPortal,
-    PlanPrice,
     PlanTier,
     PurchasablePlan,
     startCheckout,
@@ -33,7 +31,6 @@ import {
     TeamBillingConfig,
 } from "../../services/billingApi";
 import { formatPrice } from "../../utils/currency";
-import { CurrencyPicker } from "./CurrencyPicker";
 import { planCta } from "./planCta";
 import { MatrixCell, planMatrixGroups } from "./planMatrix";
 import { TrialEndNote } from "./TrialEndNote";
@@ -56,9 +53,8 @@ import { TrialEndNote } from "./TrialEndNote";
 
 type PlanStrings = Messages["settings"]["planUsage"];
 
-// MIP-1839: the one support address every other page uses. Switch to `/contact?topic=enterprise`
-// when the contact form (MIP-1261, genos-frontend #1086) is on main.
-const CONTACT_SALES_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=Genos%20Enterprise`;
+// MIP-1902: the Enterprise button opens the contact form's Enterprise variant (MIP-1261).
+const CONTACT_SALES_HREF = "/contact?topic=enterprise";
 
 // Self-serve plans, cheapest first — mirrors `PURCHASABLE_PLANS` in
 // genos-api `origin/services/stripe_billing.py`. Used for the team
@@ -159,7 +155,7 @@ export const PlansHome = () => {
     const { t, locale } = useTranslation();
     // Display currency. The subscription's REAL currency is read off
     // Stripe and is unaffected by this — see useCurrencyPreference.
-    const { currency, setCurrency } = useCurrencyPreference();
+    const { currency } = useCurrencyPreference();
     const [plans, setPlans] = useState<BillingPlans | null>(null);
     const [config, setConfig] = useState<BillingConfig | null>(null);
     const [teamConfig, setTeamConfig] = useState<TeamBillingConfig | null>(null);
@@ -258,7 +254,7 @@ export const PlansHome = () => {
     if (!plans) {
         return (
             <Box sx={{ flex: 1, minWidth: 0, p: 3 }}>
-                <LinearProgress size="sm" />
+                <LinearProgress aria-label={t.common.feedback.loading} size="sm" />
             </Box>
         );
     }
@@ -340,7 +336,7 @@ export const PlansHome = () => {
                 return (
                     <Button
                         component="a"
-                        href={CONTACT_SALES_MAILTO}
+                        href={CONTACT_SALES_HREF}
                         size="sm"
                         variant="outlined"
                         fullWidth

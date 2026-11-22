@@ -9,7 +9,6 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import { createFilterOptions } from "@mui/joy/Autocomplete";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -29,11 +28,7 @@ import { ChannelKind, type Channel } from "../../../../types/channel";
 import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
 import { personLabel } from "../../../../utils/personLabel";
 import { loadSearchList } from "../../services/loadChatSearchList";
-
-const filterSearchOptions = createFilterOptions<SearchListProps>({
-    stringify: (option) =>
-        option.type === "People" ? `${option.name} ${option.email ?? ""}` : option.name,
-});
+import { filterSearchOptions } from "./chatSearchFilter";
 
 type ChatSearchProps = {
     myself: UserProps;

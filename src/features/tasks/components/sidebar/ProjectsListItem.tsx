@@ -1,13 +1,9 @@
 import { memo, useMemo, useState } from "react";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import WorkIcon from "@mui/icons-material/Work";
-import { Box, Dropdown, IconButton, List, ListItem, MenuButton, Typography } from "@mui/joy";
+import { Box, List, ListItem, Typography } from "@mui/joy";
 
-import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { DataState } from "../../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../../components/ui/feedback/Skeleton";
-import { MenuDivider, MenuRow, MenuSurface } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
@@ -23,6 +19,7 @@ import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 import { ProjectFavoriteMark, ProjectFavoriteStar } from "./projects_subs/ProjectFavoriteStar";
+import { ProjectLabelFilterMenu } from "./projects_subs/ProjectLabelFilterMenu";
 import {
     distinctProjectLabels,
     filterAndSortProjects,
@@ -132,108 +129,12 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                         label={t.tasks.sidebar.projects}
                         actions={
                             <>
-                                {/* Filter projects by label. A Joy Dropdown (NOT a
-                            Material Menu — that crashes under the Joy theme)
-                            so clickaway + Escape close it for free; MenuItem
-                            selection closes it too (per user: it should close
-                            on select). Multi-label OR-filtering still works
-                            cumulatively across reopens. */}
-                                <Dropdown>
-                                    <AppTooltip title={t.tasks.sidebar.filterByLabel}>
-                                        <MenuButton
-                                            slots={{ root: IconButton }}
-                                            slotProps={{
-                                                root: {
-                                                    size: "sm",
-                                                    variant: filterActive ? "soft" : "plain",
-                                                    color: filterActive ? "primary" : "neutral",
-                                                    sx: {
-                                                        "--IconButton-size": "30px",
-                                                        borderRadius: "6px",
-                                                        px: filterActive ? 0.5 : 0,
-                                                        flexShrink: 0,
-                                                    },
-                                                },
-                                            }}
-                                        >
-                                            <FilterListIcon sx={{ fontSize: 16 }} />
-                                            {filterActive && (
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{
-                                                        ml: 0.25,
-                                                        fontWeight: 700,
-                                                        color: "inherit",
-                                                    }}
-                                                >
-                                                    {effectiveActiveIds.length}
-                                                </Typography>
-                                            )}
-                                        </MenuButton>
-                                    </AppTooltip>
-                                    <MenuSurface
-                                        placement="bottom-end"
-                                        sx={{ maxHeight: 320, minWidth: 147 }}
-                                    >
-                                        {allLabels.length === 0 ? (
-                                            <MenuRow disabled>{t.tasks.sidebar.noLabels}</MenuRow>
-                                        ) : (
-                                            allLabels.map((label) => {
-                                                const selected = effectiveActiveIds.includes(
-                                                    label.labelId
-                                                );
-                                                return (
-                                                    <MenuRow
-                                                        key={label.labelId}
-                                                        mark="none"
-                                                        selected={selected}
-                                                        onClick={() => toggleLabel(label.labelId)}
-                                                    >
-                                                        <CheckRoundedIcon
-                                                            sx={{
-                                                                fontSize: 16,
-                                                                flexShrink: 0,
-                                                                // Always visible; faint
-                                                                // when unselected so the
-                                                                // toggle affordance reads.
-                                                                opacity: selected ? 1 : 0.25,
-                                                                color: selected
-                                                                    ? g.accent.text
-                                                                    : "inherit",
-                                                            }}
-                                                        />
-                                                        <Box
-                                                            sx={{
-                                                                px: 0.75,
-                                                                py: 0.15,
-                                                                borderRadius: "5px",
-                                                                backgroundColor: label.color,
-                                                                color: label.textColor,
-                                                                fontWeight: 600,
-                                                                fontSize: "0.7rem",
-                                                                maxWidth: 110,
-                                                                overflow: "hidden",
-                                                                textOverflow: "ellipsis",
-                                                                whiteSpace: "nowrap",
-                                                            }}
-                                                        >
-                                                            {label.name}
-                                                        </Box>
-                                                    </MenuRow>
-                                                );
-                                            })
-                                        )}
-                                        {filterActive && <MenuDivider />}
-                                        {filterActive && (
-                                            <MenuRow
-                                                sx={{ justifyContent: "center" }}
-                                                onClick={() => setActiveLabelIds([])}
-                                            >
-                                                {t.tasks.sidebar.clearLabelFilter}
-                                            </MenuRow>
-                                        )}
-                                    </MenuSurface>
-                                </Dropdown>
+                                <ProjectLabelFilterMenu
+                                    activeIds={effectiveActiveIds}
+                                    labels={allLabels}
+                                    onClear={() => setActiveLabelIds([])}
+                                    onToggle={toggleLabel}
+                                />
                             </>
                         }
                         onToggleExpanded={() => setOpen(!open)}
@@ -311,6 +212,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                         <NavItem
                                             actions={favoriteStar}
                                             actionsOverlay={true}
+                                            as="div"
                                             expanded={open}
                                             selected={isSelected}
                                             label={
@@ -393,6 +295,7 @@ export const ProjectsListItem = memo(function ProjectsListItem(props: ProjectsLi
                                             }}
                                         />
                                     )}
+                                    asListItem
                                 >
                                     <MilestonesListItem
                                         currentProjectId={projectId}

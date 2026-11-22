@@ -3,7 +3,13 @@ import { ExternalLink } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 import { connectApp } from "../i18n/locales/en/connectApp";
-import { claudeCodeAddCommand, mcpServerUrl } from "../utils/mcpConnect";
+import {
+    claudeCodeAddCommand,
+    mcpServerUrl,
+    PLUGIN_COMMANDS,
+    PLUGIN_REPO_URL,
+    PLUGIN_ZIP_URL,
+} from "../utils/mcpConnect";
 import { Code } from "./Code";
 import { LpShell } from "./kit/LpShell";
 import {
@@ -101,7 +107,14 @@ const Endpoint = ({
 const Pre = ({ children, label }: { children: string; label?: string }) => (
     <div className="lp-block">
         {label && <div className="lp-label">{label}</div>}
-        <pre translate="no">{children}</pre>
+        {/* MIP-1851: a long line scrolls sideways. A keyboard user can only scroll a block
+            that can take focus, so the block is a Tab stop. `aria-label` is not allowed on a bare
+            `pre` (axe aria-prohibited-attr, MIP-1901), so every block is a named `group` (a
+            `region` would be a landmark, and several blocks share a label). MIP-1928: a block with
+            no visible label is "Code example" (the page is English-only). */}
+        <pre aria-label={label ?? "Code example"} role="group" tabIndex={0} translate="no">
+            {children}
+        </pre>
     </div>
 );
 
@@ -112,7 +125,9 @@ const Params = ({ rows, title }: { rows: Row[]; title: string }) => {
             <div className="lp-label" id={labelId}>
                 {title}
             </div>
-            <div className="lp-params__scroll">
+            {/* MIP-1851: the table scrolls sideways on a narrow screen; keyboard users must be
+                able to focus the scroll region to reach the cells past the edge. */}
+            <div aria-labelledby={labelId} className="lp-params__scroll" role="group" tabIndex={0}>
                 <table aria-labelledby={labelId} role="table">
                     <tbody role="rowgroup">
                         {rows.map((r) => (
@@ -352,6 +367,30 @@ export default function DevelopersPage() {
                                         <li key={step}>{step}</li>
                                     ))}
                                 </ol>
+
+                                <h4>{connectApp.pluginTitle}</h4>
+                                <p>{connectApp.pluginIntro}</p>
+                                <p>{connectApp.pluginCodeLabel}</p>
+                                <Pre label="the plugin, Claude Code">{PLUGIN_COMMANDS}</Pre>
+                                <p>{connectApp.pluginDesktopLabel}</p>
+                                <p>
+                                    <a
+                                        href={PLUGIN_ZIP_URL}
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                    >
+                                        {connectApp.pluginZipLink}
+                                    </a>
+                                    {" · "}
+                                    <a
+                                        href={PLUGIN_REPO_URL}
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                    >
+                                        {connectApp.pluginRepoLink}
+                                    </a>
+                                </p>
+                                <p className="lp-small">{connectApp.pluginNote}</p>
 
                                 <h4>{connectApp.chatgptTitle}</h4>
                                 <p>{connectApp.chatgptBody}</p>

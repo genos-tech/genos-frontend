@@ -32,7 +32,7 @@ export const RecentNotesList = ({
     const hidden = hiddenRecentsCount(rows.length);
 
     return (
-        <Box>
+        <Box role="none">
             {visibleRecents(rows, expanded).map((row) => (
                 <RecentNoteItem
                     key={`recent-${row.noteType}-${row.note.noteId}`}
@@ -46,7 +46,6 @@ export const RecentNotesList = ({
             {hidden > 0 && (
                 <NavItem
                     key="recents-toggle"
-                    as="div"
                     label={expanded ? t.notes.sidebar.recentsLess : t.notes.sidebar.recentsMore}
                     labelSx={{ fontWeight: 500 }}
                     aria-label={

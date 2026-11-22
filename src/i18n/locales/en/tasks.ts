@@ -113,6 +113,7 @@ export const tasks = {
         clearLabelFilter: "Clear filter",
         noLabels: "No project labels yet",
         noProjectsMatchFilter: "No projects match this filter",
+        filterProjectsPlaceholder: "Filter projects…",
         addMilestone: "Add milestone",
         pastMilestones: "Past milestones",
         moveToNoSprint: "Move to: No sprint",
@@ -1206,6 +1207,47 @@ export const tasks = {
         tabMyTasks: "My Tasks",
         tabMemberTasks: "Member's Tasks",
         tabAgentActivity: "Agent Activity",
+        tabMilestones: "Milestones",
+        // MIP-1187: every string of this tab is a DRAFT for a native reader (TODO(copy)).
+        milestoneProgress: {
+            heading: "Milestone progress",
+            subtitle:
+                "Ongoing milestones in this project: what is closed, what is late or blocked, and when anything last moved.",
+            summaryMilestones: "Milestones",
+            summaryClosed: "Tasks closed",
+            summaryOverdue: "Overdue tasks",
+            summaryBlocked: "Blocked",
+            summaryStalled: "Stalled",
+            empty: "No ongoing milestones in this project.",
+            noTasks: "No tasks under this milestone yet",
+            closedOfTotal: "{closed} of {total} closed",
+            dueNone: "No due date",
+            dueToday: "Due today",
+            dueIn: "Due in {count} days",
+            dueInOne: "Due tomorrow",
+            overdueBy: "Overdue by {count} days",
+            overdueByOne: "Overdue by 1 day",
+            lastProgress: "Last progress {age}",
+            noProgress: "No progress recorded yet",
+            stalled: "No progress for {count} days",
+            noSprint: "No sprint",
+            attentionHeading: "Needs attention",
+            attentionNone: "Nothing overdue, blocked or due this week.",
+            attentionMore: "{count} more",
+            reasonOverdue: "Overdue",
+            reasonBlocked: "Blocked",
+            reasonDueSoon: "Due soon",
+            noAssignee: "Unassigned",
+            detailsShow: "Show details",
+            detailsHide: "Hide details",
+            detailsShowFor: "Show details for {title}",
+            detailsHideFor: "Hide details for {title}",
+            recentHeading: "Recent progress",
+            recentNone: "Nothing has changed under this milestone yet.",
+            recentFailed: "Couldn't load recent progress",
+            byActor: "by {name}",
+            otherStatus: "Other",
+        },
         // MIP-1613: every string of this tab is a DRAFT for a native reader (TODO(copy)).
         agentActivity: {
             heading: "Agent Activity",
@@ -1253,7 +1295,7 @@ export const tasks = {
                 sortByCount: "Sort by changes",
             },
             groups: {
-                changes: "{count} changes",
+                changes: "{count, plural, one {# change} other {# changes}}",
                 loadMore: "Load more",
                 loadingMore: "Loading…",
                 loadMoreFailed: "Could not load more. Try again.",
@@ -1379,6 +1421,10 @@ export const tasks = {
         tooltips: {
             // BurndownSparkline header chip.
             tasksRemaining: "{remaining} of {total} tasks remaining",
+            // MIP-1830: a card's accessible name, and the hint React Flow reads with it.
+            cardAriaLabel: "{id} {title}, {status}",
+            cardAriaHint:
+                "Press Enter or Space to open the preview. Arrow keys move to a linked task.",
             // Health chip — used both on milestone nodes and the modal header.
             healthSummary: "Closed {actualPct}% · Expected {expectedPct}%",
             // ModalTaskDiagram progress-bar "expected by now" marker.

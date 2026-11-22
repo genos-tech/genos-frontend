@@ -15,20 +15,27 @@ type Processor = {
 
 /**
  * Every third party the code sends user data to, with what it receives.
- * Source: genos-docs `operations/THIRD_PARTY_REVIEW.md` (MIP-729, which
- * checked each item in the code). Exported for the test, which pins that
- * both languages render every row.
+ * Source: genos-docs `operations/THIRD_PARTY_REVIEW.md` (checked in the
+ * code on `main`). Exported for the test, which pins that both languages
+ * render every row. Production facts (EMBEDDING_PROVIDER=vertex, the cost
+ * reports in Cloud Storage) were read from the variable and job names on
+ * 2026-11-21, not from the values.
  */
 export const PROCESSORS: Processor[] = [
     {
         name: "Railway",
-        ja: "ホスティング・データ保管。本サービスの本番環境は Railway 上でのみ稼働しており、アカウント情報やコンテンツを含むサービス上のすべてのデータが保存されます。",
-        en: "Hosting and storage. Production runs on Railway only; all service data, including account details and your content, is stored there.",
+        ja: "ホスティング・データ保管。本サービスの本番環境は Railway 上で稼働しており、アカウント情報やコンテンツなど、サービスのデータはここに保存されます（AI 利用料の集計ページを除きます。下記の Google Cloud Storage を参照）。",
+        en: "Hosting and storage. Production runs on Railway, and service data, including account details and your content, is stored there (AI cost reports are the exception; see Google Cloud Storage below).",
+    },
+    {
+        name: "Google Cloud Storage",
+        ja: "AI 利用料の集計ページを毎日保存します。保存されるのは AI の利用量と費用の集計で、利用者の ID を含みます。",
+        en: "Stores the daily AI cost reports. These hold AI usage and cost totals, including user IDs.",
     },
     {
         name: "Google（Gemini）",
-        ja: "AI 機能（検索・要約・エージェント）。質問と会話、および回答に必要な範囲で取得したワークスペースの内容（メッセージ、タスク、ノート、カレンダーの予定など）が送信されます。",
-        en: "AI features (search, summaries, agent). Your question and conversation, plus the workspace content retrieved to answer it (messages, tasks, notes, calendar events and similar), are sent.",
+        ja: "AI 機能（検索・要約・エージェント）。質問と会話、および回答に必要な範囲で取得したワークスペースの内容（メッセージ、タスク、ノート、カレンダーの予定など）が送信されます。本番環境では、検索用の索引（埋め込み）の作成も Google Cloud（Vertex AI）で行っており、索引化されるテキスト（メッセージ、タスク、ノートなど）と検索語が送信されます。",
+        en: "AI features (search, summaries, agent). Your question and conversation, plus the workspace content retrieved to answer it (messages, tasks, notes, calendar events and similar), are sent. In production, the search index (embeddings) is also built on Google Cloud (Vertex AI): the text that is indexed (messages, tasks, notes and similar) and the search terms are sent.",
     },
     {
         name: "Anthropic（Claude）",
@@ -37,8 +44,8 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "OpenAI",
-        ja: "検索のための埋め込み（ベクトル）生成。検索対象としてインデックス化されるチャットメッセージ・タスク・ノートのテキストと、入力された検索語が送信されます。",
-        en: "Embeddings for search. The text of chat messages, tasks and notes that is indexed for search, and the search terms you type, are sent.",
+        ja: "設定により選択された場合のみ利用されます。その場合、検索用の埋め込み（インデックス化されるテキストと検索語）や AI 機能の処理内容が送信されます。本番環境では、2026 年 11 月 21 日時点で検索用の埋め込みには使用していません。",
+        en: "Used only when it is configured. Then the text indexed for search and the search terms, or the content of AI requests, are sent. In production, it was not used for search embeddings as of 21 November 2026.",
     },
     {
         name: "Cohere",
@@ -62,8 +69,8 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "PostHog",
-        ja: "プロダクト分析。ユーザー ID、チーム ID、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベント、マーケティングページでクリックしたボタン（例:「デモを試す」）、サインアップ、ページの言語、およびアクセス元（アクセスしたリンクに含まれる utm_source・utm_medium・utm_campaign・utm_content・utm_term の値と、参照元ウェブサイトのドメインのみ）が送信されます。サインイン前はランダムなブラウザ ID に、サインイン後はユーザー ID に紐づきます（匿名ではありません）。チーム名は送信しません。クリックの自動取得とセッション録画は行っていません。「設定 → 一般 → プライバシーと分析」またはマーケティングページ下部のリンクから、そのブラウザでの送信を停止できます。",
-        en: 'Product analytics. Your user ID, team ID, role, the path of the pages you view (without query strings), demo started / completed / failed events, which button you click on our marketing pages (for example "Try the demo"), the moment you sign up, the language of the page, and the marketing source of your visit (the utm_source, utm_medium, utm_campaign, utm_content and utm_term values in the link you arrived by, and the website you came from, domain only) are sent. Before you sign in, this is tied to a random browser ID, and once you sign in it is tied to your user ID (not anonymous). The team name is not sent. Click auto-capture and session recording are not used. You can stop it for that browser in Settings > General > Privacy & analytics, or from the link at the bottom of our marketing pages.',
+        ja: "プロダクト分析。同意していただいた場合にのみ送信します。送信するのは、ユーザー ID、チーム ID、役割（ロール）、閲覧したページのパス（クエリ文字列を除く）、デモ体験の開始・完了・失敗のイベント、マーケティングページでクリックしたボタン（例:「デモを試す」）、サインアップ、ページの言語、およびアクセス元（アクセスしたリンクに含まれる utm_source・utm_medium・utm_campaign・utm_content・utm_term の値と、参照元ウェブサイトのドメインのみ）です。アプリ内では、これに加えてブラウザの種類、OS、端末の種類、画面と表示領域のサイズ、ユーザーエージェント、ページのタイトルも送信します（マーケティングページでは送信しません）。IP アドレスは、PostHog で保存しないよう設定しています。ただし、通信の際に接続元の IP アドレスが PostHog のサーバーに届きます。サインイン前はランダムなブラウザ ID に、サインイン後はユーザー ID に紐づきます（匿名ではありません）。チーム名は送信しません。クリックの自動取得とセッション録画は行っていません。「設定 → 一般 → プライバシーと分析」またはマーケティングページ下部のリンクから、そのブラウザでの送信を停止できます。アカウントを削除しても、PostHog 上の情報は自動では削除されません。",
+        en: 'Product analytics, sent only with your consent. What is sent: your user ID, team ID, role, the path of the pages you view (without query strings), demo started / completed / failed events, which button you click on our marketing pages (for example "Try the demo"), the moment you sign up, the language of the page, and the marketing source of your visit (the utm_source, utm_medium, utm_campaign, utm_content and utm_term values in the link you arrived by, and the website you came from, domain only). In the app, the browser, operating system, device type, screen and viewport size, user agent and page title are also sent (not on our marketing pages). IP addresses are set not to be stored by PostHog, but the connecting IP address still reaches PostHog\'s servers with each request. Before you sign in, this is tied to a random browser ID, and once you sign in it is tied to your user ID (not anonymous). The team name is not sent. Click auto-capture and session recording are not used. You can stop it for that browser in Settings > General > Privacy & analytics, or from the link at the bottom of our marketing pages. Deleting your account does not automatically delete your data in PostHog.',
     },
     {
         name: "GIPHY",
@@ -72,13 +79,13 @@ export const PROCESSORS: Processor[] = [
     },
     {
         name: "Google（サインイン・カレンダー）",
-        ja: "Google アカウントでのサインインでは、基本プロフィールとメールアドレスを受け取ります。「カレンダー連携」を有効にした場合は、お客様のカレンダーの予定を読み取り、機能の利用に応じて作成・更新する予定（タイトル・日時・参加者）を Google に送信します。",
-        en: "Signing in with Google gives us your basic profile and email address. If you connect your calendar, we read your calendar events and send the events we create or update through the features you use (title, time, attendees) to Google.",
+        ja: "Google アカウントでのサインインでは、基本プロフィールとメールアドレスを受け取ります。「カレンダー連携」を有効にした場合は、お客様のカレンダーの予定を読み取り、機能の利用に応じて作成・更新する予定（タイトル・日時・参加者）を Google に送信します。連携を解除または削除すると、保存しているトークンを削除し、Google 側の許可も取り消します。",
+        en: "Signing in with Google gives us your basic profile and email address. If you connect your calendar, we read your calendar events and send the events we create or update through the features you use (title, time, attendees) to Google. If you disconnect or delete your account, we delete the token we store and also revoke the access at Google.",
     },
     {
         name: "GitHub",
-        ja: "GitHub アカウントでのサインインでは、ユーザー情報とメールアドレスを受け取ります。「GitHub 連携」を有効にした場合は、非公開リポジトリを含むリポジトリへのアクセス権限（repo スコープ）を許可していただき、取得したトークンを当サービスが保存します。プルリクエストの連携のため、対象のリポジトリに Webhook を登録します。",
-        en: "Signing in with GitHub gives us your user details and email address. If you connect GitHub, you grant access to your repositories, including private ones (the repo scope), and we store the resulting token. To link pull requests we register a webhook on the repositories involved.",
+        ja: "GitHub アカウントでのサインインでは、ユーザー情報とメールアドレスを受け取ります。「GitHub 連携」を有効にした場合は、非公開リポジトリを含むリポジトリへのアクセス権限（repo スコープ）を許可していただき、取得したトークンを当サービスが保存します。プルリクエストの連携のため、対象のリポジトリに Webhook を登録します。連携を解除または削除すると、保存しているトークンを削除し、GitHub 側の許可も取り消します。",
+        en: "Signing in with GitHub gives us your user details and email address. If you connect GitHub, you grant access to your repositories, including private ones (the repo scope), and we store the resulting token. To link pull requests we register a webhook on the repositories involved. If you disconnect or delete your account, we delete the token we store and also revoke the access at GitHub.",
     },
     {
         name: "ブラウザ提供元のプッシュ通知サービス（Apple・Google・Mozilla）",

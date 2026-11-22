@@ -19,6 +19,7 @@ import {
     normalizePinnedBubbleActions,
     PINNABLE_BUBBLE_ACTIONS,
 } from "../hooks/common/useBubbleActionsPreference";
+import { en } from "../i18n/locales/en";
 
 vi.mock("../features/chat/components/modals/ModalDeleteMessage", () => ({
     ModalDeleteMessage: () => null,
@@ -106,7 +107,8 @@ const SHARED = [
 describe("message bubble menus", () => {
     it("list the chat message's actions in the shared order", () => {
         renderMenu("main");
-        expect(menuLabels()).toEqual(["Reply in thread", ...SHARED]);
+        // "Delete permanently" (MIP-1584) closes the chat message's menu; thread replies have none.
+        expect(menuLabels()).toEqual(["Reply in thread", ...SHARED, en.common.forceDelete.menu]);
     });
 
     it("list the thread reply's actions in the shared order", () => {
@@ -146,7 +148,12 @@ describe("pinned bubble actions", () => {
             "Edit message",
         ]);
         // What is left stays in the menu, still in order.
-        expect(menuLabels()).toEqual(["Remind me…", "Unwrap content", "Delete message"]);
+        expect(menuLabels()).toEqual([
+            "Remind me…",
+            "Unwrap content",
+            "Delete message",
+            en.common.forceDelete.menu,
+        ]);
     });
 
     it("do the same on a thread reply", () => {

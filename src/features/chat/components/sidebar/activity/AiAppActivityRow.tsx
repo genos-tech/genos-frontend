@@ -8,13 +8,10 @@ import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
-import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
-import { ProjectProps } from "../../../../../types/tasks";
 import { extractYYYYMMDDHHMM } from "../../../../../utils/dateUtils";
-import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { aiAppSentence, inAppPath } from "../../../utils/aiAppNotice";
 
@@ -25,8 +22,6 @@ interface AiAppActivityRowProps {
     selectedActivityId: string;
     setSelectedActivityId: (value: string) => void;
     useCM: ChatManagementState;
-    useTM: TaskManagementState;
-    setCurrentProject: (project: ProjectProps) => void;
 }
 
 /**
@@ -34,9 +29,9 @@ interface AiAppActivityRowProps {
  *
  * The rows are the member's own doing, so there is no person to show: the app's
  * name leads, the sentence follows (worded here from facts the API stored),
- * and a click opens what was made or changed and marks the row read. A task or a milestone
- * opens in the chat's preview, as a task-body mention does (MIP-1755); a note opens in the note
- * modal (MIP-1845); a notice without the ids to open in place goes to its page.
+ * and a click opens what was made or changed and marks the row read. A task, a milestone and a
+ * note each open in the chat's modal (MIP-1755, MIP-1845), the URL staying on the chat; a notice
+ * without the ids to open in place goes to its page.
  */
 export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     activity,
@@ -45,8 +40,6 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     selectedActivityId,
     setSelectedActivityId,
     useCM,
-    useTM,
-    setCurrentProject,
 }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -67,36 +60,32 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     // Only an in-app path: the API hands us a path, never a full URL.
     const url = inAppPath(notice.url);
 
-    // MIP-1755: a task or milestone opens in the chat's preview (the same modal a task-body
-    // mention opens), not on its page. Falls back to the page when the ids are missing or the
-    // task cannot be loaded.
-    const openItem = async () => {
-        // MIP-1845: a note opens in the note modal, the same surface a note link in a chat message
-        // opens. The URL stays on the chat; "Open note" in the modal goes to the note page. The hook
-        // decides the outcome itself, so there is no second navigation here.
-        if (notice.kind === "note" && url && modal) {
-            modal.openModalByHref(url, { fullPageHref: url });
-            return;
-        }
+    // The href of the task or milestone the notice names, built from its ids (MIP-1755). Null when
+    // the ids are missing, so the row falls back to its page.
+    const itemHref = (): string | null => {
+        // A deleted item has nothing left to open: the modal would say "unavailable" (MIP-1923).
+        if (notice.verb === "deleted") return null;
         const item = notice.items[0];
         const projectId = item?.projectId ?? null;
-        if (item && projectId != null && item.kind === "milestone" && item.id != null) {
-            setCurrentProject({ projectId, projectName: "", projectTags: [] });
-            useTM.setCurrentPreviewKind("milestone");
-            useTM.setCurrentPreviewMilestoneId(Number(item.id));
-            useTM.setIsTaskPreviewVisible(true);
-            return;
+        if (!item || projectId == null) return null;
+        if (item.kind === "milestone" && item.id != null) {
+            return `/workspace/tasks/project/${projectId}/milestone/${item.id}`;
         }
-        if (item && projectId != null && item.kind === "task" && item.taskId != null) {
-            const loaded = await loadSpecificTask(myself, projectId, item.taskId, accessToken);
-            if (loaded.length > 0) {
-                setCurrentProject({ projectId, projectName: "", projectTags: [] });
-                useTM.setCurrentPreviewKind("task");
-                useTM.setCurrentPreviewTask(loaded[0]);
-                useTM.setCurrentPreviewTaskId(item.taskId);
-                useTM.setIsTaskPreviewVisible(true);
-                return;
-            }
+        if (item.kind === "task" && item.taskId != null) {
+            return `/workspace/tasks/project/${projectId}/task/${item.taskId}`;
+        }
+        return null;
+    };
+
+    // MIP-1755: a task or a milestone opens in the chat's modal, the same surface a task or milestone
+    // link in a chat message opens, not the side pane and not its page. MIP-1845: a note does the same
+    // with the note modal. "Open" in the modal goes to the item's page; the URL stays on the chat.
+    // The modal hook decides the outcome itself, so there is no second navigation here.
+    const openItem = () => {
+        const href = notice.kind === "note" ? url : itemHref();
+        if (href && modal) {
+            modal.openModalByHref(href, { fullPageHref: href });
+            return;
         }
         if (url) navigate(url);
     };
@@ -104,7 +93,7 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
     const onClick = () => {
         setSelectedActivityId(activity.activityId);
         if (activity.isRead === false) updateActivityReadStatus();
-        void openItem();
+        openItem();
     };
 
     return (

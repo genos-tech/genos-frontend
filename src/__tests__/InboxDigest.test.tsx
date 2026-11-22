@@ -12,7 +12,6 @@ import { describe, expect, it, vi } from "vitest";
 import DigestBody from "../features/inbox/components/DigestBody";
 import { DigestHeadline } from "../features/inbox/components/DigestHeadline";
 import { useInboxItems } from "../features/inbox/hooks/useInboxItems";
-import { useInboxManagement } from "../hooks/inbox/useInboxManagement";
 import { InboxItemProps } from "../types/common";
 
 const item = (itemType: number, isRead = false): InboxItemProps =>

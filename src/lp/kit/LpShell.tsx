@@ -8,10 +8,10 @@ import { analytics } from "../../services/analytics";
 import { chooseConsent, useMarketingConsent } from "../../services/marketingConsent";
 import { trackCtaClicked, trackMarketingPageview } from "../../services/marketingFunnel";
 import { useLpLang, type Lang } from "../lpLang";
-import { isTermsPageEnabled } from "../termsFlag";
 import { ConsentBanner } from "./ConsentBanner";
 import { APP_URL, CONTACT_EMAIL, DEMO_URL, SIGNUP_URL } from "./links";
 import { useLpMode } from "./lpTheme";
+import { useLpScrollReset } from "./useLpScrollReset";
 
 export type NavKey = "home" | "features" | "developers" | "plans" | "blog" | "demo" | null;
 
@@ -53,7 +53,8 @@ const SHELL = {
             docs: "ドキュメント",
             security: "セキュリティ",
             privacy: "プライバシー",
-            legal: "利用規約・特商法",
+            subprocessors: "サブプロセッサー一覧",
+            cookies: "Cookie と分析",
             terms: "利用規約",
             legalNotice: "特定商取引法に基づく表記",
             signup: "無料で始める",
@@ -104,7 +105,8 @@ const SHELL = {
             docs: "Docs",
             security: "Security",
             privacy: "Privacy",
-            legal: "Terms and legal",
+            subprocessors: "Subprocessors",
+            cookies: "Cookies & analytics",
             terms: "Terms of Service",
             legalNotice: "Legal notice",
             signup: "Start free",
@@ -166,12 +168,11 @@ export function LpShell({
     children: (api: ShellApi) => ReactNode;
 }) {
     const { lang, setLang, appHref } = useLpLang();
+    useLpScrollReset();
     const { mode, toggleMode, style } = useLpMode();
     const [menuOpen, setMenuOpen] = useState(false);
     const t = SHELL[lang];
     const year = new Date().getFullYear();
-    // Off by default: with `VITE_SHOW_TERMS_PAGE` unset the footer is exactly what it was.
-    const showTerms = isTermsPageEnabled();
 
     // Consent and the funnel (MIP-1778). Nothing below sends anything until the visitor has
     // accepted: `consent.allowed` is false before that, and `analytics` is not even started.
@@ -185,6 +186,13 @@ export function LpShell({
     useEffect(() => {
         latest.current = { lang, pathname };
     }, [lang, pathname]);
+
+    // The app's body floor (index.css: 280 CSS px on phones) would push these pages sideways
+    // at 195 CSS px (MIP-1851), so the marketing pages drop it while they are mounted.
+    useEffect(() => {
+        document.body.classList.add("lp-body");
+        return () => document.body.classList.remove("lp-body");
+    }, []);
 
     // A page view for each marketing page, and for the page the visitor was on when they
     // accepted. The language is read when the page is entered; switching it is not a new view.
@@ -235,6 +243,25 @@ export function LpShell({
         { key: "blog", to: "/blog" },
     ];
 
+    // The language switch sits in the header on wide screens and in the menu on narrow ones
+    // (MIP-1851): beside the logo, the theme switch and the menu button it does not fit at
+    // 195 CSS px. One markup in two places; CSS shows one of them.
+    const langSwitch = (className: string) => (
+        <div aria-label={t.lang} className={`lp-seg ${className}`} role="group">
+            {(["ja", "en"] as Lang[]).map((item) => (
+                <button
+                    key={item}
+                    aria-pressed={lang === item}
+                    lang={item}
+                    type="button"
+                    onClick={() => setLang(item)}
+                >
+                    {item === "ja" ? "日本語" : "EN"}
+                </button>
+            ))}
+        </div>
+    );
+
     return (
         <div ref={rootRef} className="lp-root" data-mode={mode} lang={lang} style={style}>
             <a
@@ -249,7 +276,7 @@ export function LpShell({
                 <div className="lp-container lp-header__row">
                     <Link aria-label="Genos" className="lp-logo" to="/home">
                         <img alt="" height={28} src="/genos-logo.png" width={28} />
-                        <span>Genos</span>
+                        <span className="lp-logo__name">Genos</span>
                     </Link>
                     <nav aria-label="Genos" className="lp-nav">
                         {navItems.map((item) => (
@@ -263,19 +290,7 @@ export function LpShell({
                         ))}
                     </nav>
                     <div className="lp-header__end">
-                        <div aria-label={t.lang} className="lp-seg" role="group">
-                            {(["ja", "en"] as Lang[]).map((item) => (
-                                <button
-                                    key={item}
-                                    aria-pressed={lang === item}
-                                    lang={item}
-                                    type="button"
-                                    onClick={() => setLang(item)}
-                                >
-                                    {item === "ja" ? "日本語" : "EN"}
-                                </button>
-                            ))}
-                        </div>
+                        {langSwitch("lp-header__lang")}
                         <button
                             aria-label={mode === "dark" ? t.light : t.dark}
                             className="lp-btn lp-btn--ghost lp-icon-btn"
@@ -358,6 +373,7 @@ export function LpShell({
                                 {t.signIn}
                             </a>
                         </div>
+                        {langSwitch("lp-menu__lang")}
                     </nav>
                 </div>
             )}
@@ -429,15 +445,17 @@ export function LpShell({
                                 <li>
                                     <Link to="/privacy">{t.links.privacy}</Link>
                                 </li>
-                                {showTerms && (
-                                    <li>
-                                        <Link to="/terms">{t.links.terms}</Link>
-                                    </li>
-                                )}
                                 <li>
-                                    <Link to="/legal">
-                                        {showTerms ? t.links.legalNotice : t.links.legal}
-                                    </Link>
+                                    <Link to="/subprocessors">{t.links.subprocessors}</Link>
+                                </li>
+                                <li>
+                                    <Link to="/cookies">{t.links.cookies}</Link>
+                                </li>
+                                <li>
+                                    <Link to="/terms">{t.links.terms}</Link>
+                                </li>
+                                <li>
+                                    <Link to="/legal">{t.links.legalNotice}</Link>
                                 </li>
                             </ul>
                         </div>

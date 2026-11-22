@@ -204,6 +204,11 @@ describe("MessageAttachments", () => {
         const PROTECTED = `${API_HOST}/media/chats/${CHANNEL_UUID}/messages/9/screenshot.png`;
 
         beforeEach(() => {
+            // `isProtectedMediaUrl` treats only media on OUR origin as protected, and
+            // that origin comes from VITE_MEDIA_ROOT_DJANGO. A developer's .env.local
+            // points it at a local API, so PROTECTED would read as a third-party URL
+            // and render raw. Pin the origin to the one this test's URLs use.
+            vi.stubEnv("VITE_MEDIA_ROOT_DJANGO", `${API_HOST}/media`);
             vi.stubGlobal(
                 "URL",
                 Object.assign(URL, {
@@ -222,6 +227,7 @@ describe("MessageAttachments", () => {
 
         afterEach(() => {
             setMediaAccessToken(null);
+            vi.unstubAllEnvs();
             vi.unstubAllGlobals();
         });
 

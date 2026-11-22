@@ -190,3 +190,39 @@ describe("sidebar milestone scope vs the header milestone multi-select", () => {
         expect(setTableMilestoneFilter).toHaveBeenCalledWith(null);
     });
 });
+
+describe("sidebar milestone scope vs a stored header sprint filter (MIP-1897)", () => {
+    it("scoping to a milestone in another sprint clears the stored sprint filter", () => {
+        writeStoredFilters(KEY, { sprintKeys: [1] } as never);
+        const inSprint = (t: TaskTableProps, sprintId: number) =>
+            ({ ...t, sprintId }) as unknown as TaskTableProps;
+        const tasks = [
+            inSprint(milestoneRow("110", 10), 1),
+            inSprint(milestoneRow("120", 20), 2),
+            inSprint(childTask("t1", 10, "110"), 1),
+            inSprint(childTask("t2", 20, "120"), 2),
+        ];
+        const sprint = (sprintId: number) => ({
+            sprintId,
+            projectId: 1,
+            status: "Active",
+            isDeleted: false,
+            name: `Sprint ${sprintId}`,
+        });
+        const sm = { ...useSM, projectSprints: { 1: [sprint(1), sprint(2)] } };
+        const calls: TaskTableProps[][] = [];
+        const tm = { ...makeTM(20), allTasks: tasks } as unknown as TaskManagementState;
+        render(
+            <CssVarsProvider>
+                <TaskFilterMenu
+                    filterStorageKey={KEY}
+                    predefinedTagsFilters={[]}
+                    setCurrentDisplayingTasks={(t) => calls.push(t)}
+                    useSM={sm as never}
+                    useTM={tm}
+                />
+            </CssVarsProvider>
+        );
+        expect(idsOf(calls)).toEqual(["120", "t2"]);
+    });
+});

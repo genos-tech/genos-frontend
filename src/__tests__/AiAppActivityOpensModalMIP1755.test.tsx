@@ -14,7 +14,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AiAppActivityRow } from "../features/chat/components/sidebar/activity/AiAppActivityRow";
 import { parseAiAppNotice } from "../features/chat/utils/aiAppNotice";
-import { loadSpecificTask } from "../features/tasks/services/loadSpecificTask";
 import { UrlLinkModalProvider } from "../hooks/common/UrlLinkModalContext";
 import type { ActivityMessageProps } from "../types/chat";
 
@@ -30,28 +29,14 @@ vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ accessToken: "tok" 
 vi.mock("../features/chat/hooks/useActivityStatus", () => ({
     useActivityStatus: () => ({ updateActivityReadStatus: vi.fn() }),
 }));
-vi.mock("../features/tasks/services/loadSpecificTask", () => ({
-    loadSpecificTask: vi.fn(async (_m: unknown, _p: number, taskId: number) => [
-        { taskId, title: "Fix login" },
-    ]),
-}));
 
 afterEach(cleanup);
 beforeEach(() => {
     navigateMock.mockClear();
     openModalByHrefMock.mockClear();
-    vi.mocked(loadSpecificTask).mockClear();
 });
 
 const myself = { userId: "me", userName: "Me", userEmail: "me@test", teamId: "t1" } as never;
-
-const makeTM = () => ({
-    setIsTaskPreviewVisible: vi.fn(),
-    setCurrentPreviewTask: vi.fn(),
-    setCurrentPreviewTaskId: vi.fn(),
-    setCurrentPreviewKind: vi.fn(),
-    setCurrentPreviewMilestoneId: vi.fn(),
-});
 
 /** An AI-app row as the feed holds it after `v3ActivityToLegacy` (the notice already parsed). */
 const row = (meta: Record<string, unknown>) =>
@@ -62,8 +47,7 @@ const row = (meta: Record<string, unknown>) =>
         aiApp: parseAiAppNotice({ aiApp: true, app: "Claude Code", ...meta }),
     }) as unknown as ActivityMessageProps;
 
-const renderRow = (activity: ActivityMessageProps, tm = makeTM()) => {
-    const setCurrentProject = vi.fn();
+const renderRow = (activity: ActivityMessageProps) => {
     render(
         <CssVarsProvider>
             <MemoryRouter>
@@ -73,28 +57,26 @@ const renderRow = (activity: ActivityMessageProps, tm = makeTM()) => {
                         activityMessages={[activity]}
                         myself={myself}
                         selectedActivityId=""
-                        setCurrentProject={setCurrentProject}
                         setSelectedActivityId={vi.fn()}
                         useCM={{} as never}
-                        useTM={tm as never}
                     />
                 </UrlLinkModalProvider>
             </MemoryRouter>
         </CssVarsProvider>
     );
-    return { tm, setCurrentProject };
 };
 
 const rowButton = () => screen.getByRole("button", { name: /Claude Code/ });
 
 describe("AI-app activity row opens the item in the chat modal (MIP-1755)", () => {
-    it("a created task opens its preview in place and stays on the chat page", async () => {
-        const { tm, setCurrentProject } = renderRow(
+    it("a created task opens in the chat's task modal, not the side pane, and the URL stays on the chat", async () => {
+        const url = "/workspace/tasks/project/3/task/7";
+        renderRow(
             row({
                 verb: "created",
                 kind: "task",
                 count: 1,
-                url: "/workspace/tasks/project/3/task/7",
+                url,
                 items: [
                     {
                         kind: "task",
@@ -103,7 +85,7 @@ describe("AI-app activity row opens the item in the chat modal (MIP-1755)", () =
                         projectId: 3,
                         displayId: "MIP-7",
                         title: "Fix login",
-                        url: "/workspace/tasks/project/3/task/7",
+                        url,
                     },
                 ],
             })
@@ -113,22 +95,17 @@ describe("AI-app activity row opens the item in the chat modal (MIP-1755)", () =
         await act(async () => {});
 
         expect(navigateMock).not.toHaveBeenCalled();
-        expect(loadSpecificTask).toHaveBeenCalledWith(myself, 3, 7, "tok");
-        expect(setCurrentProject).toHaveBeenCalledWith(expect.objectContaining({ projectId: 3 }));
-        expect(tm.setCurrentPreviewTask).toHaveBeenCalledWith(
-            expect.objectContaining({ taskId: 7 })
-        );
-        expect(tm.setCurrentPreviewTaskId).toHaveBeenCalledWith(7);
-        expect(tm.setIsTaskPreviewVisible).toHaveBeenCalledWith(true);
+        expect(openModalByHrefMock).toHaveBeenCalledWith(url, { fullPageHref: url });
     });
 
-    it("Enter on the focused row opens the task the same way (keyboard access)", async () => {
-        const { tm } = renderRow(
+    it("Enter on the focused row opens the task modal the same way (keyboard access)", async () => {
+        const url = "/workspace/tasks/project/3/task/7";
+        renderRow(
             row({
                 verb: "created",
                 kind: "task",
                 count: 1,
-                url: "/workspace/tasks/project/3/task/7",
+                url,
                 items: [{ kind: "task", id: 7, taskId: 7, projectId: 3, title: "Fix login" }],
             })
         );
@@ -138,35 +115,44 @@ describe("AI-app activity row opens the item in the chat modal (MIP-1755)", () =
         await act(async () => {});
 
         expect(navigateMock).not.toHaveBeenCalled();
-        expect(tm.setIsTaskPreviewVisible).toHaveBeenCalledWith(true);
+        expect(openModalByHrefMock).toHaveBeenCalledWith(url, { fullPageHref: url });
     });
 
-    it("a milestone opens its preview in place, not its page", () => {
-        const { tm, setCurrentProject } = renderRow(
+    it("a milestone opens in the milestone modal, not the side pane or its page", () => {
+        const url = "/workspace/tasks/project/3/milestone/9";
+        renderRow(
             row({
                 verb: "created",
                 kind: "milestone",
                 count: 1,
-                url: "/workspace/tasks/project/3/milestone/9",
-                items: [
-                    {
-                        kind: "milestone",
-                        id: 9,
-                        projectId: 3,
-                        title: "Launch",
-                        url: "/workspace/tasks/project/3/milestone/9",
-                    },
-                ],
+                url,
+                items: [{ kind: "milestone", id: 9, projectId: 3, title: "Launch", url }],
             })
         );
 
         fireEvent.click(rowButton());
 
         expect(navigateMock).not.toHaveBeenCalled();
-        expect(setCurrentProject).toHaveBeenCalledWith(expect.objectContaining({ projectId: 3 }));
-        expect(tm.setCurrentPreviewKind).toHaveBeenCalledWith("milestone");
-        expect(tm.setCurrentPreviewMilestoneId).toHaveBeenCalledWith(9);
-        expect(tm.setIsTaskPreviewVisible).toHaveBeenCalledWith(true);
+        expect(openModalByHrefMock).toHaveBeenCalledWith(url, { fullPageHref: url });
+    });
+
+    it("Enter on a milestone row opens the milestone modal (keyboard access)", () => {
+        const url = "/workspace/tasks/project/3/milestone/9";
+        renderRow(
+            row({
+                verb: "created",
+                kind: "milestone",
+                count: 1,
+                url,
+                items: [{ kind: "milestone", id: 9, projectId: 3, title: "Launch" }],
+            })
+        );
+
+        rowButton().focus();
+        fireEvent.keyDown(rowButton(), { key: "Enter" });
+
+        expect(navigateMock).not.toHaveBeenCalled();
+        expect(openModalByHrefMock).toHaveBeenCalledWith(url, { fullPageHref: url });
     });
 
     it("a personal note opens in the note modal in place (MIP-1845), the URL stays on the chat", () => {
@@ -257,6 +243,22 @@ describe("AI-app activity row opens the item in the chat modal (MIP-1755)", () =
         fireEvent.click(rowButton());
 
         expect(navigateMock).toHaveBeenCalledWith("/workspace/tasks");
-        expect(loadSpecificTask).not.toHaveBeenCalled();
+    });
+
+    it("a deleted milestone opens no modal: its page is gone (MIP-1923)", () => {
+        renderRow(
+            row({
+                verb: "deleted",
+                kind: "milestone",
+                count: 1,
+                url: "",
+                items: [{ kind: "milestone", id: 5, projectId: 1, title: "Old", url: "" }],
+            })
+        );
+
+        fireEvent.click(rowButton());
+
+        expect(openModalByHrefMock).not.toHaveBeenCalled();
+        expect(navigateMock).not.toHaveBeenCalled();
     });
 });

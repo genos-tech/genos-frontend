@@ -1,4 +1,4 @@
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 
 /**
  * Build a deterministic 6×7 day matrix for a monthly calendar grid.
