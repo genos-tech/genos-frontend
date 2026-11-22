@@ -164,11 +164,21 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
 
     /** A 404 means the list on screen is stale: say so and show the real one. */
     const failed = async (
-        res: { gone: boolean; error: string | null; planRequired?: boolean },
+        res: {
+            gone: boolean;
+            error: string | null;
+            planRequired?: boolean;
+            limitReached?: boolean;
+        },
         fallback: string
     ) => {
         if (res.planRequired) {
             await planRefused();
+            return;
+        }
+        if (res.limitReached && data) {
+            // The plan's count (MIP-1960): worded here, in the member's language.
+            setError(fmt(s.limitReached, { limit: data.limit }));
             return;
         }
         setError(res.error ?? (res.gone ? s.gone : fallback));
@@ -195,6 +205,9 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         } else if (res.gone) {
             setMode(null);
             await failed(res, s.saveFailed);
+        } else if (res.limitReached && data) {
+            // The form shows `error`: the plan's count in the member's language (MIP-1960).
+            return { ...res, error: fmt(s.limitReached, { limit: data.limit }) };
         }
         return res;
     };

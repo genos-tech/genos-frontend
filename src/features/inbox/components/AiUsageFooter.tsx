@@ -46,9 +46,10 @@ type Copy = Messages["inbox"]["aiUsage"];
 const credits = (milli: number): string => formatCredits(Math.round(milli / 10) / 100);
 
 /** The cost line: what it used, and (when it is known) what was taken from the balance. */
-export const costText = (cost: AiCost | null, c: Copy): string => {
-    // A digest or report that used no AI says so, plainly: no figure, no balance line.
-    if (cost === null) return c.noAiUsed;
+export const costText = (cost: AiCost | null, c: Copy, noCredits = false): string => {
+    // A digest or report that used no AI says so, plainly: no figure, no balance line. A report
+    // that skipped its AI part because the credits were used up says that instead (MIP-1960).
+    if (cost === null) return noCredits ? c.noAiNoCredits : c.noAiUsed;
     if (!cost.metered) return c.unmeasured;
     // Under a hundredth of a credit a figure would print as "0", which is not true of a cost.
     // With unpriced calls the true cost may be more, so "less than 0.01" would be wrong too.
@@ -96,6 +97,8 @@ const Footer = ({
 }) => {
     const { t } = useTranslation();
     const c = t.inbox.aiUsage;
+    // The AI part was left out for lack of credits (MIP-1960).
+    const outOfCredits = usage.source?.noCredits === true;
     return (
         <Box
             data-ai-usage=""
@@ -134,7 +137,7 @@ const Footer = ({
                     overflowWrap: "anywhere",
                 }}
             >
-                {costText(usage.cost, c)}
+                {costText(usage.cost, c, outOfCredits)}
             </Typography>
             {usage.source && (
                 <Switch

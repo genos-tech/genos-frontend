@@ -1638,6 +1638,11 @@ export const ar: DeepPartial<Messages> = {
                 disabled: "تم تعطيله بعد الفشل المتكرر",
                 managerOnly: "يمكن فقط لمالك الفريق أو المحرر إضافة خطاف على الويب.",
                 createFailed: "تعذرت إضافة خطاف الويب هذا. يرجى المحاولة مرة أخرى.",
+                // TODO(copy): MIP-1960 draft wording for a native reader.
+                planLimit:
+                    "تسمح خطة فريقك بـ {limit} من خطافات الويب، ولديه حاليًا {used}. احذف واحدًا أو قم بترقية خطة الفريق. تستمر الخطافات الحالية في التسليم.",
+                planLimitFree:
+                    "خطافات الويب غير مضمّنة في خطة فريقك. قم بترقية خطة الفريق لإضافة واحد.",
                 projectScopeAll: "المشاريع: الكل (اختر بعضها للتضييق)",
                 projectScopeSome: "المشاريع: المختارة فقط",
                 channelScopeRequired:
@@ -4505,6 +4510,9 @@ export const ar: DeepPartial<Messages> = {
             usedTiny: "رصيد الذكاء الاصطناعي المستخدم: أقل من 0.01",
             unmeasured: "استخدم Genos الذكاء الاصطناعي في هذا. لم يتم قياس الكمية.",
             noAiUsed: "لم يُستخدم الذكاء الاصطناعي",
+            // TODO(copy): MIP-1960 draft wording for a native reader.
+            noAiNoCredits:
+                "لم يُستخدم الذكاء الاصطناعي: لا يوجد لديك رصيد ذكاء اصطناعي متبقٍ هذا الشهر",
             deductedNone: "لم يُخصم شيء من رصيدك",
             deducted: "خُصم {credits} من رصيدك",
             scheduleFallback: "هذا الجدول",

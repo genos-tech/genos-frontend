@@ -8,7 +8,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { authApi } from "../services/api";
-import { createApiKey } from "../services/developerApi";
+import { createApiKey, createWebhook } from "../services/developerApi";
 
 vi.mock("../services/api", () => ({
     authApi: vi.fn(),
@@ -45,5 +45,23 @@ describe("createApiKey", () => {
             allow_destructive: true,
         });
         expect(res).toMatchObject({ status: "created", created: { allowDestructive: true } });
+    });
+});
+
+describe("createWebhook plan limit (MIP-1960)", () => {
+    const refuse = (status: number, data: object) =>
+        post.mockRejectedValueOnce({ response: { status, data } });
+    const INPUT = { teamId: "t1", url: "https://x.example/h", events: ["task.created"] };
+
+    it("a 429 plan_limit carries the numbers, not the manager 403", async () => {
+        refuse(429, { error: "x", code: "plan_limit", limit: 3, used: 3 });
+        expect(await createWebhook("tok", INPUT)).toEqual({ status: "limit", limit: 3, used: 3 });
+    });
+
+    it("a 403 is still the manager refusal, and a 429 without the code is a plain failure", async () => {
+        refuse(403, { error: "Only the team owner or an editor can manage webhooks." });
+        expect(await createWebhook("tok", INPUT)).toEqual({ status: "forbidden" });
+        refuse(429, { error: "slow down" });
+        expect(await createWebhook("tok", INPUT)).toEqual({ status: "error" });
     });
 });

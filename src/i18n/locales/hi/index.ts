@@ -855,6 +855,11 @@ export const hi: DeepPartial<Messages> = {
                 disabled: "बार-बार विफलता के बाद अक्षम हो गया",
                 managerOnly: "केवल एक टीम मालिक या संपादक ही वेबहुक जोड़ सकता है।",
                 createFailed: "वह वेबहुक नहीं जोड़ा जा सका. कृपया पुन: प्रयास करें।",
+                // TODO(copy): MIP-1960 draft wording for a native reader.
+                planLimit:
+                    "आपकी टीम का प्लान {limit} वेबहुक की अनुमति देता है, और उसमें अभी {used} हैं। एक हटाएँ, या टीम का प्लान अपग्रेड करें। मौजूदा वेबहुक डिलीवर करते रहेंगे।",
+                planLimitFree:
+                    "आपकी टीम के प्लान में वेबहुक शामिल नहीं हैं। जोड़ने के लिए टीम का प्लान अपग्रेड करें।",
                 projectScopeAll: "परियोजनाएँ: सभी (संक्षिप्त करने के लिए कुछ का चयन करें)",
                 projectScopeSome: "परियोजनाएँ: केवल चयनित",
                 channelScopeRequired:
@@ -4537,6 +4542,8 @@ export const hi: DeepPartial<Messages> = {
             usedTiny: "उपयोग किए गए AI क्रेडिट: 0.01 से कम",
             unmeasured: "Genos ने इसके लिए AI का उपयोग किया। मात्रा नापी नहीं गई।",
             noAiUsed: "AI का उपयोग नहीं हुआ",
+            // TODO(copy): MIP-1960 draft wording for a native reader.
+            noAiNoCredits: "AI का उपयोग नहीं हुआ: इस महीने आपके AI क्रेडिट बचे नहीं हैं",
             deductedNone: "आपके बैलेंस से कुछ नहीं काटा गया",
             deducted: "आपके बैलेंस से {credits} काटे गए",
             scheduleFallback: "यह शेड्यूल",

@@ -2806,6 +2806,7 @@ export const ja: DeepPartial<Messages> = {
             usedTiny: "使用した AI クレジット: 0.01 未満",
             unmeasured: "Genos がこれに AI を使用しました。使用量は計測されていません。",
             noAiUsed: "AI は使用していません",
+            noAiNoCredits: "AI は使用していません: 今月の AI クレジットが残っていません",
             deductedNone: "残高からの差し引きなし",
             deducted: "残高から {credits} を差し引き",
             scheduleFallback: "このスケジュール",
@@ -4154,6 +4155,10 @@ export const ja: DeepPartial<Messages> = {
                 disabled: "失敗を繰り返すと無効化される",
                 managerOnly: "Webhook を追加できるのは、チームのオーナーまたは編集者のみです。",
                 createFailed: "その Webhook を追加できませんでした。もう一度お試しください。",
+                planLimit:
+                    "チームのプランで使える Webhook は {limit} 件までで、現在 {used} 件あります。1 件削除するか、チームのプランをアップグレードしてください。既存の Webhook は引き続き配信されます。",
+                planLimitFree:
+                    "チームのプランには Webhook が含まれていません。追加するにはチームのプランをアップグレードしてください。",
                 projectScopeAll: "プロジェクト: すべて (一部を選択して絞り込みます)",
                 projectScopeSome: "プロジェクト: 選択したもののみ",
                 channelScopeRequired:

@@ -393,6 +393,10 @@ export const settings = {
             disabled: "Disabled after repeated failures",
             managerOnly: "Only a team owner or editor can add a webhook.",
             createFailed: "Couldn't add that webhook. Please try again.",
+            planLimit:
+                "Your team's plan allows {limit} webhooks, and it has {used}. Delete one, or upgrade the team's plan. Existing webhooks keep delivering.",
+            planLimitFree:
+                "Webhooks aren't included in your team's plan. Upgrade the team's plan to add one.",
             // The two scope pickers deliberately read differently,
             // because they behave differently: no project selected means
             // ALL projects (a filter left unset), while no channel

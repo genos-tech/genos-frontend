@@ -2831,6 +2831,8 @@ export const fr: DeepPartial<Messages> = {
             usedTiny: "Crédits IA utilisés : moins de 0.01",
             unmeasured: "Genos a utilisé l'IA pour cela. La quantité n'a pas été mesurée.",
             noAiUsed: "Aucune IA utilisée",
+            // TODO(copy): MIP-1960 draft wording for a native reader.
+            noAiNoCredits: "Aucune IA utilisée : il ne vous reste plus de crédits d'IA ce mois-ci",
             deductedNone: "Rien n'a été déduit de votre solde",
             deducted: "{credits} déduits de votre solde",
             scheduleFallback: "Cette planification",
@@ -4207,6 +4209,11 @@ export const fr: DeepPartial<Messages> = {
                 managerOnly:
                     "Seul un propriétaire ou un éditeur d'équipe peut ajouter un webhook.",
                 createFailed: "Impossible d'ajouter ce webhook. Veuillez réessayer.",
+                // TODO(copy): MIP-1960 draft wording for a native reader.
+                planLimit:
+                    "Le forfait de votre équipe autorise {limit} webhooks et en compte déjà {used}. Supprimez-en un ou passez à un forfait supérieur. Les webhooks existants continuent d'être livrés.",
+                planLimitFree:
+                    "Les webhooks ne sont pas inclus dans le forfait de votre équipe. Passez à un forfait supérieur pour en ajouter un.",
                 projectScopeAll: "Projets : tous (sélectionnez-en pour affiner)",
                 projectScopeSome: "Projets : uniquement",
                 channelScopeRequired:
