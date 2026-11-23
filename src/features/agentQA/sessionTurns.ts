@@ -28,5 +28,19 @@ export const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): C
         runId: turn.run_id,
         // Absent (not `[]`) when the turn has no writes to undo.
         ...(undo.length > 0 ? { undo } : {}),
+        // The skill the turn ran (MIP-2189): kept as the same ref a live ask holds, so Retry sends `skill`
+        // (and the version that ran) again instead of asking the words as a plain question.
+        ...(turn.skill?.id
+            ? {
+                  mentions: [
+                      {
+                          kind: "skill" as const,
+                          skillId: turn.skill.id,
+                          label: turn.skill.slug,
+                          version: turn.skill.version_no,
+                      },
+                  ],
+              }
+            : {}),
     };
 };
