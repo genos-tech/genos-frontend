@@ -4619,6 +4619,8 @@ export const zh: DeepPartial<Messages> = {
             deliverProjectChat: "{name}（项目聊天）",
             deliverChatHint:
                 "报告会作为消息发布到此聊天，不使用 AI，也不发送通知。聊天中的所有人都能看到它，因此项目报告只能发到该项目成员的聊天中。",
+            deliverChatHintAi:
+                "报告会作为消息发布到此聊天。它会使用 AI 额度，并在消息中显示费用，只能发到只有你一人的聊天中。不会发送通知。",
             rowDeliver: "发布到：{name}",
             reportPosted: "报告已发布到 {chat}",
             rowProject: "项目：{name}",
