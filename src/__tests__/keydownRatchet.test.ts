@@ -48,6 +48,10 @@ const ALLOWED: Record<string, { count: number; why: string }> = {
         count: 1,
         why: "Escape closes Spotlight (not a shortcut anyone looks up; Cmd/Ctrl+K is the registry's)",
     },
+    "features/genos/skills/SkillIconField.tsx": {
+        count: 1,
+        why: "Escape closes the emoji picker of a skill's icon (MIP-2209): the picker is a fixed popup whose search box has the focus, so the button's own onKeyDown never sees the key; not a shortcut anyone looks up, and the listener exists only while the picker is open",
+    },
     "features/chat/components/shared/ChatSelectionAsk.tsx": {
         count: 1,
         why: 'Escape dismisses the "Ask Genos" button next to selected text (MIP-1058); not a shortcut anyone looks up, and the listener exists only while the button is showing',

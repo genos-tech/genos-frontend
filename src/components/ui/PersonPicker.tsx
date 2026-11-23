@@ -28,6 +28,8 @@ type Props = {
     /** The reader, so they read as "(You)" rather than as a stranger. */
     myUserId?: string;
     disabled?: boolean;
+    /** The field's accessible name when a visible label does not already name it. */
+    ariaLabel?: string;
 };
 
 /**
@@ -46,7 +48,14 @@ type Props = {
  * every sharing surface. `clickable={false}` because inside an option the
  * avatar is a picture of a person, not a way to open them.
  */
-export const PersonPicker = ({ options, onPick, placeholder, myUserId, disabled }: Props) => {
+export const PersonPicker = ({
+    options,
+    onPick,
+    placeholder,
+    myUserId,
+    disabled,
+    ariaLabel,
+}: Props) => {
     const { t } = useTranslation();
     const youSuffix = t.common.personPicker.youSuffix;
 
@@ -78,6 +87,7 @@ export const PersonPicker = ({ options, onPick, placeholder, myUserId, disabled 
             options={sorted}
             placeholder={placeholder}
             size="sm"
+            slotProps={ariaLabel ? { input: { "aria-label": ariaLabel } } : undefined}
             sx={{ width: "100%" }}
             value={null}
             renderOption={(props, option) => (

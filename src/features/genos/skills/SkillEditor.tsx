@@ -585,7 +585,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                         borderRadius: "lg",
                         minWidth: 0,
                         overflow: "hidden",
-                        p: { xs: 0.5, sm: 1 },
+                        p: 0,
                     }}
                 >
                     {skill.noteId !== null && editable ? (
@@ -605,7 +605,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                     ) : (
                         <Typography
                             level="body-sm"
-                            sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", p: 1 }}
+                            sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", p: 2 }}
                         >
                             {skill.bodyMarkdown}
                         </Typography>
@@ -638,6 +638,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                                     sx={{
                                         display: "flex",
                                         flexWrap: "wrap",
+                                        alignItems: "baseline",
                                         columnGap: 1.5,
                                         py: 0.75,
                                         borderTop: "1px solid",
