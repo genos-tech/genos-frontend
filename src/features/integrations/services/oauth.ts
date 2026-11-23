@@ -64,10 +64,15 @@ export const redirectToOAuthConnect = async (
         return false;
     }
     try {
-        const res = await api.post<{ url: string }>(`/oauth/${provider}/initiate/`, {
-            intent: "connect",
-            next,
-        });
+        // `withCredentials`: the server pins this connect to this browser with an HttpOnly cookie
+        // set on this very response (MIP-2170); without it the browser drops the cookie and the
+        // callback refuses to connect anything. Set per request, not on `authApi`, so no other
+        // call changes its cross-origin behaviour.
+        const res = await api.post<{ url: string }>(
+            `/oauth/${provider}/initiate/`,
+            { intent: "connect", next },
+            { withCredentials: true }
+        );
         if (!res.data?.url) {
             setErrorMessage?.(messages.missingConsentUrl);
             return false;
