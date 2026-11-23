@@ -24,6 +24,19 @@ import { I18nProvider } from "../i18n";
 import type { UserProps } from "../types/admin";
 import type { AllChatProps } from "../types/chat";
 
+// SkillTagsField (MIP-2211) calls useAuth and loads the tag catalog.
+vi.mock("../context/authState", () => ({
+    useAuth: () => ({ accessToken: "tok" }),
+}));
+vi.mock("../features/genos/skills/skillsApi", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("../features/genos/skills/skillsApi")>();
+    return {
+        ...actual,
+        fetchSkillTags: vi
+            .fn()
+            .mockResolvedValue({ ok: true, data: { tags: [], editable: false } }),
+    };
+});
 vi.mock("../features/genos/skills/useEffortLevels", () => ({ useEffortLevels: () => null }));
 vi.mock("../features/genos/skills/useSkillNameCheck", () => ({ useSkillNameCheck: () => null }));
 
