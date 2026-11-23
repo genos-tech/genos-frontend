@@ -4,9 +4,9 @@
  *   GET    /skills/?team_id=&tab=mine|team      the list of one tab (+ plan limit and count)
  *   POST   /skills/                             create one (`team_id` in the body)
  *   GET    /skills/<id>/                        one skill with its text
- *   PATCH  /skills/<id>/                        change it (the owner)
+ *   PATCH  /skills/<id>/                        save the owner's draft (readers keep the published version)
  *   DELETE /skills/<id>/                        delete it with its body note (the owner)
- *   POST   /skills/<id>/publish/                cut a new version (a team skill's readers get it)
+ *   POST   /skills/<id>/publish/                cut a new version from the draft (readers get it)
  *   GET    /skills/<id>/versions/               the versions
  *
  * The whole API answers 404 while the server's `GENOS_SKILLS` switch is off: the list call then
@@ -61,6 +61,11 @@ export type SkillRow = {
     ownerName: string;
     /** The body note, sent to the owner only. */
     noteId: number | null;
+    /** The owner's detail answer only (MIP-2177): the draft differs from the published version a
+     *  team skill's readers get. `unpublishedChanges` names what differs (the keys a PATCH
+     *  takes; the text is `bodyMarkdown`). Always false / empty elsewhere. */
+    hasUnpublishedChanges: boolean;
+    unpublishedChanges: string[];
     /** Present on the detail answer only. */
     bodyMarkdown?: string;
 };
@@ -158,6 +163,11 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         canEdit: r.canEdit === true,
         ownerName: str(r.ownerName, 120),
         noteId: typeof note === "number" && Number.isSafeInteger(note) && note > 0 ? note : null,
+        hasUnpublishedChanges: r.hasUnpublishedChanges === true,
+        unpublishedChanges: (Array.isArray(r.unpublishedChanges) ? r.unpublishedChanges : [])
+            .map((k) => str(k, 40))
+            .filter((k) => k !== "")
+            .slice(0, 20),
         bodyMarkdown: typeof r.bodyMarkdown === "string" ? r.bodyMarkdown : undefined,
     };
 };

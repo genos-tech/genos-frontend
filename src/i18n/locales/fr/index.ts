@@ -4936,7 +4936,7 @@ export const fr: DeepPartial<Messages> = {
                 visibilityPrivate: "Moi seul",
                 visibilityTeam: "Mon équipe",
                 visibilityTeamHelp:
-                    "Vos collègues lisent et lancent la dernière version publiée. Publier, ou enregistrer les détails, leur envoie le texte actuel.",
+                    "Vos collègues lisent et lancent la dernière version publiée. Choisir Mon équipe publie le texte actuel ; ensuite, Enregistrer garde vos modifications privées jusqu'à ce que vous appuyiez sur Publier les modifications.",
                 owner: "Propriétaire",
                 created: "Créée",
                 updated: "Mise à jour",
@@ -4949,6 +4949,12 @@ export const fr: DeepPartial<Messages> = {
                 save: "Enregistrer les détails",
                 saving: "Enregistrement…",
                 saved: "Détails enregistrés.",
+                saveDraft: "Enregistrer le brouillon",
+                savedDraft:
+                    "Brouillon enregistré. Vous seul le voyez tant que vous ne publiez pas.",
+                saveHint:
+                    "Enregistrer garde vos modifications privées. Vos collègues utilisent la version {n} jusqu'à ce que vous publiiez.",
+                unpublishedChanges: "Modifications non publiées",
                 publish: "Publier pour l'équipe",
                 publishChanges: "Publier les modifications",
                 publishing: "Publication…",

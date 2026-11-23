@@ -1187,7 +1187,7 @@ export const es: DeepPartial<Messages> = {
                 visibilityPrivate: "Solo yo",
                 visibilityTeam: "Mi equipo",
                 visibilityTeamHelp:
-                    "Tus compañeros leen y ejecutan la última versión publicada. Publicar, o guardar los detalles, les envía el texto actual.",
+                    "Tus compañeros leen y ejecutan la última versión publicada. Al elegir Mi equipo se publica el texto actual; después, Guardar mantiene tus cambios privados hasta que pulses Publicar cambios.",
                 owner: "Propietario",
                 created: "Creada",
                 updated: "Actualizada",
@@ -1200,6 +1200,11 @@ export const es: DeepPartial<Messages> = {
                 save: "Guardar detalles",
                 saving: "Guardando…",
                 saved: "Detalles guardados.",
+                saveDraft: "Guardar borrador",
+                savedDraft: "Borrador guardado. Solo tú lo ves hasta que publiques.",
+                saveHint:
+                    "Guardar mantiene tus cambios privados. Tus compañeros usan la versión {n} hasta que publiques.",
+                unpublishedChanges: "Cambios sin publicar",
                 publish: "Publicar para el equipo",
                 publishChanges: "Publicar cambios",
                 publishing: "Publicando…",
