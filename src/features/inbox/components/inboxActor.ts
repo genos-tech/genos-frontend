@@ -1,8 +1,9 @@
 import type { InboxItemProps } from "../../../types/common";
 import { GM_REQUEST, NOTE_ACCESS_REQUEST, PROJECT_REQUEST, TEAM_REQUEST } from "./inboxItemConfig";
 
-/** The person a card is about: who is asking, or who did the thing. */
-export type InboxActor = { userId: string; userName: string };
+/** The person a card is about: who is asking, or who did the thing. `avatarImgPath` is set only
+ *  when the API sent the sender (it is what lets the face show for someone outside the roster). */
+export type InboxActor = { userId: string; userName: string; avatarImgPath?: string };
 
 type Inline = { type?: string; props?: Record<string, unknown> };
 type Block = { content?: unknown };
@@ -32,6 +33,36 @@ export const findActor = (itemBody: InboxItemProps["itemBody"]): InboxActor | nu
         return null;
     }
     return null;
+};
+
+/**
+ * The person a card is about: the sender the API names (MIP-2181), else the first person mentioned
+ * in the body (a row stored before the API sent senders, or delivered live without one).
+ *
+ * The sender wins when both exist: it is the row's own column, whereas a mention is text someone
+ * wrote. It is what gives the ownership claim, the cross-team notices and the reminders a face,
+ * since their bodies name nobody. Null when there is neither, and the card shows its type's mark.
+ */
+export const resolveActor = (
+    item: Pick<InboxItemProps, "itemBody" | "senderId" | "sender">
+): InboxActor | null => {
+    const id = item.sender?.userId ?? item.senderId;
+    if (id != null && String(id) !== "") {
+        const fromBody = findActor(item.itemBody);
+        const name = item.sender?.userName ?? "";
+        return {
+            userId: String(id),
+            // The sender's name, else the body's mention of the same person.
+            userName:
+                name !== ""
+                    ? name
+                    : fromBody && fromBody.userId === String(id)
+                      ? fromBody.userName
+                      : "",
+            avatarImgPath: item.sender?.avatarImgPath ?? undefined,
+        };
+    }
+    return findActor(item.itemBody);
 };
 
 /** The request types whose card is composed from locale strings: "<name> wants to join ...". */

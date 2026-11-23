@@ -4980,7 +4980,6 @@ export const ar: DeepPartial<Messages> = {
             project: "المشروع",
         },
         crossTeam: {
-            connectionHint: "ربط أسهم شيئا من تلقاء نفسها.",
             shareHint: "اقبل أن تفتحه، ثم أضف أفرادك إليه.",
             failed: "لا يمكن الرد. يرجى المحاولة مرة أخرى.",
             acceptedIn: {

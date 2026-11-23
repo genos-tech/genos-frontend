@@ -1,10 +1,11 @@
-import type { ElementType, ReactNode } from "react";
+import { useEffect, type ElementType, type ReactNode } from "react";
 import { Box } from "@mui/joy";
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { GenosAuthorAvatar } from "../../../components/ui/avatars/GenosAuthor";
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
+import { rememberPeople } from "../../../components/ui/avatars/userDirectory";
 import type { InboxActor } from "./inboxActor";
 import type { InboxTone } from "./inboxItemConfig";
 
@@ -28,6 +29,17 @@ type Props = {
  */
 export const InboxItemAvatar = ({ actor, byGenos, tone, Icon }: Props) => {
     const ctx = useOptionalAvatarContext();
+    // The API sends the sender's name and avatar path with the card. Hand them to the avatar
+    // directory so a person outside the roster (someone asking to join, the owner of another team)
+    // shows their photo rather than an initial. The roster still wins for anyone in it.
+    const actorId = actor?.userId;
+    const actorName = actor?.userName;
+    const actorAvatar = actor?.avatarImgPath;
+    useEffect(() => {
+        if (actorId && actorAvatar) {
+            rememberPeople([{ userId: actorId, userName: actorName, avatarImgPath: actorAvatar }]);
+        }
+    }, [actorId, actorName, actorAvatar]);
     let face: ReactNode;
     if (actor && ctx) {
         face = (

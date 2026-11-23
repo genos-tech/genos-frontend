@@ -2745,7 +2745,6 @@ export const zh: DeepPartial<Messages> = {
             openTodo: "打开待办事项",
         },
         crossTeam: {
-            connectionHint: "连接本身不共享任何内容。",
             shareHint: "接受打开它，然后将你自己的人员添加到其中。",
             failed: "无法回应。请再试一次。",
             acceptedIn: {
