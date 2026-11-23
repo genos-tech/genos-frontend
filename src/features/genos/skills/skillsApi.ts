@@ -215,6 +215,8 @@ export type Failure = {
     reason: "off" | "conflict" | "limit" | "report_limit" | "bad_input" | "error";
     /** The server's own sentence, or "". */
     message: string;
+    /** The server's machine code when it sent one (`name_taken`: a 400 about the name, MIP-2210). */
+    code?: string;
     limit?: number;
     used?: number;
     /** A refused publish lists every problem together (400 `problems`). */
@@ -388,7 +390,8 @@ const failure = (error: unknown): Failure => {
     const res = (error as { response?: { status?: number; data?: unknown } })?.response;
     const body = rec(res?.data);
     const message = str(body?.error, 400);
-    const base = { ok: false as const, message };
+    const code = str(body?.code, 40);
+    const base = { ok: false as const, message, ...(code ? { code } : {}) };
     if (res?.status === 404) return { ...base, reason: "off" };
     if (res?.status === 409) return { ...base, reason: "conflict" };
     if (res?.status === 429 && body?.code === "plan_limit") {
@@ -464,6 +467,46 @@ export const fetchRunnableSkills = async (
         });
         const data = parseRunnableSkills(res.data);
         return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** The answer to "is this name free where the skill is shared?" (MIP-2210). `slug` is the name as
+ *  the server reads it (trimmed, lower case); `message` is the sentence to show when it is not free. */
+export type NameCheck = { slug: string; available: boolean; message: string };
+
+export const fetchNameCheck = async (
+    accessToken: string | null,
+    q: {
+        teamId: string;
+        slug: string;
+        visibility: "private" | "team" | "public";
+        skillId?: string;
+    }
+): Promise<Result<NameCheck>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.get("/skills/name-check/", {
+            ...OPTIONS,
+            params: {
+                team_id: q.teamId,
+                slug: q.slug,
+                visibility: q.visibility,
+                ...(q.skillId ? { skill_id: q.skillId } : {}),
+            },
+        });
+        const body = rec(res.data);
+        if (!body || typeof body.available !== "boolean") return NO_API;
+        return {
+            ok: true,
+            data: {
+                slug: str(body.slug, 80),
+                available: body.available,
+                message: str(body.message, 400),
+            },
+        };
     } catch (error) {
         return failure(error);
     }

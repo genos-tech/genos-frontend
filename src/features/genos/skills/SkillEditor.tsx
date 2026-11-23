@@ -188,6 +188,11 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
             setServerProblems({ slug: m.problems.slugTaken });
             return;
         }
+        if (res.code === "name_taken") {
+            // The server says where the name clashes (yours, the team's, the public ones).
+            setServerProblems({ slug: res.message || m.problems.slugTaken });
+            return;
+        }
         const field = res.message ? fieldOf(res.message) : null;
         if (field) setServerProblems({ [field]: res.message });
         else setNotice(res.message || fallback);
