@@ -486,7 +486,10 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 </Chip>
             )}
             <Stack alignItems="center" direction="row" spacing={0.75}>
-                {isActivityCard && !inboxItem.isRead && <UnreadDot />}
+                {/* Same dot on both halves (MIP-2175): an activity you have not looked at, a
+                    request nobody has answered yet. A request has no read toggle: answering it
+                    is what clears the dot. */}
+                {(isActivityCard ? !inboxItem.isRead : !isHandled) && <UnreadDot />}
                 <BubbleMeta>{extractYYYYMMDDHHMM(inboxItem.tsSent)}</BubbleMeta>
                 {isActivityCard && (
                     <ReadToggleButton
