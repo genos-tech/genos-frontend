@@ -2659,7 +2659,7 @@ export const zh: DeepPartial<Messages> = {
         requestTypes: {
             teamRequest: "团队申请",
             projectRequest: "项目申请",
-            gmRequest: "群组申请",
+            gmRequest: "群聊申请",
             noteAccessRequest: "笔记访问",
             ownershipClaim: "所有权申请",
             digest: "Genos 摘要",
@@ -2669,6 +2669,14 @@ export const zh: DeepPartial<Messages> = {
             todoReminder: "待办提醒",
             genosReport: "Genos 报告",
             trialNotice: "免费试用",
+        },
+        // The join requests, said once in the reader's language. `{name}` is set bold
+        // wherever the language puts it (MIP-2175).
+        card: {
+            joinTeam: "{name} 申请加入团队",
+            joinProject: "{name} 申请加入项目",
+            joinGm: "{name} 申请加入群聊",
+            noteAccess: "{name} 申请访问你的笔记",
         },
         report: {
             showMore: "再显示 {count} 项",
@@ -2724,16 +2732,16 @@ export const zh: DeepPartial<Messages> = {
             planNeeded: "开启需要 Core 或更高的套餐。",
         },
         messageReminder: {
-            headline: "你要求提醒你这条消息。",
-            headlineFrom: "你要求提醒你 {name} 的这条消息。",
+            headline: "这条消息的提醒",
+            headlineFrom: "{name} 的消息提醒",
             openMessage: "打开消息",
             openInNamed: "在「{chat}」中打开",
-            headlineComment: "你要求提醒你这条评论。",
-            headlineCommentFrom: "你要求提醒你 {name} 的这条评论。",
+            headlineComment: "这条评论的提醒",
+            headlineCommentFrom: "{name} 的评论提醒",
             openComment: "打开评论",
         },
         todoReminder: {
-            headline: "你要求提醒你这个待办事项。",
+            headline: "这个待办事项的提醒",
             openTodo: "打开待办事项",
         },
         crossTeam: {

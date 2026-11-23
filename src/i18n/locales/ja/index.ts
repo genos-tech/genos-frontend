@@ -2773,7 +2773,7 @@ export const ja: DeepPartial<Messages> = {
         requestTypes: {
             teamRequest: "チームリクエスト",
             projectRequest: "プロジェクトリクエスト",
-            gmRequest: "GMリクエスト",
+            gmRequest: "グループチャットのリクエスト",
             noteAccessRequest: "ノートアクセス",
             ownershipClaim: "オーナー権限リクエスト",
             digest: "Genos ダイジェスト",
@@ -2783,6 +2783,14 @@ export const ja: DeepPartial<Messages> = {
             todoReminder: "To-Do リマインダー",
             genosReport: "Genos レポート",
             trialNotice: "無料トライアル",
+        },
+        // The join requests, said once in the reader's language. `{name}` is set bold
+        // wherever the language puts it (MIP-2175).
+        card: {
+            joinTeam: "{name}さんがチームへの参加を希望しています",
+            joinProject: "{name}さんがプロジェクトへの参加を希望しています",
+            joinGm: "{name}さんがグループチャットへの参加を希望しています",
+            noteAccess: "{name}さんがあなたのノートへのアクセスを希望しています",
         },
         report: {
             showMore: "残り{count}件を表示",
@@ -2839,16 +2847,16 @@ export const ja: DeepPartial<Messages> = {
             planNeeded: "オンにするには Core プラン以上が必要です。",
         },
         messageReminder: {
-            headline: "このメッセージのリマインダーです。",
-            headlineFrom: "{name}さんのメッセージのリマインダーです。",
+            headline: "このメッセージのリマインダー",
+            headlineFrom: "{name}さんのメッセージのリマインダー",
             openMessage: "メッセージを開く",
             openInNamed: "「{chat}」で開く",
-            headlineComment: "このコメントのリマインダーです。",
-            headlineCommentFrom: "{name}さんのコメントのリマインダーです。",
+            headlineComment: "このコメントのリマインダー",
+            headlineCommentFrom: "{name}さんのコメントのリマインダー",
             openComment: "コメントを開く",
         },
         todoReminder: {
-            headline: "この To-Do のリマインダーです。",
+            headline: "この To-Do のリマインダー",
             openTodo: "To-Do を開く",
         },
         crossTeam: {

@@ -37,18 +37,26 @@ export const inbox = {
         activities: "Activities",
     },
     requestTypes: {
-        teamRequest: "Team Request",
-        projectRequest: "Project Request",
-        gmRequest: "GM Request",
-        noteAccessRequest: "Note Access",
-        ownershipClaim: "Ownership Request",
+        teamRequest: "Team request",
+        projectRequest: "Project request",
+        gmRequest: "Group chat request",
+        noteAccessRequest: "Note access",
+        ownershipClaim: "Ownership claim",
         digest: "Genos digest",
-        teamConnection: "Team Connection",
-        externalShare: "Shared With Your Team",
+        teamConnection: "Team connection",
+        externalShare: "Shared with your team",
         messageReminder: "Reminder",
         todoReminder: "To-do reminder",
         genosReport: "Genos report",
         trialNotice: "Free trial",
+    },
+    // The join requests, said once in the reader's language. `{name}` is set bold
+    // wherever the language puts it (MIP-2175).
+    card: {
+        joinTeam: "{name} wants to join the team",
+        joinProject: "{name} wants to join the project",
+        joinGm: "{name} wants to join the group chat",
+        noteAccess: "{name} wants access to your note",
     },
     // The rich card of a typed report (item_body.version 2, MIP-1208). Section headings and
     // the lines in them come from the server; this is only the card's own chrome.
@@ -110,21 +118,21 @@ export const inbox = {
     // A reminder that has come due (item_type 9). The card is written from
     // the reader's side — they asked for this, so it says so.
     messageReminder: {
-        headline: "You asked to be reminded about this message.",
-        headlineFrom: "You asked to be reminded about {name}'s message.",
+        headline: "Reminder for this message",
+        headlineFrom: "Reminder for {name}'s message",
         openMessage: "Open message",
         openInNamed: "Open in {chat}",
         // A reminder about a task comment (item_optionals.subject "task_comment", MIP-1444).
         // It is a message underneath, but nobody calls it that.
-        headlineComment: "You asked to be reminded about this comment.",
-        headlineCommentFrom: "You asked to be reminded about {name}'s comment.",
+        headlineComment: "Reminder for this comment",
+        headlineCommentFrom: "Reminder for {name}'s comment",
         openComment: "Open comment",
     },
     // The other kind of item_type 9, told apart by `item_optionals.kind`.
     // Same card, different subject: a to-do of the reader's own, quoted
     // under the same preview block.
     todoReminder: {
-        headline: "You asked to be reminded about this to-do.",
+        headline: "Reminder for this to-do",
         openTodo: "Open to-do",
     },
     crossTeam: {

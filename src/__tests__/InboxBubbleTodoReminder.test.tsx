@@ -73,14 +73,14 @@ const renderBubble = (item: InboxItemProps, openModalByHref = vi.fn()) => {
 describe("InboxBubble to-do reminder", () => {
     it("says it is about a to-do and quotes the title", () => {
         renderBubble(reminderItem(todoOptionals));
-        expect(screen.getByText("You asked to be reminded about this to-do.")).toBeTruthy();
+        expect(screen.getByText("Reminder for this to-do")).toBeTruthy();
         expect(screen.getByText("ship the release notes")).toBeTruthy();
     });
 
-    it("names the kind on the type chip, so a mixed inbox is readable", () => {
+    it("names the kind in its own sentence, so a mixed inbox is readable", () => {
         renderBubble(reminderItem(todoOptionals));
-        expect(screen.getByText("To-do reminder")).toBeTruthy();
-        expect(screen.queryByText("Reminder")).toBeNull();
+        expect(screen.getByText("Reminder for this to-do")).toBeTruthy();
+        expect(screen.queryByText("Reminder for this message")).toBeNull();
     });
 
     it("never uses the message wording", () => {
@@ -122,7 +122,7 @@ describe("InboxBubble to-do reminder", () => {
                 href: "/workspace/chat/gm/ch-1/message/111",
             })
         );
-        expect(screen.getByText(/You asked to be reminded about Alice's message/)).toBeTruthy();
+        expect(screen.getByText(/Reminder for Alice's message/)).toBeTruthy();
         expect(screen.queryByText("To-do reminder")).toBeNull();
     });
 });

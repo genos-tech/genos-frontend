@@ -2802,7 +2802,7 @@ export const fr: DeepPartial<Messages> = {
         requestTypes: {
             teamRequest: "Demande d'équipe",
             projectRequest: "Demande de projet",
-            gmRequest: "Demande de GM",
+            gmRequest: "Demande de discussion de groupe",
             noteAccessRequest: "Accès à la note",
             ownershipClaim: "Demande de propriété",
             digest: "Résumé Genos",
@@ -2812,6 +2812,14 @@ export const fr: DeepPartial<Messages> = {
             todoReminder: "Rappel de tâche",
             genosReport: "Rapport Genos",
             trialNotice: "Essai gratuit",
+        },
+        // The join requests, said once in the reader's language. `{name}` is set bold
+        // wherever the language puts it (MIP-2175).
+        card: {
+            joinTeam: "{name} souhaite rejoindre l'équipe",
+            joinProject: "{name} souhaite rejoindre le projet",
+            joinGm: "{name} souhaite rejoindre la discussion de groupe",
+            noteAccess: "{name} demande l'accès à votre note",
         },
         report: {
             showMore: "Afficher {count} de plus",
@@ -2870,16 +2878,16 @@ export const fr: DeepPartial<Messages> = {
             planNeeded: "L'activer nécessite le forfait Core ou supérieur.",
         },
         messageReminder: {
-            headline: "Vous avez demandé un rappel à propos de ce message.",
-            headlineFrom: "Vous avez demandé un rappel à propos du message de {name}.",
+            headline: "Rappel pour ce message",
+            headlineFrom: "Rappel pour le message de {name}",
             openMessage: "Ouvrir le message",
             openInNamed: "Ouvrir dans {chat}",
-            headlineComment: "Vous avez demandé un rappel à propos de ce commentaire.",
-            headlineCommentFrom: "Vous avez demandé un rappel à propos du commentaire de {name}.",
+            headlineComment: "Rappel pour ce commentaire",
+            headlineCommentFrom: "Rappel pour le commentaire de {name}",
             openComment: "Ouvrir le commentaire",
         },
         todoReminder: {
-            headline: "Vous avez demandé un rappel à propos de cette tâche.",
+            headline: "Rappel pour cette tâche",
             openTodo: "Ouvrir la tâche",
         },
         crossTeam: {

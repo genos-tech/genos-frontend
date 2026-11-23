@@ -378,7 +378,8 @@ describe("GenosReportCard: nothing a job wrote is markup or a live link", () => 
                 },
             ],
         });
-        expect(container.querySelector("img, b, i, script")).toBeNull();
+        // The Genos mark is the card's own face; a job's text must not add any other image.
+        expect(container.querySelector('img:not([alt="Genos Logo"]), b, i, script')).toBeNull();
         expect(screen.getByText("[a link](https://evil.example)")).toBeTruthy();
         expect(screen.getByText("<script>x()</script>")).toBeTruthy();
         // A hostile "emoji" is replaced by the table's own for the key.

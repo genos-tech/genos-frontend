@@ -90,7 +90,7 @@ describe("InboxBubble — cross-team requests", () => {
     it("shows a connection request with its body and an Approve button", () => {
         renderBubble({ itemType: 7, itemOptionals: { connection_id: "c-1" } });
 
-        expect(screen.getByText("Team Connection")).toBeTruthy();
+        expect(screen.getByText("Team connection")).toBeTruthy();
         expect(screen.getByTestId("body").textContent).toContain("Acme would like to connect");
         expect(screen.getByText("Approve")).toBeTruthy();
     });
@@ -125,7 +125,7 @@ describe("InboxBubble — cross-team requests", () => {
             itemOptionals: { grant_id: "g-1", object_type: "project" },
         });
 
-        expect(screen.getByText("Shared With Your Team")).toBeTruthy();
+        expect(screen.getByText("Shared with your team")).toBeTruthy();
         fireEvent.click(screen.getByText("Reject"));
 
         await waitFor(() => expect(respondToExternalShare).toHaveBeenCalled());

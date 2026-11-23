@@ -73,7 +73,7 @@ const fullOptionals = {
 describe("InboxBubble message reminder", () => {
     it("says who the message was from and quotes it", () => {
         renderBubble(reminderItem(fullOptionals));
-        expect(screen.getByText(/You asked to be reminded about Alice's message/)).toBeTruthy();
+        expect(screen.getByText(/Reminder for Alice's message/)).toBeTruthy();
         expect(screen.getByText("ship the release notes")).toBeTruthy();
     });
 
@@ -96,7 +96,7 @@ describe("InboxBubble message reminder", () => {
         const open = renderBubble(
             reminderItem({ ...fullOptionals, sender_name: "", chat_name: "" })
         );
-        expect(screen.getByText("You asked to be reminded about this message.")).toBeTruthy();
+        expect(screen.getByText("Reminder for this message")).toBeTruthy();
         fireEvent.click(screen.getByRole("button", { name: /open message/i }));
         expect(open).toHaveBeenCalledWith(REMINDER_HREF, { fullPageHref: REMINDER_HREF });
     });
@@ -132,7 +132,7 @@ describe("InboxBubble message reminder — a task comment", () => {
 
     it("says who the comment was from, and not 'message'", () => {
         renderBubble(reminderItem(commentOptionals));
-        expect(screen.getByText("You asked to be reminded about Alice's comment.")).toBeTruthy();
+        expect(screen.getByText("Reminder for Alice's comment")).toBeTruthy();
         expect(screen.queryByText(/message/i)).toBeNull();
     });
 
@@ -140,7 +140,7 @@ describe("InboxBubble message reminder — a task comment", () => {
         const open = renderBubble(
             reminderItem({ ...commentOptionals, sender_name: "", chat_name: "" })
         );
-        expect(screen.getByText("You asked to be reminded about this comment.")).toBeTruthy();
+        expect(screen.getByText("Reminder for this comment")).toBeTruthy();
         fireEvent.click(screen.getByRole("button", { name: /open comment/i }));
         expect(open).toHaveBeenCalledWith(COMMENT_HREF, { fullPageHref: COMMENT_HREF });
     });
@@ -161,7 +161,7 @@ describe("InboxBubble message reminder — a task comment", () => {
         "reads as a message for subject %j (an old server, or any other message)",
         (subject) => {
             renderBubble(reminderItem({ ...fullOptionals, subject }));
-            expect(screen.getByText(/reminded about Alice's message/)).toBeTruthy();
+            expect(screen.getByText(/Reminder for Alice's message/)).toBeTruthy();
             expect(screen.queryByText(/comment/i)).toBeNull();
         }
     );
@@ -176,7 +176,7 @@ describe("InboxBubble message reminder — a task comment", () => {
                 remind_at: "2026-08-05T09:00:00Z",
             })
         );
-        expect(screen.getByText("You asked to be reminded about this to-do.")).toBeTruthy();
+        expect(screen.getByText("Reminder for this to-do")).toBeTruthy();
         expect(screen.queryByText(/comment/i)).toBeNull();
     });
 });

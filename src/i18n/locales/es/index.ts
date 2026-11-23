@@ -4933,7 +4933,7 @@ export const es: DeepPartial<Messages> = {
         requestTypes: {
             teamRequest: "Solicitud de equipo",
             projectRequest: "Solicitud de proyecto",
-            gmRequest: "Solicitud de GM",
+            gmRequest: "Solicitud de chat de grupo",
             noteAccessRequest: "Acceso a nota",
             ownershipClaim: "Solicitud de propiedad",
             messageReminder: "Recordatorio",
@@ -4943,6 +4943,14 @@ export const es: DeepPartial<Messages> = {
             externalShare: "Compartido con tu equipo",
             genosReport: "Informe de Genos",
             trialNotice: "Prueba gratuita",
+        },
+        // The join requests, said once in the reader's language. `{name}` is set bold
+        // wherever the language puts it (MIP-2175).
+        card: {
+            joinTeam: "{name} quiere unirse al equipo",
+            joinProject: "{name} quiere unirse al proyecto",
+            joinGm: "{name} quiere unirse al chat de grupo",
+            noteAccess: "{name} quiere acceder a tu nota",
         },
         report: {
             showMore: "Mostrar {count} más",
@@ -5001,16 +5009,16 @@ export const es: DeepPartial<Messages> = {
             planNeeded: "Activarlo requiere el plan Core o superior.",
         },
         messageReminder: {
-            headline: "Pediste que te recordáramos este mensaje.",
-            headlineFrom: "Pediste que te recordáramos el mensaje de {name}.",
+            headline: "Recordatorio de este mensaje",
+            headlineFrom: "Recordatorio del mensaje de {name}",
             openMessage: "Abrir mensaje",
             openInNamed: "Abrir en {chat}",
-            headlineComment: "Pediste que te recordáramos este comentario.",
-            headlineCommentFrom: "Pediste que te recordáramos el comentario de {name}.",
+            headlineComment: "Recordatorio de este comentario",
+            headlineCommentFrom: "Recordatorio del comentario de {name}",
             openComment: "Abrir comentario",
         },
         todoReminder: {
-            headline: "Pediste que te recordáramos esta tarea pendiente.",
+            headline: "Recordatorio de esta tarea pendiente",
             openTodo: "Abrir tarea pendiente",
         },
         ownershipClaim: {
