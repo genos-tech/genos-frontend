@@ -5,6 +5,13 @@ import { Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
+import { SkillsEntryCard } from "../skills/SkillsEntryCard";
+import type { SkillsHost } from "../skills/skillsHost";
+
+// Same reason, for the Skills page: it carries the note editor.
+const SkillsPage = lazy(() =>
+    import("../skills/SkillsPage").then((module) => ({ default: module.SkillsPage }))
+);
 
 // Fetched when the card is first opened, not with the app. The Settings dialog
 // is statically imported by the sidebar, so a plain import would put the whole
@@ -22,9 +29,13 @@ interface Props {
     // and a cycle between the two would be load-order roulette.
     children: ReactNode;
     onOpenLanguageSettings?: () => void;
+    // What the Skills editor needs from the app. Only the main Settings dialog has it: without
+    // it the panel shows no Skills card (the Spotlight gear dialog is the quick-settings
+    // surface and carries no editor).
+    skillsHost?: SkillsHost;
 }
 
-type View = "settings" | "memory";
+type View = "settings" | "memory" | "skills";
 
 /**
  * The body of the Genos settings, in both places it appears (the "Genos" tab
@@ -38,7 +49,12 @@ type View = "settings" | "memory";
  * It is local state, so closing and reopening the dialog starts at the usual
  * sections.
  */
-export const GenosSettingsPanel = ({ teamId, children, onOpenLanguageSettings }: Props) => {
+export const GenosSettingsPanel = ({
+    teamId,
+    children,
+    onOpenLanguageSettings,
+    skillsHost,
+}: Props) => {
     const { t } = useTranslation();
     const m = t.settings.genosMemory;
     const [view, setView] = useState<View>("settings");
@@ -60,6 +76,31 @@ export const GenosSettingsPanel = ({ teamId, children, onOpenLanguageSettings }:
         scrollOnSwitchRef.current = false;
         rootRef.current?.scrollIntoView?.({ block: "start" });
     }, [view]);
+
+    if (view === "skills" && skillsHost) {
+        return (
+            <Stack ref={rootRef} spacing={1.5} sx={{ minWidth: 0 }}>
+                <Button
+                    size="sm"
+                    startDecorator={<ArrowBackRoundedIcon />}
+                    sx={{ alignSelf: "flex-start" }}
+                    variant="plain"
+                    onClick={() => switchTo("settings")}
+                >
+                    {t.settings.genosSkills.backToSettings}
+                </Button>
+                <Suspense
+                    fallback={
+                        <Box sx={{ py: 1 }}>
+                            <Spinner caption={t.common.actions.loading} />
+                        </Box>
+                    }
+                >
+                    <SkillsPage host={skillsHost} teamId={teamId} />
+                </Suspense>
+            </Stack>
+        );
+    }
 
     if (view === "memory") {
         return (
@@ -108,6 +149,7 @@ export const GenosSettingsPanel = ({ teamId, children, onOpenLanguageSettings }:
                     </Button>
                 </Box>
             </Sheet>
+            {skillsHost && <SkillsEntryCard teamId={teamId} onOpen={() => switchTo("skills")} />}
         </Stack>
     );
 };

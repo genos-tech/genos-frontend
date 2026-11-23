@@ -1902,6 +1902,18 @@ export const SettingsModal = ({
                             tab state. */}
                         <GenosSettingsPanel
                             teamId={genosTeamId}
+                            skillsHost={
+                                myself && setMyself && useCM && useUISM && useTEM
+                                    ? {
+                                          myself,
+                                          setMyself,
+                                          socket: socket ?? null,
+                                          useTEM,
+                                          useCM,
+                                          useUISM,
+                                      }
+                                    : undefined
+                            }
                             onOpenLanguageSettings={() => setTab("general")}
                         >
                             <LlmModelSection />
