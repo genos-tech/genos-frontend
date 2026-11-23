@@ -1092,6 +1092,21 @@ export const es: DeepPartial<Messages> = {
             reportPosted: "Informe publicado en {chat}",
             rowProject: "Proyecto: {name}",
             rowMilestone: "Hito: {name}",
+            paramSkill: "Habilidad",
+            paramSkillHint:
+                "Ejecuta la versión publicada de esta habilidad y guarda lo que encuentra en tu bandeja de entrada. Solo lee: no cambia nada.",
+            paramSkillInput: "Qué dárselo",
+            paramSkillInputHint:
+                "Opcional. Las palabras que escribirías después del nombre de la habilidad, como un proyecto o una semana.",
+            skillPlaceholder: "Elige una habilidad",
+            skillLoading: "Cargando habilidades…",
+            skillNone:
+                "Todavía no tienes ninguna habilidad para ejecutar. Escribe una primero en Habilidades.",
+            skillNotPublished:
+                "{name} (compártela con tu equipo para publicar una versión primero)",
+            errorSkill: "Elige una habilidad.",
+            effortHintNoEstimate:
+                "Cuánto trabaja la IA en esta ejecución. Gasta tus créditos de IA como una pregunta en Spotlight; la cifra real aparece en cada informe.",
             paramAiSentences: "Frases de IA",
             paramAiSentencesHint:
                 "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA y gasta tus créditos de IA. Viene desactivada: actívala si la quieres.",

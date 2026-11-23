@@ -4767,6 +4767,18 @@ export const ja: DeepPartial<Messages> = {
             reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
             rowMilestone: "マイルストーン: {name}",
+            paramSkill: "スキル",
+            paramSkillHint:
+                "このスキルの公開済みバージョンを実行し、結果を受信箱に届けます。読み取りだけで、何も変更しません。",
+            paramSkillInput: "スキルに渡す内容",
+            paramSkillInputHint: "任意。スキル名の後に入力する言葉です（プロジェクトや週など）。",
+            skillPlaceholder: "スキルを選択",
+            skillLoading: "スキルを読み込み中…",
+            skillNone: "実行できるスキルがまだありません。先にスキルを作成してください。",
+            skillNotPublished: "{name}（先にチームと共有してバージョンを公開してください）",
+            errorSkill: "スキルを選択してください。",
+            effortHintNoEstimate:
+                "この実行で AI がどれだけ深く考えるか。Spotlight での質問と同じように AI クレジットを使います。実際の消費量は各レポートに表示されます。",
             paramAiSentences: "AI による一文",
             paramAiSentencesHint:
                 "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用し、AI クレジットを消費します。初期設定ではオフで、オンにしたときだけ追加されます。",

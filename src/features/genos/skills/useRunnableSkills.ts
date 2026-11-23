@@ -30,6 +30,13 @@ const toCandidate = (s: RunnableSkill): AgentMentionCandidate => {
  * one is asked for.
  */
 export const useRunnableSkills = (enabled = true): AgentMentionCandidate[] | undefined => {
+    const rows = useRunnableSkillRows(enabled);
+    return useMemo(() => (enabled ? rows?.map(toCandidate) : undefined), [enabled, rows]);
+};
+
+/** The same list as rows, for a surface that draws its own choice (the schedule form's skill
+ *  picker, MIP-2045). Same rules: `undefined` while it loads, when Skills is off, or on a failure. */
+export const useRunnableSkillRows = (enabled = true): RunnableSkill[] | undefined => {
     const accessToken = useOptionalAccessToken();
     const teamId = useHashMentionData().myself?.teamId;
     const [rows, setRows] = useState<RunnableSkill[] | undefined>(undefined);
@@ -51,5 +58,5 @@ export const useRunnableSkills = (enabled = true): AgentMentionCandidate[] | und
         };
     }, [enabled, accessToken, teamId]);
 
-    return useMemo(() => (enabled ? rows?.map(toCandidate) : undefined), [enabled, rows]);
+    return enabled ? rows : undefined;
 };

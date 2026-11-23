@@ -4842,6 +4842,21 @@ export const fr: DeepPartial<Messages> = {
             reportPosted: "Rapport publié dans {chat}",
             rowProject: "Projet : {name}",
             rowMilestone: "Jalon : {name}",
+            paramSkill: "Compétence",
+            paramSkillHint:
+                "Exécute la version publiée de cette compétence et dépose le résultat dans votre boîte de réception. Elle lit seulement : elle ne modifie rien.",
+            paramSkillInput: "Ce qu'il faut lui donner",
+            paramSkillInputHint:
+                "Facultatif. Les mots que vous taperiez après le nom de la compétence, comme un projet ou une semaine.",
+            skillPlaceholder: "Choisir une compétence",
+            skillLoading: "Chargement des compétences…",
+            skillNone:
+                "Vous n'avez pas encore de compétence à exécuter. Écrivez-en une d'abord dans Compétences.",
+            skillNotPublished:
+                "{name} (partagez-la d'abord avec votre équipe pour publier une version)",
+            errorSkill: "Choisissez une compétence.",
+            effortHintNoEstimate:
+                "L'effort que l'IA fournit pour cette exécution. Elle consomme vos crédits d'IA comme une question dans Spotlight ; le chiffre réel figure sur chaque rapport.",
             paramAiSentences: "Phrases de l'IA",
             paramAiSentencesHint:
                 "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA et dépense vos crédits d'IA. Désactivée par défaut : activez-la si vous la voulez.",

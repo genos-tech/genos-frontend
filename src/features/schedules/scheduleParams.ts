@@ -15,7 +15,7 @@ import type { JobParam } from "../../services/schedules";
 
 type ScheduleStrings = Messages["settings"]["schedules"];
 
-export type ParamPicker = "project" | "milestone";
+export type ParamPicker = "project" | "milestone" | "skill";
 
 export interface KnownParam {
     label: keyof ScheduleStrings;
@@ -32,6 +32,9 @@ export interface KnownParam {
     /** Show our own localized hint even when the server sends a description: the server's is
      *  English only, and for the AI switch it must stay neutral about whether AI is running. */
     preferOwnHint?: boolean;
+    /** Kept in the form and sent, never drawn: the server's own bookkeeping that the member has no
+     *  words for (`version_no`, the published version a schedule is pinned to, MIP-2045). */
+    hidden?: boolean;
 }
 
 export const KNOWN_PARAMS: Record<string, KnownParam> = {
@@ -57,6 +60,12 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         aiSwitch: true,
         preferOwnHint: true,
     },
+    // A schedule that runs a skill (MIP-2045). The skill is picked by name; the version it runs
+    // is the published one, pinned by the server when the schedule is saved, so it is carried
+    // along untouched and never drawn (a member who picks another skill drops it).
+    skill_id: { label: "paramSkill", hint: "paramSkillHint", picker: "skill" },
+    version_no: { label: "paramSkill", hint: "paramSkillHint", hidden: true },
+    input: { label: "paramSkillInput", hint: "paramSkillInputHint" },
 };
 
 // Own-property lookups only: a key that arrives from the API must never read
