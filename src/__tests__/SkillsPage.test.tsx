@@ -78,8 +78,14 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     updatedAt: "2026-11-21T10:00:00Z",
     publishedAt: null,
     mine: true,
+    role: "owner",
     canEdit: true,
+    canManage: true,
+    canHide: false,
+    hiddenByTeam: false,
     ownerName: "ken",
+    editors: [],
+    forkedFrom: null,
     noteId: 12,
     hasUnpublishedChanges: false,
     unpublishedChanges: [],
@@ -282,7 +288,18 @@ describe("deleting from the list", () => {
 
     it("copies a teammate's skill into the member's own", async () => {
         vi.mocked(api.fetchSkills).mockResolvedValue(
-            list([skill({ id: "s9", title: "Release notes", mine: false, canEdit: false })])
+            list([
+                skill({
+                    id: "s9",
+                    title: "Release notes",
+                    mine: false,
+                    role: "reader",
+                    canEdit: false,
+                    canManage: false,
+                    visibility: "team",
+                    publishedVersionNo: 1,
+                }),
+            ])
         );
         vi.mocked(api.copySkill).mockResolvedValue({ ok: true, data: skill({ id: "c1" }) });
         const success = vi.spyOn(toast, "success");
@@ -451,7 +468,9 @@ describe("the editor", () => {
                     id: "s9",
                     title: "Release notes",
                     mine: false,
+                    role: "reader",
                     canEdit: false,
+                    canManage: false,
                     noteId: null,
                     visibility: "team",
                     publishedVersionNo: 1,

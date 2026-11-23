@@ -8,6 +8,9 @@
  *   DELETE /skills/<id>/                        delete it with its body note (the owner)
  *   POST   /skills/<id>/publish/                cut a new version from the draft (readers get it)
  *   GET    /skills/<id>/versions/               the versions
+ *   POST   /skills/<id>/editors/ {userId}       invite a teammate to edit (the owner); DELETE
+ *                                               /skills/<id>/editors/<user>/ removes one (or leaves)
+ *   POST   /skills/<id>/hide/                   the team owner hides a team skill; DELETE shows it
  *
  * The whole API answers 404 while the server's `GENOS_SKILLS` switch is off: the list call then
  * resolves `{ ok: false, reason: "off" }` and the settings card is not drawn at all.
@@ -36,6 +39,20 @@ export const SKILL_LIMITS = {
     bodyMax: 12_000,
 } as const;
 
+export type SkillRole = "owner" | "editor" | "reader";
+
+export type SkillPerson = { id: string; username: string };
+
+/** Where a copy came from. `available: false` = the original is private or gone for this
+ *  reader: the server names nothing then, and neither does the page. */
+export type SkillOrigin = {
+    available: boolean;
+    id: string;
+    title: string;
+    ownerName: string;
+    versionNo: number;
+};
+
 export type SkillRow = {
     id: string;
     teamId: string;
@@ -56,9 +73,23 @@ export type SkillRow = {
     updatedAt: string | null;
     publishedAt: string | null;
     mine: boolean;
+    /** What this member is on the skill (MIP-2043): its owner, a co-editor the owner invited, or a
+     *  reader (a teammate who can run it, or the team owner looking at it). */
+    role: SkillRole;
+    /** Owner or co-editor: may change the text and details and publish. */
     canEdit: boolean;
+    /** Owner only: rename, change who can use it, delete, choose the editors. */
+    canManage: boolean;
+    /** The team owner, on a team skill someone else wrote: may hide it from the team. */
+    canHide: boolean;
+    /** The team owner hid it: teammates cannot see or run it. */
+    hiddenByTeam: boolean;
     /** A teammate's account name; empty for a skill the server does not name. */
     ownerName: string;
+    /** Detail answer only, for the owner and the co-editors: who edits it with the owner. */
+    editors: SkillPerson[];
+    /** Detail answer only, on a copy: where it came from (null = not a copy). */
+    forkedFrom: SkillOrigin | null;
     /** The body note, sent to the owner only. */
     noteId: number | null;
     /** The owner's detail answer only (MIP-2177): the draft differs from the published version a
@@ -133,6 +164,27 @@ const when = (v: unknown): string | null => {
 const oneOf = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
     typeof v === "string" && (allowed as readonly string[]).includes(v) ? (v as T) : fallback;
 
+const parsePeople = (raw: unknown): SkillPerson[] =>
+    (Array.isArray(raw) ? raw : []).flatMap((row) => {
+        const p = rec(row);
+        const id = str(p?.id, 64);
+        return p && id !== "" ? [{ id, username: str(p.username, 120) }] : [];
+    });
+
+const parseOrigin = (raw: unknown): SkillOrigin | null => {
+    const o = rec(raw);
+    if (!o) return null;
+    const available = o.available === true;
+    return {
+        available,
+        // Nothing of an original the reader cannot see is kept, even if a server sent it.
+        id: available ? str(o.id, 64) : "",
+        title: available ? str(o.title, 300) : "",
+        ownerName: available ? str(o.ownerName, 120) : "",
+        versionNo: int(o.versionNo),
+    };
+};
+
 export const parseSkill = (raw: unknown): SkillRow | null => {
     const r = rec(raw);
     const id = str(r?.id, 64);
@@ -160,8 +212,18 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         updatedAt: when(r.updatedAt),
         publishedAt: when(r.publishedAt),
         mine: r.mine === true,
+        role: oneOf(
+            r.role,
+            ["owner", "editor", "reader"] as const,
+            r.mine === true ? "owner" : "reader"
+        ),
         canEdit: r.canEdit === true,
+        canManage: r.canManage === true,
+        canHide: r.canHide === true,
+        hiddenByTeam: r.hiddenByTeam === true,
         ownerName: str(r.ownerName, 120),
+        editors: parsePeople(r.editors),
+        forkedFrom: parseOrigin(r.forkedFrom),
         noteId: typeof note === "number" && Number.isSafeInteger(note) && note > 0 ? note : null,
         hasUnpublishedChanges: r.hasUnpublishedChanges === true,
         unpublishedChanges: (Array.isArray(r.unpublishedChanges) ? r.unpublishedChanges : [])
@@ -349,6 +411,63 @@ export const fetchSkillVersions = async (
     try {
         const res = await api.get(`/skills/${encodeURIComponent(skillId)}/versions/`, OPTIONS);
         return { ok: true, data: parseVersions(res.data) };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Invite a teammate to edit the skill (the owner). Resolves the editors as they now are. */
+export const addSkillEditor = async (
+    accessToken: string | null,
+    skillId: string,
+    userId: string
+): Promise<Result<SkillPerson[]>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.post(
+            `/skills/${encodeURIComponent(skillId)}/editors/`,
+            { userId },
+            OPTIONS
+        );
+        return { ok: true, data: parsePeople(rec(res.data)?.editors) };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Take an editor away (the owner), or leave the skill (an editor removing themself). */
+export const removeSkillEditor = async (
+    accessToken: string | null,
+    skillId: string,
+    userId: string
+): Promise<Result<SkillPerson[]>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.delete(
+            `/skills/${encodeURIComponent(skillId)}/editors/${encodeURIComponent(userId)}/`,
+            OPTIONS
+        );
+        return { ok: true, data: parsePeople(rec(res.data)?.editors) };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** The team owner hides a team skill from the team (`hidden`), or shows it again. */
+export const setSkillHidden = async (
+    accessToken: string | null,
+    skillId: string,
+    hidden: boolean
+): Promise<Result<SkillRow>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const url = `/skills/${encodeURIComponent(skillId)}/hide/`;
+        const res = hidden ? await api.post(url, {}, OPTIONS) : await api.delete(url, OPTIONS);
+        const data = parseSkill(rec(res.data)?.skill);
+        return data ? { ok: true, data } : NO_API;
     } catch (error) {
         return failure(error);
     }

@@ -1224,6 +1224,40 @@ export const es: DeepPartial<Messages> = {
                 unsavedBody: "Las instrucciones se guardan solas. Los detalles necesitan Guardar.",
                 bodyAria: "Instrucciones de la habilidad",
             },
+            team: {
+                roleEditor: "Editor",
+                hiddenChip: "Oculta al equipo",
+                hide: "Ocultar al equipo",
+                show: "Mostrar al equipo",
+                hiddenToast: "Oculta para tu equipo.",
+                shownToast: "Vuelve a mostrarse a tu equipo.",
+                hideFailed: "No se pudo cambiar. Inténtalo de nuevo.",
+                hiddenByOwner:
+                    "El propietario del equipo ocultó esta habilidad. Tu equipo no puede verla ni ejecutarla hasta que la vuelva a mostrar.",
+                hiddenByYou:
+                    "Ocultaste esta habilidad a tu equipo. Tus compañeros no pueden verla ni ejecutarla hasta que la muestres de nuevo.",
+                editorNote:
+                    "Editas esta habilidad como editor: puedes cambiar el texto y los detalles y publicar versiones. El propietario decide su nombre, quién puede usarla y si se elimina.",
+                copiedFrom: "Copiada de «{title}» de {name} (versión {n}).",
+                copiedFromNoName: "Copiada de «{title}» (versión {n}).",
+                copiedFromGone: "Copiada de una habilidad que ya no puedes ver.",
+                makePrivateTitle: "¿Hacer privada esta habilidad?",
+                makePrivateBody:
+                    "Tu equipo dejará de verla y ejecutarla de inmediato. Las copias que ya hicieron tus compañeros siguen siendo suyas y los editores que invitaste conservan su acceso.",
+                makePrivateConfirm: "Hacer privada",
+                ownerOnly: "Solo el propietario puede cambiar esto.",
+                editors: "Editores",
+                editorsHelp:
+                    "Los editores pueden cambiar el texto y los detalles y publicar versiones. No pueden renombrar, compartir ni eliminar la habilidad.",
+                editorsNone: "Aún no hay editores.",
+                editorsAdd: "Añadir un editor",
+                editorsChoose: "Elige a un compañero",
+                editorsEveryone: "Todo tu equipo ya es editor.",
+                editorRemove: "Quitar a {name}",
+                editorLeave: "Dejar de editar esta habilidad",
+                editorsFailed: "No se pudieron cambiar los editores. Inténtalo de nuevo.",
+                editorLeft: "Ya no editas esta habilidad.",
+            },
             versions: {
                 heading: "Versiones",
                 empty: "Aún no se ha publicado nada.",
