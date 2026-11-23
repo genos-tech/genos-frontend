@@ -110,6 +110,28 @@ describe("parseGenosReportV2: emoji", () => {
         }
     );
 
+    it("never marks unfinished to-dos with a check, and marks finished ones with one (MIP-1417)", () => {
+        expect(REPORT_EMOJI.todos_today).toBe("⬜");
+        expect(REPORT_EMOJI.todos_done).toBe("✅");
+        // Reports stored before the fix carry the old marks: they are redrawn from the table.
+        const stored = parseGenosReportV2({
+            version: 2,
+            sections: [
+                { heading: "a", key: "todos_today", emoji: "✅", items: [{ text: "a" }] },
+                { heading: "b", key: "todos_done", emoji: "☑️", items: [{ text: "b" }] },
+            ],
+            stats: [{ key: "todos_today", count: 2, emoji: "✅" }],
+        })!;
+        expect(stored.sections.map((s) => s.emoji)).toEqual(["⬜", "✅"]);
+        expect(stored.stats[0].emoji).toBe("⬜");
+        // A check on any other key is the server's own choice and stays.
+        const other = parseGenosReportV2({
+            version: 2,
+            sections: [{ heading: "c", key: "closed", emoji: "✅", items: [{ text: "c" }] }],
+        })!;
+        expect(other.sections[0].emoji).toBe("✅");
+    });
+
     it("has none for a key the table does not know", () => {
         const report = parseGenosReportV2({
             version: 2,

@@ -109,7 +109,8 @@ export const REPORT_EMOJI: Readonly<Record<string, string>> = {
     start_with: "🎯",
     overdue: "🔥",
     due_today: "📅",
-    todos_today: "✅",
+    // An empty box: these to-dos are NOT done, so no check mark (MIP-1417).
+    todos_today: "⬜",
     todos_earlier: "🕘",
     calendar: "🗓️",
     waiting_on_you: "🙋",
@@ -118,7 +119,7 @@ export const REPORT_EMOJI: Readonly<Record<string, string>> = {
     gone_quiet: "💤",
     tasks: "🛠️",
     notes: "📝",
-    todos_done: "☑️",
+    todos_done: "✅",
     messages: "💬",
     looked_at: "👀",
     still_open: "🔓",
@@ -154,8 +155,14 @@ const oneOf = <T extends string>(list: readonly T[], value: unknown): T | null =
  *  the table's emoji for the key. */
 const EMOJI_PATTERN = /^(?:\p{Extended_Pictographic}|‍|️){1,10}$/u;
 
+/** Emoji an earlier server stamped on a key and that now misleads: reports already stored still
+ *  carry them. "To-dos for today" held a green check although those to-dos are unfinished
+ *  (MIP-1417), so that pair is drawn with the table's emoji instead. */
+const RETIRED_EMOJI: Readonly<Record<string, string>> = { todos_today: "✅", todos_done: "☑️" };
+
 const emojiFor = (key: string | null, supplied: unknown): string => {
-    if (typeof supplied === "string" && EMOJI_PATTERN.test(supplied)) return supplied;
+    const retired = key !== null && own(RETIRED_EMOJI, key) && RETIRED_EMOJI[key] === supplied;
+    if (typeof supplied === "string" && !retired && EMOJI_PATTERN.test(supplied)) return supplied;
     return key !== null && own(REPORT_EMOJI, key) ? REPORT_EMOJI[key] : "";
 };
 
