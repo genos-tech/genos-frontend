@@ -18,6 +18,10 @@
  *   POST   /skills/<id>/star/                   star a skill (DELETE removes the star)
  *   GET    /skills/<id>/publish-check/          the publish checklist, ticked off (the owner)
  *   GET    /skills/profile/ , PUT               my public handle (chosen once) and display name
+ *   GET    /skills/<id>/run-card/?teamId=&versionNo=  what a first run is about to run (MIP-2192)
+ *   POST   /skills/<id>/confirm/ {teamId,versionNo}   "Run this skill": the person read the card
+ *   GET    /skills/<id>/update-diff/            what an installed skill's update changes
+ *   PATCH  /skills/<id>/install/ {versionNo}    accept that update
  *
  * The whole API answers 404 while the server's `GENOS_SKILLS` switch is off: the list call then
  * resolves `{ ok: false, reason: "off" }` and the settings card is not drawn at all.
@@ -120,6 +124,9 @@ export type SkillRow = {
     hiddenByTeam: boolean;
     /** A teammate's account name; empty for a skill the server does not name. */
     ownerName: string;
+    /** A copy of a skill an operator took down as harmful (MIP-2192): the row warns, and running it
+     *  asks first. False from a server that predates it. */
+    sourceHarmful: boolean;
     /** A PUBLIC skill's byline (MIP-2047); null while its author has no handle (an official skill). */
     author: SkillAuthor | null;
     /** The Hub's numbers. `starCount` counts stars from aged, verified accounts only. */
@@ -373,6 +380,7 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         canHide: r.canHide === true,
         hiddenByTeam: r.hiddenByTeam === true,
         ownerName: str(r.ownerName, 120),
+        sourceHarmful: r.sourceHarmful === true,
         author: parseAuthor(r.author),
         starCount: int(r.starCount),
         runCount30d: int(r.runCount30d),
@@ -995,3 +1003,216 @@ export const publishToHub = async (
         ...(input.handle ? { handle: input.handle } : {}),
         ...(input.displayName ? { displayName: input.displayName } : {}),
     });
+
+// ---------- the first-run card and the update diff (MIP-2192) ----------
+
+/** The only writes an outside skill may propose (each still needs the person's approval). */
+export const PROPOSE_TOOLS = ["create_task", "create_note", "create_todo_item"] as const;
+export type ProposeTool = (typeof PROPOSE_TOOLS)[number];
+
+/** What the person reads before a skill runs for the first time (an outside author's version, or a
+ *  copy of a skill an operator took down as harmful). `author` is the public handle and display
+ *  name, never anything else about the person. */
+export type RunCard = {
+    skillId: string;
+    versionNo: number;
+    slug: string;
+    title: string;
+    /** The whole text, never cut: the person confirms what they have read. Shown as plain text. */
+    bodyMarkdown: string;
+    toolLevel: ToolLevel;
+    mayPropose: ProposeTool[];
+    author: SkillAuthor | null;
+    outside: boolean;
+    harmful: boolean;
+    confirmed: boolean;
+};
+
+const isVersionNo = (v: unknown): v is number =>
+    typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 1_000_000_000;
+
+export const parseRunCard = (raw: unknown): RunCard | null => {
+    const r = rec(raw);
+    const skillId = str(r?.skillId, 64);
+    if (!r || skillId === "" || !isVersionNo(r.versionNo) || typeof r.bodyMarkdown !== "string") {
+        return null;
+    }
+    return {
+        skillId,
+        versionNo: r.versionNo,
+        slug: str(r.slug, 80),
+        title: str(r.title, 300),
+        bodyMarkdown: r.bodyMarkdown,
+        toolLevel: oneOf(r.toolLevel, ["read", "act"] as const, "read"),
+        mayPropose: PROPOSE_TOOLS.filter(
+            (tool) => Array.isArray(r.mayPropose) && r.mayPropose.includes(tool)
+        ),
+        author: parseAuthor(r.author),
+        outside: r.outside === true,
+        harmful: r.harmful === true,
+        confirmed: r.confirmed === true,
+    };
+};
+
+/** The details an update can change, as the server names them. */
+export const UPDATE_FIELDS = [
+    "title",
+    "description",
+    "tags",
+    "argumentHint",
+    "effort",
+    "language",
+    "slug",
+    "toolLevel",
+] as const;
+export type UpdateField = (typeof UPDATE_FIELDS)[number];
+
+/** One changed detail; `from` and `to` are the values as text (tags joined by ", "; "" = none). */
+export type UpdateChange = { field: UpdateField; from: string; to: string };
+
+export type UpdateDiff = {
+    fromVersionNo: number;
+    toVersionNo: number;
+    upToDate: boolean;
+    changes: UpdateChange[];
+    /** The update lets the skill propose changes where the installed version only read. */
+    toolLevelRaised: boolean;
+    changelogs: Array<{ versionNo: number; changelog: string }>;
+    /** Unified diff of the text; may be empty. */
+    diff: string;
+    truncated: boolean;
+    /** The new version runs only after the person confirms it. */
+    needsConfirmation: boolean;
+};
+
+const asText = (v: unknown): string => {
+    if (typeof v === "string") return v.slice(0, 2_000);
+    if (Array.isArray(v)) {
+        return v
+            .filter((x): x is string => typeof x === "string")
+            .join(", ")
+            .slice(0, 2_000);
+    }
+    return typeof v === "number" || typeof v === "boolean" ? String(v) : "";
+};
+
+export const parseUpdateDiff = (raw: unknown): UpdateDiff | null => {
+    const r = rec(raw);
+    if (!r || !isVersionNo(r.fromVersionNo) || !isVersionNo(r.toVersionNo)) return null;
+    const changes = (Array.isArray(r.changes) ? r.changes : []).flatMap((row) => {
+        const c = rec(row);
+        const field = c?.field;
+        return c && (UPDATE_FIELDS as readonly unknown[]).includes(field)
+            ? [{ field: field as UpdateField, from: asText(c.from), to: asText(c.to) }]
+            : [];
+    });
+    const changelogs = (Array.isArray(r.changelogs) ? r.changelogs : []).flatMap((row) => {
+        const c = rec(row);
+        return c && isVersionNo(c.versionNo)
+            ? [{ versionNo: c.versionNo, changelog: str(c.changelog, 1000) }]
+            : [];
+    });
+    return {
+        fromVersionNo: r.fromVersionNo,
+        toVersionNo: r.toVersionNo,
+        upToDate: r.upToDate === true,
+        changes,
+        toolLevelRaised: r.toolLevelRaised === true,
+        changelogs,
+        diff: str(r.diff, 200_000),
+        truncated: r.truncated === true,
+        needsConfirmation: r.needsConfirmation === true,
+    };
+};
+
+/** The card for a first run. 404 = not found or not readable (`off`), 403 = not installed (the
+ *  server's sentence, kept as `message`). */
+export const fetchRunCard = async (
+    accessToken: string | null,
+    skillId: string,
+    teamId: string,
+    versionNo: number
+): Promise<Result<RunCard>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.get(`/skills/${encodeURIComponent(skillId)}/run-card/`, {
+            ...OPTIONS,
+            params: { teamId, versionNo },
+        });
+        const data = parseRunCard(rec(res.data)?.card);
+        return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** "Run this skill": the person read the card for this version. Idempotent. */
+export const confirmSkillRun = async (
+    accessToken: string | null,
+    skillId: string,
+    teamId: string,
+    versionNo: number
+): Promise<Result<{ versionNo: number; outside: boolean; harmful: boolean }>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.post(
+            `/skills/${encodeURIComponent(skillId)}/confirm/`,
+            { teamId, versionNo },
+            OPTIONS
+        );
+        const r = rec(res.data);
+        if (!r || r.confirmed !== true) return NO_API;
+        return {
+            ok: true,
+            data: {
+                versionNo: isVersionNo(r.versionNo) ? r.versionNo : versionNo,
+                outside: r.outside === true,
+                harmful: r.harmful === true,
+            },
+        };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** What updating an installed skill would change. 404 when the skill is not installed. */
+export const fetchUpdateDiff = async (
+    accessToken: string | null,
+    skillId: string
+): Promise<Result<UpdateDiff>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.get(`/skills/${encodeURIComponent(skillId)}/update-diff/`, OPTIONS);
+        const data = parseUpdateDiff(res.data);
+        return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Accept the update the diff ended at (`versionNo` = its `toVersionNo`). A 409 `update_moved` (the
+ *  author published another version meanwhile) is a `conflict` carrying `code: "update_moved"`:
+ *  reload the diff. */
+export const acceptSkillUpdate = async (
+    accessToken: string | null,
+    skillId: string,
+    versionNo: number
+): Promise<Result<{ installedVersionNo: number }>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.patch(
+            `/skills/${encodeURIComponent(skillId)}/install/`,
+            { versionNo },
+            OPTIONS
+        );
+        const r = rec(res.data);
+        if (!r || !isVersionNo(r.installedVersionNo)) return NO_API;
+        return { ok: true, data: { installedVersionNo: r.installedVersionNo } };
+    } catch (error) {
+        return failure(error);
+    }
+};

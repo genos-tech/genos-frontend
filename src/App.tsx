@@ -60,6 +60,7 @@ import { CalendarEventLinkHost } from "./features/calendar/components/CalendarEv
 import { CalendarModal } from "./features/calendar/components/CalendarModal";
 import { useIsV3ChatEnabled } from "./features/channel/chatRolloutFlags";
 import { AddToTodoHost } from "./features/chat/components/todo/AddToTodoHost";
+import { SkillRunCardHost } from "./features/genos/skills/SkillRunCardHost";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { personalNoteScopes } from "./features/notes/common/utils/noteTypeAlias";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
@@ -1581,6 +1582,7 @@ const AppBody = () => {
                                                         />
                                                         <BillingReturnSnackbar />
                                                         <ToastHost />
+                                                        <SkillRunCardHost />
                                                         <AddToTodoHost
                                                             accessToken={accessToken}
                                                             allChats={useCM.allChats}

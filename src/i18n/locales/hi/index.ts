@@ -1765,6 +1765,65 @@ export const hi: DeepPartial<Messages> = {
                 failed: "रिपोर्ट नहीं भेजी जा सकी। कृपया फिर से कोशिश करें।",
                 limit: "आज आप जितनी रिपोर्ट भेज सकते थे, भेज चुके हैं। कल फिर कोशिश करें।",
             },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "इस स्किल को चलाएँ?",
+                intro: "पहली बार चलाने से पहले पढ़ें कि यह स्किल क्या कहती है। यह तभी चलेगी जब आप “इस स्किल को चलाएँ” चुनेंगे।",
+                loading: "स्किल लोड हो रही है…",
+                loadFailed: "यह स्किल लोड नहीं हो सकी। कृपया फिर से कोशिश करें।",
+                confirmFailed: "आपका उत्तर सहेजा नहीं जा सका। कृपया फिर से कोशिश करें।",
+                harmful: "जिस स्किल से यह कॉपी की गई थी, उसे Genos ने हानिकारक मानकर हटा दिया है।",
+                writtenBy: "लेखक",
+                noAuthor: "लेखक का नाम नहीं है",
+                version: "संस्करण {n}",
+                textLabel: "यह स्किल क्या कहती है",
+                emptyText: "(इस संस्करण में कोई टेक्स्ट नहीं है।)",
+                mayLabel: "यह क्या कर सकती है",
+                readOnly: "यह केवल पढ़ सकती है। यह कुछ भी बना या बदल नहीं सकती।",
+                propose: {
+                    create_task: "कार्य बनाने का सुझाव देना",
+                    create_note: "नोट बनाने का सुझाव देना",
+                    create_todo_item: "टू-डू आइटम जोड़ने का सुझाव देना",
+                },
+                approveFirst: "हर सुझाव आपकी मंज़ूरी के बाद ही लागू होता है।",
+                run: "इस स्किल को चलाएँ",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "अपडेट उपलब्ध है",
+                loading: "बदलाव लोड हो रहे हैं…",
+                loadFailed: "बदलाव लोड नहीं हो सके। कृपया फिर से कोशिश करें।",
+                upToDate: "आपके पास पहले से नवीनतम संस्करण है।",
+                versions: "संस्करण {from} से संस्करण {to} तक",
+                versionShort: "संस्करण {n}",
+                changelogsLabel: "लेखक के अनुसार क्या बदला",
+                noChangelog: "लेखक की ओर से कोई नोट नहीं।",
+                changesLabel: "बदले हुए विवरण",
+                none: "कोई नहीं",
+                language: "भाषा",
+                becomes: "बदलकर",
+                toolRaisedTitle: "यह संस्करण अब बदलाव सुझा सकता है",
+                toolRaised:
+                    "यह संस्करण अब बदलाव सुझा सकता है। हर बदलाव के लिए अब भी आपकी मंज़ूरी चाहिए।",
+                needsConfirmation: "इस संस्करण को चलाने से पहले आपसे पुष्टि माँगी जाएगी।",
+                diffLabel: "टेक्स्ट में बदलाव",
+                diffEmpty: "टेक्स्ट में कोई बदलाव नहीं हुआ।",
+                truncated:
+                    "बदलाव इतने लंबे हैं कि पूरे नहीं दिखाए जा सकते। केवल शुरुआती हिस्सा दिखाया गया है।",
+                moved: "आपके पढ़ते समय लेखक ने एक और संस्करण प्रकाशित किया। नीचे के बदलाव नवीनतम हैं।",
+                updateFailed: "स्किल अपडेट नहीं हो सकी। कृपया फिर से कोशिश करें।",
+                update: "संस्करण {n} पर अपडेट करें",
+                updateGeneric: "अपडेट करें",
+                keep: "संस्करण {n} रखें",
+                close: "बंद करें",
+                updated: "संस्करण {n} पर अपडेट हो गया।",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "हटाई गई स्किल की कॉपी",
+                warning: "जिस स्किल से यह कॉपी की गई थी, उसे Genos ने हानिकारक मानकर हटा दिया है।",
+            },
             moderation: {
                 title: {
                     in_review:

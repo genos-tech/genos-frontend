@@ -22,6 +22,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
@@ -485,6 +486,13 @@ const SkillListItem = ({
                         <Chip color="warning" size="sm" variant="soft">
                             {tm.hiddenChip}
                         </Chip>
+                    )}
+                    {skill.sourceHarmful && (
+                        <AppTooltip title={t.settings.genosSkills.sourceHarmful.warning}>
+                            <Chip color="warning" size="sm" variant="soft">
+                                {t.settings.genosSkills.sourceHarmful.chip}
+                            </Chip>
+                        </AppTooltip>
                     )}
                     {skill.mine && isModerated(skill.status) && (
                         <Chip color="warning" size="sm" variant="soft">
