@@ -602,11 +602,6 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                     formattingToolbar={() => (
                                         <GenosDocumentToolbar
                                             editor={editor}
-                                            hasComments={
-                                                !!threadStore &&
-                                                !commentsArchived &&
-                                                !hideViewControls
-                                            }
                                             isEditable={isEditable}
                                             setShowGifPicker={setShowGifPicker}
                                             askSource={
@@ -618,6 +613,11 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                                           label: note.title,
                                                       }
                                                     : null
+                                            }
+                                            hasComments={
+                                                !!threadStore &&
+                                                !commentsArchived &&
+                                                !hideViewControls
                                             }
                                         />
                                     )}
