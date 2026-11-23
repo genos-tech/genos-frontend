@@ -128,6 +128,37 @@ describe("PrivacyPage", () => {
         expect(posthog?.en).toContain("Click auto-capture and session recording are not used");
     });
 
+    // MIP-2091 (2026-11-23): counsel approved the GitHub App wording as drafted. The old wording
+    // (the `repo` scope, a webhook registered on the person's repositories) must not come back:
+    // it describes the legacy OAuth connection that is being retired.
+    it("pins the approved GitHub App wording and drops the legacy repo-scope claims", () => {
+        const { container } = renderPage();
+        const { ja, en } = splitText(container.textContent ?? "");
+        const github = PROCESSORS.find((p) => p.name === "GitHub");
+        expect(github?.en).toContain(
+            "you install the Genos GitHub App on the repositories you choose"
+        );
+        expect(github?.en).toContain(
+            "It cannot read your code, and it cannot change anything on GitHub."
+        );
+        expect(github?.en).toContain("we do not keep the answer");
+        expect(github?.en).toContain("whoever installed the App can remove it");
+        expect(github?.ja).toContain("Genos の GitHub App をインストールしていただきます");
+        expect(github?.ja).toContain(
+            "コードを読み取ることはできず、GitHub 上の内容を変更することもできません"
+        );
+        expect(github?.ja).toContain("その結果は保存しません");
+        expect(github?.ja).toContain("その時点ですべてのアクセスが止まります");
+        // Rendered in both language sections.
+        expect(ja).toContain("Genos の GitHub App をインストール");
+        expect(en).toContain("install the Genos GitHub App");
+        // The legacy claims are gone.
+        expect(github?.ja).not.toContain("repo スコープ");
+        expect(github?.ja).not.toContain("Webhook を登録します");
+        expect(github?.en).not.toContain("the repo scope");
+        expect(github?.en).not.toContain("we register a webhook");
+    });
+
     it("states the hosting as Railway, and discloses the Google Cloud Storage cost reports", () => {
         const { container } = renderPage();
         const text = container.textContent ?? "";
