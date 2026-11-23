@@ -1,28 +1,26 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Chip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { useIsMobile } from "../../../../../hooks/common/useIsMobile";
+import { useIsTouch } from "../../../../../hooks/common/useIsTouch";
 import { useTranslation } from "../../../../../i18n";
 import { capRowTags, RowTag } from "./capRowTags";
 
-const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
-
 type TaskRowTagsProps = { taskId?: number; tags: RowTag[] };
 
+/**
+ * The capped tag chips of a task row (MIP-2176). Sits inside the row's button; the "+N" chip for
+ * the rest is `TaskRowMoreTags`, a SIBLING of that button (a button inside a button is not
+ * valid for assistive tech).
+ */
 export const TaskRowTags = ({ taskId, tags }: TaskRowTagsProps) => {
-    const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isPhone = useIsMobile();
-    // On a phone a tap opens the list (a touch has no hover); on a laptop the tooltip's own
-    // hover and focus handling does.
-    const [tapOpen, setTapOpen] = useState(false);
-
     if (tags.length === 0) return null;
-    const { shown, hidden } = capRowTags(tags, isPhone);
-    const hiddenNames = hidden.map((tag) => tag.tagName).join(", ");
+    const { shown } = capRowTags(tags, isPhone);
     const maxChipWidth = isPhone ? "96px" : "140px";
 
     return (
@@ -45,8 +43,9 @@ export const TaskRowTags = ({ taskId, tags }: TaskRowTagsProps) => {
                     sx={{
                         marginX: "2px",
                         maxWidth: maxChipWidth,
-                        // Shrinks (ellipsis) on a narrow row, but never below a readable stub.
-                        minWidth: "7ch",
+                        // Shrinks (ellipsis) on a narrow row, but never below a readable stub
+                        // (and never wider than a short tag's own text).
+                        minWidth: "min(7ch, max-content)",
                         color: mode === "dark" ? "white" : "black",
                         fontWeight: 600,
                         borderRadius: "5px",
@@ -57,44 +56,70 @@ export const TaskRowTags = ({ taskId, tags }: TaskRowTagsProps) => {
                     {tagName}
                 </Chip>
             ))}
-            {hidden.length > 0 && (
-                // Remount on a breakpoint change so Joy's Tooltip never flips between
-                // controlled and uncontrolled.
-                <AppTooltip
-                    key={isPhone ? "tap" : "hover"}
-                    maxWidth={240}
-                    open={isPhone ? tapOpen : undefined}
-                    placement="top-end"
-                    title={hiddenNames}
+        </Box>
+    );
+};
+
+/** The "+N" chip: the tags that did not fit, listed on hover/focus, or on a tap on a touch screen. */
+export const TaskRowMoreTags = ({ tags }: { tags: RowTag[] }) => {
+    const { t } = useTranslation();
+    const isPhone = useIsMobile();
+    // A touch screen has no hover: a tap opens the list. Keyed on the input device, not the
+    // width, so a narrow desktop window keeps hover and focus.
+    const isTouch = useIsTouch();
+    const [tapOpen, setTapOpen] = useState(false);
+    useEffect(() => setTapOpen(false), [isTouch]);
+    // A tap anywhere else closes the list (a touch has no mouse-leave to do it).
+    const wrapRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!tapOpen) return;
+        const onOutside = (e: Event) => {
+            if (!wrapRef.current?.contains(e.target as Node)) setTapOpen(false);
+        };
+        document.addEventListener("click", onOutside);
+        return () => document.removeEventListener("click", onOutside);
+    }, [tapOpen]);
+
+    const { hidden } = capRowTags(tags, isPhone);
+    if (hidden.length === 0) return null;
+    const hiddenNames = hidden.map((tag) => tag.tagName).join(", ");
+
+    return (
+        <Box
+            ref={wrapRef}
+            sx={{ display: "flex", alignItems: "center", flexShrink: 0, marginLeft: "4px" }}
+        >
+            {/* Remount when the input device changes so Joy's Tooltip never flips between
+                    controlled and uncontrolled. */}
+            <AppTooltip
+                key={isTouch ? "tap" : "hover"}
+                maxWidth={240}
+                open={isTouch ? tapOpen : undefined}
+                placement="top-end"
+                title={hiddenNames}
+            >
+                <Chip
+                    color="neutral"
+                    size="md"
+                    sx={{ marginX: "2px", fontWeight: 600 }}
+                    variant="soft"
+                    slotProps={{
+                        action: {
+                            // Joy points the action at the "+N" label, which would
+                            // hide this aria-label; drop it so the label names the tags.
+                            "aria-labelledby": undefined,
+                            "aria-label": t.tasks.subTasks.moreTagsAria
+                                .replace("{count}", String(hidden.length))
+                                .replace("{tags}", hiddenNames),
+                        },
+                    }}
+                    onClick={() => {
+                        if (isTouch) setTapOpen((open) => !open);
+                    }}
                 >
-                    <Chip
-                        color="neutral"
-                        size="md"
-                        variant="soft"
-                        sx={{ marginX: "2px", fontWeight: 600, flexShrink: 0 }}
-                        // The row is a button that opens the task: the "+N" chip must not
-                        // also open it (a click or Enter on the action bubbles to here).
-                        slotProps={{
-                            action: {
-                                // Joy points the action at the "+N" label, which would
-                                // hide this aria-label; drop it so the label names the tags.
-                                "aria-labelledby": undefined,
-                                "aria-label": t.tasks.subTasks.moreTagsAria
-                                    .replace("{count}", String(hidden.length))
-                                    .replace("{tags}", hiddenNames),
-                            },
-                        }}
-                        onBlur={() => setTapOpen(false)}
-                        onKeyDown={stop}
-                        onClick={(e: React.MouseEvent) => {
-                            stop(e);
-                            if (isPhone) setTapOpen((open) => !open);
-                        }}
-                    >
-                        {`+${hidden.length}`}
-                    </Chip>
-                </AppTooltip>
-            )}
+                    {`+${hidden.length}`}
+                </Chip>
+            </AppTooltip>
         </Box>
     );
 };

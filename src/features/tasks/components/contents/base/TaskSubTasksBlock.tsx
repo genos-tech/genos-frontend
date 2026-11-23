@@ -34,7 +34,7 @@ import {
 } from "../../../services/taskEvents";
 import { TaskIdText } from "../../card";
 import { StatusLabel } from "../../meta/StatusLabel";
-import { TaskRowTags } from "./TaskRowTags";
+import { TaskRowMoreTags, TaskRowTags } from "./TaskRowTags";
 
 // A list this long is windowed (MIP-1985): a milestone with ~800 tasks drew ~590 rows (8,800 DOM nodes)
 // inside this 300px scroller. Shorter lists keep the plain markup.
@@ -390,7 +390,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                         flex: 1, // takes what the capped tag chips leave
-                        minWidth: "10ch", // the title keeps its room; the chips shrink first
+                        minWidth: "7ch", // the title keeps its room; the chips shrink first
                     }}
                     noWrap
                 >
@@ -398,6 +398,8 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 </Typography>
                 <TaskRowTags tags={tags} taskId={id} />
             </ListItemButton>
+            {/* A sibling of the row button, not inside it: a button in a button is invalid. */}
+            <TaskRowMoreTags tags={tags} />
         </ListItem>
     );
 
