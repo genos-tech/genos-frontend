@@ -402,8 +402,17 @@ describe("the runnable list from the server", () => {
                 description: "",
                 group: "team",
                 ownerName: "Alice",
+                publishedVersionNo: 0,
             },
-            { id: "b", slug: "four", title: "", description: "", group: "mine", ownerName: "" },
+            {
+                id: "b",
+                slug: "four",
+                title: "",
+                description: "",
+                group: "mine",
+                ownerName: "",
+                publishedVersionNo: 0,
+            },
         ]);
         expect(parseRunnableSkills(null)).toBeNull();
         expect(parseRunnableSkills({ skills: "no" })).toBeNull();

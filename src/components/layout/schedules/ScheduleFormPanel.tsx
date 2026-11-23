@@ -62,7 +62,11 @@ import type {
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
 import { useJoinedProjects } from "./scheduleParamHooks";
-import { MilestoneParamSelect, ProjectParamSelect } from "./ScheduleParamPickers";
+import {
+    MilestoneParamSelect,
+    ProjectParamSelect,
+    SkillParamSelect,
+} from "./ScheduleParamPickers";
 
 type Props = {
     /** The schedule being edited; null to create one. */
@@ -345,6 +349,9 @@ export const ScheduleFormPanel = ({
                         {Object.entries(job.params).map(([key, spec]) => {
                             const kind = paramKind(spec);
                             const known = knownParam(key);
+                            // The server's own bookkeeping (the version a skill schedule is
+                            // pinned to): carried in the form and sent, never drawn.
+                            if (known?.hidden) return null;
                             const problem = show ? problems.params[key] : undefined;
                             const required = isRequiredParam(spec);
                             const range =
@@ -375,7 +382,9 @@ export const ScheduleFormPanel = ({
                                         ? s.errorMilestone
                                         : known?.picker === "project"
                                           ? s.errorProject
-                                          : s.errorRequired;
+                                          : known?.picker === "skill"
+                                            ? s.errorSkill
+                                            : s.errorRequired;
                                 }
                                 if (
                                     p === "range" &&
@@ -390,7 +399,13 @@ export const ScheduleFormPanel = ({
                                 return s.errorParam;
                             };
                             const setParam = (v: string) =>
-                                set("params", { ...form.params, [key]: v });
+                                set("params", {
+                                    ...form.params,
+                                    [key]: v,
+                                    // Another skill is another version: the server pins the new
+                                    // one when the schedule is saved.
+                                    ...(known?.picker === "skill" ? { version_no: "" } : {}),
+                                });
                             if (kind === "boolean") {
                                 // Not set means the job's own default, which the catalog does not
                                 // state: the form knows it for the parameters it has words for.
@@ -476,6 +491,11 @@ export const ScheduleFormPanel = ({
                                         />
                                     ) : known?.picker === "milestone" ? (
                                         <MilestoneParamSelect
+                                            value={form.params[key] ?? ""}
+                                            onChange={setParam}
+                                        />
+                                    ) : known?.picker === "skill" ? (
+                                        <SkillParamSelect
                                             value={form.params[key] ?? ""}
                                             onChange={setParam}
                                         />
@@ -569,7 +589,9 @@ export const ScheduleFormPanel = ({
                             </FormHelperText>
                         )}
                         <FormHelperText sx={{ color: g.text.secondary }}>
-                            {s.effortHint}
+                            {/* "The estimate is for a report of about 10 tasks" is about the
+                                report sentences: a job with no estimate (a skill run) has none. */}
+                            {job?.effortCost ? s.effortHint : s.effortHintNoEstimate}
                         </FormHelperText>
                         {held && (
                             <FormHelperText data-testid="schedule-effort-held">

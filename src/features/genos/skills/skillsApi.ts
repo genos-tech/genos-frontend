@@ -316,6 +316,9 @@ export type RunnableSkill = {
     group: "mine" | "team" | "installed" | "official";
     /** A teammate's account name (team and own skills); "" otherwise. */
     ownerName: string;
+    /** The version a schedule would run (MIP-2045); 0 = none (a skill never published), so it
+     *  cannot be scheduled. A server that predates it sends none: read as 0. */
+    publishedVersionNo: number;
 };
 
 export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
@@ -334,6 +337,7 @@ export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
                 description: str(s.description, 600),
                 group: oneOf(s.group, ["mine", "team", "installed", "official"] as const, "mine"),
                 ownerName: str(s.ownerName, 120),
+                publishedVersionNo: int(s.publishedVersionNo),
             },
         ];
     });
