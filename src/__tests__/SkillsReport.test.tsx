@@ -71,6 +71,12 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     canHide: false,
     hiddenByTeam: false,
     ownerName: "ayumi",
+    author: null,
+    starCount: 0,
+    runCount30d: 0,
+    copyCount: 0,
+    isOfficial: false,
+    starred: false,
     editors: [],
     forkedFrom: null,
     noteId: null,
@@ -101,7 +107,7 @@ const renderPage = () =>
 
 const list = (skills: SkillRow[]) => ({
     ok: true as const,
-    data: { skills, limit: 25, used: 0 },
+    data: { skills, limit: 25, used: 0, publicEnabled: false },
 });
 
 const openReport = async (user: ReturnType<typeof userEvent.setup>) => {

@@ -24,7 +24,9 @@ import {
     type SkillDraft,
 } from "./skillDraft";
 import { SkillEditorsField } from "./SkillEditorsField";
+import { SkillHubField, SkillHubStrip } from "./SkillHubField";
 import { syncSkillNoteTitle } from "./skillNoteTitle";
+import { SkillPublishDialog } from "./SkillPublishDialog";
 import { SkillReportDialog } from "./SkillReportDialog";
 import {
     copySkill,
@@ -34,6 +36,7 @@ import {
     isModerated,
     publishSkill,
     setSkillHidden,
+    setSkillStar,
     updateSkill,
     type Failure,
     type SkillRow,
@@ -46,6 +49,8 @@ type Props = {
     skillId: string;
     teamId: string;
     host: SkillsHost;
+    /** The server's `GENOS_SKILLS_PUBLIC` switch: only then is "Publish to the Hub" offered. */
+    publicEnabled?: boolean;
     /** Back to the list. `changed` = something was saved, copied or deleted: read the list again. */
     onBack: (changed: boolean) => void;
 };
@@ -79,7 +84,7 @@ const followsTitle = (skill: SkillRow, defaultTitle: string): boolean =>
  * owner's draft. The "Publish changes" button makes the new version, and is enabled only while the
  * draft differs from the published one.
  */
-export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
+export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBack }: Props) => {
     const { t, locale } = useTranslation();
     const m = t.settings.genosSkills;
     const e = m.editor;
@@ -104,6 +109,9 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     const [confirmLeave, setConfirmLeave] = useState(false);
     const [confirmPrivate, setConfirmPrivate] = useState(false);
     const [hiding, setHiding] = useState(false);
+    const [publishingToHub, setPublishingToHub] = useState(false);
+    const [confirmUnpublish, setConfirmUnpublish] = useState(false);
+    const [unpublishError, setUnpublishError] = useState<string | null>(null);
     const [bodyEdited, setBodyEdited] = useState(false);
     const bodyRef = useRef<SkillBodyEditorHandle>(null);
 
@@ -125,7 +133,8 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         void load();
     }, [load]);
 
-    const published = skill?.visibility === "team" || (skill?.publishedVersionNo ?? 0) > 0;
+    const published =
+        (skill?.visibility ?? "private") !== "private" || (skill?.publishedVersionNo ?? 0) > 0;
     const loadVersions = useCallback(async () => {
         const res = await fetchSkillVersions(accessToken, skillId);
         setVersionsFailed(!res.ok);
@@ -267,6 +276,37 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         }
     };
 
+    const star = async () => {
+        const next = !skill.starred;
+        const apply = (starred: boolean) =>
+            setSkill((prev) => (prev ? { ...prev, starred } : prev));
+        apply(next);
+        const res = await setSkillStar(accessToken, skill.id, next);
+        if (!res.ok) {
+            apply(!next);
+            toast.error(res.message || m.hub.starFailed);
+            return;
+        }
+        // The public total moves only for an account that counts: read it back.
+        void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
+    };
+
+    /** Stop listing the skill in the Hub: private again, at once. Copies others made stay theirs. */
+    const unpublish = async () => {
+        setUnpublishError(null);
+        const res = await updateSkill(accessToken, skill.id, { visibility: "private" });
+        if (!res.ok) {
+            setUnpublishError(res.message || m.hub.unpublishFailed);
+            return false;
+        }
+        setConfirmUnpublish(false);
+        setSkill(res.data);
+        setDraft(draftFrom(res.data));
+        setChanged(true);
+        toast.success(m.hub.unpublished);
+        return true;
+    };
+
     const toggleHidden = async () => {
         if (hiding) return;
         const hide = !skill.hiddenByTeam;
@@ -312,13 +352,14 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         onBack(changed);
     };
 
-    const savedTeam = skill.visibility === "team";
+    // Shared with the team or public: readers get a published version, not the live draft.
+    const savedTeam = skill.visibility !== "private";
     // What readers do not have yet: the server's comparison of the saved draft, plus what was
     // typed here since (the note's autosave and the unsaved details).
     // Switching the skill back to private is not something to publish: it ends the sharing.
     const unpublished =
         savedTeam &&
-        draft.visibility === "team" &&
+        (skill.visibility === "public" || draft.visibility === "team") &&
         (skill.hasUnpublishedChanges || bodyEdited || dirty);
 
     return (
@@ -359,14 +400,6 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     </>
                 ) : (
                     <>
-                        <Button
-                            size="sm"
-                            startDecorator={<FlagOutlinedIcon />}
-                            variant="plain"
-                            onClick={() => setReporting(true)}
-                        >
-                            {m.report.action}
-                        </Button>
                         {skill.canHide && (
                             <Button
                                 loading={hiding}
@@ -377,6 +410,14 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                                 {skill.hiddenByTeam ? m.team.show : m.team.hide}
                             </Button>
                         )}
+                        <Button
+                            size="sm"
+                            startDecorator={<FlagOutlinedIcon />}
+                            variant="plain"
+                            onClick={() => setReporting(true)}
+                        >
+                            {m.report.action}
+                        </Button>
                         {!skill.hiddenByTeam && skill.visibility !== "private" && (
                             <Button
                                 size="sm"
@@ -425,6 +466,9 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     {skill.canHide ? m.team.hiddenByYou : m.team.hiddenByOwner}
                 </Alert>
             )}
+            {skill.visibility === "public" && skill.status === "active" && (
+                <SkillHubStrip skill={skill} onStar={() => void star()} />
+            )}
             {skill.forkedFrom && (
                 <Typography
                     level="body-xs"
@@ -432,16 +476,22 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 >
                     {!skill.forkedFrom.available
                         ? m.team.copiedFromGone
-                        : skill.forkedFrom.ownerName
-                          ? fmt(m.team.copiedFrom, {
+                        : skill.forkedFrom.author
+                          ? fmt(m.hub.copiedFromAuthor, {
                                 title: skill.forkedFrom.title,
-                                name: skill.forkedFrom.ownerName,
+                                handle: skill.forkedFrom.author.handle,
                                 n: skill.forkedFrom.versionNo,
                             })
-                          : fmt(m.team.copiedFromNoName, {
-                                title: skill.forkedFrom.title,
-                                n: skill.forkedFrom.versionNo,
-                            })}
+                          : skill.forkedFrom.ownerName
+                            ? fmt(m.team.copiedFrom, {
+                                  title: skill.forkedFrom.title,
+                                  name: skill.forkedFrom.ownerName,
+                                  n: skill.forkedFrom.versionNo,
+                              })
+                            : fmt(m.team.copiedFromNoName, {
+                                  title: skill.forkedFrom.title,
+                                  n: skill.forkedFrom.versionNo,
+                              })}
                 </Typography>
             )}
             {editable && savedTeam && (
@@ -496,6 +546,19 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                                         return;
                                     }
                                     setSkill((prev) => (prev ? { ...prev, editors } : prev));
+                                }}
+                            />
+                        ) : undefined
+                    }
+                    hubField={
+                        publicEnabled && editable && skill.canManage ? (
+                            <SkillHubField
+                                busy={saving || publishing}
+                                skill={skill}
+                                onPublish={() => setPublishingToHub(true)}
+                                onUnpublish={() => {
+                                    setUnpublishError(null);
+                                    setConfirmUnpublish(true);
                                 }}
                             />
                         ) : undefined
@@ -636,6 +699,30 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
             <SkillReportDialog
                 skill={reporting ? { id: skill.id, title: skill.title } : null}
                 onClose={() => setReporting(false)}
+            />
+            <SkillPublishDialog
+                skill={publishingToHub ? skill : null}
+                onClose={() => setPublishingToHub(false)}
+                onPublished={(next) => {
+                    setPublishingToHub(false);
+                    setSkill(next);
+                    setDraft(draftFrom(next));
+                    setChanged(true);
+                    setBodyEdited(false);
+                    void loadVersions();
+                }}
+            />
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={m.hub.field.unpublishConfirm}
+                description={m.hub.field.unpublishBody}
+                entityName={skill.title}
+                error={unpublishError}
+                open={confirmUnpublish}
+                title={m.hub.field.unpublishTitle}
+                zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+                onClose={() => setConfirmUnpublish(false)}
+                onConfirm={unpublish}
             />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
