@@ -199,7 +199,7 @@ export const fr: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Vérifiez votre boîte de réception",
-                    body: "Nous avons envoyé un lien de vérification à {email}. Cliquez dessus pour terminer votre inscription.",
+                    body: "Nous avons envoyé un e-mail à {email}. Ouvrez-le pour terminer votre inscription, ou pour vous connecter si vous avez déjà un compte.",
                     checkInboxHint:
                         "Cliquez sur le lien dans l'e-mail pour vérifier votre adresse.",
                     resend: "Renvoyer l'e-mail",

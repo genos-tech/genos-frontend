@@ -66,7 +66,7 @@ export const admin = {
             },
             afterSubmit: {
                 title: "Check your inbox",
-                body: "We sent a verification link to {email}. Click it to finish signing up.",
+                body: "We sent an email to {email}. Open it to finish signing up, or to sign in if you already have an account.",
                 checkInboxHint: "Click the link in the email to verify your address.",
                 resend: "Resend email",
                 resending: "Sending…",

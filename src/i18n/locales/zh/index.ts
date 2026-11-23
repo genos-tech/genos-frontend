@@ -177,7 +177,7 @@ export const zh: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "检查你的收件箱",
-                    body: "我们向 {email} 发送了验证链接。点击它即可完成注册。",
+                    body: "我们已向 {email} 发送了一封邮件。打开它即可完成注册；如果你已有账号，请直接登录。",
                     checkInboxHint: "点击邮箱中的链接以验证你的地址。",
                     resend: "重新发送邮箱",
                     resending: "正在发送…",

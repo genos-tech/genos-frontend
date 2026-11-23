@@ -188,7 +188,7 @@ export const ja: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "メール受信箱を確認してください",
-                    body: "確認リンクを {email} に送信しました。それをクリックしてサインアップを完了します。",
+                    body: "{email} にメールを送信しました。メールを開いてサインアップを完了するか、すでにアカウントをお持ちの場合はサインインしてください。",
                     checkInboxHint: "メール内のリンクをクリックしてアドレスを確認します。",
                     resend: "メールを再送信する",
                     resending: "送信中…",
