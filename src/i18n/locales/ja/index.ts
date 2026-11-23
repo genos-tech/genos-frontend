@@ -2860,7 +2860,6 @@ export const ja: DeepPartial<Messages> = {
             openTodo: "To-Do を開く",
         },
         crossTeam: {
-            connectionHint: "連携自体は何も共有しません。",
             shareHint: "同意して開くと、そこに自分のユーザーを追加できます。",
             failed: "応答できませんでした。もう一度お試しください。",
             acceptedIn: {

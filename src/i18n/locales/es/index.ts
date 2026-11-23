@@ -5055,7 +5055,6 @@ export const es: DeepPartial<Messages> = {
             project: "el proyecto",
         },
         crossTeam: {
-            connectionHint: "Connecting no comparte nada por sí solo.",
             shareHint: "Acepte abrirlo y luego agregue a su propia gente.",
             failed: "No se pudo responder. Inténtalo de nuevo.",
             acceptedIn: {

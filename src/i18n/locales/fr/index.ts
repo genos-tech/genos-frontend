@@ -2891,7 +2891,6 @@ export const fr: DeepPartial<Messages> = {
             openTodo: "Ouvrir la tâche",
         },
         crossTeam: {
-            connectionHint: "Connecting ne partage rien en soi.",
             shareHint: "Acceptez de l'ouvrir, puis ajoutez-y vos propres personnes.",
             failed: "Impossible de répondre. Veuillez réessayer.",
             acceptedIn: {

@@ -4988,7 +4988,6 @@ export const hi: DeepPartial<Messages> = {
             openTodo: "टू-डू खोलें",
         },
         crossTeam: {
-            connectionHint: "कनेक्ट करना अपने आप में कुछ भी साझा नहीं करता है.",
             shareHint: "इसे खोलना स्वीकार करें, फिर इसमें अपने लोगों को जोड़ें।",
             failed: "प्रतिक्रिया नहीं दे सका. कृपया पुन: प्रयास करें।",
             acceptedIn: {

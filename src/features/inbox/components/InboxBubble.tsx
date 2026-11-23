@@ -25,7 +25,7 @@ import { resolveInboxTarget } from "../utils/resolveInboxTarget";
 import { AiUsageFooter } from "./AiUsageFooter";
 import { DigestHeadline } from "./DigestHeadline";
 import { GenosReportBody } from "./GenosReportBody";
-import { fallbackTargetName, findActor, joinTitleKey, splitAroundName } from "./inboxActor";
+import { fallbackTargetName, joinTitleKey, resolveActor, splitAroundName } from "./inboxActor";
 import { InboxCrossTeamChips } from "./InboxCrossTeamChips";
 import { InboxItemAvatar } from "./InboxItemAvatar";
 import {
@@ -122,12 +122,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const claimDeadline =
         itemType === OWNERSHIP_CLAIM ? (itemOptionals?.deadline as string | undefined) : undefined;
     const isCrossTeam = itemType === TEAM_CONNECTION || itemType === EXTERNAL_SHARE;
-    const crossTeamHint =
-        itemType === TEAM_CONNECTION
-            ? t.inbox.crossTeam.connectionHint
-            : itemType === EXTERNAL_SHARE
-              ? t.inbox.crossTeam.shareHint
-              : null;
+    // Only a share carries a footnote. A connection request already says, in its own body, that
+    // connecting gives access to nothing; saying it again under the body read as a duplicate.
+    const crossTeamHint = itemType === EXTERNAL_SHARE ? t.inbox.crossTeam.shareHint : null;
     // Where the accepted thing actually IS: accepting a share admits the approver and the object
     // joins their own lists, but nothing said so. This is the one sentence that closes that loop.
     const acceptedObjectType = String(itemOptionals?.object_type ?? "");
@@ -166,10 +163,10 @@ export const InboxBubble = (props: InboxBubbleProps) => {
               }
             : null;
 
-    // WHO the card is about, read from the body's first mention (the inbox GET sends no sender id).
-    // A card Genos wrote has no person to show.
+    // WHO the card is about: the sender the inbox GET names, else the body's first mention (a row
+    // stored before the API sent senders, or delivered live). A card Genos wrote has no person.
     const byGenos = isGenosAuthored(inboxItem);
-    const actor = byGenos ? null : findActor(itemBody);
+    const actor = byGenos ? null : resolveActor(inboxItem);
     // The join requests say one short sentence in the reader's language, with the name in bold,
     // instead of the server's English body and its "Waiting for your approval..." filler. Without
     // a name to put in it, the card keeps the stored body.
