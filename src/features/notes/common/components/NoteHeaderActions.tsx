@@ -658,7 +658,8 @@ export const NoteHeaderActions = ({
                         kind: "import",
                         label: t.notes.header.importMarkdown,
                         icon: <FileUploadRoundedIcon sx={{ fontSize: 18 }} />,
-                        visible: importContext != null,
+                        // Hidden on an HTML page (MIP-2215): the page is read-only and nothing may write its body.
+                        visible: importContext != null && !isHtml,
                         onClick: () => setImportMdOpen(true),
                     },
                     {

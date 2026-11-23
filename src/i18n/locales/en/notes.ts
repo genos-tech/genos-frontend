@@ -308,6 +308,7 @@ export const notes = {
     },
     // Importing a .html file as an HTML note (MIP-2215).
     htmlImport: {
+        heading: "Import Markdown or HTML",
         chooseFile: "Choose a .md or .html file…",
         notOnPlan:
             "HTML pages are part of the Core plan and up. Upgrade in Settings → Plan & Usage to import this page.",

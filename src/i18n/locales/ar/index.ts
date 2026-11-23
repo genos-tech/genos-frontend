@@ -4974,6 +4974,7 @@ export const ar: DeepPartial<Messages> = {
         },
         // Importing a .html file as an HTML note (MIP-2215).
         htmlImport: {
+            heading: "استيراد Markdown أو HTML",
             chooseFile: "اختر ملف .md أو .html…",
             notOnPlan:
                 "صفحات HTML متاحة في خطة Core وما فوقها. قم بالترقية من الإعدادات ← الخطة والاستخدام لاستيراد هذه الصفحة.",

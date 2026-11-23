@@ -4931,6 +4931,7 @@ export const hi: DeepPartial<Messages> = {
         },
         // Importing a .html file as an HTML note (MIP-2215).
         htmlImport: {
+            heading: "Markdown या HTML आयात करें",
             chooseFile: ".md या .html फ़ाइल चुनें…",
             notOnPlan:
                 "HTML पेज Core प्लान और उससे ऊपर में उपलब्ध हैं। इस पेज को इंपोर्ट करने के लिए सेटिंग्स → प्लान और उपयोग में अपग्रेड करें।",

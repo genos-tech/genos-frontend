@@ -651,7 +651,7 @@ export const ModalImportMarkdown = ({
             actions={actions}
             open={open}
             size="md"
-            title={t.notes.importMd.heading}
+            title={htmlLimit.enabled ? t.notes.htmlImport.heading : t.notes.importMd.heading}
             zIndex={hostZIndex != null ? hostZIndex + 1 : theme.zIndex.modal}
             ownsListboxPopups
             onClose={onClose}

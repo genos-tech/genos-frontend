@@ -3621,6 +3621,7 @@ export const fr: DeepPartial<Messages> = {
         },
         // Importing a .html file as an HTML note (MIP-2215).
         htmlImport: {
+            heading: "Importer du Markdown ou du HTML",
             chooseFile: "Choisir un fichier .md ou .html…",
             notOnPlan:
                 "Les pages HTML font partie du forfait Core et supérieurs. Passez à un forfait supérieur dans Paramètres → Forfait et utilisation pour importer cette page.",

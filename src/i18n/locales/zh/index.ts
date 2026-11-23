@@ -3435,6 +3435,7 @@ export const zh: DeepPartial<Messages> = {
         },
         // Importing a .html file as an HTML note (MIP-2215).
         htmlImport: {
+            heading: "导入 Markdown 或 HTML",
             chooseFile: "选择 .md 或 .html 文件…",
             notOnPlan:
                 "HTML 页面属于 Core 及以上套餐。请在 设置 → 套餐与用量 中升级后再导入此页面。",

@@ -3577,6 +3577,7 @@ export const ja: DeepPartial<Messages> = {
         },
         // Importing a .html file as an HTML note (MIP-2215).
         htmlImport: {
+            heading: "MarkdownまたはHTMLをインポート",
             chooseFile: ".md または .html ファイルを選択…",
             notOnPlan:
                 "HTMLページはCoreプラン以上でご利用いただけます。このページをインポートするには、設定 → プランと使用状況でアップグレードしてください。",
