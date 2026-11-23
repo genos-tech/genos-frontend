@@ -4915,6 +4915,12 @@ export const ja: DeepPartial<Messages> = {
                 effortLow: "低",
                 effortMedium: "中",
                 effortHigh: "高",
+                effortCostBase: "{label} · 最小コスト",
+                effortCost: "{label} · 「低」の約{n}倍",
+                effortLocked: "{label} · お使いのプランでは利用できません",
+                effortHelp:
+                    "レベルが高いほど、1回の実行で消費するクレジットが増えます。クレジットが少なくなると、1段階低いレベルで実行し、その旨をお知らせします。",
+                effortAutoHelp: "各ユーザーが設定で選んだレベルで実行します。",
                 visibility: "使える人",
                 visibilityPrivate: "自分のみ",
                 visibilityTeam: "自分のチーム",

@@ -1200,6 +1200,12 @@ export const settings = {
             effortLow: "Low",
             effortMedium: "Medium",
             effortHigh: "High",
+            effortCostBase: "{label} · lowest cost",
+            effortCost: "{label} · about {n}× Low",
+            effortLocked: "{label} · not in your plan",
+            effortHelp:
+                "A higher level costs more credits per run. When your credits run low, the skill runs one level lower and tells you.",
+            effortAutoHelp: "Runs at the level each person has chosen in Settings.",
             visibility: "Who can use it",
             visibilityPrivate: "Only me",
             visibilityTeam: "My team",

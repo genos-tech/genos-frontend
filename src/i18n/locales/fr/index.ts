@@ -4996,6 +4996,13 @@ export const fr: DeepPartial<Messages> = {
                 effortLow: "Faible",
                 effortMedium: "Moyen",
                 effortHigh: "Élevé",
+                effortCostBase: "{label} · coût le plus bas",
+                effortCost: "{label} · environ {n}× Faible",
+                effortLocked: "{label} · non inclus dans votre offre",
+                effortHelp:
+                    "Un niveau plus élevé consomme plus de crédits par exécution. Quand vos crédits baissent, la compétence s’exécute un niveau plus bas et vous le signale.",
+                effortAutoHelp:
+                    "S’exécute au niveau que chaque personne a choisi dans les réglages.",
                 visibility: "Qui peut l'utiliser",
                 visibilityPrivate: "Moi seul",
                 visibilityTeam: "Mon équipe",

@@ -1176,6 +1176,12 @@ export const ar: DeepPartial<Messages> = {
                 effortLow: "منخفض",
                 effortMedium: "متوسط",
                 effortHigh: "مرتفع",
+                effortCostBase: "{label} · الأقل تكلفة",
+                effortCost: "{label} · نحو {n}× من «منخفض»",
+                effortLocked: "{label} · غير متاح في خطتك",
+                effortHelp:
+                    "كلما ارتفع المستوى زاد عدد الأرصدة المستهلكة في كل تشغيل. وعندما ينخفض رصيدك تعمل المهارة بمستوى أقل بدرجة واحدة وتُعلمك بذلك.",
+                effortAutoHelp: "تعمل بالمستوى الذي اختاره كل شخص في الإعدادات.",
                 visibility: "من يمكنه استخدامها",
                 visibilityPrivate: "أنا فقط",
                 visibilityTeam: "فريقي",
