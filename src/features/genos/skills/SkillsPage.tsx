@@ -4,7 +4,9 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import {
     Alert,
@@ -32,11 +34,14 @@ import { fmt, useTranslation } from "../../../i18n";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "../memory/confirmLayer";
 import { SkillEditor } from "./SkillEditor";
+import { SkillReportDialog } from "./SkillReportDialog";
 import {
     copySkill,
     createSkill,
     deleteSkill,
     fetchSkills,
+    isModerated,
+    setSkillHidden,
     type SkillList,
     type SkillRow,
     type SkillTab,
@@ -73,6 +78,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
     const [limitHit, setLimitHit] = useState<{ limit: number; used: number } | null>(null);
     const [creating, setCreating] = useState(false);
     const [deleting, setDeleting] = useState<SkillRow | null>(null);
+    const [reporting, setReporting] = useState<SkillRow | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     // Only the newest request may set the list: a slow answer for the tab left behind must not
@@ -140,6 +146,17 @@ export const SkillsPage = ({ teamId, host }: Props) => {
         } else {
             toast.error(res.message || m.list.copyFailed);
         }
+    };
+
+    const toggleHidden = async (skill: SkillRow) => {
+        const hide = !skill.hiddenByTeam;
+        const res = await setSkillHidden(accessToken, skill.id, hide);
+        if (res.ok) {
+            toast.success(hide ? m.team.hiddenToast : m.team.shownToast);
+        } else {
+            toast.error(res.message || m.team.hideFailed);
+        }
+        void load(tab);
     };
 
     const remove = async () => {
@@ -293,6 +310,8 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                             }
                             onCopy={() => void copy(skill)}
                             onOpen={() => setView({ kind: "edit", id: skill.id })}
+                            onReport={() => setReporting(skill)}
+                            onToggleHidden={() => void toggleHidden(skill)}
                             onDelete={() => {
                                 setDeleteError(null);
                                 setDeleting(skill);
@@ -307,6 +326,10 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 </Typography>
             )}
 
+            <SkillReportDialog
+                skill={reporting ? { id: reporting.id, title: reporting.title } : null}
+                onClose={() => setReporting(null)}
+            />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={m.delete.confirm}
@@ -329,12 +352,23 @@ type ItemProps = {
     when: string;
     onOpen: () => void;
     onCopy: () => void;
+    onReport: () => void;
+    onToggleHidden: () => void;
     onDelete: () => void;
 };
 
-const SkillListItem = ({ skill, when, onOpen, onCopy, onDelete }: ItemProps) => {
+const SkillListItem = ({
+    skill,
+    when,
+    onOpen,
+    onCopy,
+    onReport,
+    onToggleHidden,
+    onDelete,
+}: ItemProps) => {
     const { t } = useTranslation();
     const l = t.settings.genosSkills.list;
+    const tm = t.settings.genosSkills.team;
     const name = skill.title || t.settings.genosSkills.untitled;
     const items = [
         {
@@ -349,6 +383,22 @@ const SkillListItem = ({ skill, when, onOpen, onCopy, onDelete }: ItemProps) => 
             label: l.copy,
             icon: <ContentCopyRoundedIcon />,
             onClick: onCopy,
+            // A private skill is the owner's to copy (an editor was invited to work on it), and a
+            // skill the team owner hid is not the team's to copy.
+            visible: !skill.mine && skill.visibility !== "private" && !skill.hiddenByTeam,
+        },
+        {
+            id: "hide",
+            label: skill.hiddenByTeam ? tm.show : tm.hide,
+            icon: skill.hiddenByTeam ? <VisibilityOutlinedIcon /> : <VisibilityOffOutlinedIcon />,
+            onClick: onToggleHidden,
+            visible: skill.canHide,
+        },
+        {
+            id: "report",
+            label: l.report,
+            icon: <FlagOutlinedIcon />,
+            onClick: onReport,
             visible: !skill.mine,
         },
         {
@@ -400,6 +450,21 @@ const SkillListItem = ({ skill, when, onOpen, onCopy, onDelete }: ItemProps) => 
                     <Chip size="sm" variant="soft">
                         {skill.visibility === "team" ? l.team : l.private}
                     </Chip>
+                    {skill.mine && isModerated(skill.status) && (
+                        <Chip color="warning" size="sm" variant="soft">
+                            {l.moderated[skill.status as keyof typeof l.moderated]}
+                        </Chip>
+                    )}
+                    {skill.role === "editor" && (
+                        <Chip size="sm" variant="outlined">
+                            {tm.roleEditor}
+                        </Chip>
+                    )}
+                    {skill.hiddenByTeam && (
+                        <Chip color="warning" size="sm" variant="soft">
+                            {tm.hiddenChip}
+                        </Chip>
+                    )}
                     {skill.mine && skill.visibility === "team" && (
                         <Chip
                             color={skill.publishedVersionNo > 0 ? "neutral" : "warning"}

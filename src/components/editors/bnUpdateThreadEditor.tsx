@@ -94,7 +94,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const dictionary = useBlockNoteDictionary();
     // Without the stored trailing blank line, or editing shows (and saves) an
     // extra empty line at the end (MIP-1039).
-    const initialContent: any[] = withoutTrailingBlank(message.content);
+    const initialContent = withoutTrailingBlank(message.content);
 
     // Edit in place: the shared composer pipeline with no draft; Save waits for uploads in
     // flight (an empty url would be stored), and the host closes the editor itself.
@@ -169,7 +169,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     }, [isInEdit]);
 
     useEffect(() => {
-        const newInitialContent: any[] = withoutTrailingBlank(message.content);
+        const newInitialContent = withoutTrailingBlank(message.content);
         replaceBlocksSafely(editor, newInitialContent, "editing the message");
     }, [message]);
 

@@ -72,15 +72,24 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     effort: "",
     visibility: "private",
     status: "active",
+    moderationReason: "",
     currentVersionNo: 1,
     publishedVersionNo: 0,
     createdAt: "2026-11-20T10:00:00Z",
     updatedAt: "2026-11-21T10:00:00Z",
     publishedAt: null,
     mine: true,
+    role: "owner",
     canEdit: true,
+    canManage: true,
+    canHide: false,
+    hiddenByTeam: false,
     ownerName: "ken",
+    editors: [],
+    forkedFrom: null,
     noteId: 12,
+    hasUnpublishedChanges: false,
+    unpublishedChanges: [],
     ...over,
 });
 
@@ -280,7 +289,18 @@ describe("deleting from the list", () => {
 
     it("copies a teammate's skill into the member's own", async () => {
         vi.mocked(api.fetchSkills).mockResolvedValue(
-            list([skill({ id: "s9", title: "Release notes", mine: false, canEdit: false })])
+            list([
+                skill({
+                    id: "s9",
+                    title: "Release notes",
+                    mine: false,
+                    role: "reader",
+                    canEdit: false,
+                    canManage: false,
+                    visibility: "team",
+                    publishedVersionNo: 1,
+                }),
+            ])
         );
         vi.mocked(api.copySkill).mockResolvedValue({ ok: true, data: skill({ id: "c1" }) });
         const success = vi.spyOn(toast, "success");
@@ -449,7 +469,9 @@ describe("the editor", () => {
                     id: "s9",
                     title: "Release notes",
                     mine: false,
+                    role: "reader",
                     canEdit: false,
+                    canManage: false,
                     noteId: null,
                     visibility: "team",
                     publishedVersionNo: 1,
@@ -472,12 +494,21 @@ describe("the editor", () => {
 
 describe("a team skill", () => {
     const teamSkill = skill({ visibility: "team", publishedVersionNo: 1 });
-    beforeEach(() => {
-        vi.mocked(api.fetchSkills).mockResolvedValue(list([teamSkill]));
+    const withUnpublished = (over: Partial<SkillRow> = {}): SkillRow => ({
+        ...teamSkill,
+        hasUnpublishedChanges: true,
+        unpublishedChanges: ["title"],
+        ...over,
+    });
+    const serve = (row: SkillRow) => {
+        vi.mocked(api.fetchSkills).mockResolvedValue(list([row]));
         vi.mocked(api.fetchSkill).mockResolvedValue({
             ok: true,
-            data: { ...teamSkill, bodyMarkdown: "x" },
+            data: { ...row, bodyMarkdown: "x" },
         });
+    };
+    beforeEach(() => {
+        serve(teamSkill);
         vi.mocked(api.fetchSkillVersions).mockResolvedValue({
             ok: true,
             data: [{ versionNo: 1, title: "Weekly update", changelog: "First", createdAt: null }],
@@ -492,7 +523,68 @@ describe("a team skill", () => {
         expect(screen.getByText("First")).toBeTruthy();
     });
 
-    it("saves the text before it publishes, and says so when nothing is new", async () => {
+    it("says Save is private, and offers no publishing while nothing differs", async () => {
+        const user = userEvent.setup();
+        renderPage();
+        await openEditor(user);
+        expect(
+            screen.getByText(
+                "Saving keeps your changes private. Teammates use version 1 until you publish."
+            )
+        ).toBeTruthy();
+        expect(screen.getByRole("button", { name: "Save draft" })).toBeTruthy();
+        expect(screen.queryByRole("button", { name: "Save details" })).toBeNull();
+        expect(screen.queryByText("Unpublished changes")).toBeNull();
+        const publish = screen.getByRole("button", {
+            name: "Publish changes",
+        }) as HTMLButtonElement;
+        expect(publish.disabled).toBe(true);
+    });
+
+    it("shows Unpublished changes and enables Publish when the draft differs", async () => {
+        serve(withUnpublished());
+        const user = userEvent.setup();
+        renderPage();
+        await openEditor(user);
+        expect(await screen.findByText("Unpublished changes")).toBeTruthy();
+        const publish = screen.getByRole("button", {
+            name: "Publish changes",
+        }) as HTMLButtonElement;
+        expect(publish.disabled).toBe(false);
+    });
+
+    it("saving the details makes no version: it keeps a draft and then offers Publish", async () => {
+        vi.mocked(api.updateSkill).mockResolvedValue({
+            ok: true,
+            data: withUnpublished({ title: "Weekly!" }),
+        });
+        const success = vi.spyOn(toast, "success");
+        const user = userEvent.setup();
+        renderPage();
+        const title = await openEditor(user);
+        await user.type(title, "!");
+        // Typing is itself an unpublished change, before and after the save.
+        expect(screen.getByText("Unpublished changes")).toBeTruthy();
+        await user.click(screen.getByRole("button", { name: "Save draft" }));
+        await waitFor(() =>
+            expect(api.updateSkill).toHaveBeenCalledWith("tok", "s1", { title: "Weekly update!" })
+        );
+        await waitFor(() =>
+            expect(success).toHaveBeenCalledWith(
+                "Draft saved. Only you can see it until you publish."
+            )
+        );
+        expect(api.publishSkill).not.toHaveBeenCalled();
+        // Readers have no new version to read again.
+        expect(api.fetchSkillVersions).toHaveBeenCalledTimes(1);
+        expect(screen.getByText("Unpublished changes")).toBeTruthy();
+        expect(
+            (screen.getByRole("button", { name: "Publish changes" }) as HTMLButtonElement).disabled
+        ).toBe(false);
+    });
+
+    it("publishes the saved draft, and says so when nothing is new", async () => {
+        serve(withUnpublished());
         vi.mocked(api.publishSkill).mockResolvedValueOnce({
             ok: false,
             reason: "conflict",
@@ -508,39 +600,81 @@ describe("a team skill", () => {
         expect(neutral).toHaveBeenCalledWith("The team already has this text.");
     });
 
-    it("tells the team a new version is out, and reads the versions again", async () => {
+    it("tells the team a new version is out, reads the versions again and clears the flag", async () => {
+        serve(withUnpublished());
         vi.mocked(api.publishSkill).mockResolvedValue({ ok: true, data: { versionNo: 2 } });
         const success = vi.spyOn(toast, "success");
         const user = userEvent.setup();
         renderPage();
         await openEditor(user);
+        // After the publish the server's page is clean.
+        vi.mocked(api.fetchSkill).mockResolvedValue({
+            ok: true,
+            data: { ...teamSkill, publishedVersionNo: 2, bodyMarkdown: "x" },
+        });
         await user.click(screen.getByRole("button", { name: "Publish changes" }));
         await waitFor(() => expect(success).toHaveBeenCalledWith("Published version 2."));
         expect(api.fetchSkillVersions).toHaveBeenCalledTimes(2);
+        await waitFor(() => expect(screen.queryByText("Unpublished changes")).toBeNull());
+        expect(
+            (screen.getByRole("button", { name: "Publish changes" }) as HTMLButtonElement).disabled
+        ).toBe(true);
     });
 
     it("flushes the editor before the details are saved", async () => {
         vi.mocked(api.updateSkill).mockImplementation(async () => {
             callOrder.push("patch");
-            return { ok: true, data: { ...teamSkill, title: "Weekly!" } };
+            return { ok: true, data: withUnpublished({ title: "Weekly!" }) };
         });
         const user = userEvent.setup();
         renderPage();
         const title = await openEditor(user);
         await user.type(title, "!");
-        await user.click(screen.getByRole("button", { name: "Save details" }));
+        await user.click(screen.getByRole("button", { name: "Save draft" }));
         await waitFor(() => expect(callOrder).toEqual(["flush", "patch"]));
     });
 
-    it("a private skill has no Publish button: its text saves by itself", async () => {
+    it("choosing My team on a private skill is the share: it reports the published version", async () => {
+        vi.mocked(api.updateSkill).mockResolvedValue({
+            ok: true,
+            data: { ...teamSkill, publishedVersionNo: 1 },
+        });
         vi.mocked(api.fetchSkills).mockResolvedValue(list([skill()]));
         vi.mocked(api.fetchSkill).mockResolvedValue({
             ok: true,
             data: { ...skill(), bodyMarkdown: "x" },
         });
+        const success = vi.spyOn(toast, "success");
+        const user = userEvent.setup();
+        renderPage();
+        await openEditor(user);
+        expect(screen.queryByText(/Saving keeps your changes private/)).toBeNull();
+        await user.click(screen.getByRole("button", { name: "My team" }));
+        await user.click(screen.getByRole("button", { name: "Save details" }));
+        await waitFor(() =>
+            expect(api.updateSkill).toHaveBeenCalledWith("tok", "s1", { visibility: "team" })
+        );
+        await waitFor(() => expect(success).toHaveBeenCalledWith("Published version 1."));
+    });
+
+    it("choosing Only me ends the sharing: it is not an unpublished change to publish", async () => {
+        const user = userEvent.setup();
+        renderPage();
+        await openEditor(user);
+        await user.click(screen.getByRole("button", { name: "Only me" }));
+        expect(screen.queryByText("Unpublished changes")).toBeNull();
+        const publish = screen.getByRole("button", {
+            name: "Publish changes",
+        }) as HTMLButtonElement;
+        expect(publish.disabled).toBe(true);
+    });
+
+    it("a private skill has no Publish button: its text saves by itself", async () => {
+        serve(skill());
         const user = userEvent.setup();
         renderPage();
         await openEditor(user);
         expect(screen.queryByRole("button", { name: /^Publish/ })).toBeNull();
+        expect(screen.queryByText("Unpublished changes")).toBeNull();
     });
 });

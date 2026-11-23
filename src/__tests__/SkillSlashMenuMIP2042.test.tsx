@@ -33,7 +33,11 @@ import { fr } from "../i18n/locales/fr";
 import { hi } from "../i18n/locales/hi";
 import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
-import { askAgentStream } from "../services/agentApi";
+import {
+    askAgentStream,
+    fetchAgentSessionDetail,
+    type AgentSessionTurn,
+} from "../services/agentApi";
 
 vi.mock("../services/agentApi", async (importOriginal) => {
     const actual = await importOriginal<typeof import("../services/agentApi")>();
@@ -311,6 +315,71 @@ describe("the ask", () => {
         });
         await waitFor(() => expect(askAgentStream).toHaveBeenCalledTimes(1));
         expect(vi.mocked(askAgentStream).mock.calls[0][0].skill).toEqual({ id: "s-1" });
+    });
+
+    // MIP-2189: the same retry, but the turn comes back from the server's history.
+    describe("a turn reloaded from history", () => {
+        const resumeWith = async (skillRef: AgentSessionTurn["skill"] | undefined) => {
+            vi.mocked(fetchAgentSessionDetail).mockResolvedValueOnce({
+                session_id: "sess-9",
+                created_at: "2026-11-23T00:00:00Z",
+                last_active_at: "2026-11-23T00:00:00Z",
+                turns: [
+                    {
+                        run_id: "run-9",
+                        query: "/weekly-report for Q3",
+                        answer: "Done.",
+                        status: "done",
+                        error: null,
+                        started_at: "2026-11-23T00:00:00Z",
+                        sources: [],
+                        ...(skillRef !== undefined ? { skill: skillRef } : {}),
+                    },
+                ],
+            });
+            vi.mocked(askAgentStream).mockImplementation(async (args) => {
+                args.onDelta("Again.");
+                args.onDone("sess-9", "run-10");
+            });
+            const { result } = renderHook(() =>
+                useSpotlight({ accessToken: "test-token", teamId: "team-1" })
+            );
+            act(() => result.current.resumeSession("sess-9"));
+            await waitFor(() => expect(result.current.turns).toHaveLength(1));
+            return result;
+        };
+
+        const retry = async (result: Awaited<ReturnType<typeof resumeWith>>) => {
+            act(() => {
+                result.current.onAsk(
+                    result.current.turns[0].askedQuery,
+                    result.current.turns[0].mentions
+                );
+            });
+            await waitFor(() => expect(askAgentStream).toHaveBeenCalledTimes(1));
+            return vi.mocked(askAgentStream).mock.calls[0][0];
+        };
+
+        it("retries with the skill and the version that ran", async () => {
+            const result = await resumeWith({ id: "s-1", version_no: 3, slug: "weekly-report" });
+            const args = await retry(result);
+            expect(args.skill).toEqual({ id: "s-1", version_no: 3 });
+            expect(args.query).toBe("/weekly-report for Q3");
+            expect(args.mentions).toBeUndefined();
+        });
+
+        it("an owner's draft turn (version 0) asks for the skill without a version", async () => {
+            const result = await resumeWith({ id: "s-1", version_no: 0, slug: "weekly-report" });
+            expect((await retry(result)).skill).toEqual({ id: "s-1" });
+        });
+
+        it("a plain turn, a null skill and an older backend send no skill key", async () => {
+            for (const skillRef of [undefined, null]) {
+                vi.mocked(askAgentStream).mockClear();
+                const result = await resumeWith(skillRef);
+                expect("skill" in (await retry(result))).toBe(false);
+            }
+        });
     });
 });
 

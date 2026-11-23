@@ -14,13 +14,13 @@ import { CommentsSidebarToggle } from "../components/editors/sub/CommentsSidebar
 
 // A minimal ThreadStore stand-in: a fixed set of threads and a no-op subscribe
 // (the count is read synchronously on render via getSnapshot).
-const makeStore = (threads: any[]) =>
+const makeStore = (threads: Array<{ id: string }>) =>
     ({
         getThreads: () => new Map(threads.map((t) => [t.id, t])),
         subscribe: () => () => {},
     }) as never;
 
-const thread = (id: string, opts: Partial<any> = {}) => ({
+const thread = (id: string, opts: Record<string, unknown> = {}) => ({
     id,
     resolved: false,
     deletedAt: undefined,

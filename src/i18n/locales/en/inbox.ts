@@ -137,10 +137,10 @@ export const inbox = {
     },
     crossTeam: {
         // Both of these are answered from the card, so the card is where
-        // the consequence has to be stated. Approving a connection grants
-        // nothing; accepting a share puts the item in your workspace and
-        // lets you bring colleagues in afterwards.
-        connectionHint: "Connecting shares nothing on its own.",
+        // the consequence has to be stated. A connection request states it
+        // in its own body (approving grants nothing), so only a share has
+        // a footnote: accepting puts the item in your workspace and lets
+        // you bring colleagues in afterwards.
         shareHint: "Accept to open it, then add your own people to it.",
         failed: "Couldn’t respond. Please try again.",
         // WHERE the thing you just accepted now is. Approving used to leave

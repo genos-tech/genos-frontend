@@ -10,7 +10,6 @@ import { createPortal } from "react-dom";
 const EmojiPickerInner = lazy(() => import("./EmojiPickerInner"));
 
 type EmojiPickerProps = {
-    editorPos?: any;
     showEmojiPicker: boolean;
     setShowEmojiPicker: (value: boolean) => void;
     setSelectedEmoji: (emoji: string | null) => void;

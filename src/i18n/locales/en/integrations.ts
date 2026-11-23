@@ -20,6 +20,9 @@ export const integrations = {
         calendarRequestFailed: "Calendar request failed.",
         githubNotConnected: "GitHub account is not connected.",
         githubRequestFailed: "GitHub request failed.",
+        githubAppTeamRequired: "Pick a team first, then press Connect again.",
+        githubAppTeamNotFound: "That team could not be found. Pick a team, then try again.",
+        githubAppTeamNotAllowed: "Only a team owner or editor can connect GitHub for this team.",
     },
     tabs: {
         connections: "Connections",
@@ -34,6 +37,8 @@ export const integrations = {
                 "Genos deletes its saved access to this Google account. Calendar features that use it stop working until you connect again, which means signing in with Google once more.",
             bodyGithub:
                 "Genos deletes its saved access to this GitHub account. Features that use it, such as pull request links, stop working until you connect again, which means signing in with GitHub once more.",
+            bodyGithubApp:
+                "Genos deletes your authorization of the GitHub App. Your team's installation stays on GitHub until someone removes it there; pull request features stop working for you until you authorize again.",
         },
         primaryLogin: "Primary login",
         noEmailShared: "(no email shared)",
@@ -51,6 +56,24 @@ export const integrations = {
             "with your Gmail address — we'll add you as a test user. Access works within a minute of confirmation.",
         verificationError: "Error 403: access_denied",
         addGoogleAccount: "Add another Google account",
+        // The GitHub App states of the GitHub row (MIP-2090). Shown only while the server has
+        // the App switched on.
+        githubApp: {
+            connectedApp: "Connected through the Genos GitHub App (read-only, no code access).",
+            needsAuthorize:
+                "Your team installed the GitHub App on {accounts}. Authorize it to use it here.",
+            authorize: "Authorize",
+            legacyHint: "Reconnect to give Genos narrower, per-repository access.",
+            reconnect: "Reconnect",
+            notInstalled: "The GitHub App isn't installed for this team yet.",
+            install: "Install",
+            suspended: "Suspended on GitHub",
+            manageOnGithub: "Manage on GitHub",
+            cannotLink: "Only a team owner or editor can connect GitHub for this team.",
+            legacyRowNote:
+                "Old connection with full access to your repositories. Disconnect it once the GitHub App works for you.",
+            manageOnGithubHint: "({account}, opens in a new tab)",
+        },
     },
     calendar: {
         connectPrompt: "Connect Google to read and manage your calendar events here.",
@@ -150,6 +173,10 @@ export const integrations = {
             truncated: "Showing the 100 most recently updated repositories.",
             missingOrg:
                 "Missing an organization? Grant it on GitHub — for orgs that restrict third-party apps an owner has to approve the request — then re-authorize here so the new access takes effect.",
+            descriptionApp:
+                "Genos reaches GitHub through the GitHub App, so it sees only the repositories chosen in your team's installation, and only the ones you can open on GitHub too. Add or remove repositories on GitHub.",
+            missingOrgApp:
+                "Missing an organization or repository? Install the app there or add the repository in the installation's settings on GitHub, then press Refresh.",
             manage: "Manage access on GitHub",
             reauthorize: "Re-authorize GitHub",
         },

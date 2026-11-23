@@ -13,8 +13,11 @@
  *     backend returns the consent URL as JSON, and then we navigate.
  */
 
+import axios from "axios";
+
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
+import { activeTeamId } from "./activeTeam";
 
 const apiBase = (): string => (import.meta.env.VITE_API_BASE_URL as string).replace(/\/$/, "");
 
@@ -64,10 +67,20 @@ export const redirectToOAuthConnect = async (
         return false;
     }
     try {
-        const res = await api.post<{ url: string }>(`/oauth/${provider}/initiate/`, {
-            intent: "connect",
-            next,
-        });
+        // `withCredentials`: the server pins this connect to this browser with an HttpOnly cookie
+        // set on this very response (MIP-2170); without it the browser drops the cookie and the
+        // callback refuses to connect anything. Set per request, not on `authApi`, so no other
+        // call changes its cross-origin behaviour.
+        //
+        // GitHub also names the team the installation is linked into (MIP-2090): the server takes
+        // the person's only team when none is sent and answers `team_required` for a person in
+        // several. Sent only for GitHub (the App flow reads it; Google has no use for it).
+        const teamId = provider === "github" ? activeTeamId() : null;
+        const res = await api.post<{ url: string }>(
+            `/oauth/${provider}/initiate/`,
+            { intent: "connect", next, ...(teamId ? { team_id: teamId } : {}) },
+            { withCredentials: true }
+        );
         if (!res.data?.url) {
             setErrorMessage?.(messages.missingConsentUrl);
             return false;
@@ -76,7 +89,20 @@ export const redirectToOAuthConnect = async (
         return true;
     } catch (err) {
         console.error("OAuth connect initiate failed:", err);
-        setErrorMessage?.(messages.connectFlowFailed);
+        setErrorMessage?.(initiateErrorMessage(err, provider));
         return false;
     }
+};
+
+/** The App flow's refusals at `initiate` are `{detail: "<reason>"}` (400/403/404): each one says
+ *  what to do, where the generic "could not start" would not. Anything else stays generic. */
+const initiateErrorMessage = (err: unknown, provider: "google" | "github"): string => {
+    const messages = getMessages().integrations.errors;
+    if (provider === "github" && axios.isAxiosError(err)) {
+        const detail = (err.response?.data as { detail?: unknown } | undefined)?.detail;
+        if (detail === "team_required") return messages.githubAppTeamRequired;
+        if (detail === "team_not_found") return messages.githubAppTeamNotFound;
+        if (detail === "team_not_allowed") return messages.githubAppTeamNotAllowed;
+    }
+    return messages.connectFlowFailed;
 };

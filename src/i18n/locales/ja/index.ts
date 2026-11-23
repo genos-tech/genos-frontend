@@ -295,6 +295,18 @@ export const ja: DeepPartial<Messages> = {
                         "アカウントを作成するには、まずサインアップ画面で利用規約とプライバシーポリシーに同意してください。",
                     email_not_verified:
                         "Google でこのメールアドレスを確認できなかったため、アカウントは作成されませんでした。Google でメールアドレスを確認してからもう一度お試しいただくか、メールアドレスとパスワードで登録してください。",
+                    github_app_state_missing:
+                        "GitHub から Genos に接続リクエストが戻ってきませんでした。設定でもう一度「GitHub を接続」を押してください。",
+                    github_app_org_membership_unverified:
+                        "GitHub でその組織のアクティブなメンバーであることを確認できませんでした。GitHub でメンバーシップを確認してから、もう一度お試しください。",
+                    github_app_org_admin_required:
+                        "最初に組織のオーナーがこのインストールを接続する必要があります。オーナーに、チームの「GitHub を接続」を押してもらってください。",
+                    installation_not_confirmed:
+                        "GitHub があなたのアカウントでそのインストールを確認しませんでした。「GitHub を接続」を押して、アプリをもう一度インストールしてください。",
+                    no_installation:
+                        "使用できる GitHub App のインストールが見つかりませんでした。アカウントまたは組織にアプリをインストールしてから、もう一度「GitHub を接続」を押してください。",
+                    team_not_allowed:
+                        "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
                     fallback: "OAuth フローが失敗しました。",
                 },
                 methods: {
@@ -2860,7 +2872,6 @@ export const ja: DeepPartial<Messages> = {
             openTodo: "To-Do を開く",
         },
         crossTeam: {
-            connectionHint: "連携自体は何も共有しません。",
             shareHint: "同意して開くと、そこに自分のユーザーを追加できます。",
             failed: "応答できませんでした。もう一度お試しください。",
             acceptedIn: {
@@ -2931,6 +2942,11 @@ export const ja: DeepPartial<Messages> = {
             calendarRequestFailed: "カレンダーのリクエストが失敗しました。",
             githubNotConnected: "GitHub アカウントが連携されていません。",
             githubRequestFailed: "GitHub リクエストが失敗しました。",
+            githubAppTeamRequired: "先にチームを選んでから、もう一度「接続」を押してください。",
+            githubAppTeamNotFound:
+                "そのチームが見つかりません。チームを選んでからもう一度お試しください。",
+            githubAppTeamNotAllowed:
+                "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
         },
         tabs: {
             connections: "連携",
@@ -2945,6 +2961,8 @@ export const ja: DeepPartial<Messages> = {
                     "Genos はこの Google アカウントの保存済みアクセス権を削除します。再び接続するまで、それを使うカレンダー機能は動作しません。再接続には Google でもう一度サインインする必要があります。",
                 bodyGithub:
                     "Genos はこの GitHub アカウントの保存済みアクセス権を削除します。再び接続するまで、プルリクエストのリンクなど、それを使う機能は動作しません。再接続には GitHub でもう一度サインインする必要があります。",
+                bodyGithubApp:
+                    "Genos は GitHub App のあなたの承認を削除します。チームのインストールは、GitHub で誰かが削除するまで残ります。再び承認するまで、プルリクエストの機能はあなたには動作しません。",
             },
             primaryLogin: "プライマリログイン",
             noEmailShared: "(メールは共有されません)",
@@ -2962,6 +2980,25 @@ export const ja: DeepPartial<Messages> = {
                 "Gmail アドレスを使用して、テスト ユーザーとして追加します。確認後 1 分以内にアクセスが有効になります。",
             verificationError: "エラー 403: アクセスが拒否されました",
             addGoogleAccount: "別の Google アカウントを追加する",
+            githubApp: {
+                connectedApp:
+                    "Genos GitHub App で接続済み（読み取り専用、コードへのアクセスなし）。",
+                needsAuthorize:
+                    "チームが {accounts} に GitHub App をインストール済みです。ここで使うには承認してください。",
+                authorize: "承認する",
+                legacyHint:
+                    "再接続すると、Genos のアクセスがリポジトリ単位のより狭い範囲になります。",
+                reconnect: "再接続",
+                notInstalled: "このチームには GitHub App がまだインストールされていません。",
+                install: "インストール",
+                suspended: "GitHub で停止中",
+                manageOnGithub: "GitHub で管理",
+                cannotLink:
+                    "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
+                legacyRowNote:
+                    "リポジトリ全体へのアクセス権を持つ旧来の接続です。GitHub App が使えるようになったら切断してください。",
+                manageOnGithubHint: "（{account}、新しいタブで開きます）",
+            },
         },
         calendar: {
             connectPrompt: "ここで Google と連携してカレンダー イベントを読み取り、管理します。",
@@ -3064,6 +3101,10 @@ export const ja: DeepPartial<Messages> = {
                 truncated: "最近更新された 100 件のリポジトリを表示します。",
                 missingOrg:
                     "組織が見つかりませんか? GitHub で許可します。サードパーティ アプリを制限している組織の場合は、オーナーがリクエストを承認する必要があります。その後、ここで再承認して、新しいアクセスが有効になります。",
+                descriptionApp:
+                    "Genos は GitHub App 経由で GitHub にアクセスするため、チームのインストールで選ばれたリポジトリのうち、あなたが GitHub でも開けるものだけが見えます。リポジトリの追加や削除は GitHub で行います。",
+                missingOrgApp:
+                    "組織やリポジトリが見つかりませんか? そこにアプリをインストールするか、GitHub のインストール設定でリポジトリを追加してから、「更新」を押してください。",
                 manage: "GitHub でのアクセスを管理する",
                 reauthorize: "GitHubを再認証する",
             },
@@ -4842,6 +4883,12 @@ export const ja: DeepPartial<Messages> = {
                 copy: "自分のスキルにコピー",
                 copied: "自分のスキルにコピーしました。",
                 copyFailed: "スキルをコピーできませんでした。もう一度お試しください。",
+                report: "報告する",
+                moderated: {
+                    in_review: "確認待ち",
+                    reported_hidden: "報告により非表示",
+                    taken_down: "削除されました",
+                },
                 delete: "削除",
             },
             fields: {
@@ -4872,7 +4919,7 @@ export const ja: DeepPartial<Messages> = {
                 visibilityPrivate: "自分のみ",
                 visibilityTeam: "自分のチーム",
                 visibilityTeamHelp:
-                    "チームメンバーは最後に公開したバージョンを読み、実行できます。公開するか詳細を保存すると、現在のテキストが届きます。",
+                    "チームメンバーは最後に公開したバージョンを読み、実行できます。「自分のチーム」を選ぶと現在のテキストが公開され、その後は「変更を公開」を押すまで、保存した編集は自分だけに表示されます。",
                 owner: "オーナー",
                 created: "作成日",
                 updated: "更新日",
@@ -4885,6 +4932,11 @@ export const ja: DeepPartial<Messages> = {
                 save: "詳細を保存",
                 saving: "保存中…",
                 saved: "詳細を保存しました。",
+                saveDraft: "下書きを保存",
+                savedDraft: "下書きを保存しました。公開するまで自分だけに表示されます。",
+                saveHint:
+                    "保存した変更は自分だけに表示されます。公開するまで、チームメンバーはバージョン {n} を使います。",
+                unpublishedChanges: "未公開の変更",
                 publish: "チームに公開",
                 publishChanges: "変更を公開",
                 publishing: "公開中…",
@@ -4904,6 +4956,40 @@ export const ja: DeepPartial<Messages> = {
                 unsavedBody: "手順は自動で保存されます。詳細は「保存」が必要です。",
                 bodyAria: "スキルの手順",
             },
+            team: {
+                roleEditor: "編集者",
+                hiddenChip: "チームに非表示",
+                hide: "チームに非表示にする",
+                show: "チームに再表示する",
+                hiddenToast: "チームに非表示にしました。",
+                shownToast: "チームに再び表示しました。",
+                hideFailed: "変更できませんでした。もう一度お試しください。",
+                hiddenByOwner:
+                    "チームオーナーがこのスキルを非表示にしました。再表示されるまで、チームはこのスキルを見ることも実行することもできません。",
+                hiddenByYou:
+                    "このスキルをチームに非表示にしています。再表示するまで、チームメンバーは見ることも実行することもできません。",
+                editorNote:
+                    "あなたはこのスキルの編集者です。テキストと詳細を変更し、バージョンを公開できます。名前、利用できる人、削除はオーナーが決めます。",
+                copiedFrom: "{name} さんの「{title}」からコピー（バージョン {n}）。",
+                copiedFromNoName: "「{title}」からコピー（バージョン {n}）。",
+                copiedFromGone: "もう表示できないスキルからコピーしました。",
+                makePrivateTitle: "このスキルを非公開にしますか？",
+                makePrivateBody:
+                    "チームはすぐにこのスキルを見ることも実行することもできなくなります。メンバーがすでに作ったコピーはそのまま残り、招待した編集者のアクセスも維持されます。",
+                makePrivateConfirm: "非公開にする",
+                ownerOnly: "変更できるのはオーナーだけです。",
+                editors: "編集者",
+                editorsHelp:
+                    "編集者はテキストと詳細を変更し、バージョンを公開できます。名前の変更、共有、削除はできません。",
+                editorsNone: "編集者はまだいません。",
+                editorsAdd: "編集者を追加",
+                editorsChoose: "チームメンバーを選択",
+                editorsEveryone: "チームの全員がすでに編集者です。",
+                editorRemove: "{name} を外す",
+                editorLeave: "このスキルの編集をやめる",
+                editorsFailed: "編集者を変更できませんでした。もう一度お試しください。",
+                editorLeft: "このスキルの編集者ではなくなりました。",
+            },
             versions: {
                 heading: "バージョン",
                 empty: "まだ何も公開されていません。",
@@ -4917,6 +5003,35 @@ export const ja: DeepPartial<Messages> = {
                 body: "スキルとその手順は、あなたとチームの両方から完全に削除されます。",
                 confirm: "スキルを削除",
                 failed: "スキルを削除できませんでした。もう一度お試しください。",
+            },
+            report: {
+                action: "報告する",
+                title: "このスキルを報告",
+                body: "問題の内容を教えてください。すべての報告は運営担当者が確認します。異なる3人から報告があると、確認が終わるまでスキルは非表示になります。",
+                reasonLabel: "どのような問題ですか？",
+                reasons: {
+                    harmful: "有害、またはデータを不正に使おうとしている",
+                    spam: "スパム",
+                    copyright: "著作権",
+                    personal_data: "個人情報が含まれている",
+                    offensive: "不快な内容",
+                    other: "その他",
+                },
+                noteLabel: "ほかに伝えたいことはありますか？（任意）",
+                send: "報告を送信",
+                sent: "ありがとうございます。内容を確認します。",
+                failed: "報告を送信できませんでした。もう一度お試しください。",
+                limit: "本日送信できる報告の上限に達しました。明日もう一度お試しください。",
+            },
+            moderation: {
+                title: {
+                    in_review:
+                        "このスキルは確認待ちです。確認が終わるまで、ほかの人は読めず、実行もできません。",
+                    reported_hidden:
+                        "このスキルは報告により非表示になりました。運営担当者が確認するまで、ほかの人は読めず、実行もできません。",
+                    taken_down: "このスキルは削除されました。ほかの人は読めず、実行もできません。",
+                },
+                reason: "理由：{reason}",
             },
             problems: {
                 titleEmpty: "タイトルは必須です。",

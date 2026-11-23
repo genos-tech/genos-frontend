@@ -18,7 +18,7 @@ type TaskCreateBodyBlockProps = {
     setBody: (value: PartialBlock[]) => void;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
-    onEditorReady?: (editor: any) => void;
+    onEditorReady?: (editor: unknown) => void;
 };
 export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
     const {

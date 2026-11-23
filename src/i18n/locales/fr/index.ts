@@ -306,6 +306,18 @@ export const fr: DeepPartial<Messages> = {
                         "Pour créer un compte, acceptez d'abord les Conditions d'utilisation et la Politique de confidentialité sur la page d'inscription.",
                     email_not_verified:
                         "Google n'a pas pu confirmer cette adresse e-mail, donc aucun compte n'a été créé. Vérifiez l'adresse auprès de Google et réessayez, ou inscrivez-vous avec votre e-mail et votre mot de passe.",
+                    github_app_state_missing:
+                        "GitHub n'a pas renvoyé la demande de connexion à Genos. Appuyez de nouveau sur Connecter GitHub dans les paramètres.",
+                    github_app_org_membership_unverified:
+                        "GitHub n'a pas pu confirmer que vous êtes membre actif de cette organisation. Vérifiez votre appartenance sur GitHub, puis réessayez.",
+                    github_app_org_admin_required:
+                        "Un propriétaire de l'organisation doit d'abord connecter cette installation. Demandez-lui d'appuyer sur Connecter GitHub pour votre équipe.",
+                    installation_not_confirmed:
+                        "GitHub n'a pas confirmé cette installation pour votre compte. Appuyez sur Connecter GitHub et installez de nouveau l'app.",
+                    no_installation:
+                        "Aucune installation de la GitHub App utilisable n'a été trouvée. Installez l'app sur votre compte ou votre organisation, puis appuyez de nouveau sur Connecter GitHub.",
+                    team_not_allowed:
+                        "Seul un propriétaire ou un éditeur de l'équipe peut lier GitHub à cette équipe.",
                     fallback: "Le flux OAuth a échoué.",
                 },
                 methods: {
@@ -2891,7 +2903,6 @@ export const fr: DeepPartial<Messages> = {
             openTodo: "Ouvrir la tâche",
         },
         crossTeam: {
-            connectionHint: "Connecting ne partage rien en soi.",
             shareHint: "Acceptez de l'ouvrir, puis ajoutez-y vos propres personnes.",
             failed: "Impossible de répondre. Veuillez réessayer.",
             acceptedIn: {
@@ -2962,6 +2973,12 @@ export const fr: DeepPartial<Messages> = {
             calendarRequestFailed: "La demande de calendrier a échoué.",
             githubNotConnected: "Le compte GitHub n'est pas connecté.",
             githubRequestFailed: "La requête GitHub a échoué.",
+            githubAppTeamRequired:
+                "Choisissez d'abord une équipe, puis appuyez de nouveau sur Connecter.",
+            githubAppTeamNotFound:
+                "Cette équipe est introuvable. Choisissez une équipe et réessayez.",
+            githubAppTeamNotAllowed:
+                "Seul un propriétaire ou un éditeur de l'équipe peut connecter GitHub pour cette équipe.",
         },
         tabs: {
             connections: "Connexions",
@@ -2976,6 +2993,8 @@ export const fr: DeepPartial<Messages> = {
                     "Genos supprime l'accès enregistré à ce compte Google. Les fonctions d'agenda qui l'utilisent cessent de fonctionner jusqu'à une nouvelle connexion, ce qui demande de se reconnecter à Google.",
                 bodyGithub:
                     "Genos supprime l'accès enregistré à ce compte GitHub. Les fonctions qui l'utilisent, comme les liens vers les pull requests, cessent de fonctionner jusqu'à une nouvelle connexion, ce qui demande de se reconnecter à GitHub.",
+                bodyGithubApp:
+                    "Genos supprime votre autorisation de la GitHub App. L'installation de votre équipe reste sur GitHub tant que quelqu'un ne la retire pas ; les fonctions de pull requests cessent de fonctionner pour vous jusqu'à une nouvelle autorisation.",
             },
             primaryLogin: "Connexion principale",
             noEmailShared: "(aucun e-mail partagé)",
@@ -2994,6 +3013,25 @@ export const fr: DeepPartial<Messages> = {
                 "avec votre adresse Gmail — nous vous ajouterons en tant qu'utilisateur test. L’accès fonctionne dans la minute qui suit la confirmation.",
             verificationError: "Erreur 403 : access_denied",
             addGoogleAccount: "Ajouter un autre compte Google",
+            githubApp: {
+                connectedApp:
+                    "Connecté via la GitHub App de Genos (lecture seule, sans accès au code).",
+                needsAuthorize:
+                    "Votre équipe a installé la GitHub App sur {accounts}. Autorisez-la pour l'utiliser ici.",
+                authorize: "Autoriser",
+                legacyHint:
+                    "Reconnectez-vous pour donner à Genos un accès plus restreint, par dépôt.",
+                reconnect: "Reconnecter",
+                notInstalled: "La GitHub App n'est pas encore installée pour cette équipe.",
+                install: "Installer",
+                suspended: "Suspendue sur GitHub",
+                manageOnGithub: "Gérer sur GitHub",
+                cannotLink:
+                    "Seul un propriétaire ou un éditeur de l'équipe peut connecter GitHub pour cette équipe.",
+                legacyRowNote:
+                    "Ancienne connexion avec accès complet à vos dépôts. Déconnectez-la dès que la GitHub App fonctionne pour vous.",
+                manageOnGithubHint: "({account}, s'ouvre dans un nouvel onglet)",
+            },
         },
         calendar: {
             connectPrompt:
@@ -3099,6 +3137,10 @@ export const fr: DeepPartial<Messages> = {
                 truncated: "Affichage des 100 dépôts les plus récemment mis à jour.",
                 missingOrg:
                     "Il manque une organisation ? Accordez-le sur GitHub (pour les organisations qui restreignent les applications tierces, un propriétaire doit approuver la demande), puis réautorisez-le ici pour que le nouvel accès prenne effet.",
+                descriptionApp:
+                    "Genos accède à GitHub via la GitHub App : il ne voit que les dépôts choisis dans l'installation de votre équipe, et seulement ceux que vous pouvez aussi ouvrir sur GitHub. Ajoutez ou retirez des dépôts sur GitHub.",
+                missingOrgApp:
+                    "Il manque une organisation ou un dépôt ? Installez l'app à cet endroit ou ajoutez le dépôt dans les paramètres de l'installation sur GitHub, puis appuyez sur Actualiser.",
                 manage: "Gérer l'accès sur GitHub",
                 reauthorize: "Réautoriser GitHub",
             },
@@ -4921,6 +4963,12 @@ export const fr: DeepPartial<Messages> = {
                 copy: "Copier dans mes compétences",
                 copied: "Copiée dans vos compétences.",
                 copyFailed: "Impossible de copier la compétence. Réessayez.",
+                report: "Signaler",
+                moderated: {
+                    in_review: "En cours de vérification",
+                    reported_hidden: "Masquée après signalements",
+                    taken_down: "Retirée",
+                },
                 delete: "Supprimer",
             },
             fields: {
@@ -4952,7 +5000,7 @@ export const fr: DeepPartial<Messages> = {
                 visibilityPrivate: "Moi seul",
                 visibilityTeam: "Mon équipe",
                 visibilityTeamHelp:
-                    "Vos collègues lisent et lancent la dernière version publiée. Publier, ou enregistrer les détails, leur envoie le texte actuel.",
+                    "Vos collègues lisent et lancent la dernière version publiée. Choisir Mon équipe publie le texte actuel ; ensuite, Enregistrer garde vos modifications privées jusqu'à ce que vous appuyiez sur Publier les modifications.",
                 owner: "Propriétaire",
                 created: "Créée",
                 updated: "Mise à jour",
@@ -4965,6 +5013,12 @@ export const fr: DeepPartial<Messages> = {
                 save: "Enregistrer les détails",
                 saving: "Enregistrement…",
                 saved: "Détails enregistrés.",
+                saveDraft: "Enregistrer le brouillon",
+                savedDraft:
+                    "Brouillon enregistré. Vous seul le voyez tant que vous ne publiez pas.",
+                saveHint:
+                    "Enregistrer garde vos modifications privées. Vos collègues utilisent la version {n} jusqu'à ce que vous publiiez.",
+                unpublishedChanges: "Modifications non publiées",
                 publish: "Publier pour l'équipe",
                 publishChanges: "Publier les modifications",
                 publishing: "Publication…",
@@ -4985,6 +5039,40 @@ export const fr: DeepPartial<Messages> = {
                     "Les instructions s'enregistrent toutes seules. Les détails demandent Enregistrer.",
                 bodyAria: "Instructions de la compétence",
             },
+            team: {
+                roleEditor: "Éditeur",
+                hiddenChip: "Masquée à l'équipe",
+                hide: "Masquer à l'équipe",
+                show: "Afficher à l'équipe",
+                hiddenToast: "Masquée pour votre équipe.",
+                shownToast: "De nouveau visible pour votre équipe.",
+                hideFailed: "Impossible de modifier. Réessayez.",
+                hiddenByOwner:
+                    "Le propriétaire de l'équipe a masqué cette compétence. Votre équipe ne peut ni la voir ni la lancer tant qu'elle n'est pas réaffichée.",
+                hiddenByYou:
+                    "Vous avez masqué cette compétence à votre équipe. Vos collègues ne peuvent ni la voir ni la lancer tant que vous ne la réaffichez pas.",
+                editorNote:
+                    "Vous modifiez cette compétence en tant qu'éditeur : vous pouvez changer le texte et les détails et publier des versions. Le propriétaire décide de son nom, de qui peut l'utiliser et de sa suppression.",
+                copiedFrom: "Copiée depuis « {title} » de {name} (version {n}).",
+                copiedFromNoName: "Copiée depuis « {title} » (version {n}).",
+                copiedFromGone: "Copiée depuis une compétence que vous ne pouvez plus voir.",
+                makePrivateTitle: "Rendre cette compétence privée ?",
+                makePrivateBody:
+                    "Votre équipe cessera aussitôt de la voir et de la lancer. Les copies déjà faites par vos collègues leur restent, et les éditeurs invités gardent leur accès.",
+                makePrivateConfirm: "Rendre privée",
+                ownerOnly: "Seul le propriétaire peut modifier ceci.",
+                editors: "Éditeurs",
+                editorsHelp:
+                    "Les éditeurs peuvent changer le texte et les détails et publier des versions. Ils ne peuvent ni renommer, ni partager, ni supprimer la compétence.",
+                editorsNone: "Aucun éditeur pour le moment.",
+                editorsAdd: "Ajouter un éditeur",
+                editorsChoose: "Choisissez un collègue",
+                editorsEveryone: "Tous les membres de votre équipe sont déjà éditeurs.",
+                editorRemove: "Retirer {name}",
+                editorLeave: "Ne plus modifier cette compétence",
+                editorsFailed: "Impossible de modifier les éditeurs. Réessayez.",
+                editorLeft: "Vous ne modifiez plus cette compétence.",
+            },
             versions: {
                 heading: "Versions",
                 empty: "Rien n'a encore été publié.",
@@ -4998,6 +5086,36 @@ export const fr: DeepPartial<Messages> = {
                 body: "La compétence et ses instructions sont supprimées définitivement, pour vous et pour votre équipe.",
                 confirm: "Supprimer la compétence",
                 failed: "Impossible de supprimer la compétence. Réessayez.",
+            },
+            report: {
+                action: "Signaler",
+                title: "Signaler cette compétence",
+                body: "Dites-nous ce qui ne va pas. Un opérateur examine chaque signalement, et trois signalements de personnes différentes masquent la compétence en attendant.",
+                reasonLabel: "Quel est le problème ?",
+                reasons: {
+                    harmful: "Elle est nuisible ou tente de détourner mes données",
+                    spam: "Spam",
+                    copyright: "Droit d'auteur",
+                    personal_data: "Elle contient des données personnelles",
+                    offensive: "Contenu choquant",
+                    other: "Autre chose",
+                },
+                noteLabel: "Autre chose à nous dire ? (facultatif)",
+                send: "Envoyer le signalement",
+                sent: "Merci. Nous allons l'examiner.",
+                failed: "Impossible d'envoyer le signalement. Veuillez réessayer.",
+                limit: "Vous avez envoyé le nombre maximal de signalements aujourd'hui. Réessayez demain.",
+            },
+            moderation: {
+                title: {
+                    in_review:
+                        "Cette compétence est en cours de vérification. Personne d'autre ne peut encore la lire ni l'exécuter.",
+                    reported_hidden:
+                        "Cette compétence a été masquée après des signalements. Personne d'autre ne peut la lire ni l'exécuter tant qu'un opérateur ne l'a pas examinée.",
+                    taken_down:
+                        "Cette compétence a été retirée. Personne d'autre ne peut la lire ni l'exécuter.",
+                },
+                reason: "Motif : {reason}",
             },
             problems: {
                 titleEmpty: "Un titre est requis.",

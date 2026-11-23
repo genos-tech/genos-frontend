@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
+import { activeTeamId } from "./activeTeam";
 
 export interface Connection {
     /** Server-side id of this specific connection. Every per-account
@@ -9,7 +10,9 @@ export interface Connection {
      *  user can hold several Google accounts, and `provider` alone no
      *  longer identifies one. */
     id: string;
-    provider: "google" | "github";
+    /** `github_app` is the person's authorization of the Genos GitHub App (MIP-2090): a separate
+     *  row from the `github` sign-in / legacy OAuth one, never a login. */
+    provider: "google" | "github" | "github_app";
     provider_email: string | null;
     /** Display name for the account — the provider email, falling back
      *  to the opaque provider id. This is how a user tells their work
@@ -24,10 +27,52 @@ export interface Connection {
     is_primary: boolean;
 }
 
+/** One installation of the GitHub App on an account, as linked to the active team. */
+export interface GithubAppInstallation {
+    installation_id: number;
+    account_login: string;
+    account_type: "User" | "Organization";
+    repository_selection: "all" | "selected";
+    /** GitHub suspended the installation: Genos reads nothing through it. */
+    suspended: boolean;
+    /** The installation's own settings page on GitHub (repositories are changed there). */
+    manage_url: string;
+}
+
+/** Sent by the server ONLY while its GITHUB_APP_ENABLED switch is on (MIP-2090). A response
+ *  without it means the App is off: every GitHub screen then behaves as it did before. */
+export interface GithubAppBlock {
+    enabled: boolean;
+    team_id: string | null;
+    /** The person may link an installation to this team (team owner or editor). */
+    can_link: boolean;
+    installations: GithubAppInstallation[];
+}
+
 export interface ConnectionsResponse {
     primary_auth_provider: "email" | "google" | "github";
     connections: Connection[];
+    github_app?: GithubAppBlock;
 }
+
+/** The App block, or null when the switch is off or the server is older than this field. */
+export const githubAppBlock = (data: ConnectionsResponse | null): GithubAppBlock | null =>
+    data?.github_app?.enabled === true ? data.github_app : null;
+
+/** The person holds an App authorization (and the server has the App on). Their GitHub calls then
+ *  go through the App, whatever the team has installed. */
+export const hasGithubAppConnection = (data: ConnectionsResponse | null): boolean =>
+    githubAppBlock(data) !== null && !!data?.connections.some((c) => c.provider === "github_app");
+
+/** The person has some GitHub connection: the legacy OAuth one, or the App's while the App is on
+ *  (a leftover App row with the switch off is inert and does not count). */
+export const isGithubConnected = (data: ConnectionsResponse | null): boolean =>
+    !!data?.connections.some((c) => c.provider === "github") || hasGithubAppConnection(data);
+
+/** The team's GitHub connection is the App (App on and an installation linked): the OAuth-era
+ *  panels (register a repository, set up a webhook by hand) have nothing to do there. */
+export const teamUsesGithubApp = (data: ConnectionsResponse | null): boolean =>
+    (githubAppBlock(data)?.installations.length ?? 0) > 0;
 
 // Specific Google Calendar API scope needed to read/write events. A
 // sign-in-via-Google user starts with only `openid email profile` —
@@ -91,7 +136,13 @@ export const listConnections = async (
     try {
         const api = authApi(accessToken);
         if (!api) return null;
-        const res = await api.get<ConnectionsResponse>("/integrations/me/");
+        // The active team scopes the App block (which installations this team has). Every
+        // caller sends it, so the cards of one screen never disagree about the team.
+        const teamId = activeTeamId();
+        const res = await api.get<ConnectionsResponse>(
+            "/integrations/me/",
+            teamId ? { params: { team_id: teamId } } : undefined
+        );
         return res.data;
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

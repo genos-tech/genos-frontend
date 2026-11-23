@@ -51,9 +51,27 @@ describe("the other RTL leftovers", () => {
     });
 
     it("inbox previews isolate each paragraph's direction", () => {
-        expect(source("features/inbox/components/InboxBubble.tsx")).toMatch(
-            /"& \.inbox-preview p, & \.inbox-preview li": \{ unicodeBidi: "plaintext",? \}/
+        const bubble = source("features/inbox/components/InboxBubble.tsx");
+        expect(bubble).toMatch(
+            /'& \[class\*="inbox-preview-"\] p, & \[class\*="inbox-preview-"\] li': \{\s*unicodeBidi: "plaintext",?\s*\}/
         );
+        // The old selectors targeted a bare `.inbox-preview` class that never exists.
+        expect(bubble).not.toContain('"& .inbox-preview');
+    });
+
+    it("the preview selector matches the class BnChatPreview really renders", () => {
+        // BnChatPreview builds `${customClassName}-${mode}`; the selector's attribute
+        // substring must be a substring of that, and of the class passed by the bubble.
+        expect(source("components/editors/bnChatPreview.tsx")).toContain("${customClassName}-");
+        const box = document.createElement("div");
+        box.className = "inbox-preview-light";
+        const p = document.createElement("p");
+        box.appendChild(p);
+        document.body.appendChild(box);
+        expect(box.matches('[class*="inbox-preview-"]')).toBe(true);
+        expect(p.closest('[class*="inbox-preview-"]')).toBe(box);
+        expect(box.matches(".inbox-preview")).toBe(false);
+        box.remove();
     });
 
     it.each([

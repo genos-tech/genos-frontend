@@ -268,6 +268,17 @@ export const zh: DeepPartial<Messages> = {
                     terms_required: "创建账号前，请先在注册页面同意服务条款和隐私政策。",
                     email_not_verified:
                         "Google 无法确认此邮箱地址，因此未创建账号。请先在 Google 验证该邮箱后重试，或使用邮箱和密码注册。",
+                    github_app_state_missing:
+                        "GitHub 没有把连接请求发回 Genos。请在设置中再次点击“连接 GitHub”。",
+                    github_app_org_membership_unverified:
+                        "GitHub 无法确认你是该组织的有效成员。请在 GitHub 上检查你的成员身份后重试。",
+                    github_app_org_admin_required:
+                        "需要先由组织所有者连接此安装。请让所有者为你的团队点击“连接 GitHub”。",
+                    installation_not_confirmed:
+                        "GitHub 没有为你的账号确认该安装。请点击“连接 GitHub”并重新安装应用。",
+                    no_installation:
+                        "未找到你可以使用的 GitHub App 安装。请在你的账号或组织上安装该应用，然后再次点击“连接 GitHub”。",
+                    team_not_allowed: "只有团队所有者或编辑者可以将 GitHub 关联到此团队。",
                     fallback: "OAuth 流程失败。",
                 },
                 methods: {
@@ -2745,7 +2756,6 @@ export const zh: DeepPartial<Messages> = {
             openTodo: "打开待办事项",
         },
         crossTeam: {
-            connectionHint: "连接本身不共享任何内容。",
             shareHint: "接受打开它，然后将你自己的人员添加到其中。",
             failed: "无法回应。请再试一次。",
             acceptedIn: {
@@ -2812,6 +2822,9 @@ export const zh: DeepPartial<Messages> = {
             calendarRequestFailed: "日历请求失败。",
             githubNotConnected: "GitHub 账户未连接。",
             githubRequestFailed: "GitHub 请求失败。",
+            githubAppTeamRequired: "请先选择一个团队，然后再次点击“连接”。",
+            githubAppTeamNotFound: "找不到该团队。请选择团队后重试。",
+            githubAppTeamNotAllowed: "只有团队所有者或编辑者可以为此团队连接 GitHub。",
         },
         tabs: {
             connections: "连接",
@@ -2826,6 +2839,8 @@ export const zh: DeepPartial<Messages> = {
                     "Genos 会删除已保存的此 Google 账号访问权限。在你重新连接之前，使用它的日历功能将无法工作；重新连接需要再次使用 Google 登录。",
                 bodyGithub:
                     "Genos 会删除已保存的此 GitHub 账号访问权限。在你重新连接之前，使用它的功能（例如拉取请求链接）将无法工作；重新连接需要再次使用 GitHub 登录。",
+                bodyGithubApp:
+                    "Genos 会删除你对 GitHub App 的授权。团队的安装会保留在 GitHub 上，直到有人在那里将其移除；在你重新授权之前，拉取请求相关功能对你不可用。",
             },
             primaryLogin: "主要登录方式",
             noEmailShared: "（未共享邮箱）",
@@ -2841,6 +2856,21 @@ export const zh: DeepPartial<Messages> = {
             verificationEnding: "——我们会将你添加为测试用户。确认后约一分钟即可使用。",
             verificationError: "Error 403: access_denied",
             addGoogleAccount: "添加其他 Google 账号",
+            githubApp: {
+                connectedApp: "已通过 Genos GitHub App 连接（只读，无法访问代码）。",
+                needsAuthorize:
+                    "你的团队已在 {accounts} 上安装了 GitHub App。请授权以便在此使用。",
+                authorize: "授权",
+                legacyHint: "重新连接后，Genos 将只获得更窄的、按仓库划分的访问权限。",
+                reconnect: "重新连接",
+                notInstalled: "此团队尚未安装 GitHub App。",
+                install: "安装",
+                suspended: "已在 GitHub 上暂停",
+                manageOnGithub: "在 GitHub 上管理",
+                cannotLink: "只有团队所有者或编辑者可以为此团队连接 GitHub。",
+                legacyRowNote: "拥有全部仓库访问权限的旧连接。GitHub App 可用后请断开它。",
+                manageOnGithubHint: "（{account}，在新标签页中打开）",
+            },
         },
         calendar: {
             connectPrompt: "连接 Google，即可在此查看和管理日程。",
@@ -2939,6 +2969,10 @@ export const zh: DeepPartial<Messages> = {
                 truncated: "显示最近更新的 100 个仓库。",
                 missingOrg:
                     "缺少组织？在 GitHub 上授予权限（对于限制第三方应用的组织，所有者必须批准该请求），然后在此处重新授权，以便新的访问权限生效。",
+                descriptionApp:
+                    "Genos 通过 GitHub App 访问 GitHub，因此只能看到团队安装中选定的仓库，并且仅限你自己在 GitHub 上也能打开的仓库。请在 GitHub 上添加或移除仓库。",
+                missingOrgApp:
+                    "缺少组织或仓库？请在该处安装应用，或在 GitHub 的安装设置中添加仓库，然后点击“刷新”。",
                 manage: "管理 GitHub 上的访问",
                 reauthorize: "重新授权 GitHub",
             },
@@ -4663,6 +4697,12 @@ export const zh: DeepPartial<Messages> = {
                 copy: "复制到我的技能",
                 copied: "已复制到你的技能。",
                 copyFailed: "无法复制技能,请重试。",
+                report: "举报",
+                moderated: {
+                    in_review: "待审核",
+                    reported_hidden: "因举报已隐藏",
+                    taken_down: "已下架",
+                },
                 delete: "删除",
             },
             fields: {
@@ -4693,7 +4733,7 @@ export const zh: DeepPartial<Messages> = {
                 visibilityPrivate: "仅自己",
                 visibilityTeam: "我的团队",
                 visibilityTeamHelp:
-                    "队友会读取并运行最近发布的版本。发布或保存详细信息时,当前文本会送达他们。",
+                    "队友会读取并运行最近发布的版本。选择“我的团队”会发布当前文本;之后保存只会让你的更改保持私有,直到你点击“发布更改”。",
                 owner: "所有者",
                 created: "创建时间",
                 updated: "更新时间",
@@ -4706,6 +4746,10 @@ export const zh: DeepPartial<Messages> = {
                 save: "保存详情",
                 saving: "正在保存…",
                 saved: "详情已保存。",
+                saveDraft: "保存草稿",
+                savedDraft: "草稿已保存。发布之前只有你能看到。",
+                saveHint: "保存后你的更改仅自己可见。发布之前,队友使用版本 {n}。",
+                unpublishedChanges: "未发布的更改",
                 publish: "发布给团队",
                 publishChanges: "发布更改",
                 publishing: "正在发布…",
@@ -4724,6 +4768,38 @@ export const zh: DeepPartial<Messages> = {
                 unsavedBody: "说明会自动保存。详情需要点击保存。",
                 bodyAria: "技能说明",
             },
+            team: {
+                roleEditor: "编辑者",
+                hiddenChip: "已对团队隐藏",
+                hide: "对团队隐藏",
+                show: "对团队显示",
+                hiddenToast: "已对你的团队隐藏。",
+                shownToast: "已再次对你的团队显示。",
+                hideFailed: "无法更改。请重试。",
+                hiddenByOwner:
+                    "团队所有者已隐藏此技能。在重新显示之前，你的团队无法查看或运行它。",
+                hiddenByYou: "你已对团队隐藏此技能。在你重新显示之前，队友无法查看或运行它。",
+                editorNote:
+                    "你是此技能的编辑者：可以修改文本和详情并发布版本。名称、使用范围和是否删除由所有者决定。",
+                copiedFrom: "复制自 {name} 的“{title}”（版本 {n}）。",
+                copiedFromNoName: "复制自“{title}”（版本 {n}）。",
+                copiedFromGone: "复制自一个你已无法查看的技能。",
+                makePrivateTitle: "将此技能设为私有？",
+                makePrivateBody:
+                    "你的团队将立即无法查看和运行它。队友已创建的副本仍归他们所有，你邀请的编辑者仍保留访问权限。",
+                makePrivateConfirm: "设为私有",
+                ownerOnly: "只有所有者可以更改。",
+                editors: "编辑者",
+                editorsHelp: "编辑者可以修改文本和详情并发布版本，但不能重命名、共享或删除技能。",
+                editorsNone: "还没有编辑者。",
+                editorsAdd: "添加编辑者",
+                editorsChoose: "选择一位队友",
+                editorsEveryone: "团队里的每个人都已是编辑者。",
+                editorRemove: "移除 {name}",
+                editorLeave: "不再编辑此技能",
+                editorsFailed: "无法更改编辑者。请重试。",
+                editorLeft: "你不再编辑此技能。",
+            },
             versions: {
                 heading: "版本",
                 empty: "还没有发布任何内容。",
@@ -4737,6 +4813,34 @@ export const zh: DeepPartial<Messages> = {
                 body: "该技能及其说明将被永久删除,你和你的团队都将无法再使用。",
                 confirm: "删除技能",
                 failed: "无法删除技能,请重试。",
+            },
+            report: {
+                action: "举报",
+                title: "举报此技能",
+                body: "请告诉我们哪里有问题。每条举报都会由运营人员查看；如果有三位不同的用户举报，该技能会在审核完成前被隐藏。",
+                reasonLabel: "哪里有问题？",
+                reasons: {
+                    harmful: "内容有害，或试图滥用我的数据",
+                    spam: "垃圾内容",
+                    copyright: "侵犯版权",
+                    personal_data: "包含个人信息",
+                    offensive: "冒犯性内容",
+                    other: "其他",
+                },
+                noteLabel: "还有其他需要告诉我们的吗？（可选）",
+                send: "提交举报",
+                sent: "谢谢，我们会尽快查看。",
+                failed: "无法提交举报，请重试。",
+                limit: "你今天提交的举报已达上限，请明天再试。",
+            },
+            moderation: {
+                title: {
+                    in_review: "此技能正在审核中，在此之前其他人无法查看或运行。",
+                    reported_hidden:
+                        "此技能因举报已被隐藏，在运营人员审核之前，其他人无法查看或运行。",
+                    taken_down: "此技能已被下架，其他人无法查看或运行。",
+                },
+                reason: "原因：{reason}",
             },
             problems: {
                 titleEmpty: "标题为必填项。",
