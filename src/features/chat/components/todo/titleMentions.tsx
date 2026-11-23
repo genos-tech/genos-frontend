@@ -300,6 +300,7 @@ const paletteForRef = (ref: AgentMentionRef, myselfUserId: string | undefined): 
         case "task":
             return ref.isMilestone ? MILESTONE_PALETTE : TASK_PALETTE;
         case "note":
+        case "skill": // never in a to-do title (no skills there): the note's disc if it were
             return NOTE_PALETTE;
         case "chat":
             return CHAT_PALETTE;

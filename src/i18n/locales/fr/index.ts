@@ -4905,6 +4905,12 @@ export const fr: DeepPartial<Messages> = {
                 copy: "Copier dans mes compétences",
                 copied: "Copiée dans vos compétences.",
                 copyFailed: "Impossible de copier la compétence. Réessayez.",
+                report: "Signaler",
+                moderated: {
+                    in_review: "En cours de vérification",
+                    reported_hidden: "Masquée après signalements",
+                    taken_down: "Retirée",
+                },
                 delete: "Supprimer",
             },
             fields: {
@@ -5022,6 +5028,36 @@ export const fr: DeepPartial<Messages> = {
                 body: "La compétence et ses instructions sont supprimées définitivement, pour vous et pour votre équipe.",
                 confirm: "Supprimer la compétence",
                 failed: "Impossible de supprimer la compétence. Réessayez.",
+            },
+            report: {
+                action: "Signaler",
+                title: "Signaler cette compétence",
+                body: "Dites-nous ce qui ne va pas. Un opérateur examine chaque signalement, et trois signalements de personnes différentes masquent la compétence en attendant.",
+                reasonLabel: "Quel est le problème ?",
+                reasons: {
+                    harmful: "Elle est nuisible ou tente de détourner mes données",
+                    spam: "Spam",
+                    copyright: "Droit d'auteur",
+                    personal_data: "Elle contient des données personnelles",
+                    offensive: "Contenu choquant",
+                    other: "Autre chose",
+                },
+                noteLabel: "Autre chose à nous dire ? (facultatif)",
+                send: "Envoyer le signalement",
+                sent: "Merci. Nous allons l'examiner.",
+                failed: "Impossible d'envoyer le signalement. Veuillez réessayer.",
+                limit: "Vous avez envoyé le nombre maximal de signalements aujourd'hui. Réessayez demain.",
+            },
+            moderation: {
+                title: {
+                    in_review:
+                        "Cette compétence est en cours de vérification. Personne d'autre ne peut encore la lire ni l'exécuter.",
+                    reported_hidden:
+                        "Cette compétence a été masquée après des signalements. Personne d'autre ne peut la lire ni l'exécuter tant qu'un opérateur ne l'a pas examinée.",
+                    taken_down:
+                        "Cette compétence a été retirée. Personne d'autre ne peut la lire ni l'exécuter.",
+                },
+                reason: "Motif : {reason}",
             },
             problems: {
                 titleEmpty: "Un titre est requis.",
@@ -5660,6 +5696,13 @@ export const fr: DeepPartial<Messages> = {
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",
+        },
+        skills: {
+            ariaLabel: "Suggestions de compétences",
+            mine: "Les vôtres",
+            fromTeammate: "Compétence d'équipe de {name}",
+            installed: "Installée",
+            official: "Genos",
         },
         errors: {
             noTeam: "Aucune équipe sélectionnée.",

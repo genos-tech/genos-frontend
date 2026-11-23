@@ -46,7 +46,7 @@ import { emitProjectToolResult } from "./approvedProjectWrites";
 import { emitMilestoneChangeToolResult, emitTaskAttachmentToolResult } from "./approvedTaskWrites";
 import { toWireSelection, type AskSelection } from "./askSelection";
 import { mergeDroppedReferences } from "./droppedReferences";
-import { toWireMentions, type AgentMentionRef } from "./mentions/types";
+import { toWireMentions, toWireSkill, type AgentMentionRef } from "./mentions/types";
 import { mergeSources } from "./mergeSources";
 import { emitNoteChanged } from "./noteWriteTools";
 import { emitTodoChanged } from "./todoWriteTools";
@@ -600,7 +600,10 @@ export const useAgentQA = ({
                     ? { resume: true }
                     : {}),
                 signal: controller.signal,
-                ...(mentions?.length ? { mentions: toWireMentions(mentions) } : {}),
+                ...(mentions?.some((m) => m.kind !== "skill")
+                    ? { mentions: toWireMentions(mentions) }
+                    : {}),
+                ...(toWireSkill(mentions) ? { skill: toWireSkill(mentions) } : {}),
                 ...(wireSelection.selected_text
                     ? {
                           selectedText: wireSelection.selected_text,
