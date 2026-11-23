@@ -16,7 +16,9 @@ import { PlainButton } from "../../../components/ui/PlainButton";
 import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
+import { ProjectTagChip } from "../../tasks/components/ProjectTagChip";
 import {
+    chipsOf,
     fetchHub,
     fetchHubTags,
     setSkillStar,
@@ -380,10 +382,12 @@ const HubRow = ({ skill, when, onOpen, onCopy, onReport, onStar }: RowProps) => 
                 )}
                 {skill.tags.length > 0 && (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.75 }}>
-                        {skill.tags.map((tagName) => (
-                            <Chip key={tagName} size="sm" variant="outlined">
-                                {tagName}
-                            </Chip>
+                        {chipsOf(skill).map((chip) => (
+                            <ProjectTagChip
+                                key={chip.name}
+                                label={chip.name}
+                                tagColor={chip.color}
+                            />
                         ))}
                     </Box>
                 )}

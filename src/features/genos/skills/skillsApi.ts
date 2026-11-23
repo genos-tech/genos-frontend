@@ -69,6 +69,18 @@ export type SkillOrigin = {
     versionNo: number;
 };
 
+/** A tag as a chip on a skill. */
+export type SkillTagChip = { name: string; color: string; textColor: string };
+
+/** One tag of a member's catalog (MIP-2211): picked in the editor, managed in Manage tags. */
+export type SkillTag = SkillTagChip & { tagId: number };
+
+export type SkillTagCatalog = {
+    tags: SkillTag[];
+    /** Only the skill's owner changes the catalog; a co-editor picks from it. */
+    editable: boolean;
+};
+
 export type SkillRow = {
     id: string;
     teamId: string;
@@ -76,6 +88,10 @@ export type SkillRow = {
     title: string;
     description: string;
     tags: string[];
+    /** The tags as chips (MIP-2211): the colour the owner gave each name. Grey for a name the owner
+     *  no longer has, and for every tag of a public skill read by anyone but its owner or an editor.
+     *  Absent from a server that predates the catalog: draw `tags` in grey then. */
+    tagChips?: SkillTagChip[];
     icon: string;
     argumentHint: string;
     toolLevel: ToolLevel;
@@ -275,6 +291,49 @@ const parseOrigin = (raw: unknown): SkillOrigin | null => {
     };
 };
 
+const HEX = /^#[0-9a-fA-F]{6}$/;
+// A tag with no colour of its own: the chip draws its neutral dot for an empty colour.
+const NEUTRAL_TAG = "";
+
+const parseTagChips = (raw: unknown[]): SkillTagChip[] =>
+    raw.flatMap((row) => {
+        const c = rec(row);
+        const name = str(c?.name, 60);
+        if (!c || name === "") return [];
+        const color = str(c.color, 10);
+        return [
+            {
+                name,
+                color: HEX.test(color) ? color : NEUTRAL_TAG,
+                textColor: str(c.textColor, 10) || "white",
+            },
+        ];
+    });
+
+export const parseSkillTag = (raw: unknown): SkillTag | null => {
+    const r = rec(raw);
+    const id = r?.tagId;
+    if (!r || typeof id !== "number" || !Number.isSafeInteger(id)) return null;
+    const [chip] = parseTagChips([r]);
+    return chip ? { ...chip, tagId: id } : null;
+};
+
+export const parseSkillTagCatalog = (raw: unknown): SkillTagCatalog | null => {
+    const r = rec(raw);
+    if (!r || !Array.isArray(r.tags)) return null;
+    return {
+        tags: r.tags.flatMap((row) => {
+            const tag = parseSkillTag(row);
+            return tag ? [tag] : [];
+        }),
+        editable: r.editable === true,
+    };
+};
+
+/** A skill's tags as chips: the server's, else every name in grey. */
+export const chipsOf = (skill: Pick<SkillRow, "tags" | "tagChips">): SkillTagChip[] =>
+    skill.tagChips ?? skill.tags.map((name) => ({ name, color: NEUTRAL_TAG, textColor: "white" }));
+
 export const parseSkill = (raw: unknown): SkillRow | null => {
     const r = rec(raw);
     const id = str(r?.id, 64);
@@ -290,6 +349,7 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
             .map((t) => str(t, 60))
             .filter((t) => t !== "")
             .slice(0, 10),
+        tagChips: Array.isArray(r.tagChips) ? parseTagChips(r.tagChips) : undefined,
         icon: str(r.icon, 16),
         argumentHint: str(r.argumentHint, 300),
         toolLevel: oneOf(r.toolLevel, ["read", "act"] as const, "read"),
@@ -608,6 +668,71 @@ export const updateSkill = async (
         const res = await api.patch(`/skills/${encodeURIComponent(skillId)}/`, input, OPTIONS);
         const data = parseSkill(rec(res.data)?.skill);
         return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** The tag catalog a skill's tags come from: its owner's. Without a skill id, the caller's own in a
+ *  team. */
+export const fetchSkillTags = async (
+    accessToken: string | null,
+    scope: { skillId: string } | { teamId: string }
+): Promise<Result<SkillTagCatalog>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const params =
+            "skillId" in scope ? { skill_id: scope.skillId } : { team_id: scope.teamId };
+        const res = await api.get("/skills/tags/", { ...OPTIONS, params });
+        const data = parseSkillTagCatalog(res.data);
+        return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+export const createSkillTag = async (
+    accessToken: string | null,
+    teamId: string,
+    input: { name: string; color?: string; textColor?: string }
+): Promise<Result<SkillTag>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.post("/skills/tags/", { team_id: teamId, ...input }, OPTIONS);
+        const data = parseSkillTag(res.data);
+        return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+export const updateSkillTag = async (
+    accessToken: string | null,
+    tagId: number,
+    patch: { name?: string; color?: string; textColor?: string }
+): Promise<Result<SkillTag>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.patch(`/skills/tags/${tagId}/`, patch, OPTIONS);
+        const data = parseSkillTag(res.data);
+        return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+export const deleteSkillTag = async (
+    accessToken: string | null,
+    tagId: number
+): Promise<Result<null>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        await api.delete(`/skills/tags/${tagId}/`, OPTIONS);
+        return { ok: true, data: null };
     } catch (error) {
         return failure(error);
     }
