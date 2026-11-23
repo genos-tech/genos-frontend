@@ -268,6 +268,17 @@ export const zh: DeepPartial<Messages> = {
                     terms_required: "创建账号前，请先在注册页面同意服务条款和隐私政策。",
                     email_not_verified:
                         "Google 无法确认此邮箱地址，因此未创建账号。请先在 Google 验证该邮箱后重试，或使用邮箱和密码注册。",
+                    github_app_state_missing:
+                        "GitHub 没有把连接请求发回 Genos。请在设置中再次点击“连接 GitHub”。",
+                    github_app_org_membership_unverified:
+                        "GitHub 无法确认你是该组织的有效成员。请在 GitHub 上检查你的成员身份后重试。",
+                    github_app_org_admin_required:
+                        "需要先由组织所有者连接此安装。请让所有者为你的团队点击“连接 GitHub”。",
+                    installation_not_confirmed:
+                        "GitHub 没有为你的账号确认该安装。请点击“连接 GitHub”并重新安装应用。",
+                    no_installation:
+                        "未找到你可以使用的 GitHub App 安装。请在你的账号或组织上安装该应用，然后再次点击“连接 GitHub”。",
+                    team_not_allowed: "只有团队所有者或编辑者可以将 GitHub 关联到此团队。",
                     fallback: "OAuth 流程失败。",
                 },
                 methods: {
@@ -2811,6 +2822,9 @@ export const zh: DeepPartial<Messages> = {
             calendarRequestFailed: "日历请求失败。",
             githubNotConnected: "GitHub 账户未连接。",
             githubRequestFailed: "GitHub 请求失败。",
+            githubAppTeamRequired: "请先选择一个团队，然后再次点击“连接”。",
+            githubAppTeamNotFound: "找不到该团队。请选择团队后重试。",
+            githubAppTeamNotAllowed: "只有团队所有者或编辑者可以为此团队连接 GitHub。",
         },
         tabs: {
             connections: "连接",
@@ -2825,6 +2839,8 @@ export const zh: DeepPartial<Messages> = {
                     "Genos 会删除已保存的此 Google 账号访问权限。在你重新连接之前，使用它的日历功能将无法工作；重新连接需要再次使用 Google 登录。",
                 bodyGithub:
                     "Genos 会删除已保存的此 GitHub 账号访问权限。在你重新连接之前，使用它的功能（例如拉取请求链接）将无法工作；重新连接需要再次使用 GitHub 登录。",
+                bodyGithubApp:
+                    "Genos 会删除你对 GitHub App 的授权。团队的安装会保留在 GitHub 上，直到有人在那里将其移除；在你重新授权之前，拉取请求相关功能对你不可用。",
             },
             primaryLogin: "主要登录方式",
             noEmailShared: "（未共享邮箱）",
@@ -2840,6 +2856,21 @@ export const zh: DeepPartial<Messages> = {
             verificationEnding: "——我们会将你添加为测试用户。确认后约一分钟即可使用。",
             verificationError: "Error 403: access_denied",
             addGoogleAccount: "添加其他 Google 账号",
+            githubApp: {
+                connectedApp: "已通过 Genos GitHub App 连接（只读，无法访问代码）。",
+                needsAuthorize:
+                    "你的团队已在 {accounts} 上安装了 GitHub App。请授权以便在此使用。",
+                authorize: "授权",
+                legacyHint: "重新连接后，Genos 将只获得更窄的、按仓库划分的访问权限。",
+                reconnect: "重新连接",
+                notInstalled: "此团队尚未安装 GitHub App。",
+                install: "安装",
+                suspended: "已在 GitHub 上暂停",
+                manageOnGithub: "在 GitHub 上管理",
+                cannotLink: "只有团队所有者或编辑者可以为此团队连接 GitHub。",
+                legacyRowNote: "拥有全部仓库访问权限的旧连接。GitHub App 可用后请断开它。",
+                manageOnGithubHint: "（{account}，在新标签页中打开）",
+            },
         },
         calendar: {
             connectPrompt: "连接 Google，即可在此查看和管理日程。",
@@ -2938,6 +2969,10 @@ export const zh: DeepPartial<Messages> = {
                 truncated: "显示最近更新的 100 个仓库。",
                 missingOrg:
                     "缺少组织？在 GitHub 上授予权限（对于限制第三方应用的组织，所有者必须批准该请求），然后在此处重新授权，以便新的访问权限生效。",
+                descriptionApp:
+                    "Genos 通过 GitHub App 访问 GitHub，因此只能看到团队安装中选定的仓库，并且仅限你自己在 GitHub 上也能打开的仓库。请在 GitHub 上添加或移除仓库。",
+                missingOrgApp:
+                    "缺少组织或仓库？请在该处安装应用，或在 GitHub 的安装设置中添加仓库，然后点击“刷新”。",
                 manage: "管理 GitHub 上的访问",
                 reauthorize: "重新授权 GitHub",
             },

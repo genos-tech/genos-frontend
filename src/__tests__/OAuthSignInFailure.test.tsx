@@ -118,6 +118,20 @@ describe("OAuth sign-in failure", () => {
         expect(alert.textContent).not.toMatch(/your email and password instead/i);
     });
 
+    // MIP-2090: the GitHub App connect's refusals, each with its own next step (not the generic one).
+    it.each([
+        ["github_app_state_missing", /press Connect GitHub again/i],
+        ["github_app_org_membership_unverified", /active member of that organization/i],
+        ["github_app_org_admin_required", /organization owner has to connect/i],
+        ["installation_not_confirmed", /didn't confirm that installation/i],
+        ["no_installation", /No GitHub App installation you can use/i],
+        ["team_not_allowed", /Only a team owner or editor/i],
+    ])("GitHub App refusal %s has its own message", async (reason, text) => {
+        renderAt(`?error=${reason}`);
+        expect(await screen.findByText(text)).toBeInTheDocument();
+        expect(screen.queryByText("OAuth flow failed.")).toBeNull();
+    });
+
     it("still shows the generic message for a code it does not know", async () => {
         renderAt("?error=something_new");
         expect(await screen.findByText("OAuth flow failed.")).toBeInTheDocument();

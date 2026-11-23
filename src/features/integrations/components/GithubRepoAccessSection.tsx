@@ -42,8 +42,19 @@ import { redirectToOAuthConnect } from "../services/oauth";
  * its absence) and links to the two places that change it: GitHub's
  * per-application settings page, and a re-authorize round trip that
  * refreshes the token's grants.
+ *
+ * `appMode` (MIP-2090): the team's connection is the GitHub App, which DOES have a per-repo
+ * selection, made on GitHub in the installation's settings. The panel then says so, points
+ * `manage_url` there, and drops the re-authorize button (an installation change applies at once
+ * and the App's token has no scopes to refresh).
  */
-export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }) => {
+export const GithubRepoAccessSection = ({
+    accessToken,
+    appMode = false,
+}: {
+    accessToken: string;
+    appMode?: boolean;
+}) => {
     const { t } = useTranslation();
     const [data, setData] = useState<GithubAccessibleReposResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -107,7 +118,9 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                 </Stack>
 
                 <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                    {t.integrations.github.repoAccess.description}
+                    {appMode
+                        ? t.integrations.github.repoAccess.descriptionApp
+                        : t.integrations.github.repoAccess.description}
                 </Typography>
 
                 {error && <Alert color="danger">{error}</Alert>}
@@ -233,7 +246,9 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
 
                 <Box>
                     <Typography level="body-xs" sx={{ color: "text.secondary", mb: 1 }}>
-                        {t.integrations.github.repoAccess.missingOrg}
+                        {appMode
+                            ? t.integrations.github.repoAccess.missingOrgApp
+                            : t.integrations.github.repoAccess.missingOrg}
                     </Typography>
                     <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1 }}>
                         {data?.manage_url && (
@@ -249,20 +264,22 @@ export const GithubRepoAccessSection = ({ accessToken }: { accessToken: string }
                                 {t.integrations.github.repoAccess.manage}
                             </Button>
                         )}
-                        <Button
-                            size="sm"
-                            variant="soft"
-                            onClick={() => {
-                                void redirectToOAuthConnect(
-                                    "github",
-                                    accessToken,
-                                    undefined,
-                                    setError
-                                );
-                            }}
-                        >
-                            {t.integrations.github.repoAccess.reauthorize}
-                        </Button>
+                        {!appMode && (
+                            <Button
+                                size="sm"
+                                variant="soft"
+                                onClick={() => {
+                                    void redirectToOAuthConnect(
+                                        "github",
+                                        accessToken,
+                                        undefined,
+                                        setError
+                                    );
+                                }}
+                            >
+                                {t.integrations.github.repoAccess.reauthorize}
+                            </Button>
+                        )}
                     </Stack>
                 </Box>
             </Stack>

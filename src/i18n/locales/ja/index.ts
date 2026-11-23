@@ -295,6 +295,18 @@ export const ja: DeepPartial<Messages> = {
                         "アカウントを作成するには、まずサインアップ画面で利用規約とプライバシーポリシーに同意してください。",
                     email_not_verified:
                         "Google でこのメールアドレスを確認できなかったため、アカウントは作成されませんでした。Google でメールアドレスを確認してからもう一度お試しいただくか、メールアドレスとパスワードで登録してください。",
+                    github_app_state_missing:
+                        "GitHub から Genos に接続リクエストが戻ってきませんでした。設定でもう一度「GitHub を接続」を押してください。",
+                    github_app_org_membership_unverified:
+                        "GitHub でその組織のアクティブなメンバーであることを確認できませんでした。GitHub でメンバーシップを確認してから、もう一度お試しください。",
+                    github_app_org_admin_required:
+                        "最初に組織のオーナーがこのインストールを接続する必要があります。オーナーに、チームの「GitHub を接続」を押してもらってください。",
+                    installation_not_confirmed:
+                        "GitHub があなたのアカウントでそのインストールを確認しませんでした。「GitHub を接続」を押して、アプリをもう一度インストールしてください。",
+                    no_installation:
+                        "使用できる GitHub App のインストールが見つかりませんでした。アカウントまたは組織にアプリをインストールしてから、もう一度「GitHub を接続」を押してください。",
+                    team_not_allowed:
+                        "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
                     fallback: "OAuth フローが失敗しました。",
                 },
                 methods: {
@@ -2930,6 +2942,11 @@ export const ja: DeepPartial<Messages> = {
             calendarRequestFailed: "カレンダーのリクエストが失敗しました。",
             githubNotConnected: "GitHub アカウントが連携されていません。",
             githubRequestFailed: "GitHub リクエストが失敗しました。",
+            githubAppTeamRequired: "先にチームを選んでから、もう一度「接続」を押してください。",
+            githubAppTeamNotFound:
+                "そのチームが見つかりません。チームを選んでからもう一度お試しください。",
+            githubAppTeamNotAllowed:
+                "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
         },
         tabs: {
             connections: "連携",
@@ -2944,6 +2961,8 @@ export const ja: DeepPartial<Messages> = {
                     "Genos はこの Google アカウントの保存済みアクセス権を削除します。再び接続するまで、それを使うカレンダー機能は動作しません。再接続には Google でもう一度サインインする必要があります。",
                 bodyGithub:
                     "Genos はこの GitHub アカウントの保存済みアクセス権を削除します。再び接続するまで、プルリクエストのリンクなど、それを使う機能は動作しません。再接続には GitHub でもう一度サインインする必要があります。",
+                bodyGithubApp:
+                    "Genos は GitHub App のあなたの承認を削除します。チームのインストールは、GitHub で誰かが削除するまで残ります。再び承認するまで、プルリクエストの機能はあなたには動作しません。",
             },
             primaryLogin: "プライマリログイン",
             noEmailShared: "(メールは共有されません)",
@@ -2961,6 +2980,25 @@ export const ja: DeepPartial<Messages> = {
                 "Gmail アドレスを使用して、テスト ユーザーとして追加します。確認後 1 分以内にアクセスが有効になります。",
             verificationError: "エラー 403: アクセスが拒否されました",
             addGoogleAccount: "別の Google アカウントを追加する",
+            githubApp: {
+                connectedApp:
+                    "Genos GitHub App で接続済み（読み取り専用、コードへのアクセスなし）。",
+                needsAuthorize:
+                    "チームが {accounts} に GitHub App をインストール済みです。ここで使うには承認してください。",
+                authorize: "承認する",
+                legacyHint:
+                    "再接続すると、Genos のアクセスがリポジトリ単位のより狭い範囲になります。",
+                reconnect: "再接続",
+                notInstalled: "このチームには GitHub App がまだインストールされていません。",
+                install: "インストール",
+                suspended: "GitHub で停止中",
+                manageOnGithub: "GitHub で管理",
+                cannotLink:
+                    "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
+                legacyRowNote:
+                    "リポジトリ全体へのアクセス権を持つ旧来の接続です。GitHub App が使えるようになったら切断してください。",
+                manageOnGithubHint: "（{account}、新しいタブで開きます）",
+            },
         },
         calendar: {
             connectPrompt: "ここで Google と連携してカレンダー イベントを読み取り、管理します。",
@@ -3063,6 +3101,10 @@ export const ja: DeepPartial<Messages> = {
                 truncated: "最近更新された 100 件のリポジトリを表示します。",
                 missingOrg:
                     "組織が見つかりませんか? GitHub で許可します。サードパーティ アプリを制限している組織の場合は、オーナーがリクエストを承認する必要があります。その後、ここで再承認して、新しいアクセスが有効になります。",
+                descriptionApp:
+                    "Genos は GitHub App 経由で GitHub にアクセスするため、チームのインストールで選ばれたリポジトリのうち、あなたが GitHub でも開けるものだけが見えます。リポジトリの追加や削除は GitHub で行います。",
+                missingOrgApp:
+                    "組織やリポジトリが見つかりませんか? そこにアプリをインストールするか、GitHub のインストール設定でリポジトリを追加してから、「更新」を押してください。",
                 manage: "GitHub でのアクセスを管理する",
                 reauthorize: "GitHubを再認証する",
             },

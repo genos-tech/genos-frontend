@@ -166,6 +166,19 @@ export const admin = {
                 // TODO(copy): draft wording for Ken (MIP-1770); ja is the other real locale.
                 email_not_verified:
                     "Google could not confirm that you own this email address, so no account was created. Verify the address with Google and try again, or sign up with your email and password.",
+                // TODO(copy): draft wording for Ken (MIP-2090); ja is the other real locale.
+                // GitHub App connect: each says what to do next.
+                github_app_state_missing:
+                    "GitHub didn't send the connect request back to Genos. Press Connect GitHub again in Settings.",
+                github_app_org_membership_unverified:
+                    "GitHub couldn't confirm that you are an active member of that organization. Check your membership on GitHub, then try again.",
+                github_app_org_admin_required:
+                    "An organization owner has to connect this installation first. Ask one to press Connect GitHub for your team.",
+                installation_not_confirmed:
+                    "GitHub didn't confirm that installation for your account. Press Connect GitHub and install the app again.",
+                no_installation:
+                    "No GitHub App installation you can use was found. Install the app on your account or organization, then press Connect GitHub again.",
+                team_not_allowed: "Only a team owner or editor can link GitHub to this team.",
                 fallback: "OAuth flow failed.",
             },
             methods: {

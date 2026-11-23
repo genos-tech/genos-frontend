@@ -5761,6 +5761,17 @@ export const ar: DeepPartial<Messages> = {
                         "لإنشاء حساب، وافق أولًا على شروط الخدمة وسياسة الخصوصية في صفحة التسجيل.",
                     email_not_verified:
                         "تعذّر على Google تأكيد عنوان البريد الإلكتروني هذا، لذلك لم يتم إنشاء أي حساب. تحقق من العنوان لدى Google وحاول مرة أخرى، أو سجّل باستخدام بريدك الإلكتروني وكلمة المرور.",
+                    github_app_state_missing:
+                        "لم يُرجع GitHub طلب الربط إلى Genos. اضغط «ربط GitHub» مرة أخرى من الإعدادات.",
+                    github_app_org_membership_unverified:
+                        "تعذّر على GitHub تأكيد أنك عضو نشط في تلك المؤسسة. تحقق من عضويتك على GitHub ثم حاول مرة أخرى.",
+                    github_app_org_admin_required:
+                        "يجب أن يربط مالك المؤسسة هذا التثبيت أولًا. اطلب منه الضغط على «ربط GitHub» لفريقك.",
+                    installation_not_confirmed:
+                        "لم يؤكد GitHub ذلك التثبيت لحسابك. اضغط «ربط GitHub» وثبّت التطبيق مرة أخرى.",
+                    no_installation:
+                        "لم يُعثر على تثبيت لتطبيق GitHub يمكنك استخدامه. ثبّت التطبيق على حسابك أو مؤسستك ثم اضغط «ربط GitHub» مرة أخرى.",
+                    team_not_allowed: "يمكن لمالك الفريق أو محرّره فقط ربط GitHub بهذا الفريق.",
                     fallback: "فشل تدفق OAuth.",
                 },
                 methods: {
@@ -7035,6 +7046,9 @@ export const ar: DeepPartial<Messages> = {
             calendarRequestFailed: "فشل طلب التقويم.",
             githubNotConnected: "حساب GitHub غير مرتبط.",
             githubRequestFailed: "فشل طلب GitHub.",
+            githubAppTeamRequired: "اختر فريقًا أولًا ثم اضغط «ربط» مرة أخرى.",
+            githubAppTeamNotFound: "تعذّر العثور على هذا الفريق. اختر فريقًا ثم حاول مرة أخرى.",
+            githubAppTeamNotAllowed: "يمكن لمالك الفريق أو محرّره فقط ربط GitHub بهذا الفريق.",
         },
         tabs: {
             connections: "الحسابات المرتبطة",
@@ -7049,6 +7063,8 @@ export const ar: DeepPartial<Messages> = {
                     "يحذف Genos الوصول المحفوظ إلى حساب Google هذا. تتوقف ميزات التقويم التي تستخدمه عن العمل إلى أن تعيد الربط، وهذا يتطلب تسجيل الدخول باستخدام Google مرة أخرى.",
                 bodyGithub:
                     "يحذف Genos الوصول المحفوظ إلى حساب GitHub هذا. تتوقف الميزات التي تستخدمه، مثل روابط طلبات السحب، عن العمل إلى أن تعيد الربط، وهذا يتطلب تسجيل الدخول باستخدام GitHub مرة أخرى.",
+                bodyGithubApp:
+                    "يحذف Genos تفويضك لتطبيق GitHub. يبقى تثبيت فريقك على GitHub إلى أن يزيله أحدهم هناك، وتتوقف ميزات طلبات السحب عن العمل لك إلى أن تفوّض مرة أخرى.",
             },
             primaryLogin: "تسجيل الدخول الأساسي",
             noEmailShared: "(لم تتم مشاركة أي بريد إلكتروني)",
@@ -7066,6 +7082,22 @@ export const ar: DeepPartial<Messages> = {
                 "مع عنوان Gmail الخاص بك — سنضيفك كمستخدم اختباري، وسيعمل الوصول خلال دقيقة من التأكيد.",
             verificationError: "Error 403: access_denied",
             addGoogleAccount: "إضافة حساب Google آخر",
+            githubApp: {
+                connectedApp:
+                    "متصل عبر تطبيق Genos على GitHub (للقراءة فقط، دون وصول إلى الشيفرة).",
+                needsAuthorize: "ثبّت فريقك تطبيق GitHub على {accounts}. فوّضه لاستخدامه هنا.",
+                authorize: "تفويض",
+                legacyHint: "أعد الربط لمنح Genos وصولًا أضيق على مستوى كل مستودع.",
+                reconnect: "إعادة الربط",
+                notInstalled: "لم يُثبَّت تطبيق GitHub لهذا الفريق بعد.",
+                install: "تثبيت",
+                suspended: "معلّق على GitHub",
+                manageOnGithub: "الإدارة على GitHub",
+                cannotLink: "يمكن لمالك الفريق أو محرّره فقط ربط GitHub بهذا الفريق.",
+                legacyRowNote:
+                    "اتصال قديم بوصول كامل إلى مستودعاتك. افصله بعد أن يعمل تطبيق GitHub لك.",
+                manageOnGithubHint: "({account}، يُفتح في علامة تبويب جديدة)",
+            },
         },
         calendar: {
             connectPrompt: "اربط Google لقراءة أحداث تقويمك وإدارتها من هنا.",
@@ -7165,6 +7197,10 @@ export const ar: DeepPartial<Messages> = {
                 truncated: "تُعرض أحدث 100 مستودع حسب التحديث.",
                 missingOrg:
                     "هل هناك مؤسسة مفقودة؟ امنحها الوصول على GitHub — وإذا كانت المؤسسة تقيّد تطبيقات الجهات الخارجية، فيجب أن يوافق مالك عليها — ثم أعد التفويض هنا لتطبيق الوصول الجديد.",
+                descriptionApp:
+                    "يصل Genos إلى GitHub عبر تطبيق GitHub، لذا يرى فقط المستودعات المختارة في تثبيت فريقك والتي يمكنك أنت أيضًا فتحها على GitHub. أضف المستودعات أو أزلها على GitHub.",
+                missingOrgApp:
+                    "هل هناك مؤسسة أو مستودع مفقود؟ ثبّت التطبيق هناك أو أضف المستودع في إعدادات التثبيت على GitHub، ثم اضغط «تحديث».",
                 manage: "إدارة الوصول على GitHub",
                 reauthorize: "إعادة تفويض GitHub",
             },
