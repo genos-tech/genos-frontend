@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { GithubTab } from "../features/integrations/IntegrationsHome";
 import {
+    hasGithubAppConnection,
     isGithubConnected,
     teamUsesGithubApp,
     type ConnectionsResponse,
@@ -35,11 +36,16 @@ vi.mock("../features/integrations/components/GithubRepoRegistration", () => ({
     GithubRepoRegistration: () => <div data-testid="register-repo" />,
 }));
 
-const renderTab = (appMode: boolean) =>
+const renderTab = (appMode: boolean, appCredential = appMode) =>
     render(
         <CssVarsProvider>
             <MemoryRouter>
-                <GithubTab accessToken="tok" appMode={appMode} githubConnected />
+                <GithubTab
+                    accessToken="tok"
+                    appCredential={appCredential}
+                    appMode={appMode}
+                    githubConnected
+                />
             </MemoryRouter>
         </CssVarsProvider>
     );
@@ -56,8 +62,18 @@ describe("GitHub tab", () => {
         expect(screen.getByText(/reaches GitHub with your account's permissions/)).toBeTruthy();
     });
 
+    it("team on the App but this person still on the legacy token: panels hidden, the card keeps the OAuth wording and its re-authorize", async () => {
+        renderTab(true, false);
+        expect(
+            await screen.findByText(/reaches GitHub with your account's permissions/)
+        ).toBeTruthy();
+        expect(screen.queryByTestId("register-repo")).toBeNull();
+        expect(screen.queryByText("Auto-close tasks when their PR is merged")).toBeNull();
+        expect(await screen.findByRole("button", { name: "Re-authorize GitHub" })).toBeTruthy();
+    });
+
     it("App team: neither panel shows; the access card points at the installation", async () => {
-        renderTab(true);
+        renderTab(true, true);
         expect(await screen.findByText(/through the GitHub App/)).toBeTruthy();
         expect(screen.queryByTestId("register-repo")).toBeNull();
         expect(screen.queryByText("Auto-close tasks when their PR is merged")).toBeNull();
@@ -99,19 +115,40 @@ describe("what counts as the App", () => {
         expect(teamUsesGithubApp(data({ github_app: app() }))).toBe(true);
     });
 
-    it("an App authorization alone is a GitHub connection, like the legacy one", () => {
-        const row = (provider: "github" | "github_app") => ({
-            id: "x",
-            provider,
-            provider_email: null,
-            label: "x",
-            scopes: [],
-            connected_at: "",
-            is_primary: false,
-        });
-        expect(isGithubConnected(data({ connections: [row("github_app")] }))).toBe(true);
+    const row = (provider: "github" | "github_app") => ({
+        id: "x",
+        provider,
+        provider_email: null,
+        label: "x",
+        scopes: [],
+        connected_at: "",
+        is_primary: false,
+    });
+
+    it("an App authorization alone is a GitHub connection while the App is on", () => {
+        const on = { github_app: app({ installations: [] }) };
+        expect(isGithubConnected(data({ ...on, connections: [row("github_app")] }))).toBe(true);
         expect(isGithubConnected(data({ connections: [row("github")] }))).toBe(true);
         expect(isGithubConnected(data({}))).toBe(false);
         expect(isGithubConnected(null)).toBe(false);
+    });
+
+    it("a leftover App row with the switch off is inert: not a connection", () => {
+        expect(isGithubConnected(data({ connections: [row("github_app")] }))).toBe(false);
+        expect(
+            isGithubConnected(
+                data({ github_app: app({ enabled: false }), connections: [row("github_app")] })
+            )
+        ).toBe(false);
+    });
+
+    it("the person's own credential is the App only with the block and an App row", () => {
+        expect(hasGithubAppConnection(data({ connections: [row("github_app")] }))).toBe(false);
+        expect(
+            hasGithubAppConnection(data({ github_app: app(), connections: [row("github")] }))
+        ).toBe(false);
+        expect(
+            hasGithubAppConnection(data({ github_app: app(), connections: [row("github_app")] }))
+        ).toBe(true);
     });
 });

@@ -42,6 +42,7 @@ import {
     ConnectionsResponse,
     findGoogleConnections,
     hasAnyCalendarScope,
+    hasGithubAppConnection,
     isGithubConnected,
     listConnections,
     teamUsesGithubApp,
@@ -560,11 +561,16 @@ export const GithubTab = ({
     accessToken,
     githubConnected,
     appMode = false,
+    appCredential = false,
 }: {
     accessToken: string;
     githubConnected: boolean;
-    /** The team's GitHub connection is the App (MIP-2090). */
+    /** The team's hooks come from the App, or this person's token is the App's (MIP-2090): the
+     *  per-repository registration and manual webhook steps have nothing to do. */
     appMode?: boolean;
+    /** This person's own GitHub calls go through the App: the repo-access card says so. A person
+     *  still on the legacy token keeps the OAuth wording and its re-authorize button. */
+    appCredential?: boolean;
 }) => {
     const { t, locale } = useTranslation();
     const [pulls, setPulls] = useState<GithubPullSummary[]>([]);
@@ -667,7 +673,7 @@ export const GithubTab = ({
                 </Stack>
             )}
 
-            <GithubRepoAccessSection accessToken={accessToken} appMode={appMode} />
+            <GithubRepoAccessSection accessToken={accessToken} appMode={appCredential} />
 
             {/* "Register a repository" and the manual webhook steps exist only because the OAuth
                 integration needs a hook per repository. The App has one webhook for every
@@ -749,7 +755,8 @@ export const IntegrationsHome = () => {
     const googleCalendarAuthorized = hasAnyCalendarScope(googleConnections);
     // The App's authorization counts as a connection too (MIP-2090).
     const githubConnected = isGithubConnected(data);
-    const githubAppMode = teamUsesGithubApp(data);
+    const githubAppCredential = hasGithubAppConnection(data);
+    const githubAppMode = teamUsesGithubApp(data) || githubAppCredential;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -820,6 +827,7 @@ export const IntegrationsHome = () => {
                         {integrationAllowed("github") ? (
                             <GithubTab
                                 accessToken={accessToken}
+                                appCredential={githubAppCredential}
                                 appMode={githubAppMode}
                                 githubConnected={githubConnected}
                             />

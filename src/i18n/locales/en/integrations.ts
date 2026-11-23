@@ -70,6 +70,9 @@ export const integrations = {
             suspended: "Suspended on GitHub",
             manageOnGithub: "Manage on GitHub",
             cannotLink: "Only a team owner or editor can connect GitHub for this team.",
+            legacyRowNote:
+                "Old connection with full access to your repositories. Disconnect it once the GitHub App works for you.",
+            manageOnGithubHint: "({account}, opens in a new tab)",
         },
     },
     calendar: {

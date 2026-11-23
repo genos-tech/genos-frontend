@@ -5113,6 +5113,9 @@ export const hi: DeepPartial<Messages> = {
                 suspended: "GitHub पर निलंबित",
                 manageOnGithub: "GitHub पर प्रबंधित करें",
                 cannotLink: "इस टीम के लिए GitHub केवल टीम का मालिक या संपादक कनेक्ट कर सकता है।",
+                legacyRowNote:
+                    "सभी रिपॉज़िटरी तक पूरी पहुँच वाला पुराना कनेक्शन। GitHub App आपके लिए काम करने लगे तो इसे डिस्कनेक्ट कर दें।",
+                manageOnGithubHint: "({account}, नए टैब में खुलता है)",
             },
         },
         calendar: {

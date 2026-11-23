@@ -219,6 +219,29 @@ describe("GitHub row: App on", () => {
         expect(button.hasAttribute("disabled")).toBe(true);
     });
 
+    it("a viewer with nothing installed and nothing connected: Install is disabled too, and the reason is visible text", async () => {
+        respond([], block({ can_link: false }));
+        setup();
+        const card = await githubCard();
+        expect(
+            within(card).getByRole("button", { name: "Install" }).hasAttribute("disabled")
+        ).toBe(true);
+        expect(within(card).queryByRole("button", { name: "Connect" })).toBeNull();
+        // Not only a tooltip on a disabled button (a keyboard never reaches it).
+        expect(card.textContent).toMatch(/Only a team owner or editor can connect GitHub/);
+    });
+
+    it("each installation link names its account and says it opens a new tab, after the visible text", async () => {
+        respond(
+            [account({ id: "app1", provider: "github_app" })],
+            block({ installations: [installation()] })
+        );
+        setup();
+        const card = await githubCard();
+        const link = within(card).getByRole("link", { name: /^Manage on GitHub/ });
+        expect(link.textContent).toMatch(/Manage on GitHub\s*\(genos-tech, opens in a new tab\)/);
+    });
+
     it("an unknown team (team_id null) never locks the button: the server answers", async () => {
         respond([], block({ team_id: null, can_link: false, installations: [installation()] }));
         setup();
@@ -238,6 +261,10 @@ describe("GitHub row: App on", () => {
         setup();
         expect(await screen.findByText("app@example.com")).toBeTruthy();
         expect(screen.getByText("old@example.com")).toBeTruthy();
+        // Both rows read "GitHub": the old one says what it is.
+        expect(
+            screen.getByText(/Old connection with full access to your repositories/)
+        ).toBeTruthy();
         // Google has none; the two GitHub rows each carry one Disconnect.
         expect(screen.getAllByRole("button", { name: "Disconnect" })).toHaveLength(2);
     });

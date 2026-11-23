@@ -3028,6 +3028,9 @@ export const fr: DeepPartial<Messages> = {
                 manageOnGithub: "Gérer sur GitHub",
                 cannotLink:
                     "Seul un propriétaire ou un éditeur de l'équipe peut connecter GitHub pour cette équipe.",
+                legacyRowNote:
+                    "Ancienne connexion avec accès complet à vos dépôts. Déconnectez-la dès que la GitHub App fonctionne pour vous.",
+                manageOnGithubHint: "({account}, s'ouvre dans un nouvel onglet)",
             },
         },
         calendar: {

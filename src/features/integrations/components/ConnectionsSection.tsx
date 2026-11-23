@@ -6,6 +6,7 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 
+import { visuallyHidden } from "../../../components/ui/a11y/visuallyHidden";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
@@ -265,18 +266,33 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         }}
                     >
                         {ga.manageOnGithub}
+                        {/* Several installations give several identical links: name the account,
+                            and say it opens a new tab, for a screen reader. The visible text stays
+                            the start of the accessible name. */}
+                        <Box component="span" sx={visuallyHidden}>
+                            {" "}
+                            {fmt(ga.manageOnGithubHint, { account: inst.account_login })}
+                        </Box>
                     </Typography>
                 </Stack>
             ))}
         </Stack>
     );
     const accountsList = installations.map((i) => i.account_login).join(", ");
-    const subline = (text: string, withLines: boolean) => (
+    const subline = (text: string | null, withLines: boolean, withHint = false) => (
         <Box sx={{ mt: 0.25 }}>
-            <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                {text}
-            </Typography>
+            {text && (
+                <Typography level="body-xs" sx={{ color: "text.secondary" }}>
+                    {text}
+                </Typography>
+            )}
             {withLines && installationLines}
+            {/* Visible, not only a tooltip on a disabled button (which a keyboard never reaches). */}
+            {withHint && cannotLink && (
+                <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.5 }}>
+                    {ga.cannotLink}
+                </Typography>
+            )}
         </Box>
     );
     let githubExtras: GithubRowExtras | undefined;
@@ -285,19 +301,28 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
             githubExtras =
                 installations.length > 0
                     ? { subline: subline(ga.connectedApp, true) }
-                    : { subline: subline(ga.notInstalled, false), action: linkAction(ga.install) };
+                    : {
+                          subline: subline(ga.notInstalled, false, true),
+                          action: linkAction(ga.install),
+                      };
         } else if (installations.length > 0) {
             githubExtras = {
-                subline: subline(fmt(ga.needsAuthorize, { accounts: accountsList }), true),
+                subline: subline(fmt(ga.needsAuthorize, { accounts: accountsList }), true, true),
                 action: linkAction(ga.authorize),
             };
         } else if (githubLegacyAccount) {
             githubExtras = {
-                subline: subline(ga.legacyHint, false),
+                subline: subline(ga.legacyHint, false, true),
                 action: linkAction(ga.reconnect),
             };
+        } else if (cannotLink) {
+            // Nothing connected, nothing installed, and this person may not link one: the same
+            // disabled Connect as every other state, with the reason in plain text.
+            githubExtras = { subline: subline(null, false, true), action: linkAction(ga.install) };
         }
     }
+    // The old OAuth row next to the App's: say which one it is, since both read "GitHub".
+    const legacyExtras: GithubRowExtras = { subline: subline(ga.legacyRowNote, false) };
 
     const dc = t.integrations.connections.disconnectDialog;
     const pendingIsGithubApp = pendingDisconnect?.provider === "github_app";
@@ -444,6 +469,7 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                 {app && githubAppAccount && githubLegacyAccount && (
                     <AccountRow
                         connection={githubLegacyAccount}
+                        extras={legacyExtras}
                         icon={<GitHubIcon fontSize="inherit" />}
                         label={t.integrations.providers.github}
                         provider="github"

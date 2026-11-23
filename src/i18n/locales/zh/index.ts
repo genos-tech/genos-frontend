@@ -2868,6 +2868,8 @@ export const zh: DeepPartial<Messages> = {
                 suspended: "已在 GitHub 上暂停",
                 manageOnGithub: "在 GitHub 上管理",
                 cannotLink: "只有团队所有者或编辑者可以为此团队连接 GitHub。",
+                legacyRowNote: "拥有全部仓库访问权限的旧连接。GitHub App 可用后请断开它。",
+                manageOnGithubHint: "（{account}，在新标签页中打开）",
             },
         },
         calendar: {

@@ -7018,6 +7018,9 @@ export const ar: DeepPartial<Messages> = {
                 suspended: "معلّق على GitHub",
                 manageOnGithub: "الإدارة على GitHub",
                 cannotLink: "يمكن لمالك الفريق أو محرّره فقط ربط GitHub بهذا الفريق.",
+                legacyRowNote:
+                    "اتصال قديم بوصول كامل إلى مستودعاتك. افصله بعد أن يعمل تطبيق GitHub لك.",
+                manageOnGithubHint: "({account}، يُفتح في علامة تبويب جديدة)",
             },
         },
         calendar: {

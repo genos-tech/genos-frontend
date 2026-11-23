@@ -306,7 +306,7 @@ export const ja: DeepPartial<Messages> = {
                     no_installation:
                         "使用できる GitHub App のインストールが見つかりませんでした。アカウントまたは組織にアプリをインストールしてから、もう一度「GitHub を接続」を押してください。",
                     team_not_allowed:
-                        "このチームに GitHub をリンクできるのは、チームのオーナーまたは編集者だけです。",
+                        "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
                     fallback: "OAuth フローが失敗しました。",
                 },
                 methods: {
@@ -2984,7 +2984,7 @@ export const ja: DeepPartial<Messages> = {
                 connectedApp:
                     "Genos GitHub App で接続済み（読み取り専用、コードへのアクセスなし）。",
                 needsAuthorize:
-                    "チームは {accounts} に GitHub App をインストールしました。ここで使うには承認してください。",
+                    "チームが {accounts} に GitHub App をインストール済みです。ここで使うには承認してください。",
                 authorize: "承認する",
                 legacyHint:
                     "再接続すると、Genos のアクセスがリポジトリ単位のより狭い範囲になります。",
@@ -2995,6 +2995,9 @@ export const ja: DeepPartial<Messages> = {
                 manageOnGithub: "GitHub で管理",
                 cannotLink:
                     "このチームに GitHub を接続できるのは、チームのオーナーまたは編集者だけです。",
+                legacyRowNote:
+                    "リポジトリ全体へのアクセス権を持つ旧来の接続です。GitHub App が使えるようになったら切断してください。",
+                manageOnGithubHint: "（{account}、新しいタブで開きます）",
             },
         },
         calendar: {

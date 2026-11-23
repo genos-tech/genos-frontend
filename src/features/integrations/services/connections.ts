@@ -59,9 +59,15 @@ export interface ConnectionsResponse {
 export const githubAppBlock = (data: ConnectionsResponse | null): GithubAppBlock | null =>
     data?.github_app?.enabled === true ? data.github_app : null;
 
-/** The person has some GitHub connection: the App's, or the legacy OAuth one. */
+/** The person holds an App authorization (and the server has the App on). Their GitHub calls then
+ *  go through the App, whatever the team has installed. */
+export const hasGithubAppConnection = (data: ConnectionsResponse | null): boolean =>
+    githubAppBlock(data) !== null && !!data?.connections.some((c) => c.provider === "github_app");
+
+/** The person has some GitHub connection: the legacy OAuth one, or the App's while the App is on
+ *  (a leftover App row with the switch off is inert and does not count). */
 export const isGithubConnected = (data: ConnectionsResponse | null): boolean =>
-    !!data?.connections.some((c) => c.provider === "github" || c.provider === "github_app");
+    !!data?.connections.some((c) => c.provider === "github") || hasGithubAppConnection(data);
 
 /** The team's GitHub connection is the App (App on and an installation linked): the OAuth-era
  *  panels (register a repository, set up a webhook by hand) have nothing to do there. */

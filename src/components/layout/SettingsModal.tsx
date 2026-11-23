@@ -61,9 +61,9 @@ import { listCalendars } from "../../features/integrations/services/calendar";
 import {
     findGoogleConnection,
     hasCalendarScope,
+    hasGithubAppConnection,
     isGithubConnected,
     listConnections,
-    teamUsesGithubApp,
 } from "../../features/integrations/services/connections";
 import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
 import { useAnalyticsPreferences } from "../../hooks/common/analyticsPreferenceState";
@@ -1687,7 +1687,7 @@ const IntegrationsSection = () => {
             if (cancelled) return;
             // The GitHub App's authorization counts as a connection too (MIP-2090).
             setGithubConnected(isGithubConnected(res));
-            setGithubAppMode(teamUsesGithubApp(res));
+            setGithubAppMode(hasGithubAppConnection(res));
         });
         return () => {
             cancelled = true;
