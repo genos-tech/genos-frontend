@@ -351,17 +351,35 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
                     id="today-changed"
                     title={a.sections.changed}
                 >
-                    {d.changed.items.map((c, i) => (
-                        <Row
-                            key={`c${i}${c.latestAt}`}
-                            href={changeHref(c)}
-                            meta={formatAgentWhen(c.latestAt, locale)}
-                            noLink={a.noLink}
-                            primary={[c.displayId, c.title].filter(Boolean).join(" ")}
-                            secondary={changeLine(c, a)}
-                            onOpen={open}
-                        />
-                    ))}
+                    {d.changed.items.map((c, i) => {
+                        const line = `${changeLine(c, a)} · ${formatAgentWhen(c.latestAt, locale)}`;
+                        // A changed task is a task: same row as every other section (MIP-2095).
+                        // Notes and chat threads are not tasks and keep the plain row.
+                        if (c.type === "task" && c.taskId != null) {
+                            return taskRow(
+                                {
+                                    taskId: c.taskId,
+                                    displayId: c.displayId ?? "",
+                                    title: c.title ?? "",
+                                    status: c.status,
+                                    projectId: c.projectId,
+                                    projectName: c.project,
+                                },
+                                line
+                            );
+                        }
+                        return (
+                            <Row
+                                key={`c${i}${c.latestAt}`}
+                                href={changeHref(c)}
+                                meta={formatAgentWhen(c.latestAt, locale)}
+                                noLink={a.noLink}
+                                primary={[c.displayId, c.title].filter(Boolean).join(" ")}
+                                secondary={changeLine(c, a)}
+                                onOpen={open}
+                            />
+                        );
+                    })}
                 </Section>
             );
         }

@@ -235,9 +235,43 @@ describe("TodayBriefing", () => {
         expect(screen.getByText("2 days overdue")).toBeInTheDocument();
         expect(screen.getAllByText("Due today").length).toBeGreaterThan(0);
         expect(screen.getByText("Mentioned you in Design")).toBeInTheDocument();
-        expect(screen.getByText("Ben commented: ok")).toBeInTheDocument();
+        expect(screen.getByText(/Ben commented: ok/)).toBeInTheDocument();
         fireEvent.click(screen.getByText("Ship it"));
         expect(navigate).toHaveBeenCalledWith("/workspace/tasks/project/4/task/12");
+    });
+
+    it("shows a changed task with the shared task row and a changed note with the plain row (MIP-2095)", () => {
+        const base = answer();
+        renderToday(
+            view(
+                answer({
+                    changed: {
+                        items: [
+                            ...base.changed.items,
+                            {
+                                type: "note",
+                                noteType: "personal",
+                                noteId: 5,
+                                title: "Meeting notes",
+                                latestAt: "2026-11-22T09:00:00Z",
+                                eventsTotal: 1,
+                                latest: { by: "Ana", summary: "edited" },
+                            },
+                        ],
+                        total: 2,
+                        truncated: false,
+                    },
+                })
+            )
+        );
+        const section = screen.getByRole("region", { name: "What changed" });
+        const rows = Array.from(section.querySelectorAll("li"));
+        expect(rows).toHaveLength(2);
+        const taskLi = rows.find((li) => li.textContent?.includes("Pricing page"));
+        expect(taskLi?.getAttribute("data-kind")).toBe("Task");
+        expect(taskLi?.textContent).toMatch(/Ben commented: ok/);
+        const noteLi = rows.find((li) => li.textContent?.includes("Meeting notes"));
+        expect(noteLi?.hasAttribute("data-kind")).toBe(false);
     });
 
     it("a row with no path is text, not a dead button", () => {
