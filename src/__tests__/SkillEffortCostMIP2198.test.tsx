@@ -37,6 +37,7 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     effort: "",
     visibility: "private",
     status: "active",
+    moderationReason: "",
     currentVersionNo: 1,
     publishedVersionNo: 0,
     createdAt: "2026-11-20T10:00:00Z",
