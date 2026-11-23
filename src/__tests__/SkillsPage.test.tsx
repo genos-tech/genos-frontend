@@ -637,6 +637,18 @@ describe("a team skill", () => {
         await waitFor(() => expect(success).toHaveBeenCalledWith("Published version 1."));
     });
 
+    it("choosing Only me ends the sharing: it is not an unpublished change to publish", async () => {
+        const user = userEvent.setup();
+        renderPage();
+        await openEditor(user);
+        await user.click(screen.getByRole("button", { name: "Only me" }));
+        expect(screen.queryByText("Unpublished changes")).toBeNull();
+        const publish = screen.getByRole("button", {
+            name: "Publish changes",
+        }) as HTMLButtonElement;
+        expect(publish.disabled).toBe(true);
+    });
+
     it("a private skill has no Publish button: its text saves by itself", async () => {
         serve(skill());
         const user = userEvent.setup();

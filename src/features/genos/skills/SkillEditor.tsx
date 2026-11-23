@@ -207,6 +207,9 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
             // Choosing "My team" is the explicit share: the server published the current text.
             setBodyEdited(false);
             toast.success(fmt(e.published, { n: res.data.publishedVersionNo }));
+            // A skill that was shared before still has its versions on screen: add the new one.
+            // (One that was never shared loads them when it becomes shared.)
+            if (published) void loadVersions();
         } else {
             // A team skill's save keeps the edit private; a private skill has nobody to hide it from.
             toast.success(res.data.visibility === "team" ? e.savedDraft : e.saved);
@@ -231,6 +234,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
             void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
         } else if (res.reason === "conflict") {
             toast.neutral(e.upToDate);
+            setBodyEdited(false); // a typed-then-undone edit is not a change
             void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
         } else {
             setNotice(res.message || e.publishFailed);
@@ -273,7 +277,11 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     const savedTeam = skill.visibility === "team";
     // What readers do not have yet: the server's comparison of the saved draft, plus what was
     // typed here since (the note's autosave and the unsaved details).
-    const unpublished = savedTeam && (skill.hasUnpublishedChanges || bodyEdited || dirty);
+    // Switching the skill back to private is not something to publish: it ends the sharing.
+    const unpublished =
+        savedTeam &&
+        draft.visibility === "team" &&
+        (skill.hasUnpublishedChanges || bodyEdited || dirty);
 
     return (
         <Stack spacing={2} sx={{ minWidth: 0 }}>
