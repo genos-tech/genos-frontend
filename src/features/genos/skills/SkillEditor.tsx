@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { Alert, Box, Button, Sheet, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Chip, Sheet, Stack, Typography } from "@mui/joy";
 
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
@@ -70,7 +70,9 @@ const followsTitle = (skill: SkillRow, defaultTitle: string): boolean =>
  *
  * The instructions are a note, so they save themselves. The details are a form with a Save
  * button, so a half-typed name never reaches the server. A TEAM skill's readers see the last
- * PUBLISHED version, and the editor's own autosave does not publish: the Publish button does.
+ * PUBLISHED version: neither Save nor the note's autosave publishes (MIP-2177), they only keep the
+ * owner's draft. The "Publish changes" button makes the new version, and is enabled only while the
+ * draft differs from the published one.
  */
 export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     const { t, locale } = useTranslation();
@@ -121,10 +123,13 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         setVersionsFailed(!res.ok);
         setVersions(res.ok ? res.data : []);
     }, [accessToken, skillId]);
+    const loaded = skill !== null;
     useEffect(() => {
-        // Only a skill that has readers has versions worth listing.
-        if (skill && published) void loadVersions();
-    }, [skill, published, loadVersions]);
+        // Only a skill that has readers has versions worth listing. A save keeps a draft and
+        // cuts no version, so a changed skill row is no reason to read the list again: publishing
+        // and sharing do it themselves.
+        if (loaded && published) void loadVersions();
+    }, [loaded, published, loadVersions]);
 
     if (loadState === "loading") {
         return <SkeletonRows count={4} label={m.list.loading} />;
@@ -183,8 +188,8 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         setSaving(true);
         setNotice(null);
         setServerProblems({});
-        // A TEAM skill cuts a version from the saved text whenever its details change (the API's
-        // rule), so the editor's pending autosave must land first or that version misses it.
+        // The draft's text and details belong together: land the editor's pending autosave first
+        // so what "Unpublished changes" reports and what Publish sends is what is on screen.
         await bodyRef.current?.flush();
         const res = await updateSkill(accessToken, skill.id, changes);
         setSaving(false);
@@ -197,13 +202,15 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         setSlugFollows(false);
         setProblemsShown(false);
         setChanged(true);
-        // For a team skill that save sent the current text to the readers too.
-        if (res.data.visibility === "team") {
-            setBodyEdited(false);
-            void loadVersions();
-        }
         if (skill.noteId !== null) syncSkillNoteTitle(skill.noteId, res.data.title);
-        toast.success(e.saved);
+        if (skill.visibility !== "team" && res.data.visibility === "team") {
+            // Choosing "My team" is the explicit share: the server published the current text.
+            setBodyEdited(false);
+            toast.success(fmt(e.published, { n: res.data.publishedVersionNo }));
+        } else {
+            // A team skill's save keeps the edit private; a private skill has nobody to hide it from.
+            toast.success(res.data.visibility === "team" ? e.savedDraft : e.saved);
+        }
         return true;
     };
 
@@ -264,6 +271,9 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     };
 
     const savedTeam = skill.visibility === "team";
+    // What readers do not have yet: the server's comparison of the saved draft, plus what was
+    // typed here since (the note's autosave and the unsaved details).
+    const unpublished = savedTeam && (skill.hasUnpublishedChanges || bodyEdited || dirty);
 
     return (
         <Stack spacing={2} sx={{ minWidth: 0 }}>
@@ -282,15 +292,13 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     <>
                         {savedTeam && (
                             <Button
-                                disabled={saving}
+                                disabled={saving || !unpublished}
                                 loading={publishing}
                                 size="sm"
-                                variant={dirty ? "outlined" : "solid"}
+                                variant={unpublished && !dirty ? "solid" : "outlined"}
                                 onClick={() => void publish()}
                             >
-                                {bodyEdited || skill.publishedVersionNo > 0
-                                    ? e.publishChanges
-                                    : e.publish}
+                                {skill.publishedVersionNo > 0 ? e.publishChanges : e.publish}
                             </Button>
                         )}
                         <Button
@@ -300,7 +308,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                             variant={dirty ? "solid" : "outlined"}
                             onClick={() => void save()}
                         >
-                            {e.save}
+                            {savedTeam ? e.saveDraft : e.save}
                         </Button>
                     </>
                 ) : (
@@ -324,6 +332,26 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 <Alert color="neutral" size="sm" variant="soft">
                     {e.readOnly}
                 </Alert>
+            )}
+            {editable && savedTeam && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: 1,
+                        minWidth: 0,
+                    }}
+                >
+                    {unpublished && (
+                        <Chip color="warning" size="sm" variant="soft">
+                            {e.unpublishedChanges}
+                        </Chip>
+                    )}
+                    <Typography level="body-xs" sx={{ color: "text.tertiary", minWidth: 0 }}>
+                        {fmt(e.saveHint, { n: skill.publishedVersionNo })}
+                    </Typography>
+                </Box>
             )}
             {dirty && editable && (
                 <Typography level="body-xs" role="status" sx={{ color: "text.tertiary" }}>

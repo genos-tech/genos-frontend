@@ -4852,7 +4852,7 @@ export const ja: DeepPartial<Messages> = {
                 visibilityPrivate: "自分のみ",
                 visibilityTeam: "自分のチーム",
                 visibilityTeamHelp:
-                    "チームメンバーは最後に公開したバージョンを読み、実行できます。公開するか詳細を保存すると、現在のテキストが届きます。",
+                    "チームメンバーは最後に公開したバージョンを読み、実行できます。「自分のチーム」を選ぶと現在のテキストが公開され、その後は「変更を公開」を押すまで、保存した編集は自分だけに表示されます。",
                 owner: "オーナー",
                 created: "作成日",
                 updated: "更新日",
@@ -4865,6 +4865,11 @@ export const ja: DeepPartial<Messages> = {
                 save: "詳細を保存",
                 saving: "保存中…",
                 saved: "詳細を保存しました。",
+                saveDraft: "下書きを保存",
+                savedDraft: "下書きを保存しました。公開するまで自分だけに表示されます。",
+                saveHint:
+                    "保存した変更は自分だけに表示されます。公開するまで、チームメンバーはバージョン {n} を使います。",
+                unpublishedChanges: "未公開の変更",
                 publish: "チームに公開",
                 publishChanges: "変更を公開",
                 publishing: "公開中…",

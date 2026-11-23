@@ -1184,7 +1184,7 @@ export const settings = {
             visibilityPrivate: "Only me",
             visibilityTeam: "My team",
             visibilityTeamHelp:
-                "Teammates read and run the last published version. Publishing, or saving the details, sends them the current text.",
+                "Teammates read and run the last published version. Choosing My team publishes the current text; after that, Save keeps your edits private until you press Publish changes.",
             owner: "Owner",
             created: "Created",
             updated: "Updated",
@@ -1197,6 +1197,11 @@ export const settings = {
             save: "Save details",
             saving: "Saving…",
             saved: "Details saved.",
+            saveDraft: "Save draft",
+            savedDraft: "Draft saved. Only you can see it until you publish.",
+            saveHint:
+                "Saving keeps your changes private. Teammates use version {n} until you publish.",
+            unpublishedChanges: "Unpublished changes",
             publish: "Publish to team",
             publishChanges: "Publish changes",
             publishing: "Publishing…",
