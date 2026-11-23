@@ -1187,7 +1187,7 @@ export const es: DeepPartial<Messages> = {
                 visibilityPrivate: "Solo yo",
                 visibilityTeam: "Mi equipo",
                 visibilityTeamHelp:
-                    "Tus compañeros leen y ejecutan la última versión publicada. Los cambios les llegan cuando publicas.",
+                    "Tus compañeros leen y ejecutan la última versión publicada. Publicar, o guardar los detalles, les envía el texto actual.",
                 owner: "Propietario",
                 created: "Creada",
                 updated: "Actualizada",

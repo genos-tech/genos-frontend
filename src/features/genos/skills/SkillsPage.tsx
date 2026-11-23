@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
@@ -75,10 +75,15 @@ export const SkillsPage = ({ teamId, host }: Props) => {
     const [deleting, setDeleting] = useState<SkillRow | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
+    // Only the newest request may set the list: a slow answer for the tab left behind must not
+    // be drawn under the tab now open.
+    const latest = useRef(0);
     const load = useCallback(
         async (which: SkillTab) => {
+            const mine = ++latest.current;
             setList({ status: "loading" });
             const res = await fetchSkills(accessToken, teamId, which);
+            if (mine !== latest.current) return;
             setList(res.ok ? { status: "ready", data: res.data } : { status: "failed" });
         },
         [accessToken, teamId]

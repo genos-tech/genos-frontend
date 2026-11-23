@@ -123,7 +123,7 @@ export const SkillDetailsForm = ({
                     <Input
                         disabled={disabled}
                         placeholder="⚡"
-                        slotProps={{ input: { maxLength: 8, "aria-label": f.iconHelp } }}
+                        slotProps={{ input: { maxLength: 16, "aria-label": f.iconHelp } }}
                         sx={{ textAlign: "center" }}
                         value={draft.icon}
                         onChange={(e) => onChange({ icon: e.target.value })}
@@ -218,6 +218,7 @@ export const SkillDetailsForm = ({
                                 {t.common.actions.add}
                             </Button>
                         }
+                        onBlur={() => addTag(tagInput)}
                         onKeyDown={onTagKeyDown}
                         onChange={(e) => {
                             setTagInput(e.target.value);

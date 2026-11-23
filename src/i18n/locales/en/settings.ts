@@ -1184,7 +1184,7 @@ export const settings = {
             visibilityPrivate: "Only me",
             visibilityTeam: "My team",
             visibilityTeamHelp:
-                "Teammates read and run the last published version. Changes reach them when you publish.",
+                "Teammates read and run the last published version. Publishing, or saving the details, sends them the current text.",
             owner: "Owner",
             created: "Created",
             updated: "Updated",

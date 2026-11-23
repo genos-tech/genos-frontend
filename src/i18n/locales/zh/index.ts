@@ -4672,7 +4672,8 @@ export const zh: DeepPartial<Messages> = {
                 visibility: "谁可以使用",
                 visibilityPrivate: "仅自己",
                 visibilityTeam: "我的团队",
-                visibilityTeamHelp: "队友会读取并运行最近发布的版本。更改在你发布后才会送达。",
+                visibilityTeamHelp:
+                    "队友会读取并运行最近发布的版本。发布或保存详细信息时,当前文本会送达他们。",
                 owner: "所有者",
                 created: "创建时间",
                 updated: "更新时间",

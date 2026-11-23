@@ -4,6 +4,7 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { Alert, Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { toast } from "../../../components/ui/feedback/toastStore";
@@ -56,12 +57,11 @@ const fieldOf = (message: string): keyof ServerProblems | null => {
     return null;
 };
 
-/** The title's slug while the name has not been written by hand: the saved name is the title's
- *  own (`weekly-update`, or `weekly-update-2` when that was taken). */
-const followsTitle = (skill: SkillRow): boolean => {
-    const base = slugify(skill.title);
-    return base !== "" && new RegExp(`^${base}(-\\d+)?$`).test(skill.slug);
-};
+/** The name follows the title only on a skill that was just made and not yet titled by its
+ *  author: a name people already type is never rewritten by a title edit (the server refuses to
+ *  "fix" names for the same reason). */
+const followsTitle = (skill: SkillRow, defaultTitle: string): boolean =>
+    skill.title === defaultTitle && skill.publishedVersionNo === 0;
 
 /**
  * One skill: its details, its instructions (the note editor) and, for a team skill, its
@@ -73,9 +73,10 @@ const followsTitle = (skill: SkillRow): boolean => {
  * PUBLISHED version, and the editor's own autosave does not publish: the Publish button does.
  */
 export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const m = t.settings.genosSkills;
     const e = m.editor;
+    const defaultTitle = m.newDefaultTitle;
     const { accessToken } = useAuth();
 
     const [skill, setSkill] = useState<SkillRow | null>(null);
@@ -105,9 +106,9 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         }
         setSkill(res.data);
         setDraft(draftFrom(res.data));
-        setSlugFollows(followsTitle(res.data));
+        setSlugFollows(followsTitle(res.data, defaultTitle));
         setLoadState("ready");
-    }, [accessToken, skillId]);
+    }, [accessToken, skillId, defaultTitle]);
 
     useEffect(() => {
         // Loading is a fetch whose answer sets the state; the first render has nothing to draw.
@@ -170,36 +171,46 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         else setNotice(res.message || fallback);
     };
 
-    const save = async () => {
-        if (!editable || saving) return;
+    /** Resolves true when the details are saved (or there was nothing to save). */
+    const save = async (): Promise<boolean> => {
+        if (!editable || saving || publishing) return false;
         if (hasProblems(problems)) {
             setProblemsShown(true);
-            return;
+            return false;
         }
         const changes = draftChanges(draft, skill);
-        if (Object.keys(changes).length === 0) return;
+        if (Object.keys(changes).length === 0) return true;
         setSaving(true);
         setNotice(null);
         setServerProblems({});
-        // The version a team skill cuts when its details change reads the saved text: let the
-        // editor's pending autosave land first.
+        // A TEAM skill cuts a version from the saved text whenever its details change (the API's
+        // rule), so the editor's pending autosave must land first or that version misses it.
         await bodyRef.current?.flush();
         const res = await updateSkill(accessToken, skill.id, changes);
         setSaving(false);
         if (!res.ok) {
             showFailure(res, e.saveFailed);
-            return;
+            return false;
         }
         setSkill(res.data);
         setDraft(draftFrom(res.data));
+        setSlugFollows(false);
         setProblemsShown(false);
         setChanged(true);
+        // For a team skill that save sent the current text to the readers too.
+        if (res.data.visibility === "team") {
+            setBodyEdited(false);
+            void loadVersions();
+        }
         if (skill.noteId !== null) syncSkillNoteTitle(skill.noteId, res.data.title);
         toast.success(e.saved);
+        return true;
     };
 
     const publish = async () => {
-        if (!editable || publishing) return;
+        if (!editable || publishing || saving) return;
+        // The server cuts the version from the SAVED details: save what is on screen first.
+        if (dirty && !(await save())) return;
         setPublishing(true);
         setNotice(null);
         await bodyRef.current?.flush();
@@ -213,6 +224,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
             void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
         } else if (res.reason === "conflict") {
             toast.neutral(e.upToDate);
+            void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
         } else {
             setNotice(res.message || e.publishFailed);
         }
@@ -241,9 +253,14 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         return true;
     };
 
-    const back = () => {
-        if (dirty) setConfirmLeave(true);
-        else onBack(changed);
+    const back = async () => {
+        if (dirty) {
+            setConfirmLeave(true);
+            return;
+        }
+        // The note saves a moment after the last keystroke: send it before the editor goes away.
+        await bodyRef.current?.flush();
+        onBack(changed);
     };
 
     const savedTeam = skill.visibility === "team";
@@ -259,12 +276,13 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     minWidth: 0,
                 }}
             >
-                <BackButton label={e.back} onClick={back} />
+                <BackButton label={e.back} onClick={() => void back()} />
                 <Box sx={{ flex: 1, minWidth: 0 }} />
                 {editable ? (
                     <>
                         {savedTeam && (
                             <Button
+                                disabled={saving}
                                 loading={publishing}
                                 size="sm"
                                 variant={dirty ? "outlined" : "solid"}
@@ -276,7 +294,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                             </Button>
                         )}
                         <Button
-                            disabled={!dirty}
+                            disabled={!dirty || publishing}
                             loading={saving}
                             size="sm"
                             variant={dirty ? "solid" : "outlined"}
@@ -386,9 +404,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                             {m.versions.failed}
                         </Typography>
                     ) : versions.length === 0 ? (
-                        <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                            {m.versions.empty}
-                        </Typography>
+                        <EmptyState size="sm" title={m.versions.empty} />
                     ) : (
                         <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
                             {versions.map((v) => (
@@ -410,7 +426,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                                     </Typography>
                                     <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                                         {v.createdAt
-                                            ? new Date(v.createdAt).toLocaleString(undefined, {
+                                            ? new Date(v.createdAt).toLocaleString(locale, {
                                                   dateStyle: "medium",
                                                   timeStyle: "short",
                                               })

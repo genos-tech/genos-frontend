@@ -1161,7 +1161,7 @@ export const ar: DeepPartial<Messages> = {
                 visibilityPrivate: "أنا فقط",
                 visibilityTeam: "فريقي",
                 visibilityTeamHelp:
-                    "يقرأ زملاؤك آخر إصدار منشور ويشغّلونه. تصلهم التغييرات عندما تنشر.",
+                    "يقرأ زملاؤك آخر إصدار منشور ويشغّلونه. عند النشر أو حفظ التفاصيل يصلهم النص الحالي.",
                 owner: "المالك",
                 created: "تاريخ الإنشاء",
                 updated: "تاريخ التحديث",

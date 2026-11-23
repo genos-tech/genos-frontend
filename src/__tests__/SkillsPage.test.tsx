@@ -332,8 +332,31 @@ describe("the editor", () => {
         await waitFor(() => expect(save.disabled).toBe(true));
     });
 
-    it("follows the title with the name until the name is written by hand", async () => {
+    it("never rewrites the name of a skill that already has a title", async () => {
         const user = userEvent.setup();
+        renderPage();
+        const title = await openEditor(user);
+        await user.clear(title);
+        await user.type(title, "Plan my week");
+        expect((screen.getByLabelText(/^Name to type/) as HTMLInputElement).value).toBe(
+            "weekly-update"
+        );
+    });
+
+    it("follows the title with the name on a new skill, until the name is written by hand", async () => {
+        const user = userEvent.setup();
+        vi.mocked(api.fetchSkill).mockResolvedValue({
+            ok: true,
+            data: {
+                ...skill({
+                    title: "New skill",
+                    slug: "new-skill",
+                    visibility: "private",
+                    publishedVersionNo: 0,
+                }),
+                bodyMarkdown: "",
+            },
+        });
         renderPage();
         const title = await openEditor(user);
         await user.clear(title);

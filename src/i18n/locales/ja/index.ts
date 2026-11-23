@@ -4852,7 +4852,7 @@ export const ja: DeepPartial<Messages> = {
                 visibilityPrivate: "自分のみ",
                 visibilityTeam: "自分のチーム",
                 visibilityTeamHelp:
-                    "チームメンバーは最後に公開したバージョンを読み、実行できます。変更は公開すると届きます。",
+                    "チームメンバーは最後に公開したバージョンを読み、実行できます。公開するか詳細を保存すると、現在のテキストが届きます。",
                 owner: "オーナー",
                 created: "作成日",
                 updated: "更新日",

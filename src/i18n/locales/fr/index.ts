@@ -4929,7 +4929,7 @@ export const fr: DeepPartial<Messages> = {
                 visibilityPrivate: "Moi seul",
                 visibilityTeam: "Mon équipe",
                 visibilityTeamHelp:
-                    "Vos collègues lisent et lancent la dernière version publiée. Les changements leur parviennent quand vous publiez.",
+                    "Vos collègues lisent et lancent la dernière version publiée. Publier, ou enregistrer les détails, leur envoie le texte actuel.",
                 owner: "Propriétaire",
                 created: "Créée",
                 updated: "Mise à jour",
