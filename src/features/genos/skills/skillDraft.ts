@@ -9,6 +9,7 @@ import {
     type SkillEffort,
     type SkillInput,
     type SkillRow,
+    type SkillShare,
     type SkillVisibility,
     type ToolLevel,
 } from "./skillsApi";
@@ -24,6 +25,9 @@ export type SkillDraft = {
     toolLevel: ToolLevel;
     effort: SkillEffort;
     visibility: SkillVisibility;
+    /** Who a "specific" skill is shared with (kept while another choice is selected, so a
+     *  mis-click does not lose the list). */
+    shares: SkillShare[];
 };
 
 export const draftFrom = (skill: SkillRow): SkillDraft => ({
@@ -36,8 +40,15 @@ export const draftFrom = (skill: SkillRow): SkillDraft => ({
     toolLevel: skill.toolLevel,
     effort: skill.effort,
     // A public skill is not made on this page: it reads as the nearest thing it can set.
-    visibility: skill.visibility === "team" ? "team" : "private",
+    visibility:
+        skill.visibility === "team" || skill.visibility === "specific"
+            ? skill.visibility
+            : "private",
+    shares: skill.shares.map((s) => ({ ...s })),
 });
+
+/** The identity of a share, for comparing two lists. */
+export const shareKey = (s: Pick<SkillShare, "kind" | "id">): string => `${s.kind}:${s.id}`;
 
 /** Only the fields that differ from the saved skill, as the API takes them. Empty = clean. */
 export const draftChanges = (draft: SkillDraft, skill: SkillRow): SkillInput => {
@@ -54,6 +65,13 @@ export const draftChanges = (draft: SkillDraft, skill: SkillRow): SkillInput => 
     if (draft.toolLevel !== saved.toolLevel) out.toolLevel = draft.toolLevel;
     if (draft.effort !== saved.effort) out.effort = draft.effort;
     if (draft.visibility !== saved.visibility) out.visibility = draft.visibility;
+    // The list goes with a save that changes it, or that makes the skill "specific".
+    const listChanged =
+        [...draft.shares.map(shareKey)].sort().join("\n") !==
+        [...saved.shares.map(shareKey)].sort().join("\n");
+    if (listChanged || (out.visibility === "specific" && draft.shares.length > 0)) {
+        out.shares = draft.shares.map(({ kind, id }) => ({ kind, id }));
+    }
     return out;
 };
 
@@ -64,6 +82,8 @@ export type DraftProblems = {
     title?: "empty";
     slug?: SlugProblem;
     tags?: TagProblem;
+    /** "Specific people" is chosen and nobody is. */
+    shares?: "empty";
 };
 
 /** What stops a save, before the server is asked. The description's and hint's lengths are
@@ -81,6 +101,7 @@ export const validateDraft = (draft: SkillDraft): DraftProblems => {
         }
     }
     if (!out.tags && draft.tags.length > SKILL_LIMITS.tagsMax) out.tags = "tooMany";
+    if (draft.visibility === "specific" && draft.shares.length === 0) out.shares = "empty";
     return out;
 };
 

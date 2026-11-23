@@ -1168,6 +1168,7 @@ export const es: DeepPartial<Messages> = {
                 by: "Por {name}",
                 private: "Privada",
                 team: "Equipo",
+                specific: "Compartida",
                 notPublished: "Aún sin publicar",
                 version: "Versión {n}",
                 actionsAria: "Acciones de {name}",
@@ -1241,6 +1242,9 @@ export const es: DeepPartial<Messages> = {
                 visibilityTeam: "Mi equipo",
                 visibilityTeamHelp:
                     "Tus compañeros leen y ejecutan la última versión publicada. Al elegir Mi equipo se publica el texto actual; después, Guardar mantiene tus cambios privados hasta que pulses Publicar cambios.",
+                visibilitySpecific: "Personas concretas",
+                visibilitySpecificHelp:
+                    "Solo la persona propietaria cambia con quién se comparte esta habilidad.",
                 owner: "Propietario",
                 created: "Creada",
                 updated: "Actualizada",
@@ -1277,6 +1281,26 @@ export const es: DeepPartial<Messages> = {
                 unsavedBody: "Las instrucciones se guardan solas. Los detalles necesitan Guardar.",
                 bodyAria: "Instrucciones de la habilidad",
             },
+            // Sharing a skill with chosen people, groups and projects (MIP-2212).
+            shares: {
+                label: "Compartida con",
+                nobody: "Aún no hay nadie elegido.",
+                addPerson: "Añadir una persona",
+                addGroup: "Añadir grupo, chat o proyecto",
+                noGroups: "No quedan más grupos que añadir",
+                everyone: "Todo el equipo ya está añadido",
+                kindUser: "Persona",
+                kindMentionGroup: "Grupo de menciones",
+                kindGroupChat: "Chat grupal",
+                kindProject: "Proyecto",
+                peopleNow: "{count} personas ahora",
+                unavailable: "Un chat o proyecto que ya no puedes ver",
+                remove: "Quitar a {name}",
+                problemEmpty: "Elige al menos una persona o un grupo, o elige Solo yo.",
+                help: "Los grupos siguen enlazados: quien se une puede usar la habilidad y quien se va la pierde. Todos deben estar en tu equipo. Guarda para aplicar.",
+                max: "Una habilidad se puede compartir con hasta {max} personas y grupos.",
+            },
+
             team: {
                 roleEditor: "Editor",
                 hiddenChip: "Oculta al equipo",

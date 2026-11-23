@@ -10,7 +10,7 @@ type Query = {
     teamId: string;
     skillId: string;
     slug: string;
-    visibility: "private" | "team" | "public";
+    visibility: "private" | "team" | "specific" | "public";
 };
 
 const keyOf = (q: Query) => `${q.teamId}|${q.skillId}|${q.visibility}|${q.slug}`;

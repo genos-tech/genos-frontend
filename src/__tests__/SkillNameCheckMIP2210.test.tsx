@@ -59,6 +59,7 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     isOfficial: false,
     starred: false,
     editors: [],
+    shares: [],
     forkedFrom: null,
     noteId: 12,
     hasUnpublishedChanges: false,
