@@ -56,6 +56,7 @@ vi.mock("../features/genos/skills/skillsApi", async (importOriginal) => {
         publishSkill: vi.fn(),
         copySkill: vi.fn(),
         fetchSkillVersions: vi.fn(),
+        fetchEffortLevels: vi.fn(),
     };
 });
 
@@ -126,6 +127,7 @@ beforeEach(() => {
         data: { ...skill(), bodyMarkdown: "# Weekly update" },
     });
     vi.mocked(api.fetchSkillVersions).mockResolvedValue({ ok: true, data: [] });
+    vi.mocked(api.fetchEffortLevels).mockResolvedValue({ ok: true, data: [] });
 });
 
 describe("the entry card", () => {

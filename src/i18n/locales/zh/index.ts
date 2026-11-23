@@ -4676,6 +4676,12 @@ export const zh: DeepPartial<Messages> = {
                 effortLow: "低",
                 effortMedium: "中",
                 effortHigh: "高",
+                effortCostBase: "{label} · 成本最低",
+                effortCost: "{label} · 约为“低”的 {n} 倍",
+                effortLocked: "{label} · 您的套餐不包含",
+                effortHelp:
+                    "级别越高，每次运行消耗的积分越多。积分不足时，该技能会降低一个级别运行，并告知您。",
+                effortAutoHelp: "按每位用户在设置中选择的级别运行。",
                 visibility: "谁可以使用",
                 visibilityPrivate: "仅自己",
                 visibilityTeam: "我的团队",

@@ -1540,6 +1540,12 @@ export const hi: DeepPartial<Messages> = {
                 effortLow: "कम",
                 effortMedium: "मध्यम",
                 effortHigh: "अधिक",
+                effortCostBase: "{label} · सबसे कम लागत",
+                effortCost: "{label} · “कम” का लगभग {n}×",
+                effortLocked: "{label} · आपके प्लान में शामिल नहीं",
+                effortHelp:
+                    "ऊँचा स्तर हर रन में अधिक क्रेडिट खर्च करता है। क्रेडिट कम होने पर स्किल एक स्तर नीचे चलती है और आपको बता देती है।",
+                effortAutoHelp: "हर व्यक्ति ने सेटिंग में जो स्तर चुना है, उसी पर चलती है।",
                 visibility: "कौन इस्तेमाल कर सकता है",
                 visibilityPrivate: "केवल मैं",
                 visibilityTeam: "मेरी टीम",

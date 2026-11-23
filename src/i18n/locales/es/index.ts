@@ -1183,6 +1183,12 @@ export const es: DeepPartial<Messages> = {
                 effortLow: "Bajo",
                 effortMedium: "Medio",
                 effortHigh: "Alto",
+                effortCostBase: "{label} · el coste más bajo",
+                effortCost: "{label} · unas {n}× Bajo",
+                effortLocked: "{label} · no incluido en tu plan",
+                effortHelp:
+                    "Un nivel más alto consume más créditos por ejecución. Si te quedan pocos créditos, la habilidad se ejecuta un nivel más abajo y te lo avisa.",
+                effortAutoHelp: "Se ejecuta al nivel que cada persona ha elegido en Ajustes.",
                 visibility: "Quién puede usarla",
                 visibilityPrivate: "Solo yo",
                 visibilityTeam: "Mi equipo",

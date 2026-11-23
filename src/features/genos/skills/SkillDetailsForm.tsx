@@ -19,6 +19,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { draftFrom, type DraftProblems, type SkillDraft } from "./skillDraft";
 import { SKILL_LIMITS, type SkillEffort, type SkillRow } from "./skillsApi";
 import { normalizeTag, tagProblem } from "./skillText";
+import { useEffortLevels } from "./useEffortLevels";
 
 type Props = {
     skill: SkillRow;
@@ -100,6 +101,22 @@ export const SkillDetailsForm = ({
             onChange({ tags: draft.tags.slice(0, -1) });
         }
     };
+    // The effort choice, with what each level costs next to the others once the server has said
+    // (MIP-2198). Until then, or while the agent is not on effort levels, it is the plain names.
+    const levels = useEffortLevels();
+    const effortLevels = (["low", "medium", "high"] as const).map((level) => {
+        const label = { low: f.effortLow, medium: f.effortMedium, high: f.effortHigh }[level];
+        const row = levels?.[level];
+        let text: string = label;
+        if (row?.locked) text = fmt(f.effortLocked, { label });
+        else if (row?.relativeCost != null) {
+            text =
+                row.relativeCost <= 1
+                    ? fmt(f.effortCostBase, { label })
+                    : fmt(f.effortCost, { label, n: Number(row.relativeCost.toFixed(1)) });
+        }
+        return { level, text, locked: row?.locked === true };
+    });
     const date = (iso: string | null) =>
         iso ? new Date(iso).toLocaleDateString(locale, { dateStyle: "medium" }) : "";
     const saved = draftFrom(skill);
@@ -286,10 +303,21 @@ export const SkillDetailsForm = ({
                         }
                     >
                         <Option value="">{f.effortAuto}</Option>
-                        <Option value="low">{f.effortLow}</Option>
-                        <Option value="medium">{f.effortMedium}</Option>
-                        <Option value="high">{f.effortHigh}</Option>
+                        {effortLevels.map(({ level, text, locked }) => (
+                            <Option
+                                key={level}
+                                disabled={locked && draft.effort !== level}
+                                value={level}
+                            >
+                                {text}
+                            </Option>
+                        ))}
                     </Select>
+                    {levels && (
+                        <FormHelperText>
+                            {draft.effort === "" ? f.effortAutoHelp : f.effortHelp}
+                        </FormHelperText>
+                    )}
                 </FormControl>
             </Box>
 
