@@ -4829,6 +4829,12 @@ export const ja: DeepPartial<Messages> = {
                 copy: "自分のスキルにコピー",
                 copied: "自分のスキルにコピーしました。",
                 copyFailed: "スキルをコピーできませんでした。もう一度お試しください。",
+                report: "報告する",
+                moderated: {
+                    in_review: "確認待ち",
+                    reported_hidden: "報告により非表示",
+                    taken_down: "削除されました",
+                },
                 delete: "削除",
             },
             fields: {
@@ -4943,6 +4949,35 @@ export const ja: DeepPartial<Messages> = {
                 body: "スキルとその手順は、あなたとチームの両方から完全に削除されます。",
                 confirm: "スキルを削除",
                 failed: "スキルを削除できませんでした。もう一度お試しください。",
+            },
+            report: {
+                action: "報告する",
+                title: "このスキルを報告",
+                body: "問題の内容を教えてください。すべての報告は運営担当者が確認します。異なる3人から報告があると、確認が終わるまでスキルは非表示になります。",
+                reasonLabel: "どのような問題ですか？",
+                reasons: {
+                    harmful: "有害、またはデータを不正に使おうとしている",
+                    spam: "スパム",
+                    copyright: "著作権",
+                    personal_data: "個人情報が含まれている",
+                    offensive: "不快な内容",
+                    other: "その他",
+                },
+                noteLabel: "ほかに伝えたいことはありますか？（任意）",
+                send: "報告を送信",
+                sent: "ありがとうございます。内容を確認します。",
+                failed: "報告を送信できませんでした。もう一度お試しください。",
+                limit: "本日送信できる報告の上限に達しました。明日もう一度お試しください。",
+            },
+            moderation: {
+                title: {
+                    in_review:
+                        "このスキルは確認待ちです。確認が終わるまで、ほかの人は読めず、実行もできません。",
+                    reported_hidden:
+                        "このスキルは報告により非表示になりました。運営担当者が確認するまで、ほかの人は読めず、実行もできません。",
+                    taken_down: "このスキルは削除されました。ほかの人は読めず、実行もできません。",
+                },
+                reason: "理由：{reason}",
             },
             problems: {
                 titleEmpty: "タイトルは必須です。",

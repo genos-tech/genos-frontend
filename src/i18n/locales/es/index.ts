@@ -1156,6 +1156,12 @@ export const es: DeepPartial<Messages> = {
                 copy: "Copiar a mis habilidades",
                 copied: "Copiada a tus habilidades.",
                 copyFailed: "No se pudo copiar la habilidad. Inténtalo de nuevo.",
+                report: "Denunciar",
+                moderated: {
+                    in_review: "En revisión",
+                    reported_hidden: "Oculta tras denuncias",
+                    taken_down: "Retirada",
+                },
                 delete: "Eliminar",
             },
             fields: {
@@ -1271,6 +1277,36 @@ export const es: DeepPartial<Messages> = {
                 body: "La habilidad y sus instrucciones se eliminan para siempre, para ti y para tu equipo.",
                 confirm: "Eliminar habilidad",
                 failed: "No se pudo eliminar la habilidad. Inténtalo de nuevo.",
+            },
+            report: {
+                action: "Denunciar",
+                title: "Denunciar esta habilidad",
+                body: "Cuéntanos qué ocurre. Un operador revisa cada denuncia y, si tres personas distintas denuncian una habilidad, se oculta hasta entonces.",
+                reasonLabel: "¿Qué ocurre?",
+                reasons: {
+                    harmful: "Es dañina o intenta hacer mal uso de mis datos",
+                    spam: "Spam",
+                    copyright: "Derechos de autor",
+                    personal_data: "Contiene datos personales",
+                    offensive: "Ofensiva",
+                    other: "Otro motivo",
+                },
+                noteLabel: "¿Algo más que debamos saber? (opcional)",
+                send: "Enviar denuncia",
+                sent: "Gracias. La revisaremos.",
+                failed: "No se pudo enviar la denuncia. Inténtalo de nuevo.",
+                limit: "Has enviado el máximo de denuncias de hoy. Inténtalo de nuevo mañana.",
+            },
+            moderation: {
+                title: {
+                    in_review:
+                        "Esta habilidad está en revisión. Nadie más puede leerla ni ejecutarla todavía.",
+                    reported_hidden:
+                        "Esta habilidad se ocultó tras varias denuncias. Nadie más puede leerla ni ejecutarla hasta que un operador la revise.",
+                    taken_down:
+                        "Esta habilidad fue retirada. Nadie más puede leerla ni ejecutarla.",
+                },
+                reason: "Motivo: {reason}",
             },
             problems: {
                 titleEmpty: "El título es obligatorio.",

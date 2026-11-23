@@ -1154,6 +1154,12 @@ export const settings = {
             copy: "Copy to my skills",
             copied: "Copied to your skills.",
             copyFailed: "Couldn't copy the skill. Please try again.",
+            report: "Report",
+            moderated: {
+                in_review: "Held for review",
+                reported_hidden: "Hidden after reports",
+                taken_down: "Taken down",
+            },
             delete: "Delete",
         },
         fields: {
@@ -1269,6 +1275,34 @@ export const settings = {
             body: "The skill and its instructions are deleted for good, for you and for your team.",
             confirm: "Delete skill",
             failed: "Couldn't delete the skill. Please try again.",
+        },
+        report: {
+            action: "Report",
+            title: "Report this skill",
+            body: "Tell us what is wrong. An operator looks at every report, and three reports from different people hide a skill until then.",
+            reasonLabel: "What is wrong?",
+            reasons: {
+                harmful: "It is harmful or tries to misuse my data",
+                spam: "Spam",
+                copyright: "Copyright",
+                personal_data: "It contains personal data",
+                offensive: "Offensive",
+                other: "Something else",
+            },
+            noteLabel: "Anything else we should know? (optional)",
+            send: "Send report",
+            sent: "Thank you. We will look at it.",
+            failed: "Couldn't send the report. Please try again.",
+            limit: "You have sent as many reports as you can today. Try again tomorrow.",
+        },
+        moderation: {
+            title: {
+                in_review: "This skill is held for review. Nobody else can read or run it yet.",
+                reported_hidden:
+                    "This skill was hidden after reports. Nobody else can read or run it until an operator has looked.",
+                taken_down: "This skill was taken down. Nobody else can read or run it.",
+            },
+            reason: "Reason: {reason}",
         },
         problems: {
             titleEmpty: "A title is required.",

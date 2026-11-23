@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import { Alert, Box, Button, Chip, Sheet, Stack, Typography } from "@mui/joy";
 
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
@@ -24,11 +25,13 @@ import {
 } from "./skillDraft";
 import { SkillEditorsField } from "./SkillEditorsField";
 import { syncSkillNoteTitle } from "./skillNoteTitle";
+import { SkillReportDialog } from "./SkillReportDialog";
 import {
     copySkill,
     deleteSkill,
     fetchSkill,
     fetchSkillVersions,
+    isModerated,
     publishSkill,
     setSkillHidden,
     updateSkill,
@@ -90,6 +93,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     const [problemsShown, setProblemsShown] = useState(false);
     const [serverProblems, setServerProblems] = useState<ServerProblems>({});
     const [notice, setNotice] = useState<string | null>(null);
+    const [reporting, setReporting] = useState(false);
     const [saving, setSaving] = useState(false);
     const [publishing, setPublishing] = useState(false);
     const [versions, setVersions] = useState<SkillVersion[] | null>(null);
@@ -355,6 +359,14 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     </>
                 ) : (
                     <>
+                        <Button
+                            size="sm"
+                            startDecorator={<FlagOutlinedIcon />}
+                            variant="plain"
+                            onClick={() => setReporting(true)}
+                        >
+                            {m.report.action}
+                        </Button>
                         {skill.canHide && (
                             <Button
                                 loading={hiding}
@@ -382,6 +394,20 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
             {notice && (
                 <Alert color="danger" role="alert" size="sm" variant="soft">
                     {notice}
+                </Alert>
+            )}
+            {skill.mine && isModerated(skill.status) && (
+                <Alert color="warning" role="status" size="sm" variant="soft">
+                    <Box>
+                        <Typography level="title-sm">
+                            {m.moderation.title[skill.status as keyof typeof m.moderation.title]}
+                        </Typography>
+                        {skill.moderationReason && (
+                            <Typography level="body-sm">
+                                {fmt(m.moderation.reason, { reason: skill.moderationReason })}
+                            </Typography>
+                        )}
+                    </Box>
                 </Alert>
             )}
             {!editable && !skill.hiddenByTeam && (
@@ -606,6 +632,10 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 destructive
                 onClose={() => setConfirmDelete(false)}
                 onConfirm={remove}
+            />
+            <SkillReportDialog
+                skill={reporting ? { id: skill.id, title: skill.title } : null}
+                onClose={() => setReporting(false)}
             />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
