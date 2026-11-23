@@ -6678,7 +6678,6 @@ export const ja: DeepPartial<Messages> = {
                 sinceFirst: "今日これまでの変更",
                 since: "{time} 以降の変更",
                 refresh: "更新",
-                openToday: "今日を開く",
                 agents: {
                     title: "今日のエージェント",
                     sessions: "セッション",
@@ -6702,7 +6701,6 @@ export const ja: DeepPartial<Messages> = {
                 mentionIn: "{where}であなたがメンションされました",
                 mentionChat: "チャット",
                 mentionNote: "ノート",
-                moreCount: "他 {n} 件",
                 noLink: "ここからは開けません",
                 // TODO(copy): MIP-1936 draft wording for a native reader (the briefing's own sentences).
                 change: {

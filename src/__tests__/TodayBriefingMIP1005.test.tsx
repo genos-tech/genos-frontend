@@ -1,5 +1,5 @@
 /**
- * MIP-1005 / MIP-1696: the Today view (Tasks dashboard tab, Genos page card).
+ * MIP-1005: the Today view (Tasks dashboard tab).
  *
  * Covers the typed client (query, 404, error, partial answers), the paths a row opens, the
  * "since I last looked" memory, the page and the card (sections, one click to open, the
@@ -14,7 +14,6 @@ import {
     BriefingTask,
     BriefingToday,
     changeHref,
-    hasBriefingNews,
     loadBriefingToday,
     markLooked,
     mentionHref,
@@ -93,10 +92,10 @@ const view = (data: BriefingToday | null, status: BriefingTodayStatus = "ready")
     refresh: vi.fn(),
 });
 
-const renderToday = (v: ReturnType<typeof view>, variant: "page" | "card" = "page") =>
+const renderToday = (v: ReturnType<typeof view>) =>
     render(
         <CssVarsProvider>
-            <TodayBriefing variant={variant} view={v} onOpenToday={vi.fn()} />
+            <TodayBriefing view={v} />
         </CssVarsProvider>
     );
 
@@ -274,41 +273,6 @@ describe("TodayBriefing", () => {
         renderToday(failed);
         fireEvent.click(screen.getByRole("button", { name: "Try again" }));
         expect(failed.refresh).toHaveBeenCalled();
-    });
-
-    it("the card is one short list across the sections, the rest as a count, and a way in", () => {
-        const many = Array.from({ length: 5 }, (_, i) => ({
-            taskId: 100 + i,
-            projectId: 1,
-            displayId: `P-${i}`,
-            title: `T${i}`,
-            daysUntilDue: -1,
-        }));
-        renderToday(view(answer({ overdue: many, overdueCount: 5 })), "card");
-        expect(screen.getByTestId("today-card")).toBeInTheDocument();
-        expect(screen.getByText("P-0 T0")).toBeInTheDocument();
-        expect(screen.queryByText("P-3 T3")).toBeNull();
-        expect(screen.getByText("+5 more")).toBeInTheDocument(); // 8 things in all, 3 shown
-        expect(screen.getByRole("button", { name: "Open Today" })).toBeInTheDocument();
-        fireEvent.click(screen.getByText("P-1 T1"));
-        expect(navigate).toHaveBeenCalledWith("/workspace/tasks/project/1/task/101");
-    });
-
-    it("hasBriefingNews is false for an empty answer, so the Genos page shows no card", () => {
-        expect(hasBriefingNews(null)).toBe(false);
-        expect(
-            hasBriefingNews(
-                answer({
-                    overdue: [],
-                    overdueCount: 0,
-                    dueToday: [],
-                    dueTodayCount: 0,
-                    mentions: [],
-                    changed: { items: [], total: 0, truncated: false },
-                })
-            )
-        ).toBe(false);
-        expect(hasBriefingNews(answer())).toBe(true);
     });
 });
 

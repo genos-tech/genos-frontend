@@ -3784,7 +3784,6 @@ export const hi: DeepPartial<Messages> = {
                 sinceFirst: "आज अब तक के बदलाव",
                 since: "{time} के बाद के बदलाव",
                 refresh: "रीफ़्रेश",
-                openToday: "आज खोलें",
                 agents: {
                     title: "आज आपके एजेंट",
                     sessions: "सत्र",
@@ -3808,7 +3807,6 @@ export const hi: DeepPartial<Messages> = {
                 mentionIn: "{where} में आपका उल्लेख हुआ",
                 mentionChat: "चैट",
                 mentionNote: "नोट",
-                moreCount: "+{n} और",
                 noLink: "यहाँ से खोला नहीं जा सकता",
                 // TODO(copy): MIP-1936 draft wording for a native reader (the briefing's own sentences).
                 change: {

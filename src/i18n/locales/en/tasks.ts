@@ -1338,7 +1338,6 @@ export const tasks = {
             sinceFirst: "Changes from today so far",
             since: "Changes since {time}",
             refresh: "Refresh",
-            openToday: "Open Today",
             agents: {
                 title: "Your agents today",
                 sessions: "Sessions",
@@ -1362,7 +1361,6 @@ export const tasks = {
             mentionIn: "Mentioned you in {where}",
             mentionChat: "a chat",
             mentionNote: "a note",
-            moreCount: "+{n} more",
             noLink: "Cannot be opened from here",
             // TODO(copy): MIP-1936 draft wording for a native reader (the briefing's own sentences).
             change: {

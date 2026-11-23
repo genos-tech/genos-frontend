@@ -3550,7 +3550,6 @@ export const es: DeepPartial<Messages> = {
                 sinceFirst: "Cambios de hoy hasta ahora",
                 since: "Cambios desde {time}",
                 refresh: "Actualizar",
-                openToday: "Abrir Hoy",
                 agents: {
                     title: "Tus agentes hoy",
                     sessions: "Sesiones",
@@ -3574,7 +3573,6 @@ export const es: DeepPartial<Messages> = {
                 mentionIn: "Te mencionaron en {where}",
                 mentionChat: "un chat",
                 mentionNote: "una nota",
-                moreCount: "+{n} más",
                 noLink: "No se puede abrir desde aquí",
                 // TODO(copy): MIP-1936 draft wording for a native reader (the briefing's own sentences).
                 change: {
