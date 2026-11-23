@@ -4861,7 +4861,7 @@ export const ar: DeepPartial<Messages> = {
         requestTypes: {
             teamRequest: "طلب فريق",
             projectRequest: "طلب مشروع",
-            gmRequest: "طلب مجموعة",
+            gmRequest: "طلب محادثة جماعية",
             noteAccessRequest: "الوصول إلى الملاحظة",
             ownershipClaim: "طلب ملكية",
             messageReminder: "تذكير",
@@ -4871,6 +4871,14 @@ export const ar: DeepPartial<Messages> = {
             externalShare: "مشتركة مع فريقك",
             genosReport: "تقرير Genos",
             trialNotice: "تجربة مجانية",
+        },
+        // The join requests, said once in the reader's language. `{name}` is set bold
+        // wherever the language puts it (MIP-2175).
+        card: {
+            joinTeam: "{name} يريد الانضمام إلى الفريق",
+            joinProject: "{name} يريد الانضمام إلى المشروع",
+            joinGm: "{name} يريد الانضمام إلى المحادثة الجماعية",
+            noteAccess: "{name} يطلب الوصول إلى ملاحظتك",
         },
         report: {
             showMore: "عرض {count} أخرى",
@@ -4928,16 +4936,16 @@ export const ar: DeepPartial<Messages> = {
             planNeeded: "تشغيله يتطلب خطة Core أو أعلى.",
         },
         messageReminder: {
-            headline: "لقد طلبت تذكيرك بهذه الرسالة.",
-            headlineFrom: "لقد طلبت تذكيرك برسالة {name}.",
+            headline: "تذكير بهذه الرسالة",
+            headlineFrom: "تذكير برسالة {name}",
             openMessage: "فتح الرسالة",
             openInNamed: "فتح في {chat}",
-            headlineComment: "لقد طلبت تذكيرك بهذا التعليق.",
-            headlineCommentFrom: "لقد طلبت تذكيرك بتعليق {name}.",
+            headlineComment: "تذكير بهذا التعليق",
+            headlineCommentFrom: "تذكير بتعليق {name}",
             openComment: "فتح التعليق",
         },
         todoReminder: {
-            headline: "لقد طلبت تذكيرك بهذه المهمة.",
+            headline: "تذكير بهذه المهمة",
             openTodo: "فتح المهمة",
         },
         ownershipClaim: {

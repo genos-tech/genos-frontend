@@ -43,9 +43,10 @@ const mount = (i: InboxItemProps) =>
     );
 
 describe("InboxBubble frame", () => {
-    it("is a card on the Bubble frame", () => {
+    it("is a calm row on the Bubble frame, not a bordered balloon", () => {
         const { container } = mount(item(5));
-        expect(container.querySelector('[data-bubble-layout="bubble"]')).not.toBeNull();
+        expect(container.querySelector('[data-bubble-layout="compact"]')).not.toBeNull();
+        expect(container.querySelector('[data-bubble-layout="bubble"]')).toBeNull();
     });
 
     it("has no gradient anywhere on the card", () => {
@@ -63,13 +64,12 @@ describe("InboxBubble frame", () => {
         [1, "info"],
         [2, "success"],
         [4, "warning"],
-    ])("type %i chip uses the %s role", (type, role) => {
-        mount(item(type));
-        const chip = document.querySelector(".MuiChip-root") as HTMLElement;
-        expect(getComputedStyle(chip).color).toContain(`--g-${role}-text`);
-        expect(getComputedStyle(chip).getPropertyValue("background")).toContain(
-            `--g-${role}-subtle`
-        );
+    ])("type %i's mark uses the %s role", (type, role) => {
+        const { container } = mount(item(type));
+        const tile = container.querySelector(`[data-inbox-tile-tone="${role}"]`) as HTMLElement;
+        expect(tile).not.toBeNull();
+        expect(getComputedStyle(tile).color).toContain(`--g-${role}-text`);
+        expect(getComputedStyle(tile).backgroundColor).toContain(`--g-${role}-subtle`);
     });
 
     it("the claim's respond-by line is the danger role", () => {

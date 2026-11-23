@@ -26,8 +26,6 @@ import { useState } from "react";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import { Chip, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../context/authState";
@@ -42,6 +40,7 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { TeamProfileProps, UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { resolveInboxTarget } from "../utils/resolveInboxTarget";
+import { InboxLinkChip } from "./InboxLinkChip";
 
 type InboxTargetChipProps = {
     inboxItem: InboxItemProps;
@@ -51,28 +50,28 @@ type InboxTargetChipProps = {
     useCM: ChatManagementState;
     useTEM: TeamManagementState;
     useUISM: UIStateManagementState;
+    /** The kind's icon in front of the name. Off when the type's own icon is already beside it. */
+    showIcon?: boolean;
 };
 
 const ICONS = {
-    team: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
-    project: <FolderRoundedIcon sx={{ fontSize: 14 }} />,
-    gm: <ChatRoundedIcon sx={{ fontSize: 14 }} />,
-};
-
-// Same hues as `ITEM_TYPE_CONFIG` in InboxBubble (Team=blue, Project=green,
-// GM=pink) so the chip reads as the same object as the request-type badge
-// above it.
-const COLORS = {
-    team: { dark: "#60a5fa", light: "#3b82f6" },
-    project: { dark: "#4ade80", light: "#22c55e" },
-    gm: { dark: "#f472b6", light: "#ec4899" },
+    team: GroupsRoundedIcon,
+    project: FolderRoundedIcon,
+    gm: ChatRoundedIcon,
 };
 
 export const InboxTargetChip = (props: InboxTargetChipProps) => {
-    const { inboxItem, myself, setMyself, socket, useCM, useTEM, useUISM } = props;
+    const {
+        inboxItem,
+        myself,
+        setMyself,
+        socket,
+        useCM,
+        useTEM,
+        useUISM,
+        showIcon = true,
+    } = props;
     const { accessToken } = useAuth();
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
 
     const [openProject, setOpenProject] = useState(false);
     const [openGM, setOpenGM] = useState(false);
@@ -111,40 +110,13 @@ export const InboxTargetChip = (props: InboxTargetChipProps) => {
         else void handleOpenTeam();
     };
 
-    const color = COLORS[target.kind];
-
     return (
         <>
-            <Chip
-                size="sm"
-                startDecorator={ICONS[target.kind]}
-                variant="soft"
-                sx={{
-                    cursor: "pointer",
-                    maxWidth: "100%",
-                    borderRadius: "8px",
-                    fontWeight: 600,
-                    fontSize: "0.7rem",
-                    background: isDark ? `${color.dark}15` : `${color.light}12`,
-                    color: isDark ? color.dark : color.light,
-                    border: "1px solid",
-                    borderColor: isDark ? `${color.dark}25` : `${color.light}20`,
-                    "& .MuiChip-startDecorator": { color: "inherit" },
-                    "& .MuiChip-label": {
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                    },
-                    "&:hover": {
-                        background: isDark ? `${color.dark}28` : `${color.light}20`,
-                    },
-                }}
+            <InboxLinkChip
+                Icon={showIcon ? ICONS[target.kind] : undefined}
+                label={target.name}
                 onClick={handleClick}
-            >
-                <Typography component="span" sx={{ color: "inherit", fontSize: "inherit" }}>
-                    {target.name}
-                </Typography>
-            </Chip>
+            />
 
             {target.kind === "project" && (
                 <ModalProjectProfile

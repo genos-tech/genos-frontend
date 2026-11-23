@@ -289,8 +289,14 @@ describe("the card shows its read state", () => {
         expect(screen.getByRole("button", { name: "Mark as unread" })).toBeTruthy();
     });
 
-    it("a request has neither: it is read by answering it", () => {
+    it("a pending request has the dot but no toggle: answering it is what clears it", () => {
         card(row(42, 1));
+        expect(screen.getByTestId("inbox-unread-dot")).toBeTruthy();
+        expect(screen.queryByTestId("inbox-read-toggle")).toBeNull();
+    });
+
+    it("an answered request has neither", () => {
+        card({ ...row(43, 1, true), requestStatus: "approved" });
         expect(screen.queryByTestId("inbox-unread-dot")).toBeNull();
         expect(screen.queryByTestId("inbox-read-toggle")).toBeNull();
     });

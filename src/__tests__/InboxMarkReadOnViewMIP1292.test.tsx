@@ -88,7 +88,7 @@ class MockIO {
         return MockIO.instances.filter((o) => !o.disconnected);
     }
 }
-const cards = () => [...document.querySelectorAll('[data-bubble-layout="bubble"]')];
+const cards = () => [...document.querySelectorAll('[data-bubble-layout="compact"]')];
 const see = (el: Element, ratio = 1) =>
     act(() => MockIO.live()[0].report(el, { isIntersecting: true, intersectionRatio: ratio }));
 const leave = (el: Element) =>

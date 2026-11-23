@@ -1,226 +1,55 @@
-import { lazy, Suspense, useState } from "react";
-import ArticleRoundedIcon from "@mui/icons-material/ArticleRounded";
-import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import HubRoundedIcon from "@mui/icons-material/HubRounded";
-import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import { lazy, Suspense } from "react";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
-import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import ShieldRoundedIcon from "@mui/icons-material/ShieldRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
-import { Box, Button, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../components/messageBody/MessageBody";
-import { Bubble, BubbleMeta } from "../../../components/ui/bubble";
+import { ResolvedUserName } from "../../../components/ui/avatars/AvatarContext";
+import { Bubble } from "../../../components/ui/bubble";
 import { EmojiText } from "../../../components/ui/emoji/EmojiText";
-import { useAuth } from "../../../context/authState";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../i18n";
-import { purplePalette } from "../../../theme/purplePalette";
-import { g } from "../../../theme/tokens";
+import { g, type } from "../../../theme/tokens";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
-import { extractYYYYMMDD, extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { addInboxItem } from "../../admin/services/addInboxItem";
-import { respondToOwnershipClaim } from "../../admin/services/ownershipClaim";
-import {
-    respondToExternalShare,
-    respondToTeamConnection,
-} from "../../admin/services/teamConnections";
+import { extractYYYYMMDD } from "../../../utils/dateUtils";
 import { useMarkReadOnView } from "../hooks/useMarkReadOnView";
-import { GENOS_REPORT_ITEM_TYPE } from "../utils/genosReport";
 import { isActivityItemType } from "../utils/inboxItemTypes";
+import { resolveInboxTarget } from "../utils/resolveInboxTarget";
 import { AiUsageFooter } from "./AiUsageFooter";
 import { DigestHeadline } from "./DigestHeadline";
 import { GenosReportBody } from "./GenosReportBody";
+import { fallbackTargetName, findActor, joinTitleKey, splitAroundName } from "./inboxActor";
 import { InboxCrossTeamChips } from "./InboxCrossTeamChips";
-import { ReadToggleButton, UnreadDot } from "./InboxReadControls";
+import { InboxItemAvatar } from "./InboxItemAvatar";
+import {
+    DIGEST,
+    EXTERNAL_SHARE,
+    GENOS_REPORT,
+    isGenosAuthored,
+    MESSAGE_REMINDER,
+    NOTE_ACCESS_REQUEST,
+    OWNERSHIP_CLAIM,
+    pickConfig,
+    TEAM_CONNECTION,
+} from "./inboxItemConfig";
+import { InboxItemContext } from "./InboxItemContext";
+import { InboxItemMeta } from "./InboxItemMeta";
+import { InboxLinkChip, InboxTargetText } from "./InboxLinkChip";
+import { reminderParts } from "./inboxReminder";
+import { InboxRequestActions } from "./InboxRequestActions";
 import { InboxTargetChip } from "./InboxTargetChip";
+import { useInboxResponse } from "./useInboxResponse";
 
 // Lazy: keeps react-markdown (and its remark deps) out of the inbox's
 // initial chunk — only digest bubbles ever need it.
 const DigestBody = lazy(() => import("./DigestBody"));
-
-// Item type configurations for cleaner code. `colorScheme` is intentionally
-// NOT mapped to the unified purple palette — each request type needs a
-// distinct hue (Team=blue, Project=green, GM=pink, Note=amber) so the user
-// can tell request types apart at a glance in a dense inbox.
-type RequestLabelKey =
-    | "teamRequest"
-    | "projectRequest"
-    | "gmRequest"
-    | "noteAccessRequest"
-    | "ownershipClaim"
-    | "digest"
-    | "teamConnection"
-    | "externalShare"
-    | "messageReminder"
-    | "todoReminder"
-    | "genosReport"
-    | "trialNotice";
-
-// What Genos itself files in your inbox (the digest, a schedule's report).
-const GENOS_WRITES_TO_YOU = { dark: "#c084fc", light: "#9333ea" };
-
-const ITEM_TYPE_CONFIG: Record<
-    number,
-    {
-        labelKey: RequestLabelKey;
-        icon: React.ReactNode;
-        // Types 1-4 answer over Socket.IO. Type 5 (ownership claim) is
-        // HTTP — its guards live in a locked Django transaction — so it
-        // carries no events and is dispatched separately below.
-        approveEvent?: string;
-        rejectEvent?: string;
-        /** A status role when the hue IS that status (blue info, green success,
-         *  amber warning, red danger); otherwise a literal hue (pink, purple,
-         *  teal, violet have no role). */
-        role?: "info" | "success" | "warning" | "danger";
-        colorScheme: { dark: string; light: string };
-    }
-> = {
-    1: {
-        labelKey: "teamRequest",
-        icon: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
-        approveEvent: "approve_join_team_request",
-        rejectEvent: "reject_join_team_request",
-        role: "info",
-        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
-    },
-    2: {
-        labelKey: "projectRequest",
-        icon: <FolderRoundedIcon sx={{ fontSize: 14 }} />,
-        approveEvent: "approve_join_project_request",
-        rejectEvent: "reject_join_project_request",
-        role: "success",
-        colorScheme: { dark: "#4ade80", light: "#22c55e" },
-    },
-    3: {
-        labelKey: "gmRequest",
-        icon: <ChatRoundedIcon sx={{ fontSize: 14 }} />,
-        approveEvent: "approve_join_gm_request",
-        rejectEvent: "reject_join_gm_request",
-        colorScheme: { dark: "#f472b6", light: "#ec4899" },
-    },
-    4: {
-        labelKey: "noteAccessRequest",
-        icon: <StickyNote2RoundedIcon sx={{ fontSize: 14 }} />,
-        approveEvent: "approve_note_access_request",
-        rejectEvent: "reject_note_access_request",
-        role: "warning",
-        colorScheme: { dark: "#fbbf24", light: "#f59e0b" },
-    },
-    // Red, alone among the request types, and deliberately so: this is
-    // the only inbox item that costs you something by being IGNORED.
-    5: {
-        labelKey: "ownershipClaim",
-        icon: <ShieldRoundedIcon sx={{ fontSize: 14 }} />,
-        role: "danger",
-        colorScheme: { dark: "#f87171", light: "#ef4444" },
-    },
-    // Proactive Genos digest (UX tier model §8): system-authored, not a
-    // request — no approve/reject events, body rendered from
-    // item_body.{title,text} below rather than BlockNote blocks.
-    6: {
-        labelKey: "digest",
-        icon: <AutoAwesomeRoundedIcon sx={{ fontSize: 14 }} />,
-        colorScheme: GENOS_WRITES_TO_YOU,
-    },
-    // Cross-team sharing (7, 8). Teal, apart from the in-team request
-    // hues above, because the thing that matters about these two is that
-    // the other party is a different ORGANIZATION — the distinction worth
-    // seeing before you read a word of the card. Answered over HTTP, like
-    // the ownership claim, so they carry no socket events.
-    7: {
-        labelKey: "teamConnection",
-        icon: <HubRoundedIcon sx={{ fontSize: 14 }} />,
-        colorScheme: { dark: "#2dd4bf", light: "#0d9488" },
-    },
-    8: {
-        labelKey: "externalShare",
-        icon: <ShareRoundedIcon sx={{ fontSize: 14 }} />,
-        colorScheme: { dark: "#2dd4bf", light: "#0d9488" },
-    },
-    // A reminder come due — a message's or a to-do's, told apart by
-    // `item_optionals.kind` (the chip's LABEL switches on it below; the
-    // violet bell doesn't, because "a promise you made yourself, kept" is
-    // the one thing both cards are). Matches the reminder chip in the
-    // flagged list and the More menu.
-    9: {
-        labelKey: "messageReminder",
-        icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 14 }} />,
-        colorScheme: { dark: "#c4b5fd", light: "#7c3aed" },
-    },
-    // The report a member's own schedule produced (MIP-1149). Genos's
-    // colour, like the digest it sits beside on the Activities tab; the
-    // icon and the label tell the two apart. An activity, so no
-    // approve/reject; its body is `{title, text, sections}`.
-    10: {
-        labelKey: "genosReport",
-        icon: <ArticleRoundedIcon sx={{ fontSize: 14 }} />,
-        colorScheme: GENOS_WRITES_TO_YOU,
-    },
-};
-
-/** `item_type` for a team-ownership claim. See `ownershipClaim.ts`. */
-const OWNERSHIP_CLAIM = 5;
-
-/** `item_type` for a proactive Genos digest (UX tier model §8). */
-const DIGEST = 6;
-
-/** `item_type`s for cross-team sharing. See `teamConnections.ts`. */
-const TEAM_CONNECTION = 7;
-const EXTERNAL_SHARE = 8;
-
-/** `item_type` for a reminder that came due — a message's or a to-do's.
- *  ONE type for both, because it is the same thing from the reader's side;
- *  `item_optionals.kind` says which. See `origin/services/message_reminders.py`
- *  and `origin/services/todo_reminders.py`. */
-const MESSAGE_REMINDER = 9;
-
-/** `item_type` for a schedule's report. See `utils/genosReport.ts`. */
-const GENOS_REPORT = GENOS_REPORT_ITEM_TYPE;
-
-/** `item_optionals.kind` for the to-do flavour of the type above. */
-const TODO_REMINDER_KIND = "todo_reminder";
-
-/** `item_optionals.kind` of the first-month-of-Core trial notice (an activity, item type 0). Written
- *  by genos-api's `first_month_trial_notices`. */
-const TRIAL_NOTICE_KIND = "core_trial_notice";
-
-/** The chip of that notice. Type 0 is the catch-all activity type and has no entry in
- *  `ITEM_TYPE_CONFIG` (its other cards stay chipless), so this one is picked by `kind`. Green with
- *  the plans-page icon, like the "Free trial" chip on Settings > Plan and usage. */
-const TRIAL_NOTICE_CONFIG: (typeof ITEM_TYPE_CONFIG)[number] = {
-    labelKey: "trialNotice",
-    icon: <WorkspacePremiumRoundedIcon sx={{ fontSize: 14 }} />,
-    role: "success",
-    colorScheme: ITEM_TYPE_CONFIG[2].colorScheme, // never read: `role` wins; no new literal hex
-};
-
-/** The request types answered over HTTP rather than a socket event. */
-const HTTP_ANSWERED = [OWNERSHIP_CLAIM, TEAM_CONNECTION, EXTERNAL_SHARE];
-
-// Where the card's body text actually starts, measured from the card's own
-// content edge. The body is inset TWICE — MessageBody wraps it in a box with
-// `px: var(--bn-preview-box-px)`, and `.inbox-preview-{light,dark} .bn-editor`
-// then adds `var(--inbox-preview-indent)` on top.
-//
-// Chips sit BESIDE the preview, not inside it, so they have to clear both or
-// they hang off to the left of the sentence they belong to. Summed with calc()
-// rather than hard-coded, so tuning either inset keeps the chips aligned.
-const BODY_TEXT_INDENT = "calc(var(--bn-preview-box-px) + var(--inbox-preview-indent))";
 
 type InboxBubbleProps = {
     useTEM: TeamManagementState;
@@ -232,148 +61,103 @@ type InboxBubbleProps = {
     useCM: ChatManagementState;
     /** Re-read the list after this card answers its own request. */
     onItemChanged?: () => void;
+    /** The row the open route points at. */
+    selected?: boolean;
 };
 
+/**
+ * One Inbox card, for BOTH tabs: a calm row on the shared `Bubble` frame.
+ *
+ *     [face]  Title: who, and what they want (or the stored body)            ● 10:42  ✓
+ *             type · what it points at
+ *             [Approve] [Reject]
+ *
+ * The face is the person's real avatar (found in the body), the Genos mark, or the type's tile;
+ * the type is folded into the context line instead of a chip of its own; the answer buttons sit
+ * under the text they answer. Every action and every piece of data is what it was.
+ */
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM, onItemChanged } = props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        inboxItem,
+        useUISM,
+        useCM,
+        onItemChanged,
+        selected,
+    } = props;
     const { mode } = useColorScheme();
-    const { accessToken } = useAuth();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
-    const [localStatus, setLocalStatus] = useState<"approved" | "rejected" | null>(null);
-    // Only the HTTP paths can report a refusal — a socket emit is
-    // fire-and-forget. Answering something you no longer have standing to
-    // answer (a claim after ownership moved, a share the host withdrew)
-    // has to say so, not no-op.
-    const [respondError, setRespondError] = useState<string | null>(null);
+    const { itemType, itemBody, itemOptionals } = inboxItem;
+
     // An activity (notice, digest, reminder, report) counts as read once it has been on screen
     // for a moment (MIP-1292, MIP-1627); a request gets no ref. `onItemChanged` re-reads the list
     // so the dot and the counts follow.
     const watchRef = useMarkReadOnView({
         itemId: inboxItem.itemId,
-        itemType: inboxItem.itemType,
+        itemType,
         isRead: inboxItem.isRead,
         userId: myself.userId,
         teamId: myself.teamId,
         onRead: onItemChanged,
     });
-    // The unread dot and the read/unread toggle belong to the Activities half: a request is
-    // read by answering it.
-    const isActivityCard = isActivityItemType(inboxItem.itemType);
+    // The unread dot and the read toggle belong to the Activities half: a request is read by
+    // answering it.
+    const isActivityCard = isActivityItemType(itemType);
+    // Anything that isn't an activity is something somebody is waiting on an answer to. Asked as
+    // "not an activity" rather than as a numeric range: an upper bound is how the two cross-team
+    // types once shipped as cards with no Approve button.
+    const isRequest = !isActivityCard;
+    const config = pickConfig(inboxItem);
+    const response = useInboxResponse(inboxItem, config, socket, onItemChanged);
+    const { isHandled } = response;
 
-    // Keyed on BOTH the type and the kind: type 0 carries every plain activity, and only this
-    // one gets a chip.
-    const isTrialNotice =
-        inboxItem.itemType === 0 && inboxItem.itemOptionals?.kind === TRIAL_NOTICE_KIND;
-    const config = isTrialNotice ? TRIAL_NOTICE_CONFIG : ITEM_TYPE_CONFIG[inboxItem.itemType];
-    // Anything that isn't an activity is something somebody is waiting on
-    // an answer to. Asked as "not an activity" rather than as a numeric
-    // range: an upper bound is how the two cross-team types shipped as
-    // cards with no Approve button on a request that could not be answered
-    // anywhere else in the product.
-    const isRequest = !isActivityItemType(inboxItem.itemType);
-    // Cards that can name an openable target: team/project/GM join requests
-    // (1-3) and activities (0). Note-access (4) is excluded — it has its own
-    // open-note chip. The chip renders nothing when nothing resolves, so this
-    // gate only decides where it's worth looking.
-    const canHaveTarget = inboxItem.itemType >= 0 && inboxItem.itemType <= 3;
-    const resolvedStatus = localStatus ?? inboxItem.requestStatus;
-    const isHandled = resolvedStatus === "approved" || resolvedStatus === "rejected";
+    // Cards that can name an openable target: team/project/GM join requests (1-3) and activities
+    // (0). Note-access (4) has its own open-note link. The link renders nothing when nothing
+    // resolves, so this gate only decides where it's worth looking.
+    const canHaveTarget = itemType >= 0 && itemType <= 3;
     const claimDeadline =
-        inboxItem.itemType === OWNERSHIP_CLAIM
-            ? (inboxItem.itemOptionals?.deadline as string | undefined)
-            : undefined;
-    const isCrossTeam =
-        inboxItem.itemType === TEAM_CONNECTION || inboxItem.itemType === EXTERNAL_SHARE;
+        itemType === OWNERSHIP_CLAIM ? (itemOptionals?.deadline as string | undefined) : undefined;
+    const isCrossTeam = itemType === TEAM_CONNECTION || itemType === EXTERNAL_SHARE;
     const crossTeamHint =
-        inboxItem.itemType === TEAM_CONNECTION
+        itemType === TEAM_CONNECTION
             ? t.inbox.crossTeam.connectionHint
-            : inboxItem.itemType === EXTERNAL_SHARE
+            : itemType === EXTERNAL_SHARE
               ? t.inbox.crossTeam.shareHint
               : null;
-    // Where the accepted thing actually IS. Accepting a share admits the
-    // approver and the object joins their own lists, but nothing said so —
-    // the card went quiet and the only way to learn it had worked was to
-    // go looking. This is the one sentence that closes that loop.
-    const acceptedObjectType = String(inboxItem.itemOptionals?.object_type ?? "");
+    // Where the accepted thing actually IS: accepting a share admits the approver and the object
+    // joins their own lists, but nothing said so. This is the one sentence that closes that loop.
+    const acceptedObjectType = String(itemOptionals?.object_type ?? "");
     const acceptedIn =
-        inboxItem.itemType === EXTERNAL_SHARE && resolvedStatus === "approved"
+        itemType === EXTERNAL_SHARE && response.status === "approved"
             ? (t.inbox.crossTeam.acceptedIn[
                   acceptedObjectType as keyof typeof t.inbox.crossTeam.acceptedIn
               ] ?? null)
             : null;
-    const labelSubtleColor = g.text.tertiary;
-    // The cross-team types were first written with a digest-style
-    // `{title, text}` body, which the BlockNote renderer below reads as an
-    // empty document — the rows already filed that way would stay blank
-    // cards forever. Read either shape rather than migrate them.
+
+    // The cross-team types were first written with a digest-style `{title, text}` body, which the
+    // BlockNote renderer reads as an empty document. Read either shape rather than migrate them.
     const legacyBody =
-        inboxItem.itemType !== DIGEST &&
-        inboxItem.itemType !== MESSAGE_REMINDER &&
-        inboxItem.itemType !== GENOS_REPORT &&
-        !Array.isArray(inboxItem.itemBody)
-            ? (inboxItem.itemBody as unknown as { title?: string; text?: string } | null)
+        itemType !== DIGEST &&
+        itemType !== MESSAGE_REMINDER &&
+        itemType !== GENOS_REPORT &&
+        !Array.isArray(itemBody)
+            ? (itemBody as unknown as { title?: string; text?: string } | null)
             : null;
     const legacyText = legacyBody
         ? [legacyBody.title, legacyBody.text].filter(Boolean).join("\n")
         : "";
 
-    // A reminder that came due (itemType 9). The card is composed from the
-    // optionals rather than the stored `{title, text}` body: those facts are
-    // language-free, so a reminder set in English still reads in Japanese,
-    // and the preview can be quoted apart from the sentence about it.
-    const reminderOptionals =
-        inboxItem.itemType === MESSAGE_REMINDER ? inboxItem.itemOptionals : null;
-    const reminderPreview = String(reminderOptionals?.preview ?? "");
-    const reminderSender = String(reminderOptionals?.sender_name ?? "");
-    const reminderHref = String(reminderOptionals?.href ?? "");
-    const reminderChatName = String(reminderOptionals?.chat_name ?? "");
-    // Which of the two reminder kinds this is. The preview block and the
-    // deep-link chip are shared — the to-do's title is quoted under the
-    // same `preview` key, and its `href` opens the To-Do pane focused on
-    // the row — so only the sentence and the chip's wording differ.
-    const isTodoReminder = reminderOptionals?.kind === TODO_REMINDER_KIND;
-    // A message reminder about a TASK COMMENT (the server says so in `subject`, MIP-1444): it is a
-    // message underneath but the card, and its open button, should say "comment". Absent on every
-    // other message, and on cards from a server that predates it, which read as before. A to-do
-    // reminder is checked first below, so a `subject` on one changes nothing.
-    const isCommentReminder = reminderOptionals?.subject === "task_comment";
-    const reminderStrings = t.inbox.messageReminder;
-    const reminderHeadline = isTodoReminder
-        ? t.inbox.todoReminder.headline
-        : isCommentReminder
-          ? reminderSender
-              ? fmt(reminderStrings.headlineCommentFrom, { name: reminderSender })
-              : reminderStrings.headlineComment
-          : reminderSender
-            ? fmt(reminderStrings.headlineFrom, { name: reminderSender })
-            : reminderStrings.headline;
-    const reminderOpenLabel = isTodoReminder
-        ? t.inbox.todoReminder.openTodo
-        : reminderChatName
-          ? fmt(reminderStrings.openInNamed, { chat: reminderChatName })
-          : isCommentReminder
-            ? reminderStrings.openComment
-            : reminderStrings.openMessage;
-    const typeLabelKey: RequestLabelKey | undefined = isTodoReminder
-        ? "todoReminder"
-        : config?.labelKey;
-    // On the deep-link chip below: what it opens, not what reminded you —
-    // the bell already said that at the top of the card.
-    const reminderChipIcon = isTodoReminder ? (
-        <TaskAltRoundedIcon sx={{ fontSize: 14 }} />
-    ) : (
-        <ChatRoundedIcon sx={{ fontSize: 14 }} />
-    );
+    const reminder = reminderParts(inboxItem, t);
 
-    // Note-access requests (itemType 4) can open the referenced note in the
-    // URL-link modal. Only personal notes (note_type 1) are routable from
-    // the stored optionals (note_type/note_id) — the my-notes URL needs just
-    // the id, whereas task/chat notes need project/task/chat ids the request
-    // doesn't carry, so they show no open affordance (a scoped follow-up).
+    // Note-access requests (itemType 4) can open the referenced note in the URL-link modal. Only
+    // personal notes (note_type 1) are routable from the stored optionals: the my-notes URL needs
+    // just the id, whereas task/chat notes need ids the request doesn't carry.
     const urlLinkModal = useUrlLinkModal();
-    const noteOptionals = inboxItem.itemType === 4 ? inboxItem.itemOptionals : null;
+    const noteOptionals = itemType === NOTE_ACCESS_REQUEST ? itemOptionals : null;
     const openableNote =
         noteOptionals && noteOptionals.note_type === 1 && noteOptionals.note_id
             ? {
@@ -382,508 +166,294 @@ export const InboxBubble = (props: InboxBubbleProps) => {
               }
             : null;
 
-    // Three request types are answered over HTTP rather than the socket
-    // events types 1-4 use — the ownership claim, and both cross-team
-    // ones, whose rules live in a Django transaction. Which endpoint is
-    // decided by the type; what they have in common is everything after.
-    const answerOverHttp = async (accept: boolean): Promise<boolean> => {
-        const optionals = inboxItem.itemOptionals ?? {};
-        if (inboxItem.itemType === OWNERSHIP_CLAIM) {
-            return respondToOwnershipClaim(
-                accessToken,
-                inboxItem.itemId,
-                accept ? "approve" : "reject",
-                setRespondError
-            );
-        }
-        if (inboxItem.itemType === TEAM_CONNECTION) {
-            const connectionId = optionals.connection_id as string | undefined;
-            if (!connectionId) {
-                setRespondError(t.inbox.crossTeam.failed);
-                return false;
-            }
-            return respondToTeamConnection(accessToken, connectionId, accept, setRespondError);
-        }
-        const grantId = optionals.grant_id as string | undefined;
-        if (!grantId) {
-            setRespondError(t.inbox.crossTeam.failed);
-            return false;
-        }
-        return respondToExternalShare(accessToken, grantId, accept, setRespondError);
-    };
+    // WHO the card is about, read from the body's first mention (the inbox GET sends no sender id).
+    // A card Genos wrote has no person to show.
+    const byGenos = isGenosAuthored(inboxItem);
+    const actor = byGenos ? null : findActor(itemBody);
+    // The join requests say one short sentence in the reader's language, with the name in bold,
+    // instead of the server's English body and its "Waiting for your approval..." filler. Without
+    // a name to put in it, the card keeps the stored body.
+    const joinKey = joinTitleKey(itemType, actor);
+    const joinParts = joinKey ? splitAroundName(t.inbox.card[joinKey]) : null;
+    // The sentence no longer carries the project, chat or note, so the context line must. When the
+    // link cannot open it (a chat not in the reader's list yet, a task note), the name still shows
+    // as text: it is the thing being asked about.
+    const targetOpens =
+        (canHaveTarget &&
+            resolveInboxTarget(
+                inboxItem,
+                useCM.allChats,
+                useTEM.currentTeam?.teamName || myself.teamName || ""
+            ) !== null) ||
+        (openableNote !== null && Boolean(urlLinkModal));
+    const plainTarget = joinKey && !targetOpens ? fallbackTargetName(inboxItem) : "";
 
-    // The optimistic `setLocalStatus` only moves once the call resolves —
-    // unlike a socket emit, these can be refused (you may no longer be the
-    // owner; the other team may have withdrawn the offer), and showing
-    // "Approved" on a request the server rejected would be a lie about
-    // what access exists.
-    const respondOverHttp = async (accept: boolean) => {
-        setRespondError(null);
-        if (!(await answerOverHttp(accept))) return;
-        const status = accept ? "approved" : "rejected";
-        setLocalStatus(status);
-        // PERSIST IT, don't just flip local state. These rows render
-        // inside a Virtuoso list, so component state dies whenever a row
-        // is recycled — and the stored item still said "pending", so the
-        // card came back with Approve/Reject live on a request that had
-        // already been answered. Types 1-4 avoid this for free: they
-        // answer over Socket.IO and the service pushes the updated card
-        // back, which writes to IndexedDB and re-reads the list. These
-        // answer over HTTP, so they have to do both themselves.
-        await addInboxItem({ ...inboxItem, requestStatus: status, isRead: true });
-        onItemChanged?.();
-    };
+    const hasBlockBody =
+        itemType !== DIGEST &&
+        itemType !== GENOS_REPORT &&
+        Array.isArray(itemBody) &&
+        itemBody[0]?.content?.length > 0;
 
-    const handleApprove = () => {
-        if (HTTP_ANSWERED.includes(inboxItem.itemType)) {
-            void respondOverHttp(true);
-        } else if (socket && config?.approveEvent) {
-            socket.emit(config.approveEvent, { item_id: inboxItem.itemId });
-            setLocalStatus("approved");
-        }
-    };
-
-    const handleReject = () => {
-        if (HTTP_ANSWERED.includes(inboxItem.itemType)) {
-            void respondOverHttp(false);
-        } else if (socket && config?.rejectEvent) {
-            socket.emit(config.rejectEvent, { item_id: inboxItem.itemId });
-            setLocalStatus("rejected");
-        }
-    };
-
-    const headerRow = (
-        <Stack alignItems="center" direction="row" justifyContent="space-between">
-            {config && (
-                <Chip
-                    size="sm"
-                    startDecorator={config.icon}
-                    variant="soft"
-                    sx={{
-                        borderRadius: g.radius.sm,
-                        fontWeight: 600,
-                        fontSize: "0.7rem",
-                        px: 1,
-                        py: 0.25,
-                        border: "1px solid",
-                        "& .MuiChip-startDecorator": { color: "inherit" },
-                        ...(config.role
-                            ? {
-                                  background: g[config.role].subtle,
-                                  borderColor: g[config.role].border,
-                                  color: g[config.role].text,
-                              }
-                            : {
-                                  background: `${isDark ? config.colorScheme.dark : config.colorScheme.light}14`,
-                                  borderColor: `${isDark ? config.colorScheme.dark : config.colorScheme.light}30`,
-                                  color: isDark
-                                      ? config.colorScheme.dark
-                                      : config.colorScheme.light,
-                              }),
-                    }}
-                >
-                    {t.inbox.requestTypes[typeLabelKey ?? config.labelKey]}
-                </Chip>
-            )}
-            <Stack alignItems="center" direction="row" spacing={0.75}>
-                {isActivityCard && !inboxItem.isRead && <UnreadDot />}
-                <BubbleMeta>{extractYYYYMMDDHHMM(inboxItem.tsSent)}</BubbleMeta>
-                {isActivityCard && (
-                    <ReadToggleButton
-                        inboxItem={inboxItem}
-                        teamId={myself.teamId}
-                        userId={myself.userId}
-                        onChanged={onItemChanged}
-                    />
-                )}
-            </Stack>
-        </Stack>
+    const unread = isActivityCard ? !inboxItem.isRead : !isHandled;
+    const meta = (
+        <InboxItemMeta
+            inboxItem={inboxItem}
+            isActivity={isActivityCard}
+            teamId={myself.teamId}
+            unread={unread}
+            userId={myself.userId}
+            onChanged={onItemChanged}
+        />
     );
+
+    // The one title line, which is the body for a card that has no composed sentence.
+    let title: React.ReactNode = null;
+    if (joinParts && actor) {
+        title = (
+            <Typography component="p" sx={{ ...type("body-md"), color: g.text.primary, m: 0 }}>
+                {joinParts[0]}
+                <Box component="strong" sx={{ fontWeight: 600 }}>
+                    {/* The person's name today, not the one the request was filed under. */}
+                    <ResolvedUserName fallbackName={actor.userName} userId={actor.userId} />
+                </Box>
+                {joinParts[1]}
+            </Typography>
+        );
+    } else if (reminder) {
+        title = (
+            <Typography component="p" sx={{ ...type("body-md"), color: g.text.primary, m: 0 }}>
+                {reminder.headline}
+            </Typography>
+        );
+    } else if (hasBlockBody) {
+        title = (
+            <Box
+                sx={{
+                    "& .inbox-preview": { fontSize: "0.875rem", color: g.text.primary },
+                    "&& .bn-editor": {
+                        paddingInline: 0,
+                        background: "transparent",
+                        fontSize: "0.875rem",
+                        lineHeight: 1.45,
+                    },
+                    // The editor's own side padding and white fill belong to a full-width editor;
+                    // here the avatar column carries the indent and the row its own surface.
+                    "&& .bn-container": {
+                        background: "transparent",
+                        "--bn-colors-editor-background": "transparent",
+                    },
+                    // Each paragraph takes its own direction from its first strong letter:
+                    // server-written English in an Arabic UI kept its period at the line
+                    // start (MIP-1180).
+                    "& .inbox-preview p, & .inbox-preview li": { unicodeBidi: "plaintext" },
+                }}
+            >
+                <MessageBody
+                    key={`${itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
+                    content={itemBody}
+                    customClassName="inbox-preview"
+                    isSent={true}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            </Box>
+        );
+    } else if (legacyText !== "") {
+        title = (
+            <Typography sx={{ ...type("body-md"), color: g.text.primary, whiteSpace: "pre-wrap" }}>
+                {legacyText}
+            </Typography>
+        );
+    }
+    const hasTitle = title !== null;
 
     return (
         <Bubble
-            bodyOffset={1.5}
-            header={headerRow}
-            layout="bubble"
+            align="gutter"
+            bodyOffset={0.25}
+            layout="compact"
+            narrowBody="beside"
             rootRef={watchRef}
-            sx={{ p: { xs: 1.5, md: 2 } }}
-            tail={false}
+            selected={selected}
+            avatar={
+                <InboxItemAvatar
+                    actor={actor}
+                    byGenos={byGenos}
+                    Icon={config?.Icon ?? NotificationsNoneRoundedIcon}
+                    tone={config?.tone ?? "neutral"}
+                />
+            }
+            header={
+                hasTitle ? (
+                    <Stack alignItems="flex-start" direction="row" spacing={1.5}>
+                        <Box sx={{ flex: 1, minWidth: 0, overflowWrap: "anywhere" }}>{title}</Box>
+                        {meta}
+                    </Stack>
+                ) : undefined
+            }
+            sx={{
+                py: 1.5,
+                px: { xs: 1.5, md: 2 },
+                // The avatar column now carries the indent, so the body text starts flush with
+                // the title: no second inset inside the BlockNote preview.
+                "--bn-preview-box-px": "0px",
+                "--inbox-preview-indent": "0px",
+            }}
         >
-            <Stack spacing={1.5}>
-                {/* Content — digest items carry {title, text} rather than
-                    BlockNote blocks. The text is agent-authored MARKDOWN
-                    (bold, bullets, workspace links resolved server-side),
-                    rendered by the lazy DigestBody; while the chunk loads,
-                    fall back to the old pre-wrapped plain text. */}
-                {inboxItem.itemType === DIGEST && (
-                    <DigestHeadline
-                        isDark={isDark}
-                        title={String(
-                            (inboxItem.itemBody as unknown as { title?: string })?.title ?? ""
-                        )}
+            <InboxItemContext
+                Icon={reminder ? undefined : config?.Icon}
+                label={config && !reminder ? t.inbox.requestTypes[config.labelKey] : undefined}
+                meta={hasTitle ? undefined : meta}
+            >
+                {/* What the card is ABOUT. The body names the target in plain text, so you could
+                    read it but not open it. Renders nothing when the target can't be resolved,
+                    which includes every activity row created before activities carried ids. */}
+                {canHaveTarget && (
+                    <InboxTargetChip
+                        inboxItem={inboxItem}
+                        myself={myself}
+                        setMyself={setMyself}
+                        showIcon={!config}
+                        socket={socket}
+                        useCM={useCM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
                 )}
-                {inboxItem.itemType === DIGEST && (
+                {plainTarget !== "" && <InboxTargetText label={plainTarget} />}
+                {openableNote && urlLinkModal && (
+                    <InboxLinkChip
+                        Icon={StickyNote2RoundedIcon}
+                        label={fmt(t.inbox.noteAccess.openNoteNamed, {
+                            title: openableNote.title,
+                        })}
+                        onClick={() => urlLinkModal.openModalByHref(openableNote.href)}
+                    />
+                )}
+                {/* Jump to what the reminder is about, in the same URL-link modal, so acting on a
+                    reminder doesn't cost you the inbox you were working through. */}
+                {reminder && reminder.href !== "" && urlLinkModal && (
+                    <InboxLinkChip
+                        Icon={reminder.OpenIcon}
+                        label={reminder.openLabel}
+                        onClick={() =>
+                            urlLinkModal.openModalByHref(reminder.href, {
+                                fullPageHref: reminder.href,
+                            })
+                        }
+                    />
+                )}
+            </InboxItemContext>
+
+            {/* The subject itself, quoted: the message, or the to-do's title. A reminder whose
+                subject you have to go and look up is a reminder you postpone. Through `EmojiText`
+                because this preview is the stored `body_text`, where a custom emoji is its
+                `:name:` shortcode. */}
+            {reminder && reminder.preview !== "" && (
+                <Typography
+                    sx={{
+                        ...type("body-sm"),
+                        mt: 0.75,
+                        pl: 1,
+                        whiteSpace: "pre-wrap",
+                        borderLeft: "2px solid",
+                        borderColor: g.accent.border,
+                        color: g.text.secondary,
+                    }}
+                >
+                    <EmojiText text={reminder.preview} />
+                </Typography>
+            )}
+
+            {/* Digest items carry {title, text} rather than BlockNote blocks. The text is
+                agent-authored MARKDOWN, rendered by the lazy DigestBody; while the chunk loads,
+                fall back to plain text. */}
+            {itemType === DIGEST && (
+                <Box sx={{ mt: 0.75 }}>
+                    <DigestHeadline
+                        isDark={isDark}
+                        title={String((itemBody as unknown as { title?: string })?.title ?? "")}
+                    />
                     <Suspense
                         fallback={
                             <Typography
                                 level="body-sm"
-                                sx={{
-                                    whiteSpace: "pre-wrap",
-                                    color: g.text.primary,
-                                }}
+                                sx={{ whiteSpace: "pre-wrap", color: g.text.primary }}
                             >
-                                {String(
-                                    (inboxItem.itemBody as unknown as { text?: string })?.text ??
-                                        ""
-                                )}
+                                {String((itemBody as unknown as { text?: string })?.text ?? "")}
                             </Typography>
                         }
                     >
                         <DigestBody
                             isDark={isDark}
-                            text={String(
-                                (inboxItem.itemBody as unknown as { text?: string })?.text ?? ""
-                            )}
+                            text={String((itemBody as unknown as { text?: string })?.text ?? "")}
                         />
                     </Suspense>
-                )}
-                {inboxItem.itemType === GENOS_REPORT && (
+                </Box>
+            )}
+            {itemType === GENOS_REPORT && (
+                <Box sx={{ mt: 0.75 }}>
                     <GenosReportBody
                         allChats={useCM.allChats}
-                        itemBody={inboxItem.itemBody}
+                        itemBody={itemBody}
                         teamId={myself.teamId}
                         userId={myself.userId}
                     />
-                )}
-                {/* What an AI-made digest or report cost, and its off switch (MIP-1227). Draws
-                    nothing for any other item, however its optionals look. */}
-                <AiUsageFooter
-                    aiSource={inboxItem.aiSource}
-                    itemId={inboxItem.itemId}
-                    itemOptionals={inboxItem.itemOptionals}
-                    itemType={inboxItem.itemType}
-                    userId={myself.userId}
+                </Box>
+            )}
+            {/* What an AI-made digest or report cost, and its off switch (MIP-1227). Draws nothing
+                for any other item, however its optionals look. */}
+            <AiUsageFooter
+                aiSource={inboxItem.aiSource}
+                itemId={inboxItem.itemId}
+                itemOptionals={itemOptionals}
+                itemType={itemType}
+                userId={myself.userId}
+            />
+
+            {/* When an unanswered ownership claim becomes actionable by the person who filed it.
+                The body says how many days; this says the date, because "30 days" read three
+                weeks late is not a warning. Only while the claim is still open. */}
+            {claimDeadline && !isHandled && (
+                <Typography
+                    level="body-xs"
+                    startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 14 }} />}
+                    sx={{ mt: 0.75, color: g.danger.text, fontWeight: 500 }}
+                >
+                    {fmt(t.inbox.ownershipClaim.respondBy, {
+                        date: extractYYYYMMDD(claimDeadline),
+                    })}
+                </Typography>
+            )}
+
+            {/* WHO is asking, and WHAT for: for these two cards the subject is the whole decision
+                (another organization, one named thing of yours). */}
+            {isCrossTeam && (
+                <Box sx={{ mt: 0.75 }}>
+                    <InboxCrossTeamChips inboxItem={inboxItem} />
+                </Box>
+            )}
+
+            {/* Where the thing you just accepted has landed, or what answering this actually does
+                (narrower than it sounds, for both cross-team types). */}
+            {(acceptedIn || (crossTeamHint && !isHandled)) && (
+                <Typography level="body-xs" sx={{ mt: 0.5, color: g.text.tertiary }}>
+                    {acceptedIn ?? crossTeamHint}
+                </Typography>
+            )}
+
+            {isRequest && (
+                <InboxRequestActions
+                    error={response.error}
+                    status={response.status}
+                    onApprove={response.approve}
+                    onReject={response.reject}
                 />
-                {legacyText !== "" && (
-                    <Typography
-                        level="body-sm"
-                        sx={{
-                            whiteSpace: "pre-wrap",
-                            color: g.text.primary,
-                        }}
-                    >
-                        {legacyText}
-                    </Typography>
-                )}
-                {reminderOptionals && (
-                    <Stack spacing={0.75}>
-                        <Typography level="body-sm" sx={{ color: g.text.primary }}>
-                            {reminderHeadline}
-                        </Typography>
-                        {/* The subject itself, quoted — the message, or the
-                            to-do's title. A reminder whose
-                            subject you have to go and look up is a reminder
-                            you postpone, so the text comes with it.
-
-                            Through `EmojiText` because this preview is the
-                            message's stored `body_text`, where a custom
-                            emoji is its `:name:` shortcode — printed raw it
-                            reads as literal text in the one place the
-                            reader is being asked to recognise their own
-                            message. Same treatment as the chat list,
-                            activity feed and flagged list. */}
-                        {reminderPreview !== "" && (
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    whiteSpace: "pre-wrap",
-                                    pl: 1,
-                                    borderLeft: "2px solid",
-                                    borderColor: g.accent.border,
-                                    fontStyle: "italic",
-                                    color: g.text.secondary,
-                                }}
-                            >
-                                <EmojiText text={reminderPreview} />
-                            </Typography>
-                        )}
-                    </Stack>
-                )}
-                {inboxItem.itemType !== DIGEST &&
-                    inboxItem.itemType !== GENOS_REPORT &&
-                    Array.isArray(inboxItem.itemBody) &&
-                    inboxItem.itemBody[0]?.content?.length > 0 && (
-                        <Box
-                            sx={{
-                                "& .inbox-preview": {
-                                    fontSize: "0.85rem",
-                                    color: g.text.primary,
-                                },
-                                // Each paragraph takes its own direction from its first strong
-                                // letter: server-written English in an Arabic UI kept its period
-                                // at the line start (MIP-1180).
-                                "& .inbox-preview p, & .inbox-preview li": {
-                                    unicodeBidi: "plaintext",
-                                },
-                            }}
-                        >
-                            <MessageBody
-                                key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                                content={inboxItem.itemBody}
-                                customClassName="inbox-preview"
-                                isSent={true}
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                            />
-                        </Box>
-                    )}
-
-                {/* What the card is ABOUT. The body names the target in plain
-                    text, so you could read it but not open it — forcing you
-                    out of the inbox to find what you were just approved for,
-                    or who's asking for what. Renders nothing when the target
-                    can't be resolved, which includes every activity row
-                    created before activities carried ids. */}
-                {canHaveTarget && (
-                    // Line the chip up with the body text above it, or it
-                    // reads as detached from the sentence it belongs to. The
-                    // body is inset TWICE: MessageBody's own box padding,
-                    // then `.inbox-preview-{light,dark} .bn-editor`. Clear
-                    // both, via the variables rather than a hard-coded total.
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <InboxTargetChip
-                            inboxItem={inboxItem}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
-                )}
-
-                {/* Open-note affordance for a note-access request — opens
-                    the referenced note in the URL-link modal on top of the
-                    inbox (the owner has access, so it loads normally). */}
-                {openableNote && urlLinkModal && (
-                    // Indented to match the body, same as the target chip above.
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <Chip
-                            color="primary"
-                            size="sm"
-                            startDecorator={<StickyNote2RoundedIcon sx={{ fontSize: 14 }} />}
-                            variant="soft"
-                            sx={{
-                                cursor: "pointer",
-                                maxWidth: "100%",
-                                borderRadius: "8px",
-                                fontWeight: 600,
-                                "& .MuiChip-label": {
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                },
-                            }}
-                            onClick={() => urlLinkModal.openModalByHref(openableNote.href)}
-                        >
-                            {fmt(t.inbox.noteAccess.openNoteNamed, { title: openableNote.title })}
-                        </Chip>
-                    </Box>
-                )}
-
-                {/* Jump to what the reminder is about. Same URL-link
-                    modal as the note affordance, so acting on a reminder
-                    doesn't cost you the inbox you were working through —
-                    with `fullPageHref` offering the preview's Move-to-page
-                    button for when the reader wants the chat itself. The
-                    href names the message (or the to-do row), so either way
-                    it opens focused on the thing rather than at its list. */}
-                {reminderOptionals && reminderHref !== "" && urlLinkModal && (
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <Chip
-                            size="sm"
-                            startDecorator={reminderChipIcon}
-                            variant="soft"
-                            sx={{
-                                cursor: "pointer",
-                                maxWidth: "100%",
-                                borderRadius: "8px",
-                                fontWeight: 600,
-                                background: g.accent.subtle,
-                                color: g.accent.text,
-                                "& .MuiChip-startDecorator": { color: "inherit" },
-                                "& .MuiChip-label": {
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                },
-                            }}
-                            onClick={() =>
-                                urlLinkModal.openModalByHref(reminderHref, {
-                                    fullPageHref: reminderHref,
-                                })
-                            }
-                        >
-                            {reminderOpenLabel}
-                        </Chip>
-                    </Box>
-                )}
-
-                {/* When an unanswered ownership claim becomes actionable
-                    by the person who filed it. The body says how many
-                    days; this says the date, because "30 days" read
-                    three weeks late is not a warning. Only while the
-                    claim is still open — after a decision the deadline
-                    is spent. */}
-                {claimDeadline && !isHandled && (
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <Typography
-                            level="body-xs"
-                            startDecorator={<ScheduleRoundedIcon sx={{ fontSize: 14 }} />}
-                            sx={{
-                                color: g.danger.text,
-                                fontWeight: 600,
-                            }}
-                        >
-                            {fmt(t.inbox.ownershipClaim.respondBy, {
-                                date: extractYYYYMMDD(claimDeadline),
-                            })}
-                        </Typography>
-                    </Box>
-                )}
-
-                {/* WHO is asking, and WHAT for. The body says both in a
-                    sentence; these two cards are the ones where the subject
-                    is the whole decision — another organization, and one
-                    named thing of yours — so it gets to be a chip too. */}
-                {isCrossTeam && (
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <InboxCrossTeamChips inboxItem={inboxItem} />
-                    </Box>
-                )}
-
-                {/* Where the thing you just accepted has landed. */}
-                {acceptedIn && (
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <Typography level="body-xs" sx={{ color: labelSubtleColor }}>
-                            {acceptedIn}
-                        </Typography>
-                    </Box>
-                )}
-
-                {/* What answering this actually does. The body says who is
-                    asking; this says what the button means, which for both
-                    cross-team types is narrower than it sounds. */}
-                {crossTeamHint && !isHandled && (
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <Typography level="body-xs" sx={{ color: labelSubtleColor }}>
-                            {crossTeamHint}
-                        </Typography>
-                    </Box>
-                )}
-
-                {respondError && (
-                    <Box sx={{ pl: BODY_TEXT_INDENT }}>
-                        <Typography color="danger" level="body-xs">
-                            {respondError}
-                        </Typography>
-                    </Box>
-                )}
-
-                {/* Action Buttons */}
-                {isRequest && (
-                    <Stack
-                        direction="row"
-                        justifyContent="flex-end"
-                        spacing={1}
-                        // Approve/Reject labels are longer in several locales;
-                        // wrapping beats overflowing a 390px card.
-                        sx={{ flexWrap: "wrap", rowGap: 1 }}
-                    >
-                        {isHandled ? (
-                            <Button
-                                color={resolvedStatus === "rejected" ? "neutral" : "success"}
-                                size="sm"
-                                variant="soft"
-                                startDecorator={
-                                    resolvedStatus === "rejected" ? (
-                                        <CloseRoundedIcon sx={{ fontSize: 16 }} />
-                                    ) : (
-                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
-                                    )
-                                }
-                                sx={{
-                                    borderRadius: "10px",
-                                    fontWeight: 600,
-                                    fontSize: "0.75rem",
-                                    px: 2,
-                                    py: 0.75,
-                                    background:
-                                        resolvedStatus === "rejected"
-                                            ? palette.dangerTintBg
-                                            : palette.successTintBg,
-                                    color:
-                                        resolvedStatus === "rejected"
-                                            ? palette.dangerTint
-                                            : palette.successTint,
-                                    "&.Mui-disabled": {
-                                        opacity: 0.9,
-                                    },
-                                }}
-                                disabled
-                            >
-                                {resolvedStatus === "rejected"
-                                    ? t.inbox.bubble.rejected
-                                    : t.inbox.bubble.approved}
-                            </Button>
-                        ) : (
-                            <>
-                                <Button
-                                    color="danger"
-                                    size="sm"
-                                    startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
-                                    variant="outlined"
-                                    sx={{
-                                        borderRadius: "10px",
-                                        fontWeight: 600,
-                                        fontSize: "0.75rem",
-                                        px: 2,
-                                        py: 0.75,
-                                        borderColor: palette.dangerTintBorder,
-                                        color: palette.dangerTint,
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            background: palette.dangerTintBg,
-                                            borderColor: palette.dangerTintBorder,
-                                            transform: "translateY(-1px)",
-                                        },
-                                        "&:active": {
-                                            transform: "translateY(0)",
-                                        },
-                                    }}
-                                    onClick={handleReject}
-                                >
-                                    {t.inbox.bubble.reject}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    startDecorator={<CheckRoundedIcon sx={{ fontSize: 16 }} />}
-                                    variant="solid"
-                                    onClick={handleApprove}
-                                >
-                                    {t.inbox.bubble.approve}
-                                </Button>
-                            </>
-                        )}
-                    </Stack>
-                )}
-            </Stack>
+            )}
         </Bubble>
     );
 };

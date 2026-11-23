@@ -4900,7 +4900,7 @@ export const hi: DeepPartial<Messages> = {
         requestTypes: {
             teamRequest: "टीम अनुरोध",
             projectRequest: "प्रोजेक्ट अनुरोध",
-            gmRequest: "GM अनुरोध",
+            gmRequest: "ग्रुप चैट अनुरोध",
             noteAccessRequest: "नोट एक्सेस",
             ownershipClaim: "स्वामित्व अनुरोध",
             digest: "Genos डाइजेस्ट",
@@ -4910,6 +4910,14 @@ export const hi: DeepPartial<Messages> = {
             todoReminder: "टू-डू रिमाइंडर",
             genosReport: "Genos रिपोर्ट",
             trialNotice: "मुफ़्त ट्रायल",
+        },
+        // The join requests, said once in the reader's language. `{name}` is set bold
+        // wherever the language puts it (MIP-2175).
+        card: {
+            joinTeam: "{name} टीम से जुड़ना चाहते हैं",
+            joinProject: "{name} प्रोजेक्ट से जुड़ना चाहते हैं",
+            joinGm: "{name} ग्रुप चैट से जुड़ना चाहते हैं",
+            noteAccess: "{name} आपके नोट का एक्सेस चाहते हैं",
         },
         report: {
             showMore: "{count} और दिखाएँ",
@@ -4966,16 +4974,16 @@ export const hi: DeepPartial<Messages> = {
             planNeeded: "इसे चालू करने के लिए Core या उससे ऊपर का प्लान चाहिए।",
         },
         messageReminder: {
-            headline: "आपने इस मेसेज की याद दिलाने के लिए कहा था।",
-            headlineFrom: "आपने {name} के मेसेज की याद दिलाने के लिए कहा था।",
+            headline: "इस मेसेज का रिमाइंडर",
+            headlineFrom: "{name} के मेसेज का रिमाइंडर",
             openMessage: "मेसेज खोलें",
             openInNamed: "{chat} में खोलें",
-            headlineComment: "आपने इस टिप्पणी की याद दिलाने के लिए कहा था।",
-            headlineCommentFrom: "आपने {name} की टिप्पणी की याद दिलाने के लिए कहा था।",
+            headlineComment: "इस टिप्पणी का रिमाइंडर",
+            headlineCommentFrom: "{name} की टिप्पणी का रिमाइंडर",
             openComment: "टिप्पणी खोलें",
         },
         todoReminder: {
-            headline: "आपने इस टू-डू की याद दिलाने के लिए कहा था।",
+            headline: "इस टू-डू का रिमाइंडर",
             openTodo: "टू-डू खोलें",
         },
         crossTeam: {

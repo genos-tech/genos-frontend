@@ -175,7 +175,8 @@ describe("InboxBubble Genos report", () => {
                 </MemoryRouter>
             </CssVarsProvider>
         );
-        expect(container.querySelector("img")).toBeNull();
+        // The Genos mark is the card's face; a job's text must not add any other image.
+        expect(container.querySelector('img:not([alt="Genos Logo"])')).toBeNull();
         expect(container.querySelector("b, i")).toBeNull();
         expect(container.querySelector("a")).toBeNull();
         expect(screen.getByText("<b>bold</b>")).toBeTruthy();

@@ -11,6 +11,7 @@ import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
 import { useSyncFailure } from "../../../services/syncStatus";
+import { focusRing, g } from "../../../theme/tokens";
 import { smoothScrollBehavior } from "../../../utils/motion";
 import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
@@ -94,26 +95,26 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 <Clickable
                                     key={`${itemKeyPrefix}-${item.itemId}`}
                                     sx={{
-                                        // Narrower gutters on a phone so the
-                                        // card keeps its readable width.
-                                        px: { xs: 1, md: 2 },
-                                        py: 0.75,
+                                        // The row is a plain block that only does focus, hover
+                                        // and the keyboard: the card inside it draws its own
+                                        // padding and its hairline divider, so nothing floats.
                                         cursor: "pointer",
+                                        borderRadius: 0,
                                         animation: "fadeSlideIn 0.3s ease-out forwards",
                                         animationDelay: `${Math.min(index * 0.05, 0.3)}s`,
                                         opacity: 0,
-                                        borderRadius: "16px",
-                                        mx: 0.5,
-                                        background: isSelected
-                                            ? isDark
-                                                ? "rgba(var(--gp-brandalt-500-rgb), 0.08)"
-                                                : "rgba(var(--gp-brand-700-rgb), 0.06)"
-                                            : "transparent",
-                                        outline: isSelected
-                                            ? `2px solid ${isDark ? "rgba(var(--gp-brandalt-500-rgb), 0.3)" : "rgba(var(--gp-brand-700-rgb), 0.2)"}`
-                                            : "none",
-                                        outlineOffset: "-2px",
-                                        transition: "background 0.2s ease, outline 0.2s ease",
+                                        // Entering is decoration: a reader who asked for less motion
+                                        // sees the row at once.
+                                        "@media (prefers-reduced-motion: reduce)": {
+                                            animation: "none",
+                                            opacity: 1,
+                                        },
+                                        transition: `background-color ${g.motion.fast} ${g.ease}`,
+                                        "&:hover": { bgcolor: g.hover },
+                                        "&:focus-visible": {
+                                            ...focusRing,
+                                            outlineOffset: "-2px",
+                                        },
                                         "@keyframes fadeSlideIn": {
                                             from: {
                                                 opacity: 0,
@@ -130,6 +131,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                     <InboxBubble
                                         inboxItem={item}
                                         myself={myself}
+                                        selected={isSelected}
                                         setMyself={setMyself}
                                         socket={socket}
                                         useCM={useCM}

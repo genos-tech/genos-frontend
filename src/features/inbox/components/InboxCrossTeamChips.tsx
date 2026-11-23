@@ -1,5 +1,5 @@
 /**
- * What a cross-team request is ABOUT, as chips.
+ * What a cross-team request is ABOUT, as quiet chips.
  *
  * Types 7 and 8 name their subject in the body — bold and coloured, from
  * `cross_team_notices.py` — but the body is a sentence, and these two cards
@@ -21,9 +21,9 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Chip, Stack } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../../i18n";
+import { g } from "../../../theme/tokens";
 import { InboxItemProps } from "../../../types/common";
 
 /** `item_type`s this component renders for. Mirrors `InboxBubble`. */
@@ -39,17 +39,6 @@ const OBJECT_ICONS: Record<ObjectType, React.ReactNode> = {
     note_folder: <StickyNote2RoundedIcon sx={{ fontSize: 14 }} />,
 };
 
-// Teal for the team, matching the request-type badge on these two cards, so
-// the chip reads as part of the same thought. The object keeps its own
-// per-kind hue from the rest of the inbox (project green, chat pink, note
-// amber) so the KIND of thing is legible before its name is read.
-const TEAM_COLOR = { dark: "#2dd4bf", light: "#0d9488" };
-const OBJECT_COLORS: Record<ObjectType, { dark: string; light: string }> = {
-    channel: { dark: "#f472b6", light: "#ec4899" },
-    project: { dark: "#4ade80", light: "#22c55e" },
-    note_folder: { dark: "#fbbf24", light: "#f59e0b" },
-};
-
 const isObjectType = (value: unknown): value is ObjectType =>
     value === "channel" || value === "project" || value === "note_folder";
 
@@ -59,9 +48,7 @@ type InboxCrossTeamChipsProps = {
 
 export const InboxCrossTeamChips = (props: InboxCrossTeamChipsProps) => {
     const { inboxItem } = props;
-    const { mode } = useColorScheme();
     const { t } = useTranslation();
-    const isDark = mode === "dark";
 
     const optionals = inboxItem.itemOptionals ?? {};
     const isConnection = inboxItem.itemType === TEAM_CONNECTION;
@@ -83,22 +70,20 @@ export const InboxCrossTeamChips = (props: InboxCrossTeamChipsProps) => {
 
     if (!teamName && !objectName) return null;
 
-    const chipSx = (color: { dark: string; light: string }) => ({
+    // One quiet neutral chip for both: what it names is in its text and its icon, not in a hue.
+    const chipSx = {
         maxWidth: "100%",
-        borderRadius: "8px",
-        fontWeight: 600,
-        fontSize: "0.7rem",
-        background: isDark ? `${color.dark}15` : `${color.light}12`,
-        color: isDark ? color.dark : color.light,
-        border: "1px solid",
-        borderColor: isDark ? `${color.dark}25` : `${color.light}20`,
+        borderRadius: g.radius.sm,
+        fontWeight: 500,
+        background: g.bg.subtle,
+        color: g.text.secondary,
         "& .MuiChip-startDecorator": { color: "inherit" },
         "& .MuiChip-label": {
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
         },
-    });
+    } as const;
 
     return (
         <Stack direction="row" spacing={0.75} sx={{ flexWrap: "wrap", rowGap: 0.75 }}>
@@ -106,7 +91,7 @@ export const InboxCrossTeamChips = (props: InboxCrossTeamChipsProps) => {
                 <Chip
                     size="sm"
                     startDecorator={<GroupsRoundedIcon sx={{ fontSize: 14 }} />}
-                    sx={chipSx(TEAM_COLOR)}
+                    sx={chipSx}
                     variant="soft"
                 >
                     {teamName}
@@ -116,7 +101,7 @@ export const InboxCrossTeamChips = (props: InboxCrossTeamChipsProps) => {
                 <Chip
                     size="sm"
                     startDecorator={objectType ? OBJECT_ICONS[objectType] : undefined}
-                    sx={chipSx(objectType ? OBJECT_COLORS[objectType] : TEAM_COLOR)}
+                    sx={chipSx}
                     variant="soft"
                 >
                     {objectName}
