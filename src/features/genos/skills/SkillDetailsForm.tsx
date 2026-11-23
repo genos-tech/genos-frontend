@@ -32,6 +32,8 @@ type Props = {
     ownerOnly?: boolean;
     /** The "Editors" field, drawn under who can use the skill. */
     editorsField?: ReactNode;
+    /** The Hub's "Publish to the Hub" field (MIP-2047), drawn under who can use the skill. */
+    hubField?: ReactNode;
     onChange: (next: Partial<SkillDraft>) => void;
 };
 
@@ -50,6 +52,7 @@ export const SkillDetailsForm = ({
     disabled,
     ownerOnly = false,
     editorsField,
+    hubField,
     onChange,
 }: Props) => {
     const { t, locale } = useTranslation();
@@ -297,10 +300,10 @@ export const SkillDetailsForm = ({
                 <FormLabel id="skill-visibility">{f.visibility}</FormLabel>
                 <ToggleButtonGroup
                     aria-labelledby="skill-visibility"
-                    disabled={disabled || ownerOnly}
+                    disabled={disabled || ownerOnly || skill.visibility === "public"}
                     size="sm"
                     sx={{ flexWrap: "wrap", minWidth: 0, alignSelf: "flex-start" }}
-                    value={draft.visibility}
+                    value={skill.visibility === "public" ? null : draft.visibility}
                     onChange={(_e, value) => value && onChange({ visibility: value })}
                 >
                     <Button value="private">{f.visibilityPrivate}</Button>
@@ -314,6 +317,8 @@ export const SkillDetailsForm = ({
                     )
                 )}
             </FormControl>
+
+            {hubField}
 
             {editorsField}
 
@@ -331,7 +336,14 @@ export const SkillDetailsForm = ({
             >
                 <Box component="dt">{f.owner}</Box>
                 <Box component="dd" sx={{ m: 0, overflowWrap: "anywhere" }}>
-                    {skill.mine ? f.you : skill.ownerName || "—"}
+                    {skill.mine
+                        ? f.you
+                        : skill.ownerName ||
+                          (skill.author
+                              ? fmt(t.settings.genosSkills.hub.byHandle, {
+                                    handle: skill.author.handle,
+                                })
+                              : "—")}
                 </Box>
                 <Box component="dt">{f.created}</Box>
                 <Box component="dd" sx={{ m: 0 }}>

@@ -65,9 +65,23 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     updatedAt: "2026-11-21T10:00:00Z",
     publishedAt: "2026-11-21T10:00:00Z",
     mine: false,
+    role: "reader",
     canEdit: false,
+    canManage: false,
+    canHide: false,
+    hiddenByTeam: false,
     ownerName: "ayumi",
+    author: null,
+    starCount: 0,
+    runCount30d: 0,
+    copyCount: 0,
+    isOfficial: false,
+    starred: false,
+    editors: [],
+    forkedFrom: null,
     noteId: null,
+    hasUnpublishedChanges: false,
+    unpublishedChanges: [],
     ...over,
 });
 
@@ -93,7 +107,7 @@ const renderPage = () =>
 
 const list = (skills: SkillRow[]) => ({
     ok: true as const,
-    data: { skills, limit: 25, used: 0 },
+    data: { skills, limit: 25, used: 0, publicEnabled: false },
 });
 
 const openReport = async (user: ReturnType<typeof userEvent.setup>) => {

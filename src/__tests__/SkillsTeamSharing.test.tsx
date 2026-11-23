@@ -79,6 +79,12 @@ const base = (over: Partial<SkillRow> = {}): SkillRow => ({
     canHide: false,
     hiddenByTeam: false,
     ownerName: "ayumi",
+    author: null,
+    starCount: 0,
+    runCount30d: 0,
+    copyCount: 0,
+    isOfficial: false,
+    starred: false,
     editors: [],
     forkedFrom: null,
     noteId: null,
@@ -129,7 +135,7 @@ const renderPage = () =>
 const serve = (row: SkillRow, body = "## Steps\n1. Read") => {
     vi.mocked(api.fetchSkills).mockResolvedValue({
         ok: true,
-        data: { skills: [row], limit: 25, used: 1 },
+        data: { skills: [row], limit: 25, used: 1, publicEnabled: false },
     });
     vi.mocked(api.fetchSkill).mockResolvedValue({
         ok: true,
@@ -175,6 +181,7 @@ describe("reading the server's roles", () => {
             id: "s0",
             title: "Original",
             ownerName: "ken",
+            author: null,
             versionNo: 3,
         });
     });
@@ -195,6 +202,7 @@ describe("reading the server's roles", () => {
             id: "",
             title: "",
             ownerName: "",
+            author: null,
             versionNo: 2,
         });
     });
@@ -229,6 +237,7 @@ describe("the Team tab", () => {
                     }),
                 ],
                 limit: 25,
+                publicEnabled: false,
                 used: 0,
             },
         });
@@ -265,6 +274,7 @@ describe("the Team tab", () => {
                     base({ id: "b", title: "Hidden one", hiddenByTeam: true, canHide: true }),
                 ],
                 limit: 25,
+                publicEnabled: false,
                 used: 0,
             },
         });
@@ -358,7 +368,14 @@ describe("a team skill as a reader", () => {
             asOwner({
                 visibility: "private",
                 publishedVersionNo: 0,
-                forkedFrom: { available: false, id: "", title: "", ownerName: "", versionNo: 2 },
+                forkedFrom: {
+                    available: false,
+                    id: "",
+                    title: "",
+                    ownerName: "",
+                    author: null,
+                    versionNo: 2,
+                },
             })
         );
         const user = userEvent.setup();

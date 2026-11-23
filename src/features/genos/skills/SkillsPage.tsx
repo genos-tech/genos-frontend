@@ -34,14 +34,15 @@ import { fmt, useTranslation } from "../../../i18n";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "../memory/confirmLayer";
 import { SkillEditor } from "./SkillEditor";
+import { SkillHub } from "./SkillHub";
 import { SkillReportDialog } from "./SkillReportDialog";
 import {
     copySkill,
     createSkill,
     deleteSkill,
     fetchSkills,
-    setSkillHidden,
     isModerated,
+    setSkillHidden,
     type SkillList,
     type SkillRow,
     type SkillTab,
@@ -55,6 +56,8 @@ type Props = {
 };
 
 type View = { kind: "list" } | { kind: "edit"; id: string };
+/** The tabs of the page: the member's own and the team's, and the public Hub (MIP-2047). */
+type PageTab = SkillTab | "hub";
 type ListState =
     | { status: "loading" }
     | { status: "failed" }
@@ -73,7 +76,10 @@ export const SkillsPage = ({ teamId, host }: Props) => {
     const m = t.settings.genosSkills;
     const { accessToken } = useAuth();
     const [view, setView] = useState<View>({ kind: "list" });
-    const [tab, setTab] = useState<SkillTab>("mine");
+    const [tab, setTab] = useState<PageTab>("mine");
+    // The server's `GENOS_SKILLS_PUBLIC` switch, as the list last said it: the Hub tab exists only
+    // while it is on. It is kept apart from the list because the Hub tab shows no list of ours.
+    const [publicEnabled, setPublicEnabled] = useState(false);
     const [list, setList] = useState<ListState>({ status: "loading" });
     const [limitHit, setLimitHit] = useState<{ limit: number; used: number } | null>(null);
     const [creating, setCreating] = useState(false);
@@ -90,16 +96,19 @@ export const SkillsPage = ({ teamId, host }: Props) => {
             setList({ status: "loading" });
             const res = await fetchSkills(accessToken, teamId, which);
             if (mine !== latest.current) return;
+            if (res.ok) setPublicEnabled(res.data.publicEnabled);
             setList(res.ok ? { status: "ready", data: res.data } : { status: "failed" });
         },
         [accessToken, teamId]
     );
 
+    // The Hub tab loads its own pages; the list behind it stays the member's own.
+    const listTab: SkillTab = tab === "hub" ? "mine" : tab;
     useEffect(() => {
         if (view.kind !== "list") return;
         // The list is a fetch whose answer sets the state; the first render has nothing to draw.
-        void load(tab);
-    }, [load, tab, view.kind]);
+        void load(listTab);
+    }, [load, listTab, view.kind]);
 
     const create = async (fromTemplate: boolean) => {
         if (creating) return;
@@ -156,7 +165,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
         } else {
             toast.error(res.message || m.team.hideFailed);
         }
-        void load(tab);
+        void load(listTab);
     };
 
     const remove = async () => {
@@ -167,7 +176,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
             return false;
         }
         setDeleting(null);
-        void load(tab);
+        void load(listTab);
         return true;
     };
 
@@ -176,12 +185,14 @@ export const SkillsPage = ({ teamId, host }: Props) => {
             <SkillEditor
                 host={host}
                 skillId={view.id}
+                publicEnabled={publicEnabled}
                 teamId={teamId}
                 onBack={() => setView({ kind: "list" })}
             />
         );
     }
 
+    const onHub = tab === "hub" && publicEnabled;
     const data = list.status === "ready" ? list.data : null;
     const full = data !== null && data.limit !== null && data.used >= data.limit;
     const limitNote =
@@ -214,7 +225,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                     size="sm"
                     sx={{ bgcolor: "transparent", minWidth: 0 }}
                     value={tab}
-                    onChange={(_e, value) => setTab(value as SkillTab)}
+                    onChange={(_e, value) => setTab(value as PageTab)}
                 >
                     <TabList sx={{ gap: 0.5 }} disableUnderline>
                         <Tab value="mine" variant={tab === "mine" ? "soft" : "plain"}>
@@ -223,6 +234,11 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                         <Tab value="team" variant={tab === "team" ? "soft" : "plain"}>
                             {m.tabs.team}
                         </Tab>
+                        {publicEnabled && (
+                            <Tab value="hub" variant={tab === "hub" ? "soft" : "plain"}>
+                                {m.tabs.hub}
+                            </Tab>
+                        )}
                     </TabList>
                 </Tabs>
                 <Dropdown>
@@ -255,20 +271,28 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 </Dropdown>
             </Box>
 
-            {limitNote && (
+            {onHub && (
+                <SkillHub
+                    onCopy={(skill) => void copy(skill)}
+                    onOpen={(skill) => setView({ kind: "edit", id: skill.id })}
+                    onReport={(skill) => setReporting(skill)}
+                />
+            )}
+
+            {!onHub && limitNote && (
                 <Alert color="warning" size="sm" variant="soft">
                     {fmt(m.list.limitReached, limitNote)}
                 </Alert>
             )}
 
-            {list.status === "loading" ? (
+            {onHub ? null : list.status === "loading" ? (
                 <SkeletonRows count={3} label={m.list.loading} />
             ) : list.status === "failed" ? (
                 <ErrorState
                     data-error="genos-skills"
                     size="sm"
                     title={m.list.loadFailed}
-                    onRetry={() => void load(tab)}
+                    onRetry={() => void load(listTab)}
                 />
             ) : list.data.skills.length === 0 ? (
                 <EmptyState
@@ -320,7 +344,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                     ))}
                 </Box>
             )}
-            {data && data.limit !== null && tab === "mine" && (
+            {!onHub && data && data.limit !== null && tab === "mine" && (
                 <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                     {fmt(m.list.usage, { used: data.used, limit: data.limit })}
                 </Typography>

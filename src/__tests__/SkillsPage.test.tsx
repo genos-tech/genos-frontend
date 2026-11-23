@@ -85,6 +85,12 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     canHide: false,
     hiddenByTeam: false,
     ownerName: "ken",
+    author: null,
+    starCount: 0,
+    runCount30d: 0,
+    copyCount: 0,
+    isOfficial: false,
+    starred: false,
     editors: [],
     forkedFrom: null,
     noteId: 12,
@@ -95,7 +101,7 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
 
 const list = (skills: SkillRow[], over: Partial<api.SkillList> = {}) => ({
     ok: true as const,
-    data: { skills, limit: 25, used: skills.length, ...over },
+    data: { skills, limit: 25, used: skills.length, publicEnabled: false, ...over },
 });
 
 const host = {

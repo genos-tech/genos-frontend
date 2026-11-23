@@ -12,6 +12,12 @@
  *                                               /skills/<id>/editors/<user>/ removes one (or leaves)
  *   POST   /skills/<id>/hide/                   the team owner hides a team skill; DELETE shows it
  *   POST   /skills/<id>/report/                 report a skill the member can read (MIP-2044)
+ *   GET    /skills/hub/?q=&tag=&sort=&offset=   the public directory (MIP-2047; 404 until the server's
+ *                                               `GENOS_SKILLS_PUBLIC` switch is on)
+ *   GET    /skills/hub/tags/                    the directory's tags with counts
+ *   POST   /skills/<id>/star/                   star a skill (DELETE removes the star)
+ *   GET    /skills/<id>/publish-check/          the publish checklist, ticked off (the owner)
+ *   GET    /skills/profile/ , PUT               my public handle (chosen once) and display name
  *
  * The whole API answers 404 while the server's `GENOS_SKILLS` switch is off: the list call then
  * resolves `{ ok: false, reason: "off" }` and the settings card is not drawn at all.
@@ -27,6 +33,10 @@ export type SkillVisibility = "private" | "team";
 export type ToolLevel = "read" | "act";
 export type SkillEffort = "" | "low" | "medium" | "high";
 export type SkillTab = "mine" | "team";
+
+/** The order of the directory: most starred, most recently published, most used (distinct runners
+ *  in 30 days). */
+export type HubSort = "stars" | "recent" | "uses";
 
 /** The limits the server enforces, so the form can count and stop before it asks. */
 export const SKILL_LIMITS = {
@@ -44,6 +54,9 @@ export type SkillRole = "owner" | "editor" | "reader";
 
 export type SkillPerson = { id: string; username: string };
 
+/** The public byline of a public skill: the author's chosen handle, never the account name. */
+export type SkillAuthor = { handle: string; displayName: string };
+
 /** Where a copy came from. `available: false` = the original is private or gone for this
  *  reader: the server names nothing then, and neither does the page. */
 export type SkillOrigin = {
@@ -51,6 +64,8 @@ export type SkillOrigin = {
     id: string;
     title: string;
     ownerName: string;
+    /** The original's public handle when it is a public skill (MIP-2047). */
+    author: SkillAuthor | null;
     versionNo: number;
 };
 
@@ -89,6 +104,16 @@ export type SkillRow = {
     hiddenByTeam: boolean;
     /** A teammate's account name; empty for a skill the server does not name. */
     ownerName: string;
+    /** A PUBLIC skill's byline (MIP-2047); null while its author has no handle (an official skill). */
+    author: SkillAuthor | null;
+    /** The Hub's numbers. `starCount` counts stars from aged, verified accounts only. */
+    starCount: number;
+    /** Distinct accounts that ran it in the last 30 days. */
+    runCount30d: number;
+    copyCount: number;
+    isOfficial: boolean;
+    /** Whether this member starred it (the directory and the detail answer; false elsewhere). */
+    starred: boolean;
     /** Detail answer only, for the owner and the co-editors: who edits it with the owner. */
     editors: SkillPerson[];
     /** Detail answer only, on a copy: where it came from (null = not a copy). */
@@ -109,6 +134,38 @@ export type SkillList = {
     /** The plan's count of skills (null = unlimited) and how many this member owns. */
     limit: number | null;
     used: number;
+    /** The server's `GENOS_SKILLS_PUBLIC` switch: the Hub tab and "Publish to the Hub" exist only
+     *  while it is on. */
+    publicEnabled: boolean;
+};
+
+/** One page of the directory. */
+export type HubPage = { skills: SkillRow[]; hasMore: boolean };
+
+export type HubTag = { tag: string; count: number };
+
+/** One row of the publish checklist; `text` is the server's own words. */
+export type PublishCheck = { key: string; ok: boolean; text: string };
+
+export type PublicProfile = {
+    handle: string | null;
+    displayName: string;
+    publicSkills: number;
+    limits: { publishesPerDay: number; publicSkillsMax: number; starsPerDay: number };
+};
+
+export type PublishCheckResult = {
+    checks: PublishCheck[];
+    ready: boolean;
+    profile: PublicProfile;
+};
+
+/** What making a skill public carries besides the visibility itself. */
+export type PublishPublicInput = {
+    acceptTerms: boolean;
+    /** Only while the author has no public handle yet. */
+    handle?: string;
+    displayName?: string;
 };
 
 export type SkillVersion = {
@@ -128,8 +185,11 @@ export type SkillInput = {
     argumentHint?: string;
     toolLevel?: ToolLevel;
     effort?: SkillEffort;
-    visibility?: SkillVisibility;
+    visibility?: SkillVisibility | "public";
     bodyMarkdown?: string;
+    acceptTerms?: boolean;
+    handle?: string;
+    displayName?: string;
 };
 
 /** The reasons a report may give, in the order the dialog lists them (the server's own words). */
@@ -157,6 +217,8 @@ export type Failure = {
     message: string;
     limit?: number;
     used?: number;
+    /** A refused publish lists every problem together (400 `problems`). */
+    problems?: string[];
 };
 export type Result<T> = { ok: true; data: T } | Failure;
 
@@ -190,6 +252,12 @@ const parsePeople = (raw: unknown): SkillPerson[] =>
         return p && id !== "" ? [{ id, username: str(p.username, 120) }] : [];
     });
 
+const parseAuthor = (raw: unknown): SkillAuthor | null => {
+    const a = rec(raw);
+    const handle = str(a?.handle, 60);
+    return a && handle !== "" ? { handle, displayName: str(a.displayName, 120) } : null;
+};
+
 const parseOrigin = (raw: unknown): SkillOrigin | null => {
     const o = rec(raw);
     if (!o) return null;
@@ -200,6 +268,7 @@ const parseOrigin = (raw: unknown): SkillOrigin | null => {
         id: available ? str(o.id, 64) : "",
         title: available ? str(o.title, 300) : "",
         ownerName: available ? str(o.ownerName, 120) : "",
+        author: available ? parseAuthor(o.author) : null,
         versionNo: int(o.versionNo),
     };
 };
@@ -242,6 +311,12 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         canHide: r.canHide === true,
         hiddenByTeam: r.hiddenByTeam === true,
         ownerName: str(r.ownerName, 120),
+        author: parseAuthor(r.author),
+        starCount: int(r.starCount),
+        runCount30d: int(r.runCount30d),
+        copyCount: int(r.copyCount),
+        isOfficial: r.isOfficial === true,
+        starred: r.starred === true,
         editors: parsePeople(r.editors),
         forkedFrom: parseOrigin(r.forkedFrom),
         noteId: typeof note === "number" && Number.isSafeInteger(note) && note > 0 ? note : null,
@@ -265,6 +340,29 @@ export const parseSkillList = (raw: unknown): SkillList | null => {
         }),
         limit,
         used: int(r.used),
+        publicEnabled: r.publicEnabled === true,
+    };
+};
+
+const parseRows = (raw: unknown): SkillRow[] =>
+    (Array.isArray(raw) ? raw : []).flatMap((row) => {
+        const s = parseSkill(row);
+        return s ? [s] : [];
+    });
+
+const parseProfile = (raw: unknown): PublicProfile => {
+    const p = rec(raw);
+    const limits = rec(p?.limits);
+    const handle = str(p?.handle, 60);
+    return {
+        handle: handle === "" ? null : handle,
+        displayName: str(p?.displayName, 120),
+        publicSkills: int(p?.publicSkills),
+        limits: {
+            publishesPerDay: int(limits?.publishesPerDay),
+            publicSkillsMax: int(limits?.publicSkillsMax),
+            starsPerDay: int(limits?.starsPerDay),
+        },
     };
 };
 
@@ -298,7 +396,15 @@ const failure = (error: unknown): Failure => {
     }
     if (res?.status === 429 && body?.code === "report_limit")
         return { ...base, reason: "report_limit" };
-    if (res?.status === 400 || res?.status === 403) return { ...base, reason: "bad_input" };
+    if (res?.status === 400 || res?.status === 403 || res?.status === 429) {
+        // The publish and star limits (429) and a refused publish (400 with every `problems`
+        // sentence) are the server's own words, shown as written.
+        const problems = (Array.isArray(body?.problems) ? body.problems : [])
+            .map((p) => str(p, 300))
+            .filter((p) => p !== "")
+            .slice(0, 12);
+        return { ...base, reason: "bad_input", ...(problems.length ? { problems } : {}) };
+    }
     return { ...base, reason: "error" };
 };
 
@@ -548,7 +654,6 @@ export const setSkillHidden = async (
     }
 };
 
-
 /** Report a skill the member can read, from the skill's own page or its list row. Sending the
  *  same report twice is the same report (the server answers 200 the second time). */
 export const reportSkill = async (
@@ -570,3 +675,113 @@ export const reportSkill = async (
         return failure(error);
     }
 };
+
+// ---------- the Hub (MIP-2047) ----------
+
+export type HubQuery = {
+    q?: string;
+    tag?: string;
+    sort?: HubSort;
+    offset?: number;
+    limit?: number;
+};
+
+/** One page of the public directory. `{ ok: false, reason: "off" }` while the Hub is switched off. */
+export const fetchHub = async (
+    accessToken: string | null,
+    query: HubQuery
+): Promise<Result<HubPage>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const params: Record<string, string | number> = {};
+        if (query.q?.trim()) params.q = query.q.trim().slice(0, 80);
+        if (query.tag) params.tag = query.tag;
+        if (query.sort && query.sort !== "stars") params.sort = query.sort;
+        if (query.offset) params.offset = query.offset;
+        if (query.limit) params.limit = query.limit;
+        const res = await api.get("/skills/hub/", { ...OPTIONS, params });
+        const r = rec(res.data);
+        if (!r || !Array.isArray(r.skills)) return NO_API;
+        return { ok: true, data: { skills: parseRows(r.skills), hasMore: r.hasMore === true } };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+export const fetchHubTags = async (accessToken: string | null): Promise<Result<HubTag[]>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.get("/skills/hub/tags/", OPTIONS);
+        const raw = rec(res.data)?.tags;
+        const tags = (Array.isArray(raw) ? raw : []).flatMap((row) => {
+            const t = rec(row);
+            const tag = str(t?.tag, 60);
+            return t && tag !== "" ? [{ tag, count: int(t.count) }] : [];
+        });
+        return { ok: true, data: tags };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Star a skill, or take the star back. One per account; the server keeps the total. */
+export const setSkillStar = async (
+    accessToken: string | null,
+    skillId: string,
+    starred: boolean
+): Promise<Result<null>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const url = `/skills/${encodeURIComponent(skillId)}/star/`;
+        if (starred) await api.post(url, {}, OPTIONS);
+        else await api.delete(url, OPTIONS);
+        return { ok: true, data: null };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+export const fetchPublishCheck = async (
+    accessToken: string | null,
+    skillId: string
+): Promise<Result<PublishCheckResult>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.get(
+            `/skills/${encodeURIComponent(skillId)}/publish-check/`,
+            OPTIONS
+        );
+        const r = rec(res.data);
+        if (!r || !Array.isArray(r.checks)) return NO_API;
+        const checks = r.checks.flatMap((row) => {
+            const c = rec(row);
+            const key = str(c?.key, 40);
+            return c && key !== "" ? [{ key, ok: c.ok === true, text: str(c.text, 400) }] : [];
+        });
+        return {
+            ok: true,
+            data: { checks, ready: r.ready === true, profile: parseProfile(r.profile) },
+        };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Make the skill public: the PATCH that sets the visibility, with the author's confirmation of the
+ *  content terms and, the first time, the public handle. The server refuses with EVERY problem
+ *  listed (`problems`) and changes nothing. */
+export const publishToHub = async (
+    accessToken: string | null,
+    skillId: string,
+    input: PublishPublicInput
+): Promise<Result<SkillRow>> =>
+    updateSkill(accessToken, skillId, {
+        visibility: "public",
+        acceptTerms: input.acceptTerms,
+        ...(input.handle ? { handle: input.handle } : {}),
+        ...(input.displayName ? { displayName: input.displayName } : {}),
+    });
