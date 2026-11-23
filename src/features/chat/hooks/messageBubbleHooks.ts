@@ -6,7 +6,7 @@ import { smoothScrollBehavior } from "../../../utils/motion";
 
 export const useScrollToBottomOnNewMessage = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
-    chat: any,
+    chat: unknown,
     targetIndex: number
 ) => {
     useEffect(() => {

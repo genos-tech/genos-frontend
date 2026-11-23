@@ -105,7 +105,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
 
     const dictionary = useBlockNoteDictionary();
     // Without the stored trailing blank line (MIP-1039; see bnUpdateEditor).
-    const initialContent: any[] = withoutTrailingBlank(targetComment.commentBody);
+    const initialContent = withoutTrailingBlank(targetComment.commentBody);
     const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     // Edit in place, no inline uploads (no `uploads`), no draft: the shared composer pipeline
