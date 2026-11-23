@@ -5995,6 +5995,7 @@ export const zh: DeepPartial<Messages> = {
             quickAddPlaceholder: "输入标题，按 Enter 创建",
             quickAddError: "创建失败，请重试",
             showHidden: "显示 {count} 个已完成的子任务",
+            moreTagsAria: "另外 {count} 个标签：{tags}",
         },
         fields: {
             assignee: "负责人",

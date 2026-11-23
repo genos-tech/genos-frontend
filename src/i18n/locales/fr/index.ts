@@ -6321,6 +6321,7 @@ export const fr: DeepPartial<Messages> = {
             quickAddPlaceholder: "Tapez un titre et appuyez sur Entrée…",
             quickAddError: "Création impossible : réessayez",
             showHidden: "Afficher {count} sous-tâches terminées",
+            moreTagsAria: "{count} balises de plus : {tags}",
         },
         fields: {
             assignee: "Assigné",

@@ -1,18 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import {
-    Box,
-    Button,
-    Chip,
-    Input,
-    List,
-    ListItem,
-    ListItemButton,
-    Stack,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Input, List, ListItem, ListItemButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 import { Virtuoso } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -45,6 +34,7 @@ import {
 } from "../../../services/taskEvents";
 import { TaskIdText } from "../../card";
 import { StatusLabel } from "../../meta/StatusLabel";
+import { TaskRowMoreTags, TaskRowTags } from "./TaskRowTags";
 
 // A list this long is windowed (MIP-1985): a milestone with ~800 tasks drew ~590 rows (8,800 DOM nodes)
 // inside this 300px scroller. Shorter lists keep the plain markup.
@@ -364,6 +354,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             <ListItemButton
                 sx={{
                     marginLeft: "10px",
+                    // Lets the title shrink and truncate instead of the row growing past the
+                    // pane (MIP-2176).
+                    minWidth: 0,
                 }}
                 onClick={() => {
                     if (!project?.projectId || !id) {
@@ -396,38 +389,17 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
-                        width: "100%", // take full width of button
+                        flex: 1, // takes what the capped tag chips leave
+                        minWidth: "7ch", // the title keeps its room; the chips shrink first
                     }}
                     noWrap
                 >
                     {`${title}`}
                 </Typography>
-                <Box
-                    sx={{
-                        display: "flex",
-                        marginLeft: "auto",
-                        alignItems: "center",
-                    }}
-                >
-                    {tags.map(({ tagName, tagColor }, index) => (
-                        <Chip
-                            key={`${id}-${index}-${tagName}`}
-                            size="md"
-                            variant="outlined"
-                            sx={{
-                                marginX: "2px",
-                                color: mode === "dark" ? "white" : "black",
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                                borderWidth: "3px",
-                                borderColor: alpha(tagColor, mode === "dark" ? 0.5 : 0.75),
-                            }}
-                        >
-                            {`${tagName}`}
-                        </Chip>
-                    ))}
-                </Box>
+                <TaskRowTags tags={tags} taskId={id} />
             </ListItemButton>
+            {/* A sibling of the row button, not inside it: a button in a button is invalid. */}
+            <TaskRowMoreTags tags={tags} />
         </ListItem>
     );
 

@@ -6222,6 +6222,7 @@ export const ja: DeepPartial<Messages> = {
             quickAddPlaceholder: "タイトルを入力して Enter で作成",
             quickAddError: "作成できませんでした。もう一度お試しください",
             showHidden: "完了したサブタスク {count} 件を表示",
+            moreTagsAria: "他 {count} 件のタグ: {tags}",
         },
         fields: {
             assignee: "担当者",
