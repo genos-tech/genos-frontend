@@ -383,6 +383,10 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // Structured @/# mentions the user picked in the input. Omitted
     // entirely when empty so older backends see an unchanged payload.
     mentions?: AgentMentionPayload[];
+    // The Genos skill the question runs (MIP-2042): `{ id }` is the picker's exact choice, `{ name }` a
+    // typed `/name` the server resolves (mine > team > installed). The question is still what the
+    // person typed, `/name` included; the skill's text goes to the agent from the server.
+    skill?: { id: string } | { name: string };
     // A passage of text the member selected (MIP-1058): `selected_text` on the wire, with
     // `selectedFrom` (`selected_from`) naming where it came from when that has an id. Both are
     // omitted unless the text has something in it; the text is cut at the server's 4,000 characters
@@ -1246,6 +1250,9 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
             query: args.query,
             team_id: args.teamId,
             ...(args.mentions?.length ? { mentions: args.mentions } : {}),
+            // A skill run with `/name` (MIP-2042): the server resolves and checks it before anything is
+            // spent, and ignores the field while its switch is off.
+            ...(args.skill ? { skill: args.skill } : {}),
             ...(selectedText
                 ? {
                       selected_text: selectedText,

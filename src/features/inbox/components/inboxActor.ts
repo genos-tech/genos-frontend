@@ -1,3 +1,4 @@
+import { rememberedPerson, rememberPeople } from "../../../components/ui/avatars/userDirectory";
 import type { InboxItemProps } from "../../../types/common";
 import { GM_REQUEST, NOTE_ACCESS_REQUEST, PROJECT_REQUEST, TEAM_REQUEST } from "./inboxItemConfig";
 
@@ -63,6 +64,27 @@ export const resolveActor = (
         };
     }
     return findActor(item.itemBody);
+};
+
+/**
+ * Teach the avatar directory the sender a LIVE card names (MIP-2182).
+ *
+ * A pushed card carries the sender as the API reads them now, so unlike a stored card it may
+ * replace what the directory holds: this is how a rename or a new photo reaches the open inbox
+ * without a reload. The roster still wins for anyone in it. Keeps the email a chat payload already
+ * taught the directory (this payload has none). Does nothing for a card nobody sent.
+ */
+export const rememberInboxSender = (item: Pick<InboxItemProps, "sender">): void => {
+    const sender = item.sender;
+    if (!sender?.userId) return;
+    rememberPeople([
+        {
+            userId: sender.userId,
+            userName: sender.userName,
+            userEmail: rememberedPerson(sender.userId)?.userEmail,
+            avatarImgPath: sender.avatarImgPath,
+        },
+    ]);
 };
 
 /** The request types whose card is composed from locale strings: "<name> wants to join ...". */

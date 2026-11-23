@@ -4975,6 +4975,40 @@ export const fr: DeepPartial<Messages> = {
                     "Les instructions s'enregistrent toutes seules. Les détails demandent Enregistrer.",
                 bodyAria: "Instructions de la compétence",
             },
+            team: {
+                roleEditor: "Éditeur",
+                hiddenChip: "Masquée à l'équipe",
+                hide: "Masquer à l'équipe",
+                show: "Afficher à l'équipe",
+                hiddenToast: "Masquée pour votre équipe.",
+                shownToast: "De nouveau visible pour votre équipe.",
+                hideFailed: "Impossible de modifier. Réessayez.",
+                hiddenByOwner:
+                    "Le propriétaire de l'équipe a masqué cette compétence. Votre équipe ne peut ni la voir ni la lancer tant qu'elle n'est pas réaffichée.",
+                hiddenByYou:
+                    "Vous avez masqué cette compétence à votre équipe. Vos collègues ne peuvent ni la voir ni la lancer tant que vous ne la réaffichez pas.",
+                editorNote:
+                    "Vous modifiez cette compétence en tant qu'éditeur : vous pouvez changer le texte et les détails et publier des versions. Le propriétaire décide de son nom, de qui peut l'utiliser et de sa suppression.",
+                copiedFrom: "Copiée depuis « {title} » de {name} (version {n}).",
+                copiedFromNoName: "Copiée depuis « {title} » (version {n}).",
+                copiedFromGone: "Copiée depuis une compétence que vous ne pouvez plus voir.",
+                makePrivateTitle: "Rendre cette compétence privée ?",
+                makePrivateBody:
+                    "Votre équipe cessera aussitôt de la voir et de la lancer. Les copies déjà faites par vos collègues leur restent, et les éditeurs invités gardent leur accès.",
+                makePrivateConfirm: "Rendre privée",
+                ownerOnly: "Seul le propriétaire peut modifier ceci.",
+                editors: "Éditeurs",
+                editorsHelp:
+                    "Les éditeurs peuvent changer le texte et les détails et publier des versions. Ils ne peuvent ni renommer, ni partager, ni supprimer la compétence.",
+                editorsNone: "Aucun éditeur pour le moment.",
+                editorsAdd: "Ajouter un éditeur",
+                editorsChoose: "Choisissez un collègue",
+                editorsEveryone: "Tous les membres de votre équipe sont déjà éditeurs.",
+                editorRemove: "Retirer {name}",
+                editorLeave: "Ne plus modifier cette compétence",
+                editorsFailed: "Impossible de modifier les éditeurs. Réessayez.",
+                editorLeft: "Vous ne modifiez plus cette compétence.",
+            },
             versions: {
                 heading: "Versions",
                 empty: "Rien n'a encore été publié.",
@@ -5626,6 +5660,13 @@ export const fr: DeepPartial<Messages> = {
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",
+        },
+        skills: {
+            ariaLabel: "Suggestions de compétences",
+            mine: "Les vôtres",
+            fromTeammate: "Compétence d'équipe de {name}",
+            installed: "Installée",
+            official: "Genos",
         },
         errors: {
             noTeam: "Aucune équipe sélectionnée.",
