@@ -188,6 +188,11 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
             setServerProblems({ slug: m.problems.slugTaken });
             return;
         }
+        if (res.code === "name_taken") {
+            // The server says where the name clashes (yours, the team's, the public ones).
+            setServerProblems({ slug: res.message || m.problems.slugTaken });
+            return;
+        }
         const field = res.message ? fieldOf(res.message) : null;
         if (field) setServerProblems({ [field]: res.message });
         else setNotice(res.message || fallback);
@@ -580,7 +585,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                         borderRadius: "lg",
                         minWidth: 0,
                         overflow: "hidden",
-                        p: { xs: 0.5, sm: 1 },
+                        p: 0,
                     }}
                 >
                     {skill.noteId !== null && editable ? (
@@ -600,7 +605,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                     ) : (
                         <Typography
                             level="body-sm"
-                            sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", p: 1 }}
+                            sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", p: 2 }}
                         >
                             {skill.bodyMarkdown}
                         </Typography>
@@ -633,6 +638,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                                     sx={{
                                         display: "flex",
                                         flexWrap: "wrap",
+                                        alignItems: "baseline",
                                         columnGap: 1.5,
                                         py: 0.75,
                                         borderTop: "1px solid",

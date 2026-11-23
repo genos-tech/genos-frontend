@@ -124,6 +124,11 @@ export type GenosNoteEditorProps = {
     // editor keeps rendering Yjs's existing CRDT state (the pre-restore
     // body) even though local React state was updated.
     resyncSignal?: number | string;
+    /** Hides the top-right "Unwrap" toggles and the "Show comments" button, and with the button
+     *  the toolbar's "Add comment" (a thread could be started that nothing could open). Off by
+     *  default, so every note editor keeps them; the Skills editor turns it on (MIP-2209), where
+     *  the body is instructions for a model and none of it has a use. */
+    hideViewControls?: boolean;
 };
 export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     const {
@@ -142,6 +147,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         useCM,
         currentNoteMembers,
         resyncSignal,
+        hideViewControls = false,
     } = props;
 
     // Editor vs. viewer toggle, decided below once the collab scope is
@@ -401,7 +407,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                     corner. When the sidebar is open the cluster below shifts
                     left to clear the panel; this button stays put as the
                     open/close affordance. */}
-                {threadStore && (
+                {threadStore && !hideViewControls && (
                     <Box
                         ref={commentsToggleRef}
                         sx={{
@@ -484,12 +490,14 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                 {t.notes.editor.savedChip}
                             </Chip>
                         )}
-                        <WrapToggleButtons
-                            setUnwrapAll={setUnwrapAll}
-                            setUnwrapCode={setUnwrapCode}
-                            unwrapAll={unwrapAll}
-                            unwrapCode={unwrapCode}
-                        />
+                        {!hideViewControls && (
+                            <WrapToggleButtons
+                                setUnwrapAll={setUnwrapAll}
+                                setUnwrapCode={setUnwrapCode}
+                                unwrapAll={unwrapAll}
+                                unwrapCode={unwrapCode}
+                            />
+                        )}
                     </Box>
                 </Box>
 
@@ -594,7 +602,6 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                     formattingToolbar={() => (
                                         <GenosDocumentToolbar
                                             editor={editor}
-                                            hasComments={!!threadStore && !commentsArchived}
                                             isEditable={isEditable}
                                             setShowGifPicker={setShowGifPicker}
                                             askSource={
@@ -606,6 +613,11 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                                           label: note.title,
                                                       }
                                                     : null
+                                            }
+                                            hasComments={
+                                                !!threadStore &&
+                                                !commentsArchived &&
+                                                !hideViewControls
                                             }
                                         />
                                     )}

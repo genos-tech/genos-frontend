@@ -7,12 +7,12 @@ import {
     FormControl,
     FormHelperText,
     FormLabel,
-    Option,
-    Select,
     Typography,
 } from "@mui/joy";
 
+import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
 import { toast } from "../../../components/ui/feedback/toastStore";
+import { PersonPicker } from "../../../components/ui/PersonPicker";
 import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import type { UserProps } from "../../../types/admin";
@@ -106,6 +106,15 @@ export const SkillEditorsField = ({ skill, myId, teamMembers, onChange }: Props)
                                         />
                                     ) : undefined
                                 }
+                                startDecorator={
+                                    <UserAvatar
+                                        clickable={false}
+                                        fallbackName={person.username}
+                                        showPulseDot={false}
+                                        size={20}
+                                        userId={person.id}
+                                    />
+                                }
                                 sx={{
                                     maxWidth: "100%",
                                     "& .MuiChip-label": { overflowWrap: "anywhere" },
@@ -119,22 +128,16 @@ export const SkillEditorsField = ({ skill, myId, teamMembers, onChange }: Props)
             </Box>
             {skill.canManage ? (
                 <Box sx={{ mt: 1, maxWidth: 360 }}>
-                    <Select<string>
-                        aria-label={m.editorsAdd}
+                    {/* The shared person picker (avatar + name, type to search): the one the
+                        task preview's people fields and the sharing dialogs use (MIP-2209). */}
+                    <PersonPicker
+                        ariaLabel={m.editorsAdd}
                         disabled={busy || choices.length === 0}
+                        myUserId={myId}
+                        options={choices}
                         placeholder={choices.length === 0 ? m.editorsEveryone : m.editorsChoose}
-                        size="sm"
-                        value={null}
-                        onChange={(_e, value) => {
-                            if (value) void add(value);
-                        }}
-                    >
-                        {choices.map((member) => (
-                            <Option key={member.userId} value={member.userId}>
-                                {member.userName}
-                            </Option>
-                        ))}
-                    </Select>
+                        onPick={(person) => void add(person.userId)}
+                    />
                 </Box>
             ) : (
                 <Box sx={{ mt: 1 }}>

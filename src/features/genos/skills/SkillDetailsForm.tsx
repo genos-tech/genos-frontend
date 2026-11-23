@@ -17,9 +17,11 @@ import {
 
 import { fmt, useTranslation } from "../../../i18n";
 import { draftFrom, type DraftProblems, type SkillDraft } from "./skillDraft";
+import { SkillIconField } from "./SkillIconField";
 import { SKILL_LIMITS, type SkillEffort, type SkillRow } from "./skillsApi";
-import { normalizeTag, tagProblem } from "./skillText";
+import { normalizeTag, slugProblem, tagProblem } from "./skillText";
 import { useEffortLevels } from "./useEffortLevels";
+import { useSkillNameCheck } from "./useSkillNameCheck";
 
 type Props = {
     skill: SkillRow;
@@ -75,8 +77,28 @@ export const SkillDetailsForm = ({
         if (problems.slug === "reserved") return fmt(p.slugReserved, { slug: draft.slug.trim() });
         return p.slugChars;
     })();
+    // The live name check (MIP-2210): asked only for a name the form has no complaint about, that
+    // is not the saved one (or is going to be shared somewhere else), and that the person may change.
+    const savedDraft = draftFrom(skill);
+    const nameCheck = useSkillNameCheck(
+        disabled ||
+            ownerOnly ||
+            slugProblem(draft.slug) !== null ||
+            (draft.slug.trim().toLowerCase() === skill.slug &&
+                draft.visibility === savedDraft.visibility)
+            ? null
+            : {
+                  teamId: skill.teamId,
+                  skillId: skill.id,
+                  slug: draft.slug,
+                  visibility: skill.visibility === "public" ? "public" : draft.visibility,
+              }
+    );
+    const nameTaken = nameCheck && !nameCheck.available ? nameCheck.message : null;
     const slugShown =
-        touched.slug || serverProblems.slug ? (serverProblems.slug ?? slugText) : null;
+        touched.slug || serverProblems.slug
+            ? (serverProblems.slug ?? slugText ?? nameTaken)
+            : nameTaken;
     const titleShown =
         touched.title && problems.title ? p.titleEmpty : (serverProblems.title ?? null);
 
@@ -145,17 +167,11 @@ export const SkillDetailsForm = ({
                     />
                     {titleShown && <FormHelperText>{titleShown}</FormHelperText>}
                 </FormControl>
-                <FormControl>
-                    <FormLabel>{f.icon}</FormLabel>
-                    <Input
-                        disabled={disabled}
-                        placeholder="⚡"
-                        slotProps={{ input: { maxLength: 16, "aria-label": f.iconHelp } }}
-                        sx={{ textAlign: "center" }}
-                        value={draft.icon}
-                        onChange={(e) => onChange({ icon: e.target.value })}
-                    />
-                </FormControl>
+                <SkillIconField
+                    disabled={disabled}
+                    value={draft.icon}
+                    onChange={(icon) => onChange({ icon })}
+                />
             </Box>
 
             <FormControl error={!!slugShown} required>
@@ -170,7 +186,7 @@ export const SkillDetailsForm = ({
                     onBlur={() => touch("slug")}
                     onChange={(e) => onChange({ slug: e.target.value })}
                 />
-                <FormHelperText>
+                <FormHelperText aria-live="polite">
                     {ownerOnly
                         ? t.settings.genosSkills.team.ownerOnly
                         : (slugShown ??
