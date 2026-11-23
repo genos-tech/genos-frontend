@@ -5323,6 +5323,13 @@ export const zh: DeepPartial<Messages> = {
         mentions: {
             ariaLabel: "提及建议",
         },
+        skills: {
+            ariaLabel: "技能建议",
+            mine: "我的技能",
+            fromTeammate: "来自 {name} 的团队技能",
+            installed: "已安装",
+            official: "Genos",
+        },
         errors: {
             noTeam: "未选择团队。",
             searchFailed: "搜索失败，请重试。",

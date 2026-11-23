@@ -92,6 +92,8 @@ const kindIcon = (ref: Exclude<AgentMentionRef, { kind: "user" }>) => {
             return MENTION_ICONS.group;
         case "todo":
             return MENTION_ICONS.todo;
+        case "skill":
+            return MENTION_ICONS.skill;
         case "calendar_event":
             // Never a candidate (events are not indexed for the `#` menu): no row is drawn for one.
             return MENTION_ICONS.calendarEvent;
@@ -110,6 +112,7 @@ const kindPalette = (ref: Exclude<AgentMentionRef, { kind: "user" }>): MentionPa
         case "task":
             return ref.isMilestone ? MILESTONE_PALETTE : TASK_PALETTE;
         case "note":
+        case "skill": // a skill is a written document: the note's disc
             return NOTE_PALETTE;
         case "chat":
             return CHAT_PALETTE;
@@ -218,6 +221,19 @@ const kindSubtitle = (t: Messages, c: AgentMentionCandidate): string => {
             return e.hashProject;
         case "todo":
             return e.mentionTodo;
+        case "skill": {
+            // "Weekly report · Team skill (Alice)": the title says what it does, the group who it is from.
+            const s = t.spotlight.skills;
+            const from =
+                c.skillGroup === "team"
+                    ? fmt(s.fromTeammate, { name: c.skillOwner || "" })
+                    : c.skillGroup === "installed"
+                      ? s.installed
+                      : c.skillGroup === "official"
+                        ? s.official
+                        : s.mine;
+            return [c.skillTitle, from].filter(Boolean).join(" · ");
+        }
         case "calendar_event":
             return "";
     }

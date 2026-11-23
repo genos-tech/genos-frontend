@@ -5346,6 +5346,13 @@ export const hi: DeepPartial<Messages> = {
         mentions: {
             ariaLabel: "सुझावों का उल्लेख करें",
         },
+        skills: {
+            ariaLabel: "स्किल सुझाव",
+            mine: "आपकी",
+            fromTeammate: "{name} की टीम स्किल",
+            installed: "इंस्टॉल की गई",
+            official: "Genos",
+        },
         errors: {
             noTeam: "कोई टीम नहीं चुनी गई।",
             searchFailed: "खोज नहीं हो सकी। कृपया फिर से कोशिश करें।",

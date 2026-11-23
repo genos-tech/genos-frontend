@@ -1,5 +1,6 @@
 // BundleRule: like `mentionMenuRow`, this must never import `@blocknote/*`.
 import type { ElementType } from "react";
+import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
 import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
@@ -29,4 +30,6 @@ export const MENTION_ICONS = {
     todo: TaskAltRoundedIcon,
     // An agent mention made by "Ask Genos about this event"; never a row of the `#` menu.
     calendarEvent: EventRoundedIcon,
+    // A Genos skill in the `/` menu of Spotlight and the Genos page (MIP-2042), the glyph of the Skills page.
+    skill: AutoStoriesRoundedIcon,
 } as const satisfies Record<string, ElementType>;
