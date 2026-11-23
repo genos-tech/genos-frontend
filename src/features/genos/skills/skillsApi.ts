@@ -8,6 +8,7 @@
  *   DELETE /skills/<id>/                        delete it with its body note (the owner)
  *   POST   /skills/<id>/publish/                cut a new version (a team skill's readers get it)
  *   GET    /skills/<id>/versions/               the versions
+ *   POST   /skills/<id>/report/                 report a skill the member can read (MIP-2044)
  *
  * The whole API answers 404 while the server's `GENOS_SKILLS` switch is off: the list call then
  * resolves `{ ok: false, reason: "off" }` and the settings card is not drawn at all.
@@ -50,6 +51,8 @@ export type SkillRow = {
     /** "public" is read as such, but this page never sets it. */
     visibility: SkillVisibility | "public";
     status: string;
+    /** An operator's sentence about a held, hidden or taken-down skill; the owner's own rows only. */
+    moderationReason: string;
     currentVersionNo: number;
     publishedVersionNo: number;
     createdAt: string | null;
@@ -93,11 +96,27 @@ export type SkillInput = {
     bodyMarkdown?: string;
 };
 
+/** The reasons a report may give, in the order the dialog lists them (the server's own words). */
+export const REPORT_REASONS = [
+    "harmful",
+    "spam",
+    "copyright",
+    "personal_data",
+    "offensive",
+    "other",
+] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+export const REPORT_NOTE_MAX = 1000;
+
+/** The states an operator or the publish-time check puts a skill in (nobody but the owner reads it). */
+export const isModerated = (status: string): boolean =>
+    status === "in_review" || status === "reported_hidden" || status === "taken_down";
+
 export type Failure = {
     ok: false;
     /** `off` = 404 (switch off or not yours), `conflict` = 409 (a name taken, or nothing new to
      *  publish), `limit` = 429 `plan_limit`, `bad_input` = 400/403 with a sentence, `error`. */
-    reason: "off" | "conflict" | "limit" | "bad_input" | "error";
+    reason: "off" | "conflict" | "limit" | "report_limit" | "bad_input" | "error";
     /** The server's own sentence, or "". */
     message: string;
     limit?: number;
@@ -149,6 +168,7 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         effort: oneOf(r.effort, ["", "low", "medium", "high"] as const, ""),
         visibility: oneOf(r.visibility, ["private", "team", "public"] as const, "private"),
         status: str(r.status, 40),
+        moderationReason: str(r.moderationReason, 600),
         currentVersionNo: int(r.currentVersionNo),
         publishedVersionNo: int(r.publishedVersionNo),
         createdAt: when(r.createdAt),
@@ -204,6 +224,8 @@ const failure = (error: unknown): Failure => {
     if (res?.status === 429 && body?.code === "plan_limit") {
         return { ...base, reason: "limit", limit: int(body.limit), used: int(body.used) };
     }
+    if (res?.status === 429 && body?.code === "report_limit")
+        return { ...base, reason: "report_limit" };
     if (res?.status === 400 || res?.status === 403) return { ...base, reason: "bad_input" };
     return { ...base, reason: "error" };
 };
@@ -392,6 +414,28 @@ export const fetchSkillVersions = async (
     try {
         const res = await api.get(`/skills/${encodeURIComponent(skillId)}/versions/`, OPTIONS);
         return { ok: true, data: parseVersions(res.data) };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Report a skill the member can read, from the skill's own page or its list row. Sending the
+ *  same report twice is the same report (the server answers 200 the second time). */
+export const reportSkill = async (
+    accessToken: string | null,
+    skillId: string,
+    reason: ReportReason,
+    note: string
+): Promise<Result<{ created: boolean }>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.post(
+            `/skills/${encodeURIComponent(skillId)}/report/`,
+            { reason, note: note.trim().slice(0, REPORT_NOTE_MAX) },
+            OPTIONS
+        );
+        return { ok: true, data: { created: res.status === 201 } };
     } catch (error) {
         return failure(error);
     }

@@ -4,6 +4,7 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import {
@@ -32,11 +33,13 @@ import { fmt, useTranslation } from "../../../i18n";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "../memory/confirmLayer";
 import { SkillEditor } from "./SkillEditor";
+import { SkillReportDialog } from "./SkillReportDialog";
 import {
     copySkill,
     createSkill,
     deleteSkill,
     fetchSkills,
+    isModerated,
     type SkillList,
     type SkillRow,
     type SkillTab,
@@ -73,6 +76,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
     const [limitHit, setLimitHit] = useState<{ limit: number; used: number } | null>(null);
     const [creating, setCreating] = useState(false);
     const [deleting, setDeleting] = useState<SkillRow | null>(null);
+    const [reporting, setReporting] = useState<SkillRow | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     // Only the newest request may set the list: a slow answer for the tab left behind must not
@@ -293,6 +297,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                             }
                             onCopy={() => void copy(skill)}
                             onOpen={() => setView({ kind: "edit", id: skill.id })}
+                            onReport={() => setReporting(skill)}
                             onDelete={() => {
                                 setDeleteError(null);
                                 setDeleting(skill);
@@ -307,6 +312,10 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 </Typography>
             )}
 
+            <SkillReportDialog
+                skill={reporting ? { id: reporting.id, title: reporting.title } : null}
+                onClose={() => setReporting(null)}
+            />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={m.delete.confirm}
@@ -329,10 +338,11 @@ type ItemProps = {
     when: string;
     onOpen: () => void;
     onCopy: () => void;
+    onReport: () => void;
     onDelete: () => void;
 };
 
-const SkillListItem = ({ skill, when, onOpen, onCopy, onDelete }: ItemProps) => {
+const SkillListItem = ({ skill, when, onOpen, onCopy, onReport, onDelete }: ItemProps) => {
     const { t } = useTranslation();
     const l = t.settings.genosSkills.list;
     const name = skill.title || t.settings.genosSkills.untitled;
@@ -349,6 +359,13 @@ const SkillListItem = ({ skill, when, onOpen, onCopy, onDelete }: ItemProps) => 
             label: l.copy,
             icon: <ContentCopyRoundedIcon />,
             onClick: onCopy,
+            visible: !skill.mine,
+        },
+        {
+            id: "report",
+            label: l.report,
+            icon: <FlagOutlinedIcon />,
+            onClick: onReport,
             visible: !skill.mine,
         },
         {
@@ -400,6 +417,11 @@ const SkillListItem = ({ skill, when, onOpen, onCopy, onDelete }: ItemProps) => 
                     <Chip size="sm" variant="soft">
                         {skill.visibility === "team" ? l.team : l.private}
                     </Chip>
+                    {skill.mine && isModerated(skill.status) && (
+                        <Chip color="warning" size="sm" variant="soft">
+                            {l.moderated[skill.status as keyof typeof l.moderated]}
+                        </Chip>
+                    )}
                     {skill.mine && skill.visibility === "team" && (
                         <Chip
                             color={skill.publishedVersionNo > 0 ? "neutral" : "warning"}

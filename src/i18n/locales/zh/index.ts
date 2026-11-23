@@ -4651,6 +4651,12 @@ export const zh: DeepPartial<Messages> = {
                 copy: "复制到我的技能",
                 copied: "已复制到你的技能。",
                 copyFailed: "无法复制技能,请重试。",
+                report: "举报",
+                moderated: {
+                    in_review: "待审核",
+                    reported_hidden: "因举报已隐藏",
+                    taken_down: "已下架",
+                },
                 delete: "删除",
             },
             fields: {
@@ -4725,6 +4731,34 @@ export const zh: DeepPartial<Messages> = {
                 body: "该技能及其说明将被永久删除,你和你的团队都将无法再使用。",
                 confirm: "删除技能",
                 failed: "无法删除技能,请重试。",
+            },
+            report: {
+                action: "举报",
+                title: "举报此技能",
+                body: "请告诉我们哪里有问题。每条举报都会由运营人员查看；如果有三位不同的用户举报，该技能会在审核完成前被隐藏。",
+                reasonLabel: "哪里有问题？",
+                reasons: {
+                    harmful: "内容有害，或试图滥用我的数据",
+                    spam: "垃圾内容",
+                    copyright: "侵犯版权",
+                    personal_data: "包含个人信息",
+                    offensive: "冒犯性内容",
+                    other: "其他",
+                },
+                noteLabel: "还有其他需要告诉我们的吗？（可选）",
+                send: "提交举报",
+                sent: "谢谢，我们会尽快查看。",
+                failed: "无法提交举报，请重试。",
+                limit: "你今天提交的举报已达上限，请明天再试。",
+            },
+            moderation: {
+                title: {
+                    in_review: "此技能正在审核中，在此之前其他人无法查看或运行。",
+                    reported_hidden:
+                        "此技能因举报已被隐藏，在运营人员审核之前，其他人无法查看或运行。",
+                    taken_down: "此技能已被下架，其他人无法查看或运行。",
+                },
+                reason: "原因：{reason}",
             },
             problems: {
                 titleEmpty: "标题为必填项。",
