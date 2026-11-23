@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Box, Button, FormControl, FormLabel, IconButton } from "@mui/joy";
@@ -19,18 +19,47 @@ type Props = {
 const PICKER_HEIGHT = 435;
 const PICKER_WIDTH = 352;
 
+/** Moves the keyboard into the picker: its search box lives in emoji-mart's shadow root, which
+ *  is lazy-loaded, so this looks for it for a moment after opening. */
+const focusPickerSearch = (): (() => void) => {
+    let tries = 0;
+    const timer = window.setInterval(() => {
+        const input = document
+            .querySelector("em-emoji-picker")
+            ?.shadowRoot?.querySelector<HTMLInputElement>("input[type='search']");
+        tries += 1;
+        if (input) input.focus();
+        if (input || tries >= 20) window.clearInterval(timer);
+    }, 50);
+    return () => window.clearInterval(timer);
+};
+
 /**
  * The "Icon" of a skill: the app's emoji picker (MIP-2209), not a text box.
  *
  * It stores the emoji in the same `icon` field as before. An older skill whose icon is plain text
  * keeps showing that text on the button until the person picks an emoji or removes it. The team's
  * custom emoji are left out: an icon is shown in lists and menus that cannot resolve a `:name:`.
+ *
+ * The picker is a fixed-position popup, so the field closes it on Escape, on scroll or resize
+ * (it would otherwise float over other fields), and when the skill turns read-only; the button
+ * toggles it, and focus goes into the picker when it opens and back to the button when it closes.
  */
 export const SkillIconField = ({ value, disabled, onChange }: Props) => {
     const { t } = useTranslation();
     const f = t.settings.genosSkills.fields;
     const anchorRef = useRef<HTMLButtonElement>(null);
     const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+    // The picker closes itself on any mouse press outside it, the button's included, which would
+    // make the click that follows reopen it. The press is noted first (React's handler runs
+    // before the picker's document listener) so the click can tell it was a "close".
+    const wasOpenOnPress = useRef(false);
+    const isOpen = pos !== null && !disabled;
+
+    const close = (returnFocus: boolean) => {
+        setPos(null);
+        if (returnFocus) anchorRef.current?.focus();
+    };
 
     const open = () => {
         const rect = anchorRef.current?.getBoundingClientRect();
@@ -44,20 +73,40 @@ export const SkillIconField = ({ value, disabled, onChange }: Props) => {
         setPos({ top, left });
     };
 
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === "Escape") close(true);
+        };
+        const onMove = () => setPos(null);
+        document.addEventListener("keydown", onKey, true);
+        window.addEventListener("scroll", onMove, true);
+        window.addEventListener("resize", onMove);
+        const stopFocusing = focusPickerSearch();
+        return () => {
+            document.removeEventListener("keydown", onKey, true);
+            window.removeEventListener("scroll", onMove, true);
+            window.removeEventListener("resize", onMove);
+            stopFocusing();
+        };
+    }, [isOpen]);
+
     return (
         <FormControl>
             <FormLabel>{f.icon}</FormLabel>
-            <Box sx={{ position: "relative" }}>
+            {/* A row, so the clear button never covers the button (and follows the reading
+                direction): the emoji button gives up the width the clear button takes. */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0 }}>
                 <Button
                     ref={anchorRef}
-                    aria-expanded={pos !== null}
-                    aria-haspopup="dialog"
+                    aria-expanded={isOpen}
                     aria-label={value ? `${f.iconChoose}: ${value}` : f.iconChoose}
                     color="neutral"
                     disabled={disabled}
                     variant="outlined"
                     sx={{
-                        width: "100%",
+                        flex: 1,
+                        minWidth: 0,
                         // The height of the title field beside it.
                         height: 36,
                         minHeight: 36,
@@ -68,7 +117,15 @@ export const SkillIconField = ({ value, disabled, onChange }: Props) => {
                         overflow: "hidden",
                         whiteSpace: "nowrap",
                     }}
-                    onClick={open}
+                    onClick={() => {
+                        const wasOpen = wasOpenOnPress.current || pos !== null;
+                        wasOpenOnPress.current = false;
+                        if (wasOpen) close(false);
+                        else open();
+                    }}
+                    onMouseDown={() => {
+                        wasOpenOnPress.current = pos !== null;
+                    }}
                 >
                     {value || <SentimentSatisfiedAltIcon sx={{ color: "text.tertiary" }} />}
                 </Button>
@@ -76,33 +133,17 @@ export const SkillIconField = ({ value, disabled, onChange }: Props) => {
                     <AppTooltip size="sm" title={f.iconClear}>
                         <IconButton
                             aria-label={f.iconClear}
+                            color="neutral"
                             size="sm"
-                            variant="soft"
-                            sx={{
-                                position: "absolute",
-                                top: -8,
-                                right: -8,
-                                "--IconButton-size": "20px",
-                                minHeight: 20,
-                                borderRadius: "50%",
-                                // A touch screen gets a 44px target through the pseudo-element,
-                                // not a bigger badge.
-                                "@media (pointer: coarse)": {
-                                    "&::after": {
-                                        content: '""',
-                                        position: "absolute",
-                                        inset: -12,
-                                    },
-                                },
-                            }}
+                            variant="plain"
                             onClick={() => onChange("")}
                         >
-                            <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                            <CloseRoundedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                     </AppTooltip>
                 )}
             </Box>
-            {pos !== null && (
+            {isOpen && (
                 <EmojiPicker
                     includeCustom={false}
                     pickerLeftPosition={pos.left}
@@ -110,10 +151,14 @@ export const SkillIconField = ({ value, disabled, onChange }: Props) => {
                     pickerTopPosition={pos.top}
                     setSelectedEmoji={(emoji) => {
                         // The picker also reports `null` for a click outside it.
-                        if (emoji) onChange(emoji);
+                        if (emoji) {
+                            onChange(emoji);
+                            anchorRef.current?.focus();
+                        }
                     }}
                     setShowEmojiPicker={(shown) => {
-                        if (!shown) setPos(null);
+                        // A click elsewhere closes it too: focus stays where that click put it.
+                        if (!shown) close(false);
                     }}
                     showEmojiPicker
                     useFixedPosition

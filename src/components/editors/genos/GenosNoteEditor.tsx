@@ -124,9 +124,10 @@ export type GenosNoteEditorProps = {
     // editor keeps rendering Yjs's existing CRDT state (the pre-restore
     // body) even though local React state was updated.
     resyncSignal?: number | string;
-    /** Hides the top-right "Unwrap" toggles and the "Show comments" button. Off by default, so
-     *  every note editor keeps them; the Skills editor turns it on (MIP-2209), where the body is
-     *  instructions for a model and neither control has a use. */
+    /** Hides the top-right "Unwrap" toggles and the "Show comments" button, and with the button
+     *  the toolbar's "Add comment" (a thread could be started that nothing could open). Off by
+     *  default, so every note editor keeps them; the Skills editor turns it on (MIP-2209), where
+     *  the body is instructions for a model and none of it has a use. */
     hideViewControls?: boolean;
 };
 export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
@@ -601,7 +602,11 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                                     formattingToolbar={() => (
                                         <GenosDocumentToolbar
                                             editor={editor}
-                                            hasComments={!!threadStore && !commentsArchived}
+                                            hasComments={
+                                                !!threadStore &&
+                                                !commentsArchived &&
+                                                !hideViewControls
+                                            }
                                             isEditable={isEditable}
                                             setShowGifPicker={setShowGifPicker}
                                             askSource={

@@ -6,8 +6,9 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { useEffect } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -27,19 +28,31 @@ const picker = vi.hoisted(() => ({ last: null as PickerProps | null }));
 vi.mock("../components/ui/emoji/EmojiPicker", () => ({
     EmojiPicker: (props: PickerProps) => {
         picker.last = props;
+        // Like the real one: any mouse press outside it closes it (the button's included).
+        useEffect(() => {
+            const onDown = () => {
+                props.setSelectedEmoji(null);
+                props.setShowEmojiPicker(false);
+            };
+            document.addEventListener("mousedown", onDown);
+            return () => document.removeEventListener("mousedown", onDown);
+        });
         return <div data-testid="emoji-picker" />;
     },
 }));
 
+const tree = (value: string, onChange: () => void, disabled: boolean) => (
+    <CssVarsProvider>
+        <I18nProvider>
+            <SkillIconField disabled={disabled} value={value} onChange={onChange} />
+        </I18nProvider>
+    </CssVarsProvider>
+);
 const renderField = (value: string, onChange = vi.fn(), disabled = false) => {
-    render(
-        <CssVarsProvider>
-            <I18nProvider>
-                <SkillIconField disabled={disabled} value={value} onChange={onChange} />
-            </I18nProvider>
-        </CssVarsProvider>
-    );
-    return onChange;
+    const view = render(tree(value, onChange, disabled));
+    return Object.assign(onChange, {
+        rerender: (d: boolean) => view.rerender(tree(value, onChange, d)),
+    });
 };
 
 afterEach(() => {
@@ -64,6 +77,59 @@ describe("the icon field", () => {
         await userEvent.click(screen.getByRole("button", { name: "Choose an emoji" }));
         picker.last?.setSelectedEmoji("🚀");
         expect(onChange).toHaveBeenCalledWith("🚀");
+    });
+
+    it("the button toggles the picker: a second press closes it instead of reopening it", async () => {
+        renderField("");
+        const button = screen.getByRole("button", { name: "Choose an emoji" });
+        await userEvent.click(button);
+        expect(button.getAttribute("aria-expanded")).toBe("true");
+        await userEvent.click(button);
+        expect(screen.queryByTestId("emoji-picker")).toBeNull();
+        expect(button.getAttribute("aria-expanded")).toBe("false");
+        // And it opens again on the next press.
+        await userEvent.click(button);
+        expect(screen.getByTestId("emoji-picker")).toBeTruthy();
+    });
+
+    it("Escape closes it and puts the focus back on the button", async () => {
+        renderField("");
+        const button = screen.getByRole("button", { name: "Choose an emoji" });
+        await userEvent.click(button);
+        await userEvent.keyboard("{Escape}");
+        expect(screen.queryByTestId("emoji-picker")).toBeNull();
+        expect(document.activeElement).toBe(button);
+    });
+
+    it("a pick puts the focus back on the button", async () => {
+        renderField("");
+        const button = screen.getByRole("button", { name: "Choose an emoji" });
+        await userEvent.click(button);
+        act(() => picker.last?.setSelectedEmoji("🚀"));
+        expect(document.activeElement).toBe(button);
+    });
+
+    it("closes when the page scrolls, because it is placed from where the button was", async () => {
+        renderField("");
+        await userEvent.click(screen.getByRole("button", { name: "Choose an emoji" }));
+        act(() => void window.dispatchEvent(new Event("scroll")));
+        expect(screen.queryByTestId("emoji-picker")).toBeNull();
+    });
+
+    it("closes when the skill turns read-only while it is open", async () => {
+        const field = renderField("");
+        await userEvent.click(screen.getByRole("button", { name: "Choose an emoji" }));
+        field.rerender(true);
+        expect(screen.queryByTestId("emoji-picker")).toBeNull();
+    });
+
+    it("the clear button sits beside the emoji button, not over it", async () => {
+        renderField("⚡");
+        const button = screen.getByRole("button", { name: /Choose an emoji/ });
+        const clear = screen.getByRole("button", { name: "Remove the icon" });
+        // Siblings in one row (the layout is checked in the screenshots), never nested.
+        expect(button.contains(clear)).toBe(false);
+        expect(button.parentElement?.contains(clear)).toBe(true);
     });
 
     it("ignores the picker's null (a click outside it)", async () => {
@@ -129,6 +195,10 @@ describe("the shared note editor's top-right controls", () => {
             /threadStore && !hideViewControls && \(\s*<Box\s+ref=\{commentsToggleRef\}/
         );
         expect(editor).toMatch(/!hideViewControls && \(\s*<WrapToggleButtons/);
+        // With the button gone, no thread can be started that nothing could open.
+        expect(editor).toMatch(
+            /hasComments=\{\s*!!threadStore &&\s*!commentsArchived &&\s*!hideViewControls\s*\}/
+        );
         // The only places either control is drawn.
         expect(editor.match(/<CommentsSidebarToggle/g)).toHaveLength(1);
         expect(editor.match(/<WrapToggleButtons/g)).toHaveLength(1);
