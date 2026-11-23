@@ -97,6 +97,13 @@ export function useCollaborativeBlockNote({
     const initialBodyRef = useRef(initialBody);
     initialBodyRef.current = initialBody;
 
+    // The token the provider presents when it (re)authenticates. A ref, not a memo dependency: the
+    // access token now renews every ~25 min (MIP-2242), and a new token must not rebuild the
+    // provider and the Y.Doc under someone who is typing.
+    const accessTokenRef = useRef(accessToken);
+    accessTokenRef.current = accessToken;
+    const hasAccessToken = !!accessToken;
+
     const syncedRef = useRef(false);
     const fragmentRef = useRef<Y.XmlFragment | null>(null);
     // The current provider's reconnect-after-refusal state (null with no
@@ -212,7 +219,7 @@ export function useCollaborativeBlockNote({
         const yjsDoc = new Y.Doc();
         const frag = yjsDoc.getXmlFragment("document-store");
 
-        if (!COLLAB_URL || !accessToken) {
+        if (!COLLAB_URL || !hasAccessToken) {
             return {
                 doc: yjsDoc,
                 provider: null,
@@ -256,7 +263,7 @@ export function useCollaborativeBlockNote({
             url: COLLAB_URL,
             name: documentName,
             document: yjsDoc,
-            token: accessToken,
+            token: () => accessTokenRef.current ?? "",
             onConnect: () => safeSetConnectionStatus("connected"),
             onAuthenticated: () => safeSetCollabScope(hocuspocusProvider.authorizedScope),
             onDisconnect: () => {
@@ -292,7 +299,19 @@ export function useCollaborativeBlockNote({
             fragment: frag,
             reconnect,
         };
-    }, [documentName, accessToken, seedDocument]);
+    }, [documentName, hasAccessToken, seedDocument]);
+
+    // Hand a renewed token to the open connection. genos-collab re-checks access with the token the
+    // connection opened with, and that one expires after 30 min: it keeps the connection on the new
+    // one only if it is signed, unexpired and the same user (access.js renewConnectionToken).
+    useEffect(() => {
+        if (!provider || !accessToken) return;
+        try {
+            provider.sendStateless(JSON.stringify({ type: "token", token: accessToken }));
+        } catch {
+            // Not connected: it authenticates with the current token when it connects.
+        }
+    }, [provider, accessToken]);
 
     // A new provider (another document, or a refreshed token) hasn't been
     // granted anything yet: don't carry the previous document's scope over.
