@@ -47,6 +47,42 @@ const Marked = ({ text, query }: { text: string; query: string }) => (
     </>
 );
 
+/** Who the task is assigned to, or nothing when it is unassigned (no "?" placeholder). */
+export const SearchRowAssignee = ({
+    assigneeId,
+    assigneeName,
+}: {
+    assigneeId?: string | null;
+    assigneeName?: string | null;
+}) =>
+    assigneeId ? (
+        <Box
+            component="span"
+            sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.5,
+                minWidth: 0,
+                marginInlineStart: "auto",
+            }}
+        >
+            <AssigneeAvatar name={assigneeName} size="xs" userId={assigneeId} />
+            {assigneeName && (
+                <Box
+                    component="span"
+                    sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        maxWidth: 120,
+                    }}
+                >
+                    {assigneeName}
+                </Box>
+            )}
+        </Box>
+    ) : null;
+
 /**
  * The one task search (MIP-1990), in the table/board header. Focus shows a short starting
  * list (recently opened tasks, then the open tasks of the project in view) without loading
@@ -170,35 +206,10 @@ export const TaskSearchBar = memo(function TaskSearchBar({
                                 {option.projectName}
                             </Box>
                             <StatusLabel status={option.status?.status} />
-                            <Box
-                                component="span"
-                                sx={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 0.5,
-                                    minWidth: 0,
-                                    marginInlineStart: "auto",
-                                }}
-                            >
-                                <AssigneeAvatar
-                                    name={option.assigneeName}
-                                    size="xs"
-                                    userId={option.assigneeId}
-                                />
-                                {option.assigneeName && (
-                                    <Box
-                                        component="span"
-                                        sx={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            maxWidth: 120,
-                                        }}
-                                    >
-                                        {option.assigneeName}
-                                    </Box>
-                                )}
-                            </Box>
+                            <SearchRowAssignee
+                                assigneeId={option.assigneeId}
+                                assigneeName={option.assigneeName}
+                            />
                         </Box>
                     </Box>
                 </AutocompleteOption>
