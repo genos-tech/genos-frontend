@@ -15,11 +15,11 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { toast } from "../components/ui/feedback/toastStore";
-import { SkillsEntryCard } from "../features/genos/skills/SkillsEntryCard";
-import { SkillsPage } from "../features/genos/skills/SkillsPage";
 import * as api from "../features/genos/skills/skillsApi";
 import type { SkillRow } from "../features/genos/skills/skillsApi";
+import { SkillsEntryCard } from "../features/genos/skills/SkillsEntryCard";
 import type { SkillsHost } from "../features/genos/skills/skillsHost";
+import { SkillsPage } from "../features/genos/skills/SkillsPage";
 import { I18nProvider } from "../i18n";
 
 vi.mock("../context/authState", () => ({
@@ -41,8 +41,8 @@ vi.mock("../features/genos/skills/SkillBodyEditor", () => ({
         }));
         return <div data-testid="body-editor">editor for note {props.noteId}</div>;
     }),
-    syncSkillNoteTitle: vi.fn(),
 }));
+vi.mock("../features/genos/skills/skillNoteTitle", () => ({ syncSkillNoteTitle: vi.fn() }));
 
 vi.mock("../features/genos/skills/skillsApi", async (importOriginal) => {
     const actual = await importOriginal<typeof import("../features/genos/skills/skillsApi")>();
@@ -165,7 +165,7 @@ describe("the list", () => {
         renderPage();
         expect(await screen.findByText("Weekly update")).toBeTruthy();
         expect(screen.getByText("/weekly-update")).toBeTruthy();
-        expect(screen.getByText("Team")).toBeTruthy();
+        expect(screen.getAllByText("Team").length).toBeGreaterThan(1);
         expect(screen.getByText("Version 2")).toBeTruthy();
         expect(screen.getByText("weekly")).toBeTruthy();
         expect(screen.getByText("/plan")).toBeTruthy();
@@ -269,7 +269,7 @@ describe("deleting from the list", () => {
         await screen.findByText("Weekly update");
         await user.click(screen.getByRole("button", { name: "Actions for Weekly update" }));
         await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
-        const dialog = await screen.findByRole("dialog");
+        const dialog = await screen.findByRole("alertdialog");
         expect(within(dialog).getByText("Delete this skill?")).toBeTruthy();
         expect(api.deleteSkill).not.toHaveBeenCalled();
         vi.mocked(api.fetchSkills).mockResolvedValue(list([]));
@@ -397,7 +397,7 @@ describe("the editor", () => {
         const title = await openEditor(user);
         await user.type(title, "!");
         await user.click(screen.getByRole("button", { name: "Skills" }));
-        const dialog = await screen.findByRole("dialog");
+        const dialog = await screen.findByRole("alertdialog");
         expect(within(dialog).getByText("Discard unsaved changes?")).toBeTruthy();
         await user.click(within(dialog).getByRole("button", { name: "Discard" }));
         expect(await screen.findByRole("tab", { name: "My skills" })).toBeTruthy();
@@ -409,7 +409,7 @@ describe("the editor", () => {
         renderPage();
         await openEditor(user);
         await user.click(screen.getByRole("button", { name: "Delete skill" }));
-        const dialog = await screen.findByRole("dialog");
+        const dialog = await screen.findByRole("alertdialog");
         await user.click(within(dialog).getByRole("button", { name: "Delete skill" }));
         await waitFor(() => expect(api.deleteSkill).toHaveBeenCalledWith("tok", "s1"));
         expect(await screen.findByRole("tab", { name: "My skills" })).toBeTruthy();

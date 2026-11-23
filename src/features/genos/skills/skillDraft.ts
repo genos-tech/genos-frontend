@@ -4,8 +4,14 @@
  * (`validateDraft`), so each can be tested without drawing anything.
  */
 
-import type { SkillEffort, SkillInput, SkillRow, SkillVisibility, ToolLevel } from "./skillsApi";
-import { SKILL_LIMITS } from "./skillsApi";
+import {
+    SKILL_LIMITS,
+    type SkillEffort,
+    type SkillInput,
+    type SkillRow,
+    type SkillVisibility,
+    type ToolLevel,
+} from "./skillsApi";
 import { slugProblem, tagProblem, type SlugProblem, type TagProblem } from "./skillText";
 
 export type SkillDraft = {

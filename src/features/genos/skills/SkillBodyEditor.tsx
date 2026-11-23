@@ -7,7 +7,7 @@ import { useAuth } from "../../../context/authState";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
-import { getCachedNote, upsertNoteCache, useNoteData } from "../../../hooks/notes/useNoteData";
+import { useNoteData } from "../../../hooks/notes/useNoteData";
 import { useNoteEditor } from "../../../hooks/notes/useNoteEditor";
 import type { NoteTab } from "../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../types/admin";
@@ -47,7 +47,7 @@ type Props = {
  * note comes from `useNoteData`, saving from `useNoteEditor`, and the editor is
  * `BnMyNoteEditor` with no title field, because the skill's title is a field of the details form.
  *
- * Keeping the NOTE's title equal to the skill's title is the page's job (`syncSkillNoteTitle`):
+ * Keeping the NOTE's title equal to the skill's title is the page's job (`skillNoteTitle.ts`):
  * the editor sends the cached note's title with every body save, so a stale one would rename
  * the note back.
  */
@@ -108,9 +108,9 @@ export const SkillBodyEditor = ({
         return (
             <NoteLoadState
                 error={error !== null}
-                isActive
                 isLoading={isLoading}
                 notFound={notFound}
+                isActive
                 onRetry={reload}
             />
         );
@@ -134,14 +134,4 @@ export const SkillBodyEditor = ({
             />
         </Box>
     );
-};
-
-/**
- * After the details were saved with a new title, write that title into the note cache, so the
- * editor's next body save carries it (the server renames the note with the skill, and a save
- * from the old cached title would undo that).
- */
-export const syncSkillNoteTitle = (noteId: number, title: string): void => {
-    const cached = getCachedNote<MyNoteProps>("my", noteId);
-    if (cached && cached.title !== title) upsertNoteCache({ ...cached, title });
 };

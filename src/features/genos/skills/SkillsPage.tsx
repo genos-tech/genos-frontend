@@ -24,9 +24,9 @@ import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { toast } from "../../../components/ui/feedback/toastStore";
+import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { MenuRow, MenuSurface, MoreMenu } from "../../../components/ui/MoreMenu";
 import { PlainButton } from "../../../components/ui/PlainButton";
-import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
@@ -50,7 +50,10 @@ type Props = {
 };
 
 type View = { kind: "list" } | { kind: "edit"; id: string };
-type ListState = { status: "loading" } | { status: "failed" } | { status: "ready"; data: SkillList };
+type ListState =
+    | { status: "loading" }
+    | { status: "failed" }
+    | { status: "ready"; data: SkillList };
 
 /**
  * "Skills" in Settings > Genos: the member's own skills and their team's, a way to start a new
@@ -84,7 +87,6 @@ export const SkillsPage = ({ teamId, host }: Props) => {
     useEffect(() => {
         if (view.kind !== "list") return;
         // The list is a fetch whose answer sets the state; the first render has nothing to draw.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         void load(tab);
     }, [load, tab, view.kind]);
 
@@ -188,11 +190,11 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 <Tabs
                     aria-label={m.tabs.label}
                     size="sm"
-                    value={tab}
                     sx={{ bgcolor: "transparent", minWidth: 0 }}
+                    value={tab}
                     onChange={(_e, value) => setTab(value as SkillTab)}
                 >
-                    <TabList disableUnderline sx={{ gap: 0.5 }}>
+                    <TabList sx={{ gap: 0.5 }} disableUnderline>
                         <Tab value="mine" variant={tab === "mine" ? "soft" : "plain"}>
                             {m.tabs.mine}
                         </Tab>
@@ -248,6 +250,10 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 />
             ) : list.data.skills.length === 0 ? (
                 <EmptyState
+                    body={tab === "mine" ? m.list.emptyMineBody : m.list.emptyTeamBody}
+                    data-empty="genos-skills"
+                    size="sm"
+                    title={tab === "mine" ? m.list.emptyMineTitle : m.list.emptyTeamTitle}
                     action={
                         tab === "mine" && !full
                             ? {
@@ -257,10 +263,6 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                               }
                             : undefined
                     }
-                    body={tab === "mine" ? m.list.emptyMineBody : m.list.emptyTeamBody}
-                    data-empty="genos-skills"
-                    size="sm"
-                    title={tab === "mine" ? m.list.emptyMineTitle : m.list.emptyTeamTitle}
                 />
             ) : (
                 <Box
@@ -285,11 +287,11 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                                     : ""
                             }
                             onCopy={() => void copy(skill)}
+                            onOpen={() => setView({ kind: "edit", id: skill.id })}
                             onDelete={() => {
                                 setDeleteError(null);
                                 setDeleting(skill);
                             }}
-                            onOpen={() => setView({ kind: "edit", id: skill.id })}
                         />
                     ))}
                 </Box>

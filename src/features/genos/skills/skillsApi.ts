@@ -114,7 +114,8 @@ const rec = (v: unknown): Record<string, unknown> | null =>
         ? (v as Record<string, unknown>)
         : null;
 
-const str = (v: unknown, limit = 20_000): string => (typeof v === "string" ? v.slice(0, limit) : "");
+const str = (v: unknown, limit = 20_000): string =>
+    typeof v === "string" ? v.slice(0, limit) : "";
 
 const int = (v: unknown): number =>
     typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 1_000_000_000 ? v : 0;

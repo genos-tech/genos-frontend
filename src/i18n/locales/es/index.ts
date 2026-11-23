@@ -1136,7 +1136,8 @@ export const es: DeepPartial<Messages> = {
                 loading: "Cargando habilidades…",
                 loadFailed: "No se pudieron cargar tus habilidades.",
                 emptyMineTitle: "Aún no hay habilidades",
-                emptyMineBody: "Empieza con la plantilla o escribe la tuya desde una página en blanco.",
+                emptyMineBody:
+                    "Empieza con la plantilla o escribe la tuya desde una página en blanco.",
                 emptyTeamTitle: "Aún no hay habilidades del equipo",
                 emptyTeamBody:
                     "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Comparte una tuya desde sus detalles.",
@@ -1167,7 +1168,8 @@ export const es: DeepPartial<Messages> = {
                 counter: "{count}/{max}",
                 tags: "Etiquetas",
                 tagsPlaceholder: "Añadir una etiqueta",
-                tagsHelp: "Hasta {max} etiquetas. Palabras en minúsculas; pulsa Intro para añadir.",
+                tagsHelp:
+                    "Hasta {max} etiquetas. Palabras en minúsculas; pulsa Intro para añadir.",
                 removeTag: "Quitar la etiqueta {tag}",
                 icon: "Icono",
                 iconHelp: "Un emoji",

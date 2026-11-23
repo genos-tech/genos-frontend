@@ -64,7 +64,8 @@ export const SkillDetailsForm = ({
         if (problems.slug === "reserved") return fmt(p.slugReserved, { slug: draft.slug.trim() });
         return p.slugChars;
     })();
-    const slugShown = touched.slug || serverProblems.slug ? (serverProblems.slug ?? slugText) : null;
+    const slugShown =
+        touched.slug || serverProblems.slug ? (serverProblems.slug ?? slugText) : null;
     const titleShown =
         touched.title && problems.title ? p.titleEmpty : (serverProblems.title ?? null);
 
@@ -134,18 +135,20 @@ export const SkillDetailsForm = ({
                 <FormLabel>{f.slug}</FormLabel>
                 <Input
                     disabled={disabled}
+                    startDecorator={<Typography level="body-sm">/</Typography>}
+                    value={draft.slug}
                     slotProps={{
                         input: { maxLength: SKILL_LIMITS.slugMax, autoCapitalize: "none" },
                     }}
-                    startDecorator={<Typography level="body-sm">/</Typography>}
-                    value={draft.slug}
                     onBlur={() => touch("slug")}
                     onChange={(e) => onChange({ slug: e.target.value })}
                 />
                 <FormHelperText>
                     {slugShown ??
                         (draft.slug.trim() !== ""
-                            ? fmt(f.slugPreview, { command: `/${draft.slug.trim().toLowerCase()}` })
+                            ? fmt(f.slugPreview, {
+                                  command: `/${draft.slug.trim().toLowerCase()}`,
+                              })
                             : f.slugHelp)}
                 </FormHelperText>
             </FormControl>
@@ -172,7 +175,14 @@ export const SkillDetailsForm = ({
 
             <FormControl error={!!tagError || !!serverProblems.tags || !!problems.tags}>
                 <FormLabel>{f.tags}</FormLabel>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: draft.tags.length ? 0.75 : 0 }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        mb: draft.tags.length ? 0.75 : 0,
+                    }}
+                >
                     {draft.tags.map((tag) => (
                         <Chip
                             key={tag}
@@ -195,6 +205,9 @@ export const SkillDetailsForm = ({
                 </Box>
                 {!disabled && (
                     <Input
+                        placeholder={f.tagsPlaceholder}
+                        slotProps={{ input: { maxLength: SKILL_LIMITS.tagMax + 1 } }}
+                        value={tagInput}
                         endDecorator={
                             <Button
                                 disabled={tagInput.trim() === ""}
@@ -205,14 +218,11 @@ export const SkillDetailsForm = ({
                                 {t.common.actions.add}
                             </Button>
                         }
-                        placeholder={f.tagsPlaceholder}
-                        slotProps={{ input: { maxLength: SKILL_LIMITS.tagMax + 1 } }}
-                        value={tagInput}
+                        onKeyDown={onTagKeyDown}
                         onChange={(e) => {
                             setTagInput(e.target.value);
                             setTagError(null);
                         }}
-                        onKeyDown={onTagKeyDown}
                     />
                 )}
                 <FormHelperText>
@@ -247,8 +257,8 @@ export const SkillDetailsForm = ({
                         aria-labelledby="skill-tool-level"
                         disabled={disabled}
                         size="sm"
-                        value={draft.toolLevel}
                         sx={{ flexWrap: "wrap", minWidth: 0 }}
+                        value={draft.toolLevel}
                         onChange={(_e, value) => value && onChange({ toolLevel: value })}
                     >
                         <Button value="read">{f.toolRead}</Button>
@@ -261,7 +271,9 @@ export const SkillDetailsForm = ({
                         disabled={disabled}
                         slotProps={{ button: { "aria-labelledby": "skill-effort" } }}
                         value={draft.effort}
-                        onChange={(_e, value) => onChange({ effort: (value ?? "") as SkillEffort })}
+                        onChange={(_e, value) =>
+                            onChange({ effort: (value ?? "") as SkillEffort })
+                        }
                     >
                         <Option value="">{f.effortAuto}</Option>
                         <Option value="low">{f.effortLow}</Option>
@@ -277,8 +289,8 @@ export const SkillDetailsForm = ({
                     aria-labelledby="skill-visibility"
                     disabled={disabled}
                     size="sm"
-                    value={draft.visibility}
                     sx={{ flexWrap: "wrap", minWidth: 0, alignSelf: "flex-start" }}
+                    value={draft.visibility}
                     onChange={(_e, value) => value && onChange({ visibility: value })}
                 >
                     <Button value="private">{f.visibilityPrivate}</Button>

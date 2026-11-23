@@ -4604,7 +4604,8 @@ export const zh: DeepPartial<Messages> = {
         genosSkills: {
             entry: {
                 heading: "技能",
-                description: "编写 Genos 可以照做的分步说明,像笔记一样编辑,并选择团队是否可以使用。",
+                description:
+                    "编写 Genos 可以照做的分步说明,像笔记一样编辑,并选择团队是否可以使用。",
                 open: "打开",
                 usage: "已使用 {used} / {limit} 个技能",
                 usageUnlimited: "{used} 个技能",
@@ -4625,8 +4626,10 @@ export const zh: DeepPartial<Messages> = {
                 emptyMineTitle: "还没有技能",
                 emptyMineBody: "从模板开始,或从空白页自己编写。",
                 emptyTeamTitle: "还没有团队技能",
-                emptyTeamBody: "队友与团队共享的技能会显示在这里。你可以在技能详情中共享自己的技能。",
-                limitReached: "你的套餐最多可保存 {limit} 个技能,你已有 {used} 个。请删除一个或升级套餐。",
+                emptyTeamBody:
+                    "队友与团队共享的技能会显示在这里。你可以在技能详情中共享自己的技能。",
+                limitReached:
+                    "你的套餐最多可保存 {limit} 个技能,你已有 {used} 个。请删除一个或升级套餐。",
                 usage: "已使用 {used} / {limit} 个技能",
                 updated: "{when}更新",
                 by: "作者:{name}",
@@ -4689,7 +4692,8 @@ export const zh: DeepPartial<Messages> = {
                 upToDate: "团队已经拥有此内容。",
                 publishFailed: "无法发布,请重试。",
                 bodyHeading: "说明",
-                bodyHint: "像笔记一样写下步骤。你在名称之后输入的文字,以及添加的 @ 或 #,都会作为输入。",
+                bodyHint:
+                    "像笔记一样写下步骤。你在名称之后输入的文字,以及添加的 @ 或 #,都会作为输入。",
                 discardTitle: "放弃未保存的更改?",
                 discardBody: "你对详情所做的更改将丢失。",
                 discardConfirm: "放弃",

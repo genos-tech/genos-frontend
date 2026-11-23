@@ -126,7 +126,10 @@ describe("the draft", () => {
     it("sends only what changed, trimmed", () => {
         const skill = row();
         const draft = { ...draftFrom(skill), title: "  New title ", tags: ["weekly", "ops"] };
-        expect(draftChanges(draft, skill)).toEqual({ title: "New title", tags: ["weekly", "ops"] });
+        expect(draftChanges(draft, skill)).toEqual({
+            title: "New title",
+            tags: ["weekly", "ops"],
+        });
     });
     it("reads a public skill as private (this page never makes one public)", () => {
         expect(draftFrom(row({ visibility: "public" })).visibility).toBe("private");

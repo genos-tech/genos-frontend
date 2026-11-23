@@ -11,7 +11,7 @@ import { ConfirmDialog } from "../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "../memory/confirmLayer";
-import { SkillBodyEditor, syncSkillNoteTitle, type SkillBodyEditorHandle } from "./SkillBodyEditor";
+import { SkillBodyEditor, type SkillBodyEditorHandle } from "./SkillBodyEditor";
 import { SkillDetailsForm } from "./SkillDetailsForm";
 import {
     draftChanges,
@@ -21,6 +21,7 @@ import {
     validateDraft,
     type SkillDraft,
 } from "./skillDraft";
+import { syncSkillNoteTitle } from "./skillNoteTitle";
 import {
     copySkill,
     deleteSkill,
@@ -110,7 +111,6 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
 
     useEffect(() => {
         // Loading is a fetch whose answer sets the state; the first render has nothing to draw.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         void load();
     }, [load]);
 
@@ -122,7 +122,6 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     }, [accessToken, skillId]);
     useEffect(() => {
         // Only a skill that has readers has versions worth listing.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (skill && published) void loadVersions();
     }, [skill, published, loadVersions]);
 
@@ -314,7 +313,10 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 </Typography>
             )}
 
-            <Sheet sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: "lg", minWidth: 0 }} variant="outlined">
+            <Sheet
+                sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: "lg", minWidth: 0 }}
+                variant="outlined"
+            >
                 <Typography level="title-md" sx={{ mb: 1.5 }}>
                     {e.details}
                 </Typography>
@@ -336,8 +338,13 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 <Sheet
                     aria-label={e.bodyAria}
                     role="group"
-                    sx={{ borderRadius: "lg", minWidth: 0, overflow: "hidden", p: { xs: 0.5, sm: 1 } }}
                     variant="outlined"
+                    sx={{
+                        borderRadius: "lg",
+                        minWidth: 0,
+                        overflow: "hidden",
+                        p: { xs: 0.5, sm: 1 },
+                    }}
                 >
                     {skill.noteId !== null && editable ? (
                         <SkillBodyEditor
@@ -365,7 +372,10 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
             </Box>
 
             {published && (
-                <Sheet sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: "lg", minWidth: 0 }} variant="outlined">
+                <Sheet
+                    sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: "lg", minWidth: 0 }}
+                    variant="outlined"
+                >
                     <Typography level="title-md" sx={{ mb: 1 }}>
                         {m.versions.heading}
                     </Typography>

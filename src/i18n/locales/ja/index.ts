@@ -4877,7 +4877,8 @@ export const ja: DeepPartial<Messages> = {
                 discardTitle: "保存していない変更を破棄しますか?",
                 discardBody: "詳細に加えた変更は失われます。",
                 discardConfirm: "破棄",
-                readOnly: "このスキルは読むことができます。変更するには自分のスキルにコピーしてください。",
+                readOnly:
+                    "このスキルは読むことができます。変更するには自分のスキルにコピーしてください。",
                 loadFailed: "このスキルを開けませんでした。",
                 saveFailed: "詳細を保存できませんでした。もう一度お試しください。",
                 unsavedBody: "手順は自動で保存されます。詳細は「保存」が必要です。",

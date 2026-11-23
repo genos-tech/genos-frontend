@@ -4910,7 +4910,8 @@ export const fr: DeepPartial<Messages> = {
                 counter: "{count}/{max}",
                 tags: "Balises",
                 tagsPlaceholder: "Ajouter une balise",
-                tagsHelp: "Jusqu'à {max} balises. Des mots en minuscules ; Entrée pour en ajouter une.",
+                tagsHelp:
+                    "Jusqu'à {max} balises. Des mots en minuscules ; Entrée pour en ajouter une.",
                 removeTag: "Retirer la balise {tag}",
                 icon: "Icône",
                 iconHelp: "Un emoji",
@@ -4996,7 +4997,8 @@ export const fr: DeepPartial<Messages> = {
                 steps: "Étapes",
                 stepsHint: "Quoi lire ou faire, en nommant l'outil Genos quand c'est utile.",
                 output: "Sortie",
-                outputHint: "Ce qu'elle laisse : une réponse, une note ou des tâches que vous approuvez.",
+                outputHint:
+                    "Ce qu'elle laisse : une réponse, une note ou des tâches que vous approuvez.",
                 never: "Jamais",
                 neverHint: "Ce qu'elle ne doit pas faire.",
             },
