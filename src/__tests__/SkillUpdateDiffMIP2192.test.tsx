@@ -115,8 +115,10 @@ describe("SkillUpdateDiffDialog", () => {
         );
         renderDialog();
         const alert = await screen.findByRole("alert");
+        // A heading, and a body that adds what it may do and that approval is still needed.
+        expect(alert).toHaveTextContent("This version can now propose changes");
         expect(alert).toHaveTextContent(
-            "This version may now propose changes. Each one still needs your approval."
+            "This one may suggest creating tasks, notes or to-do items for you. Each suggestion still needs your approval."
         );
         expect(screen.getByText("Read only")).toBeInTheDocument();
         expect(screen.getByText("Read and propose changes")).toBeInTheDocument();

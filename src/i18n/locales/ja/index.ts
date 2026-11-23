@@ -5182,7 +5182,7 @@ export const ja: DeepPartial<Messages> = {
                 becomes: "から次に変更",
                 toolRaisedTitle: "このバージョンは変更を提案できるようになります",
                 toolRaised:
-                    "このバージョンは変更を提案する場合があります。どの提案も、あなたの承認が必要です。",
+                    "以前のバージョンは読み取りだけでした。このバージョンは、タスク・ノート・ToDo の作成を提案する場合があります。どの提案も、あなたの承認が必要です。",
                 needsConfirmation: "このバージョンを実行する前に確認が求められます。",
                 diffLabel: "テキストの変更点",
                 diffEmpty: "テキストに変更はありません。",

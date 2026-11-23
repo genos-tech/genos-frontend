@@ -70,6 +70,14 @@ describe("SkillRunCardDialog", () => {
         expect(api.fetchRunCard).toHaveBeenCalledWith("tok", "s1", "team-1", 3);
     });
 
+    it("starts focus on Cancel, so a reflex Enter runs nothing", async () => {
+        load(card());
+        renderCard();
+        await screen.findByText("Summarise my week.");
+        expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" }));
+        expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
     it("shows the author's handle and nothing else about them", async () => {
         load(card());
         renderCard();

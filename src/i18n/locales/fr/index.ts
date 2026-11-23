@@ -5272,7 +5272,7 @@ export const fr: DeepPartial<Messages> = {
                 becomes: "devient",
                 toolRaisedTitle: "Cette version peut désormais proposer des modifications",
                 toolRaised:
-                    "Cette version peut désormais proposer des modifications. Chacune nécessite toujours votre approbation.",
+                    "Les versions précédentes ne pouvaient que lire. Celle-ci peut suggérer de créer des tâches, des notes ou des éléments de liste de tâches pour vous. Chaque suggestion nécessite toujours votre approbation.",
                 needsConfirmation:
                     "Une confirmation vous sera demandée avant l'exécution de cette version.",
                 diffLabel: "Modifications du texte",

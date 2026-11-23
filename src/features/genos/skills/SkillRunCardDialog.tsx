@@ -93,6 +93,7 @@ export const SkillRunCardDialog = ({ request, onResolve }: Props) => {
             open={request !== null}
             title={r.title}
             zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+            focusCancel
             onClose={() => onResolve(false)}
             onConfirm={run}
         >

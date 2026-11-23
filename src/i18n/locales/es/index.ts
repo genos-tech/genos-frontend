@@ -1476,7 +1476,7 @@ export const es: DeepPartial<Messages> = {
                 becomes: "pasa a",
                 toolRaisedTitle: "Esta versión ahora puede proponer cambios",
                 toolRaised:
-                    "Esta versión ahora puede proponer cambios. Cada uno sigue necesitando tu aprobación.",
+                    "Las versiones anteriores solo podían leer. Esta puede sugerir crear tareas, notas o elementos de tareas pendientes por ti. Cada sugerencia sigue necesitando tu aprobación.",
                 needsConfirmation: "Se te pedirá confirmación antes de ejecutar esta versión.",
                 diffLabel: "Cambios en el texto",
                 diffEmpty: "El texto no cambió.",

@@ -1468,7 +1468,7 @@ export const settings = {
             becomes: "becomes",
             toolRaisedTitle: "This version can now propose changes",
             toolRaised:
-                "This version may now propose changes. Each one still needs your approval.",
+                "Earlier versions could only read. This one may suggest creating tasks, notes or to-do items for you. Each suggestion still needs your approval.",
             needsConfirmation: "You will be asked to confirm before this version runs.",
             diffLabel: "Changes to the text",
             diffEmpty: "The text did not change.",

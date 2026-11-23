@@ -4989,7 +4989,8 @@ export const zh: DeepPartial<Messages> = {
                 language: "语言",
                 becomes: "变为",
                 toolRaisedTitle: "此版本现在可以建议更改",
-                toolRaised: "此版本现在可能会建议更改。每一项仍需要你的批准。",
+                toolRaised:
+                    "之前的版本只能读取。此版本可能会建议为你创建任务、笔记或待办事项。每一项建议仍需要你的批准。",
                 needsConfirmation: "运行此版本之前，系统会请你确认。",
                 diffLabel: "文本的更改",
                 diffEmpty: "文本没有变化。",
