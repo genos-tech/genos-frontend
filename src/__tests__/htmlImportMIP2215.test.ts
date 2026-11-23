@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildFolderImportPlan } from "../features/notes/common/services/folderImportPlan";
-import { importHtmlNote } from "../features/notes/common/services/importHtmlNote";
+import { htmlTitleOf, importHtmlNote } from "../features/notes/common/services/importHtmlNote";
 import { titleFromFilename } from "../features/notes/common/services/noteMarkdown";
 import { runFolderImport } from "../features/notes/common/services/runFolderImport";
 import { createEmptyMyNote } from "../features/notes/my-notes/services/createEmptyMyNote";
@@ -142,5 +142,43 @@ describe("the run", () => {
         expect(result.notesCreated).toBe(1);
         expect(result.htmlNotesCreated).toBeUndefined();
         expect(result.htmlWarnings).toBeUndefined();
+    });
+});
+
+describe("htmlTitleOf", () => {
+    it("reads the title, folds whitespace and decodes the few entities a title has", () => {
+        expect(
+            htmlTitleOf("<html><head><TITLE lang=en>\n  Sprint &amp; Q4 &#8211; &#x41; </TITLE>")
+        ).toBe("Sprint & Q4 – A");
+        expect(htmlTitleOf("<title>It&apos;s &lt;b&gt; &quot;x&quot;</title>")).toBe(
+            'It\'s <b> "x"'
+        );
+    });
+
+    it("skips a tag that only starts like title, and an unfinished title", () => {
+        expect(htmlTitleOf("<titlefoo>no</titlefoo><title>real</title>")).toBe("real");
+        expect(htmlTitleOf("<title>never closed")).toBe("");
+        expect(htmlTitleOf("<title")).toBe("");
+        expect(htmlTitleOf("<p>no title here</p>")).toBe("");
+        expect(htmlTitleOf("")).toBe("");
+    });
+
+    it("never runs anything from the file: a title with markup is just text", () => {
+        expect(htmlTitleOf("<title><img src=x onerror=alert(1)></title>")).toBe(
+            "<img src=x onerror=alert(1)>"
+        );
+    });
+
+    it("caps the length at the server's 255 and stays linear on hostile input", () => {
+        expect(htmlTitleOf(`<title>${"x".repeat(1000)}</title>`)).toHaveLength(255);
+        for (const hostile of [
+            "<title".repeat(150_000),
+            "<title>" + "&".repeat(300_000),
+            "<title ".repeat(100_000),
+        ]) {
+            const t0 = performance.now();
+            htmlTitleOf(hostile);
+            expect(performance.now() - t0).toBeLessThan(1500);
+        }
     });
 });

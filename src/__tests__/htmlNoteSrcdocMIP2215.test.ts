@@ -6,7 +6,48 @@ import {
     HTML_NOTE_SANDBOX,
     htmlNoteFamily,
     isHtmlNote,
+    stripLeadingDoctype,
 } from "../features/notes/common/utils/htmlNote";
+
+describe("stripLeadingDoctype", () => {
+    it("drops whitespace, comments and the doctype, keeps the rest", () => {
+        expect(stripLeadingDoctype("  <!-- a --> <!--b-->\n<!DOCTYPE html>\n<p>x</p>")).toBe(
+            "\n<p>x</p>"
+        );
+        expect(stripLeadingDoctype("<!doctype html PUBLIC 'x'><p>x</p>")).toBe("<p>x</p>");
+    });
+
+    it("returns a page with no doctype exactly as it is", () => {
+        expect(stripLeadingDoctype("<p>x</p>")).toBe("<p>x</p>");
+        expect(stripLeadingDoctype("")).toBe("");
+        expect(stripLeadingDoctype("<!-- only a comment --><p>x</p>")).toBe(
+            "<!-- only a comment --><p>x</p>"
+        );
+    });
+
+    it("returns a page with an unterminated comment or doctype as it is", () => {
+        expect(stripLeadingDoctype("<!-- never closed <!doctype html><p>x</p>")).toBe(
+            "<!-- never closed <!doctype html><p>x</p>"
+        );
+        expect(stripLeadingDoctype("<!doctype html")).toBe("<!doctype html");
+    });
+
+    it("does not strip a doctype that is not the first thing", () => {
+        expect(stripLeadingDoctype("<p>a</p><!doctype html>")).toBe("<p>a</p><!doctype html>");
+    });
+
+    it("stays linear on hostile input: a page that is 200 000 comment openers, and one of spaces", () => {
+        for (const hostile of [
+            "<!--".repeat(200_000),
+            " ".repeat(500_000) + "x",
+            "<!-- ".repeat(100_000) + "<!doctype",
+        ]) {
+            const t0 = performance.now();
+            stripLeadingDoctype(hostile);
+            expect(performance.now() - t0).toBeLessThan(1000);
+        }
+    });
+});
 
 const META_START = '<!doctype html><meta http-equiv="Content-Security-Policy" content="';
 

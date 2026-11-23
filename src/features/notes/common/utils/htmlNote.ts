@@ -33,8 +33,32 @@ export const HTML_NOTE_CSP = [
  *  `allow-top-navigation` and `allow-modals` are all deliberately absent. */
 export const HTML_NOTE_SANDBOX = "allow-scripts";
 
-/** A leading BOM, then any comments, then the author's doctype: the part we replace with our own. */
-const LEADING_DOCTYPE = /^\s*(?:<!--[\s\S]*?-->\s*)*<!doctype[^>]*>/i;
+/**
+ * The page without its leading doctype: whitespace, then any comments, then `<!doctype ...>` are
+ * dropped (we put our own first). A page with no doctype, or an unterminated comment or doctype, is
+ * returned as it is.
+ *
+ * Plain scanning, not a regular expression: the text is an untrusted file, and the regex that said
+ * the same (`^\s*(?:<!--[\s\S]*?-->\s*)*<!doctype[^>]*>`) backtracks polynomially on a page that
+ * is many comments (CodeQL js/redos). Every step here moves forward, so the cost is linear.
+ */
+export const stripLeadingDoctype = (text: string): string => {
+    const n = text.length;
+    let i = 0;
+    const skipSpace = () => {
+        while (i < n && /\s/.test(text[i])) i += 1;
+    };
+    skipSpace();
+    while (text.startsWith("<!--", i)) {
+        const end = text.indexOf("-->", i + 4);
+        if (end === -1) return text;
+        i = end + 3;
+        skipSpace();
+    }
+    if (text.slice(i, i + 9).toLowerCase() !== "<!doctype") return text;
+    const close = text.indexOf(">", i + 9);
+    return close === -1 ? text : text.slice(close + 1);
+};
 
 /** True for a note shown as an HTML page. Anything else (undefined included) is an ordinary note. */
 export const isHtmlNote = (
@@ -55,7 +79,7 @@ export const isHtmlNote = (
  */
 export const buildHtmlSrcdoc = (html: string, nonce?: string): string => {
     const withoutBom = html.charCodeAt(0) === 0xfeff ? html.slice(1) : html;
-    const rest = withoutBom.replace(LEADING_DOCTYPE, "");
+    const rest = stripLeadingDoctype(withoutBom);
     return `<!doctype html><meta http-equiv="Content-Security-Policy" content="${HTML_NOTE_CSP}">${
         nonce ? loadedSentinel(nonce) : ""
     }${rest}`;

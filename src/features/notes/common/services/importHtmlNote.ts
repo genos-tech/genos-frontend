@@ -114,15 +114,58 @@ export const importHtmlNote = async (args: {
     }
 };
 
-/** The page's own `<title>`, read by an inert parser (no script runs, nothing is fetched). */
+const NAMED_ENTITIES: Record<string, string> = {
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: " ",
+};
+
+const decodeEntity = (_whole: string, body: string): string => {
+    if (body[0] === "#") {
+        const code =
+            body[1] === "x" || body[1] === "X"
+                ? parseInt(body.slice(2), 16)
+                : Number(body.slice(1));
+        return Number.isInteger(code) && code > 0 && code <= 0x10ffff
+            ? String.fromCodePoint(code)
+            : "";
+    }
+    return NAMED_ENTITIES[body.toLowerCase()] ?? "";
+};
+
+/**
+ * The page's own `<title>`, as the default name of the note (the server reads it again on save).
+ *
+ * Read by scanning the text, never by parsing the file into a document: the file is untrusted, and
+ * a parser is more than a title needs. The scan moves forward only (linear), takes the text between
+ * the first `<title ...>` and the next `</title`, decodes the few entities a title has and folds
+ * whitespace; anything unexpected reads as "no title" and the file name is used instead.
+ */
 export const htmlTitleOf = (html: string): string => {
-    try {
-        return (
-            new DOMParser().parseFromString(html, "text/html").title.replace(/\s+/g, " ").trim() ||
-            ""
-        );
-    } catch {
-        return "";
+    // ASCII-only lowercase keeps every index of `lower` the same as in `html`.
+    const lower = html.replace(/[A-Z]/g, (c) => c.toLowerCase());
+    let from = 0;
+    for (;;) {
+        const open = lower.indexOf("<title", from);
+        if (open === -1) return "";
+        const after = lower[open + 6];
+        // `<titlefoo>` is some other tag.
+        if (after === ">" || after === "/" || (after !== undefined && /\s/.test(after))) {
+            const gt = lower.indexOf(">", open + 6);
+            if (gt === -1) return "";
+            const close = lower.indexOf("</title", gt + 1);
+            if (close === -1) return "";
+            return html
+                .slice(gt + 1, close)
+                .replace(/&(#x?[0-9a-f]{1,8}|[a-z]{2,6});/gi, decodeEntity)
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 255);
+        }
+        from = open + 6;
     }
 };
 
