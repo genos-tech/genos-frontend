@@ -226,7 +226,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         title = (
             <Box
                 sx={{
-                    "& .inbox-preview": { fontSize: "0.875rem", color: g.text.primary },
+                    // BnChatPreview puts `inbox-preview-light|dark` on its box (never a bare
+                    // `inbox-preview`), so selectors here match the `inbox-preview-` prefix.
+                    // The font size lives on `.bn-editor` below.
                     "&& .bn-editor": {
                         paddingInline: 0,
                         background: "transparent",
@@ -242,7 +244,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     // Each paragraph takes its own direction from its first strong letter:
                     // server-written English in an Arabic UI kept its period at the line
                     // start (MIP-1180).
-                    "& .inbox-preview p, & .inbox-preview li": { unicodeBidi: "plaintext" },
+                    '& [class*="inbox-preview-"] p, & [class*="inbox-preview-"] li': {
+                        unicodeBidi: "plaintext",
+                    },
                 }}
             >
                 <MessageBody
