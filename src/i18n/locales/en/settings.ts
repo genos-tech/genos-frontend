@@ -1190,7 +1190,7 @@ export const settings = {
             visibilityPrivate: "Only me",
             visibilityTeam: "My team",
             visibilityTeamHelp:
-                "Teammates read and run the last published version. Publishing, or saving the details, sends them the current text.",
+                "Teammates read and run the last published version. Choosing My team publishes the current text; after that, Save keeps your edits private until you press Publish changes.",
             owner: "Owner",
             created: "Created",
             updated: "Updated",
@@ -1203,6 +1203,11 @@ export const settings = {
             save: "Save details",
             saving: "Saving…",
             saved: "Details saved.",
+            saveDraft: "Save draft",
+            savedDraft: "Draft saved. Only you can see it until you publish.",
+            saveHint:
+                "Saving keeps your changes private. Teammates use version {n} until you publish.",
+            unpublishedChanges: "Unpublished changes",
             publish: "Publish to team",
             publishChanges: "Publish changes",
             publishing: "Publishing…",
@@ -1220,6 +1225,42 @@ export const settings = {
             saveFailed: "Couldn't save the details. Please try again.",
             unsavedBody: "The instructions save by themselves. The details need Save.",
             bodyAria: "Skill instructions",
+        },
+        // Sharing with the team (MIP-2043): who edits a team skill, hiding one from the team, and
+        // where a copy came from.
+        team: {
+            roleEditor: "Editor",
+            hiddenChip: "Hidden from team",
+            hide: "Hide from team",
+            show: "Show to team",
+            hiddenToast: "Hidden from your team.",
+            shownToast: "Shown to your team again.",
+            hideFailed: "Couldn't change this. Please try again.",
+            hiddenByOwner:
+                "The team owner hid this skill. Your team can't see or run it until they show it again.",
+            hiddenByYou:
+                "You hid this skill from your team. Teammates can't see or run it until you show it again.",
+            editorNote:
+                "You edit this skill as an editor: you can change the text and details and publish versions. The owner decides its name, who can use it, and whether it is deleted.",
+            copiedFrom: "Copied from “{title}” by {name} (version {n}).",
+            copiedFromNoName: "Copied from “{title}” (version {n}).",
+            copiedFromGone: "Copied from a skill you can no longer see.",
+            makePrivateTitle: "Make this skill private?",
+            makePrivateBody:
+                "Your team stops seeing and running it right away. Copies teammates already made stay theirs, and the editors you invited keep their access.",
+            makePrivateConfirm: "Make private",
+            ownerOnly: "Only the owner can change this.",
+            editors: "Editors",
+            editorsHelp:
+                "Editors can change the text and details and publish versions. They can't rename, share or delete the skill.",
+            editorsNone: "No editors yet.",
+            editorsAdd: "Add an editor",
+            editorsChoose: "Choose a teammate",
+            editorsEveryone: "Everyone on your team is already an editor.",
+            editorRemove: "Remove {name}",
+            editorLeave: "Stop editing this skill",
+            editorsFailed: "Couldn't change the editors. Please try again.",
+            editorLeft: "You no longer edit this skill.",
         },
         versions: {
             heading: "Versions",

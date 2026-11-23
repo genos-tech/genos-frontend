@@ -65,9 +65,17 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     updatedAt: "2026-11-21T10:00:00Z",
     publishedAt: "2026-11-21T10:00:00Z",
     mine: false,
+    role: "reader",
     canEdit: false,
+    canManage: false,
+    canHide: false,
+    hiddenByTeam: false,
     ownerName: "ayumi",
+    editors: [],
+    forkedFrom: null,
     noteId: null,
+    hasUnpublishedChanges: false,
+    unpublishedChanges: [],
     ...over,
 });
 

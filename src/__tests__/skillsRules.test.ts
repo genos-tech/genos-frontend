@@ -45,9 +45,17 @@ const row = (over: Partial<SkillRow> = {}): SkillRow => ({
     updatedAt: "2026-11-21T10:00:00Z",
     publishedAt: null,
     mine: true,
+    role: "owner",
     canEdit: true,
+    canManage: true,
+    canHide: false,
+    hiddenByTeam: false,
     ownerName: "ken",
+    editors: [],
+    forkedFrom: null,
     noteId: 12,
+    hasUnpublishedChanges: false,
+    unpublishedChanges: [],
     ...over,
 });
 
@@ -160,6 +168,25 @@ describe("reading the API", () => {
         expect(skill?.visibility).toBe("private");
         expect(skill?.noteId).toBeNull();
         expect(skill?.tags).toEqual(["ok"]);
+    });
+    it("reads the unpublished-changes flag as a strict boolean, and the field names as strings", () => {
+        const none = parseSkill({ id: "a" });
+        expect(none?.hasUnpublishedChanges).toBe(false);
+        expect(none?.unpublishedChanges).toEqual([]);
+        const odd = parseSkill({
+            id: "a",
+            hasUnpublishedChanges: "yes",
+            unpublishedChanges: "title",
+        });
+        expect(odd?.hasUnpublishedChanges).toBe(false);
+        expect(odd?.unpublishedChanges).toEqual([]);
+        const some = parseSkill({
+            id: "a",
+            hasUnpublishedChanges: true,
+            unpublishedChanges: ["title", 3, "", "bodyMarkdown"],
+        });
+        expect(some?.hasUnpublishedChanges).toBe(true);
+        expect(some?.unpublishedChanges).toEqual(["title", "bodyMarkdown"]);
     });
     it("reads the list with its limit (null = unlimited)", () => {
         expect(parseSkillList({ skills: [{ id: "a" }, "junk"], limit: null, used: 2 })).toEqual(

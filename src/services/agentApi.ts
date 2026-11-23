@@ -386,7 +386,7 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // The Genos skill the question runs (MIP-2042): `{ id }` is the picker's exact choice, `{ name }` a
     // typed `/name` the server resolves (mine > team > installed). The question is still what the
     // person typed, `/name` included; the skill's text goes to the agent from the server.
-    skill?: { id: string } | { name: string };
+    skill?: { id: string; version_no?: number } | { name: string };
     // A passage of text the member selected (MIP-1058): `selected_text` on the wire, with
     // `selectedFrom` (`selected_from`) naming where it came from when that has an id. Both are
     // omitted unless the text has something in it; the text is cut at the server's 4,000 characters
@@ -740,6 +740,10 @@ export interface AgentSessionTurn {
     // approve several): empty for none, absent against older backends. Whether
     // one can STILL be undone is not known here, only when it is tried.
     undo?: AgentSessionUndo[];
+    // The Genos skill this turn ran (MIP-2189, `GENOS_SKILLS`): the reference only (id, the version that
+    // ran, 0 = the owner's draft, and the slug), so "Retry" from history runs it again. Null or absent
+    // for a plain ask and against older backends.
+    skill?: { id: string; version_no: number; slug: string } | null;
 }
 
 export interface AgentSessionUndo {

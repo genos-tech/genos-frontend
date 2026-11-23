@@ -1193,7 +1193,7 @@ export const es: DeepPartial<Messages> = {
                 visibilityPrivate: "Solo yo",
                 visibilityTeam: "Mi equipo",
                 visibilityTeamHelp:
-                    "Tus compañeros leen y ejecutan la última versión publicada. Publicar, o guardar los detalles, les envía el texto actual.",
+                    "Tus compañeros leen y ejecutan la última versión publicada. Al elegir Mi equipo se publica el texto actual; después, Guardar mantiene tus cambios privados hasta que pulses Publicar cambios.",
                 owner: "Propietario",
                 created: "Creada",
                 updated: "Actualizada",
@@ -1206,6 +1206,11 @@ export const es: DeepPartial<Messages> = {
                 save: "Guardar detalles",
                 saving: "Guardando…",
                 saved: "Detalles guardados.",
+                saveDraft: "Guardar borrador",
+                savedDraft: "Borrador guardado. Solo tú lo ves hasta que publiques.",
+                saveHint:
+                    "Guardar mantiene tus cambios privados. Tus compañeros usan la versión {n} hasta que publiques.",
+                unpublishedChanges: "Cambios sin publicar",
                 publish: "Publicar para el equipo",
                 publishChanges: "Publicar cambios",
                 publishing: "Publicando…",
@@ -1224,6 +1229,40 @@ export const es: DeepPartial<Messages> = {
                 saveFailed: "No se pudieron guardar los detalles. Inténtalo de nuevo.",
                 unsavedBody: "Las instrucciones se guardan solas. Los detalles necesitan Guardar.",
                 bodyAria: "Instrucciones de la habilidad",
+            },
+            team: {
+                roleEditor: "Editor",
+                hiddenChip: "Oculta al equipo",
+                hide: "Ocultar al equipo",
+                show: "Mostrar al equipo",
+                hiddenToast: "Oculta para tu equipo.",
+                shownToast: "Vuelve a mostrarse a tu equipo.",
+                hideFailed: "No se pudo cambiar. Inténtalo de nuevo.",
+                hiddenByOwner:
+                    "El propietario del equipo ocultó esta habilidad. Tu equipo no puede verla ni ejecutarla hasta que la vuelva a mostrar.",
+                hiddenByYou:
+                    "Ocultaste esta habilidad a tu equipo. Tus compañeros no pueden verla ni ejecutarla hasta que la muestres de nuevo.",
+                editorNote:
+                    "Editas esta habilidad como editor: puedes cambiar el texto y los detalles y publicar versiones. El propietario decide su nombre, quién puede usarla y si se elimina.",
+                copiedFrom: "Copiada de «{title}» de {name} (versión {n}).",
+                copiedFromNoName: "Copiada de «{title}» (versión {n}).",
+                copiedFromGone: "Copiada de una habilidad que ya no puedes ver.",
+                makePrivateTitle: "¿Hacer privada esta habilidad?",
+                makePrivateBody:
+                    "Tu equipo dejará de verla y ejecutarla de inmediato. Las copias que ya hicieron tus compañeros siguen siendo suyas y los editores que invitaste conservan su acceso.",
+                makePrivateConfirm: "Hacer privada",
+                ownerOnly: "Solo el propietario puede cambiar esto.",
+                editors: "Editores",
+                editorsHelp:
+                    "Los editores pueden cambiar el texto y los detalles y publicar versiones. No pueden renombrar, compartir ni eliminar la habilidad.",
+                editorsNone: "Aún no hay editores.",
+                editorsAdd: "Añadir un editor",
+                editorsChoose: "Elige a un compañero",
+                editorsEveryone: "Todo tu equipo ya es editor.",
+                editorRemove: "Quitar a {name}",
+                editorLeave: "Dejar de editar esta habilidad",
+                editorsFailed: "No se pudieron cambiar los editores. Inténtalo de nuevo.",
+                editorLeft: "Ya no editas esta habilidad.",
             },
             versions: {
                 heading: "Versiones",
@@ -5091,7 +5130,6 @@ export const es: DeepPartial<Messages> = {
             project: "el proyecto",
         },
         crossTeam: {
-            connectionHint: "Connecting no comparte nada por sí solo.",
             shareHint: "Acepte abrirlo y luego agregue a su propia gente.",
             failed: "No se pudo responder. Inténtalo de nuevo.",
             acceptedIn: {

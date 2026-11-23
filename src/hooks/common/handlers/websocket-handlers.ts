@@ -6,6 +6,7 @@ import {
     v3MessageToLegacyChatPayload,
     v3MessageToLegacyThreadPayload,
 } from "../../../features/chat/adapters/v3MessageToNotification";
+import { rememberInboxSender } from "../../../features/inbox/components/inboxActor";
 import { inboxItemNamesAMissingChat } from "../../../features/inbox/utils/resolveInboxTarget";
 import { noteSocketConnected } from "../../../features/tasks/services/commentsResync";
 import { emitCommentsResync, emitTaskTouched } from "../../../features/tasks/services/taskEvents";
@@ -27,7 +28,7 @@ export const setupWebSocketHandlers = (
     socket: Socket,
     myself: UserProps,
     accessToken: string | null,
-    currentProject: any,
+    currentProject: unknown,
     currentPreviewTaskId: number,
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void,
     funcSetInboxItems: () => void,
@@ -271,6 +272,10 @@ export const setupWebSocketHandlers = (
         } else if (message.wsType === "inbox") {
             const inboxItem: InboxItemProps = message.data;
             if (message.alreadyExist === false) {
+                // The pushed card names its sender as the API reads them now (MIP-2182): hand it
+                // to the avatar directory first, so a rename or a new photo shows on this card
+                // and on the older ones from the same person.
+                rememberInboxSender(inboxItem);
                 await addInboxItem(inboxItem);
                 funcSetInboxItems();
                 // An activity announcing "you were added to / approved to join
