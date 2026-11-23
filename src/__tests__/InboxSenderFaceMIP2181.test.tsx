@@ -12,7 +12,11 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
-import { forgetEveryone } from "../components/ui/avatars/userDirectory";
+import {
+    forgetEveryone,
+    rememberedPerson,
+    rememberPeople,
+} from "../components/ui/avatars/userDirectory";
 import { resolveActor } from "../features/inbox/components/inboxActor";
 import { InboxBubble } from "../features/inbox/components/InboxBubble";
 import { en } from "../i18n/locales/en";
@@ -163,6 +167,24 @@ describe("a face on every card", () => {
         };
         const { container } = mount(item(1, { senderId: "u-out", sender: stranger }));
         expect(container.querySelector("img")?.getAttribute("src")).toBe(stranger.avatarImgPath);
+    });
+
+    it("the photo handed to the directory does not erase an email it already holds", () => {
+        rememberPeople([{ userId: "u-out", userName: "Newcomer", userEmail: "n@other.example" }]);
+        mount(
+            item(1, {
+                senderId: "u-out",
+                sender: {
+                    userId: "u-out",
+                    userName: "Newcomer",
+                    avatarImgPath: "https://img.example/out.png",
+                },
+            })
+        );
+        expect(rememberedPerson("u-out")).toMatchObject({
+            userEmail: "n@other.example",
+            avatarImgPath: "https://img.example/out.png",
+        });
     });
 
     it("a card with no sender and no mention keeps the type's tile", () => {

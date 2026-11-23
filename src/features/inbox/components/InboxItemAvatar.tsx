@@ -5,7 +5,7 @@ import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarC
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { GenosAuthorAvatar } from "../../../components/ui/avatars/GenosAuthor";
 import { UserAvatar } from "../../../components/ui/avatars/UserAvatar";
-import { rememberPeople } from "../../../components/ui/avatars/userDirectory";
+import { rememberedPerson, rememberPeople } from "../../../components/ui/avatars/userDirectory";
 import type { InboxActor } from "./inboxActor";
 import type { InboxTone } from "./inboxItemConfig";
 
@@ -37,7 +37,17 @@ export const InboxItemAvatar = ({ actor, byGenos, tone, Icon }: Props) => {
     const actorAvatar = actor?.avatarImgPath;
     useEffect(() => {
         if (actorId && actorAvatar) {
-            rememberPeople([{ userId: actorId, userName: actorName, avatarImgPath: actorAvatar }]);
+            // Keep the email a chat payload already taught the directory: this payload has none,
+            // and `rememberPeople` would otherwise overwrite it with an empty one.
+            const known = rememberedPerson(actorId);
+            rememberPeople([
+                {
+                    userId: actorId,
+                    userName: actorName,
+                    userEmail: known?.userEmail,
+                    avatarImgPath: actorAvatar,
+                },
+            ]);
         }
     }, [actorId, actorName, actorAvatar]);
     let face: ReactNode;
