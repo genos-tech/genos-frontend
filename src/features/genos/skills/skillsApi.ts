@@ -222,6 +222,59 @@ const failure = (error: unknown): Failure => {
 
 const NO_API: Failure = { ok: false, reason: "error", message: "" };
 
+/** A skill the `/` menu offers (`GET /skills/?tab=runnable`): metadata only, never the text. */
+export type RunnableSkill = {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    /** Resolution order of a typed name: mine, then team, then installed, then official. */
+    group: "mine" | "team" | "installed" | "official";
+    /** A teammate's account name (team and own skills); "" otherwise. */
+    ownerName: string;
+};
+
+export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
+    const r = rec(raw);
+    if (!r || !Array.isArray(r.skills)) return null;
+    return r.skills.flatMap((row) => {
+        const s = rec(row);
+        const id = str(s?.id, 64);
+        const slug = str(s?.slug, 80);
+        if (!s || id === "" || slug === "") return [];
+        return [
+            {
+                id,
+                slug,
+                title: str(s.title, 300),
+                description: str(s.description, 600),
+                group: oneOf(s.group, ["mine", "team", "installed", "official"] as const, "mine"),
+                ownerName: str(s.ownerName, 120),
+            },
+        ];
+    });
+};
+
+/** What this member may run from the `/` menu in this team. `{ ok: false, reason: "off" }` (the
+ *  server's 404) while Skills is switched off: the menu then does not exist at all. */
+export const fetchRunnableSkills = async (
+    accessToken: string | null,
+    teamId: string
+): Promise<Result<RunnableSkill[]>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.get("/skills/", {
+            ...OPTIONS,
+            params: { team_id: teamId, tab: "runnable" },
+        });
+        const data = parseRunnableSkills(res.data);
+        return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
 export const fetchSkills = async (
     accessToken: string | null,
     teamId: string,

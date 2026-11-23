@@ -5533,6 +5533,13 @@ export const ja: DeepPartial<Messages> = {
         mentions: {
             ariaLabel: "メンション候補",
         },
+        skills: {
+            ariaLabel: "スキルの候補",
+            mine: "自分のスキル",
+            fromTeammate: "{name} さんのチームスキル",
+            installed: "インストール済み",
+            official: "Genos",
+        },
         errors: {
             noTeam: "チームが選択されていません。",
             searchFailed: "検索に失敗しました。もう一度お試しください。",

@@ -5219,6 +5219,13 @@ export const es: DeepPartial<Messages> = {
         mentions: {
             ariaLabel: "Mencionar sugerencias",
         },
+        skills: {
+            ariaLabel: "Sugerencias de habilidades",
+            mine: "Tuyas",
+            fromTeammate: "Habilidad del equipo de {name}",
+            installed: "Instalada",
+            official: "Genos",
+        },
         history: {
             header: "Historial",
             detailHeader: "Conversación pasada",

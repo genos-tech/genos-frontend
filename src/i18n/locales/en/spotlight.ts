@@ -122,6 +122,14 @@ export const spotlight = {
     mentions: {
         ariaLabel: "Mention suggestions",
     },
+    // The `/` menu: a skill you may run, typed at the start of the question (MIP-2042).
+    skills: {
+        ariaLabel: "Skill suggestions",
+        mine: "Yours",
+        fromTeammate: "Team skill from {name}",
+        installed: "Installed",
+        official: "Genos",
+    },
     errors: {
         noTeam: "No team selected.",
         searchFailed: "Search failed. Please try again.",

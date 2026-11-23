@@ -5627,6 +5627,13 @@ export const fr: DeepPartial<Messages> = {
         mentions: {
             ariaLabel: "Mentionner les suggestions",
         },
+        skills: {
+            ariaLabel: "Suggestions de compétences",
+            mine: "Les vôtres",
+            fromTeammate: "Compétence d'équipe de {name}",
+            installed: "Installée",
+            official: "Genos",
+        },
         errors: {
             noTeam: "Aucune équipe sélectionnée.",
             searchFailed: "Échec de la recherche. Veuillez réessayer.",
