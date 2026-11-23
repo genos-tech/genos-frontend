@@ -151,11 +151,11 @@ describe("the specs against the packages", () => {
 
     it("have the packages' strings, in the app's six languages", () => {
         for (const language of ["ar", "en", "es", "fr", "ja", "zh"] as const) {
-            const { exporter: mathExporter, ...math } = (mathLocales as Record<string, any>)[
-                language
-            ];
+            const { exporter: mathExporter, ...math } = (
+                mathLocales as Record<string, Record<string, unknown>>
+            )[language];
             const { exporter: diagramExporter, ...diagram } = (
-                diagramLocales as Record<string, any>
+                diagramLocales as Record<string, Record<string, unknown>>
             )[language];
             void mathExporter;
             void diagramExporter;

@@ -83,7 +83,7 @@ const row = (over: Partial<SearchTeamTasksResponse>): SearchTeamTasksResponse =>
     }) as unknown as SearchTeamTasksResponse;
 
 type TestData = HashMentionData & { teamTasks?: SearchTeamTasksResponse[] };
-const menuItems = (editor: any, data: TestData) =>
+const menuItems = (editor: Parameters<typeof HashMentionMenuItems>[0], data: TestData) =>
     HashMentionMenuItems(editor, data, serverTaskItems(editor, data.teamTasks ?? [], data));
 
 const dataWith = (over: Partial<TestData>): TestData => ({
