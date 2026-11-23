@@ -3549,6 +3549,7 @@ export const ja: DeepPartial<Messages> = {
             shareEllipsis: "共有…",
             importMarkdown: "Markdownをインポート…",
             exportMarkdown: "Markdownとしてエクスポート",
+            reloadPage: "ページを再読み込み",
             openTask: "タスクを開く",
             taskIdLabel: "{id}",
             openTaskTooltip: "タスク {id} を開く",
@@ -3561,6 +3562,49 @@ export const ja: DeepPartial<Messages> = {
             ownerProjectTooltip: "所属プロジェクト",
             focusNote: "このノートに集中（ほかのペインを隠す）",
             exitFocusNote: "ほかのペインを再び表示",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "HTMLページ · サンドボックス内で表示",
+            navigatedTitle: "このページは別のページを開こうとしました",
+            navigatedBody:
+                "操作は止めたため、ほかのページは開かれていません。再読み込みするとページをもう一度表示します。",
+            reload: "再読み込み",
+            loadError: "このページを読み込めませんでした",
+            retry: "再試行",
+            frameTitle: "HTMLページ: {title}",
+            kindLabel: "HTMLページ",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            chooseFile: ".md または .html ファイルを選択…",
+            notOnPlan:
+                "HTMLページはCoreプラン以上でご利用いただけます。このページをインポートするには、設定 → プランと使用状況でアップグレードしてください。",
+            tooLarge:
+                "このページは {size} で、ご利用のプランのHTMLページの上限 {limit} を超えています。",
+            importedWithWarnings:
+                "HTMLページとしてインポートしました。一部はサンドボックス内で表示されません:",
+            resultNotes: "HTMLページを {count} 件インポートしました。",
+            resultWarnings:
+                "{count} 件のHTMLページに、サンドボックス内で表示されない部分があります。",
+            fallbackWarning: "ページの一部はサンドボックス内で表示されません。",
+            warning: {
+                external_script: "別のアドレスから読み込むスクリプトは実行されません ({count})。",
+                external_css:
+                    "別のアドレスから読み込むスタイルシートはブロックされ、ページのスタイルが当たらないことがあります ({count})。",
+                external_font: "別のアドレスから読み込むWebフォントはブロックされます ({count})。",
+                remote_image:
+                    "別のアドレスから読み込む画像やメディアはブロックされます ({count})。",
+                external_frame: "別のページを指すフレームや埋め込みはブロックされます ({count})。",
+                network_call:
+                    "ページのネットワーク呼び出し (fetch、XHR、WebSocket) は失敗します ({count})。",
+                form: "ここではフォームを送信できません ({count})。",
+                window_open: "ポップアップはブロックされます ({count})。",
+                navigation: "ページから離れるリダイレクトやリンクはブロックされます ({count})。",
+                storage: "ページはCookieやローカルストレージを保持できません ({count})。",
+                no_doctype: "ページに <!doctype html> がないため、互換モードで表示されます。",
+                no_title: "ページに <title> がないため、ファイル名をノートのタイトルにしました。",
+            },
         },
         importMd: {
             heading: "Markdownをインポート",

@@ -281,6 +281,7 @@ export const notes = {
         shareEllipsis: "Share…",
         importMarkdown: "Import Markdown…",
         exportMarkdown: "Export as Markdown",
+        reloadPage: "Reload page",
         openTask: "Open Task",
         taskIdLabel: "{id}",
         openTaskTooltip: "Open Task {id}",
@@ -293,6 +294,43 @@ export const notes = {
         ownerProjectTooltip: "Owner project",
         focusNote: "Focus on this note (hide the other panes)",
         exitFocusNote: "Show the other panes again",
+    },
+    // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+    htmlNote: {
+        label: "HTML page · shown in a sandbox",
+        navigatedTitle: "This page tried to open another page",
+        navigatedBody: "It was stopped, so nothing else was opened. Reload to see the page again.",
+        reload: "Reload",
+        loadError: "Couldn't load this page",
+        retry: "Retry",
+        frameTitle: "HTML page: {title}",
+        kindLabel: "HTML page",
+    },
+    // Importing a .html file as an HTML note (MIP-2215).
+    htmlImport: {
+        chooseFile: "Choose a .md or .html file…",
+        notOnPlan:
+            "HTML pages are part of the Core plan and up. Upgrade in Settings → Plan & Usage to import this page.",
+        tooLarge: "This page is {size}, over your plan's {limit} limit for an HTML page.",
+        importedWithWarnings: "Imported as an HTML page. Some parts won't show in the sandbox:",
+        resultNotes: "Imported {count} HTML pages.",
+        resultWarnings: "{count} HTML pages have parts that won't show in the sandbox.",
+        fallbackWarning: "Part of the page won't show in the sandbox.",
+        warning: {
+            external_script: "Scripts loaded from another address won't run ({count}).",
+            external_css:
+                "Stylesheets loaded from another address are blocked, so the page may look unstyled ({count}).",
+            external_font: "Web fonts loaded from another address are blocked ({count}).",
+            remote_image: "Images and media loaded from another address are blocked ({count}).",
+            external_frame: "Frames and embeds that point at another page are blocked ({count}).",
+            network_call: "The page's network calls (fetch, XHR, WebSocket) will fail ({count}).",
+            form: "Forms can't be submitted from here ({count}).",
+            window_open: "Pop-ups are blocked ({count}).",
+            navigation: "Redirects and links that leave the page are blocked ({count}).",
+            storage: "The page can't keep cookies or local storage ({count}).",
+            no_doctype: "The page has no <!doctype html>, so it is drawn in quirks mode.",
+            no_title: "The page has no <title>, so the file name was used as the note title.",
+        },
     },
     importMd: {
         heading: "Import Markdown",

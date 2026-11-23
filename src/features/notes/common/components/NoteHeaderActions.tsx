@@ -15,6 +15,7 @@ import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsAct
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
@@ -45,6 +46,8 @@ import { SpotlightResult } from "../../../spotlight/types";
 import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
+import { requestHtmlNoteReload } from "../services/htmlNoteReload";
+import { isHtmlNote } from "../utils/htmlNote";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 import { isPersonalNoteBucket, toBackendNoteType } from "../utils/noteTypeAlias";
 import { ImportMarkdownContext, ModalImportMarkdown } from "./ModalImportMarkdown";
@@ -123,6 +126,8 @@ export const NoteHeaderActions = ({
             : null;
     const activeNoteId = activeNote?.noteId ?? null;
     const activeNoteTitle = activeNote?.title ?? "";
+    // An HTML page (MIP-2215) is read-only and has no editor, history or markdown export.
+    const isHtml = isHtmlNote(activeNote);
     // This header serves personal (incl. the shared/team aliases) AND task
     // notes, whose ids come from different tables — so a note mute has to
     // carry the backend note type or it names up to three notes at once.
@@ -615,7 +620,12 @@ export const NoteHeaderActions = ({
                         kind: "versionHistory",
                         label: t.notes.history.viewVersions,
                         icon: <HistoryRoundedIcon sx={{ fontSize: 18 }} />,
-                        visible: activeNoteId != null && useNM.currentNoteVersions.length > 0,
+                        // An HTML page's versions are the pages themselves, which this dialog
+                        // would show as the placeholder text (a later phase gives them a view).
+                        visible:
+                            activeNoteId != null &&
+                            !isHtml &&
+                            useNM.currentNoteVersions.length > 0,
                         onClick: () => setHistoryOpen(true),
                     },
                     {
@@ -652,11 +662,26 @@ export const NoteHeaderActions = ({
                         onClick: () => setImportMdOpen(true),
                     },
                     {
+                        // An HTML note (MIP-2215): fetch the page again. The frame is the only
+                        // view, and a page that was replaced elsewhere is not pushed to it.
+                        id: "reloadHtmlPage",
+                        kind: "reload",
+                        label: t.notes.header.reloadPage,
+                        icon: <ReplayRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: isHtml && activeNoteId != null && normalizedNoteType !== null,
+                        onClick: () => {
+                            if (activeNoteId != null && normalizedNoteType !== null) {
+                                requestHtmlNoteReload(normalizedNoteType, activeNoteId);
+                            }
+                        },
+                    },
+                    {
                         id: "exportMarkdown",
                         kind: "export",
                         label: t.notes.header.exportMarkdown,
                         icon: <FileDownloadRoundedIcon sx={{ fontSize: 18 }} />,
-                        visible: activeNoteId != null,
+                        // Exporting an HTML note would write its placeholder text.
+                        visible: activeNoteId != null && !isHtml,
                         onClick: () => {
                             void handleExportMarkdown();
                         },

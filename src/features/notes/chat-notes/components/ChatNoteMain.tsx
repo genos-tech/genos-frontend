@@ -15,7 +15,9 @@ import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
+import { HtmlNoteView } from "../../common/components/HtmlNoteView";
 import { NoteTabStrip } from "../../common/components/NoteTabStrip";
+import { isHtmlNote } from "../../common/utils/htmlNote";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 import { ChatNoteEditorPanel } from "./ChatNoteEditorPanel";
 import { ChatNoteHeader } from "./ChatNoteHeader";
@@ -344,38 +346,57 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                      * hook is fed `null` in notes-home mode, so
                      * `body` is undefined and this branch is naturally
                      * skipped. */}
-                    {isInChatPage && activeChatNote && chatNoteEditor.body && (
+                    {/* An HTML page (MIP-2215) is shown in its sandboxed frame, never the editor. */}
+                    {isInChatPage && activeChatNote && isHtmlNote(activeChatNote) && (
                         <TabPanel
-                            key={`tab-note-body-${activeChatNote.noteType}-${activeChatNote.noteId}`}
+                            key={`tab-html-note-${activeChatNote.noteId}`}
+                            sx={{ padding: 0 }}
                             value={Math.max(0, chatPanelActiveTabIndex)}
-                            sx={{
-                                paddingX: "5px",
-                                paddingTop: "0px",
-                                paddingBottom: "5px",
-                            }}
                         >
-                            <ChatNoteEditor
-                                body={chatNoteEditor.body}
-                                currentChatNote={activeChatNote}
-                                currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
-                                currentNoteMembers={useNM.currentNoteMembers}
-                                myself={myself}
-                                noteBodySaved={chatNoteEditor.noteBodySaved}
-                                resyncSignal={useNM.noteResyncNonce}
-                                setMyself={setMyself}
-                                setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
-                                setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
-                                socket={socket}
-                                titleInputRef={chatNoteEditor.titleInputRef}
-                                useCM={useCM}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                                onBodyChange={chatNoteEditor.handleBodyChange}
-                                onTitleBlur={chatNoteEditor.handleTitleBlur}
-                                onTitleChange={chatNoteEditor.handleTitleChange}
+                            <HtmlNoteView
+                                accessToken={accessToken}
+                                noteId={activeChatNote.noteId}
+                                noteType={3}
+                                title={activeChatNote.title}
+                                isActive
                             />
                         </TabPanel>
                     )}
+                    {isInChatPage &&
+                        activeChatNote &&
+                        !isHtmlNote(activeChatNote) &&
+                        chatNoteEditor.body && (
+                            <TabPanel
+                                key={`tab-note-body-${activeChatNote.noteType}-${activeChatNote.noteId}`}
+                                value={Math.max(0, chatPanelActiveTabIndex)}
+                                sx={{
+                                    paddingX: "5px",
+                                    paddingTop: "0px",
+                                    paddingBottom: "5px",
+                                }}
+                            >
+                                <ChatNoteEditor
+                                    body={chatNoteEditor.body}
+                                    currentChatNote={activeChatNote}
+                                    currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
+                                    currentNoteMembers={useNM.currentNoteMembers}
+                                    myself={myself}
+                                    noteBodySaved={chatNoteEditor.noteBodySaved}
+                                    resyncSignal={useNM.noteResyncNonce}
+                                    setMyself={setMyself}
+                                    setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
+                                    setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
+                                    socket={socket}
+                                    titleInputRef={chatNoteEditor.titleInputRef}
+                                    useCM={useCM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                    onBodyChange={chatNoteEditor.handleBodyChange}
+                                    onTitleBlur={chatNoteEditor.handleTitleBlur}
+                                    onTitleChange={chatNoteEditor.handleTitleChange}
+                                />
+                            </TabPanel>
+                        )}
                 </Tabs>
 
                 {/* Task-page inline editor — task-page panel

@@ -4719,6 +4719,7 @@ export const ar: DeepPartial<Messages> = {
             showHiddenCrumbs: "إظهار {count} فتات الخبز المخفية",
             importMarkdown: "استيراد تخفيض السعر…",
             exportMarkdown: "تصدير كتخفيض السعر",
+            reloadPage: "إعادة تحميل الصفحة",
         },
         autocomplete: {
             searchAria: "بحث",
@@ -4959,6 +4960,47 @@ export const ar: DeepPartial<Messages> = {
             tagUsage: "يستخدم بواسطة {count} المجلد (المجلدات)",
             tagEditFailed: "تعذر تحديث هذه العلامة. قد يكون موجودًا بالفعل، أو لا يمكنك تعديله.",
             tagDeleteFailed: "تعذر حذف هذه العلامة. لا يستطيع ذلك إلا منشئه أو مالك الفريق.",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "صفحة HTML · تُعرض داخل بيئة معزولة",
+            navigatedTitle: "حاولت هذه الصفحة فتح صفحة أخرى",
+            navigatedBody: "تم إيقافها، فلم تُفتح أي صفحة أخرى. أعد التحميل لرؤية الصفحة من جديد.",
+            reload: "إعادة التحميل",
+            loadError: "تعذّر تحميل هذه الصفحة",
+            retry: "إعادة المحاولة",
+            frameTitle: "صفحة HTML: {title}",
+            kindLabel: "صفحة HTML",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            chooseFile: "اختر ملف .md أو .html…",
+            notOnPlan:
+                "صفحات HTML متاحة في خطة Core وما فوقها. قم بالترقية من الإعدادات ← الخطة والاستخدام لاستيراد هذه الصفحة.",
+            tooLarge: "حجم هذه الصفحة {size}، وهو أكبر من حد خطتك لصفحة HTML ({limit}).",
+            importedWithWarnings:
+                "تم الاستيراد كصفحة HTML. لن تظهر بعض الأجزاء داخل البيئة المعزولة:",
+            resultNotes: "تم استيراد {count} صفحة HTML.",
+            resultWarnings: "في {count} صفحة HTML أجزاء لن تظهر داخل البيئة المعزولة.",
+            fallbackWarning: "لن يظهر جزء من الصفحة داخل البيئة المعزولة.",
+            warning: {
+                external_script: "لن تعمل السكربتات المحمّلة من عنوان آخر ({count}).",
+                external_css:
+                    "تُحظر أوراق الأنماط المحمّلة من عنوان آخر، لذا قد تبدو الصفحة بلا تنسيق ({count}).",
+                external_font: "تُحظر خطوط الويب المحمّلة من عنوان آخر ({count}).",
+                remote_image: "تُحظر الصور والوسائط المحمّلة من عنوان آخر ({count}).",
+                external_frame:
+                    "تُحظر الإطارات والعناصر المضمّنة التي تشير إلى صفحة أخرى ({count}).",
+                network_call:
+                    "ستفشل استدعاءات الشبكة في الصفحة (fetch وXHR وWebSocket) ({count}).",
+                form: "لا يمكن إرسال النماذج من هنا ({count}).",
+                window_open: "تُحظر النوافذ المنبثقة ({count}).",
+                navigation: "تُحظر إعادة التوجيه والروابط التي تغادر الصفحة ({count}).",
+                storage:
+                    "لا يمكن للصفحة الاحتفاظ بملفات تعريف الارتباط أو التخزين المحلي ({count}).",
+                no_doctype: "لا تحتوي الصفحة على <!doctype html>، لذا تُعرض في وضع quirks.",
+                no_title: "لا تحتوي الصفحة على <title>، لذا استُخدم اسم الملف عنوانًا للملاحظة.",
+            },
         },
         importMd: {
             heading: "استيراد تخفيض السعر",

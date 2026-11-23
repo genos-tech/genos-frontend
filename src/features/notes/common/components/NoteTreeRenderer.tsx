@@ -1,5 +1,4 @@
 import { memo, ReactNode, useEffect, useRef, useState } from "react";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { Box, List, ListItem } from "@mui/joy";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
@@ -11,6 +10,7 @@ import { useNoteUnread } from "../context/noteUnreadState";
 import { BaseNoteTreeNode } from "../types/noteTypes";
 import { isNoteOpen } from "../utils/openNote";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";
+import { NoteKindIcon } from "./noteOrigin";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
@@ -122,7 +122,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     actionsVisible={rowMenuOpen}
                     as="div"
                     expanded={hasChildren ? open : undefined}
-                    icon={<DescriptionOutlinedIcon />}
+                    icon={<NoteKindIcon note={node} />}
                     label={node.title || t.notes.defaults.untitled}
                     selected={isSelected}
                     trailing={hasUnread ? <NoteUnreadDot /> : undefined}

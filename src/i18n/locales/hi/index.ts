@@ -4903,6 +4903,7 @@ export const hi: DeepPartial<Messages> = {
             shareEllipsis: "शेयर करें…",
             importMarkdown: "मार्कडाउन आयात करें...",
             exportMarkdown: "मार्कडाउन के रूप में निर्यात करें",
+            reloadPage: "पेज रीलोड करें",
             openTask: "टास्क खोलें",
             taskIdLabel: "{id}",
             openTaskTooltip: "टास्क {id} खोलें",
@@ -4915,6 +4916,52 @@ export const hi: DeepPartial<Messages> = {
             ownerProjectTooltip: "स्वामी प्रोजेक्ट",
             focusNote: "इस नोट पर फ़ोकस करें (बाकी पैन छिपाएँ)",
             exitFocusNote: "बाकी पैन फिर से दिखाएँ",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "HTML पेज · सैंडबॉक्स में दिखाया गया",
+            navigatedTitle: "इस पेज ने दूसरा पेज खोलने की कोशिश की",
+            navigatedBody:
+                "इसे रोक दिया गया, इसलिए कुछ और नहीं खुला। पेज दोबारा देखने के लिए रीलोड करें।",
+            reload: "रीलोड करें",
+            loadError: "यह पेज लोड नहीं हो सका",
+            retry: "फिर से कोशिश करें",
+            frameTitle: "HTML पेज: {title}",
+            kindLabel: "HTML पेज",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            chooseFile: ".md या .html फ़ाइल चुनें…",
+            notOnPlan:
+                "HTML पेज Core प्लान और उससे ऊपर में उपलब्ध हैं। इस पेज को इंपोर्ट करने के लिए सेटिंग्स → प्लान और उपयोग में अपग्रेड करें।",
+            tooLarge:
+                "यह पेज {size} का है, जो आपके प्लान की HTML पेज की सीमा {limit} से ज़्यादा है।",
+            importedWithWarnings:
+                "HTML पेज के रूप में इंपोर्ट हुआ। कुछ हिस्से सैंडबॉक्स में नहीं दिखेंगे:",
+            resultNotes: "{count} HTML पेज इंपोर्ट हुए।",
+            resultWarnings: "{count} HTML पेज के कुछ हिस्से सैंडबॉक्स में नहीं दिखेंगे।",
+            fallbackWarning: "पेज का एक हिस्सा सैंडबॉक्स में नहीं दिखेगा।",
+            warning: {
+                external_script: "दूसरे पते से लोड होने वाली स्क्रिप्ट नहीं चलेंगी ({count})।",
+                external_css:
+                    "दूसरे पते से लोड होने वाली स्टाइलशीट ब्लॉक हो जाती हैं, इसलिए पेज बिना स्टाइल के दिख सकता है ({count})।",
+                external_font:
+                    "दूसरे पते से लोड होने वाले वेब फ़ॉन्ट ब्लॉक हो जाते हैं ({count})।",
+                remote_image:
+                    "दूसरे पते से लोड होने वाली इमेज और मीडिया ब्लॉक हो जाते हैं ({count})।",
+                external_frame:
+                    "दूसरे पेज की ओर इशारा करने वाले फ़्रेम और एम्बेड ब्लॉक हो जाते हैं ({count})।",
+                network_call: "पेज की नेटवर्क कॉल (fetch, XHR, WebSocket) विफल होंगी ({count})।",
+                form: "यहाँ से फ़ॉर्म सबमिट नहीं किए जा सकते ({count})।",
+                window_open: "पॉप-अप ब्लॉक हो जाते हैं ({count})।",
+                navigation:
+                    "पेज से बाहर ले जाने वाले रीडायरेक्ट और लिंक ब्लॉक हो जाते हैं ({count})।",
+                storage: "पेज कुकी या लोकल स्टोरेज नहीं रख सकता ({count})।",
+                no_doctype:
+                    "पेज में <!doctype html> नहीं है, इसलिए यह क्विर्क्स मोड में दिखता है।",
+                no_title:
+                    "पेज में <title> नहीं है, इसलिए फ़ाइल के नाम को नोट का शीर्षक बनाया गया।",
+            },
         },
         importMd: {
             heading: "मार्कडाउन आयात करें",
