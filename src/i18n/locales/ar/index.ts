@@ -3287,6 +3287,7 @@ export const ar: DeepPartial<Messages> = {
             quickAddPlaceholder: "اكتب عنوانًا واضغط على Enter…",
             quickAddError: "تعذر الإنشاء — حاول مرة أخرى",
             showHidden: "عرض {count} من المهام الفرعية المكتملة",
+            moreTagsAria: "{count} علامات أخرى: {tags}",
         },
         fields: {
             assignee: "المُسنَد إليه",

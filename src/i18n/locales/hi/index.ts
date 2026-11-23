@@ -3330,6 +3330,7 @@ export const hi: DeepPartial<Messages> = {
             quickAddPlaceholder: "टाइटल लिखें और Enter दबाएँ",
             quickAddError: "बना नहीं सका — फिर से कोशिश करें",
             showHidden: "{count} पूर्ण उप-कार्य दिखाएँ",
+            moreTagsAria: "{count} और टैग: {tags}",
         },
         fields: {
             assignee: "असाइनी",

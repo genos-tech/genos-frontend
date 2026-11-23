@@ -3350,6 +3350,7 @@ export const es: DeepPartial<Messages> = {
             quickAddPlaceholder: "Escriba un título y presione Enter…",
             quickAddError: "No se pudo crear. Inténtalo de nuevo.",
             showHidden: "Mostrar {count} subtareas cerradas",
+            moreTagsAria: "{count} etiquetas más: {tags}",
         },
         fields: {
             assignee: "Asignado",
