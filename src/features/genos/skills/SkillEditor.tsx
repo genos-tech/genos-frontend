@@ -164,6 +164,21 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
     const dirty = isDirty(draft, skill);
     const problems = validateDraft(draft);
 
+    // Manage tags renamed or deleted a tag: the server already rewrote the owner's saved tags (and
+    // so a shared skill now differs from its published version). The draft is rewritten the same
+    // way, without losing what else was typed, and the saved row is read again so "unpublished
+    // changes" and the chips are the server's, not a guess.
+    const rewriteTag = (name: string, next: string | null) => {
+        const swap = (tags: string[]) => [
+            ...new Set(tags.flatMap((x) => (x !== name ? [x] : next !== null ? [next] : []))),
+        ];
+        setChanged(true); // the list reads the new names again when the person goes back
+        setDraft((prev) => (prev ? { ...prev, tags: swap(prev.tags) } : prev));
+        void fetchSkill(accessToken, skillId).then((res) => {
+            if (res.ok) setSkill(res.data);
+        });
+    };
+
     const setField = (next: Partial<SkillDraft>) => {
         setNotice(null);
         setServerProblems({});
@@ -569,6 +584,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                         ) : undefined
                     }
                     onChange={setField}
+                    onTagCatalogRewrite={rewriteTag}
                 />
             </Sheet>
 

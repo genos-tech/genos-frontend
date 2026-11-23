@@ -32,11 +32,13 @@ import { PlainButton } from "../../../components/ui/PlainButton";
 import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { relativeTimeLabel } from "../../spotlight/SpotlightContent";
+import { ProjectTagChip } from "../../tasks/components/ProjectTagChip";
 import { GENOS_MEMORY_CONFIRM_Z_INDEX } from "../memory/confirmLayer";
 import { SkillEditor } from "./SkillEditor";
 import { SkillHub } from "./SkillHub";
 import { SkillReportDialog } from "./SkillReportDialog";
 import {
+    chipsOf,
     copySkill,
     createSkill,
     deleteSkill,
@@ -518,10 +520,12 @@ const SkillListItem = ({
                 )}
                 {skill.tags.length > 0 && (
                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.75 }}>
-                        {skill.tags.map((tag) => (
-                            <Chip key={tag} size="sm" variant="outlined">
-                                {tag}
-                            </Chip>
+                        {chipsOf(skill).map((chip) => (
+                            <ProjectTagChip
+                                key={chip.name}
+                                label={chip.name}
+                                tagColor={chip.color}
+                            />
                         ))}
                     </Box>
                 )}

@@ -57,6 +57,7 @@ vi.mock("../features/genos/skills/skillsApi", async (importOriginal) => {
         copySkill: vi.fn(),
         fetchSkillVersions: vi.fn(),
         fetchEffortLevels: vi.fn(),
+        fetchSkillTags: vi.fn(),
     };
 });
 
@@ -135,6 +136,16 @@ beforeEach(() => {
     });
     vi.mocked(api.fetchSkillVersions).mockResolvedValue({ ok: true, data: [] });
     vi.mocked(api.fetchEffortLevels).mockResolvedValue({ ok: true, data: [] });
+    vi.mocked(api.fetchSkillTags).mockResolvedValue({
+        ok: true,
+        data: {
+            editable: true,
+            tags: [
+                { tagId: 1, name: "weekly", color: "#1dc200", textColor: "white" },
+                { tagId: 2, name: "planning", color: "#0044c2", textColor: "white" },
+            ],
+        },
+    });
 });
 
 describe("the entry card", () => {
@@ -428,18 +439,25 @@ describe("the editor", () => {
         expect(await screen.findByText("You already have a skill with this name.")).toBeTruthy();
     });
 
-    it("limits tags to five lower-case words", async () => {
+    it("takes tags from the member's list only: no free-text field (MIP-2211)", async () => {
         const user = userEvent.setup();
         renderPage();
         await openEditor(user);
-        const input = screen.getByPlaceholderText("Add a tag");
-        for (const tag of ["a1", "b2", "c3", "d4"]) await user.type(input, `${tag}{Enter}`);
-        await user.type(input, "Two Words{Enter}");
-        expect(await screen.findByText(/lower-case letters, digits and hyphens/)).toBeTruthy();
-        await user.clear(input);
-        await user.type(input, "e5{Enter}");
-        await user.type(input, "f6{Enter}");
-        expect(await screen.findByText("At most 5 tags.")).toBeTruthy();
+        // The picker is a menu over the catalog, not a text input.
+        expect(screen.queryByPlaceholderText("Add a tag")).toBeNull();
+        await user.click(await screen.findByRole("button", { name: "Add a tag" }));
+        expect(await screen.findByRole("menuitem", { name: /planning/ })).toBeTruthy();
+        await user.click(screen.getByRole("menuitem", { name: /planning/ }));
+        await user.keyboard("{Escape}");
+        vi.mocked(api.updateSkill).mockResolvedValue({
+            ok: true,
+            data: { ...skill({ tags: ["weekly", "planning"] }), bodyMarkdown: "# Weekly update" },
+        });
+        await user.click(screen.getByRole("button", { name: "Save details" }));
+        await waitFor(() => expect(api.updateSkill).toHaveBeenCalled());
+        expect(vi.mocked(api.updateSkill).mock.calls[0][2]).toEqual({
+            tags: ["weekly", "planning"],
+        });
     });
 
     it("asks before dropping unsaved details", async () => {

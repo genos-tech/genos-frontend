@@ -1,9 +1,7 @@
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
     Box,
     Button,
-    Chip,
-    ChipDelete,
     FormControl,
     FormHelperText,
     FormLabel,
@@ -19,7 +17,8 @@ import { fmt, useTranslation } from "../../../i18n";
 import { draftFrom, type DraftProblems, type SkillDraft } from "./skillDraft";
 import { SkillIconField } from "./SkillIconField";
 import { SKILL_LIMITS, type SkillEffort, type SkillRow } from "./skillsApi";
-import { normalizeTag, slugProblem, tagProblem } from "./skillText";
+import { SkillTagsField } from "./SkillTagsField";
+import { slugProblem } from "./skillText";
 import { useEffortLevels } from "./useEffortLevels";
 import { useSkillNameCheck } from "./useSkillNameCheck";
 
@@ -38,6 +37,8 @@ type Props = {
     /** The Hub's "Publish to the Hub" field (MIP-2047), drawn under who can use the skill. */
     hubField?: ReactNode;
     onChange: (next: Partial<SkillDraft>) => void;
+    /** Manage tags renamed (`next` = the new name) or deleted (`next` = null) a tag. */
+    onTagCatalogRewrite?: (name: string, next: string | null) => void;
 };
 
 const FIELD_GAP = 2;
@@ -57,12 +58,11 @@ export const SkillDetailsForm = ({
     editorsField,
     hubField,
     onChange,
+    onTagCatalogRewrite,
 }: Props) => {
     const { t, locale } = useTranslation();
     const f = t.settings.genosSkills.fields;
     const p = t.settings.genosSkills.problems;
-    const [tagInput, setTagInput] = useState("");
-    const [tagError, setTagError] = useState<string | null>(null);
     // A problem is shown for a field once the person has been in it, or when a save asked.
     const [touched, setTouched] = useState<Record<string, boolean>>({});
     const touch = (name: string) => setTouched((prev) => ({ ...prev, [name]: true }));
@@ -102,30 +102,13 @@ export const SkillDetailsForm = ({
     const titleShown =
         touched.title && problems.title ? p.titleEmpty : (serverProblems.title ?? null);
 
-    const addTag = (raw: string) => {
-        const tag = normalizeTag(raw);
-        if (tag === "") return;
-        const problem = tagProblem(tag, draft.tags);
-        if (problem === "chars") {
-            setTagError(fmt(p.tagChars, { max: SKILL_LIMITS.tagMax }));
-            return;
-        }
-        if (problem === "tooMany") {
-            setTagError(fmt(p.tagsMax, { max: SKILL_LIMITS.tagsMax }));
-            return;
-        }
-        setTagError(null);
-        setTagInput("");
-        if (!draft.tags.includes(tag)) onChange({ tags: [...draft.tags, tag] });
-    };
-    const onTagKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
-            addTag(tagInput);
-        } else if (e.key === "Backspace" && tagInput === "" && draft.tags.length > 0) {
-            onChange({ tags: draft.tags.slice(0, -1) });
-        }
-    };
+    // The picker only offers tags that exist, so these only show for a draft that came in wrong.
+    const tagsText =
+        problems.tags === "chars"
+            ? fmt(p.tagChars, { max: SKILL_LIMITS.tagMax })
+            : problems.tags === "tooMany"
+              ? fmt(p.tagsMax, { max: SKILL_LIMITS.tagsMax })
+              : null;
     // The effort choice, with what each level costs next to the others once the server has said
     // (MIP-2198). Until then, or while the agent is not on effort levels, it is the plain names.
     const levels = useEffortLevels();
@@ -218,65 +201,15 @@ export const SkillDetailsForm = ({
                 </FormHelperText>
             </FormControl>
 
-            <FormControl error={!!tagError || !!serverProblems.tags || !!problems.tags}>
-                <FormLabel>{f.tags}</FormLabel>
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 0.5,
-                        mb: draft.tags.length ? 0.75 : 0,
-                    }}
-                >
-                    {draft.tags.map((tag) => (
-                        <Chip
-                            key={tag}
-                            size="sm"
-                            variant="soft"
-                            endDecorator={
-                                disabled ? undefined : (
-                                    <ChipDelete
-                                        aria-label={fmt(f.removeTag, { tag })}
-                                        onDelete={() =>
-                                            onChange({ tags: draft.tags.filter((x) => x !== tag) })
-                                        }
-                                    />
-                                )
-                            }
-                        >
-                            {tag}
-                        </Chip>
-                    ))}
-                </Box>
-                {!disabled && (
-                    <Input
-                        placeholder={f.tagsPlaceholder}
-                        slotProps={{ input: { maxLength: SKILL_LIMITS.tagMax + 1 } }}
-                        value={tagInput}
-                        endDecorator={
-                            <Button
-                                disabled={tagInput.trim() === ""}
-                                size="sm"
-                                variant="plain"
-                                onClick={() => addTag(tagInput)}
-                            >
-                                {t.common.actions.add}
-                            </Button>
-                        }
-                        onBlur={() => addTag(tagInput)}
-                        onKeyDown={onTagKeyDown}
-                        onChange={(e) => {
-                            setTagInput(e.target.value);
-                            setTagError(null);
-                        }}
-                    />
-                )}
-                <FormHelperText>
-                    {tagError ??
-                        serverProblems.tags ??
-                        fmt(f.tagsHelp, { max: SKILL_LIMITS.tagsMax })}
-                </FormHelperText>
-            </FormControl>
+            <SkillTagsField
+                disabled={disabled}
+                problem={serverProblems.tags ?? tagsText}
+                selected={draft.tags}
+                skillId={skill.id}
+                teamId={skill.teamId}
+                onCatalogRewrite={onTagCatalogRewrite}
+                onChange={(tags) => onChange({ tags })}
+            />
 
             <FormControl>
                 <FormLabel>{f.argumentHint}</FormLabel>
