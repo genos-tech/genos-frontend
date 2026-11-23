@@ -73,11 +73,11 @@ export interface TaskHeaderProps {
     teamMemberProfiles: UserProps[];
     funcSetAllChats: () => Promise<void>;
     currentProject: ProjectProps | undefined;
-    teamTaskSearchOptions: any[];
+    teamTaskSearchOptions: unknown[];
     loading: boolean;
     openSearch: boolean;
     setOpenSearch: (open: boolean) => void;
-    onSearchChange: (value: any) => void;
+    onSearchChange: (value: string) => void;
     handleCreateTask: () => void;
     onCreateProject: () => void;
     onManageTags: () => void;

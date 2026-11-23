@@ -3,8 +3,10 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { Alert, Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 
+import { visuallyHidden } from "../../../components/ui/a11y/visuallyHidden";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { DataState } from "../../../components/ui/feedback/DataState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
@@ -15,6 +17,7 @@ import {
     Connection,
     ConnectionsResponse,
     disconnectAccount,
+    githubAppBlock,
     hasCalendarScope,
     listConnections,
 } from "../services/connections";
@@ -73,10 +76,20 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         () => (data?.connections || []).filter((c) => c.provider === "google"),
         [data]
     );
-    const githubAccount = useMemo(
+    // The GitHub App block exists only while the server's GITHUB_APP_ENABLED switch is on
+    // (MIP-2090). Without it, every branch below is the OAuth-era card, unchanged.
+    const app = githubAppBlock(data);
+    const githubAppAccount = useMemo(
+        () => (data?.connections || []).find((c) => c.provider === "github_app"),
+        [data]
+    );
+    // The sign-in / legacy OAuth row. It can sit next to an App row (the migration window), so
+    // the two are never merged into one.
+    const githubLegacyAccount = useMemo(
         () => (data?.connections || []).find((c) => c.provider === "github"),
         [data]
     );
+    const githubAccount = app ? (githubAppAccount ?? githubLegacyAccount) : githubLegacyAccount;
 
     const handleDisconnect = async (accountId: string): Promise<boolean> => {
         setError(null);
@@ -91,6 +104,15 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         void redirectToOAuthConnect(provider, accessToken, undefined, setError);
     };
 
+    /** What a GitHub row adds when the App is on (MIP-2090): a line of state under the account
+     *  and the one button that goes through the same `Connect GitHub` call (the server decides
+     *  between GitHub's install page and its authorize page). */
+    interface GithubRowExtras {
+        subline: React.ReactNode;
+        /** Replaces the plain "Connect" button, or sits beside "Disconnect". */
+        action?: { label: string; disabled: boolean; hint: string };
+    }
+
     /** One connected account, or an empty "Connect" affordance when
      *  `connection` is undefined. */
     const AccountRow = ({
@@ -98,18 +120,29 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
         provider,
         label,
         icon,
+        extras,
     }: {
         connection?: Connection;
         provider: "google" | "github";
         label: string;
         icon: React.ReactNode;
+        extras?: GithubRowExtras;
     }) => {
         const isPrimary = connection?.is_primary === true;
         return (
             <Card sx={{ p: 2 }} variant="outlined">
-                <Stack alignItems="center" direction="row" spacing={2}>
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    // With a state line the row may need two lines on a phone: the buttons drop
+                    // below the text instead of crushing it. `gap` (not Stack `spacing`, which is a
+                    // left margin and would indent the wrapped button). Rows without a state
+                    // line are unchanged.
+                    spacing={extras ? 0 : 2}
+                    sx={extras ? { flexWrap: "wrap", gap: 2 } : undefined}
+                >
                     <Box sx={{ fontSize: 32, display: "flex" }}>{icon}</Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box sx={{ flex: 1, minWidth: extras ? { xs: "60%", sm: 0 } : 0 }}>
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <Typography level="title-md">{label}</Typography>
                             {isPrimary && (
@@ -124,7 +157,22 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                                   t.integrations.connections.noEmailShared
                                 : t.integrations.connections.notConnected}
                         </Typography>
+                        {extras?.subline}
                     </Box>
+                    {extras?.action && (
+                        <AppTooltip placement="left" title={extras.action.hint}>
+                            <span>
+                                <Button
+                                    color="primary"
+                                    disabled={extras.action.disabled}
+                                    variant={connection ? "soft" : "solid"}
+                                    onClick={() => startConnect(provider)}
+                                >
+                                    {extras.action.label}
+                                </Button>
+                            </span>
+                        </AppTooltip>
+                    )}
                     {/* A Google account that came in via sign-in only
                         has openid/email/profile scopes — no calendar
                         access. Surface that explicitly with a Grant
@@ -161,23 +209,134 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                             </span>
                         </AppTooltip>
                     ) : (
-                        <Button onClick={() => startConnect(provider)}>
-                            {t.integrations.connections.connect}
-                        </Button>
+                        !extras?.action && (
+                            <Button onClick={() => startConnect(provider)}>
+                                {t.integrations.connections.connect}
+                            </Button>
+                        )
                     )}
                 </Stack>
             </Card>
         );
     };
 
+    // The GitHub rows. App off (no block from the server): one row, exactly as before. App on:
+    // the person's App row (or the legacy one, or none) with the state of THIS team's
+    // installation under it, and the legacy row after it while one still exists.
+    const ga = t.integrations.connections.githubApp;
+    const installations = app?.installations ?? [];
+    // `team_id` null = the server could not tell the team (none stored, several teams): leave the
+    // button enabled and let the server answer, rather than lock out a person who may link.
+    const cannotLink = !!app && app.team_id !== null && !app.can_link;
+    const linkAction = (label: string) => ({
+        label,
+        disabled: cannotLink,
+        hint: cannotLink ? ga.cannotLink : "",
+    });
+    const installationLines = (
+        <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+            {installations.map((inst) => (
+                <Stack
+                    key={inst.installation_id}
+                    alignItems="center"
+                    direction="row"
+                    sx={{ flexWrap: "wrap", columnGap: 1, rowGap: 0.25 }}
+                >
+                    <Typography level="body-xs" sx={{ fontWeight: 600 }}>
+                        {inst.account_login}
+                    </Typography>
+                    {inst.suspended && (
+                        <Chip color="warning" size="sm" variant="soft">
+                            {ga.suspended}
+                        </Chip>
+                    )}
+                    <Typography
+                        component="a"
+                        endDecorator={<OpenInNewRoundedIcon sx={{ fontSize: 14 }} />}
+                        href={inst.manage_url}
+                        level="body-xs"
+                        rel="noreferrer"
+                        target="_blank"
+                        sx={{
+                            color: g.link.default,
+                            textDecoration: "underline",
+                            minHeight: 24,
+                            display: "inline-flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        {ga.manageOnGithub}
+                        {/* Several installations give several identical links: name the account,
+                            and say it opens a new tab, for a screen reader. The visible text stays
+                            the start of the accessible name. */}
+                        <Box component="span" sx={visuallyHidden}>
+                            {" "}
+                            {fmt(ga.manageOnGithubHint, { account: inst.account_login })}
+                        </Box>
+                    </Typography>
+                </Stack>
+            ))}
+        </Stack>
+    );
+    const accountsList = installations.map((i) => i.account_login).join(", ");
+    const subline = (text: string | null, withLines: boolean, withHint = false) => (
+        <Box sx={{ mt: 0.25 }}>
+            {text && (
+                <Typography level="body-xs" sx={{ color: "text.secondary" }}>
+                    {text}
+                </Typography>
+            )}
+            {withLines && installationLines}
+            {/* Visible, not only a tooltip on a disabled button (which a keyboard never reaches). */}
+            {withHint && cannotLink && (
+                <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.5 }}>
+                    {ga.cannotLink}
+                </Typography>
+            )}
+        </Box>
+    );
+    let githubExtras: GithubRowExtras | undefined;
+    if (app) {
+        if (githubAppAccount) {
+            githubExtras =
+                installations.length > 0
+                    ? { subline: subline(ga.connectedApp, true) }
+                    : {
+                          subline: subline(ga.notInstalled, false, true),
+                          action: linkAction(ga.install),
+                      };
+        } else if (installations.length > 0) {
+            githubExtras = {
+                subline: subline(fmt(ga.needsAuthorize, { accounts: accountsList }), true, true),
+                action: linkAction(ga.authorize),
+            };
+        } else if (githubLegacyAccount) {
+            githubExtras = {
+                subline: subline(ga.legacyHint, false, true),
+                action: linkAction(ga.reconnect),
+            };
+        } else if (cannotLink) {
+            // Nothing connected, nothing installed, and this person may not link one: the same
+            // disabled Connect as every other state, with the reason in plain text.
+            githubExtras = { subline: subline(null, false, true), action: linkAction(ga.install) };
+        }
+    }
+    // The old OAuth row next to the App's: say which one it is, since both read "GitHub".
+    const legacyExtras: GithubRowExtras = { subline: subline(ga.legacyRowNote, false) };
+
     const dc = t.integrations.connections.disconnectDialog;
-    const pendingIsGithub = pendingDisconnect?.provider === "github";
+    const pendingIsGithubApp = pendingDisconnect?.provider === "github_app";
+    const pendingIsGithub = pendingDisconnect?.provider === "github" || pendingIsGithubApp;
     const pendingTitle = fmt(dc.title, {
         provider: pendingIsGithub
             ? t.integrations.providers.github
             : t.integrations.providers.google,
     });
-    const pendingBody = pendingIsGithub ? dc.bodyGithub : dc.bodyGoogle;
+    const pendingBody = pendingIsGithubApp
+        ? dc.bodyGithubApp
+        : pendingIsGithub
+          ? dc.bodyGithub
+          : dc.bodyGoogle;
     const pendingAccount =
         pendingDisconnect?.provider_email || t.integrations.connections.noEmailShared;
 
@@ -299,10 +458,23 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                 )}
                 <AccountRow
                     connection={githubAccount}
+                    extras={githubExtras}
                     icon={<GitHubIcon fontSize="inherit" />}
                     label={t.integrations.providers.github}
                     provider="github"
                 />
+                {/* The old OAuth row while it still exists next to the App's (the 30-day
+                    migration window): it holds the broad `repo` grant, so it keeps its own
+                    Disconnect instead of hiding behind the App row. */}
+                {app && githubAppAccount && githubLegacyAccount && (
+                    <AccountRow
+                        connection={githubLegacyAccount}
+                        extras={legacyExtras}
+                        icon={<GitHubIcon fontSize="inherit" />}
+                        label={t.integrations.providers.github}
+                        provider="github"
+                    />
+                )}
             </Stack>
         </DataState>
     );
