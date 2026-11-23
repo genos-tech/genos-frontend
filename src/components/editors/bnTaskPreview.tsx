@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { FormattingToolbarController, SideMenu, SideMenuController } from "@blocknote/react";
@@ -309,7 +309,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 className={bnBoxClassName}
                 // Set the height CSS var inline (not via a post-paint effect)
                 // so the FIRST paint already has the content-derived height.
-                style={{ ["--task-body-editor-height" as any]: `${editorHeight}px` }}
+                style={{ "--task-body-editor-height": `${editorHeight}px` } as CSSProperties}
                 sx={{ position: "relative" }}
             >
                 <FileUploadStatusBadge count={editorUploadCount} />
