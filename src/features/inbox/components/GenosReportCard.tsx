@@ -15,8 +15,10 @@
 
 import { memo, useId, useMemo, useState, type MouseEvent, type ReactNode } from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import { Box, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
@@ -54,7 +56,8 @@ const SLOT_DUE = 84;
 
 const KIND_EMOJI: Record<Exclude<ReportKind, "more">, string> = {
     task: "🛠️",
-    todo: "✅",
+    // Not drawn: a to-do wears `TodoMark` (open or finished), never an emoji.
+    todo: "☐",
     event: "🗓️",
     note: "📝",
     chat: "💬",
@@ -390,13 +393,37 @@ const chatMarkOf = (
     return parsed ? chatMarks.get(chatMarkKey(parsed.kind, parsed.id)) : undefined;
 };
 
+/** The mark of a to-do line. Two states that must never look alike: a finished to-do has a green
+ *  check, an unfinished one an empty circle in a neutral color (MIP-1417: a green check on a
+ *  to-do that is still open read as "done"). The state is the section's, since the line itself
+ *  carries none: only the "finished" section holds finished to-dos. */
+const FINISHED_TODO_SECTION = "todos_done";
+const TodoMark = ({ done }: { done: boolean }) => {
+    const Icon = done ? CheckCircleRoundedIcon : RadioButtonUncheckedRoundedIcon;
+    return (
+        <Icon
+            aria-hidden="true"
+            data-report-todo={done ? "done" : "open"}
+            sx={{
+                fontSize: 16,
+                // The success hue meant for icons on a surface (contrast in both modes).
+                color: done ? g.success.text : g.text.tertiary,
+                verticalAlign: "text-bottom",
+            }}
+        />
+    );
+};
+
 const LineRow = ({
     item,
+    sectionKey,
     onOpen,
     chatMarks,
     iconSlotWidth,
 }: {
     item: ReportItemV2;
+    /** The key of the section the line sits in: it says whether a to-do is finished. */
+    sectionKey: string | null;
     onOpen: Open;
     chatMarks: ReadonlyMap<string, ReportChatMark>;
     /** The icon slot every line of the section shares, so a stack of faces on one line does not
@@ -457,7 +484,11 @@ const LineRow = ({
                         marginInlineEnd: `${iconSlotWidth - CHAT_ICON_SLOT}px`,
                     }}
                 >
-                    {emoji}
+                    {item.kind === "todo" ? (
+                        <TodoMark done={sectionKey === FINISHED_TODO_SECTION} />
+                    ) : (
+                        emoji
+                    )}
                 </Box>
             )}
             <Box
@@ -665,6 +696,7 @@ const Section = ({
                                                 chatMarks={chatMarks}
                                                 iconSlotWidth={iconSlotWidth}
                                                 item={item}
+                                                sectionKey={section.key}
                                                 onOpen={onOpen}
                                             />
                                         )}

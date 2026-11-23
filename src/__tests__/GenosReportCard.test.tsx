@@ -266,6 +266,64 @@ describe("GenosReportCard: folds", () => {
     });
 });
 
+describe("GenosReportCard: to-do marks (MIP-1417)", () => {
+    const todoBody = {
+        version: 2,
+        title: "t",
+        text: "s",
+        sections: [
+            {
+                heading: "To-dos for today",
+                key: "todos_today",
+                emoji: "✅", // what an older server stamped: a green check on unfinished to-dos
+                items: [{ text: "Call the bank", kind: "todo" }],
+            },
+            {
+                heading: "To-dos left over from earlier",
+                key: "todos_earlier",
+                items: [{ text: "Water plants", kind: "todo" }],
+            },
+            {
+                heading: "To-dos you finished",
+                key: "todos_done",
+                emoji: "☑️",
+                items: [{ text: "Pay rent", kind: "todo" }],
+            },
+        ],
+    };
+    const marksIn = (container: HTMLElement, key: string) =>
+        [...sectionOf(container, key).querySelectorAll("[data-report-todo]")].map((m) =>
+            m.getAttribute("data-report-todo")
+        );
+
+    it("draws an unfinished to-do as an empty circle, never a check", () => {
+        const { container } = renderBody(todoBody);
+        expect(marksIn(container, "todos_today")).toEqual(["open"]);
+        expect(marksIn(container, "todos_earlier")).toEqual(["open"]);
+        // An empty circle, not the filled check-circle.
+        const open = sectionOf(container, "todos_today").querySelector("[data-report-todo]")!;
+        expect(open.getAttribute("data-testid")).toBe("RadioButtonUncheckedRoundedIcon");
+    });
+
+    it("draws a finished to-do as a check", () => {
+        const { container } = renderBody(todoBody);
+        // Only the first two sections are open on first draw.
+        fireEvent.click(sectionOf(container, "todos_done").querySelector("button")!);
+        expect(marksIn(container, "todos_done")).toEqual(["done"]);
+        const done = sectionOf(container, "todos_done").querySelector("[data-report-todo]")!;
+        expect(done.getAttribute("data-testid")).toBe("CheckCircleRoundedIcon");
+    });
+
+    it("keeps the green check off the unfinished section's header, even on a stored report", () => {
+        const { container } = renderBody(todoBody);
+        const header = (key: string) =>
+            sectionOf(container, key).querySelector("button")!.textContent ?? "";
+        expect(header("todos_today")).not.toContain("✅");
+        expect(header("todos_today")).toContain("⬜");
+        expect(header("todos_done")).toContain("✅");
+    });
+});
+
 describe("GenosReportCard: non-task lines and unknown values", () => {
     const body = (items: unknown[]) => ({
         version: 2,
@@ -305,7 +363,8 @@ describe("GenosReportCard: non-task lines and unknown values", () => {
         const rows = (key: string) =>
             [...sectionOf(container, key).querySelectorAll("li")].map((r) => r.textContent);
         expect(rows("todos_today")).toEqual([
-            "✅Call the bank",
+            // A to-do wears a drawn mark, not an emoji, so its row text is just the text.
+            "Call the bank",
             "🗓️10:00 Planning",
             "📝Design note",
             "💬Sam wrote",
