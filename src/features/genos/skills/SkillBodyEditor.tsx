@@ -18,6 +18,30 @@ import { NoteLoadState } from "../../notes/common/components/NoteLoadState";
 /** No explicit role rows: the owner of an unshared note is its implicit editor. */
 const NO_MEMBERS: NoteRoleMember[] = [];
 
+/**
+ * The shared note editor is built for a full-height note page: its scroller is a fixed share of
+ * the viewport (`92dvh` in App.css), on its own grey background, below a title row. In a form
+ * that is a ~1,000 px slab with three lines at the top. Here the editor grows with its text from
+ * a minimum of about ten lines, takes the card's background and keeps the page scrolling.
+ * `&&` outranks the three App.css rules (desktop, phone, notes pool) without `!important`.
+ */
+const bodyBoxSx = {
+    minWidth: 0,
+    width: "100%",
+    "&& .bn-editor-with-sidebar": { height: "auto" },
+    "&& .bn-editor-section, && .bn-box": { backgroundColor: "transparent" },
+    "&& .bn-editor": {
+        backgroundColor: "transparent",
+        height: "auto",
+        minHeight: 300,
+        // Clears the "Saved" chip, which the editor pins to the top-right corner.
+        marginTop: 0,
+        paddingBlock: "32px 20px",
+        paddingInline: { xs: "16px", sm: "24px" },
+        overflowY: "visible",
+    },
+} as const;
+
 export type SkillBodyEditorHandle = {
     /** Save the body now (the editor saves on a short delay; publishing must not miss the last
      *  keystrokes). Resolves when the save has been sent. */
@@ -116,7 +140,7 @@ export const SkillBodyEditor = ({
         );
     }
     return (
-        <Box sx={{ minWidth: 0, width: "100%" }}>
+        <Box sx={bodyBoxSx}>
             <BnMyNoteEditor
                 body={noteEditor.body}
                 currentMyNote={note}
