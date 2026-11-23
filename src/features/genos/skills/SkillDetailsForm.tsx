@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
 import {
     Box,
     Button,
@@ -27,6 +27,11 @@ type Props = {
     /** A sentence from the server that belongs to one field (a name already taken, say). */
     serverProblems: Partial<Record<"title" | "slug" | "description" | "tags", string>>;
     disabled: boolean;
+    /** An editor (not the owner) writes the details too, but the name and who can use the skill
+     *  stay the owner's: those two fields are shown, locked, with the reason (MIP-2043). */
+    ownerOnly?: boolean;
+    /** The "Editors" field, drawn under who can use the skill. */
+    editorsField?: ReactNode;
     onChange: (next: Partial<SkillDraft>) => void;
 };
 
@@ -43,6 +48,8 @@ export const SkillDetailsForm = ({
     problems,
     serverProblems,
     disabled,
+    ownerOnly = false,
+    editorsField,
     onChange,
 }: Props) => {
     const { t, locale } = useTranslation();
@@ -134,7 +141,7 @@ export const SkillDetailsForm = ({
             <FormControl error={!!slugShown} required>
                 <FormLabel>{f.slug}</FormLabel>
                 <Input
-                    disabled={disabled}
+                    disabled={disabled || ownerOnly}
                     startDecorator={<Typography level="body-sm">/</Typography>}
                     value={draft.slug}
                     slotProps={{
@@ -144,12 +151,14 @@ export const SkillDetailsForm = ({
                     onChange={(e) => onChange({ slug: e.target.value })}
                 />
                 <FormHelperText>
-                    {slugShown ??
-                        (draft.slug.trim() !== ""
-                            ? fmt(f.slugPreview, {
-                                  command: `/${draft.slug.trim().toLowerCase()}`,
-                              })
-                            : f.slugHelp)}
+                    {ownerOnly
+                        ? t.settings.genosSkills.team.ownerOnly
+                        : (slugShown ??
+                          (draft.slug.trim() !== ""
+                              ? fmt(f.slugPreview, {
+                                    command: `/${draft.slug.trim().toLowerCase()}`,
+                                })
+                              : f.slugHelp))}
                 </FormHelperText>
             </FormControl>
 
@@ -288,7 +297,7 @@ export const SkillDetailsForm = ({
                 <FormLabel id="skill-visibility">{f.visibility}</FormLabel>
                 <ToggleButtonGroup
                     aria-labelledby="skill-visibility"
-                    disabled={disabled}
+                    disabled={disabled || ownerOnly}
                     size="sm"
                     sx={{ flexWrap: "wrap", minWidth: 0, alignSelf: "flex-start" }}
                     value={draft.visibility}
@@ -297,10 +306,16 @@ export const SkillDetailsForm = ({
                     <Button value="private">{f.visibilityPrivate}</Button>
                     <Button value="team">{f.visibilityTeam}</Button>
                 </ToggleButtonGroup>
-                {draft.visibility === "team" && (
-                    <FormHelperText>{f.visibilityTeamHelp}</FormHelperText>
+                {ownerOnly ? (
+                    <FormHelperText>{t.settings.genosSkills.team.ownerOnly}</FormHelperText>
+                ) : (
+                    draft.visibility === "team" && (
+                        <FormHelperText>{f.visibilityTeamHelp}</FormHelperText>
+                    )
                 )}
             </FormControl>
+
+            {editorsField}
 
             <Box
                 component="dl"

@@ -22,6 +22,7 @@ import {
     validateDraft,
     type SkillDraft,
 } from "./skillDraft";
+import { SkillEditorsField } from "./SkillEditorsField";
 import { syncSkillNoteTitle } from "./skillNoteTitle";
 import {
     copySkill,
@@ -29,6 +30,7 @@ import {
     fetchSkill,
     fetchSkillVersions,
     publishSkill,
+    setSkillHidden,
     updateSkill,
     type Failure,
     type SkillRow,
@@ -96,6 +98,8 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [confirmLeave, setConfirmLeave] = useState(false);
+    const [confirmPrivate, setConfirmPrivate] = useState(false);
+    const [hiding, setHiding] = useState(false);
     const [bodyEdited, setBodyEdited] = useState(false);
     const bodyRef = useRef<SkillBodyEditorHandle>(null);
 
@@ -176,8 +180,9 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         else setNotice(res.message || fallback);
     };
 
-    /** Resolves true when the details are saved (or there was nothing to save). */
-    const save = async (): Promise<boolean> => {
+    /** Resolves true when the details are saved (or there was nothing to save). `sureAboutPrivate`
+     *  = the person already confirmed taking a team skill back from the team. */
+    const save = async (sureAboutPrivate = false): Promise<boolean> => {
         if (!editable || saving || publishing) return false;
         if (hasProblems(problems)) {
             setProblemsShown(true);
@@ -185,6 +190,11 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         }
         const changes = draftChanges(draft, skill);
         if (Object.keys(changes).length === 0) return true;
+        if (!sureAboutPrivate && skill.visibility === "team" && changes.visibility === "private") {
+            // The team stops reading and running it at once: say so before it happens.
+            setConfirmPrivate(true);
+            return false;
+        }
         setSaving(true);
         setNotice(null);
         setServerProblems({});
@@ -251,6 +261,30 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         } else {
             toast.error(res.message || m.list.copyFailed);
         }
+    };
+
+    const toggleHidden = async () => {
+        if (hiding) return;
+        const hide = !skill.hiddenByTeam;
+        setHiding(true);
+        const res = await setSkillHidden(accessToken, skill.id, hide);
+        setHiding(false);
+        if (!res.ok) {
+            toast.error(res.message || m.team.hideFailed);
+            return;
+        }
+        setChanged(true);
+        setSkill((prev) =>
+            prev
+                ? {
+                      ...prev,
+                      status: res.data.status,
+                      hiddenByTeam: res.data.hiddenByTeam,
+                      canHide: res.data.canHide,
+                  }
+                : prev
+        );
+        toast.success(hide ? m.team.hiddenToast : m.team.shownToast);
     };
 
     const remove = async () => {
@@ -320,14 +354,28 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                         </Button>
                     </>
                 ) : (
-                    <Button
-                        size="sm"
-                        startDecorator={<ContentCopyRoundedIcon />}
-                        variant="solid"
-                        onClick={() => void copy()}
-                    >
-                        {m.list.copy}
-                    </Button>
+                    <>
+                        {skill.canHide && (
+                            <Button
+                                loading={hiding}
+                                size="sm"
+                                variant="outlined"
+                                onClick={() => void toggleHidden()}
+                            >
+                                {skill.hiddenByTeam ? m.team.show : m.team.hide}
+                            </Button>
+                        )}
+                        {!skill.hiddenByTeam && skill.visibility !== "private" && (
+                            <Button
+                                size="sm"
+                                startDecorator={<ContentCopyRoundedIcon />}
+                                variant="solid"
+                                onClick={() => void copy()}
+                            >
+                                {m.list.copy}
+                            </Button>
+                        )}
+                    </>
                 )}
             </Box>
 
@@ -336,10 +384,39 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     {notice}
                 </Alert>
             )}
-            {!editable && (
+            {!editable && !skill.hiddenByTeam && (
                 <Alert color="neutral" size="sm" variant="soft">
                     {e.readOnly}
                 </Alert>
+            )}
+            {editable && skill.role === "editor" && (
+                <Alert color="neutral" size="sm" variant="soft">
+                    {m.team.editorNote}
+                </Alert>
+            )}
+            {skill.hiddenByTeam && (
+                <Alert color="warning" size="sm" variant="soft">
+                    {skill.canHide ? m.team.hiddenByYou : m.team.hiddenByOwner}
+                </Alert>
+            )}
+            {skill.forkedFrom && (
+                <Typography
+                    level="body-xs"
+                    sx={{ color: "text.tertiary", overflowWrap: "anywhere" }}
+                >
+                    {!skill.forkedFrom.available
+                        ? m.team.copiedFromGone
+                        : skill.forkedFrom.ownerName
+                          ? fmt(m.team.copiedFrom, {
+                                title: skill.forkedFrom.title,
+                                name: skill.forkedFrom.ownerName,
+                                n: skill.forkedFrom.versionNo,
+                            })
+                          : fmt(m.team.copiedFromNoName, {
+                                title: skill.forkedFrom.title,
+                                n: skill.forkedFrom.versionNo,
+                            })}
+                </Typography>
             )}
             {editable && savedTeam && (
                 <Box
@@ -377,9 +454,26 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 <SkillDetailsForm
                     disabled={!editable}
                     draft={draft}
+                    ownerOnly={editable && !skill.canManage}
                     problems={problemsShown ? problems : {}}
                     serverProblems={serverProblems}
                     skill={skill}
+                    editorsField={
+                        editable ? (
+                            <SkillEditorsField
+                                myId={host.myself.userId}
+                                skill={skill}
+                                teamMembers={host.useTEM.teamMembers ?? []}
+                                onChange={(editors, left) => {
+                                    if (left) {
+                                        onBack(true);
+                                        return;
+                                    }
+                                    setSkill((prev) => (prev ? { ...prev, editors } : prev));
+                                }}
+                            />
+                        ) : undefined
+                    }
                     onChange={setField}
                 />
             </Sheet>
@@ -483,7 +577,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 </Sheet>
             )}
 
-            {editable && (
+            {skill.canManage && (
                 <Box>
                     <Button
                         color="danger"
@@ -512,6 +606,20 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 destructive
                 onClose={() => setConfirmDelete(false)}
                 onConfirm={remove}
+            />
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={m.team.makePrivateConfirm}
+                description={m.team.makePrivateBody}
+                entityName={skill.title}
+                open={confirmPrivate}
+                title={m.team.makePrivateTitle}
+                zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+                onClose={() => setConfirmPrivate(false)}
+                onConfirm={async () => {
+                    setConfirmPrivate(false);
+                    await save(true);
+                }}
             />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
