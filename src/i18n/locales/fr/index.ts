@@ -266,6 +266,10 @@ export const fr: DeepPartial<Messages> = {
                 generic: "Une erreur est survenue. Veuillez réessayer plus tard.",
                 unexpected: "Une erreur inattendue est survenue. Veuillez réessayer.",
                 duplicateEmail: "Veuillez essayer avec une autre adresse e-mail.",
+                passwordCommon:
+                    "Ce mot de passe est trop courant ou trop facile à deviner. Veuillez en choisir un autre.",
+                passwordBreached:
+                    "Ce mot de passe figure dans une fuite de données connue. Veuillez en choisir un autre.",
                 duplicateName: "Veuillez essayer avec un autre nom.",
                 demoRateLimited:
                     "Trop de connexions démo depuis ce réseau. Veuillez réessayer plus tard.",

@@ -3,6 +3,7 @@ import axios from "axios";
 import { getMessages } from "../../../i18n";
 import { nonAuthApi } from "../../../services/api";
 import type { SignUpResponse, SignUpVerificationResponse } from "../../../types/admin";
+import { passwordRejectionMessage } from "../utils/passwordRejection";
 
 export const signUp = async (
     username: string,
@@ -41,6 +42,11 @@ export const signUp = async (
                     "terms_not_accepted"
             ) {
                 setErrorMessage?.(getMessages().admin.auth.signUp.consent.required);
+            } else if (
+                error.response.status === 400 &&
+                passwordRejectionMessage(error.response.data)
+            ) {
+                setErrorMessage?.(passwordRejectionMessage(error.response.data) as string);
             } else if (error.response.status === 400) {
                 console.error("HTTP 400 error:", error.response.data);
                 setErrorMessage?.(m.duplicateEmail);

@@ -239,6 +239,8 @@ export const zh: DeepPartial<Messages> = {
                 generic: "出现了一些问题，请稍后再试。",
                 unexpected: "发生未知错误，请重试。",
                 duplicateEmail: "请尝试使用其他邮箱。",
+                passwordCommon: "此密码过于常见或容易被猜到，请换一个。",
+                passwordBreached: "此密码出现在已知的数据泄露中，请换一个。",
                 duplicateName: "请尝试使用其他名称。",
                 demoRateLimited: "此网络的体验登录次数过多，请稍后再试。",
                 demoFailed: "无法创建体验会话，请稍后再试。",
