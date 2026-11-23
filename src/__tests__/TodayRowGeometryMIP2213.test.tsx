@@ -168,18 +168,18 @@ describe("touch: no hover, a long press shows the actions", () => {
         expect(li.getAttribute("data-actions-open")).toBeNull();
     });
 
-    it("closes on Escape, and a plain tap still opens the task", () => {
+    it("a plain tap after a long press opens the task and closes the actions", () => {
         const onOpen = vi.fn();
         const { container } = row({ onAction: vi.fn(), onOpen });
         const li = rowEl(container);
         const button = li.querySelector(":scope > button") as HTMLElement;
         press(button);
         fireEvent.click(button);
-        fireEvent.keyDown(document, { key: "Escape" });
-        expect(li.getAttribute("data-actions-open")).toBeNull();
+        expect(li.getAttribute("data-actions-open")).toBe("true");
 
         fireEvent.click(button);
         expect(onOpen).toHaveBeenCalledWith("/x");
+        expect(li.getAttribute("data-actions-open")).toBeNull();
     });
 
     it("does nothing on a long press for a row without actions", () => {

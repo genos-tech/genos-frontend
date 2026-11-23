@@ -94,14 +94,9 @@ export const TodayTaskRow = ({
         const away = (e: Event) => {
             if (!rowRef.current?.contains(e.target as Node)) setPressed(false);
         };
-        const escape = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setPressed(false);
-        };
         document.addEventListener("touchstart", away);
-        document.addEventListener("keydown", escape);
         return () => {
             document.removeEventListener("touchstart", away);
-            document.removeEventListener("keydown", escape);
         };
     }, [open]);
 
