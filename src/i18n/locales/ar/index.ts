@@ -1103,7 +1103,7 @@ export const ar: DeepPartial<Messages> = {
             intro: "المهارة هي ملاحظة تعليمات لها اسم. اكتب الخطوات مرة واحدة واحتفظ بها لنفسك أو شاركها مع فريقك.",
             newDefaultTitle: "مهارة جديدة",
             untitled: "مهارة بلا عنوان",
-            tabs: { label: "المهارات", mine: "مهاراتي", team: "الفريق", hub: "Genos Hub" },
+            tabs: { label: "المهارات", mine: "مهاراتي", team: "الفريق", hub: "مركز Genos" },
             newSkill: "مهارة جديدة",
             newBlank: "مهارة فارغة",
             newTemplate: "من قالب",
@@ -1268,7 +1268,7 @@ export const ar: DeepPartial<Messages> = {
                 unpublishFailed: "تعذّر جعلها خاصة. حاول مرة أخرى.",
                 copiedFromAuthor: "نُسخت من «{title}» بواسطة @{handle} (الإصدار {n}).",
                 field: {
-                    label: "Genos Hub",
+                    label: "مركز Genos",
                     public: "عامة",
                     publish: "انشر في Hub…",
                     unpublish: "إيقاف المشاركة العامة",

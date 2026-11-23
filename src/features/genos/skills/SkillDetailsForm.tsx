@@ -296,27 +296,31 @@ export const SkillDetailsForm = ({
                 </FormControl>
             </Box>
 
-            <FormControl>
-                <FormLabel id="skill-visibility">{f.visibility}</FormLabel>
-                <ToggleButtonGroup
-                    aria-labelledby="skill-visibility"
-                    disabled={disabled || ownerOnly || skill.visibility === "public"}
-                    size="sm"
-                    sx={{ flexWrap: "wrap", minWidth: 0, alignSelf: "flex-start" }}
-                    value={skill.visibility === "public" ? null : draft.visibility}
-                    onChange={(_e, value) => value && onChange({ visibility: value })}
-                >
-                    <Button value="private">{f.visibilityPrivate}</Button>
-                    <Button value="team">{f.visibilityTeam}</Button>
-                </ToggleButtonGroup>
-                {ownerOnly ? (
-                    <FormHelperText>{t.settings.genosSkills.team.ownerOnly}</FormHelperText>
-                ) : (
-                    draft.visibility === "team" && (
-                        <FormHelperText>{f.visibilityTeamHelp}</FormHelperText>
-                    )
-                )}
-            </FormControl>
+            {/* A public skill says so in the Hub row below (and in its byline): the Private/Team
+                switch would only show two unselected buttons. */}
+            {skill.visibility !== "public" && (
+                <FormControl>
+                    <FormLabel id="skill-visibility">{f.visibility}</FormLabel>
+                    <ToggleButtonGroup
+                        aria-labelledby="skill-visibility"
+                        disabled={disabled || ownerOnly}
+                        size="sm"
+                        sx={{ flexWrap: "wrap", minWidth: 0, alignSelf: "flex-start" }}
+                        value={draft.visibility}
+                        onChange={(_e, value) => value && onChange({ visibility: value })}
+                    >
+                        <Button value="private">{f.visibilityPrivate}</Button>
+                        <Button value="team">{f.visibilityTeam}</Button>
+                    </ToggleButtonGroup>
+                    {ownerOnly ? (
+                        <FormHelperText>{t.settings.genosSkills.team.ownerOnly}</FormHelperText>
+                    ) : (
+                        draft.visibility === "team" && (
+                            <FormHelperText>{f.visibilityTeamHelp}</FormHelperText>
+                        )
+                    )}
+                </FormControl>
+            )}
 
             {hubField}
 
