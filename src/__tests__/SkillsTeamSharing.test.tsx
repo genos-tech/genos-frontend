@@ -67,6 +67,7 @@ const base = (over: Partial<SkillRow> = {}): SkillRow => ({
     effort: "",
     visibility: "team",
     status: "active",
+    moderationReason: "",
     currentVersionNo: 1,
     publishedVersionNo: 1,
     createdAt: "2026-11-20T10:00:00Z",
@@ -351,6 +352,7 @@ describe("a team skill as a reader", () => {
                     id: "s0",
                     title: "Release notes",
                     ownerName: "ayumi",
+                    author: null,
                     versionNo: 2,
                 },
             })

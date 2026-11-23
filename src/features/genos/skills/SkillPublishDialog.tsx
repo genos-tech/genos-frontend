@@ -23,18 +23,7 @@ import {
     type PublishCheckResult,
     type SkillRow,
 } from "./skillsApi";
-
-/** The handle the server accepts: 3 to 30 lower-case letters, digits and single hyphens. */
-export const HANDLE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const HANDLE_MIN = 3;
-export const HANDLE_MAX = 30;
-
-export const handleProblem = (raw: string): "short" | "long" | "shape" | null => {
-    const handle = raw.trim().toLowerCase().replace(/^@/, "");
-    if (handle.length < HANDLE_MIN) return "short";
-    if (handle.length > HANDLE_MAX) return "long";
-    return HANDLE_RE.test(handle) ? null : "shape";
-};
+import { HANDLE_MAX, handleProblem } from "./skillText";
 
 type Props = {
     /** The skill to make public, or null while the dialog is closed. */

@@ -16,11 +16,11 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { toast } from "../components/ui/feedback/toastStore";
-import { handleProblem } from "../features/genos/skills/SkillPublishDialog";
 import * as api from "../features/genos/skills/skillsApi";
 import { parseSkill, parseSkillList, type SkillRow } from "../features/genos/skills/skillsApi";
 import type { SkillsHost } from "../features/genos/skills/skillsHost";
 import { SkillsPage } from "../features/genos/skills/SkillsPage";
+import { handleProblem } from "../features/genos/skills/skillText";
 import { I18nProvider } from "../i18n";
 
 vi.mock("../context/authState", () => ({

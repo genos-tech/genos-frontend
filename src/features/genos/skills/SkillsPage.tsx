@@ -184,8 +184,8 @@ export const SkillsPage = ({ teamId, host }: Props) => {
         return (
             <SkillEditor
                 host={host}
-                skillId={view.id}
                 publicEnabled={publicEnabled}
+                skillId={view.id}
                 teamId={teamId}
                 onBack={() => setView({ kind: "list" })}
             />
@@ -334,8 +334,8 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                             }
                             onCopy={() => void copy(skill)}
                             onOpen={() => setView({ kind: "edit", id: skill.id })}
-                            onToggleHidden={() => void toggleHidden(skill)}
                             onReport={() => setReporting(skill)}
+                            onToggleHidden={() => void toggleHidden(skill)}
                             onDelete={() => {
                                 setDeleteError(null);
                                 setDeleting(skill);
