@@ -102,8 +102,8 @@ export interface UseAgentMentionDraftArgs {
     searchTasks?: (query: string) => Promise<AgentMentionCandidate[]>;
     /** The skills this person may run here, in resolution order (MIP-2042). `undefined` = the host has
      *  no skills (the feature is off, or the surface does not run them): `/` is then plain text, as
-     *  it always was. `[]` = skills are on and there are none yet: a typed `/name` still goes to the
-     *  server, which answers "No skill named ...". */
+     *  it always was. `[]` = skills are on and there are none yet: the menu lists nothing and a
+     *  `/word` is an ordinary question. A typed `/name` is sent as a skill only when it is one of these. */
     skills?: AgentMentionCandidate[];
 }
 
@@ -435,8 +435,16 @@ export function useAgentMentionDraft({
                 const id = taskDisplayId(c);
                 return id ? [{ ...c.ref, label: id }] : [];
             }),
-            // A typed `/name` that is exactly one of the person's skills is that skill (by id).
-            ...(skills ?? []).map((c) => c.ref),
+            // A typed `/name` that is exactly one of the person's skills is that skill (by id), unless
+            // two of them share the name and neither is the person's own: then the server resolves the
+            // name (mine > team > installed) and asks which teammate's when it cannot.
+            ...(skills ?? [])
+                .filter(
+                    (c, i, all) =>
+                        c.skillGroup === "mine" ||
+                        all.every((o, j) => j === i || o.ref.label !== c.ref.label)
+                )
+                .map((c) => c.ref),
         ],
         [members, entities, skills]
     );
@@ -457,18 +465,23 @@ export function useAgentMentionDraft({
                 seen.add(key);
                 out.push(m.ref);
             }
-            // A `/name` that is none of the skills the picker knew (a teammate's just published, a
-            // typo) still goes to the server as a name: it resolves mine > team > installed there, or
-            // answers "No skill named ...", and nothing is billed for an answer like that.
-            if (skillsOn && !out.some((r) => r.kind === "skill")) {
+            // A `/name` that is one of the person's skills but was not resolved above (the name is
+            // shared by teammates) goes to the server as a name. A `/word` that is NOT one of their
+            // skills ("/tmp is full, why?") is an ordinary question, as it was before skills.
+            if (skills && !out.some((r) => r.kind === "skill")) {
                 const typed = TYPED_SKILL.exec(finalText)?.[1];
-                if (typed && typed.length >= SKILL_NAME_MIN && typed.length <= SKILL_NAME_MAX) {
+                if (
+                    typed &&
+                    typed.length >= SKILL_NAME_MIN &&
+                    typed.length <= SKILL_NAME_MAX &&
+                    skills.some((c) => c.ref.label === typed)
+                ) {
                     out.push({ kind: "skill", skillId: "", label: typed });
                 }
             }
             return out;
         },
-        [candidateRefs, skillsOn]
+        [candidateRefs, skills]
     );
 
     // Live token ranges for the highlight overlay. `picksVersion` keys

@@ -20,11 +20,14 @@ const toCandidate = (s: RunnableSkill): AgentMentionCandidate => {
 
 /**
  * The skills the `/` menu of Spotlight and the Genos page offers (MIP-2042): what this member may
- * run in their team, asked once when the input mounts.
+ * run in their team, asked when the input mounts and again whenever the window regains focus (the
+ * Genos page stays mounted for hours; a skill made or shared meanwhile must show up).
  *
  * `undefined` means there is no `/` menu: Skills is switched off on the server (its 404), the
  * request failed, or it has not answered yet. A failure never breaks the input, it just leaves `/`
  * as the plain character it always was. `[]` is a workspace with Skills and nothing to run yet.
+ * A different team or account never sees the previous one's list: it is dropped before the new
+ * one is asked for.
  */
 export const useRunnableSkills = (enabled = true): AgentMentionCandidate[] | undefined => {
     const accessToken = useOptionalAccessToken();
@@ -32,13 +35,19 @@ export const useRunnableSkills = (enabled = true): AgentMentionCandidate[] | und
     const [rows, setRows] = useState<RunnableSkill[] | undefined>(undefined);
 
     useEffect(() => {
+        setRows(undefined);
         if (!enabled || !accessToken || !teamId) return;
         let live = true;
-        void fetchRunnableSkills(accessToken, String(teamId)).then((res) => {
-            if (live) setRows(res.ok ? res.data : undefined);
-        });
+        const load = () => {
+            void fetchRunnableSkills(accessToken, String(teamId)).then((res) => {
+                if (live) setRows(res.ok ? res.data : undefined);
+            });
+        };
+        load();
+        window.addEventListener("focus", load);
         return () => {
             live = false;
+            window.removeEventListener("focus", load);
         };
     }, [enabled, accessToken, teamId]);
 

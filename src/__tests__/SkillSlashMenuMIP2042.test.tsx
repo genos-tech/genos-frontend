@@ -5,7 +5,7 @@
  * host passed `skills` (a prose slash, a path and "and/or" stay text; without skills nothing
  * changes); the menu lists what the server offered in resolution order and narrows by name or
  * title; a pick (or a hand-typed exact name) becomes a skill ref that rides the ask as `skill`,
- * never as a mention; a typed name the menu did not know goes to the server as a name; and a
+ * never as a mention; a name two teammates share goes to the server (which asks which); a `/word` that is no skill stays an ordinary question; and a
  * server that has Skills off yields no menu at all.
  */
 
@@ -185,14 +185,32 @@ describe("picking and sending", () => {
         ]);
     });
 
-    it("a typed name the menu did not know goes to the server as a name", () => {
+    it("a `/word` that is not one of the person's skills is an ordinary question", () => {
         const { result } = renderHook(() => useHarness(SKILLS));
-        const refs = result.current.draft.consumeMentions("/brand-new for me");
-        expect(toWireSkill(refs)).toEqual({ name: "brand-new" });
-        // `[]` (Skills on, nothing to run yet) is the same: the server answers "No skill named".
+        for (const text of ["/tmp is full, why?", "/help me plan", "/brand-new for me"]) {
+            expect(toWireSkill(result.current.draft.consumeMentions(text)), text).toBeUndefined();
+        }
+        // `[]` (Skills on, nothing to run yet) is the same.
         const empty = renderHook(() => useHarness([]));
-        expect(toWireSkill(empty.result.current.draft.consumeMentions("/brand-new"))).toEqual({
-            name: "brand-new",
+        expect(
+            toWireSkill(empty.result.current.draft.consumeMentions("/brand-new"))
+        ).toBeUndefined();
+    });
+
+    it("a name two teammates share goes to the server as a name, which asks which one", () => {
+        const shared = [
+            skill("t-1", "standup", "Standup A", "team", "Alice"),
+            skill("t-2", "standup", "Standup B", "team", "Bob"),
+        ];
+        const { result } = renderHook(() => useHarness(shared));
+        expect(toWireSkill(result.current.draft.consumeMentions("/standup now"))).toEqual({
+            name: "standup",
+        });
+        // The person's own skill of that name wins: there is nothing to ask.
+        const mine = [skill("m-1", "standup", "Mine", "mine"), ...shared];
+        const own = renderHook(() => useHarness(mine));
+        expect(toWireSkill(own.result.current.draft.consumeMentions("/standup now"))).toEqual({
+            id: "m-1",
         });
     });
 
