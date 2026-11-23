@@ -80,10 +80,34 @@ describe("img-src", () => {
     });
 });
 
+describe("frame-src (MIP-2228)", () => {
+    it("allows exactly the API's HTML-note page route and nothing else", () => {
+        expect(directives(PROD)["frame-src"]).toEqual(["https://api.genosai.dev/h/"]);
+    });
+
+    it("follows the build environment's API origin", () => {
+        const other = directives({ ...PROD, VITE_DJANGO_URL: "https://api.staging.example.dev" });
+        expect(other["frame-src"]).toEqual(["https://api.staging.example.dev/h/"]);
+    });
+
+    it("is never a bare scheme, a wildcard, 'self' or the whole API origin", () => {
+        const src = directives(PROD)["frame-src"];
+        expect(src).toHaveLength(1);
+        expect(src[0]).toMatch(/^https:\/\/[^*/]+\/h\/$/);
+        expect(src).not.toContain("'self'");
+        expect(src).not.toContain("https://api.genosai.dev");
+    });
+
+    it("did not widen the app's own script-src to make scripts in the frame run", () => {
+        const scripts = directives(PROD)["script-src"];
+        expect(scripts).not.toContain("'unsafe-inline'");
+        expect(scripts).not.toContain("'unsafe-eval'");
+    });
+});
+
 describe("the rest of the policy is untouched", () => {
-    it("still locks down frames, objects, base and framing", () => {
+    it("still locks down objects, base and framing", () => {
         const d = directives(PROD);
-        expect(d["frame-src"]).toEqual(["'none'"]);
         expect(d["object-src"]).toEqual(["'none'"]);
         expect(d["frame-ancestors"]).toEqual(["'none'"]);
         expect(d["base-uri"]).toEqual(["'self'"]);

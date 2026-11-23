@@ -34,8 +34,17 @@
 //               with ws(s) variants for the socket hosts (socket.io
 //               long-polls over http(s) before upgrading).
 //   worker-src  'self' blob: — Vite-bundled module workers (db/workers).
-//   frame-src   'none' — the app embeds no iframes; frame-ancestors
-//               'none' mirrors X-Frame-Options: DENY.
+//   frame-src   ONE route and nothing else (MIP-2228): `<django>/h/`, the
+//               API's HTML-note page route. HTML notes show an
+//               AI-written page in a sandboxed iframe whose `src` is that
+//               short-lived URL; the API answers it with its own header
+//               CSP (`sandbox allow-scripts`, no network), so the page's
+//               inline scripts run WITHOUT any `unsafe-inline` here. (A
+//               `srcdoc` frame would inherit this policy and every inline
+//               script would be blocked.) A path-ended source matches that
+//               prefix only: no other URL on the API host, and no other
+//               host, can be framed. frame-ancestors 'none' mirrors
+//               X-Frame-Options: DENY (it protects the app, not the frame).
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -125,7 +134,7 @@ const csp = [
     `connect-src ${connectSrc.join(" ")}`,
     `media-src ${uniq(["'self'", "blob:", "data:", djangoOrigin, mediaOrigin]).join(" ")}`,
     `worker-src 'self' blob:`,
-    `frame-src 'none'`,
+    `frame-src ${djangoOrigin}/h/`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
