@@ -61,7 +61,9 @@ import { listCalendars } from "../../features/integrations/services/calendar";
 import {
     findGoogleConnection,
     hasCalendarScope,
+    isGithubConnected,
     listConnections,
+    teamUsesGithubApp,
 } from "../../features/integrations/services/connections";
 import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
 import { useAnalyticsPreferences } from "../../hooks/common/analyticsPreferenceState";
@@ -1673,6 +1675,7 @@ export type SettingsTabKey =
 const IntegrationsSection = () => {
     const { accessToken } = useAuth();
     const [githubConnected, setGithubConnected] = useState(false);
+    const [githubAppMode, setGithubAppMode] = useState(false);
 
     // The repo-access panel is only meaningful once GitHub is connected —
     // before that the Connections rows above are the whole story, and an
@@ -1682,7 +1685,9 @@ const IntegrationsSection = () => {
         let cancelled = false;
         void listConnections(accessToken).then((res) => {
             if (cancelled) return;
-            setGithubConnected(!!res?.connections.find((c) => c.provider === "github"));
+            // The GitHub App's authorization counts as a connection too (MIP-2090).
+            setGithubConnected(isGithubConnected(res));
+            setGithubAppMode(teamUsesGithubApp(res));
         });
         return () => {
             cancelled = true;
@@ -1696,7 +1701,9 @@ const IntegrationsSection = () => {
             {/* Same panel the Integrations page shows, so "which repos can
                 Genos see, and how do I add my new org" is answerable
                 without leaving Settings. */}
-            {githubConnected && <GithubRepoAccessSection accessToken={accessToken} />}
+            {githubConnected && (
+                <GithubRepoAccessSection accessToken={accessToken} appMode={githubAppMode} />
+            )}
         </Stack>
     );
 };

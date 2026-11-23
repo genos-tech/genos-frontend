@@ -95,8 +95,10 @@ export interface GithubAccessibleReposResponse {
     owners: GithubRepoOwner[];
     /** True when the repo list hit the server's one-page cap. */
     truncated: boolean;
-    /** GitHub's per-application settings page — where ORGANIZATION access
-     *  is granted. Null when no OAuth client id is configured. */
+    /** Where access is changed on GitHub. OAuth connection: the per-application settings page
+     *  (ORGANIZATION access is granted there); null when no OAuth client id is configured.
+     *  App connection (MIP-2090): the GitHub App's own page, where each installation's
+     *  repositories are chosen. */
     manage_url: string | null;
 }
 

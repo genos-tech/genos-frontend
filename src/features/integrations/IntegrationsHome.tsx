@@ -42,7 +42,9 @@ import {
     ConnectionsResponse,
     findGoogleConnections,
     hasAnyCalendarScope,
+    isGithubConnected,
     listConnections,
+    teamUsesGithubApp,
 } from "./services/connections";
 import { GithubPullSummary, listMyPulls } from "./services/github";
 import { redirectToOAuthConnect } from "./services/oauth";
@@ -554,12 +556,15 @@ const WebhookSetup = () => {
     );
 };
 
-const GithubTab = ({
+export const GithubTab = ({
     accessToken,
     githubConnected,
+    appMode = false,
 }: {
     accessToken: string;
     githubConnected: boolean;
+    /** The team's GitHub connection is the App (MIP-2090). */
+    appMode?: boolean;
 }) => {
     const { t, locale } = useTranslation();
     const [pulls, setPulls] = useState<GithubPullSummary[]>([]);
@@ -662,11 +667,15 @@ const GithubTab = ({
                 </Stack>
             )}
 
-            <GithubRepoAccessSection accessToken={accessToken} />
+            <GithubRepoAccessSection accessToken={accessToken} appMode={appMode} />
 
-            <GithubRepoRegistration accessToken={accessToken} />
+            {/* "Register a repository" and the manual webhook steps exist only because the OAuth
+                integration needs a hook per repository. The App has one webhook for every
+                installed repository, so for an App team there is nothing to register or paste
+                (MIP-2090). */}
+            {!appMode && <GithubRepoRegistration accessToken={accessToken} />}
 
-            <WebhookSetup />
+            {!appMode && <WebhookSetup />}
         </Stack>
     );
 };
@@ -738,7 +747,9 @@ export const IntegrationsHome = () => {
     const googleConnections = findGoogleConnections(data);
     const googleConnected = googleConnections.length > 0;
     const googleCalendarAuthorized = hasAnyCalendarScope(googleConnections);
-    const githubConnected = !!data?.connections.find((c) => c.provider === "github");
+    // The App's authorization counts as a connection too (MIP-2090).
+    const githubConnected = isGithubConnected(data);
+    const githubAppMode = teamUsesGithubApp(data);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -809,6 +820,7 @@ export const IntegrationsHome = () => {
                         {integrationAllowed("github") ? (
                             <GithubTab
                                 accessToken={accessToken}
+                                appMode={githubAppMode}
                                 githubConnected={githubConnected}
                             />
                         ) : (

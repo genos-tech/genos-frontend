@@ -5789,6 +5789,18 @@ export const es: DeepPartial<Messages> = {
                         "Para crear una cuenta, primero acepta los Términos del servicio y la Política de privacidad en la página de registro.",
                     email_not_verified:
                         "Google no pudo confirmar esta dirección de correo electrónico, por lo que no se creó ninguna cuenta. Verifica la dirección con Google e inténtalo de nuevo, o regístrate con tu correo electrónico y contraseña.",
+                    github_app_state_missing:
+                        "GitHub no devolvió la solicitud de conexión a Genos. Vuelve a pulsar Conectar GitHub en Ajustes.",
+                    github_app_org_membership_unverified:
+                        "GitHub no pudo confirmar que eres miembro activo de esa organización. Comprueba tu pertenencia en GitHub e inténtalo de nuevo.",
+                    github_app_org_admin_required:
+                        "Primero debe conectar esta instalación un propietario de la organización. Pídele que pulse Conectar GitHub para tu equipo.",
+                    installation_not_confirmed:
+                        "GitHub no confirmó esa instalación para tu cuenta. Pulsa Conectar GitHub e instala la app de nuevo.",
+                    no_installation:
+                        "No se encontró ninguna instalación de la GitHub App que puedas usar. Instala la app en tu cuenta u organización y vuelve a pulsar Conectar GitHub.",
+                    team_not_allowed:
+                        "Solo un propietario o editor del equipo puede vincular GitHub a este equipo.",
                     fallback: "Error en el flujo de OAuth.",
                 },
                 methods: {
@@ -6119,6 +6131,11 @@ export const es: DeepPartial<Messages> = {
             calendarRequestFailed: "Falló la solicitud al calendario.",
             githubNotConnected: "La cuenta de GitHub no está conectada.",
             githubRequestFailed: "Falló la solicitud a GitHub.",
+            githubAppTeamRequired: "Elige primero un equipo y vuelve a pulsar Conectar.",
+            githubAppTeamNotFound:
+                "No se encontró ese equipo. Elige un equipo e inténtalo de nuevo.",
+            githubAppTeamNotAllowed:
+                "Solo un propietario o editor del equipo puede conectar GitHub para este equipo.",
         },
         tabs: {
             connections: "Conexiones",
@@ -6133,6 +6150,8 @@ export const es: DeepPartial<Messages> = {
                     "Genos elimina el acceso guardado a esta cuenta de Google. Las funciones de calendario que la usan dejan de funcionar hasta que vuelvas a conectarla, lo que implica iniciar sesión con Google otra vez.",
                 bodyGithub:
                     "Genos elimina el acceso guardado a esta cuenta de GitHub. Las funciones que la usan, como los enlaces a pull requests, dejan de funcionar hasta que vuelvas a conectarla, lo que implica iniciar sesión con GitHub otra vez.",
+                bodyGithubApp:
+                    "Genos elimina tu autorización de la GitHub App. La instalación de tu equipo sigue en GitHub hasta que alguien la quite allí; las funciones de pull requests dejan de funcionar para ti hasta que vuelvas a autorizar.",
             },
             primaryLogin: "Inicio de sesión principal",
             noEmailShared: "(correo no compartido)",
@@ -6150,6 +6169,22 @@ export const es: DeepPartial<Messages> = {
                 "desde tu dirección de Gmail y te añadiremos como usuario de prueba. El acceso funcionará un minuto después de la confirmación.",
             verificationError: "Error 403: access_denied",
             addGoogleAccount: "Añadir otra cuenta de Google",
+            githubApp: {
+                connectedApp:
+                    "Conectado mediante la GitHub App de Genos (solo lectura, sin acceso al código).",
+                needsAuthorize:
+                    "Tu equipo instaló la GitHub App en {accounts}. Autorízala para usarla aquí.",
+                authorize: "Autorizar",
+                legacyHint:
+                    "Vuelve a conectar para dar a Genos un acceso más limitado, por repositorio.",
+                reconnect: "Reconectar",
+                notInstalled: "La GitHub App aún no está instalada para este equipo.",
+                install: "Instalar",
+                suspended: "Suspendida en GitHub",
+                manageOnGithub: "Gestionar en GitHub",
+                cannotLink:
+                    "Solo un propietario o editor del equipo puede conectar GitHub para este equipo.",
+            },
         },
         calendar: {
             connectPrompt: "Conecta Google para consultar y gestionar aquí tus eventos.",
@@ -6252,6 +6287,10 @@ export const es: DeepPartial<Messages> = {
                 truncated: "Mostrando los 100 repos actualizados más recientemente.",
                 missingOrg:
                     "¿Falta una organización? Concédele acceso en GitHub y vuelve a autorizar aquí para aplicar el cambio. Si restringe apps de terceros, un propietario deberá aprobar la solicitud.",
+                descriptionApp:
+                    "Genos accede a GitHub mediante la GitHub App, así que solo ve los repositorios elegidos en la instalación de tu equipo y que tú también puedes abrir en GitHub. Añade o quita repositorios en GitHub.",
+                missingOrgApp:
+                    "¿Falta una organización o un repositorio? Instala la app allí o añade el repositorio en los ajustes de la instalación en GitHub y pulsa Actualizar.",
                 manage: "Gestionar acceso en GitHub",
                 reauthorize: "Volver a autorizar GitHub",
             },
