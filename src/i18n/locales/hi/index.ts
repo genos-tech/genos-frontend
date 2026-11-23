@@ -1452,6 +1452,20 @@ export const hi: DeepPartial<Messages> = {
             reportPosted: "रिपोर्ट {chat} में पोस्ट हुई",
             rowProject: "प्रोजेक्ट: {name}",
             rowMilestone: "माइलस्टोन: {name}",
+            paramSkill: "स्किल",
+            paramSkillHint:
+                "इस स्किल का प्रकाशित संस्करण चलाता है और जो मिलता है उसे आपके इनबॉक्स में रखता है। यह सिर्फ़ पढ़ता है: कुछ भी नहीं बदलता।",
+            paramSkillInput: "इसे क्या दें",
+            paramSkillInputHint:
+                "वैकल्पिक। स्किल के नाम के बाद आप जो शब्द लिखते, जैसे कोई प्रोजेक्ट या कोई सप्ताह।",
+            skillPlaceholder: "एक स्किल चुनें",
+            skillLoading: "स्किल लोड हो रही हैं…",
+            skillNone: "अभी चलाने के लिए आपके पास कोई स्किल नहीं है। पहले स्किल में एक लिखें।",
+            skillNotPublished:
+                "{name} (पहले इसे अपनी टीम के साथ साझा करके एक संस्करण प्रकाशित करें)",
+            errorSkill: "एक स्किल चुनें।",
+            effortHintNoEstimate:
+                "इस रन में AI कितनी मेहनत करता है। यह Spotlight में सवाल पूछने की तरह आपके AI क्रेडिट खर्च करता है; असली आँकड़ा हर रिपोर्ट पर दिखता है।",
             paramAiSentences: "AI के वाक्य",
             paramAiSentencesHint:
                 "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है और आपके AI क्रेडिट खर्च होते हैं। यह डिफ़ॉल्ट रूप से बंद है; चाहें तो चालू करें।",
@@ -1546,6 +1560,12 @@ export const hi: DeepPartial<Messages> = {
                 effortLow: "कम",
                 effortMedium: "मध्यम",
                 effortHigh: "अधिक",
+                effortCostBase: "{label} · सबसे कम लागत",
+                effortCost: "{label} · “कम” का लगभग {n}×",
+                effortLocked: "{label} · आपके प्लान में शामिल नहीं",
+                effortHelp:
+                    "ऊँचा स्तर हर रन में अधिक क्रेडिट खर्च करता है। क्रेडिट कम होने पर स्किल एक स्तर नीचे चलती है और आपको बता देती है।",
+                effortAutoHelp: "हर व्यक्ति ने सेटिंग में जो स्तर चुना है, उसी पर चलती है।",
                 visibility: "कौन इस्तेमाल कर सकता है",
                 visibilityPrivate: "केवल मैं",
                 visibilityTeam: "मेरी टीम",

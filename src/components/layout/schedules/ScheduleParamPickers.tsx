@@ -4,10 +4,13 @@ import {
     List,
     ListItem,
     ListSubheader,
+    Option,
+    Select,
     Typography,
 } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
+import { useRunnableSkillRows } from "../../../features/genos/skills/useRunnableSkills";
 import {
     isSameProject,
     projectListboxSlotProps,
@@ -18,7 +21,7 @@ import {
     ProjectIdentityDecorator,
     ProjectIdentityRow,
 } from "../../../features/tasks/components/ProjectIdentityRow";
-import { useTranslation } from "../../../i18n";
+import { fmt, useTranslation } from "../../../i18n";
 import type { ProjectProps } from "../../../types/tasks";
 import { useJoinedProjects, useProjectAvatars, useProjectMilestones } from "./scheduleParamHooks";
 
@@ -205,5 +208,58 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
             )}
             onChange={(_, option) => onChange(option ? option.id : "")}
         />
+    );
+};
+
+/** The skill a "Run a skill" schedule runs (MIP-2045), by name: what the member may run in this
+ *  team (the `/` menu's own list: theirs, a teammate's team skill, an installed one). A skill that
+ *  was never published is listed but cannot be chosen, with the reason: a schedule runs a
+ *  published version, never a draft. A stored skill that is no longer in the list stays selectable
+ *  as "(unavailable)" so the form can show it, as the project picker does. */
+export const SkillParamSelect = ({ value, onChange }: Props) => {
+    const { t } = useTranslation();
+    const s = t.settings.schedules;
+    const rows = useRunnableSkillRows();
+    const popupZIndex = useDialogPopupZIndex();
+
+    const skills = rows ?? [];
+    const stray = value !== "" && rows !== undefined && !skills.some((r) => r.id === value);
+
+    return (
+        <Select
+            placeholder={rows === undefined ? s.skillLoading : s.skillPlaceholder}
+            slotProps={{ listbox: { sx: { zIndex: popupZIndex, maxHeight: 280 } } }}
+            sx={{ minWidth: 0 }}
+            value={value || null}
+            onChange={(_, next) => {
+                if (next) onChange(next);
+            }}
+        >
+            {stray && (
+                <Option value={value} disabled>
+                    {s.unavailable}
+                </Option>
+            )}
+            {rows?.length === 0 && (
+                <Option value="" disabled>
+                    {s.skillNone}
+                </Option>
+            )}
+            {skills.map((r) => {
+                const name = r.title || r.slug;
+                return (
+                    <Option
+                        key={r.id}
+                        disabled={r.publishedVersionNo <= 0}
+                        label={name}
+                        value={r.id}
+                    >
+                        <Typography level="body-sm" sx={{ color: "inherit", minWidth: 0 }} noWrap>
+                            {r.publishedVersionNo > 0 ? name : fmt(s.skillNotPublished, { name })}
+                        </Typography>
+                    </Option>
+                );
+            })}
+        </Select>
     );
 };

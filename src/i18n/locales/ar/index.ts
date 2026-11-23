@@ -1069,6 +1069,19 @@ export const ar: DeepPartial<Messages> = {
             reportPosted: "تم نشر التقرير في {chat}",
             rowProject: "المشروع: {name}",
             rowMilestone: "المعلم: {name}",
+            paramSkill: "المهارة",
+            paramSkillHint:
+                "تشغّل النسخة المنشورة من هذه المهارة وتضع ما تجده في صندوق الوارد. تقرأ فقط: لا تغيّر أي شيء.",
+            paramSkillInput: "ما الذي يُعطى لها",
+            paramSkillInputHint:
+                "اختياري. الكلمات التي كنت ستكتبها بعد اسم المهارة، مثل مشروع أو أسبوع.",
+            skillPlaceholder: "اختر مهارة",
+            skillLoading: "جارٍ تحميل المهارات…",
+            skillNone: "ليس لديك مهارة لتشغيلها بعد. اكتب واحدة أولاً في المهارات.",
+            skillNotPublished: "{name} (شاركها مع فريقك أولاً لنشر نسخة)",
+            errorSkill: "اختر مهارة.",
+            effortHintNoEstimate:
+                "مقدار جهد الذكاء الاصطناعي في هذا التشغيل. يستهلك رصيدك من الذكاء الاصطناعي مثل سؤال في Spotlight؛ والرقم الفعلي يظهر في كل تقرير.",
             paramAiSentences: "جمل الذكاء الاصطناعي",
             paramAiSentencesHint:
                 "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي ويستهلك رصيدك منه. متوقف افتراضيًا؛ فعّله إن أردته.",
@@ -1163,6 +1176,12 @@ export const ar: DeepPartial<Messages> = {
                 effortLow: "منخفض",
                 effortMedium: "متوسط",
                 effortHigh: "مرتفع",
+                effortCostBase: "{label} · الأقل تكلفة",
+                effortCost: "{label} · نحو {n}× من «منخفض»",
+                effortLocked: "{label} · غير متاح في خطتك",
+                effortHelp:
+                    "كلما ارتفع المستوى زاد عدد الأرصدة المستهلكة في كل تشغيل. وعندما ينخفض رصيدك تعمل المهارة بمستوى أقل بدرجة واحدة وتُعلمك بذلك.",
+                effortAutoHelp: "تعمل بالمستوى الذي اختاره كل شخص في الإعدادات.",
                 visibility: "من يمكنه استخدامها",
                 visibilityPrivate: "أنا فقط",
                 visibilityTeam: "فريقي",

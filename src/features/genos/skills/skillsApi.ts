@@ -422,6 +422,9 @@ export type RunnableSkill = {
     group: "mine" | "team" | "installed" | "official";
     /** A teammate's account name (team and own skills); "" otherwise. */
     ownerName: string;
+    /** The version a schedule would run (MIP-2045); 0 = none (a skill never published), so it
+     *  cannot be scheduled. A server that predates it sends none: read as 0. */
+    publishedVersionNo: number;
 };
 
 export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
@@ -440,6 +443,7 @@ export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
                 description: str(s.description, 600),
                 group: oneOf(s.group, ["mine", "team", "installed", "official"] as const, "mine"),
                 ownerName: str(s.ownerName, 120),
+                publishedVersionNo: int(s.publishedVersionNo),
             },
         ];
     });
@@ -459,6 +463,44 @@ export const fetchRunnableSkills = async (
             params: { team_id: teamId, tab: "runnable" },
         });
         const data = parseRunnableSkills(res.data);
+        return data ? { ok: true, data } : NO_API;
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** One effort level as this member's plan sees it (MIP-2198). `relativeCost` is a guide next to the
+ *  choice, 1 = what a Low run costs; null when the server has no rate for the level's model. */
+export type EffortLevelRow = {
+    level: Exclude<SkillEffort, "">;
+    relativeCost: number | null;
+    /** Above the member's plan: the run uses the plan's top level instead. */
+    locked: boolean;
+};
+
+export const parseEffortLevels = (raw: unknown): EffortLevelRow[] | null => {
+    const r = rec(raw);
+    if (!r) return null;
+    if (r.enabled !== true || !Array.isArray(r.levels)) return [];
+    return r.levels.flatMap((row) => {
+        const s = rec(row);
+        if (!s || (s.level !== "low" && s.level !== "medium" && s.level !== "high")) return [];
+        const cost =
+            typeof s.relativeCost === "number" && s.relativeCost > 0 ? s.relativeCost : null;
+        return [{ level: s.level, relativeCost: cost, locked: s.locked === true }];
+    });
+};
+
+/** The effort levels and what each costs next to the others, for the editor's choice. `[]` while
+ *  the server's agent is not on effort levels (a skill's level changes nothing then). */
+export const fetchEffortLevels = async (
+    accessToken: string | null
+): Promise<Result<EffortLevelRow[]>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.get("/skills/effort-levels/", OPTIONS);
+        const data = parseEffortLevels(res.data);
         return data ? { ok: true, data } : NO_API;
     } catch (error) {
         return failure(error);

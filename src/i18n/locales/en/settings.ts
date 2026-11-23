@@ -253,6 +253,20 @@ export const settings = {
         reportPosted: "Report posted in {chat}",
         rowProject: "Project: {name}",
         rowMilestone: "Milestone: {name}",
+        // A schedule that runs a skill (MIP-2045).
+        paramSkill: "Skill",
+        paramSkillHint:
+            "Runs the published version of this skill and files what it finds in your Inbox. It only reads: it changes nothing.",
+        paramSkillInput: "What to give it",
+        paramSkillInputHint:
+            "Optional. The words you would type after the skill's name, such as a project or a week.",
+        skillPlaceholder: "Choose a skill",
+        skillLoading: "Loading skills…",
+        skillNone: "You have no skill to run yet. Write one in Skills first.",
+        skillNotPublished: "{name} (share it with your team to publish a version first)",
+        errorSkill: "Choose a skill.",
+        effortHintNoEstimate:
+            "How hard the AI works on this run. It spends your AI credits like a question in Spotlight; the real figure is shown on each report.",
         paramAiSentences: "AI sentences",
         paramAiSentencesHint:
             "Adds one short sentence under a task when its comments explain where it stands. This uses AI and spends your AI credits. It is off unless you turn it on.",
@@ -1186,6 +1200,12 @@ export const settings = {
             effortLow: "Low",
             effortMedium: "Medium",
             effortHigh: "High",
+            effortCostBase: "{label} · lowest cost",
+            effortCost: "{label} · about {n}× Low",
+            effortLocked: "{label} · not in your plan",
+            effortHelp:
+                "A higher level costs more credits per run. When your credits run low, the skill runs one level lower and tells you.",
+            effortAutoHelp: "Runs at the level each person has chosen in Settings.",
             visibility: "Who can use it",
             visibilityPrivate: "Only me",
             visibilityTeam: "My team",

@@ -4623,6 +4623,18 @@ export const zh: DeepPartial<Messages> = {
             reportPosted: "报告已发布到 {chat}",
             rowProject: "项目：{name}",
             rowMilestone: "里程碑：{name}",
+            paramSkill: "技能",
+            paramSkillHint:
+                "运行此技能的已发布版本，并把结果放入你的收件箱。它只读取，不会更改任何内容。",
+            paramSkillInput: "提供给技能的内容",
+            paramSkillInputHint: "可选。你会在技能名称后输入的文字，例如某个项目或某一周。",
+            skillPlaceholder: "选择技能",
+            skillLoading: "正在加载技能…",
+            skillNone: "你还没有可运行的技能。请先在“技能”中创建一个。",
+            skillNotPublished: "{name}（请先与团队共享以发布一个版本）",
+            errorSkill: "请选择一个技能。",
+            effortHintNoEstimate:
+                "AI 在这次运行中投入的程度。它会像在 Spotlight 中提问一样消耗你的 AI 额度；实际用量会显示在每份报告上。",
             paramAiSentences: "AI 一句话说明",
             paramAiSentencesHint:
                 "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI 并消耗你的 AI 额度。默认关闭,开启后才会添加。",
@@ -4717,6 +4729,12 @@ export const zh: DeepPartial<Messages> = {
                 effortLow: "低",
                 effortMedium: "中",
                 effortHigh: "高",
+                effortCostBase: "{label} · 成本最低",
+                effortCost: "{label} · 约为“低”的 {n} 倍",
+                effortLocked: "{label} · 您的套餐不包含",
+                effortHelp:
+                    "级别越高，每次运行消耗的积分越多。积分不足时，该技能会降低一个级别运行，并告知您。",
+                effortAutoHelp: "按每位用户在设置中选择的级别运行。",
                 visibility: "谁可以使用",
                 visibilityPrivate: "仅自己",
                 visibilityTeam: "我的团队",
