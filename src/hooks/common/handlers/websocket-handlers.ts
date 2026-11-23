@@ -28,7 +28,7 @@ export const setupWebSocketHandlers = (
     socket: Socket,
     myself: UserProps,
     accessToken: string | null,
-    currentProject: any,
+    currentProject: unknown,
     currentPreviewTaskId: number,
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void,
     funcSetInboxItems: () => void,
