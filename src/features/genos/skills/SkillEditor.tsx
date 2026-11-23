@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { Alert, Box, Button, Sheet, Stack, Typography } from "@mui/joy";
+import { Alert, Box, Button, Chip, Sheet, Stack, Typography } from "@mui/joy";
 
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
@@ -22,6 +22,7 @@ import {
     validateDraft,
     type SkillDraft,
 } from "./skillDraft";
+import { SkillEditorsField } from "./SkillEditorsField";
 import { syncSkillNoteTitle } from "./skillNoteTitle";
 import {
     copySkill,
@@ -29,6 +30,7 @@ import {
     fetchSkill,
     fetchSkillVersions,
     publishSkill,
+    setSkillHidden,
     updateSkill,
     type Failure,
     type SkillRow,
@@ -70,7 +72,9 @@ const followsTitle = (skill: SkillRow, defaultTitle: string): boolean =>
  *
  * The instructions are a note, so they save themselves. The details are a form with a Save
  * button, so a half-typed name never reaches the server. A TEAM skill's readers see the last
- * PUBLISHED version, and the editor's own autosave does not publish: the Publish button does.
+ * PUBLISHED version: neither Save nor the note's autosave publishes (MIP-2177), they only keep the
+ * owner's draft. The "Publish changes" button makes the new version, and is enabled only while the
+ * draft differs from the published one.
  */
 export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     const { t, locale } = useTranslation();
@@ -94,6 +98,8 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [confirmLeave, setConfirmLeave] = useState(false);
+    const [confirmPrivate, setConfirmPrivate] = useState(false);
+    const [hiding, setHiding] = useState(false);
     const [bodyEdited, setBodyEdited] = useState(false);
     const bodyRef = useRef<SkillBodyEditorHandle>(null);
 
@@ -121,10 +127,13 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         setVersionsFailed(!res.ok);
         setVersions(res.ok ? res.data : []);
     }, [accessToken, skillId]);
+    const loaded = skill !== null;
     useEffect(() => {
-        // Only a skill that has readers has versions worth listing.
-        if (skill && published) void loadVersions();
-    }, [skill, published, loadVersions]);
+        // Only a skill that has readers has versions worth listing. A save keeps a draft and
+        // cuts no version, so a changed skill row is no reason to read the list again: publishing
+        // and sharing do it themselves.
+        if (loaded && published) void loadVersions();
+    }, [loaded, published, loadVersions]);
 
     if (loadState === "loading") {
         return <SkeletonRows count={4} label={m.list.loading} />;
@@ -171,8 +180,9 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         else setNotice(res.message || fallback);
     };
 
-    /** Resolves true when the details are saved (or there was nothing to save). */
-    const save = async (): Promise<boolean> => {
+    /** Resolves true when the details are saved (or there was nothing to save). `sureAboutPrivate`
+     *  = the person already confirmed taking a team skill back from the team. */
+    const save = async (sureAboutPrivate = false): Promise<boolean> => {
         if (!editable || saving || publishing) return false;
         if (hasProblems(problems)) {
             setProblemsShown(true);
@@ -180,11 +190,16 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         }
         const changes = draftChanges(draft, skill);
         if (Object.keys(changes).length === 0) return true;
+        if (!sureAboutPrivate && skill.visibility === "team" && changes.visibility === "private") {
+            // The team stops reading and running it at once: say so before it happens.
+            setConfirmPrivate(true);
+            return false;
+        }
         setSaving(true);
         setNotice(null);
         setServerProblems({});
-        // A TEAM skill cuts a version from the saved text whenever its details change (the API's
-        // rule), so the editor's pending autosave must land first or that version misses it.
+        // The draft's text and details belong together: land the editor's pending autosave first
+        // so what "Unpublished changes" reports and what Publish sends is what is on screen.
         await bodyRef.current?.flush();
         const res = await updateSkill(accessToken, skill.id, changes);
         setSaving(false);
@@ -197,13 +212,18 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         setSlugFollows(false);
         setProblemsShown(false);
         setChanged(true);
-        // For a team skill that save sent the current text to the readers too.
-        if (res.data.visibility === "team") {
-            setBodyEdited(false);
-            void loadVersions();
-        }
         if (skill.noteId !== null) syncSkillNoteTitle(skill.noteId, res.data.title);
-        toast.success(e.saved);
+        if (skill.visibility !== "team" && res.data.visibility === "team") {
+            // Choosing "My team" is the explicit share: the server published the current text.
+            setBodyEdited(false);
+            toast.success(fmt(e.published, { n: res.data.publishedVersionNo }));
+            // A skill that was shared before still has its versions on screen: add the new one.
+            // (One that was never shared loads them when it becomes shared.)
+            if (published) void loadVersions();
+        } else {
+            // A team skill's save keeps the edit private; a private skill has nobody to hide it from.
+            toast.success(res.data.visibility === "team" ? e.savedDraft : e.saved);
+        }
         return true;
     };
 
@@ -224,6 +244,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
             void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
         } else if (res.reason === "conflict") {
             toast.neutral(e.upToDate);
+            setBodyEdited(false); // a typed-then-undone edit is not a change
             void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
         } else {
             setNotice(res.message || e.publishFailed);
@@ -240,6 +261,30 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
         } else {
             toast.error(res.message || m.list.copyFailed);
         }
+    };
+
+    const toggleHidden = async () => {
+        if (hiding) return;
+        const hide = !skill.hiddenByTeam;
+        setHiding(true);
+        const res = await setSkillHidden(accessToken, skill.id, hide);
+        setHiding(false);
+        if (!res.ok) {
+            toast.error(res.message || m.team.hideFailed);
+            return;
+        }
+        setChanged(true);
+        setSkill((prev) =>
+            prev
+                ? {
+                      ...prev,
+                      status: res.data.status,
+                      hiddenByTeam: res.data.hiddenByTeam,
+                      canHide: res.data.canHide,
+                  }
+                : prev
+        );
+        toast.success(hide ? m.team.hiddenToast : m.team.shownToast);
     };
 
     const remove = async () => {
@@ -264,6 +309,13 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
     };
 
     const savedTeam = skill.visibility === "team";
+    // What readers do not have yet: the server's comparison of the saved draft, plus what was
+    // typed here since (the note's autosave and the unsaved details).
+    // Switching the skill back to private is not something to publish: it ends the sharing.
+    const unpublished =
+        savedTeam &&
+        draft.visibility === "team" &&
+        (skill.hasUnpublishedChanges || bodyEdited || dirty);
 
     return (
         <Stack spacing={2} sx={{ minWidth: 0 }}>
@@ -282,15 +334,13 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     <>
                         {savedTeam && (
                             <Button
-                                disabled={saving}
+                                disabled={saving || !unpublished}
                                 loading={publishing}
                                 size="sm"
-                                variant={dirty ? "outlined" : "solid"}
+                                variant={unpublished && !dirty ? "solid" : "outlined"}
                                 onClick={() => void publish()}
                             >
-                                {bodyEdited || skill.publishedVersionNo > 0
-                                    ? e.publishChanges
-                                    : e.publish}
+                                {skill.publishedVersionNo > 0 ? e.publishChanges : e.publish}
                             </Button>
                         )}
                         <Button
@@ -300,18 +350,32 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                             variant={dirty ? "solid" : "outlined"}
                             onClick={() => void save()}
                         >
-                            {e.save}
+                            {savedTeam ? e.saveDraft : e.save}
                         </Button>
                     </>
                 ) : (
-                    <Button
-                        size="sm"
-                        startDecorator={<ContentCopyRoundedIcon />}
-                        variant="solid"
-                        onClick={() => void copy()}
-                    >
-                        {m.list.copy}
-                    </Button>
+                    <>
+                        {skill.canHide && (
+                            <Button
+                                loading={hiding}
+                                size="sm"
+                                variant="outlined"
+                                onClick={() => void toggleHidden()}
+                            >
+                                {skill.hiddenByTeam ? m.team.show : m.team.hide}
+                            </Button>
+                        )}
+                        {!skill.hiddenByTeam && skill.visibility !== "private" && (
+                            <Button
+                                size="sm"
+                                startDecorator={<ContentCopyRoundedIcon />}
+                                variant="solid"
+                                onClick={() => void copy()}
+                            >
+                                {m.list.copy}
+                            </Button>
+                        )}
+                    </>
                 )}
             </Box>
 
@@ -320,10 +384,59 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                     {notice}
                 </Alert>
             )}
-            {!editable && (
+            {!editable && !skill.hiddenByTeam && (
                 <Alert color="neutral" size="sm" variant="soft">
                     {e.readOnly}
                 </Alert>
+            )}
+            {editable && skill.role === "editor" && (
+                <Alert color="neutral" size="sm" variant="soft">
+                    {m.team.editorNote}
+                </Alert>
+            )}
+            {skill.hiddenByTeam && (
+                <Alert color="warning" size="sm" variant="soft">
+                    {skill.canHide ? m.team.hiddenByYou : m.team.hiddenByOwner}
+                </Alert>
+            )}
+            {skill.forkedFrom && (
+                <Typography
+                    level="body-xs"
+                    sx={{ color: "text.tertiary", overflowWrap: "anywhere" }}
+                >
+                    {!skill.forkedFrom.available
+                        ? m.team.copiedFromGone
+                        : skill.forkedFrom.ownerName
+                          ? fmt(m.team.copiedFrom, {
+                                title: skill.forkedFrom.title,
+                                name: skill.forkedFrom.ownerName,
+                                n: skill.forkedFrom.versionNo,
+                            })
+                          : fmt(m.team.copiedFromNoName, {
+                                title: skill.forkedFrom.title,
+                                n: skill.forkedFrom.versionNo,
+                            })}
+                </Typography>
+            )}
+            {editable && savedTeam && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: 1,
+                        minWidth: 0,
+                    }}
+                >
+                    {unpublished && (
+                        <Chip color="warning" size="sm" variant="soft">
+                            {e.unpublishedChanges}
+                        </Chip>
+                    )}
+                    <Typography level="body-xs" sx={{ color: "text.tertiary", minWidth: 0 }}>
+                        {fmt(e.saveHint, { n: skill.publishedVersionNo })}
+                    </Typography>
+                </Box>
             )}
             {dirty && editable && (
                 <Typography level="body-xs" role="status" sx={{ color: "text.tertiary" }}>
@@ -341,9 +454,26 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 <SkillDetailsForm
                     disabled={!editable}
                     draft={draft}
+                    ownerOnly={editable && !skill.canManage}
                     problems={problemsShown ? problems : {}}
                     serverProblems={serverProblems}
                     skill={skill}
+                    editorsField={
+                        editable ? (
+                            <SkillEditorsField
+                                myId={host.myself.userId}
+                                skill={skill}
+                                teamMembers={host.useTEM.teamMembers ?? []}
+                                onChange={(editors, left) => {
+                                    if (left) {
+                                        onBack(true);
+                                        return;
+                                    }
+                                    setSkill((prev) => (prev ? { ...prev, editors } : prev));
+                                }}
+                            />
+                        ) : undefined
+                    }
                     onChange={setField}
                 />
             </Sheet>
@@ -447,7 +577,7 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 </Sheet>
             )}
 
-            {editable && (
+            {skill.canManage && (
                 <Box>
                     <Button
                         color="danger"
@@ -476,6 +606,20 @@ export const SkillEditor = ({ skillId, teamId, host, onBack }: Props) => {
                 destructive
                 onClose={() => setConfirmDelete(false)}
                 onConfirm={remove}
+            />
+            <ConfirmDialog
+                cancelLabel={t.common.actions.cancel}
+                confirmLabel={m.team.makePrivateConfirm}
+                description={m.team.makePrivateBody}
+                entityName={skill.title}
+                open={confirmPrivate}
+                title={m.team.makePrivateTitle}
+                zIndex={GENOS_MEMORY_CONFIRM_Z_INDEX}
+                onClose={() => setConfirmPrivate(false)}
+                onConfirm={async () => {
+                    setConfirmPrivate(false);
+                    await save(true);
+                }}
             />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}

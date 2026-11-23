@@ -60,6 +60,15 @@ export type InboxItemProps = {
     isRead: boolean;
     requestStatus: "pending" | "approved" | "rejected";
     tsSent: string;
+    /** Who sent the card (genos-api, MIP-2181): the person's id, name and avatar path. Both null
+     *  for a card nobody sent (digest, report, trial notice) or a system account; absent on a row
+     *  stored before the API sent them, or delivered live. Read it through `resolveActor`. */
+    senderId?: string | null;
+    sender?: {
+        userId: string;
+        userName?: string | null;
+        avatarImgPath?: string | null;
+    } | null;
     // Request routing payload. Note-access items (itemType 4) carry
     // note_type/note_id/note_title so the card can open the referenced
     // note; other request types carry their own keys. Absent on plain

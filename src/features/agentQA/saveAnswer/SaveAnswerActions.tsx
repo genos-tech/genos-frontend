@@ -40,7 +40,6 @@ import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { useOptionalAccessToken } from "../../../context/authState";
 import { useTranslation } from "../../../i18n";
 import type { SpotlightResult } from "../../spotlight/types";
-import type { AgentTurnActionContext } from "../AgentTurn";
 import { emitNoteChanged } from "../noteWriteTools";
 import { answerTitle, buildAnswerBody } from "./answerBlocks";
 import { NoteLimitError, saveAnswerAsNote } from "./saveAnswerAsNote";
@@ -51,7 +50,6 @@ import {
     finishSave,
     getSaveState,
     subscribeSave,
-    turnKeyOf,
     type SaveFailure,
     type SaveKind,
 } from "./saveAnswerStore";
