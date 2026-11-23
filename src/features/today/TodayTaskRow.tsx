@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
@@ -6,6 +6,8 @@ import { Box, IconButton } from "@mui/joy";
 
 import { visuallyHidden } from "../../components/ui/a11y/visuallyHidden";
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { useIsTouch } from "../../hooks/common/useIsTouch";
+import { useLongPress } from "../../hooks/common/useLongPress";
 import { fmt, useTranslation } from "../../i18n";
 import { focusRing, g, type } from "../../theme/tokens";
 import {
@@ -22,7 +24,7 @@ import { ToneLabel } from "../tasks/components/meta/ToneLabel";
 import { ProjectAvatar } from "../tasks/components/ProjectIdentityRow";
 import type { BriefingBlocked, BriefingTask } from "./briefingToday";
 import type { TodayCopy } from "./briefingWords";
-import { rowDivider } from "./rowDivider";
+import { ROW_MIN_HEIGHT, rowDivider } from "./rowDivider";
 import { TodayAction } from "./todayActions";
 import { dueOf } from "./todaySummary";
 
@@ -35,6 +37,11 @@ import { dueOf } from "./todaySummary";
  * The whole row is ONE button that opens the task (a row with no path is plain text, never a
  * dead link). There is no hover preview (the maintainer found it too much): everything that
  * matters is on the row itself. Rows are separated by a hairline divider, visible at rest.
+ *
+ * Every row has the SAME geometry, with or without quick actions (MIP-2213): the actions reserve
+ * no space. They sit over the row's end edge, on a fade of the row's own background, and show on
+ * hover, on keyboard focus anywhere in the row, or after a long press on a screen with no hover
+ * (the chat row's pattern). Hidden, they stay in the tab order and cost the title no width.
  */
 
 export type TodayTaskRowProps = {
@@ -71,10 +78,36 @@ export const TodayTaskRow = ({
     const { locale } = useTranslation();
     const due = dueOf(task, a, locale);
     const blocked = blockedBy != null;
+    // A milestone, a row of someone else's and the card variant get no actions: closing a
+    // milestone goes through its own record (sprint, sub-tasks), which this row cannot name.
+    const canAct = onAction != null && !task.isMilestone && task.projectId != null;
+    // "Tomorrow" is for what is due today or already late: it must never pull a deadline earlier.
+    const canTomorrow = task.daysUntilDue != null && task.daysUntilDue <= 0;
+    const isTouch = useIsTouch();
+    const rowRef = useRef<HTMLLIElement>(null);
+    // No hover on a phone: a long press shows the actions, a touch anywhere else hides them.
+    const [pressed, setPressed] = useState(false);
+    const longPress = useLongPress(() => setPressed(true));
+    const open = pressed;
+    useEffect(() => {
+        if (!open) return undefined;
+        const away = (e: Event) => {
+            if (!rowRef.current?.contains(e.target as Node)) setPressed(false);
+        };
+        const escape = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setPressed(false);
+        };
+        document.addEventListener("touchstart", away);
+        document.addEventListener("keydown", escape);
+        return () => {
+            document.removeEventListener("touchstart", away);
+            document.removeEventListener("keydown", escape);
+        };
+    }, [open]);
 
     const kind = task.isMilestone ? a.row.milestone : a.row.task;
     const line1 = (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0, minHeight: 24 }}>
             <Box component="span" sx={visuallyHidden}>
                 {kind}
             </Box>
@@ -122,6 +155,7 @@ export const TodayTaskRow = ({
                 alignItems: "center",
                 gap: 1,
                 minWidth: 0,
+                minHeight: 22,
                 ...type("body-xs"),
                 color: g.text.secondary,
             }}
@@ -173,7 +207,13 @@ export const TodayTaskRow = ({
 
     const body = (
         <Box
-            sx={{ display: "flex", flexDirection: "column", gap: 0.5, minWidth: 0, width: "100%" }}
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.25,
+                minWidth: 0,
+                width: "100%",
+            }}
         >
             {line1}
             {line2}
@@ -185,7 +225,7 @@ export const TodayTaskRow = ({
         alignItems: "center",
         width: "100%",
         minWidth: 0,
-        minHeight: 44,
+        minHeight: ROW_MIN_HEIGHT,
         px: 1.25,
         py: 0.75,
         border: 0,
@@ -204,72 +244,104 @@ export const TodayTaskRow = ({
             </Box>
         );
     }
-    const button = (
-        <Box
-            component="button"
-            type="button"
-            sx={{
-                ...sx,
-                cursor: "pointer",
-                transition: `background ${g.motion.fast}`,
-                "&:hover": { background: g.hover },
-                "&:focus-visible": focusRing,
-            }}
-            onClick={() => onOpen(href)}
-        >
-            {body}
-        </Box>
-    );
-    // A milestone, a row of someone else's and the card variant get no actions: closing a
-    // milestone goes through its own record (sprint, sub-tasks), which this row cannot name.
-    const canAct = onAction != null && !task.isMilestone && task.projectId != null;
-    // "Tomorrow" is for what is due today or already late: it must never pull a deadline earlier.
-    const canTomorrow = task.daysUntilDue != null && task.daysUntilDue <= 0;
+    const done = () => setPressed(false);
     return (
         <Box
+            ref={rowRef}
             component="li"
+            data-actions-open={open ? "true" : undefined}
             data-kind={kind}
             sx={{
                 listStyle: "none",
                 ...rowDivider,
-                display: "flex",
-                alignItems: "center",
-                gap: 0.25,
+                position: "relative",
                 minWidth: 0,
-                // Hover-capable devices show the actions on hover and keyboard focus; they stay
-                // in the tab order either way (opacity, not display). A phone has no hover: they
-                // are always there.
-                "& [data-today-actions]": {
-                    "@media (hover: hover)": {
-                        opacity: 0,
-                        transition: `opacity ${g.motion.fast}`,
+                // The actions' fade is a shadow that reaches into the row: the row clips it, so it
+                // never lands on the neighbouring rows.
+                overflow: "hidden",
+                "@supports selector(:has(*))": {
+                    "&:has(> button:focus-visible)::after": {
+                        content: '""',
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 1,
+                        pointerEvents: "none",
+                        borderRadius: g.radius.sm,
+                        outline: focusRing.outline,
+                        outlineOffset: "-2px",
                     },
                 },
-                "&:hover [data-today-actions], &:focus-within [data-today-actions]": {
-                    opacity: 1,
+                // One hover fill for the whole row, whichever part the pointer or focus is on.
+                "&:has(:focus-visible) > button, &[data-actions-open] > button": {
+                    background: ROW_FILL,
+                },
+                // The actions are over the row's end edge, hidden until hover, focus anywhere in
+                // the row or a long press. Opacity, not display: they stay in the tab order.
+                "&:has(:focus-visible) > [data-today-actions], &[data-actions-open] > [data-today-actions]":
+                    { opacity: 1, pointerEvents: "auto" },
+                "@media (hover: hover)": {
+                    "&:hover > button": { background: ROW_FILL },
+                    "&:hover > [data-today-actions]": { opacity: 1, pointerEvents: "auto" },
                 },
             }}
         >
-            <Box sx={{ minWidth: 0, flex: 1 }}>{button}</Box>
+            <Box
+                component="button"
+                type="button"
+                sx={{
+                    ...sx,
+                    cursor: "pointer",
+                    // Inside the row: the row clips what sticks out of it.
+                    // Inside the row (the row clips what sticks out). Where `:has` works the ring is
+                    // drawn by the row instead (below), above the actions that open with it.
+                    "&:focus-visible": { ...focusRing, outlineOffset: "-2px" },
+                    "@supports selector(:has(*))": { "&:focus-visible": { outline: "none" } },
+                    "@media (hover: none)": { WebkitTouchCallout: "none", userSelect: "none" },
+                }}
+                onContextMenu={canAct && isTouch ? (e) => e.preventDefault() : undefined}
+                onClick={() => {
+                    if (canAct && longPress.consumedTap()) return;
+                    done();
+                    onOpen(href);
+                }}
+                {...(canAct ? longPress : {})}
+            >
+                {body}
+            </Box>
             {canAct ? (
                 <Box
                     aria-label={fmt(a.actions.group, { task: `${task.displayId} ${task.title}` })}
                     data-today-actions=""
                     role="group"
-                    sx={{ display: "flex", flexShrink: 0, pr: 0.5 }}
+                    sx={{
+                        position: "absolute",
+                        insetBlock: 0,
+                        insetInlineEnd: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        // The row's own hovered fill, solid under the buttons, with a fade of the same
+                        // colour into the title so the cut is never hard.
+                        paddingInlineEnd: 0.5,
+                        borderStartEndRadius: g.radius.sm,
+                        borderEndEndRadius: g.radius.sm,
+                        background: ROW_FILL,
+                        boxShadow: fade(-1),
+                        '[dir="rtl"] &': { boxShadow: fade(1) },
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transition: `opacity ${g.motion.fast}`,
+                        "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+                    }}
                 >
                     <AppTooltip title={a.actions.done}>
                         <IconButton
                             aria-label={`${a.actions.done}: ${task.displayId}`}
                             size="sm"
+                            sx={actionButtonSx}
                             variant="plain"
-                            sx={{
-                                minWidth: { xs: 36, sm: 44 },
-                                minHeight: 44,
-                                "&:focus-visible": focusRing,
-                            }}
                             onClick={(e) => {
                                 focusNeighbour(e.currentTarget);
+                                done();
                                 onAction("done");
                             }}
                         >
@@ -281,14 +353,11 @@ export const TodayTaskRow = ({
                             <IconButton
                                 aria-label={`${a.actions.tomorrow}: ${task.displayId}`}
                                 size="sm"
+                                sx={actionButtonSx}
                                 variant="plain"
-                                sx={{
-                                    minWidth: { xs: 36, sm: 44 },
-                                    minHeight: 44,
-                                    "&:focus-visible": focusRing,
-                                }}
                                 onClick={(e) => {
                                     if (!keepsOnTomorrow) focusNeighbour(e.currentTarget);
+                                    done();
                                     onAction("tomorrow");
                                 }}
                             >
@@ -301,6 +370,21 @@ export const TodayTaskRow = ({
         </Box>
     );
 };
+
+/**
+ * The row's fill while it is hovered or focused: the hover tint already composited on the surface,
+ * so it is opaque and hides the title under the actions. The row itself uses the same value.
+ */
+const ROW_FILL = "var(--joy-palette-neutral-softBg)";
+
+/** A fade of ROW_FILL along the row, `-1` toward the left (reading direction), `1` toward the right. */
+const fade = (direction: -1 | 1): string => `${direction * 8}px 0 14px 7px ${ROW_FILL}`;
+
+const actionButtonSx = {
+    minWidth: { xs: 40, sm: 44 },
+    minHeight: 44,
+    "&:focus-visible": focusRing,
+} as const;
 
 /**
  * The row is about to leave the list: put focus on the nearest row that stays (the next, else the

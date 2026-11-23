@@ -20,7 +20,7 @@ import {
     taskHref,
 } from "./briefingToday";
 import { changeLine, reasonLine } from "./briefingWords";
-import { rowDivider } from "./rowDivider";
+import { ROW_MIN_HEIGHT, rowDivider } from "./rowDivider";
 import { TodayAction } from "./todayActions";
 import { TodaySummary } from "./TodaySummary";
 import { TodayTaskRow } from "./TodayTaskRow";
@@ -89,7 +89,7 @@ const Row = ({ href, primary, secondary, meta, onOpen, noLink }: RowProps) => {
         textAlign: "start",
         px: 1.25,
         py: 0.75,
-        minHeight: 44,
+        minHeight: ROW_MIN_HEIGHT,
         border: 0,
         background: "transparent",
         borderRadius: g.radius.sm,
@@ -146,7 +146,11 @@ const Section = ({
             py: 1,
         }}
     >
-        <Typography level="title-sm" sx={{ px: 1.25, pb: 0.5, color: g.text.primary }}>
+        <Typography
+            component="h3"
+            level="title-sm"
+            sx={{ m: 0, px: 1.25, pb: 0.5, color: g.text.primary }}
+        >
             {title}
             <Box component="span" sx={{ ml: 0.75, color: g.text.secondary, fontWeight: 400 }}>
                 {count}
@@ -275,11 +279,11 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
             waiting: "today-waiting",
             changed: "today-changed",
         };
-        const mainSections: ReactNode[] = [];
-        const sideSections: ReactNode[] = [];
-        const bandSections: ReactNode[] = [];
+        // One list, in the order the day is read: what is due, what to look at, what waits on the
+        // member, what changed, what the member waits on, what was handed to others.
+        const sections: ReactNode[] = [];
         if (d.overdueCount + d.dueTodayCount > 0) {
-            mainSections.push(
+            sections.push(
                 <Section
                     key="due"
                     count={d.overdueCount + d.dueTodayCount}
@@ -302,7 +306,7 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
             );
         }
         if (d.suggestedNext.length > 0) {
-            mainSections.push(
+            sections.push(
                 <Section key="next" count={d.suggestedNext.length} title={a.sections.next}>
                     {d.suggestedNext.map((task) =>
                         taskRow(task, reasonLine(task, a, locale), "stays")
@@ -311,7 +315,7 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
             );
         }
         if (waitingCount > 0) {
-            sideSections.push(
+            sections.push(
                 <Section
                     key="waiting"
                     count={waitingCount}
@@ -344,7 +348,7 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
             );
         }
         if (d.changed.total > 0) {
-            sideSections.push(
+            sections.push(
                 <Section
                     key="changed"
                     count={d.changed.total}
@@ -384,7 +388,7 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
             );
         }
         if (d.blocked.length > 0) {
-            bandSections.push(
+            sections.push(
                 <Section key="blocked" count={d.blocked.length} title={a.sections.blocked}>
                     {d.blocked.map((b) =>
                         taskRow(
@@ -396,19 +400,13 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
             );
         }
         if (d.delegatedTotal > 0) {
-            bandSections.push(
+            sections.push(
                 <Section key="delegated" count={d.delegatedTotal} title={a.sections.delegated}>
                     {d.delegated.map((task) => taskRow(task))}
                 </Section>
             );
         }
         const quiet = total(d) === 0;
-        const column = (items: ReactNode[]) =>
-            items.length > 0 ? (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, minWidth: 0 }}>
-                    {items}
-                </Box>
-            ) : null;
         body = (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                 <TodaySummary anchors={anchors} copy={a} data={d} />
@@ -428,38 +426,28 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
                             .join(" ")}
                     />
                 ) : null}
-                {mainSections.length + sideSections.length > 0 ? (
+                {sections.length > 0 ? (
+                    // One column on a phone and a tablet. From a wide screen, two columns of
+                    // equal-height cards in reading order, so each pair of lists sits side by side
+                    // and no column ends ragged; a last card on its own spans both.
                     <Box
+                        data-testid="today-sections"
                         sx={{
                             display: "grid",
                             gap: 1.5,
-                            alignItems: "start",
+                            alignItems: "stretch",
                             gridTemplateColumns: {
                                 xs: "minmax(0, 1fr)",
-                                lg:
-                                    mainSections.length > 0 && sideSections.length > 0
-                                        ? "minmax(0, 2fr) minmax(0, 1fr)"
-                                        : "minmax(0, 1fr)",
+                                lg: "repeat(2, minmax(0, 1fr))",
+                            },
+                            "@media (min-width: 1200px)": {
+                                "& > section:last-of-type:nth-of-type(odd)": {
+                                    gridColumn: "1 / -1",
+                                },
                             },
                         }}
                     >
-                        {column(mainSections)}
-                        {column(sideSections)}
-                    </Box>
-                ) : null}
-                {bandSections.length > 0 ? (
-                    <Box
-                        sx={{
-                            display: "grid",
-                            gap: 1.5,
-                            alignItems: "start",
-                            gridTemplateColumns: {
-                                xs: "minmax(0, 1fr)",
-                                md: "repeat(2, minmax(0, 1fr))",
-                            },
-                        }}
-                    >
-                        {bandSections}
+                        {sections}
                     </Box>
                 ) : null}
             </Box>
