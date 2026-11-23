@@ -4938,6 +4938,40 @@ export const ja: DeepPartial<Messages> = {
                 unsavedBody: "手順は自動で保存されます。詳細は「保存」が必要です。",
                 bodyAria: "スキルの手順",
             },
+            team: {
+                roleEditor: "編集者",
+                hiddenChip: "チームに非表示",
+                hide: "チームに非表示にする",
+                show: "チームに再表示する",
+                hiddenToast: "チームに非表示にしました。",
+                shownToast: "チームに再び表示しました。",
+                hideFailed: "変更できませんでした。もう一度お試しください。",
+                hiddenByOwner:
+                    "チームオーナーがこのスキルを非表示にしました。再表示されるまで、チームはこのスキルを見ることも実行することもできません。",
+                hiddenByYou:
+                    "このスキルをチームに非表示にしています。再表示するまで、チームメンバーは見ることも実行することもできません。",
+                editorNote:
+                    "あなたはこのスキルの編集者です。テキストと詳細を変更し、バージョンを公開できます。名前、利用できる人、削除はオーナーが決めます。",
+                copiedFrom: "{name} さんの「{title}」からコピー（バージョン {n}）。",
+                copiedFromNoName: "「{title}」からコピー（バージョン {n}）。",
+                copiedFromGone: "もう表示できないスキルからコピーしました。",
+                makePrivateTitle: "このスキルを非公開にしますか？",
+                makePrivateBody:
+                    "チームはすぐにこのスキルを見ることも実行することもできなくなります。メンバーがすでに作ったコピーはそのまま残り、招待した編集者のアクセスも維持されます。",
+                makePrivateConfirm: "非公開にする",
+                ownerOnly: "変更できるのはオーナーだけです。",
+                editors: "編集者",
+                editorsHelp:
+                    "編集者はテキストと詳細を変更し、バージョンを公開できます。名前の変更、共有、削除はできません。",
+                editorsNone: "編集者はまだいません。",
+                editorsAdd: "編集者を追加",
+                editorsChoose: "チームメンバーを選択",
+                editorsEveryone: "チームの全員がすでに編集者です。",
+                editorRemove: "{name} を外す",
+                editorLeave: "このスキルの編集をやめる",
+                editorsFailed: "編集者を変更できませんでした。もう一度お試しください。",
+                editorLeft: "このスキルの編集者ではなくなりました。",
+            },
             versions: {
                 heading: "バージョン",
                 empty: "まだ何も公開されていません。",
@@ -5574,6 +5608,13 @@ export const ja: DeepPartial<Messages> = {
         },
         mentions: {
             ariaLabel: "メンション候補",
+        },
+        skills: {
+            ariaLabel: "スキルの候補",
+            mine: "自分のスキル",
+            fromTeammate: "{name} さんのチームスキル",
+            installed: "インストール済み",
+            official: "Genos",
         },
         errors: {
             noTeam: "チームが選択されていません。",

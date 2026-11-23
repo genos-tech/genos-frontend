@@ -88,6 +88,7 @@ import {
     type CompletedTurn,
     type UndoRequest,
 } from "../agentQA";
+import { useRunnableSkills } from "../genos/skills/useRunnableSkills";
 import { takePendingAskRefs } from "./askGenosAbout";
 import {
     isServiceDisabledByProjectScope,
@@ -489,6 +490,10 @@ export const SpotlightContent = ({
         membersOverride: mentionMembers,
         groupsOverride: mentionGroups,
     });
+    // `/` at the start of the question lists the skills this person may run (MIP-2042). Undefined while
+    // Skills is off on the server, so `/` stays a plain character and nothing below changes. The Genos
+    // page renders this same component, so it gets the same menu.
+    const runnableSkills = useRunnableSkills();
     const mention = useAgentMentionDraft({
         value: localInput,
         onChange: handleInputChange,
@@ -496,6 +501,7 @@ export const SpotlightContent = ({
         entities: mentionSources.entities,
         lookupTask: mentionSources.lookupTask,
         searchTasks: mentionSources.searchTasks,
+        skills: runnableSkills,
     });
     // "Ask Genos about this task": `useSpotlight` already put `#PRJ-12 ` in the
     // draft; the ref waits in a queue for the input that mounts (the overlay is
@@ -748,10 +754,14 @@ export const SpotlightContent = ({
                     {mention.pickerOpen && (
                         <MentionSuggestionDropdown
                             anchorRef={inputRowRef}
-                            ariaLabel={t.spotlight.mentions.ariaLabel}
                             highlightIndex={mention.highlightIndex}
                             placement={inAgentMode ? "above" : "below"}
                             suggestions={mention.suggestions}
+                            ariaLabel={
+                                mention.suggestions[0]?.trigger === "/"
+                                    ? t.spotlight.skills.ariaLabel
+                                    : t.spotlight.mentions.ariaLabel
+                            }
                             onSelect={handleMentionSelect}
                         />
                     )}

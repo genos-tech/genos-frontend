@@ -40,10 +40,16 @@ export const InboxItemAvatar = ({ actor, byGenos, tone, Icon }: Props) => {
             // Keep the email a chat payload already taught the directory: this payload has none,
             // and `rememberPeople` would otherwise overwrite it with an empty one.
             const known = rememberedPerson(actorId);
+            // A stored card is as old as its last sync, and an incremental sync does not resend a
+            // row when its sender renames or changes their photo (MIP-2182). So a card only FILLS
+            // a gap here; what the directory already holds came from a fresher payload (a live
+            // push, a chat) and a stale card must not put the old face back. A live card refreshes
+            // the directory where it arrives (`rememberInboxSender`).
+            if (known?.avatarImgPath) return;
             rememberPeople([
                 {
                     userId: actorId,
-                    userName: actorName,
+                    userName: known?.userName || actorName,
                     userEmail: known?.userEmail,
                     avatarImgPath: actorAvatar,
                 },

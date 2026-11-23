@@ -36,6 +36,13 @@ export type AgentMentionRef =
     // Mention group — expands to its member list server-side.
     | { kind: "group"; groupId: number; label: string }
     | { kind: "todo"; itemId: number; label: string }
+    // A Genos skill run with `/name` (MIP-2042, `GENOS_SKILLS`). Not a mention: it rides the same list
+    // so a retry and a history row keep it, but `toWireMentions` leaves it out and `toWireSkill` makes
+    // the ask's `skill` field. `skillId` is the picker's exact choice; "" = a typed name, which the
+    // server resolves (mine > team > installed). `label` is the slug, the token after the `/`.
+    // `version` is set only on a turn restored from history (MIP-2189): the version that ran, which a
+    // retry asks for again (0 = the owner's draft).
+    | { kind: "skill"; skillId: string; label: string; version?: number }
     // A Google Calendar event (MIP-1059, AGENT_PARITY_TOOLS). Only ever made by "Ask Genos about this
     // event" (`askGenosRefForCalendarEvent`), never picked from the `#` menu: the app does not index
     // events. The three ids are the event's whole identity (ids are unique per calendar, not
@@ -59,7 +66,7 @@ export type AgentMentionRef =
 // candidates carry it (groups/entities render a colored icon disc).
 export interface AgentMentionCandidate {
     ref: AgentMentionRef;
-    trigger: "@" | "#";
+    trigger: "@" | "#" | "/";
     key: string;
     subtitle?: string;
     avatarImgPath?: string;
@@ -113,6 +120,11 @@ export interface AgentMentionCandidate {
     projectId?: number;
     projectName?: string;
     status?: string;
+    /** `/skill`: who it comes from (the picker's group) and, for a teammate's, their name. Display-only. */
+    skillGroup?: "mine" | "team" | "installed" | "official";
+    skillOwner?: string;
+    /** `/skill`: the skill's title, searched beside its name and shown on the row. */
+    skillTitle?: string;
 }
 
 export const mentionKey = (ref: AgentMentionRef): string => {
@@ -133,6 +145,8 @@ export const mentionKey = (ref: AgentMentionRef): string => {
             return `group:${ref.groupId}`;
         case "todo":
             return `todo:${ref.itemId}`;
+        case "skill":
+            return `skill:${ref.skillId || ref.label}`;
         case "calendar_event":
             // JSON, because a calendar id and an event id can hold `:` (a group calendar's id, a recurring
             // instance's): joined with `:` two different pairs could give one key.
@@ -142,41 +156,61 @@ export const mentionKey = (ref: AgentMentionRef): string => {
 
 // Camel-case refs → the snake_case /agent/ask/ `mentions` wire shape.
 export const toWireMentions = (refs: AgentMentionRef[]): AgentMentionPayload[] =>
-    refs.map((ref) => {
-        switch (ref.kind) {
-            case "message":
-                return { type: "message", message_id: ref.messageId, label: ref.label };
-            case "user":
-                return { type: "user", user_id: ref.userId, label: ref.label };
-            case "task":
-                return { type: "task", task_id: ref.taskId, label: ref.label };
-            case "note":
-                return {
-                    type: "note",
-                    note_type: ref.noteType,
-                    note_id: ref.noteId,
-                    label: ref.label,
-                };
-            case "chat":
-                return {
-                    type: "chat",
-                    chat_type: ref.chatType,
-                    chat_id: ref.chatId,
-                    label: ref.label,
-                };
-            case "project":
-                return { type: "project", project_id: ref.projectId, label: ref.label };
-            case "group":
-                return { type: "group", group_id: ref.groupId, label: ref.label };
-            case "todo":
-                return { type: "todo", item_id: ref.itemId, label: ref.label };
-            case "calendar_event":
-                return {
-                    type: "calendar_event",
-                    account_id: ref.accountId,
-                    calendar_id: ref.calendarId,
-                    event_id: ref.eventId,
-                    label: ref.label,
-                };
-        }
+    refs.flatMap((ref): AgentMentionPayload[] => {
+        // A skill is not a mention: it is the ask's `skill` field (`toWireSkill`).
+        if (ref.kind === "skill") return [];
+        return [toWireMention(ref)];
     });
+
+const toWireMention = (ref: Exclude<AgentMentionRef, { kind: "skill" }>): AgentMentionPayload => {
+    switch (ref.kind) {
+        case "message":
+            return { type: "message", message_id: ref.messageId, label: ref.label };
+        case "user":
+            return { type: "user", user_id: ref.userId, label: ref.label };
+        case "task":
+            return { type: "task", task_id: ref.taskId, label: ref.label };
+        case "note":
+            return {
+                type: "note",
+                note_type: ref.noteType,
+                note_id: ref.noteId,
+                label: ref.label,
+            };
+        case "chat":
+            return {
+                type: "chat",
+                chat_type: ref.chatType,
+                chat_id: ref.chatId,
+                label: ref.label,
+            };
+        case "project":
+            return { type: "project", project_id: ref.projectId, label: ref.label };
+        case "group":
+            return { type: "group", group_id: ref.groupId, label: ref.label };
+        case "todo":
+            return { type: "todo", item_id: ref.itemId, label: ref.label };
+        case "calendar_event":
+            return {
+                type: "calendar_event",
+                account_id: ref.accountId,
+                calendar_id: ref.calendarId,
+                event_id: ref.eventId,
+                label: ref.label,
+            };
+    }
+};
+
+/** The ask's `skill` field from the refs, or undefined when none is a skill: `{ id }` for the picker's
+ *  exact choice, `{ name }` for a typed `/name` the server resolves. Only the first one counts. */
+export const toWireSkill = (
+    refs: readonly AgentMentionRef[] | undefined
+): { id: string; version_no?: number } | { name: string } | undefined => {
+    const ref = refs?.find((r) => r.kind === "skill");
+    if (!ref || ref.kind !== "skill") return undefined;
+    if (!ref.skillId) return { name: ref.label };
+    // A retry from history asks for the version that ran; the server falls back if it is gone.
+    return ref.version && ref.version > 0
+        ? { id: ref.skillId, version_no: ref.version }
+        : { id: ref.skillId };
+};

@@ -229,7 +229,7 @@ const MentionGroupChip = ({
  * must produce the same nesting BlockNote does: strong > em > u > s >
  * code, then the colour spans outermost.
  */
-function applyTextStyles(text: string, styles: Record<string, any> | undefined) {
+function applyTextStyles(text: string, styles: Record<string, unknown> | undefined) {
     let node: React.ReactNode = text;
     if (!styles) return node;
 

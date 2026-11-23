@@ -19,7 +19,7 @@ import { SearchTeamTasksResponse, TaskTableProps } from "../types/tasks";
 
 // Server search rows (what `getItems` merges in) ride along in `teamTasks` here.
 type TestData = HashMentionData & { teamTasks?: SearchTeamTasksResponse[] };
-const menuItems = (editor: any, data: TestData) =>
+const menuItems = (editor: Parameters<typeof HashMentionMenuItems>[0], data: TestData) =>
     HashMentionMenuItems(editor, data, serverTaskItems(editor, data.teamTasks ?? [], data));
 
 const openProjectTask = (over: Partial<TaskTableProps>): TaskTableProps =>

@@ -4750,6 +4750,38 @@ export const zh: DeepPartial<Messages> = {
                 unsavedBody: "说明会自动保存。详情需要点击保存。",
                 bodyAria: "技能说明",
             },
+            team: {
+                roleEditor: "编辑者",
+                hiddenChip: "已对团队隐藏",
+                hide: "对团队隐藏",
+                show: "对团队显示",
+                hiddenToast: "已对你的团队隐藏。",
+                shownToast: "已再次对你的团队显示。",
+                hideFailed: "无法更改。请重试。",
+                hiddenByOwner:
+                    "团队所有者已隐藏此技能。在重新显示之前，你的团队无法查看或运行它。",
+                hiddenByYou: "你已对团队隐藏此技能。在你重新显示之前，队友无法查看或运行它。",
+                editorNote:
+                    "你是此技能的编辑者：可以修改文本和详情并发布版本。名称、使用范围和是否删除由所有者决定。",
+                copiedFrom: "复制自 {name} 的“{title}”（版本 {n}）。",
+                copiedFromNoName: "复制自“{title}”（版本 {n}）。",
+                copiedFromGone: "复制自一个你已无法查看的技能。",
+                makePrivateTitle: "将此技能设为私有？",
+                makePrivateBody:
+                    "你的团队将立即无法查看和运行它。队友已创建的副本仍归他们所有，你邀请的编辑者仍保留访问权限。",
+                makePrivateConfirm: "设为私有",
+                ownerOnly: "只有所有者可以更改。",
+                editors: "编辑者",
+                editorsHelp: "编辑者可以修改文本和详情并发布版本，但不能重命名、共享或删除技能。",
+                editorsNone: "还没有编辑者。",
+                editorsAdd: "添加编辑者",
+                editorsChoose: "选择一位队友",
+                editorsEveryone: "团队里的每个人都已是编辑者。",
+                editorRemove: "移除 {name}",
+                editorLeave: "不再编辑此技能",
+                editorsFailed: "无法更改编辑者。请重试。",
+                editorLeft: "你不再编辑此技能。",
+            },
             versions: {
                 heading: "版本",
                 empty: "还没有发布任何内容。",
@@ -5360,6 +5392,13 @@ export const zh: DeepPartial<Messages> = {
         },
         mentions: {
             ariaLabel: "提及建议",
+        },
+        skills: {
+            ariaLabel: "技能建议",
+            mine: "我的技能",
+            fromTeammate: "来自 {name} 的团队技能",
+            installed: "已安装",
+            official: "Genos",
         },
         errors: {
             noTeam: "未选择团队。",

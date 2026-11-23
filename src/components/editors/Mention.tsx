@@ -14,7 +14,6 @@ import { UserProfile } from "../../features/admin/components/modals/ModalUserPro
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { fmt, getMessages, useTranslation } from "../../i18n";
-import { compareText } from "../../i18n/collate";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
 import { useResolvedUserName } from "../ui/avatars/AvatarContext";
@@ -28,12 +27,7 @@ import {
     MentionMenuRow,
     MentionSelfChip,
 } from "./mentionMenuRow";
-import {
-    GROUP_PALETTE,
-    USER_OTHER_PALETTE,
-    USER_SELF_PALETTE,
-    type MentionPalette,
-} from "./mentionPalettes";
+import { GROUP_PALETTE, USER_OTHER_PALETTE, USER_SELF_PALETTE } from "./mentionPalettes";
 import { MENTION_SPEC_CONFIG, mentionGroupSpecConfig } from "./schemaSpecConfigs";
 
 // The Mention inline content
