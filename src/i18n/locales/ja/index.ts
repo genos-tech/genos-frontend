@@ -4875,6 +4875,7 @@ export const ja: DeepPartial<Messages> = {
                 by: "作成者: {name}",
                 private: "非公開",
                 team: "チーム",
+                specific: "共有中",
                 notPublished: "未公開",
                 version: "バージョン {n}",
                 actionsAria: "{name} の操作",
@@ -4927,6 +4928,8 @@ export const ja: DeepPartial<Messages> = {
                 visibilityTeam: "自分のチーム",
                 visibilityTeamHelp:
                     "チームメンバーは最後に公開したバージョンを読み、実行できます。「自分のチーム」を選ぶと現在のテキストが公開され、その後は「変更を公開」を押すまで、保存した編集は自分だけに表示されます。",
+                visibilitySpecific: "特定の人",
+                visibilitySpecificHelp: "共有先を変更できるのはオーナーだけです。",
                 owner: "オーナー",
                 created: "作成日",
                 updated: "更新日",
@@ -4963,6 +4966,26 @@ export const ja: DeepPartial<Messages> = {
                 unsavedBody: "手順は自動で保存されます。詳細は「保存」が必要です。",
                 bodyAria: "スキルの手順",
             },
+            // Sharing a skill with chosen people, groups and projects (MIP-2212).
+            shares: {
+                label: "共有先",
+                nobody: "まだ誰も選ばれていません。",
+                addPerson: "人を追加",
+                addGroup: "グループ・チャット・プロジェクトを追加",
+                noGroups: "追加できるグループはもうありません",
+                everyone: "チームの全員が追加済みです",
+                kindUser: "個人",
+                kindMentionGroup: "メンショングループ",
+                kindGroupChat: "グループチャット",
+                kindProject: "プロジェクト",
+                peopleNow: "現在 {count} 人",
+                unavailable: "見られなくなったチャットまたはプロジェクト",
+                remove: "{name}を削除",
+                problemEmpty: "1人以上の人またはグループを選ぶか、「自分のみ」を選んでください。",
+                help: "グループはリンクされたままです。参加した人はスキルを使えるようになり、抜けた人は使えなくなります。全員があなたのチームのメンバーである必要があります。保存すると反映されます。",
+                max: "1つのスキルは最大 {max} 人・グループと共有できます。",
+            },
+
             team: {
                 roleEditor: "編集者",
                 hiddenChip: "チームに非表示",

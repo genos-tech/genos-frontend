@@ -4689,6 +4689,7 @@ export const zh: DeepPartial<Messages> = {
                 by: "作者:{name}",
                 private: "私有",
                 team: "团队",
+                specific: "已共享",
                 notPublished: "尚未发布",
                 version: "版本 {n}",
                 actionsAria: "{name} 的操作",
@@ -4741,6 +4742,8 @@ export const zh: DeepPartial<Messages> = {
                 visibilityTeam: "我的团队",
                 visibilityTeamHelp:
                     "队友会读取并运行最近发布的版本。选择“我的团队”会发布当前文本;之后保存只会让你的更改保持私有,直到你点击“发布更改”。",
+                visibilitySpecific: "指定的人",
+                visibilitySpecificHelp: "只有所有者可以更改此技能的共享对象。",
                 owner: "所有者",
                 created: "创建时间",
                 updated: "更新时间",
@@ -4775,6 +4778,26 @@ export const zh: DeepPartial<Messages> = {
                 unsavedBody: "说明会自动保存。详情需要点击保存。",
                 bodyAria: "技能说明",
             },
+            // Sharing a skill with chosen people, groups and projects (MIP-2212).
+            shares: {
+                label: "共享给",
+                nobody: "尚未选择任何人。",
+                addPerson: "添加成员",
+                addGroup: "添加组、群聊或项目",
+                noGroups: "没有更多可添加的组",
+                everyone: "团队所有人都已添加",
+                kindUser: "个人",
+                kindMentionGroup: "提及组",
+                kindGroupChat: "群聊",
+                kindProject: "项目",
+                peopleNow: "当前 {count} 人",
+                unavailable: "你已无法查看的群聊或项目",
+                remove: "移除 {name}",
+                problemEmpty: "请至少选择一个人或一个组，或选择“仅自己”。",
+                help: "组保持关联：加入的人可以使用该技能，离开的人将失去使用权。所有人都必须在你的团队中。保存后生效。",
+                max: "一项技能最多可共享给 {max} 个人和组。",
+            },
+
             team: {
                 roleEditor: "编辑者",
                 hiddenChip: "已对团队隐藏",

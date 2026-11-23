@@ -33,6 +33,8 @@ type Props = {
     /** An editor (not the owner) writes the details too, but the name and who can use the skill
      *  stay the owner's: those two fields are shown, locked, with the reason (MIP-2043). */
     ownerOnly?: boolean;
+    /** The "Specific people" field (MIP-2212), drawn under the switch when it is chosen. */
+    sharesField?: ReactNode;
     /** The "Editors" field, drawn under who can use the skill. */
     editorsField?: ReactNode;
     /** The Hub's "Publish to the Hub" field (MIP-2047), drawn under who can use the skill. */
@@ -55,6 +57,7 @@ export const SkillDetailsForm = ({
     disabled,
     ownerOnly = false,
     editorsField,
+    sharesField,
     hubField,
     onChange,
 }: Props) => {
@@ -355,6 +358,7 @@ export const SkillDetailsForm = ({
                     >
                         <Button value="private">{f.visibilityPrivate}</Button>
                         <Button value="team">{f.visibilityTeam}</Button>
+                        <Button value="specific">{f.visibilitySpecific}</Button>
                     </ToggleButtonGroup>
                     {ownerOnly ? (
                         <FormHelperText>{t.settings.genosSkills.team.ownerOnly}</FormHelperText>
@@ -362,6 +366,14 @@ export const SkillDetailsForm = ({
                         draft.visibility === "team" && (
                             <FormHelperText>{f.visibilityTeamHelp}</FormHelperText>
                         )
+                    )}
+                    {/* The list sits under the switch it belongs to, inside the same field, so
+                        "Who can use it" stays one place (Ken, 2026-11-23). */}
+                    {draft.visibility === "specific" && !ownerOnly && (
+                        <Box sx={{ mt: 1.5 }}>{sharesField}</Box>
+                    )}
+                    {draft.visibility === "specific" && ownerOnly && (
+                        <FormHelperText>{f.visibilitySpecificHelp}</FormHelperText>
                     )}
                 </FormControl>
             )}
@@ -401,7 +413,7 @@ export const SkillDetailsForm = ({
                 <Box component="dd" sx={{ m: 0 }}>
                     {date(skill.updatedAt)}
                 </Box>
-                {saved.visibility === "team" && skill.publishedAt && (
+                {saved.visibility !== "private" && skill.publishedAt && (
                     <>
                         <Box component="dt">{f.published}</Box>
                         <Box component="dd" sx={{ m: 0 }}>

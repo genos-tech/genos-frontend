@@ -1520,6 +1520,7 @@ export const hi: DeepPartial<Messages> = {
                 by: "{name} द्वारा",
                 private: "निजी",
                 team: "टीम",
+                specific: "साझा",
                 notPublished: "अभी प्रकाशित नहीं",
                 version: "संस्करण {n}",
                 actionsAria: "{name} के लिए कार्रवाइयाँ",
@@ -1572,6 +1573,8 @@ export const hi: DeepPartial<Messages> = {
                 visibilityTeam: "मेरी टीम",
                 visibilityTeamHelp:
                     "साथी आख़िरी प्रकाशित संस्करण पढ़ते और चलाते हैं। «मेरी टीम» चुनने पर मौजूदा पाठ प्रकाशित हो जाता है; उसके बाद सहेजने से आपके बदलाव तब तक निजी रहते हैं जब तक आप «बदलाव प्रकाशित करें» नहीं दबाते।",
+                visibilitySpecific: "चुने हुए लोग",
+                visibilitySpecificHelp: "यह स्किल किसके साथ साझा है, यह केवल स्वामी बदल सकता है।",
                 owner: "स्वामी",
                 created: "बनाई गई",
                 updated: "अपडेट की गई",
@@ -1608,6 +1611,26 @@ export const hi: DeepPartial<Messages> = {
                     "निर्देश अपने आप सहेजे जाते हैं। विवरण के लिए सहेजें दबाना ज़रूरी है।",
                 bodyAria: "स्किल के निर्देश",
             },
+            // Sharing a skill with chosen people, groups and projects (MIP-2212).
+            shares: {
+                label: "इनके साथ साझा",
+                nobody: "अभी तक किसी को नहीं चुना गया।",
+                addPerson: "व्यक्ति जोड़ें",
+                addGroup: "समूह, बातचीत या प्रोजेक्ट जोड़ें",
+                noGroups: "जोड़ने के लिए और समूह नहीं हैं",
+                everyone: "टीम के सभी लोग जोड़े जा चुके हैं",
+                kindUser: "व्यक्ति",
+                kindMentionGroup: "उल्लेख समूह",
+                kindGroupChat: "समूह बातचीत",
+                kindProject: "प्रोजेक्ट",
+                peopleNow: "अभी {count} लोग",
+                unavailable: "ऐसी बातचीत या प्रोजेक्ट जो अब आपको नहीं दिखता",
+                remove: "{name} हटाएँ",
+                problemEmpty: "कम से कम एक व्यक्ति या समूह चुनें, या «केवल मैं» चुनें।",
+                help: "समूह जुड़े रहते हैं: जो उनमें शामिल होता है वह स्किल इस्तेमाल कर सकता है और जो छोड़ता है वह खो देता है। सभी का आपकी टीम में होना ज़रूरी है। लागू करने के लिए सहेजें।",
+                max: "एक स्किल अधिकतम {max} लोगों और समूहों के साथ साझा की जा सकती है।",
+            },
+
             team: {
                 roleEditor: "संपादक",
                 hiddenChip: "टीम से छिपी",

@@ -1160,6 +1160,7 @@ export const settings = {
             by: "By {name}",
             private: "Private",
             team: "Team",
+            specific: "Shared",
             notPublished: "Not published yet",
             version: "Version {n}",
             actionsAria: "Actions for {name}",
@@ -1212,6 +1213,8 @@ export const settings = {
             visibilityTeam: "My team",
             visibilityTeamHelp:
                 "Teammates read and run the last published version. Choosing My team publishes the current text; after that, Save keeps your edits private until you press Publish changes.",
+            visibilitySpecific: "Specific people",
+            visibilitySpecificHelp: "Only the owner changes who this skill is shared with.",
             owner: "Owner",
             created: "Created",
             updated: "Updated",
@@ -1247,6 +1250,26 @@ export const settings = {
             unsavedBody: "The instructions save by themselves. The details need Save.",
             bodyAria: "Skill instructions",
         },
+        // Sharing a skill with chosen people, groups and projects (MIP-2212).
+        shares: {
+            label: "Shared with",
+            nobody: "Nobody chosen yet.",
+            addPerson: "Add a person",
+            addGroup: "Add a group, chat or project",
+            noGroups: "No more groups to add",
+            everyone: "Everyone on the team is added",
+            kindUser: "Person",
+            kindMentionGroup: "Mention group",
+            kindGroupChat: "Group chat",
+            kindProject: "Project",
+            peopleNow: "{count} people now",
+            unavailable: "A chat or project you can no longer see",
+            remove: "Remove {name}",
+            problemEmpty: "Choose at least one person or group, or pick Only me.",
+            help: "Groups stay linked: people who join one can use the skill, and people who leave lose it. Everyone must be on your team. Save to apply.",
+            max: "A skill can be shared with up to {max} people and groups.",
+        },
+
         // Sharing with the team (MIP-2043): who edits a team skill, hiding one from the team, and
         // where a copy came from.
         team: {

@@ -1136,6 +1136,7 @@ export const ar: DeepPartial<Messages> = {
                 by: "بواسطة {name}",
                 private: "خاصة",
                 team: "الفريق",
+                specific: "مشتركة",
                 notPublished: "لم تُنشر بعد",
                 version: "الإصدار {n}",
                 actionsAria: "إجراءات {name}",
@@ -1188,6 +1189,8 @@ export const ar: DeepPartial<Messages> = {
                 visibilityTeam: "فريقي",
                 visibilityTeamHelp:
                     "يقرأ زملاؤك آخر إصدار منشور ويشغّلونه. عند اختيار «فريقي» يُنشر النص الحالي؛ وبعد ذلك يُبقي الحفظ تعديلاتك خاصة إلى أن تضغط «نشر التغييرات».",
+                visibilitySpecific: "أشخاص محددون",
+                visibilitySpecificHelp: "المالك وحده يغيّر من تُشارَك معه هذه المهارة.",
                 owner: "المالك",
                 created: "تاريخ الإنشاء",
                 updated: "تاريخ التحديث",
@@ -1222,6 +1225,26 @@ export const ar: DeepPartial<Messages> = {
                 unsavedBody: "تُحفظ التعليمات تلقائيًا. أما التفاصيل فتحتاج إلى «حفظ».",
                 bodyAria: "تعليمات المهارة",
             },
+            // Sharing a skill with chosen people, groups and projects (MIP-2212).
+            shares: {
+                label: "مشتركة مع",
+                nobody: "لم يُختر أحد بعد.",
+                addPerson: "إضافة شخص",
+                addGroup: "إضافة مجموعة أو دردشة أو مشروع",
+                noGroups: "لا توجد مجموعات أخرى للإضافة",
+                everyone: "أُضيف جميع أعضاء الفريق",
+                kindUser: "شخص",
+                kindMentionGroup: "مجموعة إشارة",
+                kindGroupChat: "دردشة جماعية",
+                kindProject: "مشروع",
+                peopleNow: "{count} أشخاص الآن",
+                unavailable: "دردشة أو مشروع لم يعد بإمكانك رؤيته",
+                remove: "إزالة {name}",
+                problemEmpty: "اختر شخصًا أو مجموعة واحدة على الأقل، أو اختر «أنا فقط».",
+                help: "تبقى المجموعات مرتبطة: من ينضم إليها يستطيع استخدام المهارة ومن يغادرها يفقد ذلك. يجب أن يكون الجميع في فريقك. احفظ للتطبيق.",
+                max: "يمكن مشاركة المهارة مع {max} شخصًا ومجموعة كحد أقصى.",
+            },
+
             team: {
                 roleEditor: "محرّر",
                 hiddenChip: "مخفية عن الفريق",
