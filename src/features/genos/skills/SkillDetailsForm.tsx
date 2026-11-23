@@ -17,6 +17,7 @@ import {
 
 import { fmt, useTranslation } from "../../../i18n";
 import { draftFrom, type DraftProblems, type SkillDraft } from "./skillDraft";
+import { SkillIconField } from "./SkillIconField";
 import { SKILL_LIMITS, type SkillEffort, type SkillRow } from "./skillsApi";
 import { normalizeTag, tagProblem } from "./skillText";
 import { useEffortLevels } from "./useEffortLevels";
@@ -145,17 +146,11 @@ export const SkillDetailsForm = ({
                     />
                     {titleShown && <FormHelperText>{titleShown}</FormHelperText>}
                 </FormControl>
-                <FormControl>
-                    <FormLabel>{f.icon}</FormLabel>
-                    <Input
-                        disabled={disabled}
-                        placeholder="⚡"
-                        slotProps={{ input: { maxLength: 16, "aria-label": f.iconHelp } }}
-                        sx={{ textAlign: "center" }}
-                        value={draft.icon}
-                        onChange={(e) => onChange({ icon: e.target.value })}
-                    />
-                </FormControl>
+                <SkillIconField
+                    disabled={disabled}
+                    value={draft.icon}
+                    onChange={(icon) => onChange({ icon })}
+                />
             </Box>
 
             <FormControl error={!!slugShown} required>

@@ -131,6 +131,7 @@ export const SkillBodyEditor = ({
                 useCM={useCM}
                 useTEM={useTEM}
                 useUISM={useUISM}
+                hideViewControls
             />
         </Box>
     );

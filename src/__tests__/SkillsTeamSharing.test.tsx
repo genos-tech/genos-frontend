@@ -15,12 +15,14 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AvatarContextProvider } from "../components/ui/avatars/AvatarContext";
 import { toast } from "../components/ui/feedback/toastStore";
 import * as api from "../features/genos/skills/skillsApi";
 import { parseSkill, type SkillRow } from "../features/genos/skills/skillsApi";
 import type { SkillsHost } from "../features/genos/skills/skillsHost";
 import { SkillsPage } from "../features/genos/skills/SkillsPage";
 import { I18nProvider } from "../i18n";
+import type { UserProps } from "../types/admin";
 
 vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
@@ -122,15 +124,29 @@ const host = {
     useUISM: {},
 } as unknown as SkillsHost;
 
+// The editors' avatars (and the shared person picker's rows) read the roster from the context the
+// authenticated shell provides.
 const renderPage = () =>
     render(
-        <CssVarsProvider>
-            <I18nProvider>
-                <MemoryRouter>
-                    <SkillsPage host={host} teamId="team-1" />
-                </MemoryRouter>
-            </I18nProvider>
-        </CssVarsProvider>
+        <AvatarContextProvider
+            value={{
+                myself: { userId: "u1", userName: "Ken" } as unknown as UserProps,
+                setMyself: () => {},
+                teamMemberProfiles: {},
+                setTeamMemberProfiles: () => {},
+                socket: null,
+                useCM: {} as never,
+                useUISM: {} as never,
+            }}
+        >
+            <CssVarsProvider>
+                <I18nProvider>
+                    <MemoryRouter>
+                        <SkillsPage host={host} teamId="team-1" />
+                    </MemoryRouter>
+                </I18nProvider>
+            </CssVarsProvider>
+        </AvatarContextProvider>
     );
 
 const serve = (row: SkillRow, body = "## Steps\n1. Read") => {
@@ -532,9 +548,12 @@ describe("the owner chooses the editors", () => {
         renderPage();
         await user.click(await screen.findByRole("button", { name: "Weekly update" }));
         await user.click(await screen.findByRole("combobox", { name: "Add an editor" }));
-        const options = (await screen.findAllByRole("option")).map((o) => o.textContent);
+        // Each row is an avatar (its initial) beside the name, as in the other person pickers.
+        const options = (await screen.findAllByRole("option")).map((o) =>
+            o.textContent?.replace(/^[A-Z?]/, "")
+        );
         expect(options).toEqual(["Ayumi", "Mina"]);
-        await user.click(screen.getByRole("option", { name: "Mina" }));
+        await user.click(screen.getByRole("option", { name: /Mina$/ }));
         await waitFor(() => expect(api.addSkillEditor).toHaveBeenCalledWith("tok", "s1", "u3"));
         expect(await screen.findByText("mina")).toBeTruthy();
     });
@@ -551,7 +570,7 @@ describe("the owner chooses the editors", () => {
         renderPage();
         await user.click(await screen.findByRole("button", { name: "Weekly update" }));
         await user.click(await screen.findByRole("combobox", { name: "Add an editor" }));
-        await user.click(await screen.findByRole("option", { name: "Mina" }));
+        await user.click(await screen.findByRole("option", { name: /Mina$/ }));
         await waitFor(() =>
             expect(error).toHaveBeenCalledWith("That person is not on this team.")
         );
