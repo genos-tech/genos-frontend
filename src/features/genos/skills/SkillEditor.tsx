@@ -42,6 +42,7 @@ import {
     type SkillRow,
     type SkillVersion,
 } from "./skillsApi";
+import { SkillSharesField } from "./SkillSharesField";
 import type { SkillsHost } from "./skillsHost";
 import { slugify } from "./skillText";
 
@@ -56,6 +57,10 @@ type Props = {
 };
 
 type ServerProblems = Partial<Record<"title" | "slug" | "description" | "tags", string>>;
+
+/** Shared with people other than the owner, through a published version (not public). */
+const isSharedWithPeople = (visibility: string): boolean =>
+    visibility === "team" || visibility === "specific";
 
 /** Which field a server sentence is about, from the words it uses. Anything else is general. */
 const fieldOf = (message: string): keyof ServerProblems | null => {
@@ -223,8 +228,12 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
         }
         const changes = draftChanges(draft, skill);
         if (Object.keys(changes).length === 0) return true;
-        if (!sureAboutPrivate && skill.visibility === "team" && changes.visibility === "private") {
-            // The team stops reading and running it at once: say so before it happens.
+        if (
+            !sureAboutPrivate &&
+            (skill.visibility === "team" || skill.visibility === "specific") &&
+            changes.visibility === "private"
+        ) {
+            // The readers stop reading and running it at once: say so before it happens.
             setConfirmPrivate(true);
             return false;
         }
@@ -246,8 +255,9 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
         setProblemsShown(false);
         setChanged(true);
         if (skill.noteId !== null) syncSkillNoteTitle(skill.noteId, res.data.title);
-        if (skill.visibility !== "team" && res.data.visibility === "team") {
-            // Choosing "My team" is the explicit share: the server published the current text.
+        if (skill.visibility === "private" && isSharedWithPeople(res.data.visibility)) {
+            // Choosing "My team" or "Specific people" is the explicit share: the server published
+            // the current text.
             setBodyEdited(false);
             toast.success(fmt(e.published, { n: res.data.publishedVersionNo }));
             // A skill that was shared before still has its versions on screen: add the new one.
@@ -255,7 +265,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
             if (published) void loadVersions();
         } else {
             // A team skill's save keeps the edit private; a private skill has nobody to hide it from.
-            toast.success(res.data.visibility === "team" ? e.savedDraft : e.saved);
+            toast.success(isSharedWithPeople(res.data.visibility) ? e.savedDraft : e.saved);
         }
         return true;
     };
@@ -379,7 +389,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
     // Switching the skill back to private is not something to publish: it ends the sharing.
     const unpublished =
         savedTeam &&
-        (skill.visibility === "public" || draft.visibility === "team") &&
+        (skill.visibility === "public" || isSharedWithPeople(draft.visibility)) &&
         (skill.hasUnpublishedChanges || bodyEdited || dirty);
 
     return (
@@ -438,16 +448,18 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                         >
                             {m.report.action}
                         </Button>
-                        {!skill.hiddenByTeam && skill.visibility !== "private" && (
-                            <Button
-                                size="sm"
-                                startDecorator={<ContentCopyRoundedIcon />}
-                                variant="solid"
-                                onClick={() => void copy()}
-                            >
-                                {m.list.copy}
-                            </Button>
-                        )}
+                        {!skill.hiddenByTeam &&
+                            skill.visibility !== "private" &&
+                            (skill.mine || skill.visibility !== "specific") && (
+                                <Button
+                                    size="sm"
+                                    startDecorator={<ContentCopyRoundedIcon />}
+                                    variant="solid"
+                                    onClick={() => void copy()}
+                                >
+                                    {m.list.copy}
+                                </Button>
+                            )}
                     </>
                 )}
             </Box>
@@ -585,6 +597,21 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                                     setUnpublishError(null);
                                     setConfirmUnpublish(true);
                                 }}
+                            />
+                        ) : undefined
+                    }
+                    sharesField={
+                        editable && skill.canManage ? (
+                            <SkillSharesField
+                                allChats={host.useCM.allChats ?? []}
+                                disabled={saving || publishing}
+                                myId={host.myself.userId}
+                                shares={draft.shares}
+                                teamMembers={host.useTEM.teamMembers ?? []}
+                                problem={
+                                    problemsShown && problems.shares ? m.shares.problemEmpty : null
+                                }
+                                onChange={(shares) => setField({ shares })}
                             />
                         ) : undefined
                     }

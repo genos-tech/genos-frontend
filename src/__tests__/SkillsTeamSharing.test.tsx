@@ -90,6 +90,7 @@ const base = (over: Partial<SkillRow> = {}): SkillRow => ({
     starred: false,
     sourceHarmful: false,
     editors: [],
+    shares: [],
     forkedFrom: null,
     noteId: null,
     hasUnpublishedChanges: false,
@@ -234,6 +235,7 @@ describe("reading the server's roles", () => {
             canHide: false,
             hiddenByTeam: false,
             editors: [],
+            shares: [],
             forkedFrom: null,
         });
         expect(parseSkill({ id: "s2", mine: true })?.role).toBe("owner");

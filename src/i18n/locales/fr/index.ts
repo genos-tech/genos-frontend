@@ -4960,6 +4960,7 @@ export const fr: DeepPartial<Messages> = {
                 by: "Par {name}",
                 private: "Privée",
                 team: "Équipe",
+                specific: "Partagée",
                 notPublished: "Pas encore publiée",
                 version: "Version {n}",
                 actionsAria: "Actions pour {name}",
@@ -5034,6 +5035,9 @@ export const fr: DeepPartial<Messages> = {
                 visibilityTeam: "Mon équipe",
                 visibilityTeamHelp:
                     "Vos collègues lisent et lancent la dernière version publiée. Choisir Mon équipe publie le texte actuel ; ensuite, Enregistrer garde vos modifications privées jusqu'à ce que vous appuyiez sur Publier les modifications.",
+                visibilitySpecific: "Personnes précises",
+                visibilitySpecificHelp:
+                    "Seul le propriétaire change avec qui cette compétence est partagée.",
                 owner: "Propriétaire",
                 created: "Créée",
                 updated: "Mise à jour",
@@ -5072,6 +5076,26 @@ export const fr: DeepPartial<Messages> = {
                     "Les instructions s'enregistrent toutes seules. Les détails demandent Enregistrer.",
                 bodyAria: "Instructions de la compétence",
             },
+            // Sharing a skill with chosen people, groups and projects (MIP-2212).
+            shares: {
+                label: "Partagée avec",
+                nobody: "Personne n'est encore choisi.",
+                addPerson: "Ajouter une personne",
+                addGroup: "Ajouter groupe, discussion, projet",
+                noGroups: "Plus aucun groupe à ajouter",
+                everyone: "Toute l'équipe est déjà ajoutée",
+                kindUser: "Personne",
+                kindMentionGroup: "Groupe de mentions",
+                kindGroupChat: "Discussion de groupe",
+                kindProject: "Projet",
+                peopleNow: "{count} personnes actuellement",
+                unavailable: "Une discussion ou un projet que vous ne voyez plus",
+                remove: "Retirer {name}",
+                problemEmpty: "Choisissez au moins une personne ou un groupe, ou Moi seul.",
+                help: "Les groupes restent liés : qui les rejoint peut utiliser la compétence, qui les quitte la perd. Tout le monde doit être dans votre équipe. Enregistrez pour appliquer.",
+                max: "Une compétence peut être partagée avec {max} personnes et groupes au plus.",
+            },
+
             team: {
                 roleEditor: "Éditeur",
                 hiddenChip: "Masquée à l'équipe",

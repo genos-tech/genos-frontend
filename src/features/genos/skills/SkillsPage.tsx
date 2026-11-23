@@ -412,7 +412,11 @@ const SkillListItem = ({
             onClick: onCopy,
             // A private skill is the owner's to copy (an editor was invited to work on it), and a
             // skill the team owner hid is not the team's to copy.
-            visible: !skill.mine && skill.visibility !== "private" && !skill.hiddenByTeam,
+            visible:
+                !skill.mine &&
+                skill.visibility !== "private" &&
+                skill.visibility !== "specific" &&
+                !skill.hiddenByTeam,
         },
         {
             id: "hide",
@@ -475,7 +479,11 @@ const SkillListItem = ({
                         /{skill.slug}
                     </Typography>
                     <Chip size="sm" variant="soft">
-                        {skill.visibility === "team" ? l.team : l.private}
+                        {skill.visibility === "team"
+                            ? l.team
+                            : skill.visibility === "specific"
+                              ? l.specific
+                              : l.private}
                     </Chip>
                     {skill.role === "editor" && (
                         <Chip size="sm" variant="outlined">
@@ -499,17 +507,18 @@ const SkillListItem = ({
                             {l.moderated[skill.status as keyof typeof l.moderated]}
                         </Chip>
                     )}
-                    {skill.mine && skill.visibility === "team" && (
-                        <Chip
-                            color={skill.publishedVersionNo > 0 ? "neutral" : "warning"}
-                            size="sm"
-                            variant="outlined"
-                        >
-                            {skill.publishedVersionNo > 0
-                                ? fmt(l.version, { n: skill.publishedVersionNo })
-                                : l.notPublished}
-                        </Chip>
-                    )}
+                    {skill.mine &&
+                        (skill.visibility === "team" || skill.visibility === "specific") && (
+                            <Chip
+                                color={skill.publishedVersionNo > 0 ? "neutral" : "warning"}
+                                size="sm"
+                                variant="outlined"
+                            >
+                                {skill.publishedVersionNo > 0
+                                    ? fmt(l.version, { n: skill.publishedVersionNo })
+                                    : l.notPublished}
+                            </Chip>
+                        )}
                 </Box>
                 {skill.description && (
                     <Typography

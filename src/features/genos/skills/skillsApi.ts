@@ -33,7 +33,8 @@
 
 import { authApi } from "../../../services/api";
 
-export type SkillVisibility = "private" | "team";
+/** "specific" = shared with the people and groups the owner chose (MIP-2212). */
+export type SkillVisibility = "private" | "team" | "specific";
 export type ToolLevel = "read" | "act";
 export type SkillEffort = "" | "low" | "medium" | "high";
 export type SkillTab = "mine" | "team";
@@ -52,11 +53,34 @@ export const SKILL_LIMITS = {
     tagMax: 24,
     argumentHintMax: 120,
     bodyMax: 12_000,
+    sharesMax: 50,
 } as const;
 
 export type SkillRole = "owner" | "editor" | "reader";
 
 export type SkillPerson = { id: string; username: string };
+
+/** One chosen reader of a "specific" skill: a person, or a LIVE link to a mention group, a group
+ *  chat or a project (who is in it is asked every time the skill is read or run). */
+export type SkillShareKind = "user" | "mentionGroup" | "groupChat" | "project";
+export type SkillShare = {
+    kind: SkillShareKind;
+    /** A user id or chat id (text), or a mention group or project id as text. */
+    id: string;
+    /** "" when the owner can no longer see it (a chat they left): `available` is false then. */
+    name: string;
+    /** People in the group now; null for a person. */
+    memberCount: number | null;
+    available: boolean;
+};
+export const SHARE_KINDS: readonly SkillShareKind[] = [
+    "user",
+    "mentionGroup",
+    "groupChat",
+    "project",
+];
+/** What a save sends: only the identity of each share (the server re-checks every new one). */
+export type SkillShareInput = { kind: SkillShareKind; id: string };
 
 /** The public byline of a public skill: the author's chosen handle, never the account name. */
 export type SkillAuthor = { handle: string; displayName: string };
@@ -139,6 +163,8 @@ export type SkillRow = {
     starred: boolean;
     /** Detail answer only, for the owner and the co-editors: who edits it with the owner. */
     editors: SkillPerson[];
+    /** Detail and save answer, the owner only: who a "specific" skill is shared with. */
+    shares: SkillShare[];
     /** Detail answer only, on a copy: where it came from (null = not a copy). */
     forkedFrom: SkillOrigin | null;
     /** The body note, sent to the owner only. */
@@ -209,6 +235,8 @@ export type SkillInput = {
     toolLevel?: ToolLevel;
     effort?: SkillEffort;
     visibility?: SkillVisibility | "public";
+    /** The whole list of who a "specific" skill is shared with (replaces the saved one). */
+    shares?: SkillShareInput[];
     bodyMarkdown?: string;
     acceptTerms?: boolean;
     handle?: string;
@@ -275,6 +303,24 @@ const parsePeople = (raw: unknown): SkillPerson[] =>
         const p = rec(row);
         const id = str(p?.id, 64);
         return p && id !== "" ? [{ id, username: str(p.username, 120) }] : [];
+    });
+
+const parseShares = (raw: unknown): SkillShare[] =>
+    (Array.isArray(raw) ? raw : []).flatMap((row) => {
+        const s = rec(row);
+        const id = str(s?.id, 64);
+        const kind = oneOf<SkillShareKind | "">(s?.kind, SHARE_KINDS, "");
+        if (!s || id === "" || kind === "") return [];
+        const count = s.memberCount;
+        return [
+            {
+                kind,
+                id,
+                name: str(s.name, 255),
+                memberCount: typeof count === "number" && count >= 0 ? Math.floor(count) : null,
+                available: s.available === true,
+            },
+        ];
     });
 
 const parseAuthor = (raw: unknown): SkillAuthor | null => {
@@ -361,7 +407,11 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         argumentHint: str(r.argumentHint, 300),
         toolLevel: oneOf(r.toolLevel, ["read", "act"] as const, "read"),
         effort: oneOf(r.effort, ["", "low", "medium", "high"] as const, ""),
-        visibility: oneOf(r.visibility, ["private", "team", "public"] as const, "private"),
+        visibility: oneOf(
+            r.visibility,
+            ["private", "team", "specific", "public"] as const,
+            "private"
+        ),
         status: str(r.status, 40),
         moderationReason: str(r.moderationReason, 600),
         currentVersionNo: int(r.currentVersionNo),
@@ -388,6 +438,7 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         isOfficial: r.isOfficial === true,
         starred: r.starred === true,
         editors: parsePeople(r.editors),
+        shares: parseShares(r.shares),
         forkedFrom: parseOrigin(r.forkedFrom),
         noteId: typeof note === "number" && Number.isSafeInteger(note) && note > 0 ? note : null,
         hasUnpublishedChanges: r.hasUnpublishedChanges === true,
@@ -549,7 +600,7 @@ export const fetchNameCheck = async (
     q: {
         teamId: string;
         slug: string;
-        visibility: "private" | "team" | "public";
+        visibility: "private" | "team" | "specific" | "public";
         skillId?: string;
     }
 ): Promise<Result<NameCheck>> => {
