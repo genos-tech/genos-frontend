@@ -12,6 +12,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { trackSignupCompleted } from "../../../services/marketingFunnel";
 import { privateProfileFromWire, setPrivateProfile } from "../../../services/privateProfileStore";
+import { refreshSession } from "../../../services/refreshSession";
 import { purplePalette } from "../../../theme/purplePalette";
 import { takeReturn } from "../../../utils/pendingReturn";
 import {
@@ -56,6 +57,10 @@ const REMEDY_IS_ANOTHER_METHOD = new Set(["email_in_use", "not_a_login_account"]
 // Reasons whose message points at signing up with email and password, so the
 // page offers the sign-up page itself, without preselecting any provider.
 const OFFERS_PLAIN_SIGN_UP = new Set(["email_not_verified"]);
+
+// A same-origin path only: "//host" and "/\\host" would leave the app.
+const safeNextPath = (value: string | null): string | null =>
+    value && /^\/(?![/\\])/.test(value) ? value : null;
 
 export const OAuthSuccessHandler = () => {
     const navigate = useNavigate();
@@ -110,24 +115,25 @@ export const OAuthSuccessHandler = () => {
             return;
         }
 
+        // The fragment carries only where to go next. It never carries a credential: a link
+        // anyone can craft must not be able to sign this browser in as someone else (login CSRF,
+        // MIP-2219). The session comes from the refresh cookie the API set on the callback, which
+        // only the browser that finished the OAuth round trip holds.
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-        const access = hashParams.get("access");
         // Mirror the email/password sign-in flow: new users go to
         // /jointeam to pick or create a team before the team-scoped
         // workspace requests fire (otherwise an empty `teamId` crashes
         // the various history endpoints).
-        const next = hashParams.get("next") || "/jointeam";
+        const next = safeNextPath(hashParams.get("next")) ?? "/jointeam";
 
-        if (!access) {
+        if (!hashParams.has("next")) {
             // Neither success-fragment nor failure-query — landed
             // here directly. Send the user back to /signin.
             navigate("/signin", { replace: true });
             return;
         }
 
-        // Clear the hash so the JWT isn't sitting in window.location
-        // after we navigate away. History replaceState is silent —
-        // no extra browser history entry.
+        // Clear the hash. History replaceState is silent — no extra browser history entry.
         window.history.replaceState({}, "", window.location.pathname);
         // Read before it is forgotten: the sign-in page's button names the provider (the
         // sign-up page does not, so a sign-up reports plain "oauth").
@@ -136,12 +142,24 @@ export const OAuthSuccessHandler = () => {
         forgetRememberedOAuthProvider();
 
         const completeSession = async () => {
-            const api = authApi(access);
-            if (!api) {
-                if (!cancelled) setError(oauth.apiClientFailed);
-                return;
-            }
             try {
+                const refreshed = await refreshSession();
+                if (cancelled) return;
+                if (refreshed.kind === "unauthenticated") {
+                    // No sign-in cookie in this browser: not a sign-in this browser made.
+                    navigate("/signin", { replace: true });
+                    return;
+                }
+                if (refreshed.kind !== "ok") {
+                    setError(oauth.profileFailed);
+                    return;
+                }
+                const access = refreshed.access;
+                const api = authApi(access);
+                if (!api) {
+                    setError(oauth.apiClientFailed);
+                    return;
+                }
                 const res = await api.get<MeResponse>("/user/me/");
                 if (cancelled) return;
                 const me = res.data;
