@@ -389,7 +389,7 @@ export const tasks = {
         customizeFields: {
             heading: "Customize Task Fields",
             description:
-                "Make fields required and set default values for new tasks and milestones in this project. Only the project owner can change these.",
+                "Make fields required and set default values for new tasks and milestones in this project. Only the project owner and editors can change these.",
             requiredLabel: "Required",
             defaultLabel: "Default value",
             alwaysRequired: "Always required",
@@ -402,7 +402,8 @@ export const tasks = {
             dueOffsetLabel: "Days after creation",
             save: "Save",
             cancel: "Cancel",
-            saveFailed: "Couldn't save — only the project owner can change these settings.",
+            saveFailed:
+                "Couldn't save — only the project owner and editors can change these settings.",
         },
     },
 

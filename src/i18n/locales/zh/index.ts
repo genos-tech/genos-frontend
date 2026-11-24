@@ -6214,7 +6214,7 @@ export const zh: DeepPartial<Messages> = {
             customizeFields: {
                 heading: "自定义任务字段",
                 description:
-                    "为此项目中新建的任务和里程碑设置必填字段和默认值。仅项目所有者可以修改。",
+                    "为此项目中新建的任务和里程碑设置必填字段和默认值。仅项目所有者和编辑者可以修改。",
                 requiredLabel: "必填",
                 defaultLabel: "默认值",
                 alwaysRequired: "始终必填",
@@ -6227,7 +6227,7 @@ export const zh: DeepPartial<Messages> = {
                 dueOffsetLabel: "创建后的天数",
                 save: "保存",
                 cancel: "取消",
-                saveFailed: "保存失败——仅项目所有者可以修改这些设置。",
+                saveFailed: "保存失败——仅项目所有者和编辑者可以修改这些设置。",
             },
         },
         projects: {
