@@ -5955,7 +5955,7 @@ export const es: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Revisa tu bandeja de entrada",
-                    body: "Enviamos un enlace de verificación a {email}. Haz clic en él para finalizar el registro.",
+                    body: "Enviamos un correo a {email}. Ábrelo para finalizar el registro o para iniciar sesión si ya tienes una cuenta.",
                     checkInboxHint:
                         "Haz clic en el enlace del correo electrónico para verificar su dirección.",
                     resend: "Reenviar correo electrónico",
