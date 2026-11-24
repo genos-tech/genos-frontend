@@ -458,7 +458,18 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                         </Button>
                     </>
                 ) : (
-                    <>
+                    // Report, Install and Copy do not fit beside "Back" on a phone: they wrap
+                    // together and stay at the end of the line instead of one of them alone.
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            gap: 1,
+                            minWidth: 0,
+                        }}
+                    >
                         {skill.canHide && (
                             <Button
                                 loading={hiding}
@@ -510,7 +521,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                                     {m.list.copy}
                                 </Button>
                             )}
-                    </>
+                    </Box>
                 )}
             </Box>
 
