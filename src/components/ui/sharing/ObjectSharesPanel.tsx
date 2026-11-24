@@ -85,10 +85,10 @@ export const ObjectSharesPanel = ({
     // actually about to add somebody.
     const [pickerTeamId, setPickerTeamId] = useState<string | null>(null);
     const [roster, setRoster] = useState<PickablePerson[]>([]);
-    // What the next offer grants. Editing by default: sharing a project so
-    // the other team can read it is the rare case, and it was the only one
-    // reachable before.
-    const [offerCeiling, setOfferCeiling] = useState<"viewer" | "editor">("editor");
+    // What the next offer grants. View only by default (MIP-2340): least
+    // privilege outside the team; the host picks Edit when the other team
+    // should change things.
+    const [offerCeiling, setOfferCeiling] = useState<"viewer" | "editor">("viewer");
 
     const openPicker = async (share: ObjectShare) => {
         setPickerTeamId(share.teamId);
@@ -281,9 +281,9 @@ export const ObjectSharesPanel = ({
                         {strings.offerPrompt}
                     </Typography>
                     {/* Decided before the team is picked, because picking
-                        the team is what sends the offer. Edit is preselected
-                        — the ceiling can be lowered later, and a share
-                        nobody can write in is the exception. */}
+                        the team is what sends the offer. View only is
+                        preselected (MIP-2340): the host raises it to Edit
+                        when the other team should change things. */}
                     <Stack
                         alignItems="center"
                         direction="row"

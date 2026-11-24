@@ -48,5 +48,5 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
     - The app is read-only and has no code access. It sees only the repositories chosen in the team's installation.
     - An older GitHub connection shows as a legacy connection, with **Reconnect**.
 - Paste a pull request link into a task's Links field to see its state and checks on the task.
-- Settings → Tasks → **Close my tasks when their PR merges** closes a task you are assigned to when a pull request whose branch name contains the task ID merges. It is off by default.
+- Settings → Tasks → **Close my tasks when their PR merges** closes a task you are assigned to when a pull request whose branch name contains the task ID merges. It is on by default for new accounts (accounts made earlier keep their choice).
 - Settings → Tasks → **Auto-sync task due dates** adds tasks with due dates to your Google Calendar as all-day events. It only works one way: deleting an event in Google doesn't change your tasks.

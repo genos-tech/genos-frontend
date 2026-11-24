@@ -1535,6 +1535,8 @@ export const hi: DeepPartial<Messages> = {
             unavailable: "(उपलब्ध नहीं)",
             milestonePlaceholder: "माइलस्टोन चुनें",
             milestoneLoading: "माइलस्टोन लोड हो रहे हैं…",
+            milestoneDue: "देय {date}",
+            milestoneOverdue: "अतिदेय {date}",
             milestoneNone: "चुनने के लिए कोई माइलस्टोन नहीं है।",
             milestoneLoadFailed:
                 "माइलस्टोन लोड नहीं हो सके। यह फ़ॉर्म बंद करके दोबारा कोशिश करें।",

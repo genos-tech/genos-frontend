@@ -237,6 +237,8 @@ export const settings = {
         unavailable: "(unavailable)",
         milestonePlaceholder: "Choose a milestone",
         milestoneLoading: "Loading milestones…",
+        milestoneDue: "Due {date}",
+        milestoneOverdue: "Overdue {date}",
         milestoneNone: "There are no milestones to choose from.",
         milestoneLoadFailed: "Couldn't load the milestones. Close this form and try again.",
         errorMilestone: "Choose a milestone.",

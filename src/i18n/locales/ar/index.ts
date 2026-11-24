@@ -1149,6 +1149,8 @@ export const ar: DeepPartial<Messages> = {
             unavailable: "(غير متاح)",
             milestonePlaceholder: "اختر معلمًا",
             milestoneLoading: "جارٍ تحميل المعالم…",
+            milestoneDue: "الاستحقاق {date}",
+            milestoneOverdue: "متأخر {date}",
             milestoneNone: "لا توجد معالم للاختيار منها.",
             milestoneLoadFailed: "تعذّر تحميل المعالم. أغلق هذا النموذج وحاول مرة أخرى.",
             errorMilestone: "اختر معلمًا.",

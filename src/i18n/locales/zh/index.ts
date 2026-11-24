@@ -4769,6 +4769,8 @@ export const zh: DeepPartial<Messages> = {
             unavailable: "(不可用)",
             milestonePlaceholder: "选择里程碑",
             milestoneLoading: "正在加载里程碑…",
+            milestoneDue: "截止 {date}",
+            milestoneOverdue: "已逾期 {date}",
             milestoneNone: "没有可选择的里程碑。",
             milestoneLoadFailed: "无法加载里程碑。请关闭此表单后重试。",
             errorMilestone: "请选择一个里程碑。",
