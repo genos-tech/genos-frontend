@@ -4722,6 +4722,11 @@ export const zh: DeepPartial<Messages> = {
             job: "报告",
             jobPlaceholder: "选择报告",
             jobCatalog: {
+                ai_dashboard: {
+                    title: "仪表板页面",
+                    description:
+                        "为里程碑、项目或你自己的进度保持一个持续更新的页面：按状态统计的数量、已关闭和新建的内容，以及可开始和被阻塞的内容。页面保存为一条笔记，每次运行都会替换。",
+                },
                 what_to_do_today: {
                     title: "今天要做什么",
                     description:
@@ -4845,6 +4850,20 @@ export const zh: DeepPartial<Messages> = {
             paramChatHint:
                 "可选。选择一个要回顾的群聊，或保持为所有活跃群聊。只列出你所在的群聊。",
             chatAllBusy: "所有活跃群聊",
+            paramChoose: "请选择…",
+            paramKind: "仪表板对象",
+            paramKindHint: "页面涵盖的内容：一个里程碑、一个项目，或你自己的进度。",
+            paramPeriod: "时间范围",
+            paramPeriodHint: "数字回溯多久。这是数据窗口，不是运行频率。",
+            paramFocus: "关注点",
+            paramFocusHint: "可选。用几个词说明页面应关注什么。",
+            kindMilestone: "某个里程碑",
+            kindProject: "某个项目",
+            kindMine: "我的进度",
+            periodWeek: "最近一周",
+            periodMonth: "最近一个月",
+            periodQuarter: "最近一个季度",
+            periodYear: "最近一年",
             paramSkillInput: "提供给技能的内容",
             paramSkillInputHint: "可选。你会在技能名称后输入的文字，例如某个项目或某一周。",
             skillPlaceholder: "选择技能",
@@ -7134,6 +7153,13 @@ export const zh: DeepPartial<Messages> = {
                 errorTitle: "无法加载仪表盘",
                 errorBody: "请检查网络连接后重试。",
                 retry: "重试",
+                newDashboard: "新建仪表板",
+                newDashboardTitle: "新建仪表板",
+                newDashboardIntro:
+                    "计划会让一个页面保持最新。首次运行会创建它，之后每次运行都会替换它。",
+                newDashboardSaved: "已安排仪表板。立即运行以生成页面。",
+                newDashboardNoJob: "此服务器暂时无法创建仪表板。请稍后再试。",
+                newDashboardLoadFailed: "无法加载表单。",
             },
             tabToday: "今天",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

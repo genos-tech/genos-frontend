@@ -1121,6 +1121,11 @@ export const es: DeepPartial<Messages> = {
             job: "Informe",
             jobPlaceholder: "Elige un informe",
             jobCatalog: {
+                ai_dashboard: {
+                    title: "Página de panel",
+                    description:
+                        "Una página de panel siempre al día para un hito, un proyecto o tu propio progreso: recuentos por estado, lo cerrado y creado, y lo que está listo o bloqueado. La página se guarda como una nota y se reemplaza en cada ejecución.",
+                },
                 what_to_do_today: {
                     title: "Qué hacer hoy",
                     description:
@@ -1249,6 +1254,21 @@ export const es: DeepPartial<Messages> = {
             paramChatHint:
                 "Opcional. Elige un chat de grupo para ponerte al día o déjalo en todos los chats activos. Solo se muestran los chats en los que estás.",
             chatAllBusy: "Todos los chats activos",
+            paramChoose: "Elige…",
+            paramKind: "Panel de",
+            paramKindHint: "Qué cubre la página: un hito, un proyecto o tu propio progreso.",
+            paramPeriod: "Periodo",
+            paramPeriodHint:
+                "Hasta cuándo atrás llegan las cifras. Es la ventana de datos, no la frecuencia de ejecución.",
+            paramFocus: "Enfoque",
+            paramFocusHint: "Opcional. Unas palabras sobre lo que debe mirar la página.",
+            kindMilestone: "Un hito",
+            kindProject: "Un proyecto",
+            kindMine: "Mi progreso",
+            periodWeek: "Última semana",
+            periodMonth: "Último mes",
+            periodQuarter: "Último trimestre",
+            periodYear: "Último año",
             paramSkillInput: "Qué dárselo",
             paramSkillInputHint:
                 "Opcional. Las palabras que escribirías después del nombre de la habilidad, como un proyecto o una semana.",
@@ -4166,6 +4186,14 @@ export const es: DeepPartial<Messages> = {
                 errorTitle: "No se pudieron cargar los paneles",
                 errorBody: "Comprueba tu conexión e inténtalo de nuevo.",
                 retry: "Reintentar",
+                newDashboard: "Nuevo panel",
+                newDashboardTitle: "Nuevo panel",
+                newDashboardIntro:
+                    "Una programación mantiene una página al día. La primera ejecución la crea y cada ejecución posterior la reemplaza.",
+                newDashboardSaved: "Panel programado. Ejecútalo ahora para crear la página.",
+                newDashboardNoJob:
+                    "Este servidor aún no puede crear paneles. Inténtalo más tarde.",
+                newDashboardLoadFailed: "No se pudo cargar el formulario.",
             },
             tabToday: "Hoy",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

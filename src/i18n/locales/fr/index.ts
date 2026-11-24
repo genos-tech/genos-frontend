@@ -5000,6 +5000,11 @@ export const fr: DeepPartial<Messages> = {
             job: "Rapport",
             jobPlaceholder: "Choisir un rapport",
             jobCatalog: {
+                ai_dashboard: {
+                    title: "Page de tableau de bord",
+                    description:
+                        "Une page de tableau de bord toujours à jour pour un jalon, un projet ou votre propre progression : décomptes par statut, ce qui a été clos et créé, ce qui est prêt ou bloqué. La page est enregistrée comme une note et remplacée à chaque exécution.",
+                },
                 what_to_do_today: {
                     title: "À faire aujourd'hui",
                     description:
@@ -5129,6 +5134,22 @@ export const fr: DeepPartial<Messages> = {
             paramChatHint:
                 "Facultatif. Choisissez une discussion de groupe à rattraper, ou laissez toutes les discussions actives. Seules vos discussions sont listées.",
             chatAllBusy: "Toutes les discussions actives",
+            paramChoose: "Choisir…",
+            paramKind: "Tableau de bord de",
+            paramKindHint:
+                "Ce que couvre la page : un jalon, un projet ou votre propre progression.",
+            paramPeriod: "Période",
+            paramPeriodHint:
+                "Jusqu'où remontent les chiffres. C'est la fenêtre de données, pas la fréquence d'exécution.",
+            paramFocus: "Axe",
+            paramFocusHint: "Facultatif. Quelques mots sur ce que la page doit examiner.",
+            kindMilestone: "Un jalon",
+            kindProject: "Un projet",
+            kindMine: "Ma progression",
+            periodWeek: "Dernière semaine",
+            periodMonth: "Dernier mois",
+            periodQuarter: "Dernier trimestre",
+            periodYear: "Dernière année",
             paramSkillInput: "Ce qu'il faut lui donner",
             paramSkillInputHint:
                 "Facultatif. Les mots que vous taperiez après le nom de la compétence, comme un projet ou une semaine.",
@@ -7532,6 +7553,15 @@ export const fr: DeepPartial<Messages> = {
                 errorTitle: "Impossible de charger les tableaux de bord",
                 errorBody: "Vérifiez votre connexion et réessayez.",
                 retry: "Réessayer",
+                newDashboard: "Nouveau tableau de bord",
+                newDashboardTitle: "Nouveau tableau de bord",
+                newDashboardIntro:
+                    "Une planification garde une page à jour. La première exécution la crée et chaque exécution suivante la remplace.",
+                newDashboardSaved:
+                    "Tableau de bord planifié. Lancez-le maintenant pour créer la page.",
+                newDashboardNoJob:
+                    "Ce serveur ne peut pas encore créer de tableaux de bord. Réessayez plus tard.",
+                newDashboardLoadFailed: "Le formulaire n'a pas pu être chargé.",
             },
             tabToday: "Aujourd'hui",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

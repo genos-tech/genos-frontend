@@ -1358,6 +1358,13 @@ export const tasks = {
             errorTitle: "Dashboards could not be loaded",
             errorBody: "Check your connection and try again.",
             retry: "Try again",
+            newDashboard: "New dashboard",
+            newDashboardTitle: "New dashboard",
+            newDashboardIntro:
+                "A schedule keeps one page up to date. The first run makes it, and every run after replaces it.",
+            newDashboardSaved: "Dashboard scheduled. Run it now to build the page.",
+            newDashboardNoJob: "This server cannot make dashboards yet. Try again later.",
+            newDashboardLoadFailed: "The form could not be loaded.",
         },
         tabToday: "Today",
         // MIP-1005 / MIP-1696: every string of the Today view is a DRAFT for a native reader (TODO(copy)).

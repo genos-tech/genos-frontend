@@ -1099,6 +1099,11 @@ export const ar: DeepPartial<Messages> = {
             job: "التقرير",
             jobPlaceholder: "اختر تقريرًا",
             jobCatalog: {
+                ai_dashboard: {
+                    title: "صفحة لوحة معلومات",
+                    description:
+                        "صفحة لوحة معلومات محدّثة دائمًا لمعلَم أو مشروع أو تقدمك الخاص: أعداد حسب الحالة، وما أُغلق وما أُنشئ، وما هو جاهز أو محظور. تُحفظ الصفحة كملاحظة واحدة وتُستبدل عند كل تشغيل.",
+                },
                 what_to_do_today: {
                     title: "ما يجب فعله اليوم",
                     description:
@@ -1225,6 +1230,20 @@ export const ar: DeepPartial<Messages> = {
             paramChatHint:
                 "اختياري. اختر محادثة جماعية واحدة للاطلاع عليها، أو اتركها على كل المحادثات النشطة. تظهر المحادثات التي أنت فيها فقط.",
             chatAllBusy: "كل المحادثات النشطة",
+            paramChoose: "اختر…",
+            paramKind: "لوحة معلومات عن",
+            paramKindHint: "ما تغطيه الصفحة: معلَم واحد أو مشروع واحد أو تقدمك الخاص.",
+            paramPeriod: "الفترة",
+            paramPeriodHint: "إلى أي مدى تعود الأرقام. هذه نافذة البيانات وليست وتيرة التشغيل.",
+            paramFocus: "التركيز",
+            paramFocusHint: "اختياري. بضع كلمات عمّا يجب أن تنظر إليه الصفحة.",
+            kindMilestone: "معلَم",
+            kindProject: "مشروع",
+            kindMine: "تقدمي",
+            periodWeek: "الأسبوع الماضي",
+            periodMonth: "الشهر الماضي",
+            periodQuarter: "الربع الماضي",
+            periodYear: "العام الماضي",
             paramSkillInput: "ما الذي يُعطى لها",
             paramSkillInputHint:
                 "اختياري. الكلمات التي كنت ستكتبها بعد اسم المهارة، مثل مشروع أو أسبوع.",
@@ -4090,6 +4109,13 @@ export const ar: DeepPartial<Messages> = {
                 errorTitle: "تعذّر تحميل لوحات المعلومات",
                 errorBody: "تحقق من اتصالك وحاول مرة أخرى.",
                 retry: "حاول مرة أخرى",
+                newDashboard: "لوحة معلومات جديدة",
+                newDashboardTitle: "لوحة معلومات جديدة",
+                newDashboardIntro:
+                    "تُبقي الجدولة صفحة واحدة محدّثة. التشغيل الأول ينشئها وكل تشغيل لاحق يستبدلها.",
+                newDashboardSaved: "تمت جدولة لوحة المعلومات. شغّلها الآن لإنشاء الصفحة.",
+                newDashboardNoJob: "لا يستطيع هذا الخادم إنشاء لوحات معلومات بعد. حاول لاحقًا.",
+                newDashboardLoadFailed: "تعذّر تحميل النموذج.",
             },
             tabToday: "اليوم",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
