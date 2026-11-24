@@ -5123,6 +5123,10 @@ export const fr: DeepPartial<Messages> = {
             paramSkill: "Compétence",
             paramSkillHint:
                 "Exécute la version publiée de cette compétence et dépose le résultat dans votre boîte de réception. Elle lit seulement : elle ne modifie rien.",
+            paramChat: "Discussion de groupe",
+            paramChatHint:
+                "Facultatif. Choisissez une discussion de groupe à rattraper, ou laissez toutes les discussions actives. Seules vos discussions sont listées.",
+            chatAllBusy: "Toutes les discussions actives",
             paramSkillInput: "Ce qu'il faut lui donner",
             paramSkillInputHint:
                 "Facultatif. Les mots que vous taperiez après le nom de la compétence, comme un projet ou une semaine.",

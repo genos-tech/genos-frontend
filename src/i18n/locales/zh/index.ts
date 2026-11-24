@@ -4839,6 +4839,10 @@ export const zh: DeepPartial<Messages> = {
             paramSkill: "技能",
             paramSkillHint:
                 "运行此技能的已发布版本，并把结果放入你的收件箱。它只读取，不会更改任何内容。",
+            paramChat: "群聊",
+            paramChatHint:
+                "可选。选择一个要回顾的群聊，或保持为所有活跃群聊。只列出你所在的群聊。",
+            chatAllBusy: "所有活跃群聊",
             paramSkillInput: "提供给技能的内容",
             paramSkillInputHint: "可选。你会在技能名称后输入的文字，例如某个项目或某一周。",
             skillPlaceholder: "选择技能",
