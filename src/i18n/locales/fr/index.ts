@@ -5085,11 +5085,15 @@ export const fr: DeepPartial<Messages> = {
             errorSkill: "Choisissez une compétence.",
             effortHintNoEstimate:
                 "L'effort que l'IA fournit pour cette exécution. Elle consomme vos crédits d'IA comme une question dans Spotlight ; le chiffre réel figure sur chaque rapport.",
-            paramAiSentences: "Phrases de l'IA",
-            paramAiSentencesHint:
-                "Ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela utilise l'IA et dépense vos crédits d'IA. Désactivée par défaut : activez-la si vous la voulez.",
-            aiOutOfCredits:
-                "Vous avez utilisé tous vos crédits d'IA, les phrases de l'IA ne peuvent donc pas s'exécuter. Achetez des crédits ou passez à un plan supérieur pour les activer.",
+            scheduleModeLabel: "Mode",
+            scheduleModePlain: "Tâche planifiée",
+            scheduleModeAi: "Tâche planifiée par Genos AI",
+            scheduleModePlainHint:
+                "Un rapport simple construit à partir de vos données. Pas d'IA, aucun crédit dépensé.",
+            scheduleModeAiHint:
+                "Genos AI ajoute une courte phrase sous une tâche quand ses commentaires expliquent où elle en est. Cela dépense vos crédits d'IA.",
+            scheduleModeOutOfCredits:
+                "Vous avez utilisé tous vos crédits d'IA, le mode Genos AI ne peut donc pas s'exécuter. Achetez des crédits ou passez à un plan supérieur pour l'activer.",
             aiOutOfCreditsBuy: "Acheter des crédits",
             aiOutOfCreditsUpgrade: "Changer de forfait",
             effortLabel: "Effort de l'IA",

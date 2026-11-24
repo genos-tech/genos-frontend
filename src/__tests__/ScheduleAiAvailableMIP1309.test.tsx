@@ -13,6 +13,7 @@ import { SchedulesSection } from "../components/layout/schedules/SchedulesSectio
 import { HashMentionDataProvider } from "../context/HashMentionDataContext";
 import { withoutAi } from "../features/schedules/scheduleEffort";
 import type { EffortCost, ScheduleJob } from "../services/schedules";
+import { chooseMode, queryModeBox } from "./helpers/scheduleMode";
 
 vi.setConfig({ testTimeout: 30000 });
 
@@ -155,7 +156,7 @@ describe("while AI cannot run here", () => {
         await pickJob(user, "What to do today");
         const form = screen.getByTestId("schedule-form");
         expect(screen.queryByTestId("schedule-effort")).toBeNull();
-        expect(within(form).queryByRole("switch", { name: "AI sentences" })).toBeNull();
+        expect(queryModeBox()).toBeNull();
         expect(within(form).queryByText(/credits/i)).toBeNull();
         // The rest of the job is still there.
         expect(screen.getByTestId("schedule-params")).toBeTruthy();
@@ -207,12 +208,10 @@ describe("while AI can run, or the server does not say", () => {
         const user = userEvent.setup();
         await openNew(user);
         await pickJob(user, "What to do today");
-        const aiSwitch = within(screen.getByTestId("schedule-params")).getByRole("switch", {
-            name: "AI sentences",
-        });
-        expect(aiSwitch).toBeTruthy();
-        // Off by default (MIP-1969): the effort control follows the switch.
-        await user.click(aiSwitch);
+        expect(queryModeBox()).toBeTruthy();
+        // Plain by default: the effort control follows the mode.
+        expect(screen.queryByTestId("schedule-effort")).toBeNull();
+        await chooseMode(user, "ai");
         expect(screen.getByTestId("schedule-effort")).toBeTruthy();
     });
 });

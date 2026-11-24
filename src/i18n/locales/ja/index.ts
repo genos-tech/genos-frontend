@@ -4996,11 +4996,15 @@ export const ja: DeepPartial<Messages> = {
             errorSkill: "スキルを選択してください。",
             effortHintNoEstimate:
                 "この実行で AI がどれだけ深く考えるか。Spotlight での質問と同じように AI クレジットを使います。実際の消費量は各レポートに表示されます。",
-            paramAiSentences: "AI による一文",
-            paramAiSentencesHint:
-                "タスクのコメントから状況が分かるとき、タスクの下に短い一文を添えます。AI を使用し、AI クレジットを消費します。初期設定ではオフで、オンにしたときだけ追加されます。",
-            aiOutOfCredits:
-                "AIクレジットを使い切ったため、AIの一文は実行できません。クレジットを購入するかプランをアップグレードすると使えます。",
+            scheduleModeLabel: "モード",
+            scheduleModePlain: "スケジュールジョブ",
+            scheduleModeAi: "Genos AI によるスケジュールジョブ",
+            scheduleModePlainHint:
+                "データから作る通常のレポートです。AI は使わず、クレジットも消費しません。",
+            scheduleModeAiHint:
+                "タスクのコメントから状況が分かるとき、Genos AI がタスクの下に短い一文を添えます。AI クレジットを消費します。",
+            scheduleModeOutOfCredits:
+                "AIクレジットを使い切ったため、Genos AI モードは実行できません。クレジットを購入するかプランをアップグレードすると使えます。",
             aiOutOfCreditsBuy: "クレジットを購入",
             aiOutOfCreditsUpgrade: "プランをアップグレード",
             effortLabel: "AI の Effort",
