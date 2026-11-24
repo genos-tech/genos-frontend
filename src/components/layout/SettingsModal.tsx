@@ -86,6 +86,7 @@ import { useSpotlightPreferences } from "../../hooks/common/spotlightPreferences
 import { ThemePreference, useThemePreference } from "../../hooks/common/themePreferenceContext";
 import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
 import { useAutoSyncCalendarPreference } from "../../hooks/common/useAutoSyncCalendarPreference";
+import { useIsDemoUser } from "../../hooks/common/useIsDemoUser";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference";
 import {
@@ -789,6 +790,12 @@ const HELD_BACK_PROVIDERS = new Set(["claude", "openai"]);
 export const LlmModelSection = () => {
     const { data, loading, setChoice, setEffort } = useLlmModelPreference();
     const { t } = useTranslation();
+    // A demo visitor runs on the default model whatever they pick: the server pins it and spends
+    // from a small fixed budget (MIP-2341), so the picker would offer a choice that does nothing.
+    // `useIsDemoUser` is false until the profile loads and on any failure, so a real user never
+    // loses the picker.
+    const { accessToken } = useAuth();
+    const isDemoUser = useIsDemoUser(accessToken, localStorage.getItem("userId"));
 
     // Cluster the catalog by provider so the model dropdown can show
     // only the models that match the currently-selected provider — the
@@ -805,6 +812,8 @@ export const LlmModelSection = () => {
         }
         return Array.from(seen.keys());
     }, [data]);
+
+    if (isDemoUser) return null;
 
     if (loading) {
         return (
