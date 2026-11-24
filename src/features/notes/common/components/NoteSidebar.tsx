@@ -453,7 +453,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // MIP-1697: build the template (blocks come from the built-ins) and hand title + body to the
     // creator of the surface the menu belongs to.
     const [teamTemplates, setTeamTemplates] = useState<TeamNoteTemplate[]>([]);
-    const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
+    // The picker modal, open for the surface whose menu asked (MIP-2337): `create` makes the note
+    // in that surface's folder / task / chat.
+    type ResolvedNoteOverrides = { title: string; body: ResolvedTemplate["blocks"] };
+    const [templatePicker, setTemplatePicker] = useState<{
+        create: (o: ResolvedNoteOverrides | undefined) => unknown;
+    } | null>(null);
     // Read through a ref so a new `myself` object (same team) never re-fetches the list.
     const myselfRef = useRef(myself);
     myselfRef.current = myself;
@@ -467,7 +472,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         if (accessToken) void reloadTeamTemplates();
     }, [reloadTeamTemplates, accessToken, myself.teamId]);
 
-    type ResolvedNoteOverrides = { title: string; body: ResolvedTemplate["blocks"] };
+    const openTemplatePicker = (create: (o: ResolvedNoteOverrides | undefined) => unknown) => {
+        // Refresh first: a template added in another tab or by a teammate shows up.
+        void reloadTeamTemplates();
+        setTemplatePicker({ create });
+    };
     const createFromTemplate = async (
         pick: TemplatePick,
         create: (o: ResolvedNoteOverrides | undefined) => unknown
@@ -505,8 +514,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             ? buildTemplateMenuItems({
                   copy: t.notes.noteTemplates,
                   idPrefix: "new-note-here",
-                  teamTemplates,
-                  onPick: (pick) => createFromTemplate(pick, onCreateFromTemplate),
+                  onOpenPicker: () => openTemplatePicker(onCreateFromTemplate),
               })
             : []),
         {
@@ -591,11 +599,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             buildTemplateMenuItems({
                 copy: t.notes.noteTemplates,
                 idPrefix: "new-note-here",
-                teamTemplates,
-                onPick: (pick) =>
-                    createFromTemplate(pick, (o) =>
-                        useNM.handleCreateNewMyNote(null, folderId, o)
-                    ),
+                onOpenPicker: () =>
+                    openTemplatePicker((o) => useNM.handleCreateNewMyNote(null, folderId, o)),
             }),
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
         onExportFolder: (folder) =>
@@ -695,12 +700,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         copy: t.notes.noteTemplates,
                         idPrefix: "new-note",
                         divider: true,
-                        teamTemplates,
-                        onManage: () => setTemplatesModalOpen(true),
-                        onPick: (pick) =>
-                            createFromTemplate(pick, (o) =>
-                                useNM.handleCreateNewMyNote(null, null, o)
-                            ),
+                        onOpenPicker: () =>
+                            openTemplatePicker((o) => useNM.handleCreateNewMyNote(null, null, o)),
                     }),
                     {
                         id: "new-folder",
@@ -902,11 +903,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             buildTemplateMenuItems({
                 copy: t.notes.noteTemplates,
                 idPrefix: "new-note-here",
-                teamTemplates,
-                onPick: (pick) =>
-                    createFromTemplate(pick, (o) =>
-                        useNM.handleCreateNewMyNote(null, folderId, o)
-                    ),
+                onOpenPicker: () =>
+                    openTemplatePicker((o) => useNM.handleCreateNewMyNote(null, folderId, o)),
             }),
         onImportNoteHere: (folderId) => setImportModalContext({ kind: "my", folderId }),
         onExportFolder: (folder) =>
@@ -2073,13 +2071,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             <ModalNoteTemplates
                 folders={useNM.teamNoteFolders}
                 myself={myself}
-                open={templatesModalOpen}
+                open={templatePicker !== null}
                 templates={teamTemplates}
-                onClose={() => setTemplatesModalOpen(false)}
+                onClose={() => setTemplatePicker(null)}
                 onChanged={() => {
                     void reloadTeamTemplates();
                     // The folder rows carry each folder's default template.
                     void useNM.getTeamNoteFolders();
+                }}
+                onUse={(pick) => {
+                    const target = templatePicker;
+                    setTemplatePicker(null);
+                    if (target) void createFromTemplate(pick, target.create);
                 }}
             />
             <ModalTeamFolderTags

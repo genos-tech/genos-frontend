@@ -119,7 +119,12 @@ describe("link host caption in every editable editor", () => {
         const readOnly = editorFiles
             .filter(({ text }) => /editable=\{false\}/.test(text))
             .map(({ file }) => file);
-        expect(readOnly).toEqual(["components/editors/bnChatPreview.tsx"]);
+        // The template picker's preview (MIP-2337) is read-only too: nothing can be typed or
+        // pasted into it, so it has no link to caption.
+        expect(readOnly).toEqual([
+            "components/editors/bnChatPreview.tsx",
+            "features/notes/templates/NoteTemplatePreview.tsx",
+        ]);
 
         // ...and the only surface without editing rules is the one that preview uses.
         const hooks = readFileSync(join(SRC, GENOS_HOOKS), "utf8");
