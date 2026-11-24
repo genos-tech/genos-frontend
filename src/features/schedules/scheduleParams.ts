@@ -58,8 +58,8 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
     },
     hours: { label: "paramHours", hint: "paramHoursHint" },
     ai_sentences: {
-        label: "paramAiSentences",
-        hint: "paramAiSentencesHint",
+        label: "scheduleModeLabel",
+        hint: "scheduleModeAiHint",
         boolean: { defaultOn: false },
         aiSwitch: true,
         preferOwnHint: true,
