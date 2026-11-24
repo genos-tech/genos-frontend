@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SchedulesSection } from "../components/layout/schedules/SchedulesSection";
+import { en } from "../i18n/locales/en";
 
 vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "tok" }),
@@ -317,7 +318,9 @@ describe("create and edit form", () => {
         expect(within(params).getByText("Day")).toBeTruthy();
         expect(within(params).queryByText("Changed hours")).toBeNull();
         expect(within(params).queryByRole("spinbutton")).toBeNull();
-        expect(screen.getByText("A recap of your day.")).toBeTruthy();
+        expect(
+            screen.getByText(en.settings.schedules.jobCatalog.what_you_did.description)
+        ).toBeTruthy();
         expect(screen.getByText("Your time zone: Asia/Tokyo")).toBeTruthy();
     });
 

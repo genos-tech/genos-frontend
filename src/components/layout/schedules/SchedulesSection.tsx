@@ -546,9 +546,11 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     {sch.name}
                                 </Typography>
                                 <Chip size="sm" variant="soft">
-                                    {jobs.find((j) => j.job === sch.job)?.title ??
-                                        sch.jobTitle ??
-                                        s.jobRemoved}
+                                    {/* `jobTitle: null` is the server saying the job is gone. */}
+                                    {sch.jobTitle == null
+                                        ? s.jobRemoved
+                                        : (jobs.find((j) => j.job === sch.job)?.title ??
+                                          sch.jobTitle)}
                                 </Chip>
                                 {!sch.enabled && (
                                     <Chip color="warning" size="sm" variant="soft">
