@@ -52,6 +52,9 @@ type Props = {
     cancelLabel: string;
     /** Red confirm, focus on Cancel. For anything that removes data. */
     destructive?: boolean;
+    /** Focus starts on Cancel without turning the confirm red. For a safety card that is not a
+     *  delete (a skill's first-run card): an Enter pressed by reflex must not run anything. */
+    focusCancel?: boolean;
     /** The exact text to type before Confirm enables. */
     confirmPhrase?: string;
     /** Names the field; falls back to the phrase itself. Pass it localized. */
@@ -88,6 +91,7 @@ export const ConfirmDialog = ({
     confirmLabel,
     cancelLabel,
     destructive = false,
+    focusCancel = false,
     confirmPhrase,
     confirmPhraseLabel,
     afterPhrase,
@@ -164,7 +168,7 @@ export const ConfirmDialog = ({
             actions={
                 <>
                     <Button
-                        autoFocus={destructive && confirmPhrase == null}
+                        autoFocus={(destructive || focusCancel) && confirmPhrase == null}
                         color="neutral"
                         disabled={busy}
                         size="md"
@@ -178,7 +182,7 @@ export const ConfirmDialog = ({
                         {cancelLabel}
                     </Button>
                     <Button
-                        autoFocus={!destructive && confirmPhrase == null}
+                        autoFocus={!destructive && !focusCancel && confirmPhrase == null}
                         color={destructive ? "danger" : "primary"}
                         disabled={confirmDisabled || !phraseOk}
                         loading={busy}
