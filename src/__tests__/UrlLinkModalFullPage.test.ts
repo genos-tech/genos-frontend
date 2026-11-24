@@ -12,7 +12,7 @@
  * (a navigation behind an open dialog reads as "nothing happened"), and
  * it does NOT survive the preview re-targeting itself.
  */
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { useUrlLinkModalState } from "../hooks/common/useUrlLinkModalState";
@@ -36,7 +36,8 @@ describe("UrlLinkModal → Move to page", () => {
         expect(result.current.openFullPage).toBeNull();
     });
 
-    it("closes the preview and runs the caller's navigation", () => {
+    // The action runs once the modal's history entries are popped (MIP-2376), so it is awaited.
+    it("closes the preview and runs the caller's navigation", async () => {
         const navigate = vi.fn();
         const onOpenFullPage = vi.fn();
         const { result } = renderHook(() => useUrlLinkModalState({ navigate }));
@@ -50,7 +51,7 @@ describe("UrlLinkModal → Move to page", () => {
             result.current.openFullPage?.();
         });
 
-        expect(onOpenFullPage).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(onOpenFullPage).toHaveBeenCalledTimes(1));
         // Closed, so the page the caller navigates to is actually
         // visible — and the action is gone with the preview.
         expect(result.current.target).toBeNull();
@@ -58,7 +59,7 @@ describe("UrlLinkModal → Move to page", () => {
         expect(result.current.openFullPage).toBeNull();
     });
 
-    it("navigates to `fullPageHref` for a caller with no navigate of its own", () => {
+    it("navigates to `fullPageHref` for a caller with no navigate of its own", async () => {
         // The inbox reminder card's shape: it lives below the router-aware
         // layers and has nothing to do beyond going to the link, so it
         // names the href and lets this hook drive its own navigate.
@@ -75,11 +76,11 @@ describe("UrlLinkModal → Move to page", () => {
             result.current.openFullPage?.();
         });
 
-        expect(navigate).toHaveBeenCalledWith(href);
+        await waitFor(() => expect(navigate).toHaveBeenCalledWith(href));
         expect(result.current.target).toBeNull();
     });
 
-    it("prefers an explicit `onOpenFullPage` over `fullPageHref`", () => {
+    it("prefers an explicit `onOpenFullPage` over `fullPageHref`", async () => {
         const navigate = vi.fn();
         const onOpenFullPage = vi.fn();
         const { result } = renderHook(() => useUrlLinkModalState({ navigate }));
@@ -94,7 +95,7 @@ describe("UrlLinkModal → Move to page", () => {
             result.current.openFullPage?.();
         });
 
-        expect(onOpenFullPage).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(onOpenFullPage).toHaveBeenCalledTimes(1));
         expect(navigate).not.toHaveBeenCalled();
     });
 
