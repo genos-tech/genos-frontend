@@ -1,10 +1,13 @@
 import type { MouseEvent } from "react";
 import { Stack, StackProps } from "@mui/joy";
 
+import type { SettingGuideId } from "../../../manual/settingsMap";
 import { SETTING_ROW_CLASS, settingRowSx } from "./settingRowStyles";
 import { toggleRowSwitch } from "./toggleRowSwitch";
 
 type SettingRowProps = StackProps & {
+    /** Where the manual describes this row: an id in `src/manual/settingsMap.ts` (MIP-2320). */
+    guideId: SettingGuideId;
     /** The row's control is disabled: no hover or focus plate. */
     disabled?: boolean;
     /** The row has its own fill (a muted-list row): the plate mixes over it. */
@@ -18,6 +21,7 @@ type SettingRowProps = StackProps & {
  * Lays out like the `Stack` it wraps, so a caller keeps its own direction and alignment.
  */
 export const SettingRow = ({
+    guideId,
     disabled = false,
     filled = false,
     className,
@@ -27,6 +31,7 @@ export const SettingRow = ({
 }: SettingRowProps) => (
     <Stack
         className={className ? `${SETTING_ROW_CLASS} ${className}` : SETTING_ROW_CLASS}
+        data-guide-id={guideId}
         sx={[settingRowSx({ disabled, filled }), ...(Array.isArray(sx) ? sx : [sx])]}
         onClick={(event: MouseEvent<HTMLDivElement>) => {
             onClick?.(event);
