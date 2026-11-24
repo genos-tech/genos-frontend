@@ -11,7 +11,9 @@ import { useDocumentMeta } from "./useDocumentMeta";
 /**
  * `/security` — how Genos handles data (MIP-1248). Public and auth-free, the same shell and
  * ja/en toggle as `/support`, `/privacy` and `/legal`. Every statement is in `copy/security.ts`
- * with its evidence next to it. Facts only the operator can confirm are not on this page.
+ * with its evidence next to it. Facts only the operator can confirm are not on this page, except the
+ * MIP-2284 statements (the host's attestations, the guidance we refer to, the basic policy), which Ken decided on
+ * 2026-11-24 and which go live only after he and counsel approve the wording.
  */
 
 function SecurityBody({ lang }: { lang: Lang }) {
@@ -35,6 +37,17 @@ function SecurityBody({ lang }: { lang: Lang }) {
                             {section.body.map((paragraph) => (
                                 <p key={paragraph}>{paragraph}</p>
                             ))}
+                            {section.links && (
+                                <ul aria-label={c.sourcesLabel}>
+                                    {section.links.map((link) => (
+                                        <li key={link.href}>
+                                            <a href={link.href} rel="noopener noreferrer">
+                                                {link.label}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </section>
                     ))}
 
