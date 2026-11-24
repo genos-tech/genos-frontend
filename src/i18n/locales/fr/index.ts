@@ -5062,6 +5062,8 @@ export const fr: DeepPartial<Messages> = {
             deliverLabel: "Envoyer le rapport à",
             deliverInbox: "Ma boîte de réception",
             deliverProjectChat: "{name} (chat du projet)",
+            deliverKindGroup: "Chat de groupe",
+            deliverKindProject: "Chat du projet",
             deliverChatHint:
                 "Le rapport est publié dans ce chat sous forme de message, sans IA et sans notification. Tous les membres du chat peuvent le lire : un rapport de projet ne peut donc aller que dans un chat réservé aux membres de ce projet.",
             deliverChatHintAi:

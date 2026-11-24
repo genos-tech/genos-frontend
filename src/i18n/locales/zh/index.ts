@@ -4778,6 +4778,8 @@ export const zh: DeepPartial<Messages> = {
             deliverLabel: "报告发送到",
             deliverInbox: "我的收件箱",
             deliverProjectChat: "{name}（项目聊天）",
+            deliverKindGroup: "群聊",
+            deliverKindProject: "项目聊天",
             deliverChatHint:
                 "报告会作为消息发布到此聊天，不使用 AI，也不发送通知。聊天中的所有人都能看到它，因此项目报告只能发到该项目成员的聊天中。",
             deliverChatHintAi:

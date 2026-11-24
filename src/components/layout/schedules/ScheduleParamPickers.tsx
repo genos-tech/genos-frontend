@@ -22,7 +22,10 @@ import {
     ProjectIdentityRow,
 } from "../../../features/tasks/components/ProjectIdentityRow";
 import { fmt, useTranslation } from "../../../i18n";
+import type { ChatTarget } from "../../../services/schedules";
 import type { ProjectProps } from "../../../types/tasks";
+import { INBOX_TARGET, type DeliverTarget } from "./chatTarget";
+import { ChatTargetDecorator, ChatTargetOption } from "./ChatTargetOption";
 import { useJoinedProjects, useProjectAvatars, useProjectMilestones } from "./scheduleParamHooks";
 
 /** A dropdown is portaled to <body>, so it must clear the dialog it opens from. Both
@@ -206,6 +209,62 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
                     </Typography>
                 </AutocompleteOption>
             )}
+            onChange={(_, option) => onChange(option ? option.id : "")}
+        />
+    );
+};
+
+/** "Send the report to" (MIP-2347): the Inbox or a chat, as the Project updates picker draws a
+ *  project: an Autocomplete whose rows carry the picture, the kind and the tags, and whose closed
+ *  field keeps the picture. `chats` already holds a saved place that is no longer offered
+ *  (`stray`, shown muted as "(unavailable)"), so the form never shows a blank for what is saved. */
+export const ChatTargetSelect = ({
+    chats,
+    stray,
+    value,
+    onChange,
+    label,
+}: {
+    chats: ChatTarget[];
+    /** Id of the chat in `chats` that the member's list no longer offers, if any. */
+    stray?: string;
+    /** The chat's id, "" for the Inbox. */
+    value: string;
+    onChange: (next: string) => void;
+    /** The text of a chat in the closed field and for filtering. */
+    label: (c: ChatTarget) => string;
+}) => {
+    const { t } = useTranslation();
+    const popupZIndex = useDialogPopupZIndex();
+    // `null` is the Inbox row.
+    const options: DeliverTarget[] = [INBOX_TARGET, ...chats];
+    const selected: DeliverTarget = chats.find((c) => c.id === value) ?? INBOX_TARGET;
+
+    return (
+        <Autocomplete<DeliverTarget, false, true, false>
+            isOptionEqualToValue={(o, v) => o.id === v.id}
+            noOptionsText={t.common.empty.noResults}
+            options={options}
+            slotProps={projectListboxSlotProps(popupZIndex)}
+            startDecorator={<ChatTargetDecorator target={selected} />}
+            sx={{ minWidth: 0 }}
+            value={selected}
+            getOptionLabel={(o) =>
+                o.kind === "inbox" ? t.settings.schedules.deliverInbox : label(o)
+            }
+            renderOption={(optionProps, option) => (
+                <AutocompleteOption
+                    {...optionProps}
+                    key={option.id || "inbox"}
+                    sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
+                >
+                    <ChatTargetOption
+                        target={option}
+                        unavailable={option.id !== "" && option.id === stray}
+                    />
+                </AutocompleteOption>
+            )}
+            disableClearable
             onChange={(_, option) => onChange(option ? option.id : "")}
         />
     );

@@ -4976,6 +4976,8 @@ export const ja: DeepPartial<Messages> = {
             deliverLabel: "レポートの送信先",
             deliverInbox: "自分の受信箱",
             deliverProjectChat: "{name}（プロジェクトのチャット）",
+            deliverKindGroup: "グループチャット",
+            deliverKindProject: "プロジェクトチャット",
             deliverChatHint:
                 "レポートはメッセージとしてこのチャットに投稿されます。AI は使わず、通知も送りません。チャットの全員が読めるため、プロジェクトのレポートはそのプロジェクトのメンバーだけのチャットにしか送れません。",
             deliverChatHintAi:

@@ -247,6 +247,8 @@ export const settings = {
         deliverLabel: "Send the report to",
         deliverInbox: "My Inbox",
         deliverProjectChat: "{name} (project chat)",
+        deliverKindGroup: "Group chat",
+        deliverKindProject: "Project chat",
         deliverChatHint:
             "The report is posted in this chat as a message, with no AI and no notification. Everyone in the chat can read it, so a project report can only go to a chat of that project's members.",
         deliverChatHintAi:
