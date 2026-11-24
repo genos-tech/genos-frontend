@@ -273,7 +273,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 label: "その他の連携",
                 items: ["Googleカレンダー", "GitHub"],
             },
-            kept: "Genosに残るのは、エージェントが作成・更新したタスク、コメント、ノートです。会話の全文を保存するものではありません。",
+            kept: "Genosに残るのは、Claudeなどのエージェントが作成・更新したタスク、コメント、ノートです。Claudeとの会話の記録そのものは保存しません。Genos AIとの会話は、あとで見返せるよう保存され、削除もできます。",
         },
         // One FAQ (MIP-1611): the four questions Ken wrote, then the two earlier ones that stay true.
         questions: {
@@ -281,7 +281,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             items: [
                 {
                     q: "Genosは何を記録しますか？",
-                    a: "エージェントがGenosに作成・更新したタスク、コメント、ノートです。会話の全文を保存するわけではありません。",
+                    a: "エージェントがGenosに作成・更新したタスク、コメント、ノートです。Claudeなど外部アプリとの会話の記録そのものは保存しません。Genosに組み込まれたGenos AIとの会話は、あとで見返せるよう保存され、削除もできます。",
                 },
                 {
                     q: "どのAIエージェントで使えますか？",
@@ -297,7 +297,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "Genosが記録する私の活動は、誰が見られますか？",
-                    a: "あなただけです。チームのダッシュボードや他の人への回答には使われません。設定からいつでも止められ、止めると記録は削除されます。",
+                    a: "あなただけです。AIアプリがどの項目に触れたかというGenosの記録は、あなただけが見られ、チームのダッシュボードや他の人への回答には使われません。設定 › Genos › Genosが覚えていること でオフにすると削除されます。タスク・ノート・チャットは共有の記録で、ワークスペースの権限に従います。Genos AIの回答は別に保存され、削除したり、チームへの共有を止めたりできます。",
                 },
                 {
                     q: "登録せずに試せますか？",
@@ -397,7 +397,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 { text: "チャットの返信下書き。送信するのはあなた", coming: true },
             ],
             privacy:
-                "Genosが記録するあなたの活動は、あなただけが見られます。オフにすれば削除されます。",
+                "AIアプリがどの項目に触れたかというGenosの記録は、あなただけが見られます。オフにすれば削除されます。",
             alt: "Genosの受信箱。今日やることのレポートが、プロジェクトごとにチップつきで並んでいる",
         },
         audiences: {
@@ -615,7 +615,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 items: ["Google Calendar", "GitHub"],
             },
             // TODO(copy: Ken's final English; Ken to review)
-            kept: "Genos stores the tasks, comments, and notes your AI agent creates or updates. It does not store the full text of your conversations.",
+            kept: "Genos keeps the tasks, comments, and notes that Claude or another agent creates or updates, not a transcript of your Claude conversations. Conversations with Genos AI are saved so you can return to them, and you can delete them.",
         },
         // One FAQ (MIP-1611): the four questions Ken wrote, then the two earlier ones that stay true.
         questions: {
@@ -625,7 +625,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     // TODO(copy: Ken's final English; Ken to review)
                     q: "What does Genos record?",
-                    a: "Genos records the tasks, comments, and notes your AI agent creates or updates in your workspace. It does not store the full text of your conversations.",
+                    a: "Genos records the tasks, comments, and notes your AI agent creates or updates in your workspace. It does not keep a transcript of your conversations with Claude or other outside apps. Conversations with Genos AI, the assistant built into Genos, are saved so you can return to them, and you can delete them.",
                 },
                 {
                     // TODO(copy: Ken's final English; Ken to review)
@@ -644,7 +644,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "Who can see what Genos notes about my work?",
-                    a: "Only you. It never appears in team dashboards or in answers to other people. You can turn it off in Settings at any time, and turning it off deletes it.",
+                    a: "Only you. The record Genos keeps of which items your AI apps touched is visible only to you, never in team dashboards or other people's answers. Turn it off in Settings › Genos › What Genos remembers and it is deleted. Your tasks, notes and chat messages are shared records and follow workspace access. Your Genos AI answers are saved separately; you can delete them or stop sharing them with teammates.",
                 },
                 {
                     q: "Can I try it without signing up?",
@@ -747,7 +747,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 { text: "Reply drafts in chat; you press send", coming: true },
             ],
             privacy:
-                "What Genos notes about your work is visible only to you. Turn it off and it's deleted.",
+                "The record of which items your AI apps touched is visible only to you. Turn it off and it's deleted.",
             alt: "The Genos Inbox with a report of today's work, grouped by project with status chips",
         },
         audiences: {
