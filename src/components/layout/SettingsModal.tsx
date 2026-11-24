@@ -1901,6 +1901,29 @@ export const SettingsModal = ({
         pushedTab.current = tab;
         pushModalPage(SETTINGS_HISTORY_OWNER, { tab });
     }, [open, tab, initialTab]);
+    // The rail follows the shown panel (MIP-2376): when the tab changes by Back / Forward, the
+    // focus ring must not stay on the tab that was left (it read as "still selected"), and on
+    // a phone the selected tab is scrolled into view in the strip.
+    useEffect(() => {
+        if (!open) return;
+        const frame = window.requestAnimationFrame(() => {
+            const selected = document.querySelector<HTMLElement>(
+                '[role="tablist"] [role="tab"][aria-selected="true"]'
+            );
+            if (!selected) return;
+            const active = document.activeElement;
+            if (
+                active instanceof HTMLElement &&
+                active !== selected &&
+                active.getAttribute("role") === "tab" &&
+                active.closest('[role="tablist"]') === selected.closest('[role="tablist"]')
+            ) {
+                selected.focus({ preventScroll: true });
+            }
+            selected.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+        });
+        return () => window.cancelAnimationFrame(frame);
+    }, [open, tab]);
     // "Connect your AI" points a Free member at Plan & Usage (MIP-2020).
     useEffect(() => {
         if (!open) return;

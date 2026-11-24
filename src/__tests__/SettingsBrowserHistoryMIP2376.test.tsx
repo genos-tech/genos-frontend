@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SETTINGS_TABS, SettingsModal } from "../components/layout/SettingsModal";
@@ -84,6 +84,37 @@ describe("Settings and browser history (MIP-2376)", () => {
         await act(async () => window.history.back());
         await settle();
         expect(screen.queryByRole("dialog")).toBeNull();
+    });
+
+    it("after Back and Forward the selected tab, the focused tab and the shown panel agree, and the tab is scrolled into view", async () => {
+        const scrolled: string[] = [];
+        Element.prototype.scrollIntoView = function (this: Element) {
+            scrolled.push(this.textContent ?? "");
+        };
+        renderHost();
+        fireEvent.click(screen.getByText("open"));
+        fireEvent.click(screen.getByRole("tab", { name: labelOf("security") }));
+        const notifications = screen.getByRole("tab", { name: labelOf("notifications") });
+        fireEvent.click(notifications);
+        notifications.focus();
+        expect(selectedTab()).toContain(labelOf("notifications"));
+
+        for (const [move, expected] of [
+            [() => window.history.back(), "security"],
+            [() => window.history.forward(), "notifications"],
+        ] as const) {
+            scrolled.length = 0;
+            await act(async () => move());
+            await waitFor(() => {
+                expect(selectedTab()).toContain(labelOf(expected));
+                expect(document.activeElement?.textContent).toContain(labelOf(expected));
+                expect(scrolled.some((s) => s.includes(labelOf(expected)))).toBe(true);
+            });
+            // The one visible panel belongs to the selected tab.
+            const panel = screen.getAllByRole("tabpanel").find((p) => !p.hidden);
+            const selected = screen.getByRole("tab", { selected: true });
+            expect(panel?.getAttribute("aria-labelledby")).toBe(selected.id);
+        }
     });
 
     it("closing pops the entries: Back does not reopen Settings", async () => {
