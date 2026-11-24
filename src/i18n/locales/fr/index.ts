@@ -6573,7 +6573,7 @@ export const fr: DeepPartial<Messages> = {
             customizeFields: {
                 heading: "Personnaliser les champs de tâche",
                 description:
-                    "Rendez des champs obligatoires et définissez des valeurs par défaut pour les nouvelles tâches et jalons de ce projet. Seul le propriétaire du projet peut les modifier.",
+                    "Rendez des champs obligatoires et définissez des valeurs par défaut pour les nouvelles tâches et jalons de ce projet. Seuls le propriétaire et les éditeurs du projet peuvent les modifier.",
                 requiredLabel: "Obligatoire",
                 defaultLabel: "Valeur par défaut",
                 alwaysRequired: "Toujours obligatoire",
@@ -6587,7 +6587,7 @@ export const fr: DeepPartial<Messages> = {
                 save: "Enregistrer",
                 cancel: "Annuler",
                 saveFailed:
-                    "Échec de l'enregistrement — seul le propriétaire du projet peut modifier ces paramètres.",
+                    "Échec de l'enregistrement — seuls le propriétaire et les éditeurs du projet peuvent modifier ces paramètres.",
             },
         },
         projects: {

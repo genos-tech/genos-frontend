@@ -205,6 +205,7 @@ export const SharedAnswersSection = ({ accessToken, teamId, refreshKey }: Props)
                 alignItems="center"
                 direction="row"
                 disabled={!known || pref.saving}
+                guideId="spotlight.sharedAnswers"
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mb: 1.5 }}

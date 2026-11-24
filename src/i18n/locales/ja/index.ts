@@ -6457,7 +6457,7 @@ export const ja: DeepPartial<Messages> = {
             customizeFields: {
                 heading: "タスク項目のカスタマイズ",
                 description:
-                    "このプロジェクトで新しく作成するタスク／マイルストーンの必須項目とデフォルト値を設定します。変更できるのはプロジェクトオーナーのみです。",
+                    "このプロジェクトで新しく作成するタスク／マイルストーンの必須項目とデフォルト値を設定します。変更できるのはプロジェクトオーナーと編集者のみです。",
                 requiredLabel: "必須",
                 defaultLabel: "デフォルト値",
                 alwaysRequired: "常に必須",
@@ -6471,7 +6471,7 @@ export const ja: DeepPartial<Messages> = {
                 save: "保存",
                 cancel: "キャンセル",
                 saveFailed:
-                    "保存できませんでした。この設定を変更できるのはプロジェクトオーナーのみです。",
+                    "保存できませんでした。この設定を変更できるのはプロジェクトオーナーと編集者のみです。",
             },
         },
         projects: {
