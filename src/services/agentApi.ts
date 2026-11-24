@@ -375,6 +375,36 @@ export type AgentMentionPayload =
           label: string;
       };
 
+/** The 409 `skill_needs_confirmation` of an ask: which skill version needs the person's yes first,
+ *  and why (`outside` = another author's, `harmful` = a copy of a skill taken down as harmful).
+ *  `message` is the server's own sentence, for a host that cannot show the card. */
+export type SkillNeedsConfirmation = {
+    skillId: string;
+    versionNo: number;
+    outside: boolean;
+    harmful: boolean;
+    message: string;
+};
+
+/** Reads a 409 body as `skill_needs_confirmation`; anything that cannot name a skill version is not
+ *  one (the turn then fails like any other 409). */
+const asSkillNeedsConfirmation = (data: unknown): SkillNeedsConfirmation | null => {
+    if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+    const d = data as Record<string, unknown>;
+    if (d.code !== "skill_needs_confirmation") return null;
+    if (typeof d.skillId !== "string" || d.skillId === "") return null;
+    if (typeof d.versionNo !== "number" || !Number.isInteger(d.versionNo) || d.versionNo < 0) {
+        return null;
+    }
+    return {
+        skillId: d.skillId,
+        versionNo: d.versionNo,
+        outside: d.outside === true,
+        harmful: d.harmful === true,
+        message: typeof d.error === "string" ? d.error : "",
+    };
+};
+
 export interface AskAgentArgs extends BaseStreamHandlers {
     query: string;
     teamId: string;
@@ -427,6 +457,12 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // that only wants the sentence can ignore this. A 404 is final: the caller must not send the same
     // `taskContext` again.
     onTaskNotFound?: () => void;
+    // Called INSTEAD of `onError` when the server answers 409 `skill_needs_confirmation` (MIP-2192):
+    // the skill is an outside author's version, or a copy of one an operator took down as harmful,
+    // and the person has not confirmed it yet. Nothing ran and nothing was spent, so this is no
+    // failure: the host shows the first-run card and may re-send the same ask once the person
+    // confirms. No other handler is called. Without it the 409 falls through to `onError`.
+    onSkillNeedsConfirmation?: (info: SkillNeedsConfirmation) => void;
     // When true, the backend ignores any existing session for this user
     // (both `sessionId` and any per-thread/per-note session) and creates
     // a fresh AgentSession. Used by the "Clear conversation" button so
@@ -1301,7 +1337,8 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
         args,
         undefined,
         // The 404 of an ask about a task (MIP-1057): gone for good, so say so once, in our own words.
-        taskSent ? () => args.onTaskNotFound?.() : undefined
+        taskSent ? () => args.onTaskNotFound?.() : undefined,
+        args.onSkillNeedsConfirmation
     );
 }
 
@@ -1624,7 +1661,9 @@ async function runNdjsonStream(
     handlers: BaseStreamHandlers,
     onEditsRejected?: (rejection: EditsRejected) => void,
     // Set only by an ask that carried a `task_context`: its 404 means the task cannot be opened.
-    onTaskNotFound?: () => void
+    onTaskNotFound?: () => void,
+    // Set only by an ask: a 409 `skill_needs_confirmation` goes here instead of `handlers.onError`.
+    onSkillNeedsConfirmation?: (info: SkillNeedsConfirmation) => void
 ): Promise<void> {
     let resp: Response;
     try {
@@ -1654,9 +1693,11 @@ async function runNdjsonStream(
         // `{detail}`): only the API this client was built for answers like that.
         let platformError = false;
         let outOfCredits = false;
+        let needsConfirmation: SkillNeedsConfirmation | null = null;
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
+            if (resp.status === 409) needsConfirmation = asSkillNeedsConfirmation(data);
             // The AI credit gate (429 `{category: "ai_credits"}`): the turn ends in a sentence of ours
             // with "Buy credits" / "Upgrade plan" next to it, never a dead end (MIP-1969).
             outOfCredits = resp.status === 429 && data?.category === "ai_credits";
@@ -1675,6 +1716,11 @@ async function runNdjsonStream(
         }
         if (fieldErrors && onEditsRejected) {
             onEditsRejected({ message, fieldErrors });
+            return;
+        }
+        // A skill the person must confirm first (MIP-2192): not an error, nothing ran.
+        if (needsConfirmation && onSkillNeedsConfirmation) {
+            onSkillNeedsConfirmation(needsConfirmation);
             return;
         }
         // The task this ask was about cannot be opened (deleted, access lost, never there: one
