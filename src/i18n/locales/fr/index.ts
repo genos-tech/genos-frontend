@@ -1933,6 +1933,17 @@ export const fr: DeepPartial<Messages> = {
             unsavedTitle: "Abandonner les modifications non enregistrées ?",
             unsavedBody: "Vos modifications seront perdues.",
         },
+        recentAuth: {
+            title: "Confirmez que c'est vous",
+            description:
+                "Pour votre sécurité, saisissez votre mot de passe avant d'ajouter une clé API, un webhook ou une app IA. Il ne vous sera pas redemandé pendant quelques minutes.",
+            passwordLabel: "Votre mot de passe",
+            confirm: "Continuer",
+            cancel: "Annuler",
+            wrong: "Ce mot de passe est incorrect.",
+            tooMany: "Trop de tentatives. Attendez une minute et réessayez.",
+            failed: "Impossible de vérifier votre mot de passe. Veuillez réessayer.",
+        },
         leaveConfirm: {
             leave: "Congé",
             cancel: "Annuler",

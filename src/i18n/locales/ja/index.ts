@@ -1908,6 +1908,17 @@ export const ja: DeepPartial<Messages> = {
             unsavedTitle: "未保存の変更を破棄しますか？",
             unsavedBody: "変更内容は失われます。",
         },
+        recentAuth: {
+            title: "ご本人確認",
+            description:
+                "セキュリティのため、API キー、Webhook、AI アプリを追加する前にパスワードを入力してください。数分間は再入力を求められません。",
+            passwordLabel: "パスワード",
+            confirm: "続ける",
+            cancel: "キャンセル",
+            wrong: "パスワードが正しくありません。",
+            tooMany: "試行回数が多すぎます。1 分ほど待ってからもう一度お試しください。",
+            failed: "パスワードを確認できませんでした。もう一度お試しください。",
+        },
         leaveConfirm: {
             leave: "退出",
             cancel: "キャンセル",

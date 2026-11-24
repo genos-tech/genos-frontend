@@ -248,6 +248,17 @@ export const es: DeepPartial<Messages> = {
             hashChatFallback: "chat",
             hashProjectFallback: "proyecto",
         },
+        recentAuth: {
+            title: "Confirma que eres tú",
+            description:
+                "Por tu seguridad, escribe tu contraseña antes de añadir una clave de API, un webhook o una app de IA. No se te volverá a pedir durante unos minutos.",
+            passwordLabel: "Tu contraseña",
+            confirm: "Continuar",
+            cancel: "Cancelar",
+            wrong: "Esa contraseña no es correcta.",
+            tooMany: "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
+            failed: "No se pudo comprobar tu contraseña. Inténtalo de nuevo.",
+        },
         leaveConfirm: {
             leave: "Dejar",
             cancel: "Cancelar",

@@ -15,6 +15,8 @@ const submitConsentDecision = vi.fn();
 vi.mock("../services/mcpConnections", () => ({
     getConsentContext: (...a: unknown[]) => getConsentContext(...a),
     submitConsentDecision: (...a: unknown[]) => submitConsentDecision(...a),
+    // Asking for the password again (MIP-2240) is pinned in recentAuth.test.tsx.
+    needsRecentAuth: () => false,
 }));
 
 const QUERY =
@@ -188,7 +190,8 @@ describe("OAuthConsentPage", () => {
                 scopes: ["mcp:read", "mcp:write", "mcp:destructive"],
                 teamIds: ["t2", "t1"],
                 defaultTeamId: "t2",
-            }
+            },
+            undefined // no password token yet: none was asked for
         );
     });
 

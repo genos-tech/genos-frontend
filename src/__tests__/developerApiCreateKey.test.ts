@@ -39,11 +39,12 @@ describe("createApiKey", () => {
             scope: "write",
             allowDestructive: true,
         });
-        expect(post).toHaveBeenCalledWith("/api-keys/", {
-            name: "Ops",
-            scope: "write",
-            allow_destructive: true,
-        });
+        expect(post).toHaveBeenCalledWith(
+            "/api-keys/",
+            { name: "Ops", scope: "write", allow_destructive: true },
+            // The first try may be refused with "enter your password" (MIP-2240): no toast.
+            { suppressErrorToast: true }
+        );
         expect(res).toMatchObject({ status: "created", created: { allowDestructive: true } });
     });
 });
