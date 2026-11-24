@@ -170,9 +170,8 @@ describe("DevelopersPage", () => {
     // 52c68a74: 58 read, 52 write, 13 destructive). A copy, because this repo cannot import that
     // one: when the catalog changes, this list and the page's `MCP_TOOLS` change with it (MIP-2309:
     // the page listed 85 of 110 and the home page said "85 tools").
-    // HELD_BACK tools are in the CATALOG but exist only while a server switch is on (`HTML_NOTES`,
-    // `GENOS_SKILLS`); the page lists them when the switch is on in production, not before.
-    const HELD_BACK = ["save_html_note", "list_my_skills", "get_skill", "run_skill"];
+    // Switch-gated tools (`HTML_NOTES`, `GENOS_SKILLS`) are listed too: both switches and
+    // `AGENT_PARITY_TOOLS` are on in production (checked 2026-11-24).
     const MCP_CATALOG = {
         read: [
             "get_task",
@@ -230,6 +229,9 @@ describe("DevelopersPage", () => {
             "get_my_importance",
             "get_my_memory",
             "list_my_schedules",
+            "list_my_skills",
+            "get_skill",
+            "run_skill",
         ],
         write: [
             "comment_on_task_body",
@@ -249,6 +251,7 @@ describe("DevelopersPage", () => {
             "update_tasks_bulk",
             "create_task_plan",
             "create_note",
+            "save_html_note",
             "update_note",
             "create_todo_item",
             "update_todo_item",
@@ -321,10 +324,9 @@ describe("DevelopersPage", () => {
         ]);
     });
 
-    it("does not list a tool whose server switch is off until the switch is on", () => {
+    it("lists as many tools as the registry has (110)", () => {
         renderPage();
-        const listed = mcpTable().map((r) => r.name);
-        for (const name of HELD_BACK) expect(listed).not.toContain(name);
+        expect(mcpTable()).toHaveLength(110);
     });
 
     it("says every destructive tool needs the destructive opt-in", () => {
