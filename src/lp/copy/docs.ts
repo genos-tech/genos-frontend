@@ -40,7 +40,7 @@ export interface DocsCopy {
 export const DOCS_COPY: Record<Lang, DocsCopy> = {
     en: {
         title: "Docs",
-        lead: "The Genos manual: the same text as the guide inside the app, for anyone who has not signed in yet. TODO(copy): MIP-2331",
+        lead: "The Genos manual, for anyone who has not signed in yet. TODO(copy): MIP-2331",
         searchLabel: "Search the docs",
         searchPlaceholder: "Search: a setting, API key, export",
         noMatch: "Nothing matches. Try another word, or browse the topics below.",
@@ -77,7 +77,7 @@ export const DOCS_COPY: Record<Lang, DocsCopy> = {
     },
     ja: {
         title: "ドキュメント",
-        lead: "Genos のマニュアルです。アプリ内のガイドと同じ文章を、まだサインインしていない方にもお読みいただけます。 TODO(copy): MIP-2331",
+        lead: "Genos のマニュアルです。まだサインインしていない方もお読みいただけます。 TODO(copy): MIP-2331",
         searchLabel: "ドキュメントを検索",
         searchPlaceholder: "検索：設定名、APIキー、エクスポート",
         noMatch: "一致する項目がありません。別の言葉で探すか、下のトピックをご覧ください。",

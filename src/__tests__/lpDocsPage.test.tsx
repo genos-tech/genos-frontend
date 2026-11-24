@@ -108,6 +108,8 @@ describe("every topic of the manual", () => {
     it("has a summary for the hub and is routed as a toggle page", () => {
         for (const topic of manual.topics) {
             expect(topicSummary(topic).length, topic.id).toBeGreaterThan(10);
+            // A card must say something the title does not.
+            expect(topicSummary(topic), topic.id).not.toBe(topic.title);
             expect(routeFor(`/docs/${topic.id}`)?.langs, topic.id).toBe("toggle");
         }
     });

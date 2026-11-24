@@ -12,12 +12,24 @@ const MAX = 155;
 const standsAlone = (text: string, title: string): boolean =>
     text !== title && !/[:：]$/.test(text) && text.length >= 25;
 
+const firstSentence = (text: string): string => {
+    const m = text.match(/^.*?(?:[.!?](?=\s)|[。！？])/);
+    return (m ? m[0] : text).trim();
+};
+
 export const topicSummary = (topic: ManualTopic): string => {
-    const paragraphs = parseBlocks(topic.markdown).flatMap((b) =>
-        b.type === "paragraph" ? [plainText(b.text)] : []
+    const blocks = parseBlocks(topic.markdown);
+    const paragraphs = blocks.flatMap((b) => (b.type === "paragraph" ? [plainText(b.text)] : []));
+    // A topic that opens with a list has no paragraph: use the first item's first sentence, so the
+    // card never repeats the topic's title.
+    const items = blocks.flatMap((b) =>
+        b.type === "ul" || b.type === "ol" ? b.items.map((i) => firstSentence(plainText(i))) : []
     );
     const text =
-        paragraphs.find((t) => standsAlone(t, topic.title)) ?? paragraphs[0] ?? topic.title;
+        paragraphs.find((t) => standsAlone(t, topic.title)) ??
+        items.find((t) => t !== topic.title && t.length >= 10) ??
+        paragraphs[0] ??
+        topic.title;
     if (text.length <= MAX) return text;
     const cut = text.slice(0, MAX);
     // Prefer the end of a sentence, then the last space, else cut hard (Japanese has no spaces).
