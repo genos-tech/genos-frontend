@@ -24,7 +24,7 @@ import { Shot } from "./kit/Shot";
 import { SHOT_ALT } from "./kit/shotAlts";
 import { shotRect } from "./kit/shots";
 import type { Lang } from "./lpLang";
-import { MCP_TOOLS } from "./mcpTools";
+import { mcpToolFloor } from "./mcpTools";
 import { useDocumentMeta } from "./useDocumentMeta";
 
 /**
@@ -59,7 +59,7 @@ const HOW_ICON = [MessageSquareText, FileText, Eye] as const;
 /** Where "Connect Claude" goes: the steps, which also say what the plan needs. */
 const CONNECT_PATH = "/developers#connect-an-ai-app";
 
-const withTools = (text: string) => text.replace("{tools}", String(MCP_TOOLS.length));
+const withTools = (text: string) => text.replace("{tools}", String(mcpToolFloor()));
 
 function ComingBadge({ label }: { label: string }) {
     return <span className="lp-badge lp-badge--coming">{label}</span>;

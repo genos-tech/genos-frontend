@@ -11,8 +11,9 @@ import type { Lang } from "../lpLang";
  *    "Coming" badge). Checked 2026-11-08: the MCP OAuth server is live
  *    (`api.genosai.dev/.well-known/oauth-authorization-server`); ChatGPT's
  *    directory listing (MIP-1108) and Routines (MIP-1067) are not.
- *  - Numbers that can drift are not typed here: the MCP tool count is read
- *    from the developers page's tool list (`{tools}` below).
+ *  - Numbers that can drift are not typed here: the MCP tool count is a round
+ *    floor derived from the developers page's tool list (`{tools}` below,
+ *    "more than 100"), never the exact length (MIP-2309).
  *  - Nothing about model training: the privacy page deliberately makes no
  *    such claim (see its TODO(owner)), so neither does this page.
  *  - The examples are the demo workspace's own story (kept by MIP-1237): the
@@ -362,7 +363,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             title: "Claudeから、Genosを使う。",
             sub: "一度つなげば、普段使っているAIアシスタントがあなたのプロジェクトを読み、最新に保ちます。状況のまとめ、今日の計画、タスクの更新、ノートの作成。変更を許可する範囲は、あなたが決めます。",
             points: [
-                "タスク、マイルストーン、スプリント、ノート、チャット、To-Do、カレンダーを扱う{tools}個のツール",
+                "タスク、マイルストーン、スプリント、ノート、チャット、To-Do、カレンダー、スケジュール、GitHubのPRを扱う{tools}以上のツール",
                 "Genosアカウントでサインイン（OAuth）。キーのコピーは不要で、接続は設定画面でいつでも確認・解除できます",
                 "接続したアプリに許可する範囲は、あなたが選べます。読み取りと変更。削除は別途許可が必要です",
             ],
@@ -710,7 +711,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             title: "Use Genos from Claude.",
             sub: "Connect once, and the assistant you already use can read your projects and keep them current: catch you up, plan your day, update a task, write a note. You decide what it is allowed to change.",
             points: [
-                "{tools} tools for tasks, milestones, sprints, notes, chats, to-dos and calendar",
+                "More than {tools} tools for tasks, milestones, sprints, notes, chats, to-dos, calendar, schedules and GitHub pull requests",
                 "Sign in with your Genos account (OAuth): no keys to copy, and every connection is listed in Settings, where you can end it",
                 "You choose what a connected app may do: read, or write. Deleting needs a separate opt-in.",
             ],
