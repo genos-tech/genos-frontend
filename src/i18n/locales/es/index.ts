@@ -3480,7 +3480,7 @@ export const es: DeepPartial<Messages> = {
             customizeFields: {
                 heading: "Personalizar campos de tareas",
                 description:
-                    "Haz que ciertos campos sean obligatorios y define valores predeterminados para las nuevas tareas e hitos de este proyecto. Solo el propietario del proyecto puede cambiarlos.",
+                    "Haz que ciertos campos sean obligatorios y define valores predeterminados para las nuevas tareas e hitos de este proyecto. Solo el propietario y los editores del proyecto pueden cambiarlos.",
                 requiredLabel: "Obligatorio",
                 defaultLabel: "Valor predeterminado",
                 alwaysRequired: "Siempre obligatorio",
@@ -3494,7 +3494,7 @@ export const es: DeepPartial<Messages> = {
                 save: "Guardar",
                 cancel: "Cancelar",
                 saveFailed:
-                    "No se pudo guardar: solo el propietario del proyecto puede cambiar esta configuración.",
+                    "No se pudo guardar: solo el propietario y los editores del proyecto pueden cambiar esta configuración.",
             },
             manageTags: {
                 heading: "Gestionar etiquetas",
