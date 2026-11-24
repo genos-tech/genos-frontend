@@ -275,7 +275,6 @@ function DocsBody({ lang }: { lang: Lang }) {
                                     ))}
                                 </tbody>
                             </table>
-                            <p className="lp-small">{c.shortcuts.note}</p>
                         </section>
                     )}
 
