@@ -42,7 +42,7 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
     "spotlight.aiAnswers": { name: "Genosの回答(質問ボタン)", default: "オン(この端末)" },
     "spotlight.webSearch": { name: "ウェブ検索", default: "オフ" },
     "spotlight.contentLength": { name: "Genosの書く量", default: "標準" },
-    "spotlight.sharedAnswers": { name: "自分の回答でチームメイトを助ける", default: "オン" },
+    "spotlight.sharedAnswers": { name: "自分の回答でチームメイトを助ける", default: "オフ" },
     "spotlight.noteActivity": { name: "自分の作業を記録する", default: "オン" },
     chat: {
         default:
@@ -53,7 +53,7 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
     "chat.doubleClickTodo": { name: "ダブルクリックでメッセージをTo-Doに追加", default: "オン" },
     tasks: { default: "クイックタスク作成、PR マージ時の自動クローズ、Google カレンダーの同期" },
     "tasks.quickAddRequiredFields": { name: "クイックタスク作成: 必須項目", default: "オフ" },
-    "tasks.autoCloseOnPrMerge": { name: "PRがマージされたら担当タスクをClose", default: "オフ" },
+    "tasks.autoCloseOnPrMerge": { name: "PRがマージされたら担当タスクをClose", default: "オン" },
     "tasks.autoSyncCalendar": { name: "タスクの締切を自動同期する", default: "オフ" },
     notifications: {
         default: "マスタースイッチ、一時停止、ブラウザーの許可、グループ、メール、ミュート",
