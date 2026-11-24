@@ -1,5 +1,9 @@
 import { PartialBlock } from "@blocknote/core";
 
+// How a note's body is stored and shown: BlockNote blocks (the editor), or one HTML page shown
+// read-only in a sandboxed frame (`HtmlNoteView`).
+export type NoteBodyFormat = "blocknote" | "html";
+
 export type MyNoteMetaProps = {
     noteType: number;
     noteId: number;
@@ -10,6 +14,8 @@ export type MyNoteMetaProps = {
     folderId?: number | null;
     title: string;
     tsUpdated: string;
+    // "html" for an HTML page (MIP-2215); absent or "blocknote" for an ordinary note.
+    bodyFormat?: NoteBodyFormat;
     error?: string;
 };
 
@@ -25,6 +31,8 @@ export type MyNoteProps = {
     body: PartialBlock[] | any[];
     tsCreated: string;
     tsUpdated: string;
+    // "html" for an HTML page (MIP-2215); absent or "blocknote" for an ordinary note.
+    bodyFormat?: NoteBodyFormat;
     error?: string;
     children?: MyNoteProps[];
 };
@@ -181,6 +189,8 @@ export type TaskNoteMetaProps = {
     milestoneTitle?: string | null;
     title: string;
     tsUpdated: string;
+    // "html" for an HTML page (MIP-2215); absent or "blocknote" for an ordinary note.
+    bodyFormat?: NoteBodyFormat;
     error?: string;
 };
 
@@ -197,6 +207,8 @@ export type TaskNoteProps = {
     body: PartialBlock[] | any[];
     tsCreated: string;
     tsUpdated: string;
+    // "html" for an HTML page (MIP-2215); absent or "blocknote" for an ordinary note.
+    bodyFormat?: NoteBodyFormat;
     error?: string;
     children?: TaskNoteProps[];
 };
@@ -217,6 +229,8 @@ export type ChatNoteMetaProps = {
     threadId: number;
     title: string;
     tsUpdated: string;
+    // "html" for an HTML page (MIP-2215); absent or "blocknote" for an ordinary note.
+    bodyFormat?: NoteBodyFormat;
     error?: string;
 };
 
@@ -235,6 +249,8 @@ export type ChatNoteProps = {
     body: PartialBlock[] | any[];
     tsCreated: string;
     tsUpdated: string;
+    // "html" for an HTML page (MIP-2215); absent or "blocknote" for an ordinary note.
+    bodyFormat?: NoteBodyFormat;
     error?: string;
     children?: ChatNoteProps[];
 };

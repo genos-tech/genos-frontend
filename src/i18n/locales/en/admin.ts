@@ -66,7 +66,7 @@ export const admin = {
             },
             afterSubmit: {
                 title: "Check your inbox",
-                body: "We sent a verification link to {email}. Click it to finish signing up.",
+                body: "We sent an email to {email}. Open it to finish signing up, or to sign in if you already have an account.",
                 checkInboxHint: "Click the link in the email to verify your address.",
                 resend: "Resend email",
                 resending: "Sending…",
@@ -131,6 +131,10 @@ export const admin = {
             generic: "Something went wrong. Please try again later.",
             unexpected: "An unexpected error occurred. Please try again.",
             duplicateEmail: "Please try with a different email.",
+            passwordCommon:
+                "This password is too common or too easy to guess. Please choose another.",
+            passwordBreached:
+                "This password has appeared in a known data breach. Please choose another.",
             duplicateName: "Please try with a different name.",
             demoRateLimited: "Too many demo sign-ins from this network. Please try again later.",
             demoFailed: "Could not create demo session. Please try again later.",

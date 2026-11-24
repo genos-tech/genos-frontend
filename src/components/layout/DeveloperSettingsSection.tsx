@@ -46,6 +46,7 @@ import {
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmptyState } from "../ui/feedback/EmptyState";
 import { ConfirmDialog } from "../ui/modal/ConfirmDialog";
+import { useRecentAuthPrompt } from "../ui/modal/RecentAuthDialog";
 import { AgentUseSection } from "./AgentUseSection";
 import { openConnectAppPanel } from "./connectAppPanelHelpers";
 import { SecurityLogSection } from "./SecurityLogSection";
@@ -81,6 +82,8 @@ type Props = {
 export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
+    // Creating a key or a webhook asks for the password again (MIP-2240).
+    const { guard, dialog: recentAuthDialog } = useRecentAuthPrompt();
     const d = t.settings.developer;
 
     const [keys, setKeys] = useState<ApiKey[]>([]);
@@ -154,12 +157,17 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
     const onCreateKey = async () => {
         if (!keyName.trim()) return;
         setKeyBusy(true);
-        const res = await createApiKey(accessToken, {
-            name: keyName.trim(),
-            scope: keyScope,
-            expiresInDays: keyExpiryDays,
-            ...(keyAllowDestructive ? { allowDestructive: true } : {}),
-        });
+        const res = await guard(
+            (recentAuthToken) =>
+                createApiKey(accessToken, {
+                    name: keyName.trim(),
+                    scope: keyScope,
+                    expiresInDays: keyExpiryDays,
+                    ...(keyAllowDestructive ? { allowDestructive: true } : {}),
+                    recentAuthToken,
+                }),
+            (r) => r.status === "recent_auth"
+        );
         setKeyBusy(false);
         if (res.status === "created") {
             setFreshKey(res.key);
@@ -178,14 +186,23 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
         }
         setHookBusy(true);
         setHookError(null);
-        const res = await createWebhook(accessToken, {
-            teamId,
-            url: hookUrl.trim(),
-            events: hookEvents,
-            projectIds: hookProjectIds,
-            channelIds: wantsChat ? hookChannelIds : [],
-        });
+        const res = await guard(
+            (recentAuthToken) =>
+                createWebhook(accessToken, {
+                    teamId,
+                    url: hookUrl.trim(),
+                    events: hookEvents,
+                    projectIds: hookProjectIds,
+                    channelIds: wantsChat ? hookChannelIds : [],
+                    recentAuthToken,
+                }),
+            (r) => r.status === "recent_auth"
+        );
         setHookBusy(false);
+        if (res.status === "recent_auth") {
+            // The person cancelled the password prompt: nothing was created, nothing to say.
+            return;
+        }
         if (res.status === "created") {
             setFreshSecret(res.secret);
             setHookUrl("");
@@ -759,6 +776,7 @@ export const DeveloperSettingsSection = ({ teamId }: Props) => {
                     }}
                 />
             )}
+            {recentAuthDialog}
         </Stack>
     );
 };

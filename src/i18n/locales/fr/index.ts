@@ -199,7 +199,7 @@ export const fr: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Vérifiez votre boîte de réception",
-                    body: "Nous avons envoyé un lien de vérification à {email}. Cliquez dessus pour terminer votre inscription.",
+                    body: "Nous avons envoyé un e-mail à {email}. Ouvrez-le pour terminer votre inscription, ou pour vous connecter si vous avez déjà un compte.",
                     checkInboxHint:
                         "Cliquez sur le lien dans l'e-mail pour vérifier votre adresse.",
                     resend: "Renvoyer l'e-mail",
@@ -266,6 +266,10 @@ export const fr: DeepPartial<Messages> = {
                 generic: "Une erreur est survenue. Veuillez réessayer plus tard.",
                 unexpected: "Une erreur inattendue est survenue. Veuillez réessayer.",
                 duplicateEmail: "Veuillez essayer avec une autre adresse e-mail.",
+                passwordCommon:
+                    "Ce mot de passe est trop courant ou trop facile à deviner. Veuillez en choisir un autre.",
+                passwordBreached:
+                    "Ce mot de passe figure dans une fuite de données connue. Veuillez en choisir un autre.",
                 duplicateName: "Veuillez essayer avec un autre nom.",
                 demoRateLimited:
                     "Trop de connexions démo depuis ce réseau. Veuillez réessayer plus tard.",
@@ -1931,6 +1935,17 @@ export const fr: DeepPartial<Messages> = {
             unsavedTitle: "Abandonner les modifications non enregistrées ?",
             unsavedBody: "Vos modifications seront perdues.",
         },
+        recentAuth: {
+            title: "Confirmez que c'est vous",
+            description:
+                "Pour votre sécurité, saisissez votre mot de passe avant d'ajouter une clé API, un webhook ou une app IA. Il ne vous sera pas redemandé pendant quelques minutes.",
+            passwordLabel: "Votre mot de passe",
+            confirm: "Continuer",
+            cancel: "Annuler",
+            wrong: "Ce mot de passe est incorrect.",
+            tooMany: "Trop de tentatives. Attendez une minute et réessayez.",
+            failed: "Impossible de vérifier votre mot de passe. Veuillez réessayer.",
+        },
         leaveConfirm: {
             leave: "Congé",
             cancel: "Annuler",
@@ -3595,6 +3610,7 @@ export const fr: DeepPartial<Messages> = {
             shareEllipsis: "Partager…",
             importMarkdown: "Importer une démarque…",
             exportMarkdown: "Exporter en Markdown",
+            reloadPage: "Recharger la page",
             openTask: "Ouvrir la tâche",
             taskIdLabel: "{id}",
             openTaskTooltip: "Ouvrir la tâche {id}",
@@ -3607,6 +3623,57 @@ export const fr: DeepPartial<Messages> = {
             ownerProjectTooltip: "Projet propriétaire",
             focusNote: "Se concentrer sur cette note (masquer les autres volets)",
             exitFocusNote: "Réafficher les autres volets",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "Page HTML · affichée dans un bac à sable",
+            navigatedTitle: "Cette page a tenté d'ouvrir une autre page",
+            navigatedBody:
+                "Elle a été arrêtée, rien d'autre n'a été ouvert. Rechargez pour revoir la page.",
+            reload: "Recharger",
+            loadError: "Impossible de charger cette page",
+            retry: "Réessayer",
+            frameTitle: "Page HTML : {title}",
+            kindLabel: "Page HTML",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "Importer du Markdown ou du HTML",
+            chooseFile: "Choisir un fichier .md ou .html…",
+            notOnPlan:
+                "Les pages HTML font partie du forfait Core et supérieurs. Passez à un forfait supérieur dans Paramètres → Forfait et utilisation pour importer cette page.",
+            tooLarge:
+                "Cette page pèse {size}, au-dessus de la limite de {limit} de votre forfait pour une page HTML.",
+            importedWithWarnings:
+                "Importée comme page HTML. Certaines parties ne s'afficheront pas dans le bac à sable :",
+            resultNotes: "{count} pages HTML importées.",
+            resultWarnings:
+                "{count} pages HTML ont des parties qui ne s'afficheront pas dans le bac à sable.",
+            fallbackWarning: "Une partie de la page ne s'affichera pas dans le bac à sable.",
+            warning: {
+                external_script:
+                    "Les scripts chargés depuis une autre adresse ne s'exécuteront pas ({count}).",
+                external_css:
+                    "Les feuilles de style chargées depuis une autre adresse sont bloquées, la page peut donc paraître sans style ({count}).",
+                external_font:
+                    "Les polices web chargées depuis une autre adresse sont bloquées ({count}).",
+                remote_image:
+                    "Les images et médias chargés depuis une autre adresse sont bloqués ({count}).",
+                external_frame:
+                    "Les cadres et intégrations qui pointent vers une autre page sont bloqués ({count}).",
+                network_call:
+                    "Les appels réseau de la page (fetch, XHR, WebSocket) échoueront ({count}).",
+                form: "Les formulaires ne peuvent pas être envoyés d'ici ({count}).",
+                window_open: "Les fenêtres contextuelles sont bloquées ({count}).",
+                navigation:
+                    "Les redirections et les liens qui quittent la page sont bloqués ({count}).",
+                storage:
+                    "La page ne peut pas conserver de cookies ni de stockage local ({count}).",
+                no_doctype:
+                    "La page n'a pas de <!doctype html> : elle est affichée en mode quirks.",
+                no_title:
+                    "La page n'a pas de <title> : le nom du fichier a servi de titre à la note.",
+            },
         },
         importMd: {
             heading: "Importer une démarque",
@@ -4974,6 +5041,8 @@ export const fr: DeepPartial<Messages> = {
             deliverProjectChat: "{name} (chat du projet)",
             deliverChatHint:
                 "Le rapport est publié dans ce chat sous forme de message, sans IA et sans notification. Tous les membres du chat peuvent le lire : un rapport de projet ne peut donc aller que dans un chat réservé aux membres de ce projet.",
+            deliverChatHintAi:
+                "Le rapport est publié dans ce chat sous forme de message. Il utilise des crédits d'IA et affiche son coût dans le message, et il ne peut aller que dans un chat où vous êtes seul(e). Aucune notification n'est envoyée.",
             rowDeliver: "Publié dans : {name}",
             reportPosted: "Rapport publié dans {chat}",
             rowProject: "Projet : {name}",
@@ -5033,6 +5102,7 @@ export const fr: DeepPartial<Messages> = {
                 label: "Compétences",
                 mine: "Mes compétences",
                 team: "Équipe",
+                installed: "Installées",
                 hub: "Genos Hub",
             },
             newSkill: "Nouvelle compétence",
@@ -5047,6 +5117,11 @@ export const fr: DeepPartial<Messages> = {
                 emptyTeamTitle: "Aucune compétence d'équipe pour l'instant",
                 emptyTeamBody:
                     "Les compétences que vos collègues partagent avec l'équipe apparaissent ici. Partagez l'une des vôtres depuis ses détails.",
+                emptyInstalledTitle: "Aucune compétence installée pour l'instant",
+                emptyInstalledBody:
+                    "Les compétences publiques que vous installez apparaissent ici, et vous êtes prévenu quand l'auteur publie une mise à jour.",
+                installedUpToDate: "Version {n} · à jour",
+                installedBehind: "Version {from} · dernière {to}",
                 limitReached:
                     "Votre offre permet jusqu'à {limit} compétences et vous en avez {used}. Supprimez-en une ou passez à une offre supérieure.",
                 usage: "{used} compétences sur {limit} utilisées",
@@ -5325,6 +5400,68 @@ export const fr: DeepPartial<Messages> = {
                 sent: "Merci. Nous allons l'examiner.",
                 failed: "Impossible d'envoyer le signalement. Veuillez réessayer.",
                 limit: "Vous avez envoyé le nombre maximal de signalements aujourd'hui. Réessayez demain.",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "Exécuter cette compétence ?",
+                intro: "Lisez ce que dit cette compétence avant sa première exécution. Elle ne s'exécute que si vous choisissez Exécuter cette compétence.",
+                loading: "Chargement de la compétence…",
+                loadFailed: "Impossible de charger cette compétence. Veuillez réessayer.",
+                confirmFailed: "Impossible d'enregistrer votre réponse. Veuillez réessayer.",
+                harmful:
+                    "La compétence dont celle-ci est une copie a été retirée par Genos car jugée nuisible.",
+                writtenBy: "Écrite par",
+                noAuthor: "Aucun auteur indiqué",
+                version: "Version {n}",
+                textLabel: "Ce que dit cette compétence",
+                emptyText: "(Cette version n'a pas de texte.)",
+                mayLabel: "Ce qu'elle peut faire",
+                readOnly: "Elle peut seulement lire. Elle ne peut rien créer ni modifier.",
+                propose: {
+                    create_task: "Proposer de créer une tâche",
+                    create_note: "Proposer de créer une note",
+                    create_todo_item: "Proposer d'ajouter un élément à faire",
+                },
+                approveFirst: "Chacune n'a lieu qu'après votre approbation.",
+                run: "Exécuter cette compétence",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "Mise à jour disponible",
+                loading: "Chargement des modifications…",
+                loadFailed: "Impossible de charger les modifications. Veuillez réessayer.",
+                upToDate: "Vous avez déjà la dernière version.",
+                versions: "De la version {from} à la version {to}",
+                versionShort: "Version {n}",
+                changelogsLabel: "Ce que l'auteur indique avoir changé",
+                noChangelog: "Pas de note de l'auteur.",
+                changesLabel: "Détails modifiés",
+                none: "aucun",
+                language: "Langue",
+                becomes: "devient",
+                toolRaisedTitle: "Cette version peut désormais proposer des modifications",
+                toolRaised:
+                    "Les versions précédentes ne pouvaient que lire. Celle-ci peut suggérer de créer des tâches, des notes ou des éléments de liste de tâches pour vous. Chaque suggestion nécessite toujours votre approbation.",
+                needsConfirmation:
+                    "Une confirmation vous sera demandée avant l'exécution de cette version.",
+                diffLabel: "Modifications du texte",
+                diffEmpty: "Le texte n'a pas changé.",
+                truncated:
+                    "Les modifications sont trop longues pour être affichées en entier. Seul le début est affiché.",
+                moved: "L'auteur a publié une autre version pendant votre lecture. Les modifications ci-dessous sont les plus récentes.",
+                updateFailed: "Impossible de mettre à jour la compétence. Veuillez réessayer.",
+                update: "Passer à la version {n}",
+                updateGeneric: "Mettre à jour",
+                keep: "Garder la version {n}",
+                close: "Fermer",
+                updated: "Mise à jour vers la version {n} effectuée.",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "Copie d'une compétence retirée",
+                warning:
+                    "La compétence dont celle-ci est une copie a été retirée par Genos car jugée nuisible.",
             },
             moderation: {
                 title: {

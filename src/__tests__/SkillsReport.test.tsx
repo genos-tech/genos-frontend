@@ -77,6 +77,7 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     copyCount: 0,
     isOfficial: false,
     starred: false,
+    sourceHarmful: false,
     editors: [],
     shares: [],
     forkedFrom: null,
@@ -250,5 +251,25 @@ describe("an author's skill that an operator stopped", () => {
         renderPage();
         await user.click(await screen.findByRole("button", { name: "Release notes" }));
         expect(await screen.findByRole("button", { name: "Report" })).toBeTruthy();
+    });
+});
+
+describe("A copy of a skill removed as harmful (MIP-2192)", () => {
+    it("carries a warning chip on its row, and a row without one does not", async () => {
+        vi.mocked(api.fetchSkills).mockResolvedValue(
+            list([skill({ sourceHarmful: true }), skill({ id: "s2", title: "Plain one" })])
+        );
+        renderPage();
+        await screen.findByText("Plain one");
+        const chips = screen.getAllByText("Copied from a removed skill");
+        expect(chips).toHaveLength(1);
+        expect(chips[0].closest("li")).toHaveTextContent("Release notes");
+        // Nothing the operator wrote: the hover text is our fixed sentence.
+        await userEvent.hover(chips[0]);
+        expect(
+            await screen.findByText(
+                "The skill this was copied from was removed by Genos as harmful."
+            )
+        ).toBeInTheDocument();
     });
 });

@@ -5,6 +5,8 @@ export interface BaseNoteTreeNode {
     title: string;
     children: BaseNoteTreeNode[];
     noteType: number;
+    /** "html" for an HTML page (MIP-2215); absent or "blocknote" for an ordinary note. */
+    bodyFormat?: string | null;
     [key: string]: any;
 }
 

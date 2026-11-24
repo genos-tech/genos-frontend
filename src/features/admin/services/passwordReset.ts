@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { getMessages } from "../../../i18n";
 import { nonAuthApi } from "../../../services/api";
+import { passwordRejectionMessage } from "../utils/passwordRejection";
 
 /**
  * Step 1 of the reset flow: ask the backend to email a reset link.
@@ -78,7 +79,10 @@ export const confirmPasswordReset = async (
                 setErrorMessage?.(m.network);
             } else if (error.response.status === 400) {
                 const detail = error.response.data?.detail;
-                setErrorMessage?.(typeof detail === "string" ? detail : m.generic);
+                setErrorMessage?.(
+                    passwordRejectionMessage(error.response.data) ??
+                        (typeof detail === "string" ? detail : m.generic)
+                );
             } else {
                 console.error("API error:", error.response.status, error.response.data);
                 setErrorMessage?.(m.generic);

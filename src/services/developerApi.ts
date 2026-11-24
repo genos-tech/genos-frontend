@@ -12,6 +12,7 @@
 import axios from "axios";
 
 import { authApi } from "./api";
+import { isRecentAuthRefusal } from "./recentAuth";
 import { v3ApiBaseURL } from "./v3Api";
 
 export interface ApiKey {
@@ -114,6 +115,8 @@ export const listApiKeys = async (accessToken: string | null): Promise<ApiKey[] 
 
 export type CreateApiKeyResult =
     | { status: "created"; key: string; created: ApiKey }
+    // The server wants the password typed again first (MIP-2240); see `useRecentAuthPrompt`.
+    | { status: "recent_auth" }
     | { status: "error"; message?: string };
 
 /** Lifetimes the create form offers. Every key expires — the server
@@ -130,23 +133,32 @@ export const createApiKey = async (
         teamId?: string | null;
         expiresInDays?: number;
         allowDestructive?: boolean;
+        recentAuthToken?: string;
     }
 ): Promise<CreateApiKeyResult> => {
     const api = authApi(accessToken);
     if (!api) return { status: "error" };
     try {
-        const res = await api.post<ApiKeyWire & { key: string }>("/api-keys/", {
-            name: input.name,
-            scope: input.scope,
-            ...(input.teamId ? { team_id: input.teamId } : {}),
-            ...(input.expiresInDays ? { expires_in_days: input.expiresInDays } : {}),
-            // Sent only when asked for: the server refuses it on a read
-            // key, and omitting it is the safe default.
-            ...(input.allowDestructive ? { allow_destructive: true } : {}),
-        });
+        const res = await api.post<ApiKeyWire & { key: string }>(
+            "/api-keys/",
+            {
+                name: input.name,
+                scope: input.scope,
+                ...(input.teamId ? { team_id: input.teamId } : {}),
+                ...(input.expiresInDays ? { expires_in_days: input.expiresInDays } : {}),
+                // Sent only when asked for: the server refuses it on a read
+                // key, and omitting it is the safe default.
+                ...(input.allowDestructive ? { allow_destructive: true } : {}),
+                ...(input.recentAuthToken ? { recent_auth_token: input.recentAuthToken } : {}),
+            },
+            // The first try may be refused with "enter your password" (MIP-2240): the dialog
+            // is the answer, so the global "permission denied" toast would be a false alarm.
+            { suppressErrorToast: true }
+        );
         const { key, ...rest } = res.data;
         return { status: "created", key, created: rest };
     } catch (error: unknown) {
+        if (isRecentAuthRefusal(error)) return { status: "recent_auth" };
         const message = (error as { response?: { data?: { error?: string } } })?.response?.data
             ?.error;
         return { status: "error", message };
@@ -358,6 +370,8 @@ export type CreateWebhookResult =
     // The team's plan count of webhook endpoints is reached (429 `plan_limit`, MIP-1960):
     // `limit` 0 means the plan has none. The page words it in the person's language.
     | { status: "limit"; limit: number; used: number }
+    // The server wants the password typed again first (MIP-2240); see `useRecentAuthPrompt`.
+    | { status: "recent_auth" }
     | { status: "error" };
 
 export const createWebhook = async (
@@ -369,6 +383,7 @@ export const createWebhook = async (
         projectIds?: number[];
         channelIds?: string[];
         description?: string;
+        recentAuthToken?: string;
     }
 ): Promise<CreateWebhookResult> => {
     const api = authApi(accessToken);
@@ -383,6 +398,7 @@ export const createWebhook = async (
                 project_ids: input.projectIds ?? [],
                 channel_ids: input.channelIds ?? [],
                 description: input.description ?? "",
+                ...(input.recentAuthToken ? { recent_auth_token: input.recentAuthToken } : {}),
             },
             // Validation errors are rendered inline next to the field, so
             // the global toast would be a duplicate.
@@ -391,6 +407,7 @@ export const createWebhook = async (
         const { secret, ...rest } = res.data;
         return { status: "created", secret, created: toWebhook(rest) };
     } catch (error: unknown) {
+        if (isRecentAuthRefusal(error)) return { status: "recent_auth" };
         const response = (
             error as {
                 response?: {

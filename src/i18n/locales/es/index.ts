@@ -248,6 +248,17 @@ export const es: DeepPartial<Messages> = {
             hashChatFallback: "chat",
             hashProjectFallback: "proyecto",
         },
+        recentAuth: {
+            title: "Confirma que eres tú",
+            description:
+                "Por tu seguridad, escribe tu contraseña antes de añadir una clave de API, un webhook o una app de IA. No se te volverá a pedir durante unos minutos.",
+            passwordLabel: "Tu contraseña",
+            confirm: "Continuar",
+            cancel: "Cancelar",
+            wrong: "Esa contraseña no es correcta.",
+            tooMany: "Demasiados intentos. Espera un minuto e inténtalo de nuevo.",
+            failed: "No se pudo comprobar tu contraseña. Inténtalo de nuevo.",
+        },
         leaveConfirm: {
             leave: "Dejar",
             cancel: "Cancelar",
@@ -1173,6 +1184,8 @@ export const es: DeepPartial<Messages> = {
             deliverProjectChat: "{name} (chat del proyecto)",
             deliverChatHint:
                 "El informe se publica en este chat como un mensaje, sin IA y sin notificación. Todos los del chat pueden leerlo, así que un informe de proyecto solo puede ir a un chat de los miembros de ese proyecto.",
+            deliverChatHintAi:
+                "El informe se publica en este chat como un mensaje. Usa créditos de IA y muestra su coste en el mensaje, y solo puede ir a un chat en el que estés solo tú. No se envía ninguna notificación.",
             rowDeliver: "Se publica en: {name}",
             reportPosted: "Informe publicado en {chat}",
             rowProject: "Proyecto: {name}",
@@ -1231,6 +1244,7 @@ export const es: DeepPartial<Messages> = {
                 label: "Habilidades",
                 mine: "Mis habilidades",
                 team: "Equipo",
+                installed: "Instaladas",
                 hub: "Genos Hub",
             },
             newSkill: "Nueva habilidad",
@@ -1246,6 +1260,11 @@ export const es: DeepPartial<Messages> = {
                 emptyTeamTitle: "Aún no hay habilidades del equipo",
                 emptyTeamBody:
                     "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Comparte una tuya desde sus detalles.",
+                emptyInstalledTitle: "Aún no hay habilidades instaladas",
+                emptyInstalledBody:
+                    "Aquí aparecen las habilidades públicas que instalas, y te avisamos cuando el autor publica una actualización.",
+                installedUpToDate: "Versión {n} · al día",
+                installedBehind: "Versión {from} · última {to}",
                 limitReached:
                     "Tu plan permite hasta {limit} habilidades y tienes {used}. Elimina una o mejora tu plan para añadir más.",
                 usage: "{used} de {limit} habilidades en uso",
@@ -1521,6 +1540,65 @@ export const es: DeepPartial<Messages> = {
                 sent: "Gracias. La revisaremos.",
                 failed: "No se pudo enviar la denuncia. Inténtalo de nuevo.",
                 limit: "Has enviado el máximo de denuncias de hoy. Inténtalo de nuevo mañana.",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "¿Ejecutar esta habilidad?",
+                intro: "Lee lo que dice esta habilidad antes de ejecutarla por primera vez. Solo se ejecuta si eliges Ejecutar esta habilidad.",
+                loading: "Cargando la habilidad…",
+                loadFailed: "No se pudo cargar esta habilidad. Inténtalo de nuevo.",
+                confirmFailed: "No se pudo guardar tu respuesta. Inténtalo de nuevo.",
+                harmful: "La habilidad de la que se copió fue eliminada por Genos por ser dañina.",
+                writtenBy: "Escrita por",
+                noAuthor: "Sin autor indicado",
+                version: "Versión {n}",
+                textLabel: "Lo que dice esta habilidad",
+                emptyText: "(Esta versión no tiene texto.)",
+                mayLabel: "Lo que puede hacer",
+                readOnly: "Solo puede leer. No puede crear ni cambiar nada.",
+                propose: {
+                    create_task: "Proponer crear una tarea",
+                    create_note: "Proponer crear una nota",
+                    create_todo_item: "Proponer añadir un elemento a tu lista de tareas",
+                },
+                approveFirst: "Cada una solo ocurre después de que la apruebes.",
+                run: "Ejecutar esta habilidad",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "Actualización disponible",
+                loading: "Cargando los cambios…",
+                loadFailed: "No se pudieron cargar los cambios. Inténtalo de nuevo.",
+                upToDate: "Ya tienes la última versión.",
+                versions: "De la versión {from} a la versión {to}",
+                versionShort: "Versión {n}",
+                changelogsLabel: "Lo que el autor dice que cambió",
+                noChangelog: "Sin nota del autor.",
+                changesLabel: "Detalles modificados",
+                none: "ninguno",
+                language: "Idioma",
+                becomes: "pasa a",
+                toolRaisedTitle: "Esta versión ahora puede proponer cambios",
+                toolRaised:
+                    "Las versiones anteriores solo podían leer. Esta puede sugerir crear tareas, notas o elementos de tareas pendientes por ti. Cada sugerencia sigue necesitando tu aprobación.",
+                needsConfirmation: "Se te pedirá confirmación antes de ejecutar esta versión.",
+                diffLabel: "Cambios en el texto",
+                diffEmpty: "El texto no cambió.",
+                truncated:
+                    "Los cambios son demasiado largos para mostrarlos completos. Solo se muestra la primera parte.",
+                moved: "El autor publicó otra versión mientras leías. Los cambios de abajo son los más recientes.",
+                updateFailed: "No se pudo actualizar la habilidad. Inténtalo de nuevo.",
+                update: "Actualizar a la versión {n}",
+                updateGeneric: "Actualizar",
+                keep: "Mantener la versión {n}",
+                close: "Cerrar",
+                updated: "Actualizada a la versión {n}.",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "Copia de una habilidad eliminada",
+                warning: "La habilidad de la que se copió fue eliminada por Genos por ser dañina.",
             },
             moderation: {
                 title: {
@@ -4886,6 +4964,7 @@ export const es: DeepPartial<Messages> = {
             showHiddenCrumbs: "Mostrar rutas de navegación ocultas {count}",
             importMarkdown: "Importar Markdown…",
             exportMarkdown: "Exportar como Markdown",
+            reloadPage: "Recargar página",
         },
         autocomplete: {
             searchAria: "Buscar",
@@ -5129,6 +5208,56 @@ export const es: DeepPartial<Messages> = {
                 "No se pudo actualizar esa etiqueta. Puede que ya exista o que no sea tuyo para editarlo.",
             tagDeleteFailed:
                 "No se pudo eliminar esa etiqueta. Sólo su creador o el propietario del equipo pueden hacerlo.",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "Página HTML · mostrada en un entorno aislado",
+            navigatedTitle: "Esta página intentó abrir otra página",
+            navigatedBody:
+                "Se detuvo, así que no se abrió nada más. Recarga para volver a ver la página.",
+            reload: "Recargar",
+            loadError: "No se pudo cargar esta página",
+            retry: "Reintentar",
+            frameTitle: "Página HTML: {title}",
+            kindLabel: "Página HTML",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "Importar Markdown o HTML",
+            chooseFile: "Elige un archivo .md o .html…",
+            notOnPlan:
+                "Las páginas HTML forman parte del plan Core y superiores. Mejora tu plan en Ajustes → Plan y uso para importar esta página.",
+            tooLarge:
+                "Esta página pesa {size}, más que el límite de {limit} de tu plan para una página HTML.",
+            importedWithWarnings:
+                "Importada como página HTML. Algunas partes no se mostrarán en el entorno aislado:",
+            resultNotes: "Se importaron {count} páginas HTML.",
+            resultWarnings:
+                "{count} páginas HTML tienen partes que no se mostrarán en el entorno aislado.",
+            fallbackWarning: "Parte de la página no se mostrará en el entorno aislado.",
+            warning: {
+                external_script:
+                    "Los scripts cargados desde otra dirección no se ejecutarán ({count}).",
+                external_css:
+                    "Las hojas de estilo cargadas desde otra dirección se bloquean, así que la página puede verse sin estilo ({count}).",
+                external_font:
+                    "Las fuentes web cargadas desde otra dirección se bloquean ({count}).",
+                remote_image:
+                    "Las imágenes y el contenido multimedia cargados desde otra dirección se bloquean ({count}).",
+                external_frame:
+                    "Los marcos e incrustaciones que apuntan a otra página se bloquean ({count}).",
+                network_call:
+                    "Las llamadas de red de la página (fetch, XHR, WebSocket) fallarán ({count}).",
+                form: "Los formularios no se pueden enviar desde aquí ({count}).",
+                window_open: "Las ventanas emergentes se bloquean ({count}).",
+                navigation:
+                    "Las redirecciones y los enlaces que sacan de la página se bloquean ({count}).",
+                storage: "La página no puede guardar cookies ni almacenamiento local ({count}).",
+                no_doctype:
+                    "La página no tiene <!doctype html>, así que se dibuja en modo quirks.",
+                no_title:
+                    "La página no tiene <title>, así que se usó el nombre del archivo como título de la nota.",
+            },
         },
         importMd: {
             heading: "Importar Markdown",
@@ -5987,7 +6116,7 @@ export const es: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Revisa tu bandeja de entrada",
-                    body: "Enviamos un enlace de verificación a {email}. Haz clic en él para finalizar el registro.",
+                    body: "Enviamos un correo a {email}. Ábrelo para finalizar el registro o para iniciar sesión si ya tienes una cuenta.",
                     checkInboxHint:
                         "Haz clic en el enlace del correo electrónico para verificar su dirección.",
                     resend: "Reenviar correo electrónico",
@@ -6023,6 +6152,10 @@ export const es: DeepPartial<Messages> = {
                 generic: "Algo salió mal. Inténtalo de nuevo más tarde.",
                 unexpected: "Ocurrió un error inesperado. Inténtalo de nuevo.",
                 duplicateEmail: "Prueba con un correo diferente.",
+                passwordCommon:
+                    "Esta contraseña es demasiado común o fácil de adivinar. Elige otra.",
+                passwordBreached:
+                    "Esta contraseña aparece en una filtración de datos conocida. Elige otra.",
                 duplicateName: "Prueba con un nombre diferente.",
                 demoRateLimited:
                     "Demasiados inicios de sesión demo desde esta red. Inténtalo de nuevo más tarde.",
