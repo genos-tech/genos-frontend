@@ -133,7 +133,8 @@ jobs:
                   node-version: 22
                   cache: npm
                   cache-dependency-path: package-lock.json
-            - run: npm ci
+            - run: npm ci --ignore-scripts
+            - run: npx patch-package
             # Fails open: if this step breaks for any reason, no mode is set and
             # the next step runs the whole suite.
             - name: Choose the tests
@@ -220,7 +221,8 @@ jobs:
                   node-version: 22
                   cache: npm
                   cache-dependency-path: package-lock.json
-            - run: npm ci
+            - run: npm ci --ignore-scripts
+            - run: npx patch-package
             - name: Vitest + coverage
               run: npx vitest run --coverage
             - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -242,7 +244,8 @@ jobs:
                   node-version: 22
                   cache: npm
                   cache-dependency-path: package-lock.json
-            - run: npm ci
+            - run: npm ci --ignore-scripts
+            - run: npx patch-package
             # Mirrors Railway's build (`tsc -b && vite build`). CI=true so the
             # rollup-plugin-visualizer does not try to open a browser (see
             # vite.config.ts). Confirm Railway's Nixpacks Node major == 22 or
@@ -285,7 +288,8 @@ jobs:
                   node-version: 22
                   cache: npm
                   cache-dependency-path: package-lock.json
-            - run: npm ci
+            - run: npm ci --ignore-scripts
+            - run: npx patch-package
             - name: Test type check (error-count ratchet)
               run: npm run typecheck:tests
               env:
@@ -309,7 +313,8 @@ jobs:
                   node-version: 22
                   cache: npm
                   cache-dependency-path: package-lock.json
-            - run: npm ci
+            - run: npm ci --ignore-scripts
+            - run: npx patch-package
             - name: axe scan of the public pages (report only)
               run: npx vitest run src/__tests__/a11yReport.test.tsx
               env:
@@ -336,7 +341,8 @@ jobs:
                   node-version: 22
                   cache: npm
                   cache-dependency-path: package-lock.json
-            - run: npm ci
+            - run: npm ci --ignore-scripts
+            - run: npx patch-package
             # Errors fail the gate; the relaxed/stylistic rules are warnings (so no
             # `--max-warnings 0`). Tighten back toward zero warnings as the cleanup
             # pass burns them down.
