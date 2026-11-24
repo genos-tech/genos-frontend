@@ -12,7 +12,7 @@ Genos does not assume you write software. Below is one starting shape for each k
 
 - Make one project per service or repository.
 - Connect GitHub in Settings → Integrations. If your team uses the Genos GitHub App, a team owner or editor installs it once for the team, and then each person presses Authorize. The app is read-only and has no access to code. A connection made the old way shows a note and a Reconnect button. Press Reconnect to switch to narrower, per-repository access.
-- To close tasks automatically, turn on "Close my tasks when their PR merges" in Settings → Tasks. It is off by default. When a pull request merges, Genos closes the task whose ID is in the PR's branch name (for example, branch `feature/GEN-42-foo` closes GEN-42). It only closes tasks assigned to you. If a task has several PRs, it closes when the last open one merges.
+- To close tasks automatically, "Close my tasks when their PR merges" in Settings → Tasks is on by default for new accounts; accounts made before that keep their own choice, and you can turn it off or on there. When a pull request merges, Genos closes the task whose ID is in the PR's branch name (for example, branch `feature/GEN-42-foo` closes GEN-42). It only closes tasks assigned to you. If a task has several PRs, it closes when the last open one merges.
 - Use dependencies for real blockers. If you mark task B "Blocked by" task A, Genos sets B to Blocked. When A finishes, Genos moves B back to Open. "Open task graph" shows what is holding a milestone up.
 - Keep design docs in the task's own notes, so the plan stays with the work.
 - Ask Genos, for example "what changed in the API project this week?", instead of reading the whole channel.

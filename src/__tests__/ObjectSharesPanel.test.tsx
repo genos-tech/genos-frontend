@@ -96,21 +96,21 @@ describe("ObjectSharesPanel", () => {
         expect(container.textContent).toBe("");
     });
 
-    it("offers connected teams to a host manager, editing by default", async () => {
+    it("offers connected teams to a host manager, view only by default", async () => {
         const handlers = renderPanel({
             offerableTeams: [{ teamId: "t9", teamName: "Globex" }],
         });
-        await userEvent.click(screen.getByRole("button", { name: "Globex" }));
-        expect(handlers.onOffer).toHaveBeenCalledWith("t9", "editor");
-    });
-
-    it("offers read-only when the host picks view only", async () => {
-        const handlers = renderPanel({
-            offerableTeams: [{ teamId: "t9", teamName: "Globex" }],
-        });
-        await userEvent.click(screen.getByRole("button", { name: /view only/i }));
         await userEvent.click(screen.getByRole("button", { name: "Globex" }));
         expect(handlers.onOffer).toHaveBeenCalledWith("t9", "viewer");
+    });
+
+    it("offers editing when the host picks edit", async () => {
+        const handlers = renderPanel({
+            offerableTeams: [{ teamId: "t9", teamName: "Globex" }],
+        });
+        await userEvent.click(screen.getByRole("button", { name: /^edit$/i }));
+        await userEvent.click(screen.getByRole("button", { name: "Globex" }));
+        expect(handlers.onOffer).toHaveBeenCalledWith("t9", "editor");
     });
 
     it("names both teams rather than telling the reader which side they are on", () => {

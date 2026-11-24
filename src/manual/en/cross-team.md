@@ -28,7 +28,7 @@ Only an owner or editor of your team can share an item.
 - **A chat**: when you create a group chat, turn on **Include another organization** and pick connected teams. You can also share an existing group chat or multi-person DM from its profile, under **Teams with access**, if you are in that chat. A one-to-one DM and a project chat cannot be shared. An external chat is always private.
 - **A project**: open the project profile and use **Teams with access** > **Share with a connected team**. Its tasks, task comments, files, task notes, milestones and project chat come with it.
 - **A note folder**: in a Team Notes folder's access settings, choose **Share with another organization** (offered only when your team has a connection) and pick connected teams. A shared folder is always restricted to the people let in.
-- When you share, you choose what they can do: **Edit** or **View only**. That is the highest role their people can get on that item. On a project, people from the other team always join as guests, whatever you chose: they work in its tasks but cannot manage its members.
+- When you share, you choose what they can do: **Edit** or **View only**; **View only** is pre-selected, so give Edit only when they need to change things. That is the highest role their people can get on that item. On a project, people from the other team always join as guests, whatever you chose: they work in its tasks but cannot manage its members.
 - The other team's owner gets a **Shared with your team** card in their Inbox. An owner or editor of that team accepts it. The person who accepts is let in at once, so they can open the item and decide who else on their side needs it.
 
 ## Where the shared item turns up

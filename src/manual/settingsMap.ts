@@ -117,7 +117,7 @@ export const SETTINGS_MAP = {
             },
             webSearch: { name: "Web search", ...SELF, plan: "perCap", default: "Off" },
             contentLength: { name: "How much Genos writes", ...SELF, default: "Standard" },
-            sharedAnswers: { name: "Let my answers help teammates", ...SELF, default: "On" },
+            sharedAnswers: { name: "Let my answers help teammates", ...SELF, default: "Off" },
             noteActivity: { name: "Note my activity", ...SELF, default: "On" },
         },
     },
@@ -148,7 +148,7 @@ export const SETTINGS_MAP = {
             autoCloseOnPrMerge: {
                 name: "Close my tasks when their PR merges",
                 ...SELF,
-                default: "Off",
+                default: "On",
             },
             autoSyncCalendar: {
                 name: "Sync task due dates to Google Calendar",

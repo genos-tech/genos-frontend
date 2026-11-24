@@ -251,11 +251,10 @@ export const offerExternalShare = async (
             guest_team_id: params.guestTeamId,
             object_type: params.objectType,
             object_id: params.objectId,
-            // Editing unless the caller says otherwise, matching the
-            // server's own default. A share exists so two teams can work
-            // on one thing; read-only was the default here and no UI could
-            // change it, so every share ever made was read-only.
-            role_ceiling: params.roleCeiling ?? "editor",
+            // View only unless the caller says otherwise, matching the
+            // server's own default (MIP-2340: least privilege outside the
+            // team). The share panel sends the host's explicit choice.
+            role_ceiling: params.roleCeiling ?? "viewer",
         });
         return res.data as ExternalShare;
     } catch (error: unknown) {
