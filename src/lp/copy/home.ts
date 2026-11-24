@@ -161,7 +161,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             primary: "Claudeを接続する",
             secondary: "デモを試す",
             note: "現在はClaudeに対応。ChatGPTも近日公開。一度つなぐだけで使えます。",
-            legend: "タスク・コメント・ノートでは、AIが作成したものに印が付きます。あなたが書いたものと見分けられます。",
+            legend: "タスク・コメント・ノートでは、AIが作成・更新したものに印が付きます。あなたが書いたものと見分けられます。",
             alt: "Genosのタスクのアクティビティ画面。Claudeが作成したコメントにはClaudeのマークが表示され、ユーザーが変更した優先度やコメントにはマークが付いていない。",
             // TODO(copy): draft wording of mine, not Ken's; the callouts drawn over the hero picture.
             callouts: {
@@ -203,7 +203,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     title: "見たいときに、Genosを開く",
-                    body: "AIが何をしたか、Genosで読めます。編集も削除も自由。AIが書いたものには印が付くので、あなたの記録と見分けられます。",
+                    body: "AIが何をしたか、Genosで読めます。編集も削除も自由。AIが作成・更新したものには印が付くので、あなたの記録と見分けられます。",
                 },
             ],
             plan: "エージェントの接続にはCoreプラン以上が必要です。",
@@ -223,7 +223,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     lead: "誰が書いたか分かる。",
-                    text: "タスク・コメント・ノートでは、AIが作成したものに印が付き、あなたの記録と見分けられます。",
+                    text: "タスク・コメント・ノートでは、AIが作成・更新したものに印が付き、あなたの記録と見分けられます。",
                 },
             ],
             tasksCaption: "タスク一覧",
@@ -316,8 +316,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     title: "そのまま仕事になるチャット",
                     points: [
                         "チャンネル・スレッド・DM。メンション、リアクション、カスタム絵文字やGIFも",
-                        "スレッドからワンステップでタスク化。タスクには元のスレッドへのリンクが残ります",
-                        "ピン留めと検索で、過去の決定をすぐに呼び戻せます",
+                        "スレッドからタスクを作成。タスクには元のスレッドへのリンクが残ります",
+                        "チャットのピン留め、メッセージのフラグ、検索で過去の決定を見つけられます",
                     ],
                     alt: "Genosのチャット画面。チャンネルの会話とスレッドが開いている",
                 },
@@ -328,7 +328,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     points: [
                         "テーブル・ボード・ダッシュボード。スプリントとマイルストーン",
                         "依存関係、プロジェクトごとのカスタム項目、保存できるフィルター",
-                        "変更はすべて履歴に残り、GitHubのPRもタスクに直接ひも付きます",
+                        "変更はタスクの履歴に残り、ブランチ名にタスクIDを含むGitHubのPRは自動でひも付きます",
                     ],
                     alt: "Genosのタスク一覧。ステータス・担当・優先度・スプリントが並ぶテーブル",
                 },
@@ -663,8 +663,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     title: "Chat that turns into work",
                     points: [
                         "Channels, threads and DMs with mentions, reactions, custom emoji and GIFs",
-                        "Turn a thread into a task in one step; the task keeps a link back",
-                        "Pins and search bring old decisions back when you need them",
+                        "Create a task from a thread; the task keeps a link back",
+                        "Pin chats, flag messages and search to find old decisions",
                     ],
                     alt: "The Genos chat screen with a channel conversation and a thread open",
                 },
@@ -675,7 +675,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     points: [
                         "Table, board and dashboard views, sprints and milestones",
                         "Dependencies, per-project custom fields and saved filters",
-                        "Every change lands in the task's history, and GitHub PRs link straight to it",
+                        "Task changes are kept in its history; a GitHub PR whose branch name includes the task id links to it automatically",
                     ],
                     alt: "The Genos task table with status, assignee, priority and sprint columns",
                 },

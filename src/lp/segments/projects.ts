@@ -66,7 +66,7 @@ export const projects: SegmentConfig = {
                 subtitle: "議論から、マイルストーン・タスク・依存関係を提案",
                 bullets: [
                     "タスク、担当、期限、状態、コメントを管理",
-                    "ブロッカー、依存関係、stale task、throughputを確認",
+                    "ブロッカー、依存関係、停滞中のマイルストーン、ベロシティを確認。停滞タスクはGenosに聞けます",
                     "複合タスク計画を一度の承認で作成",
                 ],
             },
@@ -93,7 +93,7 @@ export const projects: SegmentConfig = {
         },
         now: [
             "Chat、Note、Taskを同じワークスペースで管理",
-            "タスク依存関係、ブロッカー、stale task、throughputの確認",
+            "タスク依存関係、ブロッカー、停滞中のマイルストーン、ベロシティの確認（停滞タスクはGenosに質問）",
             "プロジェクト、マイルストーン、スプリント、チーム状況の読み取り",
             "GitHub PRのコメント、ファイル、レビュー、コミットの読み取り",
             "マイルストーン、タスクツリー、依存関係を含む計画の承認付き作成",
@@ -120,7 +120,7 @@ export const projects: SegmentConfig = {
             items: [
                 {
                     q: "Slack、Notion、Jiraのデータを自動で統合しますか？",
-                    a: "外部ツールの全履歴が自動的に移行・同期されるわけではありません。現在の強みは、Genos内のChat、Note、Taskを同じワークスペースで扱い、対応している情報をAIが横断できることです。",
+                    a: "他のツールとは継続的に同期しません。Slackのエクスポートの取り込みと、CSV（Jira、Notion）からのタスク取り込みは、一度だけ行えます。現在の強みは、Genos内のChat、Note、Taskを同じワークスペースで扱い、対応している情報をAIが横断できることです。",
                 },
                 {
                     q: "Genos AIはどのようなプロジェクト情報を読めますか？",
@@ -132,7 +132,7 @@ export const projects: SegmentConfig = {
                 },
                 {
                     q: "チャットへ返信できますか？",
-                    a: "現在、Genos AIはチャットメッセージの送信、返信、リアクションを行えません。チャットの読み取り、要約、質問が中心です。",
+                    a: "GenosはSlackと接続していません。Genos AIはGenosのチャットで投稿・返信・リアクションをしません（承認すればタスクにコメントでき、そのコメントはタスクのスレッドにも表示されます）。",
                 },
                 {
                     q: "AIがプロジェクトを自動で変更しますか？",
@@ -208,7 +208,7 @@ export const projects: SegmentConfig = {
                 subtitle: "Turn a discussion into milestones, tasks, and dependencies",
                 bullets: [
                     "Manage tasks, owners, deadlines, status, and comments",
-                    "Review blockers, dependencies, stale tasks, and throughput",
+                    "Review blockers, dependencies, stalled milestones and velocity; ask Genos for stale tasks",
                     "Create a structured task plan through one approval",
                 ],
             },
@@ -235,7 +235,7 @@ export const projects: SegmentConfig = {
         },
         now: [
             "Manage chat, notes, and tasks in the same workspace",
-            "Review task dependencies, blockers, stale work, and throughput",
+            "Review task dependencies, blockers, stalled milestones and velocity; ask Genos for stale tasks",
             "Read project, milestone, sprint, and team-status information",
             "Read selected GitHub pull-request comments, files, reviews, and commits",
             "Create an approved plan containing a milestone, task tree, and dependencies",
@@ -262,7 +262,7 @@ export const projects: SegmentConfig = {
             items: [
                 {
                     q: "Does Genos automatically combine all Slack, Notion, and Jira data?",
-                    a: "No. Genos does not automatically migrate or continuously synchronize every external-tool history. The current strength is keeping Genos chat, notes, and tasks in one workspace and letting AI work across supported information.",
+                    a: "No. Genos does not sync other tools continuously; you can import a Slack export and tasks from CSV (Jira, Notion) once. The current strength is keeping Genos chat, notes, and tasks in one workspace and letting AI work across supported information.",
                 },
                 {
                     q: "What project information can Genos AI read?",
@@ -274,7 +274,7 @@ export const projects: SegmentConfig = {
                 },
                 {
                     q: "Can it reply in chat?",
-                    a: "Not currently. Genos AI can read supported chat context, summarize it, and answer questions, but it cannot send, reply, or react.",
+                    a: "Genos does not connect to Slack. Genos AI cannot post, reply or react in Genos chat; with your approval it can comment on a task.",
                 },
                 {
                     q: "Can AI change the project automatically?",
