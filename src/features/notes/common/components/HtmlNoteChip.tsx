@@ -25,10 +25,10 @@ export const HtmlNoteChip = ({ size = "sm" }: HtmlNoteChipProps) => {
             color="primary"
             data-html-note-chip=""
             size={size}
-            startDecorator={
-                <WebRoundedIcon aria-hidden sx={{ fontSize: size === "sm" ? 12 : 14 }} />
-            }
             variant="soft"
+            startDecorator={
+                <WebRoundedIcon sx={{ fontSize: size === "sm" ? 12 : 14 }} aria-hidden />
+            }
             sx={{
                 flexShrink: 0,
                 fontSize: size === "sm" ? "0.65rem" : "0.7rem",
