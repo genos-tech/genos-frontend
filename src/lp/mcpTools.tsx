@@ -119,6 +119,12 @@ export const MCP_TOOLS: McpTool[] = [
     { name: "list_my_mentions", type: "read", meaning: "Chat messages that @mention you." },
     { name: "list_channel_members", type: "read", meaning: "Who is in one chat." },
     { name: "get_current_user", type: "read", meaning: "Who the key acts as." },
+    {
+        name: "get_genos_help",
+        type: "read",
+        meaning:
+            "How to use Genos itself: where a setting is, who can change it, which plan it needs, shortcuts, connecting an app. Searches the user manual in English or Japanese, free, no AI is run; returns the best matches and a link that opens that Settings tab. Not for your own data: that is search_workspace.",
+    },
     { name: "get_team_members", type: "read", meaning: "Who is in the team, for assigning." },
     { name: "list_project_members", type: "read", meaning: "Who is in one project." },
     {
