@@ -123,7 +123,7 @@ export const teams: SegmentConfig = {
                 },
                 {
                     q: "今使っているツールをすべて移行する必要がありますか？",
-                    a: "いいえ。最初は会社全体ではなく、一つの定例業務やプロジェクトをGenosで運用することを推奨します。外部ツールの全履歴が自動的に移行・同期されるわけではありません。",
+                    a: "いいえ。最初は会社全体ではなく、一つの定例業務やプロジェクトをGenosで運用することを推奨します。他のツールとは継続的に同期しません。Slackのエクスポートの取り込みと、CSV（Jira、Notion）からのタスク取り込みは、一度だけ行えます。",
                 },
                 {
                     q: "AIが勝手にタスクや予定を変更しませんか？",
@@ -131,11 +131,11 @@ export const teams: SegmentConfig = {
                 },
                 {
                     q: "Slackや他のチャットへ返信できますか？",
-                    a: "現在、Genos AIにはチャットへの送信・返信・リアクション機能はありません。チャット内容の読み取りや、スレッドに関する質問・要約を中心に利用できます。",
+                    a: "GenosはSlackと接続していません。Genos AIはGenosのチャットで投稿・返信・リアクションをしません（承認すればタスクにコメントでき、そのコメントはタスクのスレッドにも表示されます）。",
                 },
                 {
                     q: "日本語で使えますか？",
-                    a: "はい。日本語UIを選択したユーザーには、Genos AIも日本語で回答するよう設計されています。",
+                    a: "はい。Genosの表示言語は日本語を含む7言語です。日本語UIを選択すると、Genos AIも日本語で回答するよう設計されています（別の言語を指定することもできます）。",
                 },
             ],
         },
@@ -264,7 +264,7 @@ export const teams: SegmentConfig = {
                 },
                 {
                     q: "Do we need to migrate every tool first?",
-                    a: "No. Begin with one recurring workflow or project. Genos does not automatically import or continuously synchronize the full history of other tools today.",
+                    a: "No. Begin with one recurring workflow or project. Genos does not sync other tools continuously; you can import a Slack export and tasks from CSV (Jira, Notion) once.",
                 },
                 {
                     q: "Can AI change tasks or schedules without permission?",
@@ -272,11 +272,11 @@ export const teams: SegmentConfig = {
                 },
                 {
                     q: "Can Genos reply in Slack or another chat tool?",
-                    a: "Not currently. Genos can read supported chat context and answer or summarize, but chat sending, replying, and reacting are not current agent capabilities.",
+                    a: "Genos does not connect to Slack. Genos AI cannot post, reply or react in Genos chat; with your approval it can comment on a task.",
                 },
                 {
                     q: "Can the team use Genos in Japanese?",
-                    a: "Yes. When the Japanese interface is active, Genos AI is instructed to answer in Japanese as well.",
+                    a: "Yes. Genos has 7 interface languages, Japanese among them. When the Japanese interface is active, Genos AI is instructed to answer in Japanese as well (or in another language if you ask).",
                 },
             ],
         },
