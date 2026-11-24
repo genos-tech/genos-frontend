@@ -9,9 +9,10 @@ import { g } from "../../../../theme/tokens";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
 import { useNoteUnread } from "../context/noteUnreadState";
+import { isHtmlNote } from "../utils/htmlNote";
 import { isNoteOpen } from "../utils/openNote";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";
-import { NoteOriginIcon } from "./noteOrigin";
+import { NoteKindIcon, NoteOriginIcon } from "./noteOrigin";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface RecentNoteItemProps {
@@ -67,12 +68,20 @@ function RecentNoteItemComponent({
             // The star takes the time's place while the row is hovered or focused, so the row
             // is the same width either way (MIP-1430). A lit star stays beside the time.
             actions={<NoteFavoriteStar noteId={note.noteId} noteType={noteType} useNM={useNM} />}
-            icon={<NoteOriginIcon noteType={noteType} />}
+            // An HTML page wears the page icon in this slot (MIP-2215); the second line still says
+            // where it lives, which is what the origin icon was for.
             label={note.title || t.notes.defaults.untitled}
             lines={subLabel ? 2 : 1}
             secondary={subLabel}
             selected={isSelected}
             unread={hasUnread}
+            icon={
+                isHtmlNote(note) ? (
+                    <NoteKindIcon note={note} />
+                ) : (
+                    <NoteOriginIcon noteType={noteType} />
+                )
+            }
             trailing={
                 opened || hasUnread ? (
                     <>
