@@ -10,6 +10,8 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
+
 import { useAuth } from "../../context/authState";
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { isNoteCommentingArchived, useArchiveState } from "../../features/archive/archiveState";
@@ -285,11 +287,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         }
     }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
 
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     // State for modal
     const [opened, setOpened] = useState(false);

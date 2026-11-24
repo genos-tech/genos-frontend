@@ -13,6 +13,7 @@ import {
     withoutTrailingBlank,
     withTrailingBlank,
 } from "./utils/messageBlocks";
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
@@ -177,11 +178,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         setNumEditorLines(countEditorLines(editor.document));
     }, []);
 
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     useEffect(() => {
         if (isInEdit === false) {
