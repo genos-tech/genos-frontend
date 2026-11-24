@@ -6,6 +6,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import RemoveCircleOutlineRoundedIcon from "@mui/icons-material/RemoveCircleOutlineRounded";
 import UpgradeRoundedIcon from "@mui/icons-material/UpgradeRounded";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
@@ -48,6 +49,7 @@ import {
     fetchSkills,
     isModerated,
     setSkillHidden,
+    uninstallSkill,
     type SkillList,
     type SkillRow,
     type SkillTab,
@@ -193,6 +195,17 @@ export const SkillsPage = ({ teamId, host }: Props) => {
             toast.error(res.message || m.team.hideFailed);
         }
         void load(listTab);
+    };
+
+    // From the Installed tab (MIP-2293): the row leaves the list once the server has removed it.
+    const uninstall = async (skill: SkillRow) => {
+        const res = await uninstallSkill(accessToken, skill.id);
+        if (res.ok) {
+            toast.success(m.hub.uninstalledToast);
+            void load(listTab, true);
+        } else {
+            toast.error(res.message || m.hub.uninstallFailed);
+        }
     };
 
     const remove = async () => {
@@ -394,6 +407,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                             onOpen={() => setView({ kind: "edit", id: skill.id })}
                             onReport={() => setReporting(skill)}
                             onToggleHidden={() => void toggleHidden(skill)}
+                            onUninstall={() => void uninstall(skill)}
                             onUpdate={() => setUpdating(skill)}
                             onDelete={() => {
                                 setDeleteError(null);
@@ -449,6 +463,7 @@ type ItemProps = {
     onReport: () => void;
     onDelete: () => void;
     onUpdate: () => void;
+    onUninstall: () => void;
 };
 
 /** The one-line footer of an installed row. Both states are `FOOTER_HEIGHT` tall, so a row with
@@ -465,6 +480,7 @@ const SkillListItem = ({
     onReport,
     onDelete,
     onUpdate,
+    onUninstall,
 }: ItemProps) => {
     const { t } = useTranslation();
     const l = t.settings.genosSkills.list;
@@ -498,6 +514,13 @@ const SkillListItem = ({
                 skill.visibility !== "private" &&
                 skill.visibility !== "specific" &&
                 !skill.hiddenByTeam,
+        },
+        {
+            id: "uninstall",
+            label: h.uninstall,
+            icon: <RemoveCircleOutlineRoundedIcon />,
+            onClick: onUninstall,
+            visible: installed !== null,
         },
         {
             id: "hide",

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import RemoveCircleOutlineRoundedIcon from "@mui/icons-material/RemoveCircleOutlineRounded";
 import { Alert, Box, Button, Chip, Sheet, Stack, Typography } from "@mui/joy";
 
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
@@ -33,10 +35,12 @@ import {
     deleteSkill,
     fetchSkill,
     fetchSkillVersions,
+    installSkill,
     isModerated,
     publishSkill,
     setSkillHidden,
     setSkillStar,
+    uninstallSkill,
     updateSkill,
     type Failure,
     type SkillRow,
@@ -104,6 +108,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
     const [serverProblems, setServerProblems] = useState<ServerProblems>({});
     const [notice, setNotice] = useState<string | null>(null);
     const [reporting, setReporting] = useState(false);
+    const [installing, setInstalling] = useState(false);
     const [saving, setSaving] = useState(false);
     const [publishing, setPublishing] = useState(false);
     const [versions, setVersions] = useState<SkillVersion[] | null>(null);
@@ -321,6 +326,30 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
         void fetchSkill(accessToken, skill.id).then((r) => r.ok && setSkill(r.data));
     };
 
+    /** Install this public skill, or take the install away (MIP-2293). The page shows the new
+     *  state only once the server has said yes. */
+    const toggleInstall = async () => {
+        if (installing) return;
+        setInstalling(true);
+        const wasInstalled = skill.installedVersionNo != null;
+        const res = wasInstalled
+            ? await uninstallSkill(accessToken, skill.id)
+            : await installSkill(accessToken, skill.id);
+        setInstalling(false);
+        if (!res.ok) {
+            toast.error(
+                res.message || (wasInstalled ? m.hub.uninstallFailed : m.hub.installFailed)
+            );
+            return;
+        }
+        const pinned = !wasInstalled && res.data ? res.data.installedVersionNo : null;
+        setSkill((prev) =>
+            prev ? { ...prev, installedVersionNo: pinned, updateAvailable: false } : prev
+        );
+        setChanged(true);
+        toast.success(wasInstalled ? m.hub.uninstalledToast : m.hub.installedToast);
+    };
+
     /** Stop listing the skill in the Hub: private again, at once. Copies others made stay theirs. */
     const unpublish = async () => {
         setUnpublishError(null);
@@ -448,6 +477,27 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                         >
                             {m.report.action}
                         </Button>
+                        {skill.visibility === "public" &&
+                            skill.status === "active" &&
+                            !skill.mine && (
+                                <Button
+                                    loading={installing}
+                                    size="sm"
+                                    startDecorator={
+                                        skill.installedVersionNo != null ? (
+                                            <RemoveCircleOutlineRoundedIcon />
+                                        ) : (
+                                            <DownloadRoundedIcon />
+                                        )
+                                    }
+                                    variant="outlined"
+                                    onClick={() => void toggleInstall()}
+                                >
+                                    {skill.installedVersionNo != null
+                                        ? m.hub.uninstall
+                                        : m.hub.install}
+                                </Button>
+                            )}
                         {!skill.hiddenByTeam &&
                             skill.visibility !== "private" &&
                             (skill.mine || skill.visibility !== "specific") && (
