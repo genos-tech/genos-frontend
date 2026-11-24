@@ -57,12 +57,12 @@ export const DOCS_META: Record<SeoLang, Meta> = {
     ja: {
         title: "ドキュメント | Genos",
         description:
-            "Genosのはじめ方、Claudeの接続、APIキー、スケジュール、データのエクスポート、キーボードショートカット、よくある質問。",
+            "Genosのマニュアル。はじめ方、チャット、タスク、ノート、Genos AI、AIアプリとの接続、設定、プラン、困ったときの対処。",
     },
     en: {
         title: "Docs | Genos",
         description:
-            "Getting started with Genos, connecting Claude, API keys, schedules, exporting your data, keyboard shortcuts and the FAQ.",
+            "The Genos manual: getting started, chat, tasks, notes, Genos AI, connecting AI apps, settings, plans and fixes for common problems.",
     },
 };
 
