@@ -1160,6 +1160,8 @@ export const ar: DeepPartial<Messages> = {
             deliverLabel: "إرسال التقرير إلى",
             deliverInbox: "صندوق الوارد",
             deliverProjectChat: "{name} (محادثة المشروع)",
+            deliverKindGroup: "محادثة جماعية",
+            deliverKindProject: "محادثة المشروع",
             deliverChatHint:
                 "يُنشر التقرير في هذه المحادثة كرسالة، دون ذكاء اصطناعي ودون إشعار. يمكن لكل من في المحادثة قراءته، لذا لا يمكن إرسال تقرير مشروع إلا إلى محادثة تضم أعضاء ذلك المشروع فقط.",
             deliverChatHintAi:

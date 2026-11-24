@@ -64,6 +64,7 @@ import type {
 import { g } from "../../../theme/tokens";
 import { useJoinedProjects } from "./scheduleParamHooks";
 import {
+    ChatTargetSelect,
     MilestoneParamSelect,
     ProjectParamSelect,
     SkillParamSelect,
@@ -212,7 +213,10 @@ export const ScheduleFormPanel = ({
     // Where the report goes (MIP-1420): the Inbox, or a chat. The chat a schedule already posts in
     // stays selectable even when it is no longer offered (archived, left), so the form never shows
     // a blank for what is saved; the server decides on save.
-    const INBOX = "inbox";
+    const strayChatId =
+        schedule?.deliverChannel && !chatTargets.some((c) => c.id === schedule.deliverChannel?.id)
+            ? schedule.deliverChannel.id
+            : undefined;
     const deliverOptions: ChatTarget[] = useMemo(() => {
         const saved = schedule?.deliverChannel;
         if (!saved || chatTargets.some((c) => c.id === saved.id)) return chatTargets;
@@ -605,18 +609,13 @@ export const ScheduleFormPanel = ({
                 {deliverOptions.length > 0 && (
                     <FormControl data-testid="schedule-deliver" sx={{ minWidth: 0 }}>
                         <FormLabel>{s.deliverLabel}</FormLabel>
-                        <Select
-                            sx={{ minWidth: 0 }}
-                            value={form.deliverChannelId || INBOX}
-                            onChange={(_, v) => v && set("deliverChannelId", v === INBOX ? "" : v)}
-                        >
-                            <Option value={INBOX}>{s.deliverInbox}</Option>
-                            {deliverOptions.map((c) => (
-                                <Option key={c.id} value={c.id}>
-                                    {chatLabel(c)}
-                                </Option>
-                            ))}
-                        </Select>
+                        <ChatTargetSelect
+                            chats={deliverOptions}
+                            label={chatLabel}
+                            stray={strayChatId}
+                            value={form.deliverChannelId}
+                            onChange={(id) => set("deliverChannelId", id)}
+                        />
                         {chosenChat && (
                             <FormHelperText sx={{ color: g.text.secondary }}>
                                 {job?.job === "run_skill" && jobUsesAi(job)
