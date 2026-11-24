@@ -232,9 +232,15 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     // parent's sticky-comment chip can react. Height is no longer
     // computed here — the editor auto-sizes inside its CSS min/max
     // bounds and the comment list flexes above it.
+    const taskCommentLinesRef = useRef(taskCommentLines);
+    const setTaskCommentLinesRef = useRef(setTaskCommentLines);
     useEffect(() => {
-        if (numEditorLines !== taskCommentLines) {
-            setTaskCommentLines(numEditorLines);
+        taskCommentLinesRef.current = taskCommentLines;
+        setTaskCommentLinesRef.current = setTaskCommentLines;
+    });
+    useEffect(() => {
+        if (numEditorLines !== taskCommentLinesRef.current) {
+            setTaskCommentLinesRef.current(numEditorLines);
         }
     }, [numEditorLines]);
 
