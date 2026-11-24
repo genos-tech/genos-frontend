@@ -64,6 +64,7 @@ import type {
 import { g } from "../../../theme/tokens";
 import { useJoinedProjects } from "./scheduleParamHooks";
 import {
+    ChatParamSelect,
     ChatTargetSelect,
     MilestoneParamSelect,
     ProjectParamSelect,
@@ -496,6 +497,11 @@ export const ScheduleFormPanel = ({
                                         />
                                     ) : known?.picker === "milestone" ? (
                                         <MilestoneParamSelect
+                                            value={form.params[key] ?? ""}
+                                            onChange={setParam}
+                                        />
+                                    ) : known?.picker === "chat" ? (
+                                        <ChatParamSelect
                                             value={form.params[key] ?? ""}
                                             onChange={setParam}
                                         />

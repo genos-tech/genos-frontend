@@ -10,6 +10,7 @@
 // Presentational: the picker owns selection. Every list is read from what the app already holds
 // (the `#` mention data and the personal-tag store): this makes no request.
 
+import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { Box, Typography } from "@mui/joy";
 
@@ -157,10 +158,21 @@ const TargetAvatar = ({ target }: { target: DeliverTarget }) => {
     );
 };
 
-/** The closed field's start decorator: the picture, nothing else (the input holds the name). */
-export const ChatTargetDecorator = ({ target }: { target: DeliverTarget }) => (
-    <TargetAvatar target={target} />
+const AllChatsMark = () => (
+    <BaseAvatar size="xs">
+        <ForumOutlinedIcon sx={{ fontSize: 14, color: g.text.tertiary }} />
+    </BaseAvatar>
 );
+
+/** The closed field's start decorator: the picture, nothing else (the input holds the name).
+ *  `allLabel`: the empty row means "every chat" (the catch-up's picker), not the Inbox. */
+export const ChatTargetDecorator = ({
+    target,
+    allLabel,
+}: {
+    target: DeliverTarget;
+    allLabel?: string;
+}) => (allLabel && target.kind === "inbox" ? <AllChatsMark /> : <TargetAvatar target={target} />);
 
 /**
  * The row. `unavailable` is the stand-in for a saved place the member can no longer be offered
@@ -170,15 +182,26 @@ export const ChatTargetDecorator = ({ target }: { target: DeliverTarget }) => (
 export const ChatTargetOption = ({
     target,
     unavailable = false,
+    allLabel,
 }: {
     target: DeliverTarget;
     unavailable?: boolean;
+    /** The empty row's words when it means "every chat" rather than the Inbox. */
+    allLabel?: string;
 }) => {
     const { t } = useTranslation();
     const s = t.settings.schedules;
     const { projects } = useHashMentionData();
     const avatarSrc = useChatTargetAvatar(target);
 
+    if (target.kind === "inbox" && allLabel) {
+        return (
+            <>
+                <AllChatsMark />
+                <Name>{allLabel}</Name>
+            </>
+        );
+    }
     if (target.kind === "inbox") {
         return (
             <>

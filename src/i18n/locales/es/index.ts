@@ -1197,6 +1197,10 @@ export const es: DeepPartial<Messages> = {
             paramSkill: "Habilidad",
             paramSkillHint:
                 "Ejecuta la versión publicada de esta habilidad y guarda lo que encuentra en tu bandeja de entrada. Solo lee: no cambia nada.",
+            paramChat: "Chat de grupo",
+            paramChatHint:
+                "Opcional. Elige un chat de grupo para ponerte al día o déjalo en todos los chats activos. Solo se muestran los chats en los que estás.",
+            chatAllBusy: "Todos los chats activos",
             paramSkillInput: "Qué dárselo",
             paramSkillInputHint:
                 "Opcional. Las palabras que escribirías después del nombre de la habilidad, como un proyecto o una semana.",

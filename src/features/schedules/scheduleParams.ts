@@ -15,7 +15,7 @@ import type { JobParam } from "../../services/schedules";
 
 type ScheduleStrings = Messages["settings"]["schedules"];
 
-export type ParamPicker = "project" | "milestone" | "skill";
+export type ParamPicker = "project" | "milestone" | "skill" | "chat";
 
 export interface KnownParam {
     label: keyof ScheduleStrings;
@@ -65,6 +65,8 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
     // along untouched and never drawn (a member who picks another skill drops it).
     skill_id: { label: "paramSkill", hint: "paramSkillHint", picker: "skill" },
     version_no: { label: "paramSkill", hint: "paramSkillHint", hidden: true },
+    // The one group chat a catch-up covers (MIP-2348); empty means every busy chat.
+    channel_id: { label: "paramChat", hint: "paramChatHint", picker: "chat" },
     input: { label: "paramSkillInput", hint: "paramSkillInputHint" },
 };
 

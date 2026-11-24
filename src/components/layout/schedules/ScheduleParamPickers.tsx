@@ -12,6 +12,7 @@ import {
 } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
+import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { useRunnableSkillRows } from "../../../features/genos/skills/useRunnableSkills";
 import {
     isSameProject,
@@ -322,8 +323,11 @@ export const ChatTargetSelect = ({
     value,
     onChange,
     label,
+    allLabel,
 }: {
     chats: ChatTarget[];
+    /** Words for the empty row when it means "every chat" instead of the Inbox. */
+    allLabel?: string;
     /** Id of the chat in `chats` that the member's list no longer offers, if any. */
     stray?: string;
     /** The chat's id, "" for the Inbox. */
@@ -344,11 +348,11 @@ export const ChatTargetSelect = ({
             noOptionsText={t.common.empty.noResults}
             options={options}
             slotProps={projectListboxSlotProps(popupZIndex)}
-            startDecorator={<ChatTargetDecorator target={selected} />}
+            startDecorator={<ChatTargetDecorator allLabel={allLabel} target={selected} />}
             sx={{ minWidth: 0 }}
             value={selected}
             getOptionLabel={(o) =>
-                o.kind === "inbox" ? t.settings.schedules.deliverInbox : label(o)
+                o.kind === "inbox" ? (allLabel ?? t.settings.schedules.deliverInbox) : label(o)
             }
             renderOption={(optionProps, option) => (
                 <AutocompleteOption
@@ -357,6 +361,7 @@ export const ChatTargetSelect = ({
                     sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}
                 >
                     <ChatTargetOption
+                        allLabel={allLabel}
                         target={option}
                         unavailable={option.id !== "" && option.id === stray}
                     />
@@ -364,6 +369,41 @@ export const ChatTargetSelect = ({
             )}
             disableClearable
             onChange={(_, option) => onChange(option ? option.id : "")}
+        />
+    );
+};
+
+/** The group chat a catch-up covers (MIP-2348): the same dropdown and rows as "Send the report
+ *  to", with "All busy chats" as the empty row. It lists the group chats the member is in, read
+ *  from what the app already holds (no request); the server checks again on save and at every
+ *  run. A stored chat that is no longer listed stays selectable as "(unavailable)". */
+export const ChatParamSelect = ({ value, onChange }: Props) => {
+    const { t } = useTranslation();
+    const s = t.settings.schedules;
+    const { allChats } = useHashMentionData();
+    const chats = allChats
+        .filter((c) => c.chatType === 2 && !c.isExternal && c.chatName)
+        .map(
+            (c): ChatTarget => ({
+                id: String(c.chatId),
+                title: c.chatName,
+                kind: "group",
+                projectId: null,
+            })
+        )
+        .sort((a, b) => a.title.localeCompare(b.title));
+    const stray = value !== "" && !chats.some((c) => c.id === value);
+    const options: ChatTarget[] = stray
+        ? [{ id: value, title: s.unavailable, kind: "group", projectId: null }, ...chats]
+        : chats;
+    return (
+        <ChatTargetSelect
+            allLabel={s.chatAllBusy}
+            chats={options}
+            label={(c) => c.title}
+            stray={stray ? value : undefined}
+            value={value}
+            onChange={onChange}
         />
     );
 };
