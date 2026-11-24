@@ -128,7 +128,7 @@ export const students: SegmentConfig = {
                 },
                 {
                     q: "課題のリマインダーを送れますか？",
-                    a: "現在、予定や期限を管理することはできますが、「金曜日に思い出させて」のように後から自動で戻ってくるリマインダー機能は未提供です。",
+                    a: "はい。Todoの「⋮」→「リマインドする…」で時刻を設定するか、「金曜日にレポート提出をリマインドして」とGenos AIに頼めます（Core以上では、リマインダー付きのTodoを提案し、承認後に保存します）。時間になると通知（プッシュ通知をオンにしている場合）と受信箱のお知らせが届きます。メールは送られません。タスクの期限にはリマインダーは付きません。",
                 },
                 {
                     q: "グループ課題でも使えますか？",
@@ -270,7 +270,7 @@ export const students: SegmentConfig = {
                 },
                 {
                     q: "Can it remind me about an assignment later?",
-                    a: "Yes. Ask Genos to remind you, for example “remind me Friday to submit the report”. It proposes a to-do with a reminder, and nothing is saved until you approve it.",
+                    a: "Yes. Set a reminder on any to-do (⋮ → Remind me…), or ask Genos AI, for example “remind me Friday to submit the report”. On Core and up, Genos proposes the to-do with the reminder and saves it when you approve. You get a notification (push, if you turned it on) and an item in your Inbox. No email. Task due dates do not send reminders.",
                 },
                 {
                     q: "Can a study group or group assignment use it?",

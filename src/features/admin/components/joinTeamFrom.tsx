@@ -34,6 +34,7 @@ import { clearPrivateProfile, ensurePrivateProfile } from "../../../services/pri
 import { purplePalette } from "../../../theme/purplePalette";
 import { g } from "../../../theme/tokens";
 import { CreateTeamResponse, FindTeamResponse, Team } from "../../../types/admin";
+import { takeWorkspaceReturn } from "../../../utils/pendingReturn";
 import { sleepMilliSeconds } from "../../../utils/sleep";
 import { createTeam } from "../services/createTeam";
 import { findTeam } from "../services/findTeam";
@@ -118,7 +119,8 @@ export const JoinTeam = () => {
             localStorage.setItem("teamName", teamName);
 
             if (joinTeamRes) {
-                navigate("/workspace");
+                // A Settings link followed before sign-in lands on its tab (MIP-2323).
+                navigate(takeWorkspaceReturn() ?? "/workspace");
             }
         }
     };

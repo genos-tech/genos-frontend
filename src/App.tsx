@@ -131,6 +131,7 @@ import { syncStatus } from "./services/syncStatus";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
 import { parseInternalUrl } from "./utils/parseInternalUrl";
+import { useSettingsDeepLink } from "./utils/settingsDeepLink";
 import { spotlightFolderPath, spotlightNotePath } from "./utils/spotlightNotePath";
 
 import { fmt, getMessages, I18nProvider } from "./i18n";
@@ -899,6 +900,8 @@ const AppBody = () => {
     // A toast raised outside React ("Report ready" after Run now) opens the
     // Inbox through this, so it works after the dialog that started it is gone.
     useAppNavigateRequests(navigate);
+    // `?settings=<tab>` opens Settings on that tab (MIP-2323).
+    useSettingsDeepLink();
 
     // Global Cmd-K / Ctrl-K Spotlight overlay. The hook owns open/close
     // state, the keyboard listener, the debounced query, and an `onAsk`
@@ -2133,7 +2136,11 @@ const AppBody = () => {
                                                                                                                 path=""
                                                                                                                 element={
                                                                                                                     <Navigate
-                                                                                                                        to="genos"
+                                                                                                                        to={{
+                                                                                                                            pathname:
+                                                                                                                                "genos",
+                                                                                                                            search: location.search,
+                                                                                                                        }}
                                                                                                                         replace
                                                                                                                     />
                                                                                                                 }

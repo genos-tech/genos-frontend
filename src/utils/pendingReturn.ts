@@ -18,6 +18,8 @@ export const isAllowedReturn = (value: unknown): value is string => {
     // No backslash (some browsers read it as a slash) and no control characters.
     if (value.includes("\\") || [...value].some((ch) => ch.charCodeAt(0) < 32)) return false;
     const path = value.split("?")[0].split("#")[0];
+    // A Settings link (MIP-2323): `/workspace?settings=<key>`, nothing else in the query.
+    if (path === "/workspace") return /^\/workspace\?settings=[A-Za-z]{1,40}$/.test(value);
     return ALLOWED.includes(path);
 };
 
@@ -30,10 +32,27 @@ export const rememberReturn = (path: string): void => {
     }
 };
 
-/** The remembered path, once: reading it clears it. */
+const isWorkspaceReturn = (value: string | null): boolean => !!value?.startsWith("/workspace?");
+
+/** The remembered path, once: reading it clears it. A Settings link (`/workspace?settings=`)
+ *  is left in place: sign-in sends everyone through the team picker first, and the picker
+ *  returns it with `takeWorkspaceReturn`, so the tab survives choosing a team (MIP-2323). */
 export const takeReturn = (): string | null => {
     try {
         const value = sessionStorage.getItem(KEY);
+        if (isWorkspaceReturn(value)) return null;
+        sessionStorage.removeItem(KEY);
+        return isAllowedReturn(value) ? value : null;
+    } catch {
+        return null;
+    }
+};
+
+/** The remembered Settings link, once, for the team picker to land on after a team is chosen. */
+export const takeWorkspaceReturn = (): string | null => {
+    try {
+        const value = sessionStorage.getItem(KEY);
+        if (!isWorkspaceReturn(value)) return null;
         sessionStorage.removeItem(KEY);
         return isAllowedReturn(value) ? value : null;
     } catch {

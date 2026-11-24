@@ -154,7 +154,7 @@ describe("ModalCustomizeTaskFields", () => {
         await waitFor(() =>
             expect(
                 screen.getByText(
-                    "Couldn't save — only the project owner can change these settings."
+                    "Couldn't save — only the project owner and editors can change these settings."
                 )
             ).toBeInTheDocument()
         );
