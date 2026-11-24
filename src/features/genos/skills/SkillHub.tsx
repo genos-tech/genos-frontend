@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import RemoveCircleOutlineRoundedIcon from "@mui/icons-material/RemoveCircleOutlineRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StarBorderRoundedIcon from "@mui/icons-material/StarBorderRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -21,7 +23,9 @@ import {
     chipsOf,
     fetchHub,
     fetchHubTags,
+    installSkill,
     setSkillStar,
+    uninstallSkill,
     type HubSort,
     type HubTag,
     type SkillRow,
@@ -155,6 +159,37 @@ export const SkillHub = ({ onOpen, onCopy, onReport }: Props) => {
         void load();
     };
 
+    // Install or uninstall (MIP-2293): the row changes when the server says yes, never before, so a
+    // refused install (a skill just taken down) is not shown as done. One request per skill at a time.
+    const busy = useRef(new Set<string>());
+    const toggleInstall = async (skill: SkillRow) => {
+        if (busy.current.has(skill.id)) return;
+        busy.current.add(skill.id);
+        const installing = skill.installedVersionNo == null;
+        const res = installing
+            ? await installSkill(accessToken, skill.id)
+            : await uninstallSkill(accessToken, skill.id);
+        busy.current.delete(skill.id);
+        if (!res.ok) {
+            toast.error(res.message || (installing ? h.installFailed : h.uninstallFailed));
+            return;
+        }
+        const pinned = installing && res.data ? res.data.installedVersionNo : null;
+        setPage((prev) =>
+            prev.status === "ready"
+                ? {
+                      ...prev,
+                      skills: prev.skills.map((s) =>
+                          s.id === skill.id
+                              ? { ...s, installedVersionNo: pinned, updateAvailable: false }
+                              : s
+                      ),
+                  }
+                : prev
+        );
+        toast.success(installing ? h.installedToast : h.uninstalledToast);
+    };
+
     const filtered = text.trim() !== "" || tag !== "";
     return (
         <Box sx={{ display: "grid", gap: 1.5, minWidth: 0 }}>
@@ -244,6 +279,7 @@ export const SkillHub = ({ onOpen, onCopy, onReport }: Props) => {
                                         : ""
                                 }
                                 onCopy={() => onCopy(skill)}
+                                onInstall={() => void toggleInstall(skill)}
                                 onOpen={() => onOpen(skill)}
                                 onReport={() => onReport(skill)}
                                 onStar={() => void star(skill)}
@@ -272,11 +308,12 @@ type RowProps = {
     when: string;
     onOpen: () => void;
     onCopy: () => void;
+    onInstall: () => void;
     onReport: () => void;
     onStar: () => void;
 };
 
-const HubRow = ({ skill, when, onOpen, onCopy, onReport, onStar }: RowProps) => {
+const HubRow = ({ skill, when, onOpen, onCopy, onInstall, onReport, onStar }: RowProps) => {
     const { t } = useTranslation();
     const l = t.settings.genosSkills.list;
     const h = t.settings.genosSkills.hub;
@@ -286,8 +323,10 @@ const HubRow = ({ skill, when, onOpen, onCopy, onReport, onStar }: RowProps) => 
         : skill.author
           ? fmt(h.byHandle, { handle: skill.author.handle })
           : "";
+    const installed = skill.installedVersionNo != null;
     const meta = [
         byline,
+        installed ? h.installed : "",
         fmt(h.uses, { n: skill.runCount30d }),
         fmt(h.copies, { n: skill.copyCount }),
         skill.publishedVersionNo > 0 ? fmt(l.version, { n: skill.publishedVersionNo }) : "",
@@ -301,6 +340,13 @@ const HubRow = ({ skill, when, onOpen, onCopy, onReport, onStar }: RowProps) => 
             label: l.view,
             icon: <VisibilityOutlinedIcon />,
             onClick: onOpen,
+        },
+        {
+            id: "install",
+            label: installed ? h.uninstall : h.install,
+            icon: installed ? <RemoveCircleOutlineRoundedIcon /> : <DownloadRoundedIcon />,
+            onClick: onInstall,
+            visible: !skill.mine,
         },
         {
             id: "copy",

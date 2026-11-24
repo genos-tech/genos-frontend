@@ -11,13 +11,28 @@ import type { Lang } from "../lpLang";
  * Statements that a personal-data review found contradicted are left out or narrowed (note 194 on MIP-1780,
  * list in the PR body): the name inside message text, the Team Notes outcome of deletion, the removal of
  * Google and GitHub tokens at the provider, the export contents, and the claims about teams and anonymisation.
+ *
+ * MIP-2284 (Ken, 2026-11-24, no paid certification now): the page says that the host, Railway, states a SOC 2
+ * Type II report and AES-256 at rest, that Genos is built with reference to public guidance, and publishes the
+ * information security basic policy that IPA's SECURITY ACTION two stars asks for. Hard rule: Genos itself holds
+ * NO certification and no sentence may say or imply it does (SecurityPage.test.tsx pins this). The SECURITY
+ * ACTION line is NOT here: it is added only after Ken has declared (genos-docs compliance/public-statement/04).
+ * Wording approved by Ken and counsel on 2026-11-24.
  */
+
+export interface SecurityLink {
+    label: string;
+    /** Always an https URL; the source of the sentence above it. */
+    href: string;
+}
 
 export interface SecuritySection {
     id: string;
     heading: string;
     /** Paragraphs and list items, plain text. */
     body: string[];
+    /** Sources for the paragraphs above, shown as a list of external links. */
+    links?: SecurityLink[];
 }
 
 export interface SecurityCopy {
@@ -29,6 +44,8 @@ export interface SecurityCopy {
     legal: string;
     reportLabel: string;
     reportButton: string;
+    /** Accessible name of each section's list of source links. */
+    sourcesLabel: string;
 }
 
 export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
@@ -43,7 +60,22 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                     // Evidence: genos-docs/operations/THIRD_PARTY_REVIEW.md §2.1 (Railway is the only production host);
                     // genos-api/.railway/railway.ts (cron services in asia-southeast1).
                     "Genos runs on Railway. Our scheduled jobs run in Singapore.",
+                    // Evidence (MIP-2284, read 2026-11-24): docs.railway.com/enterprise/security ("Railway has a SOC 2 Type II
+                    // report and a SOC 3 report from an independent auditor"; "All data stored on Railway is encrypted at rest
+                    // with AES-256 in every region"; "public endpoints require HTTPS with TLS 1.2 or 1.3") and /compliance.
+                    // It is Railway's attestation. Railway's own word "certified" is not copied: a SOC 2 is a report.
+                    "Railway states that it holds a SOC 2 Type II report and a SOC 3 report from an independent auditor, that all data stored on Railway is encrypted at rest with AES-256, and that its public endpoints require HTTPS with TLS 1.2 or 1.3. These are Railway's statements about its platform. Genos itself holds no certification.",
                     "The companies that process data for us, and what each one receives, are listed on the privacy page.",
+                ],
+                links: [
+                    {
+                        label: "Railway: security",
+                        href: "https://docs.railway.com/enterprise/security",
+                    },
+                    {
+                        label: "Railway: compliance",
+                        href: "https://docs.railway.com/enterprise/compliance",
+                    },
                 ],
             },
             {
@@ -121,6 +153,46 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 ],
             },
             {
+                id: "standards",
+                heading: "Guidance we refer to",
+                body: [
+                    // Evidence: genos-docs compliance/public-statement/03-framework-mapping.md (versions read 2026-11-24:
+                    // IPA SME guideline 4.0, OWASP ASVS 5.0.0, OWASP Top 10 2025, NIST CSF 2.0). "With reference to" only.
+                    "Genos is built and run with reference to public security guidance: the guidelines for information security measures at small and medium-sized enterprises from Japan's IPA (version 4.0), the OWASP Application Security Verification Standard (version 5.0) and OWASP Top 10 (2025), and the NIST Cybersecurity Framework 2.0.",
+                    "This is the guidance we use as a reference when we design and review our work. It is not an audit, and Genos has not been assessed or certified against any of it.",
+                ],
+                links: [
+                    {
+                        label: "IPA: information security guidelines for small and medium-sized enterprises (Japanese)",
+                        href: "https://www.ipa.go.jp/security/guide/sme/about.html",
+                    },
+                    {
+                        label: "OWASP Application Security Verification Standard",
+                        href: "https://asvs.owasp.org/",
+                    },
+                    { label: "OWASP Top 10 (2025)", href: "https://top10.owasp.org/2025" },
+                    {
+                        label: "NIST Cybersecurity Framework 2.0",
+                        href: "https://doi.org/10.6028/NIST.CSWP.29",
+                    },
+                ],
+            },
+            {
+                id: "policy",
+                heading: "Information security basic policy",
+                body: [
+                    // Source: IPA's sample basic policy (appendix 2 of the SME guideline), five articles, adapted to one operator
+                    // plus AI agents. Evidence per article: genos-docs compliance/public-statement/02-basic-policy-public.md.
+                    // Wording approved by Ken and counsel on 2026-11-24. The 制定日 (date established) line is still to be added by Ken.
+                    "The operator of Genos (the company) protects the information assets that customers entrust to it (messages, tasks, notes, files, AI history and personal data) from accidents, disasters and crime, and works under the policy below to keep the trust of its customers and of society.",
+                    "1. Responsibility of the owner. The company works on a continual, organised basis to improve information security, led by its operator. The operator approves this policy, decides how to respond to an incident, and gives the final approval for every change to the production environment.",
+                    "2. Organisation. The operator is the person responsible, and runs Genos with the help of AI coding and operations agents. Security measures are written down as internal rules. Changes to the service go through review and automated checks before release. Agents are run within the operator's instructions, and writes to production need the operator's approval.",
+                    "3. Practice. The operator keeps learning the knowledge and skills that information security requires. The internal rules are reviewed at least once a year, and after a serious incident or a change of supplier.",
+                    "4. Legal and contractual requirements. The company complies with the laws, regulations, norms and contractual obligations on information security, and meets its customers' expectations.",
+                    "5. Violations and incidents. If a violation of law or contract, or an incident, occurs, the company handles it by procedure, informs the customers affected where appropriate, and works to prevent it from happening again.",
+                ],
+            },
+            {
                 id: "report",
                 heading: "Report a security problem",
                 body: [
@@ -136,6 +208,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
         legal: "Legal Notice",
         reportLabel: "Report by email",
         reportButton: "Email us about security",
+        sourcesLabel: "Sources",
     },
     ja: {
         title: "セキュリティとデータの扱い",
@@ -146,7 +219,18 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 heading: "データの保存場所",
                 body: [
                     "Genos は Railway 上で動作しています。定期実行されるジョブはシンガポールで動いています。",
+                    "Railway は、独立した監査人による SOC 2 Type II レポートと SOC 3 レポートを保有し、Railway に保存されるすべてのデータは保存時に AES-256 で暗号化され、公開エンドポイントは TLS 1.2 または 1.3 の HTTPS を必須としていると説明しています。これらは Railway のプラットフォームに関する Railway 自身の説明です。Genos 自体は認証を取得していません。",
                     "当社のためにデータを処理する企業と、それぞれが受け取るデータは、プライバシーポリシーのページに掲載しています。",
+                ],
+                links: [
+                    {
+                        label: "Railway：セキュリティ（英語）",
+                        href: "https://docs.railway.com/enterprise/security",
+                    },
+                    {
+                        label: "Railway：コンプライアンス（英語）",
+                        href: "https://docs.railway.com/enterprise/compliance",
+                    },
                 ],
             },
             {
@@ -210,6 +294,44 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 ],
             },
             {
+                id: "standards",
+                heading: "参考にしている指針",
+                body: [
+                    "Genos は、公開されているセキュリティの指針を参考にして作り、運用しています。IPA の「中小企業の情報セキュリティ対策ガイドライン」（第 4.0 版）、OWASP の Application Security Verification Standard（第 5.0 版）と OWASP Top 10（2025 年版）、NIST サイバーセキュリティフレームワーク 2.0 です。",
+                    "これは、設計や見直しのときに参照している指針です。監査ではありません。Genos は、これらのいずれについても評価や認証を受けていません。",
+                ],
+                links: [
+                    {
+                        label: "IPA：中小企業の情報セキュリティ対策ガイドライン",
+                        href: "https://www.ipa.go.jp/security/guide/sme/about.html",
+                    },
+                    {
+                        label: "OWASP Application Security Verification Standard（英語）",
+                        href: "https://asvs.owasp.org/",
+                    },
+                    {
+                        label: "OWASP Top 10 2025 年版（英語）",
+                        href: "https://top10.owasp.org/2025",
+                    },
+                    {
+                        label: "NIST サイバーセキュリティフレームワーク 2.0（英語）",
+                        href: "https://doi.org/10.6028/NIST.CSWP.29",
+                    },
+                ],
+            },
+            {
+                id: "policy",
+                heading: "情報セキュリティ基本方針",
+                body: [
+                    "Genos の運営者（以下、当社）は、お客様からお預かりした情報資産（メッセージ、タスク、ノート、ファイル、AI の利用履歴、個人情報）を事故・災害・犯罪などの脅威から守り、お客様ならびに社会の信頼に応えるべく、以下の方針に基づき情報セキュリティに取り組みます。",
+                    "1. 経営者の責任：当社は、運営者の主導で、組織的かつ継続的に情報セキュリティの改善・向上に努めます。方針の承認、事故対応の判断、本番環境への変更の最終承認は、運営者が行います。",
+                    "2. 体制の整備：当社は、運営者が責任者となり、AI のコーディング・運用エージェントの支援を受けて運営しています。情報セキュリティ対策は社内の規程として文書に定めています。サービスの変更は、レビューと自動チェックを通してから反映します。エージェントは運営者が与えた指示の範囲で動くよう運用し、本番環境への書き込みには運営者の承認を必要とします。",
+                    "3. 取組み：運営者は、情報セキュリティのために必要とされる知識と技術を習得し続けます。社内の規程は少なくとも年に 1 回、また重大な事故や委託先の変更のあとに見直します。",
+                    "4. 法令及び契約上の要求事項の遵守：当社は、情報セキュリティに関わる法令、規制、規範、契約上の義務を遵守するとともに、お客様の期待に応えます。",
+                    "5. 違反及び事故への対応：当社は、情報セキュリティに関わる法令違反、契約違反及び事故が発生した場合には、手順に従って適切に対処し、必要に応じて影響を受けるお客様にお知らせし、再発防止に努めます。",
+                ],
+            },
+            {
                 id: "report",
                 heading: "セキュリティの問題の報告",
                 body: [
@@ -223,6 +345,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
         legal: "特定商取引法に基づく表記",
         reportLabel: "メールで報告",
         reportButton: "セキュリティについてメールする",
+        sourcesLabel: "出典",
     },
 };
 
