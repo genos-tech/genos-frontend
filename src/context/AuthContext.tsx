@@ -101,6 +101,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
     };
 
+    // The proactive-refresh effect below must not re-run (and reset its timer) on every render, so
+    // it reaches the latest forceSignOut through this ref instead of listing it as a dependency.
+    const forceSignOutRef = useRef(forceSignOut);
+    useEffect(() => {
+        forceSignOutRef.current = forceSignOut;
+    });
+
     // Pick the delay for the next retry from the backoff schedule.
     // Once we run off the end of the schedule we stick at the last
     // (largest) value so this stays a steady poll, not unbounded.
@@ -201,7 +208,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const outcome = await refreshAccessToken();
                 if (cancelled) return;
                 if (outcome === "unauthenticated") {
-                    forceSignOut();
+                    forceSignOutRef.current();
                 } else if (outcome === "transient") {
                     const delay = nextBackoffDelayMs(failures++);
                     timer = setTimeout(() => void run(), delay);
