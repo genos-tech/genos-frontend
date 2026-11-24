@@ -13,16 +13,19 @@ import { hi } from "../i18n/locales/hi";
 import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 
-type Hints = { effortHint: string; effortHintNoEstimate: string };
+type Hints = { effortHint?: string; effortHintNoEstimate?: string };
+
+const hintsOf = (messages: unknown): Hints =>
+    (messages as { settings?: { schedules?: Hints } }).settings?.schedules ?? {};
 
 const locales: Record<string, Hints> = {
     en: en.schedules,
-    ar: ar.settings.schedules,
-    es: es.settings.schedules,
-    fr: fr.settings.schedules,
-    hi: hi.settings.schedules,
-    ja: ja.settings.schedules,
-    zh: zh.settings.schedules,
+    ar: hintsOf(ar),
+    es: hintsOf(es),
+    fr: hintsOf(fr),
+    hi: hintsOf(hi),
+    ja: hintsOf(ja),
+    zh: hintsOf(zh),
 };
 
 describe("effort hints", () => {
