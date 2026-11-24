@@ -230,6 +230,58 @@ describe("the Installed filter", () => {
         expect(api.fetchSkills).toHaveBeenLastCalledWith("tok", "team-1", "installed");
     });
 
+    it("refreshes in place after an update: no skeleton, and focus goes to that row", async () => {
+        const user = userEvent.setup();
+        let updated = false;
+        vi.mocked(api.fetchSkills).mockImplementation(async (_token, _team, tab) =>
+            tab === "installed"
+                ? list([
+                      updated
+                          ? installed({ installedVersionNo: 3, updateAvailable: false })
+                          : installed(),
+                      upToDate,
+                  ])
+                : list([base()])
+        );
+        vi.mocked(api.acceptSkillUpdate).mockImplementation(async () => {
+            updated = true;
+            return { ok: true, data: { installedVersionNo: 3 } };
+        });
+        renderPage();
+        await openInstalled(user);
+        await screen.findByText("Roadmap review");
+        await user.click(screen.getByRole("button", { name: /Update available/ }));
+        await screen.findByText("Sharper agenda");
+        await user.click(screen.getByRole("button", { name: "Update to version 3" }));
+        // The marker is gone and the row says so; the list was never swapped for a skeleton.
+        await screen.findByText("Version 3 · up to date");
+        expect(screen.queryByRole("button", { name: /Update available/ })).toBeNull();
+        expect(screen.queryByLabelText("Loading skills…")).toBeNull();
+        await waitFor(() =>
+            expect(screen.getByRole("button", { name: "Roadmap review" })).toHaveFocus()
+        );
+    });
+
+    it("keeps the Installed tab selected if the server's public switch turns off meanwhile", async () => {
+        const user = userEvent.setup();
+        let off = false;
+        vi.mocked(api.fetchSkills).mockImplementation(async (_token, _team, tab) =>
+            tab === "installed" ? list([installed(), upToDate], !off) : list([base()])
+        );
+        renderPage();
+        await openInstalled(user);
+        await screen.findByText("Roadmap review");
+        off = true;
+        await user.click(screen.getByRole("button", { name: /Update available/ }));
+        await screen.findByText("Sharper agenda");
+        await user.click(screen.getByRole("button", { name: "Update to version 3" }));
+        await waitFor(() => expect(api.acceptSkillUpdate).toHaveBeenCalled());
+        expect(await screen.findByRole("tab", { name: "Installed" })).toHaveAttribute(
+            "aria-selected",
+            "true"
+        );
+    });
+
     it("explains an empty list", async () => {
         const user = userEvent.setup();
         vi.mocked(api.fetchSkills).mockImplementation(async (_token, _team, tab) =>

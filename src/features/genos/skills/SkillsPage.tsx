@@ -100,16 +100,34 @@ export const SkillsPage = ({ teamId, host }: Props) => {
     // be drawn under the tab now open.
     const latest = useRef(0);
     const load = useCallback(
-        async (which: SkillTab) => {
+        async (which: SkillTab, quiet = false) => {
             const mine = ++latest.current;
-            setList({ status: "loading" });
+            // A quiet refresh keeps the rows on screen (no skeleton), so a focused control inside
+            // a row is not unmounted under a keyboard user.
+            if (!quiet) setList({ status: "loading" });
             const res = await fetchSkills(accessToken, teamId, which);
             if (mine !== latest.current) return;
             if (res.ok) setPublicEnabled(res.data.publicEnabled);
-            setList(res.ok ? { status: "ready", data: res.data } : { status: "failed" });
+            setList((prev) =>
+                res.ok
+                    ? { status: "ready", data: res.data }
+                    : quiet && prev.status === "ready"
+                      ? prev
+                      : { status: "failed" }
+            );
         },
         [accessToken, teamId]
     );
+
+    // After an accepted update the marker is gone, so focus goes to that row's open button
+    // instead of the page top (MIP-2226).
+    const focusAfterUpdate = useRef<string | null>(null);
+    useEffect(() => {
+        const id = focusAfterUpdate.current;
+        if (!id || list.status !== "ready") return;
+        focusAfterUpdate.current = null;
+        document.querySelector<HTMLElement>(`[data-skill-open="${CSS.escape(id)}"]`)?.focus();
+    }, [list]);
 
     // The Hub tab loads its own pages; the list behind it stays the member's own.
     const listTab: SkillTab = tab === "hub" ? "mine" : tab;
@@ -388,7 +406,10 @@ export const SkillsPage = ({ teamId, host }: Props) => {
             <SkillUpdateDiffDialog
                 skill={updating ? { id: updating.id, title: updating.title } : null}
                 onClose={() => setUpdating(null)}
-                onUpdated={() => void load(listTab)}
+                onUpdated={() => {
+                    focusAfterUpdate.current = updating?.id ?? null;
+                    void load(listTab, true);
+                }}
             />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
@@ -508,6 +529,7 @@ const SkillListItem = ({
             <Box sx={{ flex: 1, minWidth: 0 }}>
                 <PlainButton
                     aria-label={name}
+                    data-skill-open={skill.id}
                     sx={{
                         width: "100%",
                         minWidth: 0,
@@ -631,8 +653,14 @@ const SkillListItem = ({
                                 color="primary"
                                 size="sm"
                                 startDecorator={<UpgradeRoundedIcon />}
-                                sx={{ flexShrink: 0, minHeight: 0, height: FOOTER_HEIGHT - 8 }}
                                 variant="soft"
+                                sx={{
+                                    flexShrink: 0,
+                                    minHeight: 0,
+                                    height: FOOTER_HEIGHT - 8,
+                                    // A finger gets the whole footer height; the row does not grow.
+                                    "@media (pointer: coarse)": { height: FOOTER_HEIGHT },
+                                }}
                                 onClick={onUpdate}
                             >
                                 {t.settings.genosSkills.updateDiff.title}
