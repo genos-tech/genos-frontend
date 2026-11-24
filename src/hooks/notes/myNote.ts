@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { MyNoteMetaProps, MyNoteMetaTreeNode, MyNoteProps } from "../../types/notes";
 
@@ -59,7 +59,21 @@ export const updataMyNoteChain = (props: updataMyNoteChainProps) => {
         selectedTabIndex,
     } = props;
 
+    // The effect below must keep running only for the dependencies listed at its end, but it
+    // has to read the latest chain and setters, so they are read through a ref.
+    const latest = useRef({
+        currentMyNoteChain,
+        setCurrentMyNoteChain,
+        setAllNoteIdChains,
+    });
+    latest.current = { currentMyNoteChain, setCurrentMyNoteChain, setAllNoteIdChains };
+
     useEffect(() => {
+        const {
+            currentMyNoteChain: currentChain,
+            setCurrentMyNoteChain: setCurrentChain,
+            setAllNoteIdChains: setAllChains,
+        } = latest.current;
         // Will update the Chain when `currentMyNote`, `tabItems`, or `selectedTabIndex` is changed.
         // When `tabItems` is changed, `currentMyNote` is also changed at the same time.
         // But `currentMyNote` can be changed alone only if `tabItems` includes `currentMyNote`.
@@ -68,24 +82,24 @@ export const updataMyNoteChain = (props: updataMyNoteChainProps) => {
             if (chain) {
                 // Update chain if it's different from current, or if current is undefined
                 const isDifferent =
-                    !currentMyNoteChain ||
+                    !currentChain ||
                     !areArraysEqualByJSON(
                         chain.map((item) => `${item.noteType}-${item.noteId}`),
-                        currentMyNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
+                        currentChain.map((item) => `${item.noteType}-${item.noteId}`)
                     );
 
                 if (isDifferent) {
-                    setCurrentMyNoteChain(chain);
+                    setCurrentChain(chain);
                 }
 
-                setAllNoteIdChains((prev) => ({
+                setAllChains((prev) => ({
                     ...prev,
                     [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
                         chain.map((item) => item.noteId),
                 }));
             }
         } else {
-            setCurrentMyNoteChain([]);
+            setCurrentChain([]);
         }
     }, [currentMyNote, tabItems, selectedTabIndex, myNoteMetaTree]);
 };
@@ -97,9 +111,13 @@ type initCurrentMyNoteChainProps = {
 };
 export const initCurrentMyNoteChain = (props: initCurrentMyNoteChainProps) => {
     const { myNoteMeta, currentMyNoteChain, setCurrentMyNoteChain } = props;
+    const latest = useRef({ currentMyNoteChain, setCurrentMyNoteChain });
+    latest.current = { currentMyNoteChain, setCurrentMyNoteChain };
     useEffect(() => {
-        if (currentMyNoteChain === undefined && myNoteMeta.length === 0) {
-            setCurrentMyNoteChain([]);
+        const { currentMyNoteChain: currentChain, setCurrentMyNoteChain: setCurrentChain } =
+            latest.current;
+        if (currentChain === undefined && myNoteMeta.length === 0) {
+            setCurrentChain([]);
         }
     }, [myNoteMeta]);
 };

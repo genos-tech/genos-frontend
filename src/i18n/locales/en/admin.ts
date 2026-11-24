@@ -131,6 +131,10 @@ export const admin = {
             generic: "Something went wrong. Please try again later.",
             unexpected: "An unexpected error occurred. Please try again.",
             duplicateEmail: "Please try with a different email.",
+            passwordCommon:
+                "This password is too common or too easy to guess. Please choose another.",
+            passwordBreached:
+                "This password has appeared in a known data breach. Please choose another.",
             duplicateName: "Please try with a different name.",
             demoRateLimited: "Too many demo sign-ins from this network. Please try again later.",
             demoFailed: "Could not create demo session. Please try again later.",
