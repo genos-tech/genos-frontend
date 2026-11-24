@@ -26,7 +26,7 @@ export const research: SegmentConfig = {
         trust: [
             "実験・結果・次の行動を、ひとつの流れとして保存",
             "AIの回答から、元のノートやタスクへ戻れる",
-            "タスクや予定の作成は、必ず確認してから実行",
+            "Genos AIは、承認するまで何も変更しません",
         ],
         questions: {
             title: "結果は残る。判断の経緯が消えていく。",
@@ -65,9 +65,9 @@ export const research: SegmentConfig = {
                 title: "計画と行動",
                 subtitle: "次の実験を、タスクと予定に落とし込む",
                 bullets: [
-                    "研究テーマごとのタスク、Todo、期限、予定を管理",
-                    "ノートの内容から、次の作業計画をGenosに提案させる",
-                    "AIによる作成・更新は、実行前に内容を確認",
+                    "研究テーマのタスクと期限、個人のTodo、Googleカレンダーの予定を管理",
+                    "ノートの内容から次の作業計画を提案（Freeは文章の下書き、Coreはタスクを1件ずつ、Pro以上はマイルストーンとタスクツリー）",
+                    "Genos AIによる作成・更新は、承認するまで実行されません",
                 ],
             },
             {
@@ -96,8 +96,8 @@ export const research: SegmentConfig = {
             "ノート・タスク・議論等を横断したAI回答と出典リンク",
             "長いノートやスレッドの要約",
             "プロジェクト、マイルストーン、スプリント、ブロッカー等の確認",
-            "タスク計画、ノート、Todo、予定の承認付き作成・更新",
-            "GitHub pull requestに関する読み取り",
+            "タスク計画、ノート、Todo、Googleカレンダーの予定の承認付き作成・更新（Core以上、複数タスクの計画はPro以上）",
+            "GitHub pull requestに関する読み取り（Pro以上、GitHub連携時）",
         ],
         coming: [
             "AIへの質問にPDFや画像を直接添付する",
@@ -127,8 +127,8 @@ export const research: SegmentConfig = {
                     a: "現在のGenosは、研究の記録・計画・タスク・予定・振り返りをつなぐワークスペースです。規制対応、機器データ管理、正式なELN / LIMS要件を満たす製品としては提供していません。",
                 },
                 {
-                    q: "AIが研究記録を自動で変更しますか？",
-                    a: "いいえ。AIによるタスク、ノート、Todo、予定の作成・更新は、実行前に確認を求めます。承認されるまで変更されません。",
+                    q: "Genos AIが研究記録を自動で変更しますか？",
+                    a: "いいえ。Genos AIは、承認するまで何も変更しません。ご自身で接続したアプリ（Claudeなど）は、許可した範囲の権限で動作します。",
                 },
                 {
                     q: "一人でも使えますか？",
@@ -168,7 +168,7 @@ export const research: SegmentConfig = {
         trust: [
             "Keep experiments, results, and next actions connected",
             "Open the notes and tasks behind every AI answer",
-            "Review every proposed task or calendar change before it runs",
+            "Genos AI changes nothing until you approve it",
         ],
         questions: {
             title: "The result survives. The reasoning around it fades.",
@@ -208,9 +208,9 @@ export const research: SegmentConfig = {
                 title: "Plans and Actions",
                 subtitle: "Turn the next experiment into tasks and scheduled work",
                 bullets: [
-                    "Manage tasks, todos, deadlines, and calendar events for a research theme",
-                    "Ask Genos to propose the next work plan from the notes already in the workspace",
-                    "Review every AI-created or updated item before it is written",
+                    "Manage a theme's tasks and deadlines, plus your to-dos and Google Calendar events",
+                    "Ask Genos for the next work plan from your notes: a text draft on Free, tasks proposed one at a time on Core, a milestone with a task tree on Pro and up",
+                    "Genos AI writes nothing until you approve each proposal",
                 ],
             },
             {
@@ -239,8 +239,8 @@ export const research: SegmentConfig = {
             "Ask across notes, tasks, discussions, and related records with source links",
             "Summarize long notes and threads",
             "Review projects, milestones, sprints, blockers, and related work",
-            "Create or update task plans, notes, todos, and calendar events through approval",
-            "Read selected GitHub pull-request information",
+            "Create or update task plans, notes, todos, and Google Calendar events through approval (Core and up; multi-task plans on Pro and up)",
+            "Read selected GitHub pull-request information (Pro and up, with GitHub connected)",
         ],
         coming: [
             "Attach a PDF or image directly to an AI question",
@@ -270,8 +270,8 @@ export const research: SegmentConfig = {
                     a: "Genos currently connects research records, plans, tasks, schedules, and reviews. It is not positioned as a regulated ELN, LIMS, or instrument-data system.",
                 },
                 {
-                    q: "Can the AI change research records automatically?",
-                    a: "No. AI-created or updated tasks, notes, todos, and calendar events wait for human approval before anything is written.",
+                    q: "Can Genos AI change research records automatically?",
+                    a: "No. Genos AI never changes anything until you approve it. Apps you connect yourself, such as Claude, act with the access you gave them.",
                 },
                 {
                     q: "Can an individual researcher use it?",

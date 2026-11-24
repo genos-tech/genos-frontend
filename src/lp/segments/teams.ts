@@ -64,8 +64,8 @@ export const teams: SegmentConfig = {
                 title: "確認してから実行するAI",
                 subtitle: "ノートから、担当・期限・予定を提案",
                 bullets: [
-                    "会議ノートからタスク計画を提案",
-                    "Todoやカレンダー予定の作成・更新を依頼",
+                    "Pro以上では、議事録から担当者・期限・依存関係つきのタスク（最大20件）を1回の承認で作成。Coreでは1件ずつ提案します",
+                    "Core以上では、TodoやGoogleカレンダーの予定の作成・更新をGenos AIに依頼",
                     "AIの提案内容を確認し、承認したものだけを実行",
                 ],
             },
@@ -94,8 +94,8 @@ export const teams: SegmentConfig = {
             "ノート、タスク、Todo、予定の管理",
             "チームの進捗、負荷、期限、ブロッカーに関する質問",
             "AI回答から元の情報へ戻るリンク",
-            "会議ノート等からタスク計画を提案",
-            "タスク、ノート、Todo、予定の承認付き作成・更新",
+            "会議ノート等からタスク計画を提案（Pro以上は最大20件を1回の承認で、Coreは1件ずつ）",
+            "タスク、ノート、Todo、Googleカレンダーの予定の承認付き作成・更新（Core以上）",
             "UI言語に合わせたAI回答",
         ],
         coming: [
@@ -205,8 +205,8 @@ export const teams: SegmentConfig = {
                 title: "Approved Actions",
                 subtitle: "Turn notes into owners, deadlines, and scheduled work",
                 bullets: [
-                    "Ask Genos to propose a task plan from a meeting note",
-                    "Create or update todos and calendar events through the agent",
+                    "On Pro and up, turn a meeting note into a plan of up to 20 tasks with owners, deadlines and dependencies in one approval; on Core, Genos proposes tasks one at a time",
+                    "On Core and up, create or update your to-dos and Google Calendar events through Genos AI",
                     "Review the proposal and run only the changes you approve",
                 ],
             },
@@ -235,8 +235,8 @@ export const teams: SegmentConfig = {
             "Manage notes, tasks, todos, and schedules",
             "Ask about team progress, workload, deadlines, and blockers",
             "Open the source records behind an AI answer",
-            "Propose a task plan from meeting notes and related context",
-            "Create or update tasks, notes, todos, and calendar events through approval",
+            "Propose a task plan from meeting notes (up to 20 tasks in one approval on Pro and up; one task at a time on Core)",
+            "Create or update tasks, notes, to-dos, and Google Calendar events through approval (Core and up)",
             "Receive AI answers in the active interface language",
         ],
         coming: [
