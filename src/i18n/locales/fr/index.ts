@@ -3377,6 +3377,29 @@ export const fr: DeepPartial<Messages> = {
                 saveFailed: "Impossible d'enregistrer le modèle.",
                 deleteFailed: "Impossible de supprimer le modèle.",
                 defaultIn: "Par défaut dans {folder}",
+                fromTemplate: "Nouvelle note à partir d'un modèle…",
+                pickerTitle: "Nouvelle note à partir d'un modèle",
+                pickerHint:
+                    "Choisissez un modèle pour voir son contenu. Mettez {date} dans un titre pour la date du jour.",
+                listLabel: "Modèles",
+                groupBuiltin: "Intégrés",
+                groupTeam: "Équipe",
+                groupPersonal: "Mes modèles",
+                use: "Utiliser ce modèle",
+                emptyPersonal: "Vous n'avez pas encore de modèle personnel.",
+                previewFailed: "Impossible de charger l'aperçu.",
+                previewLoading: "Chargement…",
+                previewLabel: "Aperçu de {name}",
+                scope: "Qui peut l'utiliser",
+                scopePersonal: "Moi seul",
+                scopeTeam: "Équipe (toute l'équipe)",
+                deleteConfirm: "Supprimer « {name} » ?",
+                saveAsTemplate: "Enregistrer comme modèle…",
+                saveAsTitle: "Enregistrer comme modèle",
+                saveAsHint: "Il apparaît dans « Nouvelle note à partir d'un modèle… ».",
+                savedAsTemplate:
+                    "Enregistré. Retrouvez-le dans « Nouvelle note à partir d'un modèle… ».",
+                done: "Terminé",
             },
             meeting: {
                 label: "Notes de réunion",
@@ -4674,7 +4697,7 @@ export const fr: DeepPartial<Messages> = {
                 "Problème de paiement — mettez à jour votre moyen de paiement dans le portail de facturation.",
             plansHeading: "Forfaits et tarifs",
             plansSubheading:
-                "Tous les forfaits incluent toutes les fonctionnalités — seuls les limites d'utilisation et l'historique changent.",
+                "Les forfaits diffèrent par les limites d'utilisation, l'historique et les fonctions d'IA : la recherche web, les applis d'IA connectées, les planifications et les webhooks commencent à Core, et la lecture des pull requests GitHub par Genos AI commence à Pro.",
             freePrice: "Gratuit",
             perMonth: "/ mois",
             contactSales: "Contacter les ventes",
@@ -4702,11 +4725,11 @@ export const fr: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} sièges / mois",
             plansHero: "Faites-en plus avec Genos",
             plansHeroSub:
-                "Commencez gratuitement et changez de forfait à tout moment. Les forfaits payants débloquent plus d'IA, un historique illimité, la recherche web, les connexions MCP et plus d'espace pour créer.",
+                "Commencez gratuitement et changez de forfait à tout moment. Les forfaits payants débloquent plus d'IA, un historique plus long, la recherche web, les connexions MCP et plus d'espace pour créer.",
             currencyLabel: "Afficher les prix dans",
             startForFree: "Commencez gratuitement",
             taglineFree: "Chat, tâches et notes réunis au même endroit",
-            taglineCore: "Historique illimité et IA au quotidien",
+            taglineCore: "Un an d’historique et de l’IA au quotidien",
             taglinePro: "Faites de l'IA votre alliée au quotidien",
             taglineMax: "Pleine puissance pour un usage intensif de l'IA",
             taglineEnterprise: "Pour les équipes qui veulent tout",
@@ -6573,7 +6596,7 @@ export const fr: DeepPartial<Messages> = {
             customizeFields: {
                 heading: "Personnaliser les champs de tâche",
                 description:
-                    "Rendez des champs obligatoires et définissez des valeurs par défaut pour les nouvelles tâches et jalons de ce projet. Seul le propriétaire du projet peut les modifier.",
+                    "Rendez des champs obligatoires et définissez des valeurs par défaut pour les nouvelles tâches et jalons de ce projet. Seuls le propriétaire et les éditeurs du projet peuvent les modifier.",
                 requiredLabel: "Obligatoire",
                 defaultLabel: "Valeur par défaut",
                 alwaysRequired: "Toujours obligatoire",
@@ -6587,7 +6610,7 @@ export const fr: DeepPartial<Messages> = {
                 save: "Enregistrer",
                 cancel: "Annuler",
                 saveFailed:
-                    "Échec de l'enregistrement — seul le propriétaire du projet peut modifier ces paramètres.",
+                    "Échec de l'enregistrement — seuls le propriétaire et les éditeurs du projet peuvent modifier ces paramètres.",
             },
         },
         projects: {

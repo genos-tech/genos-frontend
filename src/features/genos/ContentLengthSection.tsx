@@ -84,6 +84,7 @@ export const ContentLengthSection = () => {
                                 alignItems="center"
                                 direction="row"
                                 disabled={status === "loading"}
+                                guideId="spotlight.contentLength"
                                 justifyContent="space-between"
                                 spacing={2}
                             >

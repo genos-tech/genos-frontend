@@ -43,6 +43,7 @@ const Harness = ({
                 data-testid="row"
                 direction="row"
                 disabled={disabledRow}
+                guideId="general.theme"
                 justifyContent="space-between"
             >
                 <div>
