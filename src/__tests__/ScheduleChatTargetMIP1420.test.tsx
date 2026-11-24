@@ -139,10 +139,10 @@ describe("the picker", () => {
         const user = userEvent.setup();
         await openNew(user);
         const box = within(screen.getByTestId("schedule-deliver"));
-        expect(box.getByRole("combobox")).toHaveTextContent("My Inbox");
+        expect(box.getByRole("combobox")).toHaveValue("My Inbox");
         await user.click(box.getByRole("combobox"));
         const names = (await screen.findAllByRole("option")).map((o) => o.textContent);
-        expect(names).toEqual(["My Inbox", "Squad", "Apollo (project chat)"]);
+        expect(names).toEqual(["My Inbox", "SquadGroup chat", "ApolloProject chat"]);
     });
 
     it("sends the chat's id on create, and no push switch is shown for it", async () => {
@@ -152,7 +152,7 @@ describe("the picker", () => {
         await openNew(user);
         await pickProject(user);
         await user.click(within(screen.getByTestId("schedule-deliver")).getByRole("combobox"));
-        await user.click(await screen.findByRole("option", { name: "Apollo (project chat)" }));
+        await user.click(await screen.findByRole("option", { name: /^Apollo/ }));
         expect(screen.queryByRole("switch")).toBeNull();
         expect(
             within(screen.getByTestId("schedule-deliver")).getByText(
@@ -189,7 +189,7 @@ describe("the picker", () => {
         await openNew(user);
         await pickProject(user);
         await user.click(within(screen.getByTestId("schedule-deliver")).getByRole("combobox"));
-        await user.click(await screen.findByRole("option", { name: "Squad" }));
+        await user.click(await screen.findByRole("option", { name: /^Squad/ }));
         await user.click(screen.getByRole("button", { name: "Create schedule" }));
         expect((await screen.findByRole("alert")).textContent).toContain(said);
     });
@@ -218,9 +218,9 @@ describe("a schedule that posts in a chat", () => {
         const user = userEvent.setup();
         await user.click(await screen.findByRole("button", { name: /^Edit/ }));
         const box = within(screen.getByTestId("schedule-deliver"));
-        expect(box.getByRole("combobox")).toHaveTextContent("Apollo (project chat)");
+        expect(box.getByRole("combobox")).toHaveValue("Apollo (project chat)");
         await user.click(box.getByRole("combobox"));
-        await user.click(await screen.findByRole("option", { name: "My Inbox" }));
+        await user.click(await screen.findByRole("option", { name: /^My Inbox/ }));
         await user.click(screen.getByRole("button", { name: "Save changes" }));
         await waitFor(() => expect(updateSchedule).toHaveBeenCalledTimes(1));
         expect(updateSchedule.mock.calls[0][3]).toEqual({ deliverChannelId: null });
@@ -231,9 +231,9 @@ describe("a schedule that posts in a chat", () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
         await user.click(await screen.findByRole("button", { name: /^Edit/ }));
-        expect(
-            within(screen.getByTestId("schedule-deliver")).getByRole("combobox")
-        ).toHaveTextContent("Apollo (project chat)");
+        expect(within(screen.getByTestId("schedule-deliver")).getByRole("combobox")).toHaveValue(
+            "Apollo (project chat)"
+        );
     });
 });
 
