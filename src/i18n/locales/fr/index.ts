@@ -5115,7 +5115,9 @@ export const fr: DeepPartial<Messages> = {
             deliverChatHint:
                 "Le rapport est publié dans ce chat sous forme de message, sans IA et sans notification. Tous les membres du chat peuvent le lire : un rapport de projet ne peut donc aller que dans un chat réservé aux membres de ce projet.",
             deliverChatHintAi:
-                "Le rapport est publié dans ce chat sous forme de message. Il utilise des crédits d'IA et affiche son coût dans le message, et il ne peut aller que dans un chat où vous êtes seul(e). Aucune notification n'est envoyée.",
+                "Le rapport est publié dans ce chat sous forme de message. Il utilise des crédits d'IA ; son coût n'est montré qu'à vous, dans votre boîte de réception, pas dans le chat. Il ne peut aller que dans un chat où vous êtes seul(e). Aucune notification n'est envoyée.",
+            deliverChatHintAiShared:
+                "Le rapport est publié dans ce chat sous forme de message, avec ses phrases d'IA. Tout le monde dans le chat peut le lire, mais son coût n'est montré qu'à vous, dans votre boîte de réception. Aucune notification n'est envoyée.",
             rowDeliver: "Publié dans : {name}",
             reportPosted: "Rapport publié dans {chat}",
             rowProject: "Projet : {name}",
