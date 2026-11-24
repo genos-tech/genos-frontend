@@ -1,4 +1,5 @@
-// Builds src/manual/manual.<lang>.json from src/manual/<lang>/*.md and the settings map (MIP-2321).
+// Builds src/manual/manual.<lang>.json (en, ja) from src/manual/<lang>/*.md and the settings map
+// (MIP-2321, MIP-2322). The first language (en) is the reference the others are checked against.
 //
 //   npm run manual:export          write the JSON
 //   npm run manual:check           fail (exit 1) when the committed JSON is out of date
@@ -14,7 +15,7 @@ import { createServer } from "vite";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manualDir = join(root, "src", "manual");
 const check = process.argv.includes("--check");
-const LANGUAGES = ["en"];
+const LANGUAGES = ["en", "ja"];
 
 const server = await createServer({
     root,
@@ -25,7 +26,10 @@ const server = await createServer({
 
 let failed = false;
 try {
-    const { buildManual, checkManual } = await server.ssrLoadModule("/src/manual/manualSource.ts");
+    const { buildManual, checkManual, checkParity } = await server.ssrLoadModule(
+        "/src/manual/manualSource.ts"
+    );
+    let reference = null;
     for (const lang of LANGUAGES) {
         const dir = join(manualDir, lang);
         const files = {};
@@ -33,7 +37,11 @@ try {
             files[name] = readFileSync(join(dir, name), "utf8");
         }
         const manual = buildManual(lang, files);
-        const problems = checkManual(manual);
+        if (!reference) reference = manual;
+        const problems = [
+            ...checkManual(manual),
+            ...(manual === reference ? [] : checkParity(manual, reference)),
+        ];
         if (problems.length) {
             console.error(`manual.${lang}: ${problems.join("\n  ")}`);
             failed = true;
