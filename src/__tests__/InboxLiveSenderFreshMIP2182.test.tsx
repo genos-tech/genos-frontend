@@ -26,7 +26,7 @@ const Icon = () => null;
 const mountCard = (actor: typeof OLD) =>
     render(
         <CssVarsProvider>
-            <InboxItemAvatar actor={actor} byGenos={false} tone="neutral" Icon={Icon} />
+            <InboxItemAvatar actor={actor} byGenos={false} Icon={Icon} tone="neutral" />
         </CssVarsProvider>
     );
 
