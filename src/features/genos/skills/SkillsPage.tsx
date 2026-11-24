@@ -250,11 +250,21 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 <Tabs
                     aria-label={m.tabs.label}
                     size="sm"
-                    sx={{ bgcolor: "transparent", minWidth: 0 }}
+                    sx={{ bgcolor: "transparent", minWidth: 0, maxWidth: "100%" }}
                     value={tab}
                     onChange={(_e, value) => setTab(value as PageTab)}
                 >
-                    <TabList sx={{ gap: 0.5 }} disableUnderline>
+                    {/* Four tabs stay on one line whatever the language: a label never wraps, and
+                        a strip wider than the screen scrolls sideways (MIP-2226). */}
+                    <TabList
+                        sx={{
+                            gap: 0.5,
+                            flexWrap: "nowrap",
+                            overflowX: "auto",
+                            "& [role=tab]": { flexShrink: 0, whiteSpace: "nowrap", px: 0.875 },
+                        }}
+                        disableUnderline
+                    >
                         <Tab value="mine" variant={tab === "mine" ? "soft" : "plain"}>
                             {m.tabs.mine}
                         </Tab>
