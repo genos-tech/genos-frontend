@@ -626,7 +626,7 @@ export const settings = {
             "There's a payment problem — please update your payment method in the billing portal.",
         plansHeading: "Plans & pricing",
         plansSubheading:
-            "Plans differ in usage limits, history and AI features: connected AI apps, schedules and webhooks start at Core, and GitHub at Pro.",
+            "Plans differ in usage limits, history and AI features: web search, connected AI apps, schedules and webhooks start at Core, and Genos AI reading GitHub pull requests starts at Pro.",
         freePrice: "Free",
         perMonth: "/ month",
         contactSales: "Contact sales",
@@ -653,7 +653,7 @@ export const settings = {
         perSeatMonth: "{price} × {n} seats / month",
         plansHero: "Do more of your best work with Genos",
         plansHeroSub:
-            "Start free and upgrade anytime. Paid plans unlock more AI, unlimited history, web search, MCP connections, and more room to create.",
+            "Start free and upgrade anytime. Paid plans unlock more AI, longer history, web search, MCP connections, and more room to create.",
         // Accessible name for the currency switcher. The switcher only
         // renders when more than one currency has prices configured.
         currencyLabel: "Display prices in",

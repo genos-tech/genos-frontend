@@ -4437,7 +4437,7 @@ export const zh: DeepPartial<Messages> = {
             pastDue: "付款出现问题——请在账单门户中更新你的付款方式。",
             plansHeading: "套餐与定价",
             plansSubheading:
-                "套餐的区别在于使用上限、历史记录和 AI 功能：已连接的 AI 应用、计划任务和 Webhook 从 Core 起提供，GitHub 从 Pro 起提供。",
+                "套餐的区别在于使用上限、历史记录和 AI 功能：网页搜索、已连接的 AI 应用、计划任务和 Webhook 从 Core 起提供，Genos AI 读取 GitHub 拉取请求从 Pro 起提供。",
             freePrice: "免费",
             perMonth: "/ 月",
             contactSales: "联系销售",
@@ -4463,7 +4463,7 @@ export const zh: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} 个席位 / 月",
             plansHero: "用 Genos 做更多出色的工作",
             plansHeroSub:
-                "免费开始，随时升级。付费套餐解锁更多 AI、无限历史记录、网页搜索、MCP 连接，以及更大的创建空间。",
+                "免费开始，随时升级。付费套餐解锁更多 AI、更长的历史记录、网页搜索、MCP 连接，以及更大的创建空间。",
             currencyLabel: "显示价格",
             startForFree: "免费开始",
             taglineFree: "聊天、任务和笔记，尽在一处",

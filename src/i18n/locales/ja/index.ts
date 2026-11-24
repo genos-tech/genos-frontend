@@ -4619,7 +4619,7 @@ export const ja: DeepPartial<Messages> = {
             pastDue: "お支払いに問題があります。ポータルからお支払い方法を更新してください。",
             plansHeading: "プランと料金",
             plansSubheading:
-                "プランの違いは、使用量の上限、履歴、AI機能です。連携AIアプリ、スケジュール、Webhookは Core から、GitHub連携は Pro から使えます。",
+                "プランの違いは、使用量の上限、履歴、AI機能です。Web検索、連携AIアプリ、スケジュール、Webhookは Core から、Genos AI による GitHub のプルリクエスト参照は Pro から使えます。",
             freePrice: "無料",
             perMonth: "/ 月",
             contactSales: "お問い合わせ",
