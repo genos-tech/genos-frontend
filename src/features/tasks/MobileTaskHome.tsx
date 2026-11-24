@@ -27,6 +27,7 @@ import { ProjectManagementState } from "../../hooks/common/useProjectManagement"
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { useSoloCreatePane } from "../../hooks/tasks/useSoloCreatePane";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
@@ -150,6 +151,32 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const { accessToken } = useAuth();
     const openProjectId = usePM.currentProject?.projectId;
     const archived = useIsProjectArchived(openProjectId);
+    // MIP-2370: a form opened with no preview on screen shares the preview overlay, so
+    // submitting swaps its content to the new item instead of closing one overlay and
+    // opening another.
+    const previewOverlayShown =
+        useTM.isTaskPreviewVisible &&
+        !!(
+            useTM.currentPreviewTask ||
+            useTM.currentPreviewTaskId !== -1 ||
+            useTM.currentPreviewKind === "milestone"
+        );
+    const createOverlayShown = useTM.isCreatingTask.flag === true && isActiveRoute && !archived;
+    const soloCreate = useSoloCreatePane(createOverlayShown, previewOverlayShown);
+    const createForm = (
+        <CreateTaskForm
+            myself={myself}
+            setMyself={setMyself}
+            socket={socket}
+            useCM={useCM}
+            useNM={useNM}
+            usePM={usePM}
+            useSM={useSM}
+            useTEM={useTEM}
+            useTM={useTM}
+            useUISM={useUISM}
+        />
+    );
     // A create intent left set when the project is archived is dropped, or the form would open by itself on unarchive.
     useCreateTaskBlockedByArchive(
         openProjectId,
@@ -434,12 +461,21 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
             </Box>
 
             {/* Flag-driven full-screen overlays */}
-            {useTM.isTaskPreviewVisible &&
-                (useTM.currentPreviewTask ||
-                    useTM.currentPreviewTaskId !== -1 ||
-                    useTM.currentPreviewKind === "milestone") && (
-                    <MobileOverlay onClose={handleCloseTaskPreview}>
-                        {/* No wrapper: `TaskPreviewLayout`'s Sheet already
+            {(soloCreate || previewOverlayShown) && (
+                <MobileOverlay
+                    onClose={
+                        soloCreate
+                            ? () => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))
+                            : handleCloseTaskPreview
+                    }
+                >
+                    {soloCreate ? (
+                        <Box sx={{ p: 1, flex: 1, minHeight: 0, overflow: "auto" }}>
+                            {createForm}
+                        </Box>
+                    ) : (
+                        <>
+                            {/* No wrapper: `TaskPreviewLayout`'s Sheet already
                             owns `overflowY: auto` and now flexes to fill
                             below `md`, so it becomes the ONE scroller and
                             uses the whole overlay. The old
@@ -448,49 +484,38 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             `minHeight: 500` — a short card in a tall empty
                             overlay, which is the wasted space in the
                             report. */}
-                        <Box
-                            sx={{
-                                flex: 1,
-                                minHeight: 0,
-                                display: "flex",
-                                flexDirection: "column",
-                            }}
-                        >
-                            <TaskPreview
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useCM={useCM}
-                                useNM={useNM}
-                                usePM={usePM}
-                                useSM={useSM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                                holdSwitchWithLoader
-                            />
-                        </Box>
-                    </MobileOverlay>
-                )}
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    minHeight: 0,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                }}
+                            >
+                                <TaskPreview
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useNM={useNM}
+                                    usePM={usePM}
+                                    useSM={useSM}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                    holdSwitchWithLoader
+                                />
+                            </Box>
+                        </>
+                    )}
+                </MobileOverlay>
+            )}
 
-            {useTM.isCreatingTask.flag === true && isActiveRoute && !archived && (
+            {createOverlayShown && !soloCreate && (
                 <MobileOverlay
                     onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >
-                    <Box sx={{ p: 1, flex: 1, minHeight: 0, overflow: "auto" }}>
-                        <CreateTaskForm
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            usePM={usePM}
-                            useSM={useSM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
+                    <Box sx={{ p: 1, flex: 1, minHeight: 0, overflow: "auto" }}>{createForm}</Box>
                 </MobileOverlay>
             )}
 
