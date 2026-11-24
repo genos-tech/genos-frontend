@@ -892,7 +892,7 @@ export const es: DeepPartial<Messages> = {
             plansHeroSub:
                 "Empieza gratis y mejora cuando quieras. Los planes de pago desbloquean más IA, historial más largo, búsqueda web, conexiones MCP y más espacio para crear.",
             taglineFree: "Tu chat, tareas y notas en un solo lugar",
-            taglineCore: "Historial ilimitado e IA a diario",
+            taglineCore: "Un año de historial e IA a diario",
             taglinePro: "Haz de la IA parte de tu trabajo diario",
             taglineMax: "Máxima potencia para días intensivos de IA",
             taglineEnterprise: "Para equipos que lo necesitan todo",

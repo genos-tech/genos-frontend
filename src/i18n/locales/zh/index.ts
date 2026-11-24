@@ -4467,7 +4467,7 @@ export const zh: DeepPartial<Messages> = {
             currencyLabel: "显示价格",
             startForFree: "免费开始",
             taglineFree: "聊天、任务和笔记，尽在一处",
-            taglineCore: "不限时的历史记录，每天都能用的 AI",
+            taglineCore: "保留一年的历史记录，每天都能用的 AI",
             taglinePro: "让 AI 成为日常工作的一部分",
             taglineMax: "为高强度 AI 使用提供全部动力",
             taglineEnterprise: "为需要一切的团队而备",

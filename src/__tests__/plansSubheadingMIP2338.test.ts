@@ -52,6 +52,29 @@ describe("plans hero sub (MIP-2338)", () => {
     }
 });
 
+// MIP-2339: Core keeps 365 days of chat history (unlimited from Pro), so its
+// tagline must not promise unlimited history.
+type TaglineCatalog = { settings?: { planUsage?: { taglineCore?: string } } };
+const STALE_CORE_TAGLINE = [
+    "Unlimited history",
+    "無制限の履歴",
+    "Historial ilimitado",
+    "Historique illimité",
+    "不限时的历史记录",
+    "سجل غير محدود",
+    "असीमित हिस्ट्री",
+];
+
+describe("Core plan tagline (MIP-2339)", () => {
+    for (const [locale, catalog] of Object.entries(ALL)) {
+        it(`${locale}: does not promise unlimited history`, () => {
+            const text = (catalog as TaglineCatalog).settings?.planUsage?.taglineCore ?? "";
+            expect(text).not.toBe("");
+            for (const stale of STALE_CORE_TAGLINE) expect(text).not.toContain(stale);
+        });
+    }
+});
+
 describe("plans subheading (MIP-2338)", () => {
     for (const [locale, catalog] of Object.entries(ALL)) {
         it(`${locale}: names the tiers where features start`, () => {

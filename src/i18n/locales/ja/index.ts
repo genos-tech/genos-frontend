@@ -4650,7 +4650,7 @@ export const ja: DeepPartial<Messages> = {
             currencyLabel: "価格を表示する",
             startForFree: "無料で始める",
             taglineFree: "チャット・タスク・ノートを 1 か所に",
-            taglineCore: "無制限の履歴と毎日使える AI",
+            taglineCore: "1 年分の履歴と毎日使える AI",
             taglinePro: "AI を毎日の仕事の相棒に",
             taglineMax: "上限を気にせず AI をフル活用",
             taglineEnterprise: "すべてを必要とするチームに",

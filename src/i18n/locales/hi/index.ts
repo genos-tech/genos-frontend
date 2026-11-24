@@ -1219,7 +1219,7 @@ export const hi: DeepPartial<Messages> = {
             currencyLabel: "में कीमतें प्रदर्शित करें",
             startForFree: "निःशुल्क प्रारंभ करें",
             taglineFree: "चैट, टास्क और नोट्स एक ही जगह",
-            taglineCore: "असीमित हिस्ट्री और रोज़ाना AI",
+            taglineCore: "एक साल की हिस्ट्री और रोज़ाना AI",
             taglinePro: "AI को रोज़मर्रा के काम का हिस्सा बनाएँ",
             taglineMax: "AI के भारी उपयोग के लिए पूरी शक्ति",
             taglineEnterprise: "उन टीमों के लिए जिन्हें सब कुछ चाहिए",

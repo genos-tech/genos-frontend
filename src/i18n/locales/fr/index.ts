@@ -4729,7 +4729,7 @@ export const fr: DeepPartial<Messages> = {
             currencyLabel: "Afficher les prix dans",
             startForFree: "Commencez gratuitement",
             taglineFree: "Chat, tâches et notes réunis au même endroit",
-            taglineCore: "Historique illimité et IA au quotidien",
+            taglineCore: "Un an d’historique et de l’IA au quotidien",
             taglinePro: "Faites de l'IA votre alliée au quotidien",
             taglineMax: "Pleine puissance pour un usage intensif de l'IA",
             taglineEnterprise: "Pour les équipes qui veulent tout",

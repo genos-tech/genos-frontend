@@ -659,7 +659,7 @@ export const settings = {
         currencyLabel: "Display prices in",
         startForFree: "Start for free",
         taglineFree: "Get your chat, tasks, and notes in one place",
-        taglineCore: "Unlimited history and daily AI",
+        taglineCore: "A year of history and daily AI",
         taglinePro: "Make AI part of your everyday work",
         taglineMax: "Full power for AI-heavy days",
         taglineEnterprise: "For teams that need it all",
