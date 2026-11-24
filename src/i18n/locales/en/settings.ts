@@ -395,6 +395,12 @@ export const settings = {
             },
             actions: {
                 "signin.succeeded": "Signed in",
+                "mfa.enabled": "Two-step verification turned on",
+                "mfa.disabled": "Two-step verification turned off",
+                "mfa.failed": "Second step refused",
+                "mfa.recovery_used": "Recovery code used",
+                "mfa.recovery_regenerated": "Recovery codes replaced",
+                "operator.mfa_reset": "Two-step verification reset by support",
                 "signin.failed": "Sign-in failed",
                 signout: "Signed out",
                 "password.reset_requested": "Password reset requested",

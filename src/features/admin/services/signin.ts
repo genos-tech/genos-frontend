@@ -2,16 +2,24 @@ import axios from "axios";
 
 import { getMessages } from "../../../i18n";
 import { nonAuthApi } from "../../../services/api";
-import type { SignInResponse, SignInUnverifiedResult } from "../../../types/admin";
+import type {
+    SignInMfaResult,
+    SignInResponse,
+    SignInUnverifiedResult,
+} from "../../../types/admin";
 
 export const signIn = async (
     email: string,
     password: string,
     setErrorMessage?: (value: string) => void
-): Promise<SignInResponse | SignInUnverifiedResult | undefined> => {
+): Promise<SignInResponse | SignInUnverifiedResult | SignInMfaResult | undefined> => {
     try {
         const api = nonAuthApi();
         const res = await api.post("/user/signin/", { email, password });
+        // Two-factor on: the server sends no session, only the pending token for the code step.
+        if (res.data?.mfa_required === true && typeof res.data.mfa_token === "string") {
+            return { kind: "mfa", token: res.data.mfa_token };
+        }
         return res.data as SignInResponse;
     } catch (error: unknown) {
         const m = getMessages().admin.auth.errors;

@@ -301,6 +301,8 @@ export const fr: DeepPartial<Messages> = {
                     not_authenticated: "Vous devez être connecté pour connecter un compte tiers.",
                     already_connected_to_other_user:
                         "Ce compte est déjà connecté à un autre utilisateur.",
+                    mfa_password_only:
+                        "Ce compte utilise la validation en deux étapes, qui fonctionne avec votre e-mail et votre mot de passe. Connectez-vous avec votre e-mail, votre mot de passe et le code.",
                     not_a_login_account:
                         "Ce compte n'était connecté que pour accéder à l'agenda. Il ne peut donc pas vous connecter.",
                     provider_already_connected:
@@ -4085,6 +4087,92 @@ export const fr: DeepPartial<Messages> = {
             },
         },
     },
+    security: {
+        tab: "Sécurité",
+        twoFactor: {
+            title: "Validation en deux étapes",
+            description:
+                "Après votre mot de passe, Genos demande un code à 6 chiffres généré par une application d'authentification. Un mot de passe volé ou deviné ne suffit plus pour ouvrir votre compte.",
+            statusOn: "Activée",
+            statusOff: "Désactivée",
+            onSince: "Activée depuis le {date}",
+            recoveryLeft: "Codes de récupération restants : {count}",
+            recoveryLow:
+                "Il reste peu de codes de récupération. Obtenez-en de nouveaux avant d'en avoir besoin.",
+            turnOn: "Activer",
+            turnOff: "Désactiver",
+            newCodes: "Obtenir de nouveaux codes de récupération",
+            providerNote:
+                "Vous vous connectez avec Google ou GitHub, qui ont leur propre validation en deux étapes. Activez-la sur ce compte ; il n'y a rien à configurer ici.",
+            loadFailed: "Impossible de charger vos paramètres de sécurité.",
+            retry: "Réessayer",
+            scopeNote:
+                "S'applique lorsque vous vous connectez avec votre e-mail et votre mot de passe.",
+        },
+        setup: {
+            title: "Activer la validation en deux étapes",
+            passwordIntro:
+                "Saisissez votre mot de passe pour commencer. Cela empêche une personne qui utilise votre session ouverte de modifier ce réglage.",
+            passwordLabel: "Mot de passe",
+            continue: "Continuer",
+            cancel: "Annuler",
+            scanTitle: "Scannez avec votre application d'authentification",
+            scanBody:
+                "Utilisez Google Authenticator, 1Password, Authy ou toute application qui génère des codes à 6 chiffres, puis saisissez le code affiché.",
+            qrAlt: "QR code pour ajouter Genos à votre application d'authentification",
+            manualTitle: "Impossible de scanner ? Saisissez cette clé dans l'application.",
+            keyLabel: "Clé de configuration",
+            copyKey: "Copier la clé",
+            copied: "Copié",
+            openInApp: "Ouvrir dans l'application d'authentification",
+            codeLabel: "Code à 6 chiffres",
+            codeHelp: "Le code change toutes les 30 secondes.",
+            verify: "Activer",
+            recoveryTitle: "Enregistrez vos codes de récupération",
+            recoveryBody:
+                "Si vous perdez votre téléphone, chacun de ces codes vous permet de vous connecter une fois. Ils ne sont affichés que maintenant : conservez-les en lieu sûr, séparément de votre mot de passe.",
+            copyAll: "Tout copier",
+            download: "Télécharger",
+            downloadHeader: "Codes de récupération Genos. Chacun ne fonctionne qu'une fois.",
+            savedConfirm: "J'ai enregistré ces codes",
+            done: "Terminé",
+        },
+        confirm: {
+            passwordLabel: "Mot de passe",
+            disableTitle: "Désactiver la validation en deux étapes ?",
+            disableBody:
+                "Toute personne qui connaît votre mot de passe pourra se connecter. Saisissez votre mot de passe pour confirmer.",
+            disableAction: "Désactiver",
+            newCodesTitle: "Obtenir de nouveaux codes de récupération ?",
+            newCodesBody:
+                "Vos anciens codes de récupération cesseront de fonctionner. Saisissez votre mot de passe pour en obtenir de nouveaux.",
+            newCodesAction: "Obtenir de nouveaux codes",
+            cancel: "Annuler",
+        },
+        errors: {
+            badPassword: "Ce mot de passe n'est pas correct.",
+            invalidCode: "Ce code n'est pas correct. Vérifiez l'application et réessayez.",
+            locked: "Trop de codes incorrects. Réessayez dans {minutes} min.",
+            throttled: "Trop de tentatives. Patientez un moment et réessayez.",
+            alreadyEnabled: "La validation en deux étapes est déjà activée.",
+            noSetup: "La configuration a expiré. Recommencez.",
+            network: "Erreur réseau. Vérifiez votre connexion et réessayez.",
+            generic: "Une erreur s'est produite. Rien n'a été modifié.",
+        },
+        signIn: {
+            title: "Validation en deux étapes",
+            appBody: "Saisissez le code à 6 chiffres de votre application d'authentification.",
+            recoveryBody:
+                "Saisissez l'un de vos codes de récupération. Chacun ne fonctionne qu'une fois.",
+            codeLabel: "Code d'authentification",
+            recoveryLabel: "Code de récupération",
+            submit: "Valider",
+            useRecovery: "Utiliser un code de récupération",
+            useApp: "Utiliser l'application d'authentification",
+            back: "Retour à la connexion",
+            expired: "Cette connexion a expiré. Saisissez à nouveau votre mot de passe.",
+        },
+    },
     settings: {
         title: "Paramètres",
         tabs: {
@@ -4367,6 +4455,12 @@ export const fr: DeepPartial<Messages> = {
                     anonymous: "Déconnecté",
                 },
                 actions: {
+                    "mfa.enabled": "Validation en deux étapes activée",
+                    "mfa.disabled": "Validation en deux étapes désactivée",
+                    "mfa.failed": "Deuxième étape refusée",
+                    "mfa.recovery_used": "Code de récupération utilisé",
+                    "mfa.recovery_regenerated": "Codes de récupération remplacés",
+                    "operator.mfa_reset": "Validation en deux étapes réinitialisée par le support",
                     "signin.succeeded": "Connexion réussie",
                     "signin.failed": "Échec de la connexion",
                     signout: "Déconnexion",

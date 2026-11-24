@@ -14,6 +14,7 @@ import { integrations } from "./integrations";
 import { layout } from "./layout";
 import { noteAsk } from "./noteAsk";
 import { notes } from "./notes";
+import { security } from "./security";
 import { services } from "./services";
 import { settings } from "./settings";
 import { sidebar } from "./sidebar";
@@ -28,6 +29,7 @@ export const en = {
     sidebar,
     layout,
     settings,
+    security,
     chat,
     tasks,
     notes,

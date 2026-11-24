@@ -39,6 +39,7 @@ import {
 } from "../../../services/privateProfileStore";
 import { purplePalette } from "../../../theme/purplePalette";
 import { g } from "../../../theme/tokens";
+import type { SignInResponse } from "../../../types/admin";
 import { takeReturn } from "../../../utils/pendingReturn";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { rememberOAuthProvider } from "../../integrations/oauthProvider";
@@ -49,6 +50,7 @@ import { requestPasswordReset } from "../services/passwordReset";
 import { signIn } from "../services/signin";
 import { GoogleIcon } from "./icons/GoogleIcon";
 import { LanguageSwitchButton } from "./LanguageSwitchButton";
+import { SignInCodeStep } from "./SignInCodeStep";
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;
@@ -73,6 +75,9 @@ export const SignInForm = () => {
     const [demoLoading, setDemoLoading] = useState<boolean>(false);
     const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
     const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
+    // Set when the password was right and the account has two-step verification on: the code
+    // step shows instead of the form until it trades this token for a session (MIP-2239).
+    const [mfaToken, setMfaToken] = useState<string | null>(null);
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const theme = useTheme();
@@ -106,50 +111,61 @@ export const SignInForm = () => {
             return;
         }
 
+        if (signInRes && "kind" in signInRes && signInRes.kind === "mfa") {
+            setErrorMessage(null);
+            setMfaToken(signInRes.token);
+            return;
+        }
+
         if (signInRes && "access" in signInRes) {
-            // Capture the previously signed-in user before we touch
-            // localStorage below, so we can decide whether to wipe the
-            // previous user's caches. `userId` is intentionally preserved
-            // across logout to support this comparison.
-            const previousUserId = localStorage.getItem("userId");
-            const isDifferentUser = previousUserId !== signInRes.user_id;
+            await _finishSignIn(signInRes);
+        }
+    };
 
+    // Everything after a session exists, from the password or from the code step.
+    const _finishSignIn = async (signInRes: SignInResponse) => {
+        // Capture the previously signed-in user before we touch
+        // localStorage below, so we can decide whether to wipe the
+        // previous user's caches. `userId` is intentionally preserved
+        // across logout to support this comparison.
+        const previousUserId = localStorage.getItem("userId");
+        const isDifferentUser = previousUserId !== signInRes.user_id;
+
+        if (isDifferentUser) {
+            // Different user on this device — wipe the previous user's
+            // localStorage (device-level UI prefs are preserved) so
+            // their drafts / last-opened state / Spotlight history
+            // don't leak into the new session.
+            clearUserScopedLocalStorage();
+        }
+
+        setAccessToken(signInRes.access);
+        localStorage.setItem("isSigningIn", "yes");
+        localStorage.setItem("userName", signInRes.username || "");
+        localStorage.setItem("userId", signInRes.user_id || "");
+        localStorage.setItem("tsJoined", signInRes.ts_joined_at || "");
+        localStorage.setItem("isOfflineForced", signInRes.is_offline_forced || "");
+        localStorage.setItem("role", signInRes.role || "");
+        // Store the string "false" only on an explicit opt-out; a missing
+        // field (older server) leaves it shared, matching useAuth's read.
+        localStorage.setItem(
+            "locationShared",
+            signInRes.location_shared === false ? "false" : "true"
+        );
+        localStorage.setItem("customStatus", signInRes.custom_status || "");
+        localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
+        // Email, phone, country, location and bio: memory only (MIP-619).
+        setPrivateProfile(privateProfileFromWire(signInRes));
+
+        if (signInRes.user_id) {
             if (isDifferentUser) {
-                // Different user on this device — wipe the previous user's
-                // localStorage (device-level UI prefs are preserved) so
-                // their drafts / last-opened state / Spotlight history
-                // don't leak into the new session.
-                clearUserScopedLocalStorage();
+                await DatabaseUtils.clearTeamScopedStores();
             }
 
-            setAccessToken(signInRes.access);
-            localStorage.setItem("isSigningIn", "yes");
-            localStorage.setItem("userName", signInRes.username || "");
-            localStorage.setItem("userId", signInRes.user_id || "");
-            localStorage.setItem("tsJoined", signInRes.ts_joined_at || "");
-            localStorage.setItem("isOfflineForced", signInRes.is_offline_forced || "");
-            localStorage.setItem("role", signInRes.role || "");
-            // Store the string "false" only on an explicit opt-out; a missing
-            // field (older server) leaves it shared, matching useAuth's read.
-            localStorage.setItem(
-                "locationShared",
-                signInRes.location_shared === false ? "false" : "true"
-            );
-            localStorage.setItem("customStatus", signInRes.custom_status || "");
-            localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
-            // Email, phone, country, location and bio: memory only (MIP-619).
-            setPrivateProfile(privateProfileFromWire(signInRes));
-
-            if (signInRes.user_id) {
-                if (isDifferentUser) {
-                    await DatabaseUtils.clearTeamScopedStores();
-                }
-
-                // Someone sent here to approve an AI app goes back to that request.
-                navigate(takeReturn() ?? "/jointeam");
-            } else {
-                console.error("Failed to get userId from sign-in response:", signInRes);
-            }
+            // Someone sent here to approve an AI app goes back to that request.
+            navigate(takeReturn() ?? "/jointeam");
+        } else {
+            console.error("Failed to get userId from sign-in response:", signInRes);
         }
     };
 
@@ -353,252 +369,277 @@ export const SignInForm = () => {
                         )}
                     </Stack>
 
-                    {OAUTH_INTEGRATIONS_ENABLED && (
+                    {mfaToken ? (
+                        <SignInCodeStep
+                            palette={palette}
+                            styles={styles}
+                            token={mfaToken}
+                            onSignedIn={_finishSignIn}
+                            onBack={(expired) => {
+                                setMfaToken(null);
+                                setErrorMessage(expired ? t.security.signIn.expired : null);
+                            }}
+                        />
+                    ) : (
                         <>
-                            <Stack sx={{ gap: 1.25, mb: 2.5 }}>
-                                <Button
-                                    startDecorator={<GoogleIcon />}
-                                    variant="outlined"
-                                    sx={{
-                                        py: 1.25,
-                                        borderRadius: "12px",
-                                        fontWeight: 600,
-                                        fontSize: "15px",
-                                        borderColor: styles.inputBorder,
-                                        color: styles.labelColor,
-                                        background: styles.inputBg,
-                                        "&:hover": {
-                                            borderColor: styles.accentColor,
-                                            background: `rgba(${styles.accentColorRgb}, 0.063)`,
-                                        },
-                                    }}
-                                    fullWidth
-                                    onClick={() => {
-                                        rememberOAuthProvider("google");
-                                        redirectToOAuthLogin("google");
-                                    }}
-                                >
-                                    {t.admin.auth.signIn.continueWithGoogle}
-                                </Button>
-                                <Button
-                                    startDecorator={<GitHubIcon sx={{ fontSize: 20 }} />}
-                                    variant="outlined"
-                                    sx={{
-                                        py: 1.25,
-                                        borderRadius: "12px",
-                                        fontWeight: 600,
-                                        fontSize: "15px",
-                                        borderColor: styles.inputBorder,
-                                        color: styles.labelColor,
-                                        background: styles.inputBg,
-                                        "&:hover": {
-                                            borderColor: styles.accentColor,
-                                            background: `rgba(${styles.accentColorRgb}, 0.063)`,
-                                        },
-                                    }}
-                                    fullWidth
-                                    onClick={() => {
-                                        rememberOAuthProvider("github");
-                                        redirectToOAuthLogin("github");
-                                    }}
-                                >
-                                    {t.admin.auth.signIn.continueWithGithub}
-                                </Button>
-                            </Stack>
+                            {OAUTH_INTEGRATIONS_ENABLED && (
+                                <>
+                                    <Stack sx={{ gap: 1.25, mb: 2.5 }}>
+                                        <Button
+                                            startDecorator={<GoogleIcon />}
+                                            variant="outlined"
+                                            sx={{
+                                                py: 1.25,
+                                                borderRadius: "12px",
+                                                fontWeight: 600,
+                                                fontSize: "15px",
+                                                borderColor: styles.inputBorder,
+                                                color: styles.labelColor,
+                                                background: styles.inputBg,
+                                                "&:hover": {
+                                                    borderColor: styles.accentColor,
+                                                    background: `rgba(${styles.accentColorRgb}, 0.063)`,
+                                                },
+                                            }}
+                                            fullWidth
+                                            onClick={() => {
+                                                rememberOAuthProvider("google");
+                                                redirectToOAuthLogin("google");
+                                            }}
+                                        >
+                                            {t.admin.auth.signIn.continueWithGoogle}
+                                        </Button>
+                                        <Button
+                                            startDecorator={<GitHubIcon sx={{ fontSize: 20 }} />}
+                                            variant="outlined"
+                                            sx={{
+                                                py: 1.25,
+                                                borderRadius: "12px",
+                                                fontWeight: 600,
+                                                fontSize: "15px",
+                                                borderColor: styles.inputBorder,
+                                                color: styles.labelColor,
+                                                background: styles.inputBg,
+                                                "&:hover": {
+                                                    borderColor: styles.accentColor,
+                                                    background: `rgba(${styles.accentColorRgb}, 0.063)`,
+                                                },
+                                            }}
+                                            fullWidth
+                                            onClick={() => {
+                                                rememberOAuthProvider("github");
+                                                redirectToOAuthLogin("github");
+                                            }}
+                                        >
+                                            {t.admin.auth.signIn.continueWithGithub}
+                                        </Button>
+                                    </Stack>
 
-                            <Divider sx={{ mb: 2.5, color: styles.subtitleColor }}>
+                                    <Divider sx={{ mb: 2.5, color: styles.subtitleColor }}>
+                                        {t.admin.auth.signIn.orDivider}
+                                    </Divider>
+                                </>
+                            )}
+
+                            <form
+                                onSubmit={(event: React.FormEvent<SignInFormElement>) => {
+                                    event.preventDefault();
+                                    const formElements = event.currentTarget.elements;
+                                    const email = formElements.email.value;
+                                    const password = formElements.password.value;
+
+                                    if (!email || !password) {
+                                        return;
+                                    }
+
+                                    _signin(email, password);
+
+                                    if (rememberEmail) {
+                                        localStorage.setItem("signInEmail", email);
+                                    }
+                                }}
+                            >
+                                <Stack sx={{ gap: 2.5 }}>
+                                    <FormControl required>
+                                        <FormLabel
+                                            sx={{
+                                                color: styles.labelColor,
+                                                fontSize: "0.8rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.75,
+                                            }}
+                                        >
+                                            {t.admin.auth.signIn.emailLabel}
+                                        </FormLabel>
+                                        <Input
+                                            name="email"
+                                            placeholder={t.admin.auth.signIn.emailPlaceholder}
+                                            sx={inputStyle}
+                                            type="email"
+                                            defaultValue={
+                                                localStorage.getItem("signInEmail") || ""
+                                            }
+                                            startDecorator={
+                                                <EmailRoundedIcon
+                                                    sx={{
+                                                        color: styles.accentColor,
+                                                        fontSize: 20,
+                                                    }}
+                                                />
+                                            }
+                                        />
+                                    </FormControl>
+
+                                    <FormControl required>
+                                        <FormLabel
+                                            sx={{
+                                                color: styles.labelColor,
+                                                fontSize: "0.8rem",
+                                                fontWeight: 600,
+                                                textTransform: "uppercase",
+                                                letterSpacing: "0.05em",
+                                                mb: 0.75,
+                                            }}
+                                        >
+                                            {t.admin.auth.signIn.passwordLabel}
+                                        </FormLabel>
+                                        <Input
+                                            name="password"
+                                            placeholder={t.admin.auth.signIn.passwordPlaceholder}
+                                            sx={inputStyle}
+                                            type="password"
+                                            startDecorator={
+                                                <LockRoundedIcon
+                                                    sx={{
+                                                        color: styles.accentColor,
+                                                        fontSize: 20,
+                                                    }}
+                                                />
+                                            }
+                                        />
+                                    </FormControl>
+
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                        }}
+                                    >
+                                        <Checkbox
+                                            label={t.admin.auth.signIn.rememberMe}
+                                            name="persistent"
+                                            size="sm"
+                                            sx={{
+                                                "& .MuiCheckbox-checkbox": {
+                                                    borderRadius: "6px",
+                                                },
+                                            }}
+                                            onChange={(event) => {
+                                                if (event.target.checked) {
+                                                    setRememberEmail(true);
+                                                }
+                                            }}
+                                        />
+                                        <Link
+                                            component="button"
+                                            level="body-sm"
+                                            type="button"
+                                            sx={{
+                                                color: styles.linkColor,
+                                                fontWeight: 500,
+                                                transition: "all 0.2s ease",
+                                                "&:hover": {
+                                                    color: styles.linkHover,
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                // Seed the modal email from the
+                                                // "Remember me" localStorage so
+                                                // returning users don't retype.
+                                                setForgotEmail(
+                                                    localStorage.getItem("signInEmail") || ""
+                                                );
+                                                forgotAttemptRef.current += 1;
+                                                setForgotSubmitting(false);
+                                                setForgotSucceeded(false);
+                                                setForgotError(null);
+                                                setOpenForgotPassword(true);
+                                            }}
+                                        >
+                                            {t.admin.auth.signIn.forgotPassword}
+                                        </Link>
+                                    </Box>
+
+                                    <Button
+                                        size="lg"
+                                        startDecorator={<LoginRoundedIcon />}
+                                        sx={{ mt: 1 }}
+                                        type="submit"
+                                        fullWidth
+                                    >
+                                        {t.admin.auth.signIn.submit}
+                                    </Button>
+                                </Stack>
+                            </form>
+
+                            <Divider sx={{ my: 2.5, color: styles.subtitleColor }}>
                                 {t.admin.auth.signIn.orDivider}
                             </Divider>
+
+                            <Stack sx={{ gap: 0.75 }}>
+                                <Button
+                                    loading={demoLoading}
+                                    loadingPosition="start"
+                                    startDecorator={<ScienceRoundedIcon />}
+                                    variant="outlined"
+                                    sx={{
+                                        py: 1.5,
+                                        borderRadius: "12px",
+                                        fontWeight: 600,
+                                        fontSize: "15px",
+                                        borderColor: styles.accentColor,
+                                        color: styles.linkColor,
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background: `rgba(${styles.accentColorRgb}, 0.082)`,
+                                            borderColor: styles.accentColor,
+                                            transform: "translateY(-2px)",
+                                        },
+                                    }}
+                                    fullWidth
+                                    onClick={_demoSignin}
+                                >
+                                    {demoLoading
+                                        ? t.admin.auth.signIn.demoLoading
+                                        : t.admin.auth.signIn.demoButton}
+                                </Button>
+                                <Stack sx={{ gap: 0.25, mt: 0.5 }}>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            textAlign: "center",
+                                            color: styles.subtitleColor,
+                                        }}
+                                    >
+                                        {t.admin.auth.signIn.demoHint}
+                                    </Typography>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            textAlign: "center",
+                                            fontWeight: 600,
+                                            color: styles.accentColor,
+                                        }}
+                                    >
+                                        {t.admin.auth.signIn.demoWarning}
+                                    </Typography>
+                                </Stack>
+                            </Stack>
                         </>
                     )}
-
-                    <form
-                        onSubmit={(event: React.FormEvent<SignInFormElement>) => {
-                            event.preventDefault();
-                            const formElements = event.currentTarget.elements;
-                            const email = formElements.email.value;
-                            const password = formElements.password.value;
-
-                            if (!email || !password) {
-                                return;
-                            }
-
-                            _signin(email, password);
-
-                            if (rememberEmail) {
-                                localStorage.setItem("signInEmail", email);
-                            }
-                        }}
-                    >
-                        <Stack sx={{ gap: 2.5 }}>
-                            <FormControl required>
-                                <FormLabel
-                                    sx={{
-                                        color: styles.labelColor,
-                                        fontSize: "0.8rem",
-                                        fontWeight: 600,
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        mb: 0.75,
-                                    }}
-                                >
-                                    {t.admin.auth.signIn.emailLabel}
-                                </FormLabel>
-                                <Input
-                                    defaultValue={localStorage.getItem("signInEmail") || ""}
-                                    name="email"
-                                    placeholder={t.admin.auth.signIn.emailPlaceholder}
-                                    sx={inputStyle}
-                                    type="email"
-                                    startDecorator={
-                                        <EmailRoundedIcon
-                                            sx={{ color: styles.accentColor, fontSize: 20 }}
-                                        />
-                                    }
-                                />
-                            </FormControl>
-
-                            <FormControl required>
-                                <FormLabel
-                                    sx={{
-                                        color: styles.labelColor,
-                                        fontSize: "0.8rem",
-                                        fontWeight: 600,
-                                        textTransform: "uppercase",
-                                        letterSpacing: "0.05em",
-                                        mb: 0.75,
-                                    }}
-                                >
-                                    {t.admin.auth.signIn.passwordLabel}
-                                </FormLabel>
-                                <Input
-                                    name="password"
-                                    placeholder={t.admin.auth.signIn.passwordPlaceholder}
-                                    sx={inputStyle}
-                                    type="password"
-                                    startDecorator={
-                                        <LockRoundedIcon
-                                            sx={{ color: styles.accentColor, fontSize: 20 }}
-                                        />
-                                    }
-                                />
-                            </FormControl>
-
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <Checkbox
-                                    label={t.admin.auth.signIn.rememberMe}
-                                    name="persistent"
-                                    size="sm"
-                                    sx={{
-                                        "& .MuiCheckbox-checkbox": {
-                                            borderRadius: "6px",
-                                        },
-                                    }}
-                                    onChange={(event) => {
-                                        if (event.target.checked) {
-                                            setRememberEmail(true);
-                                        }
-                                    }}
-                                />
-                                <Link
-                                    component="button"
-                                    level="body-sm"
-                                    type="button"
-                                    sx={{
-                                        color: styles.linkColor,
-                                        fontWeight: 500,
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
-                                            color: styles.linkHover,
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Seed the modal email from the
-                                        // "Remember me" localStorage so
-                                        // returning users don't retype.
-                                        setForgotEmail(localStorage.getItem("signInEmail") || "");
-                                        forgotAttemptRef.current += 1;
-                                        setForgotSubmitting(false);
-                                        setForgotSucceeded(false);
-                                        setForgotError(null);
-                                        setOpenForgotPassword(true);
-                                    }}
-                                >
-                                    {t.admin.auth.signIn.forgotPassword}
-                                </Link>
-                            </Box>
-
-                            <Button
-                                size="lg"
-                                startDecorator={<LoginRoundedIcon />}
-                                sx={{ mt: 1 }}
-                                type="submit"
-                                fullWidth
-                            >
-                                {t.admin.auth.signIn.submit}
-                            </Button>
-                        </Stack>
-                    </form>
-
-                    <Divider sx={{ my: 2.5, color: styles.subtitleColor }}>
-                        {t.admin.auth.signIn.orDivider}
-                    </Divider>
-
-                    <Stack sx={{ gap: 0.75 }}>
-                        <Button
-                            loading={demoLoading}
-                            loadingPosition="start"
-                            startDecorator={<ScienceRoundedIcon />}
-                            variant="outlined"
-                            sx={{
-                                py: 1.5,
-                                borderRadius: "12px",
-                                fontWeight: 600,
-                                fontSize: "15px",
-                                borderColor: styles.accentColor,
-                                color: styles.linkColor,
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                    background: `rgba(${styles.accentColorRgb}, 0.082)`,
-                                    borderColor: styles.accentColor,
-                                    transform: "translateY(-2px)",
-                                },
-                            }}
-                            fullWidth
-                            onClick={_demoSignin}
-                        >
-                            {demoLoading
-                                ? t.admin.auth.signIn.demoLoading
-                                : t.admin.auth.signIn.demoButton}
-                        </Button>
-                        <Stack sx={{ gap: 0.25, mt: 0.5 }}>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    textAlign: "center",
-                                    color: styles.subtitleColor,
-                                }}
-                            >
-                                {t.admin.auth.signIn.demoHint}
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    textAlign: "center",
-                                    fontWeight: 600,
-                                    color: styles.accentColor,
-                                }}
-                            >
-                                {t.admin.auth.signIn.demoWarning}
-                            </Typography>
-                        </Stack>
-                    </Stack>
                 </Box>
             </Box>
 
