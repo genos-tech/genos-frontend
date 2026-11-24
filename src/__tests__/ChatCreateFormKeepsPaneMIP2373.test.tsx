@@ -216,7 +216,7 @@ describe("chat page create form -> preview", () => {
             previewCount: 4,
         });
         act(() => {
-            rerender(<ChatSlots tm={bumped} active={false} />);
+            rerender(<ChatSlots active={false} tm={bumped} />);
         });
         act(() => {
             rerender(<ChatSlots tm={bumped} active />);
