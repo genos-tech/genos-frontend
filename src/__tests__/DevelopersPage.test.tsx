@@ -543,7 +543,7 @@ describe("DevelopersPage: MCP section", () => {
         for (const step of [...connectApp.claudeSteps, ...connectApp.claudeCodeSteps]) {
             expect(within(mcp()).getByText(step)).toBeTruthy();
         }
-        // ChatGPT is coming: a line, no steps.
+        // ChatGPT is planned: a line, no steps.
         expect(within(mcp()).getByText(connectApp.chatgptBody)).toBeTruthy();
         for (const line of [connectApp.plan, connectApp.revoke, connectApp.trap]) {
             expect(within(mcp()).getByText(line)).toBeTruthy();

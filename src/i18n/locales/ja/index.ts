@@ -4249,7 +4249,7 @@ export const ja: DeepPartial<Messages> = {
                     "承認ページでチームと許可する内容を選び、「許可」を押します。",
                 ],
                 chatgptTitle: "ChatGPT",
-                chatgptBody: "近日対応: Genos は ChatGPT のディレクトリへの掲載を準備中です。",
+                chatgptBody: "対応予定: Genos は ChatGPT のディレクトリへの掲載を準備中です。",
                 plan: "接続には Core プラン以上が必要です。Free では、承認ページに「現在のプランでは利用できません」と表示されます。",
                 revoke: "接続を解除するには、「設定 → Developer → 接続済みアプリ」で取り消します。",
                 trap: "アドレスは末尾のパスまで含めて、そのまま貼り付けてください。パスがないと、Claude はサインインできたと表示したあと、Genos にリクエストを拒否されたと報告します。",

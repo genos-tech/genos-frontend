@@ -7,7 +7,7 @@ import type { Lang } from "../lpLang";
  *
  * The roadmap has NO dates. An item is `live` only if the site already says it
  * works; `coming` only if an existing page already says it is coming (ChatGPT:
- * the home and features copy say "coming soon"). Anything else is left out.
+ * the home copy says "planned"). Anything else is left out.
  *
  * TODO(copy): MIP-1257 — Ken reads the whole roadmap and the entries before the
  * page goes live. Each roadmap item traces to a Genos task or a shipped feature
@@ -42,8 +42,8 @@ export const CHANGELOG_COPY: Record<Lang, ChangelogCopy> = {
         title: "Changelog",
         lead: "What changed in Genos, and what is coming next. Each entry is a change that is already live.",
         roadmapHeading: "Roadmap",
-        roadmapLead: "What works today, and what is coming. We do not give dates here.",
-        statusLabel: { live: "Live", coming: "Coming" },
+        roadmapLead: "What works today, and what is planned. We do not give dates here.",
+        statusLabel: { live: "Live", coming: "Planned" },
         roadmap: [
             {
                 status: "live",
@@ -67,7 +67,7 @@ export const CHANGELOG_COPY: Record<Lang, ChangelogCopy> = {
             },
             {
                 status: "coming",
-                text: "ChatGPT. Genos works with Claude today, and ChatGPT support is coming soon.",
+                text: "ChatGPT. Genos works with Claude today, and ChatGPT is planned.",
             },
         ],
         changelogHeading: "Updates",
@@ -83,7 +83,7 @@ export const CHANGELOG_COPY: Record<Lang, ChangelogCopy> = {
         lead: "Genos で変わったこと、そして次に来るものをお知らせします。ここに載るのは、すでに公開された変更だけです。",
         roadmapHeading: "ロードマップ",
         roadmapLead: "今使えるものと、これから来るものです。ここには日付を載せていません。",
-        statusLabel: { live: "利用可能", coming: "近日公開" },
+        statusLabel: { live: "利用可能", coming: "予定" },
         roadmap: [
             {
                 status: "live",
@@ -107,7 +107,7 @@ export const CHANGELOG_COPY: Record<Lang, ChangelogCopy> = {
             },
             {
                 status: "coming",
-                text: "ChatGPT。現在は Claude に対応しています。ChatGPT への対応は近日公開予定です。",
+                text: "ChatGPT。現在は Claude に対応しています。ChatGPT は対応予定です。",
             },
         ],
         changelogHeading: "アップデート",
