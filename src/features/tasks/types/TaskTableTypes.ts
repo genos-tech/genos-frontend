@@ -1,16 +1,8 @@
 import { TaskTypesProps } from "../../../types/tasks";
+import { buildTaskListGroups } from "../meta/taskStatuses";
 import { PRIORITY_TONE, STATUS_TONE, Tone, toneBase, toneSolid } from "../meta/taskTone";
 
-export const taskTypes: TaskTypesProps = {
-    all: {
-        id: 0,
-        statuses: ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"],
-        name: "All",
-    },
-    ongoing: { id: 1, statuses: ["Open", "WIP", "Blocked", "Pending"], name: "Ongoing" },
-    closed: { id: 2, statuses: ["Closed"], name: "Closed" },
-    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
-};
+export const taskTypes: TaskTypesProps = buildTaskListGroups();
 
 /** The predicates a filter carries. It was `GridFilterModel` from the DataGrid package,
  *  which nothing else in the app used (MIP-1182); only `items` is ever read or written. */

@@ -1,14 +1,11 @@
 /**
  * Note sidebar rows must survive a tree rebuild.
  *
- * `useNoteTreeState` mints a new `timestamp` whenever the tree identity or the
- * selected tab changes, and the rows used to put it in their React `key`
- * (`note-box-${noteId}-${timestamp}`). A key change UNMOUNTS and rebuilds the
- * subtree, so every refresh tick and every note switch tore the whole sidebar
- * down and rebuilt it — measured at ~9,000 remounts in two idle minutes.
- *
- * The timestamp stays a prop (the `memo` needs to see a change), but it must
- * not reach a key. This guards both directions:
+ * The rows used to put a `timestamp` (bumped by `useNoteTreeState` on every tree or tab change)
+ * in their React `key`. A key change UNMOUNTS and rebuilds the subtree, so every refresh tick
+ * and every note switch tore the whole sidebar down — measured at ~9,000 remounts in two idle
+ * minutes. The timestamp is gone (MIP-1678): rows get the open tab as a prop. This guards both
+ * directions:
  *
  *   - an equal-content rebuild keeps the same DOM nodes and mounts nothing;
  *   - a REAL change (rename, add, move, selection) still shows up, i.e. taking
@@ -46,14 +43,6 @@ vi.mock("../components/ui/MoreMenu", () => ({
         }, [id]);
         return <span data-testid={`menu-${id}`} />;
     },
-}));
-
-// A fresh, distinct stamp on every call, so the timestamp is guaranteed to
-// differ between a render and its rebuild (the real one has 1 s resolution).
-const clock = vi.hoisted(() => ({ n: 0 }));
-vi.mock("../utils/dateUtils", async (importOriginal) => ({
-    ...(await importOriginal<typeof import("../utils/dateUtils")>()),
-    getLocalCurrentTimestamp: () => `stamp-${++clock.n}`,
 }));
 
 type Node = MyNoteMetaTreeNode;
@@ -120,17 +109,17 @@ const Sidebar = ({
         currentNote: null,
     });
     return (
-        <div data-stamp={state.timestamp} data-testid="stamp">
+        <div>
             <List>
                 {state.tmpMetaTree.map((root) => (
                     <NoteTreeRenderer
                         key={root.noteId}
+                        activeTab={useNM.tabsApi.activeTab}
                         createChildNoteList={() => null}
                         currentChain={state.tmpCurrentChain}
                         node={root}
                         noteType={1}
                         rowMenuItems={rowMenuItems}
-                        timestamp={state.timestamp}
                         useNM={useNM}
                     />
                 ))}
@@ -149,7 +138,6 @@ const tree = (props: { tree: Node[]; selectedTabIndex?: number; useNM: NoteManag
     </CssVarsProvider>
 );
 
-const stamp = () => screen.getByTestId("stamp").getAttribute("data-stamp");
 const rowElements = (container: HTMLElement) => Array.from(container.querySelectorAll("li"));
 const rowButtons = (container: HTMLElement) =>
     Array.from(container.querySelectorAll<HTMLElement>("[role='button'], button, a")).filter(
@@ -159,7 +147,6 @@ const buttonFor = (container: HTMLElement, title: string) =>
     rowButtons(container).find((b) => b.textContent?.includes(title));
 
 beforeEach(() => {
-    clock.n = 0;
     for (const k of Object.keys(probe.mounts)) delete probe.mounts[k];
     for (const k of Object.keys(probe.unmounts)) delete probe.unmounts[k];
 });
@@ -171,17 +158,12 @@ describe("note rows survive an equal-content rebuild", () => {
 
         const rowsBefore = rowElements(container);
         expect(rowsBefore).toHaveLength(5); // 2 roots + 3 children, all expanded
-        const stampBefore = stamp();
         const mountsBefore = { ...probe.mounts };
         expect(Object.keys(mountsBefore)).toHaveLength(5);
 
         // Same content, new array/objects: what an unchanged refresh produces
         // once it gets past the identity guards.
         rerender(tree({ tree: baseTree(), useNM }));
-
-        // The premise: the tree really was rebuilt and the stamp really moved,
-        // i.e. the old `key` WOULD have changed.
-        expect(stamp()).not.toBe(stampBefore);
 
         const rowsAfter = rowElements(container);
         expect(rowsAfter).toHaveLength(rowsBefore.length);
@@ -195,28 +177,22 @@ describe("note rows survive an equal-content rebuild", () => {
         const base = baseTree();
         const { container, rerender } = render(tree({ tree: base, useNM, selectedTabIndex: 0 }));
         const rowsBefore = rowElements(container);
-        const stampBefore = stamp();
 
         rerender(tree({ tree: base, useNM, selectedTabIndex: 3 }));
-
-        expect(stamp()).not.toBe(stampBefore);
         rowElements(container).forEach((el, i) => expect(el).toBe(rowsBefore[i]));
         expect(probe.unmounts).toEqual({});
     });
 
-    it("keeps the rows across the one-shot 1 s timestamp refresh", () => {
+    it("keeps the rows after the old 1 s refresh time has passed", () => {
         vi.useFakeTimers();
         try {
             const useNM = makeUseNM();
             const { container } = render(tree({ tree: baseTree(), useNM }));
             const rowsBefore = rowElements(container);
-            const stampBefore = stamp();
 
             act(() => {
                 vi.advanceTimersByTime(1100);
             });
-
-            expect(stamp()).not.toBe(stampBefore);
             rowElements(container).forEach((el, i) => expect(el).toBe(rowsBefore[i]));
             expect(probe.unmounts).toEqual({});
         } finally {
@@ -303,9 +279,7 @@ describe("note rows still update when the tree really changes", () => {
 
     it("moves the selection highlight when only the selected tab changes", () => {
         // `useNM` is the same object across the two renders (mutated in place),
-        // so the ONLY thing that can reach the memoized rows is the bumped
-        // timestamp prop. This is the memo-invalidation path that has to keep
-        // working now the key no longer changes.
+        // so the ONLY thing that can reach the memoized rows is the `activeTab` prop.
         const useNM = makeUseNM(1);
         const base = baseTree();
         const { container, rerender } = render(tree({ tree: base, useNM, selectedTabIndex: 0 }));
@@ -330,13 +304,13 @@ describe("note rows still update when the tree really changes", () => {
 });
 
 describe("ChildNoteCreator", () => {
-    it("is not remounted when its timestamp prop moves", () => {
+    it("is not remounted when its node prop is replaced", () => {
         const useNM = makeUseNM();
         const n = node(1, "Alpha");
-        const view = (timestamp: string) => (
+        const view = (title: string) => (
             <CssVarsProvider>
                 <List>
-                    <ChildNoteCreator node={n} timestamp={timestamp} useNM={useNM} />
+                    <ChildNoteCreator node={{ ...n, title }} useNM={useNM} />
                 </List>
             </CssVarsProvider>
         );
