@@ -17,7 +17,7 @@ import type { Lang } from "../lpLang";
  * information security basic policy that IPA's SECURITY ACTION two stars asks for. Hard rule: Genos itself holds
  * NO certification and no sentence may say or imply it does (SecurityPage.test.tsx pins this). The SECURITY
  * ACTION line is NOT here: it is added only after Ken has declared (genos-docs compliance/public-statement/04).
- * Wording that is live only after Ken and counsel approve it.
+ * Wording approved by Ken and counsel on 2026-11-24.
  */
 
 export interface SecurityLink {
@@ -183,7 +183,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 body: [
                     // Source: IPA's sample basic policy (appendix 2 of the SME guideline), five articles, adapted to one operator
                     // plus AI agents. Evidence per article: genos-docs compliance/public-statement/02-basic-policy-public.md.
-                    // The 制定日 (date established) line is added with the approval date when Ken approves.
+                    // Wording approved by Ken and counsel on 2026-11-24. The 制定日 (date established) line is still to be added by Ken.
                     "The operator of Genos (the company) protects the information assets that customers entrust to it (messages, tasks, notes, files, AI history and personal data) from accidents, disasters and crime, and works under the policy below to keep the trust of its customers and of society.",
                     "1. Responsibility of the owner. The company works on a continual, organised basis to improve information security, led by its operator. The operator approves this policy, decides how to respond to an incident, and gives the final approval for every change to the production environment.",
                     "2. Organisation. The operator is the person responsible, and runs Genos with the help of AI coding and operations agents. Security measures are written down as internal rules. Changes to the service go through review and automated checks before release. Agents are run within the operator's instructions, and writes to production need the operator's approval.",

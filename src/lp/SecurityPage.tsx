@@ -13,7 +13,7 @@ import { useDocumentMeta } from "./useDocumentMeta";
  * ja/en toggle as `/support`, `/privacy` and `/legal`. Every statement is in `copy/security.ts`
  * with its evidence next to it. Facts only the operator can confirm are not on this page, except the
  * MIP-2284 statements (the host's attestations, the guidance we refer to, the basic policy), which Ken decided on
- * 2026-11-24 and which go live only after he and counsel approve the wording.
+ * 2026-11-24 and whose wording was approved by Ken and counsel on 2026-11-24.
  */
 
 function SecurityBody({ lang }: { lang: Lang }) {
