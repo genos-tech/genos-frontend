@@ -4965,6 +4965,8 @@ export const ja: DeepPartial<Messages> = {
             unavailable: "（利用できません）",
             milestonePlaceholder: "マイルストーンを選択",
             milestoneLoading: "マイルストーンを読み込み中…",
+            milestoneDue: "期限 {date}",
+            milestoneOverdue: "期限超過 {date}",
             milestoneNone: "選べるマイルストーンがありません。",
             milestoneLoadFailed:
                 "マイルストーンを読み込めませんでした。このフォームを閉じて、もう一度お試しください。",
