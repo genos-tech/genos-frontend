@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HOME_COPY } from "../lp/copy/home";
 import { SHOT_NAMES } from "../lp/kit/shots";
 import LandingPage from "../lp/LandingPage";
-import { MCP_TOOLS } from "../lp/mcpTools";
+import { MCP_TOOLS, mcpToolFloor } from "../lp/mcpTools";
 import SegmentLandingPage from "../lp/SegmentLandingPage";
 import { SEGMENTS } from "../lp/segments";
 
@@ -61,11 +61,32 @@ describe("/home", () => {
         expect(document.title).toBe(HOME_COPY.ja.meta.title);
     });
 
-    it("states the real MCP tool count, from the developers page list, not a typed number", () => {
+    it("states a floor of the MCP tool count (more than N), never the exact number (MIP-2309)", () => {
         setLanguage("en-US");
         renderHome();
-        expect(MCP_TOOLS.length).toBeGreaterThan(50);
-        expect(document.body.textContent).toContain(`${MCP_TOOLS.length} tools`);
+        const floor = mcpToolFloor();
+        // The registry has 110 tools (104 with every switch off): the claim must hold for both.
+        expect(floor).toBeGreaterThanOrEqual(100);
+        expect(MCP_TOOLS.length).toBeGreaterThan(floor);
+        const text = document.body.textContent ?? "";
+        expect(text).toContain(`More than ${floor} tools`);
+        expect(text).not.toContain(`${MCP_TOOLS.length} tools`);
+        expect(text).not.toMatch(/\b85 tools/);
+    });
+
+    it("derives the floor so the claim stays true as the list changes", () => {
+        expect(mcpToolFloor(106)).toBe(100);
+        expect(mcpToolFloor(110)).toBe(100);
+        expect(mcpToolFloor(111)).toBe(110);
+        expect(mcpToolFloor(101)).toBe(100);
+        expect(mcpToolFloor(100)).toBe(90);
+    });
+
+    it("states the floor in Japanese too", () => {
+        setLanguage("ja-JP");
+        renderHome();
+        expect(document.body.textContent).toContain(`${mcpToolFloor()}以上のツール`);
+        expect(document.body.textContent).not.toMatch(/85個/);
     });
 
     it("keeps what is not shipped labelled as coming, in both languages", () => {

@@ -33,7 +33,10 @@ describe("home feature lines", () => {
     });
 
     it("the Japanese mark line covers created and updated, like the English", () => {
-        expect(HOME.ja).toContain("AIが作成・更新したもの");
+        // MIP-2311: the mark line names external apps and where it shows.
+        expect(HOME.ja).toContain(
+            "作成・更新には、タスクの履歴・コメント・ノートの履歴で印が付きます"
+        );
         expect(HOME.ja).not.toContain("AIが作成したものに印");
     });
 });

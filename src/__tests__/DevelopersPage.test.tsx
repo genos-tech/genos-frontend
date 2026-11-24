@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import { connectApp } from "../i18n/locales/en/connectApp";
 import DevelopersPage from "../lp/DevelopersPage";
 import { mcpCoreUrl } from "../utils/mcpConnect";
+import mcpSnapshot from "./fixtures/mcp_catalog_snapshot.json";
 
 // What the page itself uses (VITE_DJANGO_URL, else the production API origin).
 const API_BASE = import.meta.env.VITE_DJANGO_URL || "https://api.genosai.dev";
@@ -166,101 +167,16 @@ describe("DevelopersPage", () => {
 
     // ── MCP ──────────────────────────────────────────────────────────
 
-    // genos-api `origin/views/public/mcp/tools.py` CATALOG, in order. A
-    // copy, because this repo cannot import that one: when the catalog
-    // changes, this list and the page's `MCP_TOOLS` change with it. The
-    // page said "Fourteen" through every change from 14 to 39.
+    // `fixtures/mcp_catalog_snapshot.json` is a copy (Prettier-formatted) of genos-api
+    // `origin/tests/fixtures/mcp_catalog_snapshot.json` (111 tools, the registry's own snapshot).
+    // This repo cannot import that one: when the catalog changes, copy the file again and
+    // `MCP_TOOLS` changes with it (MIP-2309: the page listed 85 of 110 and the home page said
+    // "85 tools"). Switch-gated tools are listed too: the switches are on in production.
     const MCP_CATALOG = {
-        read: [
-            "get_task",
-            "list_my_tasks",
-            "list_tasks",
-            "list_projects",
-            "list_milestones",
-            "get_milestone_summary",
-            "list_sprints",
-            "get_sprint_summary",
-            "get_task_blockers",
-            "get_task_history",
-            "find_task_by_delivery",
-            "search_workspace",
-            "get_note",
-            "list_my_chats",
-            "get_chat_thread",
-            "list_my_mentions",
-            "list_channel_members",
-            "get_current_user",
-            "get_team_members",
-            "list_project_members",
-            "list_project_tags",
-            "list_task_dependencies",
-            "list_note_folders",
-            "list_note_access",
-            "get_note_history",
-            "list_uncompleted_todos",
-            "list_today_todos",
-            "list_calendar_events",
-            "list_calendars",
-            "get_calendar_event",
-            "get_my_blockers",
-            "list_my_inbox",
-            "get_my_throughput",
-            "get_workload_distribution",
-            "get_top_task_closers",
-            "get_task_throughput_stats",
-            "get_stale_tasks",
-            "get_team_task_summary",
-            "get_project_activity_ranking",
-            "get_milestone_assignee_counts",
-            "get_project_summary",
-            "get_my_task_summary",
-            "get_pr",
-            "list_pr_reviews",
-            "list_pr_comments",
-            "list_pr_files",
-            "list_pr_commits",
-            "get_my_briefing",
-        ],
-        write: [
-            "update_task",
-            "add_comment",
-            "update_comment",
-            "delete_comment",
-            "delete_task_attachment",
-            "restore_task_body",
-            "add_task_delivery",
-            "remove_task_delivery",
-            "update_task_dependencies",
-            "create_task",
-            "assign_task",
-            "update_tasks_bulk",
-            "create_task_plan",
-            "create_note",
-            "update_note",
-            "create_todo_item",
-            "update_todo_item",
-            "delete_todo_item",
-            "create_calendar_event",
-            "update_calendar_event",
-            "delete_calendar_event",
-            "manage_milestone",
-            "delete_milestone",
-            "manage_sprint",
-            "delete_sprint",
-            "manage_project",
-            "manage_project_members",
-            "add_project_tag",
-            "manage_project_labels",
-            "approve_join_request",
-            "decline_join_request",
-            "manage_note_folder",
-            "favorite_note",
-            "delete_note",
-            "delete_note_folder",
-            "manage_note_sharing",
-            "restore_note_version",
-        ],
+        read: mcpSnapshot.filter((t) => !t.write).map((t) => t.name),
+        write: mcpSnapshot.filter((t) => t.write).map((t) => t.name),
     };
+    const MCP_DESTRUCTIVE = mcpSnapshot.filter((t) => t.destructive).map((t) => t.name);
 
     // genos-api `origin/views/public/mcp/prompts.py` PROMPTS, in order. The same
     // kind of copy as the catalog above, for the same reason.
@@ -280,6 +196,22 @@ describe("DevelopersPage", () => {
             ...MCP_CATALOG.read.map((name) => ({ name, type: "read" })),
             ...MCP_CATALOG.write.map((name) => ({ name, type: "write" })),
         ]);
+    });
+
+    it("lists as many tools as the registry has (111)", () => {
+        renderPage();
+        expect(mcpTable()).toHaveLength(111);
+    });
+
+    it("says every destructive tool needs the destructive opt-in", () => {
+        renderPage();
+        for (const name of MCP_DESTRUCTIVE) {
+            const row = [...document.querySelectorAll("tr")].find(
+                (tr) => tr.querySelector("td")?.textContent === name
+            );
+            expect(row, name).toBeTruthy();
+            expect(row?.textContent, name).toMatch(/destructive opt-in/);
+        }
     });
 
     it("describes list_note_folders as the My Notes and Team Notes folders", () => {
@@ -370,6 +302,8 @@ describe("DevelopersPage", () => {
             "delete_note",
             "delete_note_folder",
             "manage_note_sharing",
+            "forget_my_memory",
+            "delete_my_schedule",
         ]);
     });
 
@@ -543,7 +477,7 @@ describe("DevelopersPage: MCP section", () => {
         for (const step of [...connectApp.claudeSteps, ...connectApp.claudeCodeSteps]) {
             expect(within(mcp()).getByText(step)).toBeTruthy();
         }
-        // ChatGPT is coming: a line, no steps.
+        // ChatGPT is planned: a line, no steps.
         expect(within(mcp()).getByText(connectApp.chatgptBody)).toBeTruthy();
         for (const line of [connectApp.plan, connectApp.revoke, connectApp.trap]) {
             expect(within(mcp()).getByText(line)).toBeTruthy();

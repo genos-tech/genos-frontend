@@ -119,6 +119,12 @@ export const MCP_TOOLS: McpTool[] = [
     { name: "list_my_mentions", type: "read", meaning: "Chat messages that @mention you." },
     { name: "list_channel_members", type: "read", meaning: "Who is in one chat." },
     { name: "get_current_user", type: "read", meaning: "Who the key acts as." },
+    {
+        name: "get_genos_help",
+        type: "read",
+        meaning:
+            "How to use Genos itself: where a setting is, who can change it, which plan it needs, shortcuts, connecting an app. Searches the user manual in English or Japanese, free, no AI is run; returns the best matches and a link that opens that Settings tab. Not for your own data: that is search_workspace.",
+    },
     { name: "get_team_members", type: "read", meaning: "Who is in the team, for assigning." },
     { name: "list_project_members", type: "read", meaning: "Who is in one project." },
     {
@@ -212,6 +218,13 @@ export const MCP_TOOLS: McpTool[] = [
         meaning: "Open tasks nobody has touched for a while.",
     },
     {
+        name: "get_progress_history",
+        type: "read",
+        taskRef: true,
+        meaning:
+            "What changed at or under one task or milestone, newest first: which task, how far below it, the kind of change, who, when and how it arrived. For 'is this milestone moving?'. Takes a start date and a limit.",
+    },
+    {
         name: "get_team_task_summary",
         type: "read",
         meaning: "A task rollup across every project you are in.",
@@ -258,6 +271,82 @@ export const MCP_TOOLS: McpTool[] = [
                 Google each time and never stored.
             </>
         ),
+    },
+    {
+        name: "get_item_line",
+        type: "read",
+        taskRef: true,
+        meaning:
+            "Everything going on around one task, as a line in time order: history changes, comments, replies in its linked chat thread, messages elsewhere that point at it, edits to its notes and merged pull requests, plus the lines of the items next to it. For 'what happened on this' and 'why is this stuck'.",
+    },
+    {
+        name: "get_timeline",
+        type: "read",
+        meaning:
+            "The ordered history of one thing: a task, a chat thread, a note (who edited it and what each version added) or a window of a chat. Oldest to newest, to page through.",
+    },
+    {
+        name: "list_my_unread",
+        type: "read",
+        meaning:
+            "What you have not read yet, as data with counts: chats, threads, tasks and notes, by place and by reason (message, reply, mention, comment, reaction, assigned). It returns no summary; the AI writes it.",
+    },
+    {
+        name: "get_my_importance",
+        type: "read",
+        meaning:
+            "What matters most to you right now, worked out from your activity and your connected apps' activity, with the reason for each item. It counts saved actions, never time spent. Due date, priority and Blocked are only weak hints.",
+    },
+    {
+        name: "get_my_memory",
+        type: "read",
+        meaning:
+            "What Genos has stored about you from your activity, how long it is kept, and whether it is recording (Settings, What Genos remembers). References and counts, never any text.",
+    },
+    {
+        name: "list_my_schedules",
+        type: "read",
+        meaning:
+            "Your own schedules and the jobs a schedule can run: when each runs, whether it is on, the next and last run, and why it is paused if it is. Its report arrives in your Inbox.",
+    },
+    {
+        name: "list_my_skills",
+        type: "read",
+        meaning:
+            "The Genos skills you can run: reusable instructions (a runbook such as a weekly report) that people write in Genos and share with their team. Each has a name typed after /, a title, a description, what to give it, and whether it only reads or may propose changes; yours, a teammate's, installed ones and Genos's own. Skills are written in the Genos app.",
+    },
+    {
+        name: "get_skill",
+        type: "read",
+        meaning:
+            "One Genos skill in full: its title, description, level and the text of its steps, to show you what it says or check what it would do before running it. Its text is written by the skill's author, so it is read as data and followed only through run_skill.",
+    },
+    {
+        name: "run_skill",
+        type: "read",
+        meaning:
+            "Runs a Genos skill for you: the AI gets its steps and the rules to follow them by, and does the work with the Genos tools it has. Genos runs no model for this and spends no Genos AI credits. A read skill changes nothing; an act skill proposes one change at a time. A public skill you have not installed cannot be run.",
+    },
+    {
+        name: "comment_on_task_body",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Start a comment thread on a passage of a task's description, as you. The passage is copied exactly from the description's plain text; plain text only. A task nobody has opened in Genos yet cannot take one.",
+    },
+    {
+        name: "reply_to_task_body_comment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Reply to a comment thread on a task's description, marked as written through a connected app. Anyone who can read the task may reply. Take the thread from get_task.",
+    },
+    {
+        name: "resolve_task_body_comment",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Mark a comment thread on a task's description resolved. Only the thread's author or the task's assignee or reporter may; anyone else is refused. Reopening a thread is done in the editor.",
     },
     {
         name: "update_task",
@@ -350,6 +439,13 @@ export const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning: "A new note, optionally attached to a task.",
+    },
+    {
+        name: "save_html_note",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Saves an HTML page as a read-only note: a dashboard, a report, a diagram, an explainer. It creates a note of any kind create_note does, or with note_id replaces the page of an HTML note you can edit (the earlier page is kept as a revision). HTML notes are a Core plan feature, and the save is refused with the numbers when the page is over the plan's size, the note count or the saves per hour.",
     },
     { name: "update_note", type: "write", meaning: "A note's title or body, or its folder." },
     {
@@ -462,6 +558,30 @@ export const MCP_TOOLS: McpTool[] = [
             "Star or unstar a note, or a note folder, in your own sidebar. A note is named by its url, or by its id with its note_type. Nothing else changes.",
     },
     {
+        name: "comment_on_note",
+        type: "write",
+        meaning:
+            "Start a comment thread on a passage of a note. It shows in the editor on those words, marked as written through a connected app. The passage is copied exactly from the note's text; plain text only.",
+    },
+    {
+        name: "reply_to_note_comment",
+        type: "write",
+        meaning:
+            "Reply to a comment thread on a note, marked as written through a connected app. Anyone who can open the note may reply. Plain text, no @-mentions.",
+    },
+    {
+        name: "edit_note_block",
+        type: "write",
+        meaning:
+            "Change one block of a note (replace it, insert after it or delete it) without rewriting the rest, so everything else and anything a person is typing stays as it is. Pass the block's hash to refuse the edit if the block changed since you read it.",
+    },
+    {
+        name: "resolve_note_comment",
+        type: "write",
+        meaning:
+            "Mark a comment thread on a note resolved. Only the thread's author or the note's owner may; anyone else is refused. Reopening a thread is done in the editor.",
+    },
+    {
         name: "delete_note",
         type: "write",
         meaning:
@@ -485,6 +605,49 @@ export const MCP_TOOLS: McpTool[] = [
         meaning:
             "Put an earlier version of a note back, title and body. What the note says now is kept as a version first, so a restore can itself be undone. If the live editor could not be updated, the result says so. A note is named by its url, or by its id with its note_type.",
     },
+    {
+        name: "set_item_importance",
+        type: "write",
+        taskRef: true,
+        meaning:
+            "Correct what matters to you on one task: mark it not important, say its priority is right, or clear the mark. It changes nothing on the task itself, and is refused while you have recording switched off.",
+    },
+    {
+        name: "tune_my_importance",
+        type: "write",
+        meaning:
+            "Change how much each signal counts when Genos works out what matters to you: what others do, what you do, chat, notes, pull requests, how many days an item was busy, its trend, and the weak hints (due date, priority, Blocked). It changes no task.",
+    },
+    {
+        name: "forget_my_memory",
+        type: "write",
+        meaning:
+            "Delete what Genos stored about you from your activity, for good, in every team: your importance marks and signal settings, the per-day activity counts, the record of which items your AI apps opened or changed, or all three. It does not touch your tasks, notes, comments or chats, and does not switch recording off. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "create_my_schedule",
+        type: "write",
+        meaning:
+            "Create a schedule: run one of Genos's jobs at a time you choose (for example every weekday at 09:00), in your own time zone. The report goes to your Inbox, with a push notification unless you turn it off. You can keep a limited number of schedules.",
+    },
+    {
+        name: "update_my_schedule",
+        type: "write",
+        meaning:
+            "Change one of your schedules: its name, job, parameters, time, days or push, or pause it and turn it back on.",
+    },
+    {
+        name: "delete_my_schedule",
+        type: "write",
+        meaning:
+            "Delete one of your schedules for good. Reports it already delivered stay in the Inbox. Pausing it with update_my_schedule keeps it. Needs a key that also has the destructive opt-in.",
+    },
+    {
+        name: "run_my_schedule",
+        type: "write",
+        meaning:
+            "Run one of your schedules once, now: the report arrives in your Inbox like a scheduled one. It does not change when the schedule runs next, and a schedule can be run at most once a minute.",
+    },
 ];
 
 // The two MCP prompts (genos-api `origin/views/public/mcp/prompts.py`), in its order.
@@ -502,6 +665,13 @@ export const MCP_PROMPTS: McpRow[] = [
             "Up to five things to focus on today, with the reasons, then your choice of what to do about them. Takes an optional focus, in your own words.",
     },
 ];
+
+/**
+ * The round number /home may say ("more than 100 tools"): the largest multiple of ten strictly
+ * below the list's length. Derived, so the claim stays true when the list grows or shrinks, and
+ * it never claims the exact figure (MIP-2309: "85" was a hand-typed list, the registry had 110).
+ */
+export const mcpToolFloor = (count: number = MCP_TOOLS.length) => Math.ceil(count / 10) * 10 - 10;
 
 export const MCP_READS = MCP_TOOLS.filter((t) => t.type === "read");
 export const MCP_WRITES = MCP_TOOLS.filter((t) => t.type === "write");
