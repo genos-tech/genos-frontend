@@ -17,6 +17,9 @@ import { compareText } from "../../../../i18n/collate";
 import { titleFromFilename } from "./noteMarkdown";
 
 const MARKDOWN_RE = /\.(md|markdown|txt)$/i;
+/** An HTML page (MIP-2215). Only a note when the plan is built with `html: true`; otherwise it is
+ *  an asset, exactly as before. */
+const HTML_RE = /\.html?$/i;
 
 /**
  * Notion stamps every export with the page's own id — on the `.md` file
@@ -40,6 +43,8 @@ export const stripNotionId = (name: string): string => {
 export type PlannedNote = {
     title: string;
     file: File;
+    /** `html`: stored as a page in a sandboxed frame (MIP-2215), not parsed into blocks. */
+    format?: "markdown" | "html";
     /** Directory the file was read from, relative to the picked folder.
      *  Relative image links resolve against THIS, which is not always the
      *  folder the note ends up in — a Notion page merged into its own
@@ -133,6 +138,7 @@ const planDir = (dir: Dir): PlannedFolder => {
         const note: PlannedNote = {
             title: stripNotionId(titleFromFilename(file.name)),
             file,
+            format: HTML_RE.test(file.name) ? "html" : "markdown",
             sourceDir: dir.path,
         };
         const twin = childDirs.find((d) => d.name === note.title && !ownNote.has(d));
@@ -163,7 +169,10 @@ const countFolder = (folder: PlannedFolder): { folders: number; notes: number } 
     return { folders, notes };
 };
 
-export const buildFolderImportPlan = (files: File[]): FolderImportPlan => {
+export const buildFolderImportPlan = (
+    files: File[],
+    options: { html?: boolean } = {}
+): FolderImportPlan => {
     const root = newDir("", "");
     const assets = new Map<string, File>();
 
@@ -175,7 +184,7 @@ export const buildFolderImportPlan = (files: File[]): FolderImportPlan => {
         if (fileName.startsWith(".")) continue;
         if (parts.some((p) => p === "__MACOSX")) continue;
 
-        if (MARKDOWN_RE.test(fileName)) {
+        if (MARKDOWN_RE.test(fileName) || (options.html && HTML_RE.test(fileName))) {
             descend(root, parts.slice(0, -1)).files.push(file);
         } else {
             assets.set(parts.join("/"), file);

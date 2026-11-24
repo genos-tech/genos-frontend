@@ -1,5 +1,4 @@
 import { memo } from "react";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { IconButton } from "@mui/joy";
 
@@ -10,6 +9,7 @@ import { g } from "../../../../theme/tokens";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { useNoteUnread } from "../context/noteUnreadState";
 import { isNoteOpen } from "../utils/openNote";
+import { NoteKindIcon } from "./noteOrigin";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface FavoriteNoteItemProps {
@@ -48,7 +48,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNo
 
     return (
         <NavItem
-            icon={<DescriptionOutlinedIcon />}
+            icon={<NoteKindIcon note={note} />}
             label={note.title || t.notes.defaults.untitled}
             lines={subLabel ? 2 : 1}
             secondary={subLabel}

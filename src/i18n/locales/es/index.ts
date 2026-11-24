@@ -4862,6 +4862,7 @@ export const es: DeepPartial<Messages> = {
             showHiddenCrumbs: "Mostrar rutas de navegación ocultas {count}",
             importMarkdown: "Importar Markdown…",
             exportMarkdown: "Exportar como Markdown",
+            reloadPage: "Recargar página",
         },
         autocomplete: {
             searchAria: "Buscar",
@@ -5105,6 +5106,56 @@ export const es: DeepPartial<Messages> = {
                 "No se pudo actualizar esa etiqueta. Puede que ya exista o que no sea tuyo para editarlo.",
             tagDeleteFailed:
                 "No se pudo eliminar esa etiqueta. Sólo su creador o el propietario del equipo pueden hacerlo.",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "Página HTML · mostrada en un entorno aislado",
+            navigatedTitle: "Esta página intentó abrir otra página",
+            navigatedBody:
+                "Se detuvo, así que no se abrió nada más. Recarga para volver a ver la página.",
+            reload: "Recargar",
+            loadError: "No se pudo cargar esta página",
+            retry: "Reintentar",
+            frameTitle: "Página HTML: {title}",
+            kindLabel: "Página HTML",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "Importar Markdown o HTML",
+            chooseFile: "Elige un archivo .md o .html…",
+            notOnPlan:
+                "Las páginas HTML forman parte del plan Core y superiores. Mejora tu plan en Ajustes → Plan y uso para importar esta página.",
+            tooLarge:
+                "Esta página pesa {size}, más que el límite de {limit} de tu plan para una página HTML.",
+            importedWithWarnings:
+                "Importada como página HTML. Algunas partes no se mostrarán en el entorno aislado:",
+            resultNotes: "Se importaron {count} páginas HTML.",
+            resultWarnings:
+                "{count} páginas HTML tienen partes que no se mostrarán en el entorno aislado.",
+            fallbackWarning: "Parte de la página no se mostrará en el entorno aislado.",
+            warning: {
+                external_script:
+                    "Los scripts cargados desde otra dirección no se ejecutarán ({count}).",
+                external_css:
+                    "Las hojas de estilo cargadas desde otra dirección se bloquean, así que la página puede verse sin estilo ({count}).",
+                external_font:
+                    "Las fuentes web cargadas desde otra dirección se bloquean ({count}).",
+                remote_image:
+                    "Las imágenes y el contenido multimedia cargados desde otra dirección se bloquean ({count}).",
+                external_frame:
+                    "Los marcos e incrustaciones que apuntan a otra página se bloquean ({count}).",
+                network_call:
+                    "Las llamadas de red de la página (fetch, XHR, WebSocket) fallarán ({count}).",
+                form: "Los formularios no se pueden enviar desde aquí ({count}).",
+                window_open: "Las ventanas emergentes se bloquean ({count}).",
+                navigation:
+                    "Las redirecciones y los enlaces que sacan de la página se bloquean ({count}).",
+                storage: "La página no puede guardar cookies ni almacenamiento local ({count}).",
+                no_doctype:
+                    "La página no tiene <!doctype html>, así que se dibuja en modo quirks.",
+                no_title:
+                    "La página no tiene <title>, así que se usó el nombre del archivo como título de la nota.",
+            },
         },
         importMd: {
             heading: "Importar Markdown",

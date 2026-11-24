@@ -11,8 +11,10 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
+import { HtmlNoteView } from "../../common/components/HtmlNoteView";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteLoadState } from "../../common/components/NoteLoadState";
+import { isHtmlNote } from "../../common/utils/htmlNote";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 
 interface ChatNoteEditorPanelProps {
@@ -111,6 +113,20 @@ export const ChatNoteEditorPanel = ({
             <Box sx={{ display: isActive ? "block" : "none", width: "100%", height: "100%" }}>
                 <NoteAccessRequestPanel noteId={tab.noteId} noteType={3} socket={socket} />
             </Box>
+        );
+    }
+
+    if (note && isHtmlNote(note)) {
+        // An HTML page (MIP-2215): read-only in a sandboxed frame, never the editor.
+        return (
+            <HtmlNoteView
+                accessToken={accessToken}
+                fillHeight={fillHeight}
+                isActive={isActive}
+                noteId={tab.noteId}
+                noteType={3}
+                title={note.title}
+            />
         );
     }
 

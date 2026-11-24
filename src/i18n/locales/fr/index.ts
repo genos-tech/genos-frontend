@@ -3597,6 +3597,7 @@ export const fr: DeepPartial<Messages> = {
             shareEllipsis: "Partager…",
             importMarkdown: "Importer une démarque…",
             exportMarkdown: "Exporter en Markdown",
+            reloadPage: "Recharger la page",
             openTask: "Ouvrir la tâche",
             taskIdLabel: "{id}",
             openTaskTooltip: "Ouvrir la tâche {id}",
@@ -3609,6 +3610,57 @@ export const fr: DeepPartial<Messages> = {
             ownerProjectTooltip: "Projet propriétaire",
             focusNote: "Se concentrer sur cette note (masquer les autres volets)",
             exitFocusNote: "Réafficher les autres volets",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "Page HTML · affichée dans un bac à sable",
+            navigatedTitle: "Cette page a tenté d'ouvrir une autre page",
+            navigatedBody:
+                "Elle a été arrêtée, rien d'autre n'a été ouvert. Rechargez pour revoir la page.",
+            reload: "Recharger",
+            loadError: "Impossible de charger cette page",
+            retry: "Réessayer",
+            frameTitle: "Page HTML : {title}",
+            kindLabel: "Page HTML",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "Importer du Markdown ou du HTML",
+            chooseFile: "Choisir un fichier .md ou .html…",
+            notOnPlan:
+                "Les pages HTML font partie du forfait Core et supérieurs. Passez à un forfait supérieur dans Paramètres → Forfait et utilisation pour importer cette page.",
+            tooLarge:
+                "Cette page pèse {size}, au-dessus de la limite de {limit} de votre forfait pour une page HTML.",
+            importedWithWarnings:
+                "Importée comme page HTML. Certaines parties ne s'afficheront pas dans le bac à sable :",
+            resultNotes: "{count} pages HTML importées.",
+            resultWarnings:
+                "{count} pages HTML ont des parties qui ne s'afficheront pas dans le bac à sable.",
+            fallbackWarning: "Une partie de la page ne s'affichera pas dans le bac à sable.",
+            warning: {
+                external_script:
+                    "Les scripts chargés depuis une autre adresse ne s'exécuteront pas ({count}).",
+                external_css:
+                    "Les feuilles de style chargées depuis une autre adresse sont bloquées, la page peut donc paraître sans style ({count}).",
+                external_font:
+                    "Les polices web chargées depuis une autre adresse sont bloquées ({count}).",
+                remote_image:
+                    "Les images et médias chargés depuis une autre adresse sont bloqués ({count}).",
+                external_frame:
+                    "Les cadres et intégrations qui pointent vers une autre page sont bloqués ({count}).",
+                network_call:
+                    "Les appels réseau de la page (fetch, XHR, WebSocket) échoueront ({count}).",
+                form: "Les formulaires ne peuvent pas être envoyés d'ici ({count}).",
+                window_open: "Les fenêtres contextuelles sont bloquées ({count}).",
+                navigation:
+                    "Les redirections et les liens qui quittent la page sont bloqués ({count}).",
+                storage:
+                    "La page ne peut pas conserver de cookies ni de stockage local ({count}).",
+                no_doctype:
+                    "La page n'a pas de <!doctype html> : elle est affichée en mode quirks.",
+                no_title:
+                    "La page n'a pas de <title> : le nom du fichier a servi de titre à la note.",
+            },
         },
         importMd: {
             heading: "Importer une démarque",
