@@ -181,6 +181,48 @@ export const settings = {
         namePlaceholder: "e.g. Monday plan",
         job: "Report",
         jobPlaceholder: "Choose a report",
+        jobCatalog: {
+            what_to_do_today: {
+                title: "What to do today",
+                description:
+                    "Your day from what is already in Genos: what to start with, what is overdue or due today, your to-dos and calendar, what waits on you, what changed lately, and what has gone quiet.",
+            },
+            what_you_did: {
+                title: "What you did",
+                description:
+                    "What you did today or yesterday, from what Genos already saved: tasks you changed and commented on, notes you edited, to-dos you finished, and how many messages you sent in which chats. Nothing to type in.",
+            },
+            what_is_left: {
+                title: "What is left from last week",
+                description:
+                    "What is still open from the last days, from what you did and what Genos already saved: tasks you worked on that are not closed, tasks closed after your work, and to-dos left unfinished. Good for Monday morning.",
+            },
+            project_updates: {
+                title: "Project updates",
+                description:
+                    "What moved, what slipped and what is blocked in one project lately: tasks done and moved in the last days, tasks that went overdue or had their due date pushed later, and tasks that are blocked.",
+            },
+            milestone_updates: {
+                title: "Milestone updates",
+                description:
+                    "Where one milestone stands and what changed in it lately: task counts by status, what changed in the last days by anyone, what is ready to start and what waits on blockers.",
+            },
+            team_activity: {
+                title: "Team activity",
+                description:
+                    "What the team's projects did lately (tasks closed and created), who joined the team, and who closed the most tasks. In a chat it names only the projects everyone in that chat is on, and only to team members.",
+            },
+            chat_catch_up: {
+                title: "Group chat catch-up",
+                description:
+                    "Which group chats are busy now: how many messages and how many people in the last hours. Only chats you are in; in a chat, only chats everyone there is in. It never shows what was said.",
+            },
+            run_skill: {
+                title: "Run a skill",
+                description:
+                    "Runs one of your skills on this schedule and files what it finds in your Inbox, or posts it in a chat only you are in. It only reads (it changes nothing), uses your AI credits like a question in Spotlight, and runs the published version you picked.",
+            },
+        },
         options: "Options",
         paramDefault: "Default",
         paramRange: "Whole number from {min} to {max}",

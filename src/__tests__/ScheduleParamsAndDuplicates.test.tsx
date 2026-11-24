@@ -185,7 +185,7 @@ describe("plain parameter labels and hints", () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
         await openNew(user);
-        await pickJob(user, "What is left");
+        await pickJob(user, "What is left from last week");
         expect(
             within(screen.getByTestId("schedule-params")).getByText("Look back (days)")
         ).toBeTruthy();
