@@ -877,8 +877,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         })();
     };
 
+    // Mount-only fetch: read the latest closure through a ref so it does not re-run.
+    const getTeamMembersRef = useRef(getTeamMembers);
+    getTeamMembersRef.current = getTeamMembers;
     useEffect(() => {
-        getTeamMembers();
+        getTeamMembersRef.current();
     }, []);
 
     // Project-tag filters. Tags are already loaded into

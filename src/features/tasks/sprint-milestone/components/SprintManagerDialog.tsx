@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
@@ -258,12 +258,15 @@ export const SprintManagerDialog = ({ open, onClose, projectId, useSM }: Props) 
         return out;
     }, [sprints, today]);
 
+    // Keyed on open and project: the loaders are read through a ref.
+    const useSMRef = useRef(useSM);
+    useSMRef.current = useSM;
     useEffect(() => {
         if (!open) return;
         // Refresh sprints + milestones on open so the user always sees
         // the latest state, including newly auto-rolled rows.
-        useSM.loadSprintsForProject(projectId);
-        useSM.loadMilestonesForProject(projectId, {
+        useSMRef.current.loadSprintsForProject(projectId);
+        useSMRef.current.loadMilestonesForProject(projectId, {
             statuses: MILESTONE_LIST_STATUSES,
         });
     }, [open, projectId]);
