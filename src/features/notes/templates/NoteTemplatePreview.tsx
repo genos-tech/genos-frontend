@@ -9,6 +9,7 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { sanitizeBlocksForMarkdown } from "../common/services/noteMarkdown";
+import { previewDictionary } from "./previewDictionary";
 
 type Props = {
     blocks: PartialBlock[];
@@ -28,7 +29,7 @@ export const NoteTemplatePreview = ({ blocks }: Props) => {
         const safe = sanitizeBlocksForMarkdown(blocks);
         return safe.length > 0 ? safe : undefined;
     }, [blocks]);
-    const editor = useCreateBlockNote({ initialContent });
+    const editor = useCreateBlockNote({ initialContent, dictionary: previewDictionary });
     return (
         <Box sx={{ "& .bn-editor": { px: 0 } }} data-note-template-preview>
             <BlockNoteView
