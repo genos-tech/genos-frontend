@@ -1,8 +1,8 @@
 /**
  * MIP-1967: when the member has no AI credits left (`aiCreditsOut: true`, genos-api) the Schedules
- * form still draws the AI sentences switch, but off and disabled, says why, and offers Buy credits
+ * form still draws the AI mode dropdown, but off and disabled, says why, and offers Buy credits
  * and Upgrade plan. The effort control is not drawn. A server that predates the key, or says
- * false, draws the switch as before.
+ * false, draws the AI mode as before.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render as rtlRender, screen, within } from "@testing-library/react";
@@ -13,6 +13,7 @@ import { SchedulesSection } from "../components/layout/schedules/SchedulesSectio
 import { HashMentionDataProvider } from "../context/HashMentionDataContext";
 import { requestAppNavigate } from "../services/appNavigate";
 import type { EffortCost, ScheduleJob } from "../services/schedules";
+import { chooseMode, modeBox } from "./helpers/scheduleMode";
 
 vi.setConfig({ testTimeout: 30000 });
 
@@ -113,18 +114,18 @@ const pickJob = async (user: ReturnType<typeof userEvent.setup>, title: string) 
 };
 
 describe("when the member has no AI credits", () => {
-    it("shows the AI switch off and disabled, with the reason and the buy / upgrade actions", async () => {
+    it("shows plain mode, the AI option and disabled, with the reason and the buy / upgrade actions", async () => {
         listSchedules.mockResolvedValue(LIST(true));
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
         await openNew(user);
         await pickJob(user, "What to do today");
         const params = screen.getByTestId("schedule-params");
-        const sw = within(params).getByRole("switch", {
-            name: "AI sentences",
-        }) as HTMLInputElement;
-        expect(sw.disabled).toBe(true);
-        expect(sw.checked).toBe(false);
+        expect(modeBox().textContent).toBe("Scheduled job");
+        await user.click(modeBox());
+        const aiOption = await screen.findByRole("option", { name: "Scheduled job by Genos AI" });
+        expect(aiOption.getAttribute("aria-disabled")).toBe("true");
+        await user.keyboard("{Escape}");
         expect(within(params).getByText(/used all your AI credits/i)).toBeTruthy();
         expect(screen.queryByTestId("schedule-effort")).toBeNull();
         await user.click(within(params).getByRole("button", { name: "Buy credits" }));
@@ -135,20 +136,20 @@ describe("when the member has no AI credits", () => {
 });
 
 describe("when the member has credits, or the server does not say", () => {
-    it.each([false, undefined])("draws the switch as usable (aiCreditsOut=%s)", async (flag) => {
+    it.each([false, undefined])("draws the AI mode as usable (aiCreditsOut=%s)", async (flag) => {
         listSchedules.mockResolvedValue(LIST(flag));
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
         await openNew(user);
         await pickJob(user, "What to do today");
         const params = screen.getByTestId("schedule-params");
-        const sw = within(params).getByRole("switch", {
-            name: "AI sentences",
-        }) as HTMLInputElement;
-        expect(sw.disabled).toBe(false);
+        await user.click(modeBox());
+        const aiOption = await screen.findByRole("option", { name: "Scheduled job by Genos AI" });
+        expect(aiOption.getAttribute("aria-disabled")).not.toBe("true");
+        await user.keyboard("{Escape}");
         expect(within(params).queryByRole("button", { name: "Buy credits" })).toBeNull();
-        // AI sentences are an opt-in (MIP-1969): the effort control shows once the switch is on.
-        await user.click(sw);
+        // Plain is the default: the effort control shows once AI mode is chosen.
+        await chooseMode(user, "ai");
         expect(screen.getByTestId("schedule-effort")).toBeTruthy();
     });
 });

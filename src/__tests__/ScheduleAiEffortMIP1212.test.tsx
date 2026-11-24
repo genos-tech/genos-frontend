@@ -14,6 +14,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SchedulesSection } from "../components/layout/schedules/SchedulesSection";
 import { HashMentionDataProvider } from "../context/HashMentionDataContext";
+import { chooseMode, modeBox } from "./helpers/scheduleMode";
 
 vi.setConfig({ testTimeout: 30000 });
 
@@ -141,12 +142,10 @@ const openNew = async (user: ReturnType<typeof userEvent.setup>) => {
     await user.click(await screen.findByRole("button", { name: "New schedule" }));
     return screen.getByTestId("schedule-form");
 };
-// AI sentences are an opt-in (MIP-1969): the effort control shows once the switch is on.
+// Plain is the default: the effort control shows once AI mode is chosen.
 const openNewAiOn = async (user: ReturnType<typeof userEvent.setup>) => {
     await openNew(user);
-    await user.click(
-        within(screen.getByTestId("schedule-params")).getByRole("switch", { name: "AI sentences" })
-    );
+    await chooseMode(user, "ai");
 };
 const pickJob = async (user: ReturnType<typeof userEvent.setup>, title: string) => {
     await user.click(screen.getByRole("combobox", { name: "Report" }));
@@ -206,7 +205,7 @@ describe("the control in the form", () => {
             expect(text).not.toMatch(word);
         }
         // The option is described as what it does; whether the operator has the AI on is not known.
-        expect(text).toMatch(/This uses AI/);
+        expect(text).toMatch(/This spends your AI credits/);
     });
 
     it("sends the member's level on a create, and none while the job's default is left", async () => {
@@ -262,45 +261,43 @@ describe("the control in the form", () => {
         );
         await pickJob(user, "What you did");
         await pickJob(user, "What to do today");
-        // The switch went back to its default (off) with the report; turn it on again.
-        await user.click(
-            within(screen.getByTestId("schedule-params")).getByRole("switch", {
-                name: "AI sentences",
-            })
-        );
+        // The mode went back to its default (plain) with the report; choose AI again.
+        await chooseMode(user, "ai");
         expect(checked()).toBe("Low (default)");
     });
 
-    it("is hidden while the AI sentences switch is off, and back when it is on", async () => {
+    it("is hidden in plain mode, and back in AI mode", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
         await openNew(user);
-        const params = screen.getByTestId("schedule-params");
-        const sw = within(params).getByRole("switch", {
-            name: "AI sentences",
-        }) as HTMLInputElement;
-        // Off unless turned on (MIP-1969): the catalog states no default, the form knows it.
-        expect(sw.checked).toBe(false);
+        // Plain unless AI is chosen: the catalog states no default, the form knows it.
+        expect(modeBox().textContent).toBe("Scheduled job");
         expect(effortBox()).toBeNull();
-        await user.click(sw);
-        expect(sw.checked).toBe(true);
+        await chooseMode(user, "ai");
+        expect(modeBox().textContent).toBe("Scheduled job by Genos AI");
         expect(effortBox()).not.toBeNull();
-        await user.click(sw);
+        await chooseMode(user, "plain");
         expect(effortBox()).toBeNull();
     });
 });
 
-describe("the AI sentences switch", () => {
-    it("is a switch with our own localized, neutral hint, not the server's English text", async () => {
+describe("the AI mode dropdown", () => {
+    it("is a dropdown with our own localized hint, not the server's English text", async () => {
         render(<SchedulesSection teamId="t1" />);
         const user = userEvent.setup();
         await openNew(user);
         const params = screen.getByTestId("schedule-params");
-        expect(within(params).getByRole("switch", { name: "AI sentences" })).toBeTruthy();
-        expect(within(params).queryByRole("textbox", { name: "AI sentences" })).toBeNull();
+        expect(modeBox()).toBeTruthy();
+        expect(within(params).queryByRole("switch")).toBeNull();
         expect(
             within(params).getByText(
-                "Adds one short sentence under a task when its comments explain where it stands. This uses AI and spends your AI credits. It is off unless you turn it on."
+                "A plain report built from your data. No AI, no credits spent."
+            )
+        ).toBeTruthy();
+        await chooseMode(user, "ai");
+        expect(
+            within(params).getByText(
+                "Genos AI adds one short sentence under a task when its comments explain where it stands. This spends your AI credits."
             )
         ).toBeTruthy();
         expect(within(params).queryByText(/AI-written/)).toBeNull();
@@ -316,11 +313,7 @@ describe("the AI sentences switch", () => {
         expect(createSchedule.mock.calls[0][2].params).toEqual({});
         createSchedule.mockClear();
         await openNew(user);
-        await user.click(
-            within(screen.getByTestId("schedule-params")).getByRole("switch", {
-                name: "AI sentences",
-            })
-        );
+        await chooseMode(user, "ai");
         await user.click(screen.getByRole("button", { name: "Create schedule" }));
         await waitFor(() => expect(createSchedule).toHaveBeenCalledTimes(1));
         expect(createSchedule.mock.calls[0][2].params).toEqual({ ai_sentences: true });

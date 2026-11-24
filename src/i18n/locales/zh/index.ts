@@ -4802,11 +4802,14 @@ export const zh: DeepPartial<Messages> = {
             errorSkill: "请选择一个技能。",
             effortHintNoEstimate:
                 "AI 在这次运行中投入的程度。它会像在 Spotlight 中提问一样消耗你的 AI 额度；实际用量会显示在每份报告上。",
-            paramAiSentences: "AI 一句话说明",
-            paramAiSentencesHint:
-                "当任务的评论能说明它的进展时,在任务下方加一句简短的话。这会使用 AI 并消耗你的 AI 额度。默认关闭,开启后才会添加。",
-            aiOutOfCredits:
-                "您的 AI 额度已用完，因此无法生成 AI 一句话说明。购买额度或升级套餐即可开启。",
+            scheduleModeLabel: "模式",
+            scheduleModePlain: "定时任务",
+            scheduleModeAi: "由 Genos AI 执行的定时任务",
+            scheduleModePlainHint: "根据你的数据生成的普通报告。不使用 AI,不消耗额度。",
+            scheduleModeAiHint:
+                "当任务的评论能说明它的进展时,Genos AI 会在任务下方加一句简短的话。这会消耗你的 AI 额度。",
+            scheduleModeOutOfCredits:
+                "您的 AI 额度已用完,因此无法使用 Genos AI 模式。购买额度或升级套餐即可开启。",
             aiOutOfCreditsBuy: "购买额度",
             aiOutOfCreditsUpgrade: "升级套餐",
             effortLabel: "AI 推理强度",
