@@ -1839,7 +1839,13 @@ export const SettingsModal = ({
     const [tab, setTab] = useState<SettingsTabKey>("general");
     // A requested tab (`initialTab`) is applied each time the modal opens.
     useEffect(() => {
-        if (open && initialTab) setTab(initialTab);
+        if (!open || !initialTab) return;
+        // A key that is not an enabled tab (a stale link) opens General, never a blank panel.
+        setTab(
+            SETTINGS_TABS.some((def) => def.enabled && def.key === initialTab)
+                ? initialTab
+                : "general"
+        );
     }, [open, initialTab]);
     // "Connect your AI" points a Free member at Plan & Usage (MIP-2020).
     useEffect(() => {
