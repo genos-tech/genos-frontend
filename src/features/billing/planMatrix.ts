@@ -28,7 +28,7 @@
 
 import { fmt } from "../../i18n";
 import type { Messages } from "../../i18n/types";
-import type { PlanTier } from "../../services/billingApi";
+import type { HtmlNoteLimits, PlanTier } from "../../services/billingApi";
 
 type PlanStrings = Messages["settings"]["planUsage"];
 
@@ -63,6 +63,12 @@ export interface MatrixGroup {
 }
 
 const num = (v: number, locale: string) => v.toLocaleString(locale);
+
+/** A page size in bytes as "512 KB" or "1 MB" (binary units, as the server counts them). */
+const sizeLabel = (bytes: number, p: PlanStrings, locale: string) =>
+    bytes >= 1024 * 1024 && bytes % (1024 * 1024) === 0
+        ? fmt(p.matrixMb, { mb: num(bytes / (1024 * 1024), locale) })
+        : fmt(p.matrixKb, { kb: num(Math.round(bytes / 1024), locale) });
 
 /**
  * Build every comparison group for the tiers the server returned.
@@ -318,6 +324,36 @@ export const planMatrixGroups = (
                     ? { kind: "value", label: p.matrixUnlimited, emphasis: true }
                     : { kind: "value", label: fmt(p.matrixMb, { mb: String(L.upload_max_mb) }) }
             )
+        );
+    }
+    // HTML pages: three numbers off the api's one HTML table. A plan without them (Free, `null`) is a
+    // cross on every row, never "0" or "Unlimited". `has()` because a server that predates the key
+    // sends it for nobody and the rows should then not exist.
+    if (has("html_notes")) {
+        const html = (
+            key: string,
+            label: string,
+            pick: (h: HtmlNoteLimits) => string,
+            hint?: string
+        ) =>
+            workspace.push({
+                ...row(key, label, (L) =>
+                    L.html_notes ? { kind: "value", label: pick(L.html_notes) } : { kind: "no" }
+                ),
+                hint,
+            });
+        html(
+            "html-pages",
+            p.matrixRowHtmlPages,
+            (h) => num(h.max_notes, locale),
+            p.matrixHintPerPerson
+        );
+        html("html-size", p.matrixRowHtmlSize, (h) => sizeLabel(h.max_bytes, p, locale));
+        html(
+            "html-saves",
+            p.matrixRowHtmlSaves,
+            (h) => num(h.saves_per_hour, locale),
+            p.matrixHintPerPerson
         );
     }
     groups.push({ key: "workspace", label: p.matrixGroupWorkspace, rows: workspace });

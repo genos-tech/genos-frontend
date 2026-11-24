@@ -206,6 +206,19 @@ export interface PlanLimits {
     mcp_bulk_max_tasks?: number | null;
     mcp_bulk_max_plan_tasks?: number | null;
     mcp_list_page_max?: number | null;
+    /**
+     * HTML pages (MIP-2362), read off the api's `HTML_NOTE_LIMITS`, the one table the save path
+     * enforces. `null` = the plan has no HTML pages (Free). Never unlimited: the count is per
+     * person, `max_bytes` is one page's UTF-8 size, `saves_per_hour` counts saves across all of
+     * the person's HTML pages. Absent on a server that predates it: the rows are left out.
+     */
+    html_notes?: HtmlNoteLimits | null;
+}
+
+export interface HtmlNoteLimits {
+    max_notes: number;
+    max_bytes: number;
+    saves_per_hour: number;
 }
 
 export interface PlanTier {

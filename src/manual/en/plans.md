@@ -33,7 +33,7 @@ Before Genos creates or changes anything for you in the app, it shows you what i
 - **Webhooks, per team**: Free none, Core 3, Pro 10, Max 25, Enterprise unlimited. The team's plan or the team owner's plan counts, whichever is better.
 - **Scheduled reports, per person**: Free none, Core 5, Pro 20, Max 20, Enterprise 20.
 - **Skills you own** (when your Genos has Skills turned on): Free 3, Core 25, Pro 100, Max and Enterprise unlimited.
-- **HTML notes** (when your Genos has them turned on): not on Free; Core up to 512 KB a page and 100 HTML notes; Pro and up 1 MB a page and 500 HTML notes.
+- **HTML notes** (when your Genos has them turned on): not on Free; Core up to 512 KB a page and 100 HTML notes; Pro and up 1 MB a page and 500 HTML notes. Saves are limited per hour across all your HTML notes: Core 30, Pro and up 60. The plan comparison (Settings → Plan & Usage, and the public Plans page) shows the page count, page size and saves per hour.
 - **Connected AI apps and API keys**: Core and up. New connected apps and new API keys per person: Core 3, Pro 10, Max 25. Calls per minute for each key or app: Core 60, Pro 120, Max 240. Calls per day for each person: Core 3,000, Pro 10,000, Max 30,000. Enterprise has no limits. These limits are enforced only when your Genos is set to enforce them. Existing apps and keys keep working.
 
 ## AI credits
