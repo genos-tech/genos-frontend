@@ -1539,6 +1539,8 @@ export const hi: DeepPartial<Messages> = {
             unavailable: "(उपलब्ध नहीं)",
             milestonePlaceholder: "माइलस्टोन चुनें",
             milestoneLoading: "माइलस्टोन लोड हो रहे हैं…",
+            milestoneDue: "देय {date}",
+            milestoneOverdue: "अतिदेय {date}",
             milestoneNone: "चुनने के लिए कोई माइलस्टोन नहीं है।",
             milestoneLoadFailed:
                 "माइलस्टोन लोड नहीं हो सके। यह फ़ॉर्म बंद करके दोबारा कोशिश करें।",
@@ -1550,6 +1552,8 @@ export const hi: DeepPartial<Messages> = {
             deliverLabel: "रिपोर्ट यहाँ भेजें",
             deliverInbox: "मेरा इनबॉक्स",
             deliverProjectChat: "{name} (प्रोजेक्ट चैट)",
+            deliverKindGroup: "ग्रुप चैट",
+            deliverKindProject: "प्रोजेक्ट चैट",
             deliverChatHint:
                 "रिपोर्ट इस चैट में एक संदेश के रूप में पोस्ट होती है, बिना AI के और बिना सूचना के। चैट में सभी लोग इसे पढ़ सकते हैं, इसलिए प्रोजेक्ट रिपोर्ट केवल उसी प्रोजेक्ट के सदस्यों वाली चैट में जा सकती है।",
             deliverChatHintAi:
@@ -1572,11 +1576,15 @@ export const hi: DeepPartial<Messages> = {
             errorSkill: "एक स्किल चुनें।",
             effortHintNoEstimate:
                 "इस रन में AI कितनी मेहनत करता है। यह Spotlight में सवाल पूछने की तरह आपके AI क्रेडिट खर्च करता है; असली आँकड़ा हर रिपोर्ट पर दिखता है।",
-            paramAiSentences: "AI के वाक्य",
-            paramAiSentencesHint:
-                "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें AI का उपयोग होता है और आपके AI क्रेडिट खर्च होते हैं। यह डिफ़ॉल्ट रूप से बंद है; चाहें तो चालू करें।",
-            aiOutOfCredits:
-                "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए AI वाक्य नहीं चल सकते। उन्हें चालू करने के लिए क्रेडिट खरीदें या प्लान अपग्रेड करें।",
+            scheduleModeLabel: "मोड",
+            scheduleModePlain: "निर्धारित कार्य",
+            scheduleModeAi: "Genos AI द्वारा निर्धारित कार्य",
+            scheduleModePlainHint:
+                "आपके डेटा से बनी सामान्य रिपोर्ट। AI का उपयोग नहीं, कोई क्रेडिट खर्च नहीं।",
+            scheduleModeAiHint:
+                "जब किसी कार्य की टिप्पणियाँ उसकी स्थिति समझाती हैं, तो Genos AI कार्य के नीचे एक छोटा वाक्य जोड़ता है। इसमें आपके AI क्रेडिट खर्च होते हैं।",
+            scheduleModeOutOfCredits:
+                "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए Genos AI मोड नहीं चल सकता। इसे चालू करने के लिए क्रेडिट खरीदें या प्लान अपग्रेड करें।",
             aiOutOfCreditsBuy: "क्रेडिट खरीदें",
             aiOutOfCreditsUpgrade: "प्लान अपग्रेड करें",
             effortLabel: "AI की कोशिश",

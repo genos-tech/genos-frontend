@@ -1153,6 +1153,8 @@ export const ar: DeepPartial<Messages> = {
             unavailable: "(غير متاح)",
             milestonePlaceholder: "اختر معلمًا",
             milestoneLoading: "جارٍ تحميل المعالم…",
+            milestoneDue: "الاستحقاق {date}",
+            milestoneOverdue: "متأخر {date}",
             milestoneNone: "لا توجد معالم للاختيار منها.",
             milestoneLoadFailed: "تعذّر تحميل المعالم. أغلق هذا النموذج وحاول مرة أخرى.",
             errorMilestone: "اختر معلمًا.",
@@ -1162,6 +1164,8 @@ export const ar: DeepPartial<Messages> = {
             deliverLabel: "إرسال التقرير إلى",
             deliverInbox: "صندوق الوارد",
             deliverProjectChat: "{name} (محادثة المشروع)",
+            deliverKindGroup: "محادثة جماعية",
+            deliverKindProject: "محادثة المشروع",
             deliverChatHint:
                 "يُنشر التقرير في هذه المحادثة كرسالة، دون ذكاء اصطناعي ودون إشعار. يمكن لكل من في المحادثة قراءته، لذا لا يمكن إرسال تقرير مشروع إلا إلى محادثة تضم أعضاء ذلك المشروع فقط.",
             deliverChatHintAi:
@@ -1183,11 +1187,15 @@ export const ar: DeepPartial<Messages> = {
             errorSkill: "اختر مهارة.",
             effortHintNoEstimate:
                 "مقدار جهد الذكاء الاصطناعي في هذا التشغيل. يستهلك رصيدك من الذكاء الاصطناعي مثل سؤال في Spotlight؛ والرقم الفعلي يظهر في كل تقرير.",
-            paramAiSentences: "جمل الذكاء الاصطناعي",
-            paramAiSentencesHint:
-                "يضيف جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستخدم الذكاء الاصطناعي ويستهلك رصيدك منه. متوقف افتراضيًا؛ فعّله إن أردته.",
-            aiOutOfCredits:
-                "لقد استخدمت كل رصيد الذكاء الاصطناعي، لذلك لا يمكن تشغيل جمل الذكاء الاصطناعي. اشترِ رصيدًا أو قم بالترقية لتفعيلها.",
+            scheduleModeLabel: "الوضع",
+            scheduleModePlain: "مهمة مجدولة",
+            scheduleModeAi: "مهمة مجدولة بواسطة Genos AI",
+            scheduleModePlainHint:
+                "تقرير عادي مبني على بياناتك. بدون ذكاء اصطناعي ودون استهلاك رصيد.",
+            scheduleModeAiHint:
+                "يضيف Genos AI جملة قصيرة تحت المهمة عندما تشرح تعليقاتها وضعها. يستهلك هذا رصيدك من الذكاء الاصطناعي.",
+            scheduleModeOutOfCredits:
+                "لقد استخدمت كل رصيد الذكاء الاصطناعي، لذلك لا يمكن تشغيل وضع Genos AI. اشترِ رصيدًا أو قم بالترقية لتفعيله.",
             aiOutOfCreditsBuy: "شراء رصيد",
             aiOutOfCreditsUpgrade: "ترقية الخطة",
             effortLabel: "جهد الذكاء الاصطناعي",

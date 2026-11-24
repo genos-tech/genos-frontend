@@ -1176,6 +1176,8 @@ export const es: DeepPartial<Messages> = {
             unavailable: "(no disponible)",
             milestonePlaceholder: "Elige un hito",
             milestoneLoading: "Cargando hitos…",
+            milestoneDue: "Vence {date}",
+            milestoneOverdue: "Vencido {date}",
             milestoneNone: "No hay hitos entre los que elegir.",
             milestoneLoadFailed:
                 "No se pudieron cargar los hitos. Cierra este formulario e inténtalo de nuevo.",
@@ -1186,6 +1188,8 @@ export const es: DeepPartial<Messages> = {
             deliverLabel: "Enviar el informe a",
             deliverInbox: "Mi bandeja de entrada",
             deliverProjectChat: "{name} (chat del proyecto)",
+            deliverKindGroup: "Chat de grupo",
+            deliverKindProject: "Chat del proyecto",
             deliverChatHint:
                 "El informe se publica en este chat como un mensaje, sin IA y sin notificación. Todos los del chat pueden leerlo, así que un informe de proyecto solo puede ir a un chat de los miembros de ese proyecto.",
             deliverChatHintAi:
@@ -1209,11 +1213,15 @@ export const es: DeepPartial<Messages> = {
             errorSkill: "Elige una habilidad.",
             effortHintNoEstimate:
                 "Cuánto trabaja la IA en esta ejecución. Gasta tus créditos de IA como una pregunta en Spotlight; la cifra real aparece en cada informe.",
-            paramAiSentences: "Frases de IA",
-            paramAiSentencesHint:
-                "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA y gasta tus créditos de IA. Viene desactivada: actívala si la quieres.",
-            aiOutOfCredits:
-                "Has usado todos tus créditos de IA, así que las frases de IA no pueden ejecutarse. Compra créditos o mejora tu plan para activarlas.",
+            scheduleModeLabel: "Modo",
+            scheduleModePlain: "Tarea programada",
+            scheduleModeAi: "Tarea programada por Genos AI",
+            scheduleModePlainHint:
+                "Un informe sencillo hecho con tus datos. Sin IA, sin gastar créditos.",
+            scheduleModeAiHint:
+                "Genos AI añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Esto gasta tus créditos de IA.",
+            scheduleModeOutOfCredits:
+                "Has usado todos tus créditos de IA, así que el modo Genos AI no puede ejecutarse. Compra créditos o mejora tu plan para activarlo.",
             aiOutOfCreditsBuy: "Comprar créditos",
             aiOutOfCreditsUpgrade: "Mejorar plan",
             effortLabel: "Esfuerzo de la IA",

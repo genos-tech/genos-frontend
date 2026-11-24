@@ -88,7 +88,7 @@ const chooseJob = async (user: ReturnType<typeof userEvent.setup>, title: string
 const chooseChat = async (user: ReturnType<typeof userEvent.setup>) => {
     const box = within(screen.getByTestId("schedule-deliver"));
     await user.click(box.getByRole("combobox"));
-    await user.click(await screen.findByRole("option", { name: "Just me" }));
+    await user.click(await screen.findByRole("option", { name: /^Just me/ }));
 };
 
 describe("the chat hint", () => {
