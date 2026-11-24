@@ -155,7 +155,9 @@ const appPage = (mode: string): string => {
             : mode === "other-route"
               ? `<iframe ${sandbox} src="${api.origin}/api/v3/anything"></iframe>`
               : `<iframe ${sandbox} src="${api.origin}/h/a-signed-token"></iframe>`;
-    return `<!doctype html><meta charset="utf-8"><title>app</title>${frame}<pre id="result">waiting</pre><script src="/app.js"></script>`;
+    // The script comes BEFORE the frame: a policy violation of the frame is reported while the frame
+    // is being set up, and a listener registered after it would never hear it (a flaky test).
+    return `<!doctype html><meta charset="utf-8"><title>app</title><script src="/app.js"></script>${frame}<pre id="result">waiting</pre>`;
 };
 
 beforeAll(async () => {
