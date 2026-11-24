@@ -1116,7 +1116,13 @@ export const ar: DeepPartial<Messages> = {
             intro: "المهارة هي ملاحظة تعليمات لها اسم. اكتب الخطوات مرة واحدة واحتفظ بها لنفسك أو شاركها مع فريقك.",
             newDefaultTitle: "مهارة جديدة",
             untitled: "مهارة بلا عنوان",
-            tabs: { label: "المهارات", mine: "مهاراتي", team: "الفريق", hub: "مركز Genos" },
+            tabs: {
+                label: "المهارات",
+                mine: "مهاراتي",
+                team: "الفريق",
+                installed: "المثبّتة",
+                hub: "مركز Genos",
+            },
             newSkill: "مهارة جديدة",
             newBlank: "مهارة فارغة",
             newTemplate: "من قالب",
@@ -1129,6 +1135,11 @@ export const ar: DeepPartial<Messages> = {
                 emptyTeamTitle: "لا توجد مهارات للفريق بعد",
                 emptyTeamBody:
                     "تظهر هنا المهارات التي يشاركها زملاؤك مع الفريق. شارك إحدى مهاراتك من تفاصيلها.",
+                emptyInstalledTitle: "لا توجد مهارات مثبّتة بعد",
+                emptyInstalledBody:
+                    "تظهر هنا المهارات العامة التي تثبّتها، وسنُعلمك عندما ينشر المؤلف تحديثًا.",
+                installedUpToDate: "الإصدار {n} · محدَّث",
+                installedBehind: "الإصدار {from} · الأحدث {to}",
                 limitReached:
                     "تتيح خطتك حتى {limit} مهارات ولديك {used}. احذف واحدة أو قم بالترقية لإضافة المزيد.",
                 usage: "{used} من {limit} مهارات مستخدمة",

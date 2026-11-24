@@ -1500,7 +1500,13 @@ export const hi: DeepPartial<Messages> = {
             intro: "स्किल निर्देशों का एक नाम वाला नोट है। चरण एक बार लिखें और उन्हें अपने लिए रखें या टीम के साथ साझा करें।",
             newDefaultTitle: "नई स्किल",
             untitled: "बिना शीर्षक की स्किल",
-            tabs: { label: "स्किल", mine: "मेरी स्किल", team: "टीम", hub: "Genos Hub" },
+            tabs: {
+                label: "स्किल",
+                mine: "मेरी स्किल",
+                team: "टीम",
+                installed: "इंस्टॉल की हुई",
+                hub: "Genos Hub",
+            },
             newSkill: "नई स्किल",
             newBlank: "खाली स्किल",
             newTemplate: "टेम्पलेट से",
@@ -1513,6 +1519,11 @@ export const hi: DeepPartial<Messages> = {
                 emptyTeamTitle: "अभी कोई टीम स्किल नहीं",
                 emptyTeamBody:
                     "साथी जो स्किल टीम के साथ साझा करते हैं, वे यहाँ दिखती हैं। अपनी स्किल उसके विवरण से साझा करें।",
+                emptyInstalledTitle: "अभी कोई इंस्टॉल की हुई स्किल नहीं",
+                emptyInstalledBody:
+                    "आपकी इंस्टॉल की हुई सार्वजनिक स्किल यहाँ दिखती हैं, और लेखक अपडेट प्रकाशित करे तो आपको बताया जाता है।",
+                installedUpToDate: "संस्करण {n} · अद्यतन",
+                installedBehind: "संस्करण {from} · नवीनतम {to}",
                 limitReached:
                     "आपका प्लान {limit} स्किल तक रखता है और आपके पास {used} हैं। एक हटाएँ या और जोड़ने के लिए अपग्रेड करें।",
                 usage: "{limit} में से {used} स्किल इस्तेमाल में",
