@@ -12,7 +12,6 @@
 
 import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { Box, Typography } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
 import { BaseAvatar } from "../../../components/ui/avatars/BaseAvatar";
 import { GroupChatAvatar, ProjectChatAvatar } from "../../../components/ui/avatars/ChatKindAvatar";
@@ -35,7 +34,6 @@ const InboxMark = () => (
 /** The member's own tags on a group chat, at most `max`, then "+N". Nothing while the store
  *  loads or when the chat has none, so an untagged row keeps its plain geometry. */
 const PersonalTagChips = ({ chatId, max }: { chatId: string; max: number }) => {
-    const { mode } = useColorScheme();
     const { loaded, tags, assignmentsByChannelId } = usePersonalGMTags();
     const ids = assignmentsByChannelId[chatId];
     if (!loaded || !ids || ids.length === 0) return null;
@@ -55,7 +53,7 @@ const PersonalTagChips = ({ chatId, max }: { chatId: string; max: number }) => {
                     key={tag.tagId}
                     sx={{
                         alignItems: "center",
-                        background: mode === "dark" ? `${tag.color}20` : `${tag.color}18`,
+                        background: `color-mix(in srgb, ${tag.color} 12%, transparent)`,
                         border: "1px solid",
                         borderColor: `${tag.color}35`,
                         borderRadius: "5px",
