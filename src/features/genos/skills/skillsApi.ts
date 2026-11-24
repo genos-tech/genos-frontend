@@ -37,7 +37,9 @@ import { authApi } from "../../../services/api";
 export type SkillVisibility = "private" | "team" | "specific";
 export type ToolLevel = "read" | "act";
 export type SkillEffort = "" | "low" | "medium" | "high";
-export type SkillTab = "mine" | "team";
+/** `installed` = the public skills this member pinned (MIP-2226); its rows carry
+ *  `installedVersionNo` and `updateAvailable`. */
+export type SkillTab = "mine" | "team" | "installed";
 
 /** The order of the directory: most starred, most recently published, most used (distinct runners
  *  in 30 days). */
@@ -151,6 +153,11 @@ export type SkillRow = {
     /** A copy of a skill an operator took down as harmful (MIP-2192): the row warns, and running it
      *  asks first. False from a server that predates it. */
     sourceHarmful: boolean;
+    /** The version this member pinned, on the Installed tab and the detail answer; null elsewhere
+     *  (and from a server that predates it, MIP-2226). */
+    installedVersionNo?: number | null;
+    /** A newer published version than the pinned one exists (same rows as `installedVersionNo`). */
+    updateAvailable?: boolean;
     /** A PUBLIC skill's byline (MIP-2047); null while its author has no handle (an official skill). */
     author: SkillAuthor | null;
     /** The Hub's numbers. `starCount` counts stars from aged, verified accounts only. */
@@ -431,6 +438,9 @@ export const parseSkill = (raw: unknown): SkillRow | null => {
         hiddenByTeam: r.hiddenByTeam === true,
         ownerName: str(r.ownerName, 120),
         sourceHarmful: r.sourceHarmful === true,
+        installedVersionNo: int(r.installedVersionNo) > 0 ? int(r.installedVersionNo) : null,
+        // An update is offered only for a pinned version: a stray flag on any other row is dropped.
+        updateAvailable: r.updateAvailable === true && int(r.installedVersionNo) > 0,
         author: parseAuthor(r.author),
         starCount: int(r.starCount),
         runCount30d: int(r.runCount30d),

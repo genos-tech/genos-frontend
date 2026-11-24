@@ -4711,7 +4711,13 @@ export const zh: DeepPartial<Messages> = {
             intro: "技能是一份带名称的说明笔记。步骤只需写一次,可以自己使用,也可以与团队共享。",
             newDefaultTitle: "新技能",
             untitled: "未命名技能",
-            tabs: { label: "技能", mine: "我的技能", team: "团队", hub: "Genos Hub" },
+            tabs: {
+                label: "技能",
+                mine: "我的技能",
+                team: "团队",
+                installed: "已安装",
+                hub: "Genos Hub",
+            },
             newSkill: "新技能",
             newBlank: "空白技能",
             newTemplate: "从模板创建",
@@ -4724,6 +4730,10 @@ export const zh: DeepPartial<Messages> = {
                 emptyTeamTitle: "还没有团队技能",
                 emptyTeamBody:
                     "队友与团队共享的技能会显示在这里。你可以在技能详情中共享自己的技能。",
+                emptyInstalledTitle: "还没有已安装的技能",
+                emptyInstalledBody: "你安装的公开技能会显示在这里,作者发布更新时你会收到提示。",
+                installedUpToDate: "版本 {n} · 已是最新",
+                installedBehind: "版本 {from} · 最新 {to}",
                 limitReached:
                     "你的套餐最多可保存 {limit} 个技能,你已有 {used} 个。请删除一个或升级套餐。",
                 usage: "已使用 {used} / {limit} 个技能",

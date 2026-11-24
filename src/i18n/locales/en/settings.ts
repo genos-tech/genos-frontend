@@ -1142,7 +1142,13 @@ export const settings = {
         intro: "A skill is a note of instructions with a name. Write the steps once and keep them for yourself or share them with your team.",
         newDefaultTitle: "New skill",
         untitled: "Untitled skill",
-        tabs: { label: "Skills", mine: "My skills", team: "Team", hub: "Genos Hub" },
+        tabs: {
+            label: "Skills",
+            mine: "My skills",
+            team: "Team",
+            installed: "Installed",
+            hub: "Genos Hub",
+        },
         newSkill: "New skill",
         newBlank: "Blank skill",
         newTemplate: "From template",
@@ -1155,6 +1161,11 @@ export const settings = {
             emptyTeamTitle: "No team skills yet",
             emptyTeamBody:
                 "Skills that teammates share with the team appear here. Share one of yours from its details.",
+            emptyInstalledTitle: "No installed skills yet",
+            emptyInstalledBody:
+                "Public skills you install appear here, and you are told when the author publishes an update.",
+            installedUpToDate: "Version {n} · up to date",
+            installedBehind: "Version {from} · latest {to}",
             limitReached:
                 "Your plan keeps up to {limit} skills and you have {used}. Delete one or upgrade to add more.",
             usage: "{used} of {limit} skills used",

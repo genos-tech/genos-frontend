@@ -4997,6 +4997,7 @@ export const fr: DeepPartial<Messages> = {
                 label: "Compétences",
                 mine: "Mes compétences",
                 team: "Équipe",
+                installed: "Installées",
                 hub: "Genos Hub",
             },
             newSkill: "Nouvelle compétence",
@@ -5011,6 +5012,11 @@ export const fr: DeepPartial<Messages> = {
                 emptyTeamTitle: "Aucune compétence d'équipe pour l'instant",
                 emptyTeamBody:
                     "Les compétences que vos collègues partagent avec l'équipe apparaissent ici. Partagez l'une des vôtres depuis ses détails.",
+                emptyInstalledTitle: "Aucune compétence installée pour l'instant",
+                emptyInstalledBody:
+                    "Les compétences publiques que vous installez apparaissent ici, et vous êtes prévenu quand l'auteur publie une mise à jour.",
+                installedUpToDate: "Version {n} · à jour",
+                installedBehind: "Version {from} · dernière {to}",
                 limitReached:
                     "Votre offre permet jusqu'à {limit} compétences et vous en avez {used}. Supprimez-en une ou passez à une offre supérieure.",
                 usage: "{used} compétences sur {limit} utilisées",

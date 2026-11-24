@@ -66,6 +66,7 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     canHide: false,
     hiddenByTeam: false,
     ownerName: "ken",
+    sourceHarmful: false,
     author: null,
     starCount: 0,
     runCount30d: 0,
