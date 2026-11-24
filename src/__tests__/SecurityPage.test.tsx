@@ -32,7 +32,6 @@ describe("SecurityPage copy", () => {
         expect(all).not.toMatch(/connections are removed/);
         expect(all).not.toMatch(/business-tier/i);
         expect(all).not.toMatch(/do not train/i);
-        expect(all).not.toMatch(/SOC ?2|ISO ?27001|certif/i);
         expect(all).not.toMatch(/secretary/i);
         expect(all).not.toContain("秘書");
     });
@@ -41,6 +40,82 @@ describe("SecurityPage copy", () => {
         const all = JSON.stringify(SECURITY_COPY);
         expect(all).not.toMatch(/backup/i);
         expect(all).not.toMatch(/retention|retain for/i);
+    });
+});
+
+/**
+ * MIP-2284 (Ken, 2026-11-24: no paid certification now). The page may say what Railway, the host, states
+ * about itself, and that Genos follows public guidance. It must never say or imply that Genos is certified,
+ * compliant or audited. These pins replace the earlier "no SOC 2, no certification words" pin: the words may
+ * now appear, but only where they are attributed to Railway or denied for Genos.
+ */
+describe("SecurityPage certification wording (MIP-2284)", () => {
+    const paragraphs = (lang: "en" | "ja") =>
+        SECURITY_COPY[lang].sections.flatMap((s) => s.body.map((text) => ({ id: s.id, text })));
+
+    it("keeps SOC 2, SOC 3 and AES-256 sentences to the hosting section and names Railway in them", () => {
+        for (const lang of ["en", "ja"] as const) {
+            for (const { id, text } of paragraphs(lang)) {
+                if (/SOC ?[23]|AES-256/.test(text)) {
+                    expect(id).toBe("where");
+                    expect(text).toMatch(/Railway/);
+                }
+            }
+        }
+    });
+
+    it("never says or implies that Genos is certified, compliant, audited or at an ASVS level", () => {
+        // Only these denials may contain the forbidden words; they are cut out before the scan.
+        const denials = [
+            "Genos itself holds no certification",
+            "has not been assessed or certified against any of it",
+            "Genos 自体は認証を取得していません",
+            "評価や認証を受けていません",
+        ];
+        let all = JSON.stringify(SECURITY_COPY);
+        for (const denial of denials) {
+            expect(all).toContain(denial);
+            all = all.split(denial).join("");
+        }
+        expect(all).not.toMatch(/ISO ?\/?(IEC )?27001/i);
+        expect(all).not.toMatch(
+            /certif|\baudited\b|compliant|conform|accredit|approved by|level [123]\b|ASVS L[123]/i
+        );
+        expect(all).not.toMatch(/認定|認証|監査済|取得済|取得しました|準拠|適合|レベル ?[123]/);
+    });
+
+    it("says in both languages that Genos holds no certification, in the hosting paragraph", () => {
+        const en = paragraphs("en").find((p) => /SOC ?2/.test(p.text));
+        const ja = paragraphs("ja").find((p) => /SOC ?2/.test(p.text));
+        expect(en?.text).toMatch(/Genos itself holds no certification/);
+        expect(ja?.text).toMatch(/Genos 自体は認証を取得していません/);
+    });
+
+    it("keeps the SECURITY ACTION line off the page until Ken has declared (MIP-2284)", () => {
+        // Add the line (and flip this pin) in the PR that follows the declaration, with the declaration ID.
+        expect(JSON.stringify(SECURITY_COPY)).not.toMatch(/SECURITY ACTION|二つ星|★/);
+    });
+
+    it("links only to https sources", () => {
+        for (const lang of ["en", "ja"] as const) {
+            for (const section of SECURITY_COPY[lang].sections) {
+                for (const link of section.links ?? []) {
+                    expect(link.href).toMatch(/^https:\/\//);
+                }
+            }
+        }
+    });
+
+    it("publishes the five-article basic policy in both languages", () => {
+        for (const lang of ["en", "ja"] as const) {
+            const policy = SECURITY_COPY[lang].sections.find((s) => s.id === "policy");
+            expect(policy).toBeTruthy();
+            // An intro paragraph plus five numbered articles, as in IPA's sample.
+            const numbers = (policy?.body ?? [])
+                .map((p) => /^([1-5])\. /.exec(p)?.[1])
+                .filter(Boolean);
+            expect(numbers).toEqual(["1", "2", "3", "4", "5"]);
+        }
     });
 });
 

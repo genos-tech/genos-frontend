@@ -66,6 +66,9 @@ export const SkillTagsField = ({
     const [managing, setManaging] = useState(false);
 
     const load = useCallback(async () => {
+        // The catalog is the owner's: a reader gets 403/404 from it (MIP-2307). A disabled field has
+        // no picker, and the chips come from the skill, so it never asks.
+        if (disabled) return;
         const res = await fetchSkillTags(accessToken, { skillId });
         if (!res.ok) {
             setState("failed");
@@ -74,7 +77,7 @@ export const SkillTagsField = ({
         setTags(res.data.tags);
         setEditable(res.data.editable);
         setState("ready");
-    }, [accessToken, skillId]);
+    }, [accessToken, skillId, disabled]);
 
     useEffect(() => {
         // A fetch whose answer sets the state; the first render has nothing to draw.
@@ -118,11 +121,13 @@ export const SkillTagsField = ({
 
     const help =
         problem ??
-        (state === "failed"
-            ? f.tagsLoadFailed
-            : !editable && state === "ready"
-              ? `${fmt(f.tagsHelp, { max: SKILL_LIMITS.tagsMax })} ${f.tagsOwnerOnly}`
-              : fmt(f.tagsHelp, { max: SKILL_LIMITS.tagsMax }));
+        (disabled
+            ? null
+            : state === "failed"
+              ? f.tagsLoadFailed
+              : !editable && state === "ready"
+                ? `${fmt(f.tagsHelp, { max: SKILL_LIMITS.tagsMax })} ${f.tagsOwnerOnly}`
+                : fmt(f.tagsHelp, { max: SKILL_LIMITS.tagsMax }));
 
     // The dialog is a sibling of the form control, not inside it: Joy's inputs read the form
     // control from React context, which a portal does not cut off, so its fields would take the
@@ -231,7 +236,7 @@ export const SkillTagsField = ({
                         </Dropdown>
                     )}
                 </Box>
-                <FormHelperText>{help}</FormHelperText>
+                {help && <FormHelperText>{help}</FormHelperText>}
             </FormControl>
             {editable && (
                 <ModalManageSkillTags
