@@ -5143,6 +5143,65 @@ export const ja: DeepPartial<Messages> = {
                 failed: "報告を送信できませんでした。もう一度お試しください。",
                 limit: "本日送信できる報告の上限に達しました。明日もう一度お試しください。",
             },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "このスキルを実行しますか？",
+                intro: "初めて実行する前に、このスキルの内容を確認してください。「このスキルを実行」を選んだときだけ実行されます。",
+                loading: "スキルを読み込んでいます…",
+                loadFailed: "このスキルを読み込めませんでした。もう一度お試しください。",
+                confirmFailed: "回答を保存できませんでした。もう一度お試しください。",
+                harmful: "コピー元のスキルは、有害であるとして Genos により削除されました。",
+                writtenBy: "作成者",
+                noAuthor: "作成者名なし",
+                version: "バージョン {n}",
+                textLabel: "このスキルの内容",
+                emptyText: "（このバージョンにはテキストがありません。）",
+                mayLabel: "できること",
+                readOnly: "読み取りのみです。何かを作成したり変更したりすることはできません。",
+                propose: {
+                    create_task: "タスクの作成を提案",
+                    create_note: "ノートの作成を提案",
+                    create_todo_item: "To-Do 項目の追加を提案",
+                },
+                approveFirst: "どの提案も、あなたが承認した後にのみ実行されます。",
+                run: "このスキルを実行",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "アップデートがあります",
+                loading: "変更内容を読み込んでいます…",
+                loadFailed: "変更内容を読み込めませんでした。もう一度お試しください。",
+                upToDate: "すでに最新バージョンです。",
+                versions: "バージョン {from} からバージョン {to} へ",
+                versionShort: "バージョン {n}",
+                changelogsLabel: "作成者による変更内容",
+                noChangelog: "作成者からの説明はありません。",
+                changesLabel: "変更された詳細",
+                none: "なし",
+                language: "言語",
+                becomes: "から次に変更",
+                toolRaisedTitle: "このバージョンは変更を提案できるようになります",
+                toolRaised:
+                    "以前のバージョンは読み取りだけでした。このバージョンは、タスク・ノート・ToDo の作成を提案する場合があります。どの提案も、あなたの承認が必要です。",
+                needsConfirmation: "このバージョンを実行する前に確認が求められます。",
+                diffLabel: "テキストの変更点",
+                diffEmpty: "テキストに変更はありません。",
+                truncated:
+                    "変更が長いため、すべては表示していません。最初の部分のみ表示しています。",
+                moved: "読んでいる間に、作成者が別のバージョンを公開しました。以下は最新の変更内容です。",
+                updateFailed: "スキルを更新できませんでした。もう一度お試しください。",
+                update: "バージョン {n} に更新",
+                updateGeneric: "更新",
+                keep: "バージョン {n} のままにする",
+                close: "閉じる",
+                updated: "バージョン {n} に更新しました。",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "削除されたスキルのコピー",
+                warning: "コピー元のスキルは、有害であるとして Genos により削除されました。",
+            },
             moderation: {
                 title: {
                     in_review:

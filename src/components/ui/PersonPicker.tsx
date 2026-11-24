@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import UnfoldMoreRoundedIcon from "@mui/icons-material/UnfoldMoreRounded";
 import { AutocompleteOption, ListItemContent, Stack, Typography } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 
@@ -30,6 +31,8 @@ type Props = {
     disabled?: boolean;
     /** The field's accessible name when a visible label does not already name it. */
     ariaLabel?: string;
+    /** `md` matches a form field (and a Joy `Select` beside it, with its chevron); default `sm`. */
+    size?: "sm" | "md";
 };
 
 /**
@@ -55,6 +58,7 @@ export const PersonPicker = ({
     myUserId,
     disabled,
     ariaLabel,
+    size = "sm",
 }: Props) => {
     const { t } = useTranslation();
     const youSuffix = t.common.personPicker.youSuffix;
@@ -86,7 +90,8 @@ export const PersonPicker = ({
             noOptionsText={t.common.personPicker.noMatches}
             options={sorted}
             placeholder={placeholder}
-            size="sm"
+            popupIcon={size === "md" ? <UnfoldMoreRoundedIcon /> : undefined}
+            size={size}
             slotProps={ariaLabel ? { input: { "aria-label": ariaLabel } } : undefined}
             sx={{ width: "100%" }}
             value={null}
