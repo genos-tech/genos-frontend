@@ -4917,7 +4917,13 @@ export const ja: DeepPartial<Messages> = {
             intro: "スキルは、名前の付いた手順のノートです。手順を一度書けば、自分だけで使うことも、チームで共有することもできます。",
             newDefaultTitle: "新しいスキル",
             untitled: "無題のスキル",
-            tabs: { label: "スキル", mine: "自分のスキル", team: "チーム", hub: "Genos Hub" },
+            tabs: {
+                label: "スキル",
+                mine: "自分のスキル",
+                team: "チーム",
+                installed: "インストール済み",
+                hub: "Genos Hub",
+            },
             newSkill: "新しいスキル",
             newBlank: "空のスキル",
             newTemplate: "テンプレートから",
@@ -4930,6 +4936,11 @@ export const ja: DeepPartial<Messages> = {
                 emptyTeamTitle: "チームのスキルはまだありません",
                 emptyTeamBody:
                     "チームメンバーが共有したスキルがここに表示されます。自分のスキルは詳細から共有できます。",
+                emptyInstalledTitle: "インストール済みのスキルはまだありません",
+                emptyInstalledBody:
+                    "インストールした公開スキルがここに表示され、作者が更新を公開するとお知らせします。",
+                installedUpToDate: "バージョン {n} · 最新です",
+                installedBehind: "バージョン {from} · 最新 {to}",
                 limitReached:
                     "プランで保存できるスキルは {limit} 件までで、現在 {used} 件あります。削除するか、プランをアップグレードしてください。",
                 usage: "{used} / {limit} 件のスキルを使用中",

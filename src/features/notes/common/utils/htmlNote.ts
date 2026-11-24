@@ -1,113 +1,36 @@
 /**
- * HTML notes (MIP-2215): a note whose body is one HTML page, shown read-only in a sandboxed frame.
+ * HTML notes (MIP-2215, MIP-2228): a note whose body is one HTML page, shown read-only in a sandboxed
+ * frame.
  *
  * THE BOUNDARY IS THE SANDBOX PLUS THE CSP, never a sanitizer. The page is untrusted: it is shown in
  * an `<iframe sandbox="allow-scripts">` (no `allow-same-origin`, so the frame has an opaque origin and
- * can reach no cookie, storage or parent DOM), and this module puts a Content-Security-Policy in front
- * of it so the page can load nothing from the network.
+ * can reach no cookie, storage or parent DOM), and the API route that serves it
+ * (`GET <api>/h/<token>`, genos-api `services/html_note_pages.py`) sends the Content-Security-Policy
+ * that lets the page load nothing from the network.
+ *
+ * It is NOT a `srcdoc` frame (MIP-2228): a `srcdoc` document inherits the embedding app's CSP, and the
+ * production app's `script-src 'self'` blocked every inline script of every page.
  */
 
 import type { NoteBodyFormat } from "../../../../types/notes";
 
-/** What the frame may do: run inline script and style, draw `data:` / `blob:` media. Nothing leaves
- *  the page: no fetch, XHR, WebSocket, form post, nested frame, worker or plugin, and no `<base>`.
- *  `frame-ancestors` and `sandbox` are not here on purpose: a `<meta>` policy ignores both (the
- *  iframe attribute supplies the sandbox, and a `srcdoc` frame is ours by construction). */
-export const HTML_NOTE_CSP = [
-    "default-src 'none'",
-    "script-src 'unsafe-inline'",
-    "style-src 'unsafe-inline'",
-    "img-src data: blob:",
-    "font-src data:",
-    "media-src data: blob:",
-    "connect-src 'none'",
-    "form-action 'none'",
-    "object-src 'none'",
-    "base-uri 'none'",
-    "frame-src 'none'",
-    "worker-src 'none'",
-    "manifest-src 'none'",
-].join("; ");
-
 /** The one `sandbox` value the frame ever gets. `allow-same-origin`, `allow-popups`, `allow-forms`,
- *  `allow-top-navigation` and `allow-modals` are all deliberately absent. */
+ *  `allow-top-navigation` and `allow-modals` are all deliberately absent. The route's own header
+ *  policy carries the same `sandbox allow-scripts`, so the page is sandboxed even outside this frame. */
 export const HTML_NOTE_SANDBOX = "allow-scripts";
-
-/**
- * The page without its leading doctype: whitespace, then any comments, then `<!doctype ...>` are
- * dropped (we put our own first). A page with no doctype, or an unterminated comment or doctype, is
- * returned as it is.
- *
- * Plain scanning, not a regular expression: the text is an untrusted file, and the regex that said
- * the same (`^\s*(?:<!--[\s\S]*?-->\s*)*<!doctype[^>]*>`) backtracks polynomially on a page that
- * is many comments (CodeQL js/redos). Every step here moves forward, so the cost is linear.
- */
-export const stripLeadingDoctype = (text: string): string => {
-    const n = text.length;
-    let i = 0;
-    const skipSpace = () => {
-        while (i < n && /\s/.test(text[i])) i += 1;
-    };
-    skipSpace();
-    while (text.startsWith("<!--", i)) {
-        const end = text.indexOf("-->", i + 4);
-        if (end === -1) return text;
-        i = end + 3;
-        skipSpace();
-    }
-    if (text.slice(i, i + 9).toLowerCase() !== "<!doctype") return text;
-    const close = text.indexOf(">", i + 9);
-    return close === -1 ? text : text.slice(close + 1);
-};
 
 /** True for a note shown as an HTML page. Anything else (undefined included) is an ordinary note. */
 export const isHtmlNote = (
     note: { bodyFormat?: NoteBodyFormat | string | null } | null | undefined
 ) => note?.bodyFormat === "html";
 
-/**
- * The document for the frame's `srcdoc`.
- *
- * Our doctype and CSP `<meta>` come FIRST, then the author's page with its own doctype removed.
- * Order is the whole point: a meta policy covers only content parsed AFTER it, and a script placed
- * before `<head>` ran before a policy injected after `<head>` and loaded a remote image (probe 96).
- * The HTML parser merges the author's later `<html>` / `<head>` tags into the implied ones, so no
- * author markup runs before the policy is in force, and our doctype keeps the page in standards mode.
- *
- * An author's own CSP `<meta>` can only narrow this policy: browsers enforce every policy they have
- * seen, so a second one never widens the first.
- */
-export const buildHtmlSrcdoc = (html: string, nonce?: string): string => {
-    const withoutBom = html.charCodeAt(0) === 0xfeff ? html.slice(1) : html;
-    const rest = stripLeadingDoctype(withoutBom);
-    return `<!doctype html><meta http-equiv="Content-Security-Policy" content="${HTML_NOTE_CSP}">${
-        nonce ? loadedSentinel(nonce) : ""
-    }${rest}`;
-};
-
-/** What our sentinel posts to the viewer once the document it sits in has finished loading. */
+/** What the page's first script posts to the viewer once the document it sits in has finished
+ *  loading, with the nonce the API gave the viewer for this URL. A one-way, constant signal: the
+ *  viewer reads only whether the message carrying its own nonce arrived, never any data from the
+ *  page (the self-navigation guard in `HtmlNoteView`; the script is the server's, in
+ *  `html_note_pages.document`). */
 export const HTML_NOTE_LOADED_KEY = "genosHtmlNoteLoaded";
 
-/**
- * The one script of ours inside the frame, right after the policy and before any author markup.
- *
- * It exists to catch a page that navigates ITSELF while it is still being parsed: such a page
- * replaces its own document before the first `load`, so the viewer would see one `load` event (the
- * replacement's) and a load counter alone would show the replacement page as if it were the note.
- * The sentinel removes itself from the DOM (so no later script can read the nonce out of the
- * markup), then posts the nonce to the parent when the ORIGINAL document finishes loading. A
- * document that was replaced never gets there: the viewer sees a `load` with no matching message and
- * treats the frame as navigated. This is a one-way, constant signal, not a bridge: the viewer reads
- * only whether the message carrying its own nonce arrived, and never uses any data from the page.
- *
- * `nonce` is generated per frame by the viewer from `crypto.randomUUID()`; it is hex and dashes, so
- * it cannot break out of the string. The CSP above allows it as inline script.
- */
-const loadedSentinel = (nonce: string): string =>
-    `<script>(function(n){var s=document.currentScript;if(s&&s.parentNode)s.parentNode.removeChild(s);` +
-    `addEventListener("load",function(){try{parent.postMessage({${HTML_NOTE_LOADED_KEY}:n},"*")}catch(e){}})` +
-    `})(${JSON.stringify(nonce.replace(/[^0-9a-zA-Z-]/g, ""))})</script>`;
-
-/** The family name the read endpoint takes for a note type number. */
+/** The family name the read endpoints take for a note type number. */
 export const htmlNoteFamily = (noteType: number): "personal" | "task" | "chat" =>
     noteType === 2 ? "task" : noteType === 3 ? "chat" : "personal";

@@ -1159,6 +1159,7 @@ export const es: DeepPartial<Messages> = {
                 label: "Habilidades",
                 mine: "Mis habilidades",
                 team: "Equipo",
+                installed: "Instaladas",
                 hub: "Genos Hub",
             },
             newSkill: "Nueva habilidad",
@@ -1174,6 +1175,11 @@ export const es: DeepPartial<Messages> = {
                 emptyTeamTitle: "Aún no hay habilidades del equipo",
                 emptyTeamBody:
                     "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Comparte una tuya desde sus detalles.",
+                emptyInstalledTitle: "Aún no hay habilidades instaladas",
+                emptyInstalledBody:
+                    "Aquí aparecen las habilidades públicas que instalas, y te avisamos cuando el autor publica una actualización.",
+                installedUpToDate: "Versión {n} · al día",
+                installedBehind: "Versión {from} · última {to}",
                 limitReached:
                     "Tu plan permite hasta {limit} habilidades y tienes {used}. Elimina una o mejora tu plan para añadir más.",
                 usage: "{used} de {limit} habilidades en uso",
