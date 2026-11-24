@@ -29,7 +29,8 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
     },
     "general.shareUsage": { name: "利用データを共有する", default: "同意するまでオフ" },
     planUsage: {
-        default: "プラン、使用状況、アップグレード、請求、チームプラン、クレジットパック",
+        default:
+            "プラン、使用状況、アップグレード、請求、チームプラン、クレジットパック、プラン比較(HTML ページの上限を含む)",
     },
     aiCreditUsage: { default: "クレジットのメーター、ジョブ別、最近の請求(閲覧のみ)" },
     spotlight: {

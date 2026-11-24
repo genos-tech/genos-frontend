@@ -86,7 +86,8 @@ export const SETTINGS_MAP = {
     planUsage: {
         ...SELF,
         labelPath: "settings.tabs.planUsage",
-        default: "Plan, usage, upgrade, billing, team plan, credit packs",
+        default:
+            "Plan, usage, upgrade, billing, team plan, credit packs, plan comparison (incl. HTML page limits)",
         items: {},
     },
     aiCreditUsage: {

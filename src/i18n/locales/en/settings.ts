@@ -755,6 +755,10 @@ export const settings = {
         matrixRowTasks: "Tasks per month",
         matrixRowNotes: "Notes per month",
         matrixRowUpload: "File upload size",
+        matrixRowHtmlPages: "HTML pages",
+        matrixRowHtmlSize: "HTML page size",
+        matrixRowHtmlSaves: "HTML page saves per hour",
+        matrixKb: "{kb} KB",
         // Short forms: inside a group already headed "What Genos can
         // reach", the word "integration" is noise in every row.
         matrixRowWeb: "Web search",
