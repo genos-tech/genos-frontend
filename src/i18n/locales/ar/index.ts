@@ -1403,6 +1403,64 @@ export const ar: DeepPartial<Messages> = {
                 failed: "تعذّر إرسال البلاغ. حاول مرة أخرى.",
                 limit: "لقد أرسلت أقصى عدد من البلاغات اليوم. حاول مرة أخرى غدًا.",
             },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "هل تريد تشغيل هذه المهارة؟",
+                intro: "اقرأ ما تقوله هذه المهارة قبل تشغيلها لأول مرة. لن تعمل إلا إذا اخترت «تشغيل هذه المهارة».",
+                loading: "جارٍ تحميل المهارة…",
+                loadFailed: "تعذّر تحميل هذه المهارة. حاول مرة أخرى.",
+                confirmFailed: "تعذّر حفظ اختيارك. حاول مرة أخرى.",
+                harmful: "المهارة التي نُسخت منها هذه المهارة أزالتها Genos لأنها ضارة.",
+                writtenBy: "كتبها",
+                noAuthor: "لا يوجد اسم مؤلف",
+                version: "الإصدار {n}",
+                textLabel: "ما تقوله هذه المهارة",
+                emptyText: "(لا يوجد نص في هذا الإصدار.)",
+                mayLabel: "ما يمكنها فعله",
+                readOnly: "يمكنها القراءة فقط. لا يمكنها إنشاء أو تغيير أي شيء.",
+                propose: {
+                    create_task: "اقتراح إنشاء مهمة",
+                    create_note: "اقتراح إنشاء ملاحظة",
+                    create_todo_item: "اقتراح إضافة عنصر إلى قائمة المهام",
+                },
+                approveFirst: "لا يحدث أي منها إلا بعد موافقتك عليه.",
+                run: "تشغيل هذه المهارة",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "يتوفر تحديث",
+                loading: "جارٍ تحميل التغييرات…",
+                loadFailed: "تعذّر تحميل التغييرات. حاول مرة أخرى.",
+                upToDate: "لديك أحدث إصدار بالفعل.",
+                versions: "من الإصدار {from} إلى الإصدار {to}",
+                versionShort: "الإصدار {n}",
+                changelogsLabel: "ما يقول المؤلف إنه تغيّر",
+                noChangelog: "لا توجد ملاحظة من المؤلف.",
+                changesLabel: "التفاصيل التي تغيّرت",
+                none: "لا شيء",
+                language: "اللغة",
+                becomes: "أصبح",
+                toolRaisedTitle: "يمكن لهذا الإصدار الآن اقتراح تغييرات",
+                toolRaised:
+                    "كانت الإصدارات السابقة تقرأ فقط. قد يقترح هذا الإصدار إنشاء مهام أو ملاحظات أو عناصر مهام لك. يظل كل اقتراح بحاجة إلى موافقتك.",
+                needsConfirmation: "سيُطلب منك التأكيد قبل تشغيل هذا الإصدار.",
+                diffLabel: "التغييرات في النص",
+                diffEmpty: "لم يتغيّر النص.",
+                truncated: "التغييرات أطول من أن تُعرض كاملة. يظهر الجزء الأول فقط.",
+                moved: "نشر المؤلف إصدارًا آخر أثناء قراءتك. التغييرات أدناه هي الأحدث.",
+                updateFailed: "تعذّر تحديث المهارة. حاول مرة أخرى.",
+                update: "التحديث إلى الإصدار {n}",
+                updateGeneric: "تحديث",
+                keep: "الاحتفاظ بالإصدار {n}",
+                close: "إغلاق",
+                updated: "تم التحديث إلى الإصدار {n}.",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "نسخة من مهارة أُزيلت",
+                warning: "المهارة التي نُسخت منها هذه المهارة أزالتها Genos لأنها ضارة.",
+            },
             moderation: {
                 title: {
                     in_review:

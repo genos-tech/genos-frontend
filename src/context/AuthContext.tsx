@@ -11,6 +11,7 @@ import {
 } from "../services/privateProfileStore";
 import { refreshSession } from "../services/refreshSession";
 import { clearAllEditorDrafts } from "../utils/editorDraftStorage";
+import { clearSignOutLeftovers } from "../utils/signOutLeftovers";
 import { AUTH_LOCAL_STORAGE_KEYS, AuthContext } from "./authState";
 
 // Outcome of a single refresh attempt. We need to distinguish three
@@ -82,11 +83,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         analytics.reset();
         setAccessToken(null);
 
-        // Avoid stacking redirects if the user is already on the
-        // signin page (e.g. from another tab racing).
-        if (window.location.pathname !== "/signin") {
-            window.location.assign("/signin");
-        }
+        // The same leftovers the normal sign-out clears (Spotlight session,
+        // chat thread memory, device id, per-team history, IndexedDB incl. the
+        // Yjs documents; MIP-2255). The redirect waits for the wipe, since a
+        // full-page navigation would cut it off; it never throws.
+        void clearSignOutLeftovers().finally(() => {
+            // Avoid stacking redirects if the user is already on the
+            // signin page (e.g. from another tab racing).
+            if (window.location.pathname !== "/signin") {
+                window.location.assign("/signin");
+            }
+        });
     };
 
     // Pick the delay for the next retry from the backoff schedule.
