@@ -177,7 +177,7 @@ export const zh: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "检查你的收件箱",
-                    body: "我们向 {email} 发送了验证链接。点击它即可完成注册。",
+                    body: "我们已向 {email} 发送了一封邮件。打开它即可完成注册；如果你已有账号，请直接登录。",
                     checkInboxHint: "点击邮箱中的链接以验证你的地址。",
                     resend: "重新发送邮箱",
                     resending: "正在发送…",
@@ -239,6 +239,8 @@ export const zh: DeepPartial<Messages> = {
                 generic: "出现了一些问题，请稍后再试。",
                 unexpected: "发生未知错误，请重试。",
                 duplicateEmail: "请尝试使用其他邮箱。",
+                passwordCommon: "此密码过于常见或容易被猜到，请换一个。",
+                passwordBreached: "此密码出现在已知的数据泄露中，请换一个。",
                 duplicateName: "请尝试使用其他名称。",
                 demoRateLimited: "此网络的体验登录次数过多，请稍后再试。",
                 demoFailed: "无法创建体验会话，请稍后再试。",

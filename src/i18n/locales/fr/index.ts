@@ -199,7 +199,7 @@ export const fr: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Vérifiez votre boîte de réception",
-                    body: "Nous avons envoyé un lien de vérification à {email}. Cliquez dessus pour terminer votre inscription.",
+                    body: "Nous avons envoyé un e-mail à {email}. Ouvrez-le pour terminer votre inscription, ou pour vous connecter si vous avez déjà un compte.",
                     checkInboxHint:
                         "Cliquez sur le lien dans l'e-mail pour vérifier votre adresse.",
                     resend: "Renvoyer l'e-mail",
@@ -266,6 +266,10 @@ export const fr: DeepPartial<Messages> = {
                 generic: "Une erreur est survenue. Veuillez réessayer plus tard.",
                 unexpected: "Une erreur inattendue est survenue. Veuillez réessayer.",
                 duplicateEmail: "Veuillez essayer avec une autre adresse e-mail.",
+                passwordCommon:
+                    "Ce mot de passe est trop courant ou trop facile à deviner. Veuillez en choisir un autre.",
+                passwordBreached:
+                    "Ce mot de passe figure dans une fuite de données connue. Veuillez en choisir un autre.",
                 duplicateName: "Veuillez essayer avec un autre nom.",
                 demoRateLimited:
                     "Trop de connexions démo depuis ce réseau. Veuillez réessayer plus tard.",

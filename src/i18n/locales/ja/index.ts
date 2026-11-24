@@ -188,7 +188,7 @@ export const ja: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "メール受信箱を確認してください",
-                    body: "確認リンクを {email} に送信しました。それをクリックしてサインアップを完了します。",
+                    body: "{email} にメールを送信しました。メールを開いてサインアップを完了するか、すでにアカウントをお持ちの場合はサインインしてください。",
                     checkInboxHint: "メール内のリンクをクリックしてアドレスを確認します。",
                     resend: "メールを再送信する",
                     resending: "送信中…",
@@ -254,6 +254,10 @@ export const ja: DeepPartial<Messages> = {
                 generic: "問題が発生しました。しばらくしてからもう一度お試しください。",
                 unexpected: "予期しないエラーが発生しました。もう一度お試しください。",
                 duplicateEmail: "別のメールアドレスでお試しください。",
+                passwordCommon:
+                    "このパスワードは一般的すぎるか、推測されやすいものです。別のパスワードを選んでください。",
+                passwordBreached:
+                    "このパスワードは過去の情報漏えいで確認されています。別のパスワードを選んでください。",
                 duplicateName: "別の名前でお試しください。",
                 demoRateLimited:
                     "このネットワークからのデモサインインが多すぎます。しばらくしてからお試しください。",

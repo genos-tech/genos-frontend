@@ -5957,7 +5957,7 @@ export const es: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Revisa tu bandeja de entrada",
-                    body: "Enviamos un enlace de verificación a {email}. Haz clic en él para finalizar el registro.",
+                    body: "Enviamos un correo a {email}. Ábrelo para finalizar el registro o para iniciar sesión si ya tienes una cuenta.",
                     checkInboxHint:
                         "Haz clic en el enlace del correo electrónico para verificar su dirección.",
                     resend: "Reenviar correo electrónico",
@@ -5993,6 +5993,10 @@ export const es: DeepPartial<Messages> = {
                 generic: "Algo salió mal. Inténtalo de nuevo más tarde.",
                 unexpected: "Ocurrió un error inesperado. Inténtalo de nuevo.",
                 duplicateEmail: "Prueba con un correo diferente.",
+                passwordCommon:
+                    "Esta contraseña es demasiado común o fácil de adivinar. Elige otra.",
+                passwordBreached:
+                    "Esta contraseña aparece en una filtración de datos conocida. Elige otra.",
                 duplicateName: "Prueba con un nombre diferente.",
                 demoRateLimited:
                     "Demasiados inicios de sesión demo desde esta red. Inténtalo de nuevo más tarde.",
