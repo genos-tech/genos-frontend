@@ -3,6 +3,11 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { NoteService } from "../db/services/note.service";
 import { TaskService } from "../db/services/task.service";
 import { DatabaseUtils } from "../db/utils/database";
+import {
+    accessTokenExpiryMs,
+    isDueForRefresh,
+    msUntilRefresh,
+} from "../services/accessTokenExpiry";
 import { analytics } from "../services/analytics";
 import {
     clearPrivateProfile,
@@ -174,6 +179,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             clearRefreshTimer();
         };
     }, []);
+
+    // Renew the access token ahead of its expiry (MIP-2242). It lives 30 minutes, so waiting for a
+    // 401 would break a request in front of the user. A timer renews it 5 min before `exp`; a
+    // background tab's timers are throttled or frozen, so coming back to the tab (or the network
+    // coming back) renews at once when the token is inside that window. The new token lands in
+    // state, which re-runs this effect and schedules the next one. A refresh the server refuses
+    // (cookie gone or revoked) signs out as before; a network failure retries with the backoff.
+    useEffect(() => {
+        if (!accessToken) return;
+        if (accessTokenExpiryMs(accessToken) === null) return;
+        let cancelled = false;
+        let timer: ReturnType<typeof setTimeout> | null = null;
+        let running = false;
+        let failures = 0;
+
+        const run = async () => {
+            if (cancelled || running) return;
+            running = true;
+            try {
+                const outcome = await refreshAccessToken();
+                if (cancelled) return;
+                if (outcome === "unauthenticated") {
+                    forceSignOut();
+                } else if (outcome === "transient") {
+                    const delay = nextBackoffDelayMs(failures++);
+                    timer = setTimeout(() => void run(), delay);
+                }
+                // "ok": setAccessToken re-ran this effect for the new token.
+            } finally {
+                running = false;
+            }
+        };
+
+        const wake = () => {
+            if (document.visibilityState === "hidden") return;
+            if (!isDueForRefresh(accessToken, Date.now())) return;
+            if (timer) clearTimeout(timer);
+            timer = null;
+            void run();
+        };
+
+        timer = setTimeout(() => void run(), msUntilRefresh(accessToken, Date.now()) ?? 0);
+        document.addEventListener("visibilitychange", wake);
+        window.addEventListener("online", wake);
+        return () => {
+            cancelled = true;
+            if (timer) clearTimeout(timer);
+            document.removeEventListener("visibilitychange", wake);
+            window.removeEventListener("online", wake);
+        };
+    }, [accessToken]);
 
     // The signed-in user's email, phone, country, location and bio are
     // kept in memory only (`privateProfileStore`, MIP-619). Delete the
