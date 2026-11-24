@@ -96,8 +96,8 @@ const layout = (tm: ReturnType<typeof makeTM>) => (
             isActiveRoute
             onCloseTaskHome={() => {}}
             onCreateProject={() => {}}
-            onManageTags={() => {}}
             onDeleteProject={() => {}}
+            onManageTags={() => {}}
         />
     </CssVarsProvider>
 );
