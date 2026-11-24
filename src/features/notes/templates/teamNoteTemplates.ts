@@ -8,8 +8,13 @@ import type { UserProps } from "../../../types/admin";
 // reads and creates; the creator or the team owner changes or deletes. Every call answers with
 // an empty value instead of throwing: the menus must keep working when this endpoint is down.
 
+export type NoteTemplateScope = "team" | "personal";
+
 export type TeamNoteTemplate = {
     templateId: number;
+    // MIP-2337: a personal template belongs to one person (no team) and is listed only for them.
+    // An older server sends no scope: those rows are team templates.
+    scope?: NoteTemplateScope;
     teamId: string | null;
     name: string;
     title: string;
@@ -64,6 +69,8 @@ export const loadTeamNoteTemplate = async (
 export type SaveTeamNoteTemplateInput = {
     // Absent = create.
     templateId?: number;
+    // Create only: who can use it. An edit keeps the row's own scope.
+    scope?: NoteTemplateScope;
     name?: string;
     title?: string;
     body?: PartialBlock[];
@@ -80,6 +87,7 @@ export const saveTeamNoteTemplate = async (
         const api = authApi(accessToken);
         if (!api) return null;
         const payload: Record<string, unknown> = { team_id: myself.teamId };
+        if (input.scope === "personal") payload.scope = "personal";
         if (input.templateId !== undefined) payload.template_id = input.templateId;
         if (input.name !== undefined) payload.name = input.name;
         if (input.title !== undefined) payload.title = input.title;

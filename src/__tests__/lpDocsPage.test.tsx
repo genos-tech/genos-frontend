@@ -30,6 +30,17 @@ describe("docs copy", () => {
         expect(n).toBeLessThanOrEqual(10);
     });
 
+    // MIP-2333: the shortcut list in Settings is read-only, so /docs must not say
+    // the letter shortcuts can be changed there.
+    it.each(["en", "ja"] as const)("%s does not claim shortcuts can be changed", (lang) => {
+        expect(DOCS_COPY[lang].shortcuts).not.toHaveProperty("note");
+        const text = everyString(DOCS_COPY[lang]).join("\n");
+        expect(text).not.toMatch(/Settings\s*→\s*Shortcuts/);
+        expect(text).not.toMatch(/設定\s*→\s*ショートカット/);
+        expect(text).not.toMatch(/change the letter shortcuts/i);
+        expect(text).not.toContain("で変更できます");
+    });
+
     it("uses only shortcut ids the registry defines", () => {
         for (const lang of ["en", "ja"] as const) {
             const text = everyString(DOCS_COPY[lang]).join("\n");

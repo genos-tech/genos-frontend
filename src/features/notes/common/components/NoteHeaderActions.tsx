@@ -10,6 +10,7 @@ import DriveFileMoveRoundedIcon from "@mui/icons-material/DriveFileMoveRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
@@ -45,6 +46,7 @@ import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
 import { SpotlightResult } from "../../../spotlight/types";
 import { TaskInfoPill } from "../../../tasks/components/TaskInfoPill";
 import { ModalMoveToFolder } from "../../my-notes/modals/ModalMoveToFolder";
+import { ModalSaveNoteAsTemplate } from "../../templates/ModalSaveNoteAsTemplate";
 import { exportNoteMarkdown } from "../services/exportNoteMarkdown";
 import { requestHtmlNoteReload } from "../services/htmlNoteReload";
 import { isHtmlNote } from "../utils/htmlNote";
@@ -163,6 +165,7 @@ export const NoteHeaderActions = ({
 
     // ---- Markdown import / export (⋮ menu) ----
     const [importMdOpen, setImportMdOpen] = useState(false);
+    const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
     // Where an import lands: the surface this header is on. My-notes
     // (incl. the shared-personal view, which is still "your" notes
     // sidebar) get a folder picker in the dialog; a task-note import is
@@ -677,6 +680,16 @@ export const NoteHeaderActions = ({
                         },
                     },
                     {
+                        // MIP-2337: keep this note's body as a template (mine, or the team's).
+                        id: "saveAsTemplate",
+                        kind: "saveAsTemplate",
+                        label: t.notes.noteTemplates.team.saveAsTemplate,
+                        icon: <LibraryAddOutlinedIcon sx={{ fontSize: 18 }} />,
+                        // An HTML note has no blocks to keep.
+                        visible: activeNoteId != null && normalizedNoteType !== null && !isHtml,
+                        onClick: () => setSaveTemplateOpen(true),
+                    },
+                    {
                         id: "exportMarkdown",
                         kind: "export",
                         label: t.notes.header.exportMarkdown,
@@ -787,6 +800,18 @@ export const NoteHeaderActions = ({
                     useNM={useNM}
                     allowDestinationChange
                     onClose={() => setImportMdOpen(false)}
+                />
+            )}
+
+            {activeNoteId != null && normalizedNoteType !== null && (
+                <ModalSaveNoteAsTemplate
+                    fallbackBody={activeNote?.body}
+                    myself={myself}
+                    noteId={activeNoteId}
+                    noteTitle={activeNoteTitle}
+                    noteType={normalizedNoteType}
+                    open={saveTemplateOpen}
+                    onClose={() => setSaveTemplateOpen(false)}
                 />
             )}
 

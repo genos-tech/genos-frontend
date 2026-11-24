@@ -65,7 +65,6 @@ export interface DocsCopy {
         heading: string;
         intro: string;
         rows: Array<{ id: ShortcutId; label: string }>;
-        note: string;
     };
     faq: { heading: string; items: Array<{ q: string; a: string }> };
     other: { heading: string; links: Array<{ to: string; label: string }> };
@@ -196,7 +195,6 @@ export const DOCS_COPY: Record<Lang, DocsCopy> = {
                 },
                 { id: "global.undo", label: "Undo the last action, while its toast is up" },
             ],
-            note: "You can change the letter shortcuts under Settings → Shortcuts.",
         },
         faq: {
             heading: "Frequently asked questions",
@@ -374,7 +372,6 @@ export const DOCS_COPY: Record<Lang, DocsCopy> = {
                 },
                 { id: "global.undo", label: "直前の操作を取り消す（トーストが表示されている間）" },
             ],
-            note: "文字キーのショートカットは、設定 → ショートカット で変更できます。",
         },
         faq: {
             heading: "よくある質問",
