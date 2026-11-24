@@ -863,7 +863,7 @@ export const es: DeepPartial<Messages> = {
                 "Hay un problema con el pago: actualiza tu método de pago en el portal de facturación.",
             plansHeading: "Planes y precios",
             plansSubheading:
-                "Todos los planes incluyen todas las funciones: solo cambian los límites de uso y el historial.",
+                "Los planes se diferencian en límites de uso, historial y funciones de IA: las apps de IA conectadas, las programaciones y los webhooks empiezan en Core, y GitHub en Pro.",
             freePrice: "Gratis",
             perMonth: "/ mes",
             contactSales: "Contactar ventas",

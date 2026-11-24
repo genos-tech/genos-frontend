@@ -4415,7 +4415,8 @@ export const zh: DeepPartial<Messages> = {
             pendingChange: "{date} 变更为{plan}",
             pastDue: "付款出现问题——请在账单门户中更新你的付款方式。",
             plansHeading: "套餐与定价",
-            plansSubheading: "所有套餐都包含全部功能——区别仅在于使用上限和历史记录。",
+            plansSubheading:
+                "套餐的区别在于使用上限、历史记录和 AI 功能：已连接的 AI 应用、计划任务和 Webhook 从 Core 起提供，GitHub 从 Pro 起提供。",
             freePrice: "免费",
             perMonth: "/ 月",
             contactSales: "联系销售",

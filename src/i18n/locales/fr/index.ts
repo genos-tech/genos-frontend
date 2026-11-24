@@ -4674,7 +4674,7 @@ export const fr: DeepPartial<Messages> = {
                 "Problème de paiement — mettez à jour votre moyen de paiement dans le portail de facturation.",
             plansHeading: "Forfaits et tarifs",
             plansSubheading:
-                "Tous les forfaits incluent toutes les fonctionnalités — seuls les limites d'utilisation et l'historique changent.",
+                "Les forfaits diffèrent par les limites d'utilisation, l'historique et les fonctions d'IA : les applis d'IA connectées, les planifications et les webhooks commencent à Core, et GitHub à Pro.",
             freePrice: "Gratuit",
             perMonth: "/ mois",
             contactSales: "Contacter les ventes",

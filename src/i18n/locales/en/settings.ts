@@ -626,7 +626,7 @@ export const settings = {
             "There's a payment problem — please update your payment method in the billing portal.",
         plansHeading: "Plans & pricing",
         plansSubheading:
-            "Every plan includes every feature — plans differ only in usage limits and history.",
+            "Plans differ in usage limits, history and AI features: connected AI apps, schedules and webhooks start at Core, and GitHub at Pro.",
         freePrice: "Free",
         perMonth: "/ month",
         contactSales: "Contact sales",

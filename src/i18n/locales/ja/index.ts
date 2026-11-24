@@ -4597,7 +4597,7 @@ export const ja: DeepPartial<Messages> = {
             pastDue: "お支払いに問題があります。ポータルからお支払い方法を更新してください。",
             plansHeading: "プランと料金",
             plansSubheading:
-                "すべてのプランで全機能が使えます。プランの違いは使用量の上限と履歴のみです。",
+                "プランの違いは、使用量の上限、履歴、AI機能です。連携AIアプリ、スケジュール、Webhookは Core から、GitHub連携は Pro から使えます。",
             freePrice: "無料",
             perMonth: "/ 月",
             contactSales: "お問い合わせ",
