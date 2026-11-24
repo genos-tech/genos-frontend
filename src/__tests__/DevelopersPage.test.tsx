@@ -166,10 +166,13 @@ describe("DevelopersPage", () => {
 
     // ── MCP ──────────────────────────────────────────────────────────
 
-    // genos-api `origin/views/public/mcp/tools.py` CATALOG, in order. A
-    // copy, because this repo cannot import that one: when the catalog
-    // changes, this list and the page's `MCP_TOOLS` change with it. The
-    // page said "Fourteen" through every change from 14 to 39.
+    // genos-api `origin/views/public/mcp/tools.py` CATALOG, in order (110 tools at genos-api
+    // 52c68a74: 58 read, 52 write, 13 destructive). A copy, because this repo cannot import that
+    // one: when the catalog changes, this list and the page's `MCP_TOOLS` change with it (MIP-2309:
+    // the page listed 85 of 110 and the home page said "85 tools").
+    // HELD_BACK tools are in the CATALOG but exist only while a server switch is on (`HTML_NOTES`,
+    // `GENOS_SKILLS`); the page lists them when the switch is on in production, not before.
+    const HELD_BACK = ["save_html_note", "list_my_skills", "get_skill", "run_skill"];
     const MCP_CATALOG = {
         read: [
             "get_task",
@@ -209,6 +212,7 @@ describe("DevelopersPage", () => {
             "get_top_task_closers",
             "get_task_throughput_stats",
             "get_stale_tasks",
+            "get_progress_history",
             "get_team_task_summary",
             "get_project_activity_ranking",
             "get_milestone_assignee_counts",
@@ -220,8 +224,17 @@ describe("DevelopersPage", () => {
             "list_pr_files",
             "list_pr_commits",
             "get_my_briefing",
+            "get_item_line",
+            "get_timeline",
+            "list_my_unread",
+            "get_my_importance",
+            "get_my_memory",
+            "list_my_schedules",
         ],
         write: [
+            "comment_on_task_body",
+            "reply_to_task_body_comment",
+            "resolve_task_body_comment",
             "update_task",
             "add_comment",
             "update_comment",
@@ -255,12 +268,38 @@ describe("DevelopersPage", () => {
             "decline_join_request",
             "manage_note_folder",
             "favorite_note",
+            "comment_on_note",
+            "reply_to_note_comment",
+            "edit_note_block",
+            "resolve_note_comment",
             "delete_note",
             "delete_note_folder",
             "manage_note_sharing",
             "restore_note_version",
+            "set_item_importance",
+            "tune_my_importance",
+            "forget_my_memory",
+            "create_my_schedule",
+            "update_my_schedule",
+            "delete_my_schedule",
+            "run_my_schedule",
         ],
     };
+    const MCP_DESTRUCTIVE = [
+        "delete_comment",
+        "delete_task_attachment",
+        "delete_todo_item",
+        "delete_calendar_event",
+        "delete_milestone",
+        "delete_sprint",
+        "manage_project_members",
+        "approve_join_request",
+        "delete_note",
+        "delete_note_folder",
+        "manage_note_sharing",
+        "forget_my_memory",
+        "delete_my_schedule",
+    ];
 
     // genos-api `origin/views/public/mcp/prompts.py` PROMPTS, in order. The same
     // kind of copy as the catalog above, for the same reason.
@@ -280,6 +319,23 @@ describe("DevelopersPage", () => {
             ...MCP_CATALOG.read.map((name) => ({ name, type: "read" })),
             ...MCP_CATALOG.write.map((name) => ({ name, type: "write" })),
         ]);
+    });
+
+    it("does not list a tool whose server switch is off until the switch is on", () => {
+        renderPage();
+        const listed = mcpTable().map((r) => r.name);
+        for (const name of HELD_BACK) expect(listed).not.toContain(name);
+    });
+
+    it("says every destructive tool needs the destructive opt-in", () => {
+        renderPage();
+        for (const name of MCP_DESTRUCTIVE) {
+            const row = [...document.querySelectorAll("tr")].find(
+                (tr) => tr.querySelector("td")?.textContent === name
+            );
+            expect(row, name).toBeTruthy();
+            expect(row?.textContent, name).toMatch(/destructive opt-in/);
+        }
     });
 
     it("describes list_note_folders as the My Notes and Team Notes folders", () => {
@@ -370,6 +426,8 @@ describe("DevelopersPage", () => {
             "delete_note",
             "delete_note_folder",
             "manage_note_sharing",
+            "forget_my_memory",
+            "delete_my_schedule",
         ]);
     });
 
