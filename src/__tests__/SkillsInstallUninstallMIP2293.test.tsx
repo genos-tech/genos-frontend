@@ -303,7 +303,7 @@ describe("the page of a public skill", () => {
 
     it("has no Install button on the member's own skill", async () => {
         await openPublicPage({ mine: true, role: "owner", canEdit: true, canManage: true });
-        await screen.findByTestId("body-editor");
+        await screen.findByDisplayValue("Roadmap review");
         expect(screen.queryByRole("button", { name: "Install" })).toBeNull();
         expect(screen.queryByRole("button", { name: "Uninstall" })).toBeNull();
     });

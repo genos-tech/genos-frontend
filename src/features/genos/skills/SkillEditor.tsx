@@ -483,6 +483,7 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                                 <Button
                                     loading={installing}
                                     size="sm"
+                                    variant="outlined"
                                     startDecorator={
                                         skill.installedVersionNo != null ? (
                                             <RemoveCircleOutlineRoundedIcon />
@@ -490,7 +491,6 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                                             <DownloadRoundedIcon />
                                         )
                                     }
-                                    variant="outlined"
                                     onClick={() => void toggleInstall()}
                                 >
                                     {skill.installedVersionNo != null
