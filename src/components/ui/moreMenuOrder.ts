@@ -37,7 +37,6 @@ export const MORE_MENU_GROUPS = [
             "newProject",
             "newMilestone",
             "newSubfolder",
-            "manageTemplates",
         ],
     },
     {
@@ -53,7 +52,10 @@ export const MORE_MENU_GROUPS = [
             "versionHistory",
         ],
     },
-    { group: "content", kinds: ["reload", "unwrapAll", "unwrapCode", "import", "export"] },
+    {
+        group: "content",
+        kinds: ["reload", "unwrapAll", "unwrapCode", "import", "saveAsTemplate", "export"],
+    },
     { group: "mute", kinds: ["mute"] },
     { group: "edit", kinds: ["edit"] },
     { group: "delete", kinds: ["delete"] },
