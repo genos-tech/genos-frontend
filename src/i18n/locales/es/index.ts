@@ -863,7 +863,7 @@ export const es: DeepPartial<Messages> = {
                 "Hay un problema con el pago: actualiza tu método de pago en el portal de facturación.",
             plansHeading: "Planes y precios",
             plansSubheading:
-                "Todos los planes incluyen todas las funciones: solo cambian los límites de uso y el historial.",
+                "Los planes se diferencian en límites de uso, historial y funciones de IA: la búsqueda web, las apps de IA conectadas, las programaciones y los webhooks empiezan en Core, y que Genos AI lea pull requests de GitHub empieza en Pro.",
             freePrice: "Gratis",
             perMonth: "/ mes",
             contactSales: "Contactar ventas",
@@ -890,9 +890,9 @@ export const es: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} puestos / mes",
             plansHero: "Haz más de tu mejor trabajo con Genos",
             plansHeroSub:
-                "Empieza gratis y mejora cuando quieras. Los planes de pago desbloquean más IA, historial ilimitado, búsqueda web, conexiones MCP y más espacio para crear.",
+                "Empieza gratis y mejora cuando quieras. Los planes de pago desbloquean más IA, historial más largo, búsqueda web, conexiones MCP y más espacio para crear.",
             taglineFree: "Tu chat, tareas y notas en un solo lugar",
-            taglineCore: "Historial ilimitado e IA a diario",
+            taglineCore: "Un año de historial e IA a diario",
             taglinePro: "Haz de la IA parte de tu trabajo diario",
             taglineMax: "Máxima potencia para días intensivos de IA",
             taglineEnterprise: "Para equipos que lo necesitan todo",

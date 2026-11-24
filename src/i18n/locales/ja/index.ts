@@ -4619,7 +4619,7 @@ export const ja: DeepPartial<Messages> = {
             pastDue: "お支払いに問題があります。ポータルからお支払い方法を更新してください。",
             plansHeading: "プランと料金",
             plansSubheading:
-                "すべてのプランで全機能が使えます。プランの違いは使用量の上限と履歴のみです。",
+                "プランの違いは、使用量の上限、履歴、AI機能です。Web検索、連携AIアプリ、スケジュール、Webhookは Core から、Genos AI による GitHub のプルリクエスト参照は Pro から使えます。",
             freePrice: "無料",
             perMonth: "/ 月",
             contactSales: "お問い合わせ",
@@ -4650,7 +4650,7 @@ export const ja: DeepPartial<Messages> = {
             currencyLabel: "価格を表示する",
             startForFree: "無料で始める",
             taglineFree: "チャット・タスク・ノートを 1 か所に",
-            taglineCore: "無制限の履歴と毎日使える AI",
+            taglineCore: "1 年分の履歴と毎日使える AI",
             taglinePro: "AI を毎日の仕事の相棒に",
             taglineMax: "上限を気にせず AI をフル活用",
             taglineEnterprise: "すべてを必要とするチームに",

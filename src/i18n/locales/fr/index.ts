@@ -4697,7 +4697,7 @@ export const fr: DeepPartial<Messages> = {
                 "Problème de paiement — mettez à jour votre moyen de paiement dans le portail de facturation.",
             plansHeading: "Forfaits et tarifs",
             plansSubheading:
-                "Tous les forfaits incluent toutes les fonctionnalités — seuls les limites d'utilisation et l'historique changent.",
+                "Les forfaits diffèrent par les limites d'utilisation, l'historique et les fonctions d'IA : la recherche web, les applis d'IA connectées, les planifications et les webhooks commencent à Core, et la lecture des pull requests GitHub par Genos AI commence à Pro.",
             freePrice: "Gratuit",
             perMonth: "/ mois",
             contactSales: "Contacter les ventes",
@@ -4725,11 +4725,11 @@ export const fr: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} sièges / mois",
             plansHero: "Faites-en plus avec Genos",
             plansHeroSub:
-                "Commencez gratuitement et changez de forfait à tout moment. Les forfaits payants débloquent plus d'IA, un historique illimité, la recherche web, les connexions MCP et plus d'espace pour créer.",
+                "Commencez gratuitement et changez de forfait à tout moment. Les forfaits payants débloquent plus d'IA, un historique plus long, la recherche web, les connexions MCP et plus d'espace pour créer.",
             currencyLabel: "Afficher les prix dans",
             startForFree: "Commencez gratuitement",
             taglineFree: "Chat, tâches et notes réunis au même endroit",
-            taglineCore: "Historique illimité et IA au quotidien",
+            taglineCore: "Un an d’historique et de l’IA au quotidien",
             taglinePro: "Faites de l'IA votre alliée au quotidien",
             taglineMax: "Pleine puissance pour un usage intensif de l'IA",
             taglineEnterprise: "Pour les équipes qui veulent tout",
