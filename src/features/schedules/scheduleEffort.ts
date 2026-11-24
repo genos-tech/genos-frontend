@@ -47,6 +47,18 @@ export const showsEffort = (
     return key === undefined || typed[key] === "true";
 };
 
+/** Which hint sits under the chat picker (MIP-2351). A skill run with AI goes only to a chat the
+ *  member is in alone, and its cost never goes into the chat. Any other report with its AI step
+ *  on may go to a chat others read (the same audience rule as without AI), still without its
+ *  cost. A report with no AI keeps the original sentence. */
+export const chatHintKey = (
+    job: ScheduleJob | undefined,
+    typed: Record<string, string>
+): "deliverChatHint" | "deliverChatHintAi" | "deliverChatHintAiShared" => {
+    if (job?.job === "run_skill" && jobUsesAi(job)) return "deliverChatHintAi";
+    return showsEffort(job, typed) ? "deliverChatHintAiShared" : "deliverChatHint";
+};
+
 /** The level the form shows as chosen: the member's own, else the job's default. */
 export const chosenEffort = (job: ScheduleJob | undefined, aiEffort: string): EffortLevel | null =>
     asEffortLevel(aiEffort) ?? asEffortLevel(job?.effortDefault);

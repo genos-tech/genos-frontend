@@ -21,10 +21,10 @@ import { CREDIT_PACKS_PATH, PLANS_PATH } from "../../../features/billing/billing
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import {
     asEffortLevel,
+    chatHintKey,
     chosenEffort,
     costText,
     EFFORT_LEVELS,
-    jobUsesAi,
     showsEffort,
 } from "../../../features/schedules/scheduleEffort";
 import {
@@ -652,9 +652,7 @@ export const ScheduleFormPanel = ({
                         />
                         {chosenChat && (
                             <FormHelperText sx={{ color: g.text.secondary }}>
-                                {job?.job === "run_skill" && jobUsesAi(job)
-                                    ? s.deliverChatHintAi
-                                    : s.deliverChatHint}
+                                {s[chatHintKey(job, form.params)]}
                             </FormHelperText>
                         )}
                     </FormControl>
