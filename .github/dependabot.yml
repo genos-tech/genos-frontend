@@ -8,6 +8,10 @@
 # so the queue isn't flooded by every minor release. Security-update PRs
 # ignore that limit; they come from the repo setting "Dependabot security
 # updates", and read the package-lock.json this entry points at.
+#
+# docker (MIP-2269): the base image in Dockerfile.cloudrun is pinned by digest
+# (`FROM node:22-slim@sha256:...`). Dependabot moves the digest when the tag is
+# rebuilt. Major bumps are ignored: a new Node major is a deliberate change.
 
 version: 2
 updates:
@@ -24,3 +28,11 @@ updates:
       schedule:
           interval: weekly
       open-pull-requests-limit: 0
+
+    - package-ecosystem: docker
+      directory: /
+      schedule:
+          interval: weekly
+      ignore:
+          - dependency-name: node
+            update-types: ["version-update:semver-major"]

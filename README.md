@@ -37,6 +37,31 @@ Configure the backend endpoints and other build-time settings via a
 `VITE_VAPID_PUBLIC_KEY` for web push). See
 `genos-platform/docker/docker-compose.yml` for the values used in local dev.
 
+## Install scripts are off in CI and in the image (MIP-2269)
+
+A dependency's `postinstall` runs arbitrary code on the build machine, which
+holds the build-time `VITE_*` values. CI and `Dockerfile.cloudrun` therefore
+install with `npm ci --ignore-scripts` and then run `npx patch-package`
+explicitly (the one script this repo needs: it applies `patches/`).
+
+Packages in `package-lock.json` that declare an install script
+(`hasInstallScript`), and why none of them but `patch-package` is needed for
+`npm run build`:
+
+| Package                      | What its script does                           | Needed?                              |
+| ---------------------------- | ---------------------------------------------- | ------------------------------------ |
+| this repo (`patch-package`)  | applies `patches/y-prosemirror+1.3.7.patch`    | **yes**: run `npx patch-package`     |
+| `esbuild`                    | checks the platform binary                     | no (binary comes from `@esbuild/*`)  |
+| `@swc/core`                  | checks the platform binary                     | no (binary comes from `@swc/core-*`) |
+| `core-js`                    | prints a donation banner                       | no                                   |
+| `msw`                        | copies the browser service worker to `public/` | no (tests use msw in node)           |
+| `fsevents` (optional, macOS) | native build                                   | no                                   |
+
+After a dependency update, re-check the list with
+`node -e 'for (const [k,v] of Object.entries(require("./package-lock.json").packages)) if (v.hasInstallScript) console.log(k)'`.
+Railway's own build still runs whatever install step Nixpacks chooses (scripts
+on); see the PR that introduced this for the setting to change there.
+
 ## Working in a git worktree
 
 A worktree has no `node_modules`, and a worktree must run against the packages
