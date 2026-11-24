@@ -36,7 +36,7 @@ export const connectApp = {
         "On the approval page, choose the team and what it may do, then press Allow.",
     ],
     chatgptTitle: "ChatGPT",
-    chatgptBody: "Coming: Genos is being listed in ChatGPT's directory.",
+    chatgptBody: "Planned: Genos is being listed in ChatGPT's directory.",
     plan: "Connecting needs the Core plan or above. On Free, the approval page says it isn't on your plan.",
     revoke: "To disconnect an app, revoke it under Settings → Developer → Connected apps.",
     trap: "Paste the whole address, including the path at the end. Without it Claude says it signed in, then reports that Genos refused its request.",

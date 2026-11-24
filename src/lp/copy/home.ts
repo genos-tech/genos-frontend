@@ -25,13 +25,20 @@ import type { Lang } from "../lpLang";
  * `works`, `questions`) is written from the messaging brief v1 (Genos board,
  * task note 176). What it may and may not say:
  *  - "AI agent (e.g. Claude)", never "Claude" alone as the category. Works with
- *    Claude today; ChatGPT is "coming"; other agents are not supported yet.
+ *    Claude today; ChatGPT is "planned"; other agents are not supported yet.
  *  - Genos keeps what the agent writes, not the whole conversation. It is never
  *    "always written down", "remembers everything" or "automatic".
  *  - No "Secretary" / 秘書, no "MCP-native", no "AI memory", no first-month-free
  *    offer, no data-safety claim, no team-sharing claim, no "see everything in
  *    one place", and no number, logo or quote that is not real.
  *    `LandingPageAgentRecord.test.tsx` pins these for the new blocks.
+ *  - MIP-2311 (Ken's decisions of 2026-11-24, `lpHomeStoryMIP2311.test.ts`): one story, a team
+ *    workspace where a connected Claude and Genos AI are two ways to put records in. Claude
+ *    continuity is only "Genos tells your connected Claude to record ... and a later session can
+ *    read what was saved" (never "pick up where you left off", never "no special prompts"). ChatGPT
+ *    is "planned", not "coming soon". "Approve" is Genos AI's; a connected app writes at once.
+ *    The hero sub and the mark line were reworded for this (the JA hero sub is no longer Ken's
+ *    word-for-word text of 2026-11-20); the hero title is unchanged, waiting for Ken's wording.
  *  - The Japanese of those blocks is Ken's final text (2026-11-20), word for word,
  *    with the lead's four softened lines (the mark claims) and one sentence
  *    dropped from the hero subhead. The English is Ken's final English; every
@@ -154,15 +161,15 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         meta: {
             title: "Genos — いつもどおりAIと仕事をするだけ。記録はGenosに残ります。",
             description:
-                "AIエージェントが作成したタスクやノートを、Genosに記録。あとから開いて、読んで、編集できる。Claudeで利用可能。ChatGPTも近日公開。",
+                "チームのチャット・タスク・ノートのワークスペース。接続したClaudeやGenos AIが作った記録を、あとから開いて、読んで、編集できる。Claudeで利用可能。ChatGPTは対応予定。",
         },
         hero: {
             title: "いつもどおり、AIと仕事をするだけ。記録は、AIがGenosに残します。",
-            sub: "AIエージェント（Claudeなど）に、これまでどおり仕事を頼むだけ。特別な指示がなくても、エージェントは作業しながら、タスク・ノート・決めたこと・進み具合をGenosに書き留めます。\n\nAIが何をしたか見たくなったら、Genosを開くだけ。",
+            sub: "Genosは、チームのチャット・タスク・ノートがあるワークスペースです。Claudeを接続すると（Core以上）、Genosは接続したClaudeに、タスク・決めたこと・進み具合を記録するよう伝えます。のちのセッションでは、保存された内容を読めます。\n\nワークスペースに組み込まれたGenos AIに聞くこともできます。どちらでも、何があったかはGenosを開けば分かります。",
             primary: "Claudeを接続する",
             secondary: "デモを試す",
-            note: "現在はClaudeに対応。ChatGPTも近日公開。一度つなぐだけで使えます。",
-            legend: "タスク・コメント・ノートでは、AIが作成・更新したものに印が付きます。あなたが書いたものと見分けられます。",
+            note: "現在はClaudeに対応。ChatGPTは対応予定です。一度つなぐだけで使えます。",
+            legend: "Claudeなど接続したアプリ経由の作成・更新には、タスクの履歴・コメント・ノートの履歴で印が付きます。Genosで直接入力した内容には付きません。",
             alt: "Genosのタスクのアクティビティ画面。Claudeが作成したコメントにはClaudeのマークが表示され、ユーザーが変更した優先度やコメントにはマークが付いていない。",
             // TODO(copy): draft wording of mine, not Ken's; the callouts drawn over the hero picture.
             callouts: {
@@ -200,11 +207,11 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     title: "AIが、Genosに書き留める",
-                    body: "エージェントは作業しながら、タスク、コメント、ノートをGenosに残します。決めたことは、理由と日付を添えたノートに。",
+                    body: "エージェントは作業しながら、タスク、コメント、ノートをGenosに残します。決めたことは、理由と日付を添えたノートに残すよう、Genosが伝えます。",
                 },
                 {
                     title: "見たいときに、Genosを開く",
-                    body: "AIが何をしたか、Genosで読めます。編集も削除も自由。AIが作成・更新したものには印が付くので、あなたの記録と見分けられます。",
+                    body: "AIが何をしたか、Genosで読めます。編集も削除も自由。接続したアプリ経由の作成・更新には、タスクの履歴・コメント・ノートの履歴で印が付きます。",
                 },
             ],
             plan: "エージェントの接続にはCoreプラン以上が必要です。",
@@ -224,14 +231,14 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     lead: "誰が書いたか分かる。",
-                    text: "タスク・コメント・ノートでは、AIが作成・更新したものに印が付き、あなたの記録と見分けられます。",
+                    text: "接続したアプリ経由の作成・更新には、タスクの履歴・コメント・ノートの履歴で印が付きます。Genosで直接入力した内容には付きません。",
                 },
             ],
             tasksCaption: "タスク一覧",
             noteCaption: "ノート",
         },
         line: {
-            label: "ひとつの決定がたどった経緯",
+            label: "ひとつの決定がたどった経緯（例）",
             items: [
                 {
                     kind: "chat",
@@ -265,7 +272,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     name: "ChatGPT",
-                    state: "近日公開",
+                    state: "対応予定",
                     coming: true,
                 },
             ],
@@ -286,7 +293,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "どのAIエージェントで使えますか？",
-                    a: "現在はClaudeに対応しています。claude.ai、Claude Desktop、Claude Codeで利用できます。ChatGPTにも近日対応予定です。その他のエージェントは、現在対応していません。",
+                    a: "現在はClaudeに対応しています。claude.ai、Claude Desktop、Claude Codeで利用できます。ChatGPTは対応予定です。その他のエージェントは、現在対応していません。",
                 },
                 {
                     q: "エージェントが書いたものを、自分で編集・削除できますか？",
@@ -294,7 +301,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "どのプランが必要ですか？",
-                    a: "エージェントの接続にはCoreプラン以上が必要です。Freeプランでは、チャット・タスク・ノートをご利用いただけます。",
+                    a: "エージェントの接続にはCoreプラン以上が必要です。Freeプランでは、チャット・タスク・ノートと、Genos AIの回答（読み取りのみ）をご利用いただけます。Core以上でGenos AIによる変更とClaudeの接続、レポートが、Pro以上で複数タスクの計画とGitHubの読み取りが加わります。",
                 },
                 {
                     q: "Genosが記録する私の活動は、誰が見られますか？",
@@ -347,13 +354,13 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
         },
         receipts: {
-            kicker: "Genosに聞く",
+            kicker: "Genos AIに聞く",
             title: "確かめられる答え。承認してから動く変更。",
-            sub: "Genosは、チームのチャット・タスク・ノートを同僚のように読み込みます。Genosの回答には、引用元のスレッド・ノート・タスクへのリンクが付きます。Genos自身のAIは、あなたが「はい」と言うまで何も書き換えません。",
+            sub: "ワークスペースに組み込まれたGenos AIは、あなたが閲覧できるチャット・タスク・ノート・ToDoを検索します。回答には、根拠にしたスレッド・ノート・タスクが開けるリンクで表示されます。提案はひとつずつ、あなたが承認するまで何も変わりません。",
             points: [
-                "Genosの回答では、引用元のスレッド・ノート・タスクをその場で開いて確認できます",
-                "提案して、待つ。タスク・ノート・To-Do・予定の変更は承認後にだけ実行されます",
-                "質問した言語で回答。画面は7言語に対応しています",
+                "Genos AIの回答では、根拠にしたスレッド・ノート・タスクをその場で開いて確認できます",
+                "提案して、待つ。変更はCoreから、複数タスクの計画はProから。承認後にだけ実行されます",
+                "Genos AIは表示言語で回答します。別の言語を指定すれば、その言語で答えます。画面は7言語に対応しています",
             ],
             askAlt: "Genosの回答。出典のチャット・ノート・タスクがチップで並んでいる",
             approvalAlt: "Genosが提案した変更の承認カード。承認と却下のボタンがある",
@@ -361,15 +368,15 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         mcp: {
             kicker: "MCPで接続",
             title: "Claudeから、Genosを使う。",
-            sub: "一度つなげば、普段使っているAIアシスタントがあなたのプロジェクトを読み、最新に保ちます。状況のまとめ、今日の計画、タスクの更新、ノートの作成。変更を許可する範囲は、あなたが決めます。",
+            sub: "一度つなげば、普段使っているAIアシスタントがあなたのプロジェクトを読み、最新に保ちます。状況のまとめ、今日の計画、タスクの更新、ノートの作成。許可する範囲は、あなたが決めます。",
             points: [
                 "タスク、マイルストーン、スプリント、ノート、チャット、To-Do、カレンダー、スケジュール、GitHubのPRを扱う{tools}以上のツール",
                 "Genosアカウントでサインイン（OAuth）。キーのコピーは不要で、接続は設定画面でいつでも確認・解除できます",
-                "接続したアプリに許可する範囲は、あなたが選べます。読み取りと変更。削除は別途許可が必要です",
+                "接続したアプリに許可する範囲は、あなたが選べます。読み取りと変更。許可した範囲では、承認なしですぐに書き込みます（承認を求めるのはGenos AIです）。削除は別途許可が必要です",
             ],
             clients: [
                 { name: "Claude", state: "コネクタとして利用可能" },
-                { name: "ChatGPT", state: "近日公開", coming: true },
+                { name: "ChatGPT", state: "対応予定", coming: true },
             ],
             transcript: {
                 label: "AIアシスタントとの会話の例",
@@ -384,14 +391,14 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         secretary: {
             kicker: "状況のまとめ",
             title: "追いかけるのは、Genosの仕事。",
-            sub: "コメント、変更、新しいリンク。あなたの仕事で起きたことをGenosが追いかけ、大事なことだけを伝えます。進捗報告を書く必要はありません。",
+            sub: "コメント、変更、新しいリンク。あなたの仕事で起きたことをGenosが追いかけ、大事なことだけを伝えます。進捗の報告は、Genosが下書きします。",
             points: [
                 {
-                    text: "「状況を教えて」のひと言で、他の人の動き・あなた待ちのこと・あなたが待っていることを一度に",
+                    text: "接続したAIアプリに「状況を教えて」と頼むだけで、他の人の動き・あなた待ちのこと・あなたが待っていることを一度に",
                 },
-                { text: "何が大事かは、古くなりがちな優先度ではなく、実際の動きから学習します" },
+                { text: "何が大事かは、主に実際の動きから判断します。優先度の項目は参考程度です" },
                 {
-                    text: "決まった時間に受信箱へレポート。AIの利用量を表示し、ワンクリックで止められます",
+                    text: "決まった時間に受信箱へレポート。使ったAIクレジットを表示し、ワンクリックで止められます",
                     plan: "Core以上",
                 },
                 { text: "ルーティン：よく使う指示を保存して、スケジュールで実行", coming: true },
@@ -429,13 +436,13 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         trust: {
             title: "Genos自身のAIの動き方",
             items: [
-                "Genosの回答では、引用元のスレッド・ノート・タスクを開いて確認できます。",
-                "Genos自身のAIは、あなたが承認したあとにだけ変更します。",
+                "Genos AIの回答では、根拠にしたスレッド・ノート・タスクを開いて確認できます。",
+                "Genos AIは、あなたが承認したあとにだけ変更します。自分で接続したアプリ（Claudeなど）は、あなたが許可した範囲で動きます。",
             ],
         },
         plans: {
             title: "まずは無料で。",
-            body: "Freeプランでチャット・タスク・ノートを使えます。Core以上でMCP接続とGenosレポートが使え、上位プランほどAIの上限が広がります。",
+            body: "Freeプランではチャット・タスク・ノートとGenos AIの回答を使えます。Core以上でGenos AIによる変更、Claudeとの接続、レポートが使え、Pro以上で複数タスクの計画とGitHubの読み取りが使えます。",
             link: "プランを比較する",
         },
         cta: {
@@ -452,22 +459,22 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             title: "Genos — Just work with your AI as usual. It keeps the record in Genos.",
             // TODO(copy: Ken's final English; Ken to review)
             description:
-                "Genos saves the tasks, comments, and notes your AI agent creates, so you can open, review, and edit them anytime. Available with Claude. ChatGPT coming soon.",
+                "Your team's workspace for chat, tasks and notes. Genos saves the tasks, comments, and notes that a connected Claude or Genos AI creates, so you can open, review, and edit them anytime. Available with Claude. ChatGPT is planned.",
         },
         hero: {
             // TODO(copy: Ken's final English; Ken to review)
             title: "Just work with your AI as usual. It keeps the record in Genos.",
             // TODO(copy: Ken's final English; Ken to review)
-            sub: "Keep asking your AI agent (like Claude) for work the way you do now. As it works, it writes the tasks, notes, decisions, and progress into Genos. No special prompts needed.\n\nWhen you want to see what your AI did, open Genos.",
+            sub: "Genos is where your team's chat, tasks and notes live, and where the work your AI does is written down. Connect Claude (Core and up) and Genos tells it to record tasks, decisions and progress as it works, and a later session can read what was saved.\n\nOr ask Genos AI, built into the workspace. Either way, open Genos to see what happened.",
             // TODO(copy: Ken's final English; Ken to review)
             primary: "Connect Claude",
             // TODO(copy: Ken's final English; Ken to review)
             secondary: "Try the demo",
             // TODO(copy: Ken's final English; Ken to review)
-            note: "Works with Claude today. ChatGPT coming soon. Connect once to start.",
+            note: "Works with Claude today. ChatGPT is planned. Connect once to start.",
             // TODO(copy: Ken's final English; Ken to review)
             // SOFTENED from Ken's draft by the lead (listed in the PR body).
-            legend: "In tasks, comments and notes, what the AI created or updated carries a mark, so you can tell it apart from what you wrote.",
+            legend: "Changes made through Claude or another connected app are marked in task history, comments and note history; changes you type in Genos carry no mark.",
             // TODO(copy: Ken's final English; Ken to review)
             alt: "The Activity view of a task in Genos. The comment Claude created shows Claude's mark; the priority change and the comment made by the user have no mark.",
             // TODO(copy): draft wording of mine, not Ken's; the callouts drawn over the hero picture.
@@ -519,14 +526,14 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     // TODO(copy: Ken's final English; Ken to review)
                     title: "It writes things down in Genos.",
                     // TODO(copy: Ken's final English; Ken to review)
-                    body: "As it works, your agent creates tasks, comments, and notes in Genos. When something is decided, it goes into a note with the reason and the date.",
+                    body: "As it works, your agent creates tasks, comments, and notes in Genos. Genos asks it to put each decision in a note with the reason and the date.",
                 },
                 {
                     // TODO(copy: Ken's final English; Ken to review)
                     title: "Open Genos when you want to look.",
                     // TODO(copy: Ken's final English; Ken to review)
                     // SOFTENED from Ken's draft by the lead (listed in the PR body).
-                    body: "See what your AI did, and edit or delete any of it. In tasks, comments and notes, what the AI wrote carries a mark, so you can tell it apart from your own.",
+                    body: "See what your AI did, and edit or delete any of it. Changes made through a connected app are marked in task history, comments and note history.",
                 },
             ],
             // TODO(copy: Ken's final English; Ken to review)
@@ -558,7 +565,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     lead: "Know who wrote what.",
                     // TODO(copy: Ken's final English; Ken to review)
                     // SOFTENED from Ken's draft by the lead (listed in the PR body).
-                    text: "In tasks, comments and notes, AI-created and updated content carries a mark, so you can tell it from your own.",
+                    text: "Changes made through Claude or another connected app are marked in task history, comments and note history; changes you type in Genos carry no mark.",
                 },
             ],
             // TODO(copy: Ken's final English; Ken to review)
@@ -567,7 +574,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             noteCaption: "Notes",
         },
         line: {
-            label: "How one decision happened",
+            label: "How one decision happened (example)",
             items: [
                 {
                     kind: "chat",
@@ -605,7 +612,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     name: "ChatGPT",
                     // TODO(copy: Ken's final English; Ken to review)
-                    state: "Coming soon",
+                    state: "Planned",
                     coming: true,
                 },
             ],
@@ -631,7 +638,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     // TODO(copy: Ken's final English; Ken to review)
                     q: "Which AI agents does Genos support?",
-                    a: "Genos currently works with Claude on claude.ai, Claude Desktop, and Claude Code. ChatGPT support is coming soon. Other AI agents are not supported yet.",
+                    a: "Genos currently works with Claude on claude.ai, Claude Desktop, and Claude Code. ChatGPT is planned. Other AI agents are not supported yet.",
                 },
                 {
                     // TODO(copy: Ken's final English; Ken to review)
@@ -641,7 +648,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     // TODO(copy: Ken's final English; Ken to review)
                     q: "Which plan do I need to connect an AI agent?",
-                    a: "Connecting an AI agent requires the Core plan or above. The Free plan includes chat, tasks, and notes.",
+                    a: "Connecting an AI agent requires the Core plan or above. Free includes chat, tasks, notes and Genos AI answers (read-only). Core and up add Genos AI actions, the Claude connection and reports; Pro and up add multi-task plans and GitHub pull-request reading.",
                 },
                 {
                     q: "Who can see what Genos notes about my work?",
@@ -694,13 +701,13 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
         },
         receipts: {
-            kicker: "Ask Genos",
+            kicker: "Ask Genos AI",
             title: "Answers you can check. Changes you approve.",
-            sub: "Genos reads your team's chats, tasks and notes the way a colleague would. Genos's answers link to the thread, note or task they quote, and Genos's own assistant changes nothing until you say yes.",
+            sub: "Genos AI, built into the workspace, searches the chats, tasks, notes and to-dos you already have access to. Its answers show the threads, notes and tasks they draw on as links you can open, and it changes nothing until you approve each proposal.",
             points: [
-                "In Genos's answers, you can open the thread, note or task each one quotes",
-                "It proposes, then waits: tasks, notes, to-dos and events change only after you approve",
-                "Answers in the language you ask in, in an app available in 7 languages",
+                "In Genos AI's answers, you can open the threads, notes and tasks they draw on",
+                "It proposes, then waits: changes start on Core, multi-task plans on Pro, and nothing is saved until you approve",
+                "Genos AI answers in your interface language, or in another language if you ask. The app comes in 7 languages",
             ],
             askAlt: "A Genos answer with its source chat, note and task shown as chips",
             approvalAlt:
@@ -709,15 +716,15 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         mcp: {
             kicker: "Works over MCP",
             title: "Use Genos from Claude.",
-            sub: "Connect once, and the assistant you already use can read your projects and keep them current: catch you up, plan your day, update a task, write a note. You decide what it is allowed to change.",
+            sub: "Connect once, and the assistant you already use can read your projects and keep them current: catch you up, plan your day, update a task, write a note. You decide what access it has.",
             points: [
                 "More than {tools} tools for tasks, milestones, sprints, notes, chats, to-dos, calendar, schedules and GitHub pull requests",
                 "Sign in with your Genos account (OAuth): no keys to copy, and every connection is listed in Settings, where you can end it",
-                "You choose what a connected app may do: read, or write. Deleting needs a separate opt-in.",
+                "You choose what a connected app may do: read, or write. It writes at once with the access you gave it (Genos AI is the one that asks first). Deleting needs a separate opt-in.",
             ],
             clients: [
                 { name: "Claude", state: "Available as a connector" },
-                { name: "ChatGPT", state: "Coming", coming: true },
+                { name: "ChatGPT", state: "Planned", coming: true },
             ],
             transcript: {
                 label: "An example conversation with an AI assistant",
@@ -732,16 +739,16 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
         secretary: {
             kicker: "Catch-up",
             title: "It keeps track, so you don't have to.",
-            sub: "Comments, changes, new links: Genos follows what happens on your work and tells you what matters. You never write a status report.",
+            sub: "Comments, changes, new links: Genos follows what happens on your work and tells you what matters. Genos drafts the update for you.",
             points: [
                 {
-                    text: "One ask catches you up: what others did on your items, what's waiting on you, what you're waiting on",
+                    text: "Ask your connected AI app to catch you up: what others did on your items, what's waiting on you, what you're waiting on",
                 },
                 {
-                    text: "What matters is learned from real activity, not from priority fields that go stale",
+                    text: "Importance comes mostly from real activity; priority fields are only a hint",
                 },
                 {
-                    text: "Reports in your Inbox on your schedule, with the AI cost shown and a one-click off",
+                    text: "Reports in your Inbox on your schedule, with the AI credits used shown and a one-click off",
                     plan: "Core and up",
                 },
                 { text: "Routines: save an instruction and run it on a schedule", coming: true },
@@ -777,15 +784,15 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             ],
         },
         trust: {
-            title: "How Genos's own assistant behaves",
+            title: "How Genos AI behaves",
             items: [
-                "In Genos's answers, you can open the thread, note or task each one quotes.",
-                "Genos's own assistant changes your work only after you approve.",
+                "In Genos AI's answers, you can open the threads, notes and tasks they draw on.",
+                "Genos AI changes your work only after you approve. Apps you connect yourself, such as Claude, act with the access you gave them.",
             ],
         },
         plans: {
             title: "Start free.",
-            body: "The Free plan covers chat, tasks and notes. Core and up add MCP connections and Genos reports, and higher plans raise the AI limits.",
+            body: "Free: chat, tasks, notes and Genos AI answers. Core and up add Genos AI actions, the Claude connection and reports; Pro and up add multi-task plans and GitHub pull-request reading.",
             link: "Compare plans",
         },
         cta: {
