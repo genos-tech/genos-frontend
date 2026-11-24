@@ -30,6 +30,11 @@ type HtmlNoteViewProps = {
 
 type Phase = "loading" | "error" | "ready";
 
+/** The title and label row keep the note text margin; the frame itself only keeps a small margin
+ *  (MIP-2315) so a page gets nearly the whole pane, which side panels need most. */
+const TEXT_INSET = { xs: "12px", md: "var(--note-body-start, 50px)" };
+const FRAME_INSET = { xs: "12px", md: "16px" };
+
 const newNonce = (): string =>
     typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
@@ -194,7 +199,6 @@ export const HtmlNoteView = ({
                 flexDirection: "column",
                 width: "100%",
                 minWidth: 0,
-                paddingX: { xs: "12px", md: "var(--note-body-start, 50px)" },
                 paddingBottom: "8px",
                 ...(fillHeight ? { flex: 1, minHeight: 0 } : {}),
             }}
@@ -205,6 +209,7 @@ export const HtmlNoteView = ({
                     color: g.text.primary,
                     overflowWrap: "anywhere",
                     marginTop: { xs: "8px", md: "12px" },
+                    paddingX: TEXT_INSET,
                 }}
             >
                 {title}
@@ -215,6 +220,7 @@ export const HtmlNoteView = ({
                     alignItems: "center",
                     gap: "6px",
                     marginBottom: "10px",
+                    paddingX: TEXT_INSET,
                     color: g.text.secondary,
                 }}
             >
@@ -239,6 +245,7 @@ export const HtmlNoteView = ({
                 frameActive && (
                     <Box
                         sx={{
+                            marginX: FRAME_INSET,
                             flex: fillHeight ? 1 : "none",
                             minHeight: fillHeight ? 0 : 420,
                             // `--app-vh` is the shell's height (the viewport less the notification
