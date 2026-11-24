@@ -501,6 +501,11 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
             {skill.visibility === "public" && skill.status === "active" && (
                 <SkillHubStrip skill={skill} onStar={() => void star()} />
             )}
+            {skill.sourceHarmful && (
+                <Alert color="warning" size="sm" variant="soft">
+                    {m.sourceHarmful.warning}
+                </Alert>
+            )}
             {skill.forkedFrom && (
                 <Typography
                     level="body-xs"

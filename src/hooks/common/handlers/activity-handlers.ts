@@ -8,11 +8,11 @@ function isInArray<T>(item: T, array: T[]): boolean {
 }
 
 export const handleActivityMessage = async (
-    message: any,
+    message: unknown,
     myself: UserProps,
     useCM: ChatManagementState
 ) => {
-    const tmpNewActivityMessage: ActivityMessageProps = message;
+    const tmpNewActivityMessage: ActivityMessageProps = message as ActivityMessageProps;
     let newActivityMessage: ActivityMessageProps | undefined;
 
     if (!tmpNewActivityMessage) {

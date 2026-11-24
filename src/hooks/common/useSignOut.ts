@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/authState";
-import { DatabaseUtils } from "../../db/utils/database";
 import { resetProjectScopes } from "../../features/tasks/state/projectStatusScopeStore";
 import { analytics } from "../../services/analytics";
 import { clearPrivateProfile } from "../../services/privateProfileStore";
 import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
+import { clearSignOutLeftovers } from "../../utils/signOutLeftovers";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -70,30 +70,14 @@ export const useSignOut = () => {
             KEYS_TO_CLEAR.forEach((key) => localStorage.setItem(key, ""));
             localStorage.setItem("isOfflineForced", "false");
             clearPrivateProfile();
-            // Wipe per-team history buckets ("genos.history.v1.<teamId>").
-            // The user may belong to several teams; logout should clear
-            // every team's history on this device, not just the active one.
-            try {
-                const historyKeys: string[] = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    if (k && k.startsWith("genos.history.v1.")) historyKeys.push(k);
-                }
-                historyKeys.forEach((k) => localStorage.removeItem(k));
-            } catch {
-                // ignore — storage may be unavailable in some embedded contexts
-            }
             clearAllEditorDrafts();
             analytics.reset();
             // After the server has confirmed the sign-out, and never allowed to
             // fail it: a wipe that cannot finish must not strand someone signed
-            // in on a screen that says they are not. `wipeLocalCache` does not
-            // throw; the catch is for a failure to even load it.
-            try {
-                await DatabaseUtils.wipeLocalCache();
-            } catch (error) {
-                console.error("Could not clear the local cache on sign-out:", error);
-            }
+            // in on a screen that says they are not. Clears every team's history
+            // bucket, the Spotlight session, the chat thread memory, the device
+            // id and the IndexedDB cache (MIP-2255); never throws.
+            await clearSignOutLeftovers();
             // The statuses the next person's rows hold are not this person's (MIP-2000).
             resetProjectScopes();
 

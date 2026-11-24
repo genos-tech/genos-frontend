@@ -1014,9 +1014,16 @@ describe("NotificationManager", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
             // Force UTC so the window is deterministic regardless of the CI TZ.
             mgr.setZoneProvider(() => "UTC");
-            // A 00:00–23:59 window is active virtually always in UTC.
-            mgr.setSnoozeSchedule({ enabled: true, start: "00:00", end: "23:59" });
-            expect(mgr.notify(intent())).toBe("ignored-paused");
+            // A 00:00–23:59 window is inactive during the 23:59 minute, so pin the clock to
+            // noon UTC (main CI failed when the shard ran at 23:59:32 UTC).
+            vi.useFakeTimers({ toFake: ["Date"] });
+            vi.setSystemTime(new Date("2026-01-15T12:00:00Z"));
+            try {
+                mgr.setSnoozeSchedule({ enabled: true, start: "00:00", end: "23:59" });
+                expect(mgr.notify(intent())).toBe("ignored-paused");
+            } finally {
+                vi.useRealTimers();
+            }
         });
 
         it("a disabled schedule does not pause", () => {
@@ -1049,11 +1056,17 @@ describe("NotificationManager", () => {
         it("hydratePreferences copies snoozeSchedule and drives the gate", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
             mgr.setZoneProvider(() => "UTC");
-            mgr.hydratePreferences({
-                ...DEFAULT_NOTIFICATION_PREFERENCE,
-                snoozeSchedule: { enabled: true, start: "00:00", end: "23:59" },
-            });
-            expect(mgr.notify(intent())).toBe("ignored-paused");
+            vi.useFakeTimers({ toFake: ["Date"] });
+            vi.setSystemTime(new Date("2026-01-15T12:00:00Z"));
+            try {
+                mgr.hydratePreferences({
+                    ...DEFAULT_NOTIFICATION_PREFERENCE,
+                    snoozeSchedule: { enabled: true, start: "00:00", end: "23:59" },
+                });
+                expect(mgr.notify(intent())).toBe("ignored-paused");
+            } finally {
+                vi.useRealTimers();
+            }
         });
     });
 });

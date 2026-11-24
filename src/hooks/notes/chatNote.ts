@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { ChatNoteMetaProps, ChatNoteMetaTreeNode, ChatNoteProps } from "../../types/notes";
 
@@ -59,7 +59,21 @@ export const updataChatNoteChain = (props: updataChatNoteChainProps) => {
         selectedTabIndex,
     } = props;
 
+    // The effect below must keep running only for the dependencies listed at its end, but it
+    // has to read the latest chain and setters, so they are read through a ref.
+    const latest = useRef({
+        currentChatNoteChain,
+        setCurrentChatNoteChain,
+        setAllNoteIdChains,
+    });
+    latest.current = { currentChatNoteChain, setCurrentChatNoteChain, setAllNoteIdChains };
+
     useEffect(() => {
+        const {
+            currentChatNoteChain: currentChain,
+            setCurrentChatNoteChain: setCurrentChain,
+            setAllNoteIdChains: setAllChains,
+        } = latest.current;
         // Will update the Chain when `currentChatNote`, `tabItems`, or `selectedTabIndex` is changed.
         // When `tabItems` is changed, `currentChatNote` is also changed at the same time.
         // But `currentChatNote` can be changed alone only if `tabItems` includes `currentChatNote`.
@@ -68,24 +82,24 @@ export const updataChatNoteChain = (props: updataChatNoteChainProps) => {
             if (chain) {
                 // Update chain if it's different from current, or if current is undefined
                 const isDifferent =
-                    !currentChatNoteChain ||
+                    !currentChain ||
                     !areArraysEqualByJSON(
                         chain.map((item) => `${item.noteType}-${item.noteId}`),
-                        currentChatNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
+                        currentChain.map((item) => `${item.noteType}-${item.noteId}`)
                     );
 
                 if (isDifferent) {
-                    setCurrentChatNoteChain(chain);
+                    setCurrentChain(chain);
                 }
 
-                setAllNoteIdChains((prev) => ({
+                setAllChains((prev) => ({
                     ...prev,
                     [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
                         chain.map((item) => item.noteId),
                 }));
             }
         } else {
-            setCurrentChatNoteChain([]);
+            setCurrentChain([]);
         }
     }, [currentChatNote, tabItems, selectedTabIndex, chatNoteMetaTree]);
 };
@@ -97,9 +111,13 @@ type initCurrentChatNoteChainProps = {
 };
 export const initCurrentChatNoteChain = (props: initCurrentChatNoteChainProps) => {
     const { chatNoteMeta, currentChatNoteChain, setCurrentChatNoteChain } = props;
+    const latest = useRef({ currentChatNoteChain, setCurrentChatNoteChain });
+    latest.current = { currentChatNoteChain, setCurrentChatNoteChain };
     useEffect(() => {
-        if (currentChatNoteChain === undefined && chatNoteMeta.length === 0) {
-            setCurrentChatNoteChain([]);
+        const { currentChatNoteChain: currentChain, setCurrentChatNoteChain: setCurrentChain } =
+            latest.current;
+        if (currentChain === undefined && chatNoteMeta.length === 0) {
+            setCurrentChain([]);
         }
     }, [chatNoteMeta]);
 };

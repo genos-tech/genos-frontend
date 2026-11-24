@@ -113,4 +113,39 @@ describe("signUp", () => {
             "Please agree to the Terms of Service and the Privacy Policy to create an account."
         );
     });
+
+    it.each([
+        [
+            ["password_too_common"],
+            "This password is too common or too easy to guess. Please choose another.",
+        ],
+        [
+            ["password_entirely_numeric"],
+            "This password is too common or too easy to guess. Please choose another.",
+        ],
+        [
+            ["password_breached"],
+            "This password has appeared in a known data breach. Please choose another.",
+        ],
+        [["password_too_short"], "Password doesn't meet the strength requirements yet."],
+    ])(
+        "MIP-2238: shows the password reason %j, not the duplicate-email text",
+        async (codes, text) => {
+            const mockPost = vi.fn().mockRejectedValue({
+                isAxiosError: true,
+                response: {
+                    status: 400,
+                    data: { code: "password_rejected", password_errors: codes },
+                },
+            });
+            (nonAuthApi as ReturnType<typeof vi.fn>).mockReturnValue({ post: mockPost });
+
+            const axios = await import("axios");
+            vi.spyOn(axios.default, "isAxiosError").mockReturnValue(true);
+
+            const setError = vi.fn();
+            await signUp("user", "u@test.com", "pass", setError);
+            expect(setError).toHaveBeenCalledWith(text);
+        }
+    );
 });
