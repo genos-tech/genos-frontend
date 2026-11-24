@@ -2,6 +2,7 @@ import { HOME_COPY } from "../copy/home";
 import { SEGMENTS, type SegmentKey } from "../segments";
 import { buildHeadTags, htmlLangFor, type HeadSpec, type HeadTag, type SeoLang } from "./head";
 import { injectHead } from "./injectHead";
+import { manualTopicPaths, type ManualHeads } from "./manualHeads";
 import {
     ACCESSIBILITY_META,
     articleMeta,
@@ -114,7 +115,8 @@ const SINGLE_META: Record<string, Meta> = {
 export const headSpecFor = (
     path: string,
     lang: SeoLang,
-    articles: readonly BlogArticleHead[] = []
+    articles: readonly BlogArticleHead[] = [],
+    manual: ManualHeads = {}
 ): HeadSpec | undefined => {
     const route = routeFor(path);
     if (!route) return undefined;
@@ -145,6 +147,15 @@ export const headSpecFor = (
     const single = SINGLE_META[key];
     if (single) return withLang(single);
 
+    const topicId = /^\/docs\/([a-z0-9-]+)$/.exec(key)?.[1];
+    if (topicId) {
+        // A language with no manual yet shows the English one, so its head is the English one too.
+        const topic = (manual[lang] ?? manual.en)?.find((t) => t.id === topicId);
+        const known = manual.en?.some((t) => t.id === topicId);
+        if (!topic || !known) return undefined;
+        return withLang({ title: `${topic.title} | Genos`, description: topic.description });
+    }
+
     const slug = /^\/blog\/([^/]+)$/.exec(key.toLowerCase())?.[1];
     const article = slug ? articles.find((a) => a.slug.toLowerCase() === slug) : undefined;
     if (article) {
@@ -170,18 +181,22 @@ export interface PageHead {
 
 /**
  * One entry per distinct served head: every fixed route (and its `?lang=ja`
- * twin where the page toggles) and every English blog article.
+ * twin where the page toggles), every English blog article and every manual topic.
  */
-export const allPageHeads = (articles: readonly BlogArticleHead[]): PageHead[] => {
+export const allPageHeads = (
+    articles: readonly BlogArticleHead[],
+    manual: ManualHeads = {}
+): PageHead[] => {
     const paths = [
         ...LP_ROUTES.map((r) => r.path),
+        ...manualTopicPaths(manual),
         ...articles.filter((a) => a.language === "en").map((a) => `/blog/${a.slug}`),
     ];
     const out: PageHead[] = [];
     for (const path of paths) {
         const toggles = routeFor(path)?.langs === "toggle";
         for (const lang of toggles ? (["en", "ja"] as const) : (["en"] as const)) {
-            const spec = headSpecFor(path, lang, articles);
+            const spec = headSpecFor(path, lang, articles, manual);
             if (!spec) continue;
             out.push({
                 path,
@@ -204,8 +219,12 @@ export interface SeoPage {
 }
 
 /** The `_seo/**` copies of `index.html` the build writes, one per `allPageHeads` entry. */
-export const buildSeoPages = (template: string, articles: readonly BlogArticleHead[]): SeoPage[] =>
-    allPageHeads(articles).map((head) => ({
+export const buildSeoPages = (
+    template: string,
+    articles: readonly BlogArticleHead[],
+    manual: ManualHeads = {}
+): SeoPage[] =>
+    allPageHeads(articles, manual).map((head) => ({
         path: head.path,
         lang: head.lang,
         file: `_seo/${head.lang}${head.path === "/" ? "/index" : head.path}.html`,

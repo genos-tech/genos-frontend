@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { MIGRATE_COPY } from "../lp/copy/migrate";
 import MigratePage from "../lp/MigratePage";
 import { MIGRATE_META } from "../lp/seo/pageMeta";
-import { LP_ROUTES } from "../lp/seo/routes";
+import { routeFor } from "../lp/seo/routes";
 
 const everyString = (v: unknown): string[] =>
     typeof v === "string"
@@ -36,7 +36,7 @@ describe("migrate copy", () => {
             expect(anchors).toContain(m[1]);
         }
         for (const m of text.matchAll(/\]\((\/[a-z-/]+)\)/g)) {
-            expect(LP_ROUTES.map((r) => r.path)).toContain(m[1].split("#")[0]);
+            expect(routeFor(m[1].split("#")[0]), m[1]).toBeDefined();
         }
     });
 

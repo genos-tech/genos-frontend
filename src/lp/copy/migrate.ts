@@ -69,7 +69,7 @@ export const MIGRATE_COPY: Record<Lang, MigrateCopy> = {
             "To take notes out again: **Export as Markdown** is in a note's **More options** menu, and **Export folder as .zip** is in a note folder's menu.",
         tasksHeading: "Tasks",
         tasksBody:
-            "Tasks can be imported from a CSV file, including a Jira CSV export or a Notion database exported as CSV. Open a project and choose **Import tasks from CSV…** in the menu at the top of its task list. Genos recognises the Jira and Notion column names, shows a preview before anything is created, and lists each row it could not import. Everything from one import can be removed again in one step. A file can hold up to 1,000 rows. People are matched by e-mail address only: a Notion export holds names, so those tasks arrive unassigned. An AI agent you connect through Claude can also create tasks in Genos; see [Connect Claude](/docs#connect). TODO(copy): MIP-1835",
+            "Tasks can be imported from a CSV file, including a Jira CSV export or a Notion database exported as CSV. Open a project and choose **Import tasks from CSV…** in the menu at the top of its task list. Genos recognises the Jira and Notion column names, shows a preview before anything is created, and lists each row it could not import. Everything from one import can be removed again in one step. A file can hold up to 1,000 rows. People are matched by e-mail address only: a Notion export holds names, so those tasks arrive unassigned. An AI agent you connect through Claude can also create tasks in Genos; see [Connecting Genos to other tools](/docs/connecting). TODO(copy): MIP-1835",
         gapsHeading: "What does not come in",
         gapsIntro:
             "This is the honest list. Each item is a request we have recorded, not a promise.",
@@ -126,7 +126,7 @@ export const MIGRATE_COPY: Record<Lang, MigrateCopy> = {
             "ノートを書き出すには、ノートの **その他のオプション** メニューの **Markdownとしてエクスポート**、またはノートフォルダのメニューの **フォルダを .zip でエクスポート** を使います。",
         tasksHeading: "タスク",
         tasksBody:
-            "タスクは CSV ファイルから取り込めます。Jira の CSV 書き出しや、CSV として書き出した Notion のデータベースも使えます。プロジェクトを開き、タスク一覧の上にあるメニューから **CSVからタスクをインポート…** を選びます。Jira と Notion の列名は自動で認識され、作成する前にプレビューが表示され、取り込めなかった行は一覧で示されます。1回のインポートで作成したものは、まとめて削除できます。1ファイルは1,000行までです。担当者はメールアドレスだけで対応づけます。Notion の書き出しには名前しかないため、そのタスクは担当者なしで取り込まれます。Claude で接続した AI エージェントも、Genos にタスクを作成できます。詳しくは [Claude を接続する](/docs#connect) をご覧ください。 TODO(copy): MIP-1835",
+            "タスクは CSV ファイルから取り込めます。Jira の CSV 書き出しや、CSV として書き出した Notion のデータベースも使えます。プロジェクトを開き、タスク一覧の上にあるメニューから **CSVからタスクをインポート…** を選びます。Jira と Notion の列名は自動で認識され、作成する前にプレビューが表示され、取り込めなかった行は一覧で示されます。1回のインポートで作成したものは、まとめて削除できます。1ファイルは1,000行までです。担当者はメールアドレスだけで対応づけます。Notion の書き出しには名前しかないため、そのタスクは担当者なしで取り込まれます。Claude で接続した AI エージェントも、Genos にタスクを作成できます。詳しくは [Genos と他のツールをつなぐ](/docs/connecting) をご覧ください。 TODO(copy): MIP-1835",
         gapsHeading: "取り込めないもの",
         gapsIntro: "正直に一覧にしています。各項目は、記録された要望であり、約束ではありません。",
         gaps: [
