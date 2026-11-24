@@ -203,7 +203,7 @@ describe("a returning visitor", () => {
         expect(prompt(m)).toBeNull();
         expect(posthog.init).toHaveBeenCalledTimes(1);
         expect(posthog.init.mock.calls[0][1]).toMatchObject({ advanced_disable_flags: true });
-        expect(posthog.init.mock.calls[0][1]).not.toHaveProperty("capture_heatmaps");
+        expect(posthog.init.mock.calls[0][1]).toMatchObject({ capture_heatmaps: false });
         expect(posthog.identify).toHaveBeenCalledWith("user-1", {
             role: "admin",
             teamId: "team-1",

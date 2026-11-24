@@ -51,14 +51,23 @@ describe("the app start", () => {
         expect(typeof posthog.init.mock.calls[0][1].before_send).toBe("function");
     });
 
-    it("leaves the marketing-only switches alone (the app keeps its device fields)", async () => {
+    it("pins every remote-config collection option off in the app too (MIP-2255)", async () => {
         const analytics = await load();
         analytics.init();
         await analytics.whenReady();
-        const options = posthog.init.mock.calls[0][1];
-        for (const key of ["capture_heatmaps", "capture_dead_clicks", "disable_surveys"]) {
-            expect(options, key).not.toHaveProperty(key);
-        }
+        expect(posthog.init.mock.calls[0][1]).toMatchObject({
+            autocapture: false,
+            disable_session_recording: true,
+            capture_heatmaps: false,
+            capture_dead_clicks: false,
+            capture_exceptions: false,
+            disable_surveys: true,
+            disable_conversations: true,
+            disable_product_tours: true,
+            disable_web_experiments: true,
+        });
+        // The app keeps its device fields (performance timing).
+        expect(posthog.init.mock.calls[0][1]).not.toHaveProperty("capture_performance");
     });
 
     it("deletes the session's stored entry data after every capture, also one queued before the chunk loaded", async () => {

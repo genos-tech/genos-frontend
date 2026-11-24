@@ -1437,6 +1437,65 @@ export const es: DeepPartial<Messages> = {
                 failed: "No se pudo enviar la denuncia. Inténtalo de nuevo.",
                 limit: "Has enviado el máximo de denuncias de hoy. Inténtalo de nuevo mañana.",
             },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "¿Ejecutar esta habilidad?",
+                intro: "Lee lo que dice esta habilidad antes de ejecutarla por primera vez. Solo se ejecuta si eliges Ejecutar esta habilidad.",
+                loading: "Cargando la habilidad…",
+                loadFailed: "No se pudo cargar esta habilidad. Inténtalo de nuevo.",
+                confirmFailed: "No se pudo guardar tu respuesta. Inténtalo de nuevo.",
+                harmful: "La habilidad de la que se copió fue eliminada por Genos por ser dañina.",
+                writtenBy: "Escrita por",
+                noAuthor: "Sin autor indicado",
+                version: "Versión {n}",
+                textLabel: "Lo que dice esta habilidad",
+                emptyText: "(Esta versión no tiene texto.)",
+                mayLabel: "Lo que puede hacer",
+                readOnly: "Solo puede leer. No puede crear ni cambiar nada.",
+                propose: {
+                    create_task: "Proponer crear una tarea",
+                    create_note: "Proponer crear una nota",
+                    create_todo_item: "Proponer añadir un elemento a tu lista de tareas",
+                },
+                approveFirst: "Cada una solo ocurre después de que la apruebes.",
+                run: "Ejecutar esta habilidad",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "Actualización disponible",
+                loading: "Cargando los cambios…",
+                loadFailed: "No se pudieron cargar los cambios. Inténtalo de nuevo.",
+                upToDate: "Ya tienes la última versión.",
+                versions: "De la versión {from} a la versión {to}",
+                versionShort: "Versión {n}",
+                changelogsLabel: "Lo que el autor dice que cambió",
+                noChangelog: "Sin nota del autor.",
+                changesLabel: "Detalles modificados",
+                none: "ninguno",
+                language: "Idioma",
+                becomes: "pasa a",
+                toolRaisedTitle: "Esta versión ahora puede proponer cambios",
+                toolRaised:
+                    "Las versiones anteriores solo podían leer. Esta puede sugerir crear tareas, notas o elementos de tareas pendientes por ti. Cada sugerencia sigue necesitando tu aprobación.",
+                needsConfirmation: "Se te pedirá confirmación antes de ejecutar esta versión.",
+                diffLabel: "Cambios en el texto",
+                diffEmpty: "El texto no cambió.",
+                truncated:
+                    "Los cambios son demasiado largos para mostrarlos completos. Solo se muestra la primera parte.",
+                moved: "El autor publicó otra versión mientras leías. Los cambios de abajo son los más recientes.",
+                updateFailed: "No se pudo actualizar la habilidad. Inténtalo de nuevo.",
+                update: "Actualizar a la versión {n}",
+                updateGeneric: "Actualizar",
+                keep: "Mantener la versión {n}",
+                close: "Cerrar",
+                updated: "Actualizada a la versión {n}.",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "Copia de una habilidad eliminada",
+                warning: "La habilidad de la que se copió fue eliminada por Genos por ser dañina.",
+            },
             moderation: {
                 title: {
                     in_review:

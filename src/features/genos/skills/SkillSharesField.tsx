@@ -215,7 +215,6 @@ export const SkillSharesField = ({
                             sm: "repeat(2, minmax(0, 1fr))",
                         },
                         gap: 1,
-                        maxWidth: 560,
                     }}
                 >
                     {/* The shared person picker (avatar + name, type to search). */}
@@ -225,6 +224,7 @@ export const SkillSharesField = ({
                         myUserId={myId}
                         options={people}
                         placeholder={people.length === 0 ? m.everyone : m.addPerson}
+                        size="md"
                         onPick={(person) =>
                             add({
                                 kind: "user",

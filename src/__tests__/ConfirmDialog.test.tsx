@@ -97,6 +97,12 @@ describe("ConfirmDialog", () => {
             expect(document.activeElement).toBe(confirmBtn("Convert"));
         });
 
+        it("focusCancel: focus starts on Cancel without a red confirm", () => {
+            mount({ destructive: false, focusCancel: true, confirmLabel: "Convert" });
+            expect(document.activeElement).toBe(cancelBtn());
+            expect(screen.getByRole("dialog")).toBeTruthy();
+        });
+
         it("Enter on the initially focused destructive dialog keeps the data", () => {
             // The browser turns Enter on a focused button into a click on it.
             const { props } = mount();
