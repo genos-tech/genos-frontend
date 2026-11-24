@@ -1116,6 +1116,48 @@ export const es: DeepPartial<Messages> = {
             namePlaceholder: "p. ej. Plan del lunes",
             job: "Informe",
             jobPlaceholder: "Elige un informe",
+            jobCatalog: {
+                what_to_do_today: {
+                    title: "Qué hacer hoy",
+                    description:
+                        "Tu día a partir de lo que ya está en Genos: por dónde empezar, qué está vencido o vence hoy, tus tareas pendientes y tu calendario, qué espera de ti, qué cambió últimamente y qué se ha quedado sin movimiento.",
+                },
+                what_you_did: {
+                    title: "Lo que hiciste",
+                    description:
+                        "Lo que hiciste hoy o ayer, a partir de lo que Genos ya guardó: tareas que cambiaste y comentaste, notas que editaste, pendientes que terminaste y cuántos mensajes enviaste en qué chats. No hay nada que escribir.",
+                },
+                what_is_left: {
+                    title: "Lo que queda de la semana pasada",
+                    description:
+                        "Lo que sigue abierto de los últimos días, a partir de lo que hiciste y de lo que Genos ya guardó: tareas en las que trabajaste y no están cerradas, tareas cerradas después de tu trabajo y pendientes sin terminar. Útil para el lunes por la mañana.",
+                },
+                project_updates: {
+                    title: "Novedades del proyecto",
+                    description:
+                        "Qué avanzó, qué se retrasó y qué está bloqueado en un proyecto últimamente: tareas terminadas y movidas en los últimos días, tareas que vencieron o cuya fecha límite se aplazó, y tareas bloqueadas.",
+                },
+                milestone_updates: {
+                    title: "Novedades del hito",
+                    description:
+                        "Cómo va un hito y qué cambió en él últimamente: número de tareas por estado, qué cambió en los últimos días y quién lo hizo, qué está listo para empezar y qué espera por bloqueos.",
+                },
+                team_activity: {
+                    title: "Actividad del equipo",
+                    description:
+                        "Qué hicieron últimamente los proyectos del equipo (tareas cerradas y creadas), quién se unió al equipo y quién cerró más tareas. En un chat solo nombra los proyectos en los que están todos los de ese chat, y solo a los miembros del equipo.",
+                },
+                chat_catch_up: {
+                    title: "Resumen de chats de grupo",
+                    description:
+                        "Qué chats de grupo tienen más movimiento ahora: cuántos mensajes y cuántas personas en las últimas horas. Solo chats en los que estás; en un chat, solo chats en los que están todos. Nunca muestra lo que se dijo.",
+                },
+                run_skill: {
+                    title: "Ejecutar una habilidad",
+                    description:
+                        "Ejecuta una de tus habilidades con esta programación y guarda lo que encuentra en tu bandeja de entrada, o lo publica en un chat en el que solo estás tú. Solo lee (no cambia nada), usa tus créditos de IA como una pregunta en Spotlight y ejecuta la versión publicada que elegiste.",
+                },
+            },
             options: "Opciones",
             paramDefault: "Predeterminado",
             paramRange: "Número entero de {min} a {max}",

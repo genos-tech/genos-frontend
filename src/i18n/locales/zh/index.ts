@@ -4717,6 +4717,48 @@ export const zh: DeepPartial<Messages> = {
             namePlaceholder: "例如:周一计划",
             job: "报告",
             jobPlaceholder: "选择报告",
+            jobCatalog: {
+                what_to_do_today: {
+                    title: "今天要做什么",
+                    description:
+                        "根据 Genos 中已有的内容生成你的一天:先做什么、已逾期或今天到期的事项、你的待办和日程、等你处理的事项、最近的变化,以及已经沉寂的事项。",
+                },
+                what_you_did: {
+                    title: "你做了什么",
+                    description:
+                        "根据 Genos 已保存的内容,汇总你今天或昨天做的事:你修改和评论过的任务、编辑过的笔记、完成的待办,以及你在各个聊天中发送的消息数量。无需输入任何内容。",
+                },
+                what_is_left: {
+                    title: "上周遗留事项",
+                    description:
+                        "汇总最近几天仍未完成的事项:你处理过但尚未关闭的任务、在你处理后被关闭的任务,以及未完成的待办。适合周一早上查看。",
+                },
+                project_updates: {
+                    title: "项目动态",
+                    description:
+                        "汇总某个项目最近的进展、延误和阻塞:最近几天完成和移动的任务、已逾期或截止日期被推迟的任务,以及被阻塞的任务。",
+                },
+                milestone_updates: {
+                    title: "里程碑动态",
+                    description:
+                        "汇总某个里程碑的现状和最近的变化:按状态统计的任务数、最近几天任何人所做的变更、可以开始的事项,以及在等待阻塞项解决的事项。",
+                },
+                team_activity: {
+                    title: "团队动态",
+                    description:
+                        "汇总团队各项目最近的动态(已关闭和新建的任务)、新加入团队的成员,以及关闭任务最多的人。在聊天中发布时,只列出该聊天所有人都参与的项目,并且只发给团队成员。",
+                },
+                chat_catch_up: {
+                    title: "群聊概览",
+                    description:
+                        "显示目前哪些群聊最活跃:最近几个小时内的消息数和参与人数。只包含你所在的聊天;在聊天中发布时,只包含其中所有人都在的聊天。不会显示聊天的具体内容。",
+                },
+                run_skill: {
+                    title: "运行技能",
+                    description:
+                        "按此计划运行你的一个技能,并将结果放入收件箱,或发布到只有你一人的聊天中。它只读取(不做任何更改),像在 Spotlight 中提问一样消耗你的 AI 额度,并运行你选择的已发布版本。",
+                },
+            },
             options: "选项",
             paramDefault: "默认",
             paramRange: "{min} 到 {max} 的整数",

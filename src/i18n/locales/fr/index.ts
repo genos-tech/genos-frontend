@@ -4995,6 +4995,48 @@ export const fr: DeepPartial<Messages> = {
             namePlaceholder: "p. ex. Plan du lundi",
             job: "Rapport",
             jobPlaceholder: "Choisir un rapport",
+            jobCatalog: {
+                what_to_do_today: {
+                    title: "À faire aujourd'hui",
+                    description:
+                        "Votre journée à partir de ce qui est déjà dans Genos : par quoi commencer, ce qui est en retard ou dû aujourd'hui, vos to-dos et votre agenda, ce qui attend votre réponse, ce qui a changé récemment et ce qui est resté sans activité.",
+                },
+                what_you_did: {
+                    title: "Ce que vous avez fait",
+                    description:
+                        "Ce que vous avez fait aujourd'hui ou hier, à partir de ce que Genos a déjà enregistré : tâches modifiées et commentées, notes modifiées, to-dos terminés, et combien de messages vous avez envoyés dans quelles discussions. Rien à saisir.",
+                },
+                what_is_left: {
+                    title: "Ce qui reste de la semaine dernière",
+                    description:
+                        "Ce qui reste ouvert ces derniers jours, d'après ce que vous avez fait et ce que Genos a déjà enregistré : tâches sur lesquelles vous avez travaillé et non clôturées, tâches clôturées après votre travail, et to-dos inachevés. Utile le lundi matin.",
+                },
+                project_updates: {
+                    title: "Actualités du projet",
+                    description:
+                        "Ce qui a avancé, ce qui a pris du retard et ce qui est bloqué dans un projet récemment : tâches terminées et déplacées ces derniers jours, tâches en retard ou dont l'échéance a été repoussée, et tâches bloquées.",
+                },
+                milestone_updates: {
+                    title: "Actualités du jalon",
+                    description:
+                        "Où en est un jalon et ce qui a changé récemment : nombre de tâches par statut, ce qui a changé ces derniers jours et par qui, ce qui est prêt à démarrer et ce qui attend des blocages.",
+                },
+                team_activity: {
+                    title: "Activité de l'équipe",
+                    description:
+                        "Ce que les projets de l'équipe ont fait récemment (tâches clôturées et créées), qui a rejoint l'équipe et qui a clôturé le plus de tâches. Dans une discussion, seuls les projets où se trouvent tous les participants sont nommés, et seulement aux membres de l'équipe.",
+                },
+                chat_catch_up: {
+                    title: "Résumé des discussions de groupe",
+                    description:
+                        "Quelles discussions de groupe sont actives en ce moment : combien de messages et combien de personnes ces dernières heures. Uniquement les discussions où vous êtes ; dans une discussion, uniquement celles où tout le monde est présent. Ne montre jamais ce qui a été dit.",
+                },
+                run_skill: {
+                    title: "Exécuter une compétence",
+                    description:
+                        "Exécute l'une de vos compétences selon ce calendrier et dépose le résultat dans votre boîte de réception, ou le publie dans une discussion où vous êtes seul. Elle ne fait que lire (rien n'est modifié), utilise vos crédits IA comme une question dans Spotlight et exécute la version publiée que vous avez choisie.",
+                },
+            },
             options: "Options",
             paramDefault: "Par défaut",
             paramRange: "Nombre entier de {min} à {max}",

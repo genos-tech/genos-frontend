@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -13,6 +13,7 @@ import {
     STATUS_KEYS,
     statusColor,
 } from "../../../features/schedules/scheduleFormat";
+import { localizeJob } from "../../../features/schedules/scheduleParams";
 import { rowTargets } from "../../../features/schedules/scheduleRowParams";
 import { fmt, useTranslation } from "../../../i18n";
 import {
@@ -291,6 +292,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         await refresh();
     };
 
+    const jobs = useMemo(() => (data?.jobs ?? []).map((j) => localizeJob(j, s)), [data, s]);
     const schedules = data?.schedules ?? [];
     // The row names the project or milestone a schedule reports on. Projects come from the list
     // the app already holds; a milestone's name needs each project's milestone list, which is
@@ -299,14 +301,14 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
     const needsMilestones = schedules.some(
         (sch) =>
             rowTargets(
-                data?.jobs.find((j) => j.job === sch.job),
+                jobs.find((j) => j.job === sch.job),
                 sch.params
             ).milestoneId
     );
     const milestoneNames = useProjectMilestones(needsMilestones ? projectsInTeam : []);
     const paramLine = (sch: Schedule): string | null => {
         const { projectId, milestoneId } = rowTargets(
-            data?.jobs.find((j) => j.job === sch.job),
+            jobs.find((j) => j.job === sch.job),
             sch.params
         );
         // Until the app's project list has arrived (or when the member is in no project) a
@@ -348,7 +350,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
             aiCreditsOut={data?.aiCreditsOut === true}
             chatTargets={data?.chatTargets ?? []}
             existing={schedules}
-            jobs={data?.jobs ?? []}
+            jobs={jobs}
             schedule={existing}
             timeZone={zone}
             onCancel={() => setMode(null)}
@@ -517,7 +519,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                 }
                 const notice = notices[sch.id];
                 const effort = rowEffort(
-                    data?.jobs.find((j) => j.job === sch.job),
+                    jobs.find((j) => j.job === sch.job),
                     sch
                 );
                 const rowBusy = busy === sch.id;
@@ -544,7 +546,9 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     {sch.name}
                                 </Typography>
                                 <Chip size="sm" variant="soft">
-                                    {sch.jobTitle ?? s.jobRemoved}
+                                    {jobs.find((j) => j.job === sch.job)?.title ??
+                                        sch.jobTitle ??
+                                        s.jobRemoved}
                                 </Chip>
                                 {!sch.enabled && (
                                     <Chip color="warning" size="sm" variant="soft">

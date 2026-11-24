@@ -11,18 +11,22 @@
 // the label made from its key, so it still shows up with no change to this file.
 
 import type { Messages } from "../../i18n";
-import type { JobParam } from "../../services/schedules";
+import type { JobParam, ScheduleJob } from "../../services/schedules";
 
 type ScheduleStrings = Messages["settings"]["schedules"];
+/** The keys whose value is one sentence (not a group such as `jobCatalog`). */
+type TextKey = {
+    [K in keyof ScheduleStrings]: ScheduleStrings[K] extends string ? K : never;
+}[keyof ScheduleStrings];
 
 export type ParamPicker = "project" | "milestone" | "skill";
 
 export interface KnownParam {
-    label: keyof ScheduleStrings;
-    hint: keyof ScheduleStrings;
+    label: TextKey;
+    hint: TextKey;
     /** The hint when the job REQUIRES the parameter, if the optional one's wording would
      *  mislead (the project hint tells the member to leave it on "All projects"). */
-    requiredHint?: keyof ScheduleStrings;
+    requiredHint?: TextKey;
     picker?: ParamPicker;
     /** A true/false parameter, drawn as a switch. `defaultOn`: what "not set" means, because the
      *  catalog states no default (`ai_sentences` is OFF unless turned on, MIP-1969). */
@@ -79,16 +83,27 @@ export const isRequiredParam = (spec: JobParam): boolean => spec.required === tr
 
 /** The hint's string key for a known parameter: the required wording when the job requires it
  *  and there is one, else the plain one. */
-export const paramHintKey = (known: KnownParam, required: boolean): keyof ScheduleStrings =>
+export const paramHintKey = (known: KnownParam, required: boolean): TextKey =>
     required && known.requiredHint ? known.requiredHint : known.hint;
 
 /** The values a job's enum offers, in the member's language. Unknown value: the caller falls back. */
 export const ENUM_LABELS = {
     today: "paramDayToday",
     yesterday: "paramDayYesterday",
-} as const satisfies Record<string, keyof ScheduleStrings>;
+} as const satisfies Record<string, TextKey>;
 
-export const enumLabelKey = (value: string): keyof ScheduleStrings | undefined =>
+export const enumLabelKey = (value: string): TextKey | undefined =>
     Object.prototype.hasOwnProperty.call(ENUM_LABELS, value)
         ? ENUM_LABELS[value as keyof typeof ENUM_LABELS]
         : undefined;
+
+/** A report's name and description in the member's language. The catalog (`schedule_views._job`)
+ *  sends English only; the built-in reports are worded in `settings.schedules.jobCatalog`, keyed
+ *  by job key, as the parameters above are. A job the server added that is not listed keeps the
+ *  catalog's own words, so it still shows up with no change to this file. */
+export const localizeJob = (job: ScheduleJob, s: ScheduleStrings): ScheduleJob => {
+    const words = Object.prototype.hasOwnProperty.call(s.jobCatalog, job.job)
+        ? s.jobCatalog[job.job as keyof ScheduleStrings["jobCatalog"]]
+        : undefined;
+    return words ? { ...job, title: words.title, description: words.description } : job;
+};
