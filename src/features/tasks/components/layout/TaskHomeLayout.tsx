@@ -15,6 +15,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useSoloCreatePane } from "../../../../hooks/tasks/useSoloCreatePane";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -114,6 +115,16 @@ export const TaskHomeLayout = ({
         pb: ls.mainPanel.pb,
     };
 
+    const previewPanelShown =
+        useTM.isTaskPreviewVisible &&
+        !!(
+            useTM.currentPreviewTask ||
+            useTM.currentPreviewTaskId !== -1 ||
+            useTM.currentPreviewKind === "milestone"
+        );
+    const createPanelShown = useTM.isCreatingTask.flag && isActiveRoute && !archived;
+    const soloCreate = useSoloCreatePane(createPanelShown, previewPanelShown);
+
     const renderMainContent = () => (
         <Box className="MainContent" sx={mainPanelSx}>
             {useTM.isTaskDashboardVisible && (
@@ -180,47 +191,57 @@ export const TaskHomeLayout = ({
         </Box>
     );
 
+    const renderCreateTaskForm = () => (
+        <CreateTaskForm
+            myself={myself}
+            setMyself={setMyself}
+            socket={socket}
+            useCM={useCM}
+            useNM={useNM}
+            usePM={usePM}
+            useSM={useSM}
+            useTEM={useTEM}
+            useTM={useTM}
+            useUISM={useUISM}
+        />
+    );
+
+    // The form beside an already-open preview (e.g. a sub-task made from it).
     const renderCreateTaskPanel = () => (
         <>
             <ResizeHandle className="task-resize-handle" />
             <Panel id={"4"} maxSize={80} minSize={30} order={4}>
-                <Box sx={ls.mainPanel}>
-                    <CreateTaskForm
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useNM={useNM}
-                        usePM={usePM}
-                        useSM={useSM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                    />
-                </Box>
+                <Box sx={ls.mainPanel}>{renderCreateTaskForm()}</Box>
             </Panel>
         </>
     );
 
+    // The preview slot. When the form opened with no preview on screen (`soloCreate`) it
+    // fills THIS slot, and on submit the same Panel/Box swaps to the new item's preview
+    // instead of closing one pane and opening another (MIP-2370).
     const renderTaskPreviewPanel = () => (
         <>
             <ResizeHandle className="task-resize-handle" />
             <Panel defaultSize={50} id={"3"} maxSize={80} minSize={30} order={3}>
                 <Box sx={ls.mainPanel}>
-                    {/* TaskPreview decides read-only from the task's own project. */}
-                    <TaskPreview
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useNM={useNM}
-                        usePM={usePM}
-                        useSM={useSM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                        holdSwitchWithLoader
-                    />
+                    {soloCreate ? (
+                        renderCreateTaskForm()
+                    ) : (
+                        /* TaskPreview decides read-only from the task's own project. */
+                        <TaskPreview
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useSM={useSM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                            holdSwitchWithLoader
+                        />
+                    )}
                 </Box>
             </Panel>
         </>
@@ -374,17 +395,10 @@ export const TaskHomeLayout = ({
                         Pending-status milestone is clicked, then a
                         regular task in another column is clicked
                         rapidly afterward. */}
-                    {useTM.isTaskPreviewVisible &&
-                        (useTM.currentPreviewTask ||
-                            useTM.currentPreviewTaskId !== -1 ||
-                            useTM.currentPreviewKind === "milestone") &&
-                        renderTaskPreviewPanel()}
+                    {(soloCreate || previewPanelShown) && renderTaskPreviewPanel()}
                     {/* No new task in an archived project (MIP-1693): the panel would open and
                         could not be used, so it is not offered. */}
-                    {useTM.isCreatingTask.flag &&
-                        isActiveRoute &&
-                        !archived &&
-                        renderCreateTaskPanel()}
+                    {createPanelShown && !soloCreate && renderCreateTaskPanel()}
                     {/* `isTaskNotePaneVisible`, NOT `isTaskNoteVisible`:
                         closing every note tab leaves the flag set but each
                         branch inside `renderTaskNotePanel` gated off, which

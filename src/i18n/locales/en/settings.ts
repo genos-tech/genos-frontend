@@ -296,7 +296,9 @@ export const settings = {
         deliverChatHint:
             "The report is posted in this chat as a message, with no AI and no notification. Everyone in the chat can read it, so a project report can only go to a chat of that project's members.",
         deliverChatHintAi:
-            "The report is posted in this chat as a message. It uses AI credits and shows its cost in the message, and it can only go to a chat that only you are in. No notification is sent.",
+            "The report is posted in this chat as a message. It uses AI credits; what it cost is shown only to you, in your Inbox, not in the chat. It can only go to a chat that only you are in. No notification is sent.",
+        deliverChatHintAiShared:
+            "The report is posted in this chat as a message, with its AI sentences. Everyone in the chat can read it, but what it cost is shown only to you, in your Inbox. No notification is sent.",
         rowDeliver: "Posts in: {name}",
         reportPosted: "Report posted in {chat}",
         rowProject: "Project: {name}",
