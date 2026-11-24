@@ -101,6 +101,7 @@ import { NotificationSettingsPanel } from "../../services/notifications/Notifica
 import { useColorTheme } from "../../theme/colorThemeState";
 import { THEME_IDS, themeSwatch } from "../../theme/themePalettes";
 import { g } from "../../theme/tokens";
+import { closeModalPages, pushModalPage, subscribeModalHistory } from "../../utils/modalHistory";
 import { AppTooltip } from "../ui/AppTooltip";
 import { EmojiGlyph } from "../ui/emoji/EmojiGlyph";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
@@ -125,6 +126,9 @@ import { CreditUsageSection } from "./settings/CreditBalance";
 import { KeyboardShortcutsSection } from "./settings/KeyboardShortcutsSection";
 import { PlanUsageSection } from "./settings/PlanUsageSection";
 import { TeamEmojiPanel } from "./TeamEmojiPanel";
+
+// The owner name of Settings' browser-history entries (MIP-2376).
+const SETTINGS_HISTORY_OWNER = "settings-modal";
 
 type Props = {
     open: boolean;
@@ -1856,6 +1860,47 @@ export const SettingsModal = ({
                 : "general"
         );
     }, [open, initialTab]);
+    // Browser Back / Forward (MIP-2376): opening Settings and each tab switch is one history
+    // entry, so Back returns to the previous tab and from the first one closes Settings.
+    const pushedTab = useRef<SettingsTabKey | null>(null);
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
+    useEffect(() => {
+        if (!open) return;
+        return subscribeModalHistory(SETTINGS_HISTORY_OWNER, (value) => {
+            const page = value as { tab: SettingsTabKey } | null;
+            if (!page) {
+                pushedTab.current = null;
+                onCloseRef.current();
+                return;
+            }
+            pushedTab.current = page.tab;
+            setTab(page.tab);
+        });
+    }, [open]);
+    useEffect(() => {
+        if (!open) {
+            // Closed by any other means (✕, Esc, a link inside a panel): drop its entries, so
+            // Back does not reopen it. A no-op when Back itself closed it.
+            if (pushedTab.current !== null) {
+                pushedTab.current = null;
+                closeModalPages(SETTINGS_HISTORY_OWNER);
+            }
+            return;
+        }
+        if (pushedTab.current === tab) return;
+        // A requested tab is applied by the effect above in this same commit; wait for it, so
+        // opening on Developer is one entry, not General and then Developer.
+        const requested =
+            initialTab && SETTINGS_TABS.some((def) => def.enabled && def.key === initialTab)
+                ? initialTab
+                : initialTab
+                  ? "general"
+                  : null;
+        if (pushedTab.current === null && requested && requested !== tab) return;
+        pushedTab.current = tab;
+        pushModalPage(SETTINGS_HISTORY_OWNER, { tab });
+    }, [open, tab, initialTab]);
     // "Connect your AI" points a Free member at Plan & Usage (MIP-2020).
     useEffect(() => {
         if (!open) return;
