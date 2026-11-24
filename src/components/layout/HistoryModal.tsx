@@ -11,7 +11,9 @@ import { Box, Button, Chip, Stack, Tab, TabList, TabPanel, Tabs, Typography } fr
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
+import { HtmlNoteChipFor } from "../../features/notes/common/components/HtmlNoteChip";
 import { NoteOriginIcon } from "../../features/notes/common/components/noteOrigin";
+import { isHtmlNote } from "../../features/notes/common/utils/htmlNote";
 import { StatusLabel } from "../../features/tasks/components/meta/StatusLabel";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import {
@@ -619,13 +621,18 @@ export const HistoryModal = ({
                         subtitle={subtitle || undefined}
                         timestamp={entry.openedAt}
                         chips={
-                            visual ? (
-                                <SmallChip
-                                    color={{ light: visual.light, dark: visual.dark }}
-                                    icon={visual.icon}
-                                    isDark={isDark}
-                                    label={t.history.types[visual.labelKey]}
-                                />
+                            visual || isHtmlNote(entry) ? (
+                                <>
+                                    {visual && (
+                                        <SmallChip
+                                            color={{ light: visual.light, dark: visual.dark }}
+                                            icon={visual.icon}
+                                            isDark={isDark}
+                                            label={t.history.types[visual.labelKey]}
+                                        />
+                                    )}
+                                    <HtmlNoteChipFor note={entry} />
+                                </>
                             ) : null
                         }
                         chipsBeforeLabel

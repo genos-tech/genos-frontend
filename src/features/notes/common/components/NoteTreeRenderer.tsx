@@ -8,7 +8,9 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { useNoteUnread } from "../context/noteUnreadState";
 import { BaseNoteTreeNode } from "../types/noteTypes";
+import { isHtmlNote } from "../utils/htmlNote";
 import { isNoteOpen } from "../utils/openNote";
+import { HtmlNoteChipFor } from "./HtmlNoteChip";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";
 import { NoteKindIcon } from "./noteOrigin";
 import { NoteUnreadDot } from "./NoteUnreadDot";
@@ -45,6 +47,14 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     const { t } = useTranslation();
     const { isUnread, markRead } = useNoteUnread();
     const hasUnread = isUnread(noteType, node.noteId);
+    // The HTML chip (MIP-2316) sits before the unread dot; the title truncates before both.
+    const trailing =
+        isHtmlNote(node) || hasUnread ? (
+            <>
+                <HtmlNoteChipFor note={node} />
+                {hasUnread && <NoteUnreadDot />}
+            </>
+        ) : undefined;
 
     // Open state is owned by useNoteManagement so the whole tree shares a
     // single Set instead of one useState + useEffect per row. Sticky
@@ -125,7 +135,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     icon={<NoteKindIcon note={node} />}
                     label={node.title || t.notes.defaults.untitled}
                     selected={isSelected}
-                    trailing={hasUnread ? <NoteUnreadDot /> : undefined}
+                    trailing={trailing}
                     unread={hasUnread}
                     // Keep the "..." trigger visible while its portal menu is
                     // open: otherwise the hover-reveal hides it the moment the

@@ -8,7 +8,9 @@ import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { useNoteUnread } from "../context/noteUnreadState";
+import { isHtmlNote } from "../utils/htmlNote";
 import { isNoteOpen } from "../utils/openNote";
+import { HtmlNoteChipFor } from "./HtmlNoteChip";
 import { NoteKindIcon } from "./noteOrigin";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
@@ -45,6 +47,14 @@ function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNo
     };
 
     const subLabel = locate?.(noteType, note) ?? null;
+    // The HTML chip (MIP-2316) sits before the unread dot; the title truncates before both.
+    const trailing =
+        isHtmlNote(note) || hasUnread ? (
+            <>
+                <HtmlNoteChipFor note={note} />
+                {hasUnread && <NoteUnreadDot />}
+            </>
+        ) : undefined;
 
     return (
         <NavItem
@@ -53,7 +63,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNo
             lines={subLabel ? 2 : 1}
             secondary={subLabel}
             selected={isSelected}
-            trailing={hasUnread ? <NoteUnreadDot /> : undefined}
+            trailing={trailing}
             unread={hasUnread}
             // Remove-from-favorites: hover-revealed on desktop, always visible
             // on touch.
