@@ -978,6 +978,17 @@ describe("NotificationManager", () => {
     });
 
     describe("notify() pause gating (Slack-style snooze)", () => {
+        // The schedule tests use a 00:00-23:59 UTC window, which is closed
+        // from 23:59 to 00:00 UTC; pin the clock to midday so they cannot
+        // fail in that minute (main went red at 23:59:32 UTC on 2026-11-23).
+        beforeEach(() => {
+            vi.useFakeTimers({ toFake: ["Date"] });
+            vi.setSystemTime(new Date("2026-01-15T12:00:00Z"));
+        });
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
         const future = () => new Date(Date.now() + 60 * 60_000).toISOString();
         const past = () => new Date(Date.now() - 60_000).toISOString();
 
@@ -1014,7 +1025,7 @@ describe("NotificationManager", () => {
             const mgr = new NotificationManager({ currentUserId: "me" });
             // Force UTC so the window is deterministic regardless of the CI TZ.
             mgr.setZoneProvider(() => "UTC");
-            // A 00:00–23:59 window is active virtually always in UTC.
+            // A 00:00–23:59 window is active at the pinned midday clock.
             mgr.setSnoozeSchedule({ enabled: true, start: "00:00", end: "23:59" });
             expect(mgr.notify(intent())).toBe("ignored-paused");
         });
