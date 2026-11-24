@@ -21,6 +21,7 @@ import { UserProps } from "../../../../types/admin";
 import { NoteVersionDetail } from "../../../../types/notes";
 import { viaSourceOfNoteVersion } from "../../../tasks/utils/viaSource";
 import { loadNoteVersion } from "../services/loadNoteVersion";
+import { HtmlNoteChipFor } from "./HtmlNoteChip";
 
 interface ModalNoteHistoryProps {
     open: boolean;
@@ -111,6 +112,10 @@ export const ModalNoteHistory = ({
     const { t, locale } = useTranslation();
     const hostZIndex = useNoteModalHostZIndex();
 
+    // The note the history belongs to: an HTML page's snapshots are pages (MIP-2316).
+    const openNote = [useNM.currentMyNote, useNM.currentTaskNote, useNM.currentChatNote].find(
+        (n) => n && n.noteId === noteId
+    );
     const versions = useNM.currentNoteVersions;
     const headVersionNo = versions[0]?.versionNo ?? null;
 
@@ -417,9 +422,12 @@ export const ModalNoteHistory = ({
                     )}
                     {!loadingDetail && detail && (
                         <Stack spacing={1.5}>
-                            <Typography level="h4" sx={{ fontWeight: 600 }}>
-                                {detail.title || t.notes.defaults.untitled}
-                            </Typography>
+                            <Stack alignItems="center" direction="row" spacing={1}>
+                                <Typography level="h4" sx={{ fontWeight: 600, minWidth: 0 }}>
+                                    {detail.title || t.notes.defaults.untitled}
+                                </Typography>
+                                <HtmlNoteChipFor note={openNote} size="md" />
+                            </Stack>
                             <Typography level="body-xs" sx={{ color: g.text.secondary }}>
                                 {fmt(t.notes.history.snapshotFrom, {
                                     time: new Date(detail.tsUpdatedAt).toLocaleString(locale),

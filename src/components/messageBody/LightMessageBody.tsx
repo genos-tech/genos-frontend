@@ -27,7 +27,7 @@
  * `lightBodySupport.ts`.
  */
 
-import { Fragment, useMemo, useRef, useState } from "react";
+import { Fragment, ReactNode, useMemo, useRef, useState } from "react";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import { Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
@@ -37,6 +37,7 @@ import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { LazyPrCard } from "../../features/integrations/components/LazyPrCard";
 import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
+import { HashNoteHtmlMark } from "../../features/notes/common/components/HtmlNoteChip";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { hashTaskLabel } from "../../features/tasks/utils/taskDisplayId";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -173,10 +174,13 @@ const LightHashChip = ({
     href,
     label,
     palette,
+    suffix,
 }: {
     href: string;
     label: string;
     palette: MentionPalette;
+    /** After the text, inside the link (an HTML note's chip, MIP-2316). */
+    suffix?: ReactNode;
 }) => {
     const urlLinkModal = useUrlLinkModal();
     const handleClick = (e: React.SyntheticEvent) => {
@@ -187,6 +191,7 @@ const LightHashChip = ({
     return (
         <Clickable as="span" sx={hashMentionTextSx(palette)} onActivate={handleClick}>
             #{label}
+            {suffix}
         </Clickable>
     );
 };
@@ -387,6 +392,7 @@ const InlineContent = ({
                         href={entityRefToHref(ref)}
                         label={p.title || getMessages().common.editor.hashNoteFallback}
                         palette={NOTE_PALETTE}
+                        suffix={<HashNoteHtmlMark noteId={Number(noteId)} noteKind={p.noteKind} />}
                     />
                 );
             }

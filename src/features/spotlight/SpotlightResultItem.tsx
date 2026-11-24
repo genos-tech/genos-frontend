@@ -28,6 +28,7 @@ import { useTranslation, type Messages } from "../../i18n";
 import { focusRing, g } from "../../theme/tokens";
 import type { ProjectProps } from "../../types/tasks";
 import { ProjectLabelChips } from "../admin/components/projectLabels/ProjectLabelChips";
+import { HashNoteHtmlMark } from "../notes/common/components/HtmlNoteChip";
 import { StatusLabel } from "../tasks/components/meta/StatusLabel";
 import { badgeFor, badgeLabel, contextPathLabel, rowSubtitle } from "./spotlightResultHelpers";
 import type { SpotlightResult } from "./types";
@@ -341,6 +342,14 @@ const SpotlightResultItemInner = ({
                             t.spotlight.states.untitled
                         )}
                     </Typography>
+                    {result.entity_type === "note" && result.note_id && result.note_type && (
+                        // The search hit carries no format: the note lists the app holds say
+                        // whether this note is an HTML page (MIP-2316). No list entry, no chip.
+                        <HashNoteHtmlMark
+                            noteId={Number(result.note_id)}
+                            noteKind={result.note_type === "personal" ? "my" : result.note_type}
+                        />
+                    )}
                     <Typography
                         level="body-sm"
                         title={contextPathLabel(result) || undefined}

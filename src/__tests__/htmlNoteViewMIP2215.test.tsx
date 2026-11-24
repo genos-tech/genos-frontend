@@ -1,6 +1,8 @@
 // MIP-2215: the sandboxed frame. The attributes are the security boundary, so they are asserted
 // exactly; the self-navigation guard (a second load, or a load our own document never confirmed)
 // replaces the frame with a notice; Reload refetches and remounts; only the open note has a frame.
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -87,6 +89,24 @@ describe("HtmlNoteView frame", () => {
         await settle();
         expect(frame()!.getAttribute("title")).toContain("Burndown");
         expect(screen.getByText(/HTML page/)).toBeTruthy();
+    });
+
+    it("gives the frame the pane's width (a small margin), not the 50px note text margin (MIP-2315)", async () => {
+        renderView();
+        await settle();
+        // jsdom does not evaluate the responsive (media query) values, so read the source
+        const src = readFileSync(
+            resolve(__dirname, "../features/notes/common/components/HtmlNoteView.tsx"),
+            "utf8"
+        );
+        expect(src).toMatch(/FRAME_INSET = \{ xs: "12px", md: "16px" \}/);
+        expect(src).toMatch(/marginX: FRAME_INSET/);
+        // the host adds no side padding: only the title and label row keep the text inset
+        expect(src).not.toMatch(/paddingX: \{ xs: "12px", md: "var\(--note-body-start/);
+        expect(src.match(/paddingX: TEXT_INSET/g)).toHaveLength(2);
+        await settle();
+        const host = frame()!.parentElement!.parentElement as HTMLElement;
+        expect(getComputedStyle(host).paddingLeft).toMatch(/^(0|0px|)$/);
     });
 
     it("asks for the URL of the note it was given", async () => {
