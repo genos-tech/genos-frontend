@@ -301,7 +301,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "登録せずに試せますか？",
-                    a: "はい。デモを開くと、チャット・タスク・ノートが入ったサンプルチームのワークスペースが日本語で開きます。インストールもカードも不要です。",
+                    a: "はい。デモを開くと、チャット・タスク・ノートが入ったサンプルチームのワークスペースが日本語または英語で開きます。インストールもカードも不要です。",
                 },
             ],
         },
@@ -648,7 +648,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "Can I try it without signing up?",
-                    a: "Yes. The demo opens a sample team's workspace, with chats, tasks and notes already in it, in your language. Nothing to install, no card.",
+                    a: "Yes. The demo opens a sample team's workspace, with chats, tasks and notes already in it, in English or Japanese. Nothing to install, no card.",
                 },
             ],
         },

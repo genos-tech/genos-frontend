@@ -67,7 +67,7 @@ export const projects: SegmentConfig = {
                 bullets: [
                     "タスク、担当、期限、状態、コメントを管理",
                     "ブロッカー、依存関係、stale task、throughputを確認",
-                    "複合タスク計画を一度の承認で作成",
+                    "Pro以上では、複合タスク計画を一度の承認で作成",
                 ],
             },
             {
@@ -75,7 +75,7 @@ export const projects: SegmentConfig = {
                 subtitle: "現在の計画、変更理由、関連作業を、根拠付きで確認",
                 bullets: [
                     "プロジェクト、マイルストーン、スプリント、チーム状況を横断",
-                    "GitHub PRのコメント、ファイル、レビュー、コミットを読み取り",
+                    "GitHub PRのコメント、ファイル、レビュー、コミットを読み取り（Pro以上、GitHub連携時）",
                     "回答から元のタスク、ノート、チャットへ戻れる",
                 ],
             },
@@ -95,8 +95,8 @@ export const projects: SegmentConfig = {
             "Chat、Note、Taskを同じワークスペースで管理",
             "タスク依存関係、ブロッカー、stale task、throughputの確認",
             "プロジェクト、マイルストーン、スプリント、チーム状況の読み取り",
-            "GitHub PRのコメント、ファイル、レビュー、コミットの読み取り",
-            "マイルストーン、タスクツリー、依存関係を含む計画の承認付き作成",
+            "GitHub PRのコメント、ファイル、レビュー、コミットの読み取り（Pro以上、GitHub連携時）",
+            "マイルストーン、タスクツリー、依存関係を含む計画の承認付き作成（Pro以上。Coreは1件ずつ）",
             "出典リンク付きAI回答と長文要約",
         ],
         coming: [
@@ -209,7 +209,7 @@ export const projects: SegmentConfig = {
                 bullets: [
                     "Manage tasks, owners, deadlines, status, and comments",
                     "Review blockers, dependencies, stale tasks, and throughput",
-                    "Create a structured task plan through one approval",
+                    "On Pro and up, create a structured task plan through one approval",
                 ],
             },
             {
@@ -217,7 +217,7 @@ export const projects: SegmentConfig = {
                 subtitle: "Ask about the current plan, why it changed, and which work is related",
                 bullets: [
                     "Ask across projects, milestones, sprints, and team activity",
-                    "Read selected GitHub pull-request comments, files, reviews, and commits",
+                    "Read selected GitHub pull-request comments, files, reviews, and commits (Pro and up, with GitHub connected)",
                     "Open the tasks, notes, and chats behind the answer",
                 ],
             },
@@ -237,8 +237,8 @@ export const projects: SegmentConfig = {
             "Manage chat, notes, and tasks in the same workspace",
             "Review task dependencies, blockers, stale work, and throughput",
             "Read project, milestone, sprint, and team-status information",
-            "Read selected GitHub pull-request comments, files, reviews, and commits",
-            "Create an approved plan containing a milestone, task tree, and dependencies",
+            "Read selected GitHub pull-request comments, files, reviews, and commits (Pro and up, with GitHub connected)",
+            "Create an approved plan containing a milestone, task tree, and dependencies (Pro and up; on Core, one task per approval)",
             "Receive source-linked AI answers and summarize long content",
         ],
         coming: [

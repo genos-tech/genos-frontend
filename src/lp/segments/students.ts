@@ -18,7 +18,7 @@ export const students: SegmentConfig = {
             title: "学んだことを、次に学ぶことへつなげる。",
             sub: "ノート・課題・予定・振り返りを、ひとつの学習履歴に。",
             lead: "授業ノートはある。課題の期限もカレンダーにある。それでも、今週何を理解し、どこでつまずき、次に何を復習すべきかは分かりにくい。Genosは、ノート、タスク、Todo、予定、学習の会話をひとつのワークスペースに置き、Genos AIが自分の記録をもとに根拠リンク付きで答えます。",
-            primary: "無料で試す",
+            primary: "デモを試す",
             secondary: "学習フローを見る",
             footnote:
                 "ログインなしでデモを体験できます。無料プランはクレジットカード不要です。現在はWebブラウザのみで利用できます。",
@@ -65,9 +65,9 @@ export const students: SegmentConfig = {
                 title: "課題と予定",
                 subtitle: "何を、いつまでに、どの順番で進めるかを整理",
                 bullets: [
-                    "課題、練習、Todo、期限、予定を管理",
+                    "課題、練習、Todo、期限、Googleカレンダーの予定を管理",
                     "自分の未完了作業と次の期限を質問",
-                    "Action対応プランでは、学習計画のタスク・予定化を確認後に実行",
+                    "Core以上では、Genos AIが提案する学習計画のタスクやGoogleカレンダーの予定を、確認後に作成",
                 ],
             },
             {
@@ -82,7 +82,7 @@ export const students: SegmentConfig = {
         ],
         ai: {
             title: "今週の学びと、次に復習すべきことを質問できる。",
-            body: "Genos AIは、自分のワークスペースに保存したノート、課題、Todo、予定、会話を読み、根拠リンク付きで答えます。AIの答えをそのまま提出物として使うのではなく、自分の記録を振り返り、次の学習行動を決めるために使います。",
+            body: "Genos AIは、自分のワークスペースに保存したノート、課題、Todo、予定、会話を読み、根拠リンク付きで答えます。AIの答えをそのまま提出物として使うのではなく、自分の記録を振り返り、次の学習行動を決めるために使います。学習計画を頼むと、Freeでは文章の下書き、Core以上ではタスクの提案（承認後に作成）になります。",
             prompts: [
                 "今週、何を学びましたか？",
                 "どの概念で、繰り返しつまずいていますか？",
@@ -143,7 +143,7 @@ export const students: SegmentConfig = {
         cta: {
             title: "一つの授業を、4週間だけGenosでつないでみる。",
             body: "授業ノート、課題、Todo、予定、週次の振り返りを一つのワークスペースに置いてください。試験前の探し直しが減るか、次に勉強することが明確になるかを確かめられます。",
-            primary: "無料で試す",
+            primary: "デモを試す",
             secondary: "学習フローを見る",
         },
     },
@@ -160,7 +160,7 @@ export const students: SegmentConfig = {
             title: "Turn what you learned into what to study next.",
             sub: "Keep notes, assignments, schedules, and reflection in one learning history.",
             lead: "You have the lecture notes and the assignment deadline is on a calendar, but it is still hard to see what you understood, where you struggled, and what to review next. Genos keeps notes, tasks, todos, schedules, and study discussions in one workspace. Genos AI answers from your own records and links back to the source.",
-            primary: "Try Genos free",
+            primary: "Try the demo",
             secondary: "See the study workflow",
             footnote:
                 "Explore the demo without logging in. The free plan requires no credit card. Genos is currently available in a web browser.",
@@ -207,9 +207,9 @@ export const students: SegmentConfig = {
                 title: "Assignments and Time",
                 subtitle: "Organize what to do, by when, and in what order",
                 bullets: [
-                    "Manage assignments, practice tasks, todos, deadlines, and schedules",
+                    "Manage assignments, practice tasks, todos, deadlines, and your Google Calendar events",
                     "Ask what remains incomplete and which deadline comes next",
-                    "On plans with actions enabled, review and approve creation of study tasks or calendar events",
+                    "On Core and up, review and approve study tasks or Google Calendar events that Genos AI proposes",
                 ],
             },
             {
@@ -224,7 +224,7 @@ export const students: SegmentConfig = {
         ],
         ai: {
             title: "Ask what you learned this week and what to review next.",
-            body: "Genos AI reads the notes, assignments, todos, schedules, and discussions stored in your workspace and answers with source links. Use it to reflect on your own record and decide the next study action—not to replace the work required by a course.",
+            body: "Genos AI reads the notes, assignments, todos, schedules, and discussions stored in your workspace and answers with source links. Use it to reflect on your own record and decide the next study action—not to replace the work required by a course. Asking for a study plan gives a text draft on Free; on Core and up, Genos AI proposes tasks you approve.",
             prompts: [
                 "What did I learn this week?",
                 "Which concepts do I keep struggling with?",
@@ -285,7 +285,7 @@ export const students: SegmentConfig = {
         cta: {
             title: "Connect one course in Genos for four weeks.",
             body: "Keep the course notes, assignments, todos, schedule, and weekly reflection in one workspace. See whether you spend less time searching before an exam and can decide what to study next more clearly.",
-            primary: "Try Genos free",
+            primary: "Try the demo",
             secondary: "See the study workflow",
         },
     },
