@@ -5140,7 +5140,7 @@ export const fr: DeepPartial<Messages> = {
                 "{name} (partagez-la d'abord avec votre équipe pour publier une version)",
             errorSkill: "Choisissez une compétence.",
             effortHintNoEstimate:
-                "L'effort que l'IA fournit pour cette exécution. Elle consomme vos crédits d'IA comme une question dans Spotlight ; le chiffre réel figure sur chaque rapport.",
+                "L'effort que l'IA fournit pour cette exécution. Elle consomme vos crédits d'IA comme une question dans Spotlight ; le coût réel n'est montré qu'à vous, dans votre boîte de réception.",
             scheduleModeLabel: "Mode",
             scheduleModePlain: "Tâche planifiée",
             scheduleModeAi: "Tâche planifiée par Genos AI",
@@ -5158,7 +5158,7 @@ export const fr: DeepPartial<Messages> = {
             effortCostRange: "Environ {from} à {to} crédits par exécution. C'est une estimation.",
             effortCostTiny: "Moins de 0.01 crédit par exécution. C'est une estimation.",
             effortHint:
-                "Le degré d'effort de l'IA sur ce rapport. L'estimation vaut pour un rapport d'environ 10 tâches ; le chiffre réel est affiché sur chaque rapport.",
+                "Le degré d'effort de l'IA sur ce rapport. L'estimation vaut pour un rapport d'environ 10 tâches ; le coût réel n'est montré qu'à vous, dans votre boîte de réception.",
             effortHeld: "Votre offre exécute cette planification au niveau « {level} ».",
             rowEffort: "Effort de l'IA : {level}",
             duplicateSame:
