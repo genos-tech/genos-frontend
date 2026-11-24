@@ -136,6 +136,7 @@ describe("note header menu", () => {
             folders.moveToFolder,
             history.viewVersions,
             header.importMarkdown,
+            en.notes.noteTemplates.team.saveAsTemplate,
             header.exportMarkdown,
             mute,
             header.deleteNote,
