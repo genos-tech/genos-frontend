@@ -219,6 +219,7 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="notifications.quietHours"
                 justifyContent="space-between"
                 spacing={1}
                 sx={{ mb: 1 }}

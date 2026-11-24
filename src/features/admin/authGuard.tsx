@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../../context/authState";
 import { useTranslation } from "../../i18n";
 import { resolveLoggedInLandingPath } from "../../utils/lastWorkspacePath";
+import { rememberReturn } from "../../utils/pendingReturn";
+import {
+    readSettingsParam,
+    resolveSettingsTab,
+    SETTINGS_PARAM,
+} from "../../utils/settingsDeepLink";
 
 export const AuthGuard = () => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const { pathname, search } = useLocation();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -16,7 +23,13 @@ export const AuthGuard = () => {
 
     if (loading) return <div>{t.admin.guard.loading}</div>;
 
-    return localStorage.getItem("isSigningIn") === "yes" ? <Outlet /> : <Navigate to="/signin" />;
+    if (localStorage.getItem("isSigningIn") === "yes") return <Outlet />;
+    // A signed-out visit to a Settings link keeps its tab through sign-in (MIP-2323).
+    const settings = readSettingsParam(search);
+    if (pathname.startsWith("/workspace") && settings !== null) {
+        rememberReturn(`/workspace?${SETTINGS_PARAM}=${resolveSettingsTab(settings)}`);
+    }
+    return <Navigate to="/signin" />;
 };
 
 export const GuestGuard = () => {

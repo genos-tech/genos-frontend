@@ -1,4 +1,4 @@
-import { ElementType, ReactElement, useCallback, useRef } from "react";
+import { ElementType, ReactElement, ReactNode, useCallback, useRef } from "react";
 import {
     createReactInlineContentSpec,
     DefaultReactSuggestionItem,
@@ -12,6 +12,7 @@ import {
     HashNoteEntry,
     useHashMentionData,
 } from "../../context/HashMentionDataContext";
+import { HashNoteHtmlMark } from "../../features/notes/common/components/HtmlNoteChip";
 import { StatusLabel } from "../../features/tasks/components/meta/StatusLabel";
 import { TaskMentionHoverCard } from "../../features/tasks/components/TaskMentionHoverCard";
 import { lookupTaskByDisplayId } from "../../features/tasks/services/lookupTaskByDisplayId";
@@ -64,10 +65,13 @@ const HashChip = ({
     href,
     label,
     palette,
+    suffix,
 }: {
     href: string;
     label: string;
     palette: MentionPalette;
+    /** After the text, inside the link (an HTML note's chip, MIP-2316). */
+    suffix?: ReactNode;
 }) => {
     const urlLinkModal = useUrlLinkModal();
     const handleClick = (e: React.MouseEvent) => {
@@ -78,6 +82,7 @@ const HashChip = ({
     return (
         <Box sx={hashMentionTextSx(palette)} onClick={handleClick}>
             #{label}
+            {suffix}
         </Box>
     );
 };
@@ -156,6 +161,7 @@ export const CreateHashNoteSpec = () =>
                     href={entityRefToHref(ref)}
                     label={title || copy.hashNoteFallback}
                     palette={NOTE_PALETTE}
+                    suffix={<HashNoteHtmlMark noteId={Number(noteId)} noteKind={noteKind} />}
                 />
             );
         },

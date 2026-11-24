@@ -35,45 +35,25 @@ const row = (templateId: number, name: string) => ({
 
 beforeEach(() => vi.clearAllMocks());
 
-describe("team note templates: menu (MIP-1697)", () => {
-    it("lists team templates after the built-ins and a manage row last", () => {
-        const onManage = vi.fn();
-        const items = buildTemplateMenuItems({
-            copy,
-            idPrefix: "p",
-            teamTemplates: [row(7, "Weekly sync"), row(9, "Retro")],
-            onPick: vi.fn(),
-            onManage,
-        });
-        expect(items.map((i) => i.id)).toEqual([
-            "p-tpl-meeting",
-            "p-tpl-decision",
-            "p-tpl-brief",
-            "p-tpl-team-7",
-            "p-tpl-team-9",
-            "p-tpl-manage",
-        ]);
-        expect(items[3].label).toBe("Weekly sync");
-        expect(items[5].kind).toBe("manageTemplates");
-        items[5].onClick?.();
-        expect(onManage).toHaveBeenCalled();
+describe("team note templates: menu (MIP-1697, MIP-2337)", () => {
+    it("is ONE row, never a template name, and it opens the picker", () => {
+        const onOpenPicker = vi.fn();
+        const items = buildTemplateMenuItems({ copy, idPrefix: "p", onOpenPicker });
+        expect(items.map((i) => i.id)).toEqual(["p-tpl-picker"]);
+        expect(items[0].kind).toBe("newNoteFromTemplate");
+        expect(items[0].label).toBe("New note from template…");
+        items[0].onClick?.();
+        expect(onOpenPicker).toHaveBeenCalledTimes(1);
     });
 
-    it("a team row picks by template id", () => {
-        const onPick = vi.fn();
-        const items = buildTemplateMenuItems({
+    it("the divider flag lands on the one row", () => {
+        const [item] = buildTemplateMenuItems({
             copy,
             idPrefix: "p",
-            teamTemplates: [row(7, "Weekly sync")],
-            onPick,
+            onOpenPicker: vi.fn(),
+            divider: true,
         });
-        items[3].onClick?.();
-        expect(onPick).toHaveBeenCalledWith({ kind: "team", templateId: 7 });
-    });
-
-    it("no manage row unless a handler is given", () => {
-        const items = buildTemplateMenuItems({ copy, idPrefix: "p", onPick: vi.fn() });
-        expect(items.some((i) => i.kind === "manageTemplates")).toBe(false);
+        expect(item.divider).toBe(true);
     });
 
     it("resolves a team pick through the loader and fills {date}", async () => {
@@ -110,6 +90,19 @@ describe("team note templates: menu (MIP-1697)", () => {
 });
 
 describe("team note templates: API (MIP-1697)", () => {
+    it("creates a personal template with scope personal and no folder default", async () => {
+        api.post.mockResolvedValueOnce({
+            data: { ...row(3, "Mine"), scope: "personal", body: [] },
+        });
+        await saveTeamNoteTemplate(myself, { scope: "personal", name: "Mine", body: [] }, "tok");
+        expect(api.post).toHaveBeenCalledWith("/note/template/", {
+            team_id: "team-1",
+            scope: "personal",
+            name: "Mine",
+            body: [],
+        });
+    });
+
     it("lists, reads one, saves (create and update) and deletes", async () => {
         api.get.mockResolvedValueOnce({ data: [row(1, "A")] });
         expect(await loadTeamNoteTemplates(myself, "tok")).toHaveLength(1);

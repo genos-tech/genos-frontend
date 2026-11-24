@@ -1,5 +1,5 @@
 import { memo, MouseEvent } from "react";
-import { Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { NAV_HIDE_ON_ACTIONS_CLASS } from "../../../../components/ui/nav/navStyles";
@@ -11,6 +11,7 @@ import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
 import { useNoteUnread } from "../context/noteUnreadState";
 import { isHtmlNote } from "../utils/htmlNote";
 import { isNoteOpen } from "../utils/openNote";
+import { HtmlNoteChipFor } from "./HtmlNoteChip";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";
 import { NoteKindIcon, NoteOriginIcon } from "./noteOrigin";
 import { NoteUnreadDot } from "./NoteUnreadDot";
@@ -83,8 +84,15 @@ function RecentNoteItemComponent({
                 )
             }
             trailing={
-                opened || hasUnread ? (
+                opened || hasUnread || isHtmlNote(note) ? (
                     <>
+                        {isHtmlNote(note) && (
+                            <Box
+                                sx={{ display: "inline-flex", mr: opened || hasUnread ? 0.75 : 0 }}
+                            >
+                                <HtmlNoteChipFor note={note} />
+                            </Box>
+                        )}
                         {opened && (
                             <Typography
                                 className={NAV_HIDE_ON_ACTIONS_CLASS}

@@ -179,9 +179,10 @@ const tree = (
             {/* Changelog, public roadmap and RSS (MIP-1257). changelog.rss is a build asset. */}
             <Route element={publicPage(GenosChangelogPage)} path="/changelog" />
 
-            {/* Help hub (MIP-1259): getting started, connecting Claude, API keys, schedules,
-                export, shortcuts and the FAQ on one page. Public, like /support. */}
+            {/* The manual hub (MIP-1259, MIP-2331): search and every topic. Public, like /support. */}
             <Route element={publicPage(GenosDocsPage)} path="/docs" />
+            {/* One manual topic (MIP-2331), rendered from src/manual/manual.<lang>.json. */}
+            <Route element={publicPage(GenosDocsPage)} path="/docs/:topic" />
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>

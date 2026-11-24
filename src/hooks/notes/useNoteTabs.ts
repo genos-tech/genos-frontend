@@ -51,6 +51,8 @@ export type NoteTabKind = NoteRef["kind"];
 export type NoteTab = NoteRef & {
     id: string;
     title: string;
+    /** "html" for an HTML page (MIP-2316): the tab wears the HTML chip. */
+    bodyFormat?: string | null;
     teamId: string;
 };
 
@@ -177,6 +179,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                             bucket: ref.bucket ?? "my",
                             id: tabIdFor("my", myNote.noteId),
                             title: myNote.title,
+                            bodyFormat: myNote.bodyFormat,
                             teamId,
                         };
                     }
@@ -194,6 +197,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                             bucket: ref.bucket ?? "my",
                             id: tabIdFor("my", myNote.noteId),
                             title: myNote.title,
+                            bodyFormat: myNote.bodyFormat,
                             teamId,
                         };
                     }
@@ -211,6 +215,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                             taskId: taskNote.taskId,
                             id: tabIdFor("task", taskNote.noteId),
                             title: taskNote.title,
+                            bodyFormat: taskNote.bodyFormat,
                             teamId,
                         };
                     }
@@ -226,6 +231,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                             taskId: taskNote.taskId,
                             id: tabIdFor("task", taskNote.noteId),
                             title: taskNote.title,
+                            bodyFormat: taskNote.bodyFormat,
                             teamId,
                         };
                     }
@@ -244,6 +250,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                         threadId: chatNote.threadId,
                         id: tabIdFor("chat", chatNote.noteId),
                         title: chatNote.title,
+                        bodyFormat: chatNote.bodyFormat,
                         teamId,
                     };
                 }
@@ -261,6 +268,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                         threadId: chatNote.threadId,
                         id: tabIdFor("chat", chatNote.noteId),
                         title: chatNote.title,
+                        bodyFormat: chatNote.bodyFormat,
                         teamId,
                     };
                 }
@@ -524,6 +532,7 @@ export const noteToTab = (
         noteType: number;
         noteId: number;
         title: string;
+        bodyFormat?: string | null;
         projectId?: number;
         taskId?: number;
         chatType?: number;
@@ -544,6 +553,7 @@ export const noteToTab = (
             bucket,
             id: tabIdFor("my", note.noteId),
             title: note.title,
+            bodyFormat: note.bodyFormat,
             teamId,
         };
     }
@@ -556,6 +566,7 @@ export const noteToTab = (
             taskId: note.taskId ?? 0,
             id: tabIdFor("task", note.noteId),
             title: note.title,
+            bodyFormat: note.bodyFormat,
             teamId,
         };
     }
@@ -569,6 +580,7 @@ export const noteToTab = (
         threadId: note.threadId ?? 0,
         id: tabIdFor("chat", note.noteId),
         title: note.title,
+        bodyFormat: note.bodyFormat,
         teamId,
     };
 };

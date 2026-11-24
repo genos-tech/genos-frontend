@@ -863,7 +863,7 @@ export const es: DeepPartial<Messages> = {
                 "Hay un problema con el pago: actualiza tu método de pago en el portal de facturación.",
             plansHeading: "Planes y precios",
             plansSubheading:
-                "Todos los planes incluyen todas las funciones: solo cambian los límites de uso y el historial.",
+                "Los planes se diferencian en límites de uso, historial y funciones de IA: la búsqueda web, las apps de IA conectadas, las programaciones y los webhooks empiezan en Core, y que Genos AI lea pull requests de GitHub empieza en Pro.",
             freePrice: "Gratis",
             perMonth: "/ mes",
             contactSales: "Contactar ventas",
@@ -890,9 +890,9 @@ export const es: DeepPartial<Messages> = {
             perSeatMonth: "{price} × {n} puestos / mes",
             plansHero: "Haz más de tu mejor trabajo con Genos",
             plansHeroSub:
-                "Empieza gratis y mejora cuando quieras. Los planes de pago desbloquean más IA, historial ilimitado, búsqueda web, conexiones MCP y más espacio para crear.",
+                "Empieza gratis y mejora cuando quieras. Los planes de pago desbloquean más IA, historial más largo, búsqueda web, conexiones MCP y más espacio para crear.",
             taglineFree: "Tu chat, tareas y notas en un solo lugar",
-            taglineCore: "Historial ilimitado e IA a diario",
+            taglineCore: "Un año de historial e IA a diario",
             taglinePro: "Haz de la IA parte de tu trabajo diario",
             taglineMax: "Máxima potencia para días intensivos de IA",
             taglineEnterprise: "Para equipos que lo necesitan todo",
@@ -3480,7 +3480,7 @@ export const es: DeepPartial<Messages> = {
             customizeFields: {
                 heading: "Personalizar campos de tareas",
                 description:
-                    "Haz que ciertos campos sean obligatorios y define valores predeterminados para las nuevas tareas e hitos de este proyecto. Solo el propietario del proyecto puede cambiarlos.",
+                    "Haz que ciertos campos sean obligatorios y define valores predeterminados para las nuevas tareas e hitos de este proyecto. Solo el propietario y los editores del proyecto pueden cambiarlos.",
                 requiredLabel: "Obligatorio",
                 defaultLabel: "Valor predeterminado",
                 alwaysRequired: "Siempre obligatorio",
@@ -3494,7 +3494,7 @@ export const es: DeepPartial<Messages> = {
                 save: "Guardar",
                 cancel: "Cancelar",
                 saveFailed:
-                    "No se pudo guardar: solo el propietario del proyecto puede cambiar esta configuración.",
+                    "No se pudo guardar: solo el propietario y los editores del proyecto pueden cambiar esta configuración.",
             },
             manageTags: {
                 heading: "Gestionar etiquetas",
@@ -5077,6 +5077,28 @@ export const es: DeepPartial<Messages> = {
                 saveFailed: "No se pudo guardar la plantilla.",
                 deleteFailed: "No se pudo eliminar la plantilla.",
                 defaultIn: "Predeterminada en {folder}",
+                fromTemplate: "Nueva nota desde plantilla…",
+                pickerTitle: "Nueva nota desde plantilla",
+                pickerHint:
+                    "Elige una plantilla para ver su contenido. Escribe {date} en un título para la fecha de hoy.",
+                listLabel: "Plantillas",
+                groupBuiltin: "Integradas",
+                groupTeam: "Equipo",
+                groupPersonal: "Mis plantillas",
+                use: "Usar esta plantilla",
+                emptyPersonal: "Aún no tienes plantillas propias.",
+                previewFailed: "No se pudo cargar la vista previa.",
+                previewLoading: "Cargando…",
+                previewLabel: "Vista previa de {name}",
+                scope: "Quién puede usarla",
+                scopePersonal: "Solo yo",
+                scopeTeam: "Equipo (todos en el equipo)",
+                deleteConfirm: "¿Eliminar «{name}»?",
+                saveAsTemplate: "Guardar como plantilla…",
+                saveAsTitle: "Guardar como plantilla",
+                saveAsHint: "Aparece en «Nueva nota desde plantilla…».",
+                savedAsTemplate: "Guardada. Búscala en «Nueva nota desde plantilla…».",
+                done: "Hecho",
             },
             meeting: {
                 label: "Notas de reunión",

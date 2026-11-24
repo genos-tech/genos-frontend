@@ -73,7 +73,7 @@ const renderPanel = (over: Record<string, unknown> = {}) => {
 const cssOfRow = (props: { disabled?: boolean; filled?: boolean } = {}) => {
     render(
         <CssVarsProvider>
-            <SettingRow data-testid="row" {...props} />
+            <SettingRow data-testid="row" guideId="general.theme" {...props} />
         </CssVarsProvider>
     );
     return cssWithMediaOf(screen.getByTestId("row")).replace(/\s+/g, " ");

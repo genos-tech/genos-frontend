@@ -46,6 +46,8 @@ export type TabItem = {
     id: string;
     label: ReactNode;
     icon?: ReactNode;
+    /** A small chip after the label that never truncates with it (an HTML note's mark). */
+    badge?: ReactNode;
     /** A count after the label (unread, pending). Hidden at 0 or unset. */
     count?: number;
     /** Accent the count: something needs the person's attention. */
@@ -382,6 +384,14 @@ export const TabStrip = ({
                                 >
                                     {tab.label}
                                 </Box>
+                                {tab.badge && (
+                                    <Box
+                                        component="span"
+                                        sx={{ display: "inline-flex", flexShrink: 0 }}
+                                    >
+                                        {tab.badge}
+                                    </Box>
+                                )}
                                 {tab.count !== undefined && tab.count > 0 && (
                                     <Typography
                                         component="span"

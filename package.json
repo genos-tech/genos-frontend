@@ -16,6 +16,8 @@
         "lint:ratchet": "node scripts/lint-warning-ratchet.mjs",
         "lint:ratchet:update": "node scripts/lint-warning-ratchet.mjs --update",
         "format": "prettier --write .",
+        "manual:export": "node scripts/manual-export.mjs",
+        "manual:check": "node scripts/manual-export.mjs --check",
         "blocknote-compat": "node scripts/blocknote-compat.mjs",
         "ratchet:update": "node scripts/design-ratchet.mjs",
         "ratchet:slack": "node scripts/design-ratchet.mjs --slack",

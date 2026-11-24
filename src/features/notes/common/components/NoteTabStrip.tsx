@@ -3,12 +3,14 @@ import { useMemo } from "react";
 import { TabStrip, type TabItem } from "../../../../components/ui/feedback/TabStrip";
 import { useTranslation } from "../../../../i18n";
 import { originOfNote } from "../utils/noteTypeAlias";
+import { HtmlNoteChipFor } from "./HtmlNoteChip";
 import { NoteOriginIcon } from "./noteOrigin";
 
 type NoteTabLike = {
     noteType: number;
     noteId: number | string;
     title: string;
+    bodyFormat?: string | null;
     // For a personal note: which space it was opened from (my / shared / team).
     bucket?: "my" | "shared" | "team";
 };
@@ -46,6 +48,7 @@ export const NoteTabStrip = ({ tabs, selectedIndex, onSelect, onCloseTab }: Note
             tabs.map((tab, i) => ({
                 id: ids[i],
                 label: tab.title,
+                badge: <HtmlNoteChipFor note={tab} />,
                 title: tab.title,
                 // The family the note came from, as everywhere else it is listed (MIP-1429).
                 icon: <NoteOriginIcon noteType={originOfNote(tab.noteType, tab.bucket)} />,
