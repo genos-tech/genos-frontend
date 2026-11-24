@@ -18,6 +18,7 @@ import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useOptionalAccessToken } from "../../../../context/authState";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
+import { resolveHtmlNoteLimit, type HtmlNoteLimit } from "../../../../services/htmlNoteLimits";
 import { resolveUploadLimitBytes } from "../../../../services/uploadLimit";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -25,6 +26,13 @@ import { decodeTextBytes } from "../../../../utils/decodeText";
 import { fetchMediaText } from "../../../../utils/downloadUtils";
 import { formatBytes } from "../../../../utils/uploadLimits";
 import type { DataUriImageWarning } from "../services/importDataUriImages";
+import {
+    htmlTitleOf,
+    importHtmlNote,
+    isHtmlFileName,
+    type HtmlImportTarget,
+    type HtmlImportWarning,
+} from "../services/importHtmlNote";
 import {
     buildChatNoteDestinations,
     buildTaskNoteDestinations,
@@ -35,6 +43,7 @@ import {
 } from "../services/noteImportDestinations";
 import { markdownToNoteBlocks, titleFromFilename } from "../services/noteMarkdown";
 import type { ImportDestination } from "../services/runFolderImport";
+import { htmlWarningText } from "../utils/htmlImportWarnings";
 import {
     AttachmentDestination,
     AttachmentDestinationPicker,
@@ -166,6 +175,12 @@ export const ModalImportMarkdown = ({
     // one line per image, so nothing is silent (MIP-1946).
     const [imageWarnings, setImageWarnings] = useState<DataUriImageWarning[] | null>(null);
     const [fileLoading, setFileLoading] = useState(false);
+    // `.html` import (MIP-2215). `htmlLimit` says whether the server has HTML notes on and what the
+    // plan allows; the picked file is a page, not markdown, when `fileIsHtml`; `htmlWarnings` is what
+    // the scan found in a page that WAS imported (shown instead of closing, like the image warnings).
+    const [htmlLimit, setHtmlLimit] = useState<HtmlNoteLimit>({ enabled: false });
+    const [fileIsHtml, setFileIsHtml] = useState(false);
+    const [htmlWarnings, setHtmlWarnings] = useState<HtmlImportWarning[] | null>(null);
 
     // Fresh state per open, seeded from `context`.
     //
@@ -199,6 +214,8 @@ export const ModalImportMarkdown = ({
             setMode("file");
             setImportedTo(null);
             setImageWarnings(null);
+            setFileIsHtml(false);
+            setHtmlWarnings(null);
             setAttachmentPick(null);
             // An attachment is seeded HERE, after the wipe above: the
             // reset would otherwise clear it on the very render that
@@ -230,6 +247,19 @@ export const ModalImportMarkdown = ({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, initialFile?.url]);
+
+    // Whether `.html` is offered, and what the plan allows: asked afresh each time the dialog opens,
+    // so an upgrade made in another tab shows at once. Off or failed reads as "not offered".
+    useEffect(() => {
+        if (!open) return;
+        let live = true;
+        void resolveHtmlNoteLimit(accessToken, { fresh: true }).then((limit) => {
+            if (live) setHtmlLimit(limit);
+        });
+        return () => {
+            live = false;
+        };
+    }, [open, accessToken]);
 
     useEffect(() => {
         // Folder mode needs it for its plan; the single-file import needs
@@ -311,20 +341,121 @@ export const ModalImportMarkdown = ({
         try {
             // UTF-8, with a Shift-JIS fallback for legacy Japanese .txt files.
             const text = decodeTextBytes(await file.arrayBuffer());
+            const asHtml = htmlLimit.enabled && isHtmlFileName(file.name);
             setFileName(file.name);
             setFileText(text);
-            // Default the note title to the file name; keep any name the
-            // user already typed (they picked it deliberately).
-            setTitle((prev) => prev || titleFromFilename(file.name));
+            setFileIsHtml(asHtml);
+            // Default the note title to the file name (a page's own <title> when it is a page);
+            // keep any name the user already typed (they picked it deliberately).
+            setTitle(
+                (prev) => prev || (asHtml ? htmlTitleOf(text) : "") || titleFromFilename(file.name)
+            );
         } catch {
             setError(t.notes.importMd.readError);
         }
+    };
+
+    // An HTML page is stored as a page, never parsed into blocks (MIP-2215). The server applies the
+    // plan, the size and the rate; this only says up front what it can know, so a Free member or a page
+    // over the limit is told before anything is sent.
+    const htmlBytes = fileIsHtml && fileText != null ? new Blob([fileText]).size : 0;
+    const htmlBlocker: string | null =
+        !fileIsHtml || !htmlLimit.enabled
+            ? null
+            : htmlLimit.maxBytes == null
+              ? t.notes.htmlImport.notOnPlan
+              : htmlBytes > htmlLimit.maxBytes
+                ? fmt(t.notes.htmlImport.tooLarge, {
+                      size: formatBytes(htmlBytes),
+                      limit: formatBytes(htmlLimit.maxBytes),
+                  })
+                : null;
+
+    const handleHtmlImport = async () => {
+        if (fileText == null || !accessToken) return;
+        // The picked destination when the user changed it, else the surface the dialog was opened from.
+        let target: HtmlImportTarget;
+        if (context.kind === "my") {
+            target =
+                folderDestination.kind === "team" && folderDestination.parentFolderId != null
+                    ? { kind: "team", folderId: folderDestination.parentFolderId }
+                    : { kind: "personal", folderId: folderDestination.parentFolderId };
+        } else if (context.kind === "task") {
+            const picked = taskDestinations.find((d) => d.key === destinationKey);
+            target = {
+                kind: "task",
+                projectId: picked?.projectId ?? context.projectId,
+                taskId: picked?.taskId ?? context.taskId,
+            };
+        } else {
+            const picked = chatDestinations.find((d) => d.key === destinationKey);
+            const isThread = picked?.isThread ?? context.isThread;
+            const threadId = picked?.threadId ?? context.threadId;
+            // The API keys chat notes on the v3 channel UUID; the legacy numeric typing of
+            // `chatId` is not what travels at run time (see the attachment path below).
+            target = {
+                kind: "chat",
+                chatId: String(picked?.chatId ?? context.chatId),
+                threadId: isThread && threadId ? String(threadId) : null,
+            };
+        }
+        const result = await importHtmlNote({
+            accessToken,
+            teamId: myself.teamId,
+            html: fileText,
+            title: title.trim(),
+            target,
+        });
+        if (result.status === "not-on-plan") {
+            setError(t.notes.htmlImport.notOnPlan);
+            return;
+        }
+        if (result.status === "refused") {
+            // The server's words say what to do (size, count, rate, a folder that is not yours).
+            setError(result.reason);
+            return;
+        }
+        // The note exists on the server: bring the sidebar up to date and open it.
+        const bucket =
+            target.kind === "team"
+                ? 8
+                : target.kind === "task"
+                  ? 2
+                  : target.kind === "chat"
+                    ? 3
+                    : 1;
+        if (target.kind === "team" || target.kind === "personal") {
+            void useNM.getMyNoteMeta();
+            void useNM.getTeamNoteMeta();
+        } else if (target.kind === "task") {
+            void useNM.getTaskNoteMeta();
+        } else {
+            void useNM.getChatNoteMeta();
+        }
+        useNM.setCurrentNoteType(bucket);
+        void useNM.loadNote(bucket, result.noteId, -1);
+        if (result.warnings.length > 0) {
+            setHtmlWarnings(result.warnings);
+            return;
+        }
+        onClose();
     };
 
     const handleImport = async () => {
         if (fileText == null || !title.trim()) return;
         setImporting(true);
         setError(null);
+        if (!attachmentMode && fileIsHtml && htmlLimit.enabled) {
+            try {
+                await handleHtmlImport();
+            } catch (e) {
+                console.error("HTML import failed:", e);
+                setError(t.notes.importMd.importError);
+            } finally {
+                setImporting(false);
+            }
+            return;
+        }
         try {
             const body = await markdownToNoteBlocks(fileText);
             // Images embedded as `data:` URIs are uploaded as note files for
@@ -461,8 +592,18 @@ export const ModalImportMarkdown = ({
                 </Stack>
             </Stack>
         ) : null;
+    const htmlWarningList =
+        htmlWarnings != null && htmlWarnings.length > 0 ? (
+            <Stack component="ul" spacing={0.25} sx={{ m: 0, pl: 2.5 }}>
+                {htmlWarnings.map((w) => (
+                    <Typography key={w.code} component="li" level="body-sm">
+                        {htmlWarningText(t, w)}
+                    </Typography>
+                ))}
+            </Stack>
+        ) : null;
     let actions: ReactNode = null;
-    if (imageWarnings != null && !attachmentMode) {
+    if ((imageWarnings != null || htmlWarnings != null) && !attachmentMode) {
         actions = <Button onClick={onClose}>{t.common.actions.close}</Button>;
     } else if (attachmentMode && initialFile) {
         actions =
@@ -490,8 +631,10 @@ export const ModalImportMarkdown = ({
             <>
                 {cancelButton}
                 <Button
-                    disabled={importing || fileText == null || !title.trim()}
                     loading={importing}
+                    disabled={
+                        importing || fileText == null || !title.trim() || htmlBlocker != null
+                    }
                     onClick={handleImport}
                 >
                     {t.notes.importMd.importButton}
@@ -508,14 +651,14 @@ export const ModalImportMarkdown = ({
             actions={actions}
             open={open}
             size="md"
-            title={t.notes.importMd.heading}
+            title={htmlLimit.enabled ? t.notes.htmlImport.heading : t.notes.importMd.heading}
             zIndex={hostZIndex != null ? hostZIndex + 1 : theme.zIndex.modal}
             ownsListboxPopups
             onClose={onClose}
         >
             {/* Folders only exist under my-notes, so a task or chat
                     note gets the single-file dialog it has always had. */}
-            {canImportFolder && imageWarnings == null && (
+            {canImportFolder && imageWarnings == null && htmlWarnings == null && (
                 <Tabs
                     size="sm"
                     sx={{ bgcolor: "transparent", mt: 1 }}
@@ -540,22 +683,25 @@ export const ModalImportMarkdown = ({
                     (a note always lands somewhere): the previous pick
                     stays selected. Shared by both modes: a folder
                     import needs a destination just as much. */}
-            {destinationOptions.length > 0 && imageWarnings == null && !importedTo && (
-                <FormControl sx={{ mt: 2 }}>
-                    <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
-                    <Autocomplete
-                        filterOptions={filterDestinations}
-                        getOptionLabel={(option) => option.label}
-                        isOptionEqualToValue={(option, value) => option.key === value.key}
-                        options={destinationOptions}
-                        value={selectedDestination}
-                        autoHighlight
-                        onChange={(_e, v) => {
-                            if (v) setDestinationKey(v.key);
-                        }}
-                    />
-                </FormControl>
-            )}
+            {destinationOptions.length > 0 &&
+                imageWarnings == null &&
+                htmlWarnings == null &&
+                !importedTo && (
+                    <FormControl sx={{ mt: 2 }}>
+                        <FormLabel>{t.notes.importMd.folderLabel}</FormLabel>
+                        <Autocomplete
+                            filterOptions={filterDestinations}
+                            getOptionLabel={(option) => option.label}
+                            isOptionEqualToValue={(option, value) => option.key === value.key}
+                            options={destinationOptions}
+                            value={selectedDestination}
+                            autoHighlight
+                            onChange={(_e, v) => {
+                                if (v) setDestinationKey(v.key);
+                            }}
+                        />
+                    </FormControl>
+                )}
 
             {attachmentMode && initialFile ? (
                 importedTo != null ? (
@@ -590,6 +736,13 @@ export const ModalImportMarkdown = ({
                         </FormControl>
                     </Stack>
                 )
+            ) : htmlWarnings != null ? (
+                <Stack spacing={1} sx={{ mt: 2 }}>
+                    <Typography level="body-md">
+                        {t.notes.htmlImport.importedWithWarnings}
+                    </Typography>
+                    {htmlWarningList}
+                </Stack>
             ) : imageWarnings != null ? (
                 <Stack spacing={1} sx={{ mt: 2 }}>
                     <Typography level="body-md">
@@ -601,6 +754,7 @@ export const ModalImportMarkdown = ({
                 <FolderImportPanel
                     accessToken={accessToken}
                     destination={folderDestination}
+                    htmlEnabled={htmlLimit.enabled}
                     myself={myself}
                     uploadLimitBytes={uploadLimitBytes}
                     onClose={onClose}
@@ -619,9 +773,13 @@ export const ModalImportMarkdown = ({
                             markdown and it saves a rename. */}
                     <input
                         ref={fileInputRef}
-                        accept=".md,.markdown,.txt"
                         style={{ display: "none" }}
                         type="file"
+                        accept={
+                            htmlLimit.enabled
+                                ? ".md,.markdown,.txt,.html,.htm"
+                                : ".md,.markdown,.txt"
+                        }
                         onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) void handleFilePicked(file);
@@ -635,8 +793,17 @@ export const ModalImportMarkdown = ({
                         variant="outlined"
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        {fileName ?? t.notes.importMd.chooseFile}
+                        {fileName ??
+                            (htmlLimit.enabled
+                                ? t.notes.htmlImport.chooseFile
+                                : t.notes.importMd.chooseFile)}
                     </Button>
+
+                    {htmlBlocker && (
+                        <Typography level="body-sm" role="alert" sx={{ color: "danger.500" }}>
+                            {htmlBlocker}
+                        </Typography>
+                    )}
 
                     <FormControl required>
                         <FormLabel>{t.notes.importMd.titleLabel}</FormLabel>

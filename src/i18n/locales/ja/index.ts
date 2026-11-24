@@ -188,7 +188,7 @@ export const ja: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "メール受信箱を確認してください",
-                    body: "確認リンクを {email} に送信しました。それをクリックしてサインアップを完了します。",
+                    body: "{email} にメールを送信しました。メールを開いてサインアップを完了するか、すでにアカウントをお持ちの場合はサインインしてください。",
                     checkInboxHint: "メール内のリンクをクリックしてアドレスを確認します。",
                     resend: "メールを再送信する",
                     resending: "送信中…",
@@ -254,6 +254,10 @@ export const ja: DeepPartial<Messages> = {
                 generic: "問題が発生しました。しばらくしてからもう一度お試しください。",
                 unexpected: "予期しないエラーが発生しました。もう一度お試しください。",
                 duplicateEmail: "別のメールアドレスでお試しください。",
+                passwordCommon:
+                    "このパスワードは一般的すぎるか、推測されやすいものです。別のパスワードを選んでください。",
+                passwordBreached:
+                    "このパスワードは過去の情報漏えいで確認されています。別のパスワードを選んでください。",
                 duplicateName: "別の名前でお試しください。",
                 demoRateLimited:
                     "このネットワークからのデモサインインが多すぎます。しばらくしてからお試しください。",
@@ -3560,6 +3564,7 @@ export const ja: DeepPartial<Messages> = {
             shareEllipsis: "共有…",
             importMarkdown: "Markdownをインポート…",
             exportMarkdown: "Markdownとしてエクスポート",
+            reloadPage: "ページを再読み込み",
             openTask: "タスクを開く",
             taskIdLabel: "{id}",
             openTaskTooltip: "タスク {id} を開く",
@@ -3572,6 +3577,50 @@ export const ja: DeepPartial<Messages> = {
             ownerProjectTooltip: "所属プロジェクト",
             focusNote: "このノートに集中（ほかのペインを隠す）",
             exitFocusNote: "ほかのペインを再び表示",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "HTMLページ · サンドボックス内で表示",
+            navigatedTitle: "このページは別のページを開こうとしました",
+            navigatedBody:
+                "操作は止めたため、ほかのページは開かれていません。再読み込みするとページをもう一度表示します。",
+            reload: "再読み込み",
+            loadError: "このページを読み込めませんでした",
+            retry: "再試行",
+            frameTitle: "HTMLページ: {title}",
+            kindLabel: "HTMLページ",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "MarkdownまたはHTMLをインポート",
+            chooseFile: ".md または .html ファイルを選択…",
+            notOnPlan:
+                "HTMLページはCoreプラン以上でご利用いただけます。このページをインポートするには、設定 → プランと使用状況でアップグレードしてください。",
+            tooLarge:
+                "このページは {size} で、ご利用のプランのHTMLページの上限 {limit} を超えています。",
+            importedWithWarnings:
+                "HTMLページとしてインポートしました。一部はサンドボックス内で表示されません:",
+            resultNotes: "HTMLページを {count} 件インポートしました。",
+            resultWarnings:
+                "{count} 件のHTMLページに、サンドボックス内で表示されない部分があります。",
+            fallbackWarning: "ページの一部はサンドボックス内で表示されません。",
+            warning: {
+                external_script: "別のアドレスから読み込むスクリプトは実行されません ({count})。",
+                external_css:
+                    "別のアドレスから読み込むスタイルシートはブロックされ、ページのスタイルが当たらないことがあります ({count})。",
+                external_font: "別のアドレスから読み込むWebフォントはブロックされます ({count})。",
+                remote_image:
+                    "別のアドレスから読み込む画像やメディアはブロックされます ({count})。",
+                external_frame: "別のページを指すフレームや埋め込みはブロックされます ({count})。",
+                network_call:
+                    "ページのネットワーク呼び出し (fetch、XHR、WebSocket) は失敗します ({count})。",
+                form: "ここではフォームを送信できません ({count})。",
+                window_open: "ポップアップはブロックされます ({count})。",
+                navigation: "ページから離れるリダイレクトやリンクはブロックされます ({count})。",
+                storage: "ページはCookieやローカルストレージを保持できません ({count})。",
+                no_doctype: "ページに <!doctype html> がないため、互換モードで表示されます。",
+                no_title: "ページに <title> がないため、ファイル名をノートのタイトルにしました。",
+            },
         },
         importMd: {
             heading: "Markdownをインポート",
@@ -4815,6 +4864,8 @@ export const ja: DeepPartial<Messages> = {
             deliverProjectChat: "{name}（プロジェクトのチャット）",
             deliverChatHint:
                 "レポートはメッセージとしてこのチャットに投稿されます。AI は使わず、通知も送りません。チャットの全員が読めるため、プロジェクトのレポートはそのプロジェクトのメンバーだけのチャットにしか送れません。",
+            deliverChatHintAi:
+                "レポートはメッセージとしてこのチャットに投稿されます。AI クレジットを使い、メッセージにその費用が表示されます。あなただけのチャットにしか送れません。通知は送りません。",
             rowDeliver: "投稿先: {name}",
             reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
@@ -5153,6 +5204,65 @@ export const ja: DeepPartial<Messages> = {
                 sent: "ありがとうございます。内容を確認します。",
                 failed: "報告を送信できませんでした。もう一度お試しください。",
                 limit: "本日送信できる報告の上限に達しました。明日もう一度お試しください。",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "このスキルを実行しますか？",
+                intro: "初めて実行する前に、このスキルの内容を確認してください。「このスキルを実行」を選んだときだけ実行されます。",
+                loading: "スキルを読み込んでいます…",
+                loadFailed: "このスキルを読み込めませんでした。もう一度お試しください。",
+                confirmFailed: "回答を保存できませんでした。もう一度お試しください。",
+                harmful: "コピー元のスキルは、有害であるとして Genos により削除されました。",
+                writtenBy: "作成者",
+                noAuthor: "作成者名なし",
+                version: "バージョン {n}",
+                textLabel: "このスキルの内容",
+                emptyText: "（このバージョンにはテキストがありません。）",
+                mayLabel: "できること",
+                readOnly: "読み取りのみです。何かを作成したり変更したりすることはできません。",
+                propose: {
+                    create_task: "タスクの作成を提案",
+                    create_note: "ノートの作成を提案",
+                    create_todo_item: "To-Do 項目の追加を提案",
+                },
+                approveFirst: "どの提案も、あなたが承認した後にのみ実行されます。",
+                run: "このスキルを実行",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "アップデートがあります",
+                loading: "変更内容を読み込んでいます…",
+                loadFailed: "変更内容を読み込めませんでした。もう一度お試しください。",
+                upToDate: "すでに最新バージョンです。",
+                versions: "バージョン {from} からバージョン {to} へ",
+                versionShort: "バージョン {n}",
+                changelogsLabel: "作成者による変更内容",
+                noChangelog: "作成者からの説明はありません。",
+                changesLabel: "変更された詳細",
+                none: "なし",
+                language: "言語",
+                becomes: "から次に変更",
+                toolRaisedTitle: "このバージョンは変更を提案できるようになります",
+                toolRaised:
+                    "以前のバージョンは読み取りだけでした。このバージョンは、タスク・ノート・ToDo の作成を提案する場合があります。どの提案も、あなたの承認が必要です。",
+                needsConfirmation: "このバージョンを実行する前に確認が求められます。",
+                diffLabel: "テキストの変更点",
+                diffEmpty: "テキストに変更はありません。",
+                truncated:
+                    "変更が長いため、すべては表示していません。最初の部分のみ表示しています。",
+                moved: "読んでいる間に、作成者が別のバージョンを公開しました。以下は最新の変更内容です。",
+                updateFailed: "スキルを更新できませんでした。もう一度お試しください。",
+                update: "バージョン {n} に更新",
+                updateGeneric: "更新",
+                keep: "バージョン {n} のままにする",
+                close: "閉じる",
+                updated: "バージョン {n} に更新しました。",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "削除されたスキルのコピー",
+                warning: "コピー元のスキルは、有害であるとして Genos により削除されました。",
             },
             moderation: {
                 title: {

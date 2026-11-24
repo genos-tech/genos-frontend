@@ -112,6 +112,12 @@ const getNoteService = (): NoteService => {
 
 const cacheKey = (tab: NoteTab): string => tab.id;
 
+// A note cached before the API said `bodyFormat` cannot tell an HTML page from an ordinary note
+// (MIP-2215), and opening a page in the editor would show its placeholder text. Such a row is
+// fetched once; the fetched copy carries the format. If the fetch cannot be made or fails (offline),
+// the cached row is used exactly as before.
+const lacksBodyFormat = (note: ResolvedNote): boolean => note.bodyFormat === undefined;
+
 const fetchForTab = async (
     tab: NoteTab,
     myself: UserProps,
@@ -121,10 +127,9 @@ const fetchForTab = async (
     try {
         if (tab.kind === "my") {
             const cached = await ns.getPersonalNote(tab.noteId);
-            if (cached) {
-                return { ...cached, noteType: 1 } as MyNoteProps;
-            }
-            if (!accessToken) return null;
+            const cachedNote = cached ? ({ ...cached, noteType: 1 } as MyNoteProps) : null;
+            if (cachedNote && !lacksBodyFormat(cachedNote)) return cachedNote;
+            if (!accessToken) return cachedNote;
             const fetched: MyNoteProps = await loadSpecificNote(
                 myself,
                 1,
@@ -136,14 +141,13 @@ const fetchForTab = async (
             if (fetched && !fetched.error && fetched.noteType === 1) {
                 return cacheFetchedNote(fetched);
             }
-            return null;
+            return cachedNote;
         }
         if (tab.kind === "task") {
             const cached = await ns.getTaskNote(tab.noteId);
-            if (cached) {
-                return { ...cached, noteType: 2 } as TaskNoteProps;
-            }
-            if (!accessToken) return null;
+            const cachedNote = cached ? ({ ...cached, noteType: 2 } as TaskNoteProps) : null;
+            if (cachedNote && !lacksBodyFormat(cachedNote)) return cachedNote;
+            if (!accessToken) return cachedNote;
             const fetched: TaskNoteProps = await loadSpecificNote(
                 myself,
                 2,
@@ -155,20 +159,19 @@ const fetchForTab = async (
             if (fetched && !fetched.error && fetched.noteType === 2) {
                 return cacheFetchedNote(fetched);
             }
-            return null;
+            return cachedNote;
         }
         const cached = await ns.getChatNote(tab.noteId);
-        if (cached) {
-            return { ...cached, noteType: 3 } as ChatNoteProps;
-        }
-        if (!accessToken) return null;
+        const cachedNote = cached ? ({ ...cached, noteType: 3 } as ChatNoteProps) : null;
+        if (cachedNote && !lacksBodyFormat(cachedNote)) return cachedNote;
+        if (!accessToken) return cachedNote;
         const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, tab.noteId, accessToken);
         if (fetched?.error === "forbidden") return FORBIDDEN;
         if (fetched?.error === "not_found") return NOT_FOUND;
         if (fetched && !fetched.error && fetched.noteType === 3) {
             return cacheFetchedNote(fetched);
         }
-        return null;
+        return cachedNote;
     } catch {
         return null;
     }

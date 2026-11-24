@@ -50,6 +50,9 @@ interface Props {
     accessToken: string;
     /** Per-file upload ceiling from the user's plan; null when unknown. */
     uploadLimitBytes: number | null;
+    /** `.html` files in the folder become HTML notes (MIP-2215) while the server has HTML notes
+     *  on; otherwise they are assets, exactly as before. */
+    htmlEnabled?: boolean;
     /** Reload the sidebar once notes and folders exist on the server. */
     onImported: () => void;
     onClose: () => void;
@@ -60,6 +63,7 @@ export const FolderImportPanel = ({
     myself,
     accessToken,
     uploadLimitBytes,
+    htmlEnabled = false,
     onImported,
     onClose,
 }: Props) => {
@@ -80,7 +84,7 @@ export const FolderImportPanel = ({
     const handleFolderPicked = (files: FileList) => {
         const picked = [...files];
         setFolderName(picked[0]?.webkitRelativePath.split("/")[0] ?? null);
-        setPlan(buildFolderImportPlan(picked));
+        setPlan(buildFolderImportPlan(picked, { html: htmlEnabled }));
         setResult(null);
         setProgress(null);
     };
@@ -220,6 +224,20 @@ export const FolderImportPanel = ({
                             folders: result.foldersCreated,
                         })}
                     </Typography>
+                    {(result.htmlNotesCreated ?? 0) > 0 && (
+                        <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
+                            {fmt(t.notes.htmlImport.resultNotes, {
+                                count: result.htmlNotesCreated ?? 0,
+                            })}
+                        </Typography>
+                    )}
+                    {(result.htmlWarnings?.length ?? 0) > 0 && (
+                        <Typography level="body-xs" sx={{ color: "warning.500" }}>
+                            {fmt(t.notes.htmlImport.resultWarnings, {
+                                count: result.htmlWarnings?.length ?? 0,
+                            })}
+                        </Typography>
+                    )}
                     {result.assetsUploaded > 0 && (
                         <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
                             {fmt(t.notes.importMd.resultImages, { count: result.assetsUploaded })}

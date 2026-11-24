@@ -56,6 +56,7 @@ const skill = (over: Partial<SkillRow> = {}): SkillRow => ({
     copyCount: 0,
     isOfficial: false,
     starred: false,
+    sourceHarmful: false,
     editors: [],
     shares: [],
     forkedFrom: null,

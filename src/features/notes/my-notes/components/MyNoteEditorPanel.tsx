@@ -11,9 +11,11 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
+import { HtmlNoteView } from "../../common/components/HtmlNoteView";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteEditor } from "../../common/components/NoteEditor";
 import { NoteLoadState } from "../../common/components/NoteLoadState";
+import { isHtmlNote } from "../../common/utils/htmlNote";
 
 interface MyNoteEditorPanelProps {
     tab: NoteTab & { kind: "my" };
@@ -105,6 +107,21 @@ export const MyNoteEditorPanel = ({
             <Box sx={{ display: isActive ? "block" : "none", width: "100%", height: "100%" }}>
                 <NoteAccessRequestPanel noteId={tab.noteId} noteType={1} socket={socket} />
             </Box>
+        );
+    }
+
+    if (note && isHtmlNote(note)) {
+        // An HTML page (MIP-2215): read-only in a sandboxed frame. Never reaches NoteEditor, so
+        // neither BlockNote nor a collab provider is built for it.
+        return (
+            <HtmlNoteView
+                accessToken={accessToken}
+                fillHeight={fillHeight}
+                isActive={isActive}
+                noteId={tab.noteId}
+                noteType={1}
+                title={note.title}
+            />
         );
     }
 
