@@ -150,7 +150,7 @@ export const buildSettings = (): ManualSetting[] =>
         ];
     });
 
-const cell = (text: string) => text.replace(/\|/g, "\\|");
+const cell = (text: string) => text.replace(/[\\|]/g, "\\$&");
 
 /** The generated "Settings A-Z" topic: one section per tab, one table row per setting. */
 export const buildSettingsReference = (settings: ManualSetting[]): ManualTopic => {
