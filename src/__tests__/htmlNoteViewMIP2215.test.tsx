@@ -14,11 +14,20 @@ import { HTML_NOTE_LOADED_KEY } from "../features/notes/common/utils/htmlNote";
 
 const load = vi.hoisted(() => ({ fn: vi.fn() }));
 vi.mock("../features/notes/common/services/loadHtmlNote", () => ({
-    loadHtmlNote: (...args: unknown[]) => load.fn(...args),
+    loadHtmlNoteFrame: (...args: unknown[]) => load.fn(...args),
 }));
 
-const PAGE =
-    "<!doctype html><html><head><title>Burndown</title></head><body><h1>Hi</h1></body></html>";
+// MIP-2228: the viewer frames the API's own page URL; the nonce is the one the API handed out.
+const NONCE = "0123abcd0123abcd0123abcd0123abcd";
+const frameAnswer = (over: Record<string, unknown> = {}) => ({
+    url: "https://api.example.test/h/tok-1",
+    nonce: NONCE,
+    rev: 1,
+    size: 100,
+    warnings: [],
+    savedAt: "",
+    ...over,
+});
 
 const renderView = (props: Partial<Parameters<typeof HtmlNoteView>[0]> = {}) =>
     render(
@@ -37,14 +46,12 @@ const renderView = (props: Partial<Parameters<typeof HtmlNoteView>[0]> = {}) =>
 const settle = () => act(async () => void (await Promise.resolve()));
 const frame = () => document.querySelector("iframe") as HTMLIFrameElement | null;
 
-/** What our sentinel posts from inside the frame: the nonce is the one in the frame's srcdoc. */
+/** What the server's sentinel posts from inside the frame: the nonce the API gave the viewer. */
 const confirmFromFrame = (el: HTMLIFrameElement) => {
-    const nonce = /\("([0-9a-zA-Z-]+)"\)<\/script>/.exec(el.getAttribute("srcdoc") ?? "")?.[1];
-    expect(nonce).toBeTruthy();
     act(() => {
         window.dispatchEvent(
             new MessageEvent("message", {
-                data: { [HTML_NOTE_LOADED_KEY]: nonce },
+                data: { [HTML_NOTE_LOADED_KEY]: NONCE },
                 source: el.contentWindow,
             })
         );
@@ -54,13 +61,7 @@ const confirmFromFrame = (el: HTMLIFrameElement) => {
 beforeEach(() => {
     vi.useFakeTimers();
     load.fn.mockReset();
-    load.fn.mockResolvedValue({
-        html: PAGE,
-        rev: 1,
-        size: PAGE.length,
-        warnings: [],
-        savedAt: "",
-    });
+    load.fn.mockResolvedValue(frameAnswer());
 });
 afterEach(() => {
     cleanup();
@@ -68,7 +69,7 @@ afterEach(() => {
 });
 
 describe("HtmlNoteView frame", () => {
-    it("is sandboxed with allow-scripts and nothing else, srcdoc, no referrer, lazy", async () => {
+    it("is sandboxed with allow-scripts and nothing else, the API page URL, no referrer, lazy", async () => {
         renderView();
         await settle();
         const el = frame();
@@ -76,15 +77,9 @@ describe("HtmlNoteView frame", () => {
         expect(el!.getAttribute("sandbox")).toBe("allow-scripts");
         expect(el!.getAttribute("referrerpolicy")).toBe("no-referrer");
         expect(el!.getAttribute("loading")).toBe("lazy");
-        expect(el!.getAttribute("src")).toBeNull();
-        const srcdoc = el!.getAttribute("srcdoc") ?? "";
-        expect(
-            srcdoc.startsWith('<!doctype html><meta http-equiv="Content-Security-Policy"')
-        ).toBe(true);
-        // the page itself follows our policy and our sentinel
-        expect(srcdoc.indexOf("<h1>Hi</h1>")).toBeGreaterThan(
-            srcdoc.indexOf("Content-Security-Policy")
-        );
+        // MIP-2228: not a srcdoc (it would inherit the app's CSP and every script would be blocked)
+        expect(el!.getAttribute("srcdoc")).toBeNull();
+        expect(el!.getAttribute("src")).toBe("https://api.example.test/h/tok-1");
     });
 
     it("names the note's page in the frame title and says it is a sandboxed HTML page", async () => {
@@ -94,7 +89,7 @@ describe("HtmlNoteView frame", () => {
         expect(screen.getByText(/HTML page/)).toBeTruthy();
     });
 
-    it("fetches the page of the note it was given", async () => {
+    it("asks for the URL of the note it was given", async () => {
         renderView({ noteType: 3, noteId: 42 });
         await settle();
         expect(load.fn).toHaveBeenCalledWith(3, 42, "tok", expect.anything());
@@ -116,13 +111,15 @@ describe("HtmlNoteView frame", () => {
     });
 });
 
-// jsdom, like a browser, fires the frame's FIRST `load` by itself once the frame is in the document;
-// `mountLoaded` lets that happen, so a test's own `fireEvent.load` is the SECOND load.
+// A browser fires the frame's FIRST `load` by itself once its page has arrived; jsdom does not fetch
+// the frame's URL, so `mountLoaded` fires that first load, and a test's own `fireEvent.load` is the
+// SECOND load.
 const mountLoaded = async () => {
     renderView();
     await settle();
-    await act(async () => void vi.advanceTimersByTime(0));
-    return frame()!;
+    const el = frame()!;
+    fireEvent.load(el);
+    return el;
 };
 
 describe("self-navigation guard", () => {
@@ -200,5 +197,63 @@ describe("Reload from the note's actions menu", () => {
         act(() => requestHtmlNoteReload(1, 7));
         await settle();
         expect(load.fn).toHaveBeenCalledTimes(2);
+    });
+});
+
+// MIP-2228: the URL is good for ten minutes; a tab left and come back to must not load a dead one.
+describe("the page URL's lifetime", () => {
+    const tree = (isActive: boolean) => (
+        <CssVarsProvider>
+            <HtmlNoteView
+                accessToken="tok"
+                isActive={isActive}
+                noteId={7}
+                noteType={1}
+                title="Burndown"
+            />
+        </CssVarsProvider>
+    );
+
+    it("asks once while the tab stays open, however often it re-renders", async () => {
+        const { rerender } = render(tree(true));
+        await settle();
+        rerender(tree(true));
+        await settle();
+        expect(load.fn).toHaveBeenCalledTimes(1);
+        expect(frame()!.getAttribute("src")).toBe("https://api.example.test/h/tok-1");
+    });
+
+    it("asks for a NEW url, and shows no frame meanwhile, each time the tab comes back", async () => {
+        const { rerender } = render(tree(true));
+        await settle();
+        expect(frame()!.getAttribute("src")).toBe("https://api.example.test/h/tok-1");
+
+        // the frame goes with the tab, and the URL it used was spent by that load
+        rerender(tree(false));
+        await settle();
+        expect(frame()).toBeNull();
+
+        load.fn.mockResolvedValueOnce(frameAnswer({ url: "https://api.example.test/h/tok-2" }));
+        rerender(tree(true));
+        // never a frame that holds the spent link, not even for one commit
+        expect(frame()).toBeNull();
+        await settle();
+        expect(load.fn).toHaveBeenCalledTimes(2);
+        expect(frame()!.getAttribute("src")).toBe("https://api.example.test/h/tok-2");
+    });
+
+    it("asks again when the same view is reused for another note", async () => {
+        const { rerender } = render(tree(true));
+        await settle();
+        load.fn.mockResolvedValueOnce(frameAnswer({ url: "https://api.example.test/h/tok-9" }));
+        rerender(
+            <CssVarsProvider>
+                <HtmlNoteView accessToken="tok" noteId={8} noteType={1} title="Other" isActive />
+            </CssVarsProvider>
+        );
+        await settle();
+        expect(load.fn).toHaveBeenCalledTimes(2);
+        expect(load.fn).toHaveBeenLastCalledWith(1, 8, "tok", expect.anything());
+        expect(frame()!.getAttribute("src")).toBe("https://api.example.test/h/tok-9");
     });
 });

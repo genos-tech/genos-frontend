@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import WebRoundedIcon from "@mui/icons-material/WebRounded";
 import { Box, Typography } from "@mui/joy";
@@ -7,8 +7,8 @@ import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { onHtmlNoteReload } from "../services/htmlNoteReload";
-import { loadHtmlNote } from "../services/loadHtmlNote";
-import { buildHtmlSrcdoc, HTML_NOTE_LOADED_KEY, HTML_NOTE_SANDBOX } from "../utils/htmlNote";
+import { loadHtmlNoteFrame } from "../services/loadHtmlNote";
+import { HTML_NOTE_LOADED_KEY, HTML_NOTE_SANDBOX } from "../utils/htmlNote";
 import { NoteLoadState } from "./NoteLoadState";
 
 /** How long after the frame's `load` its own document gets to say it finished loading. A document
@@ -41,15 +41,23 @@ const newNonce = (): string =>
  * Never mounts BlockNote or Yjs: the editor panels branch to this before they build either.
  *
  * THE FRAME: `sandbox="allow-scripts"` and nothing else (an opaque origin: no cookies, storage,
- * parent DOM or popups), `srcdoc` with our CSP first (`buildHtmlSrcdoc`), `referrerpolicy` none and
- * lazy loading. The page is untrusted: this component never reads anything out of it.
+ * parent DOM or popups), `src` = the page's own short-lived URL on the API host (MIP-2228: the API
+ * answers it with a header CSP of its own, so the page's inline scripts run even under the app's
+ * `script-src 'self'`, which a `srcdoc` frame would inherit), `referrerpolicy` none and lazy loading.
+ * The app's CSP `frame-src` allows that route and nothing else. The page is untrusted: this component
+ * never reads anything out of it.
+ *
+ * THE URL: a signed token good for ONE frame load (and ten minutes at most), asked for with the
+ * signed-in session (the note's own ACL decides). Single use is what keeps the page's own script,
+ * which can read its URL, from handing it to a server of its own to learn the nonce below. So every
+ * frame mount asks for a fresh URL: a tab that was left and comes back, and Reload.
  *
  * SELF-NAVIGATION: CSP cannot stop a frame from navigating itself, so a page could swap itself for a
  * look-alike sign-in page. The frame is therefore watched. A second `load` means it navigated after
- * loading; a `load` that our own document never confirmed (see `loadedSentinel`) means it navigated
- * while parsing. Either way the frame is REMOVED and replaced by a notice with Reload, so a
- * replacement page is never left on screen. The request the navigation made cannot be recalled:
- * the label and this notice are the mitigation, as the plan says.
+ * loading; a `load` that our own document never confirmed (the server's first script posts the nonce
+ * we were given) means it navigated while parsing. Either way the frame is REMOVED and replaced by a
+ * notice with Reload, so a replacement page is never left on screen. The request the navigation made
+ * cannot be recalled: the label and this notice are the mitigation, as the plan says.
  */
 export const HtmlNoteView = ({
     noteType,
@@ -61,7 +69,7 @@ export const HtmlNoteView = ({
 }: HtmlNoteViewProps) => {
     const { t } = useTranslation();
     const [phase, setPhase] = useState<Phase>("loading");
-    const [page, setPage] = useState<{ html: string; rev: number } | null>(null);
+    const [page, setPage] = useState<{ url: string; nonce: string; rev: number } | null>(null);
     const [navigated, setNavigated] = useState(false);
     // Bumped by every reload: refetch the page and remount the frame.
     const [nonce, setNonce] = useState(0);
@@ -73,18 +81,27 @@ export const HtmlNoteView = ({
         setNonce((n) => n + 1);
     }, []);
 
-    // Fetch while this tab is the open one, once per Reload: coming back to a tab keeps the page it
-    // already holds. A fetch cut short by leaving the tab is not counted as done.
-    const fetchedNonceRef = useRef<number | null>(null);
+    // Ask for the page's URL while this tab is the open one, once per Reload. The URL works for ONE
+    // frame load (the API spends it), so leaving the tab, which removes the frame, also drops the URL:
+    // coming back asks for a new one and shows the loading state meanwhile, never a frame that holds
+    // a spent link. A request cut short by leaving the tab is not counted as done.
+    const fetchedKeyRef = useRef<string | null>(null);
     useEffect(() => {
-        if (!isActive || fetchedNonceRef.current === nonce) return;
+        if (!isActive) {
+            fetchedKeyRef.current = null;
+            setPhase((p) => (p === "ready" ? "loading" : p));
+            return;
+        }
+        const key = `${noteType}:${noteId}:${nonce}`;
+        if (fetchedKeyRef.current === key) return;
+        setPhase("loading");
         const controller = new AbortController();
         let cancelled = false;
-        loadHtmlNote(noteType, noteId, accessToken, controller.signal)
+        loadHtmlNoteFrame(noteType, noteId, accessToken, controller.signal)
             .then((loaded) => {
                 if (cancelled) return;
-                fetchedNonceRef.current = nonce;
-                setPage({ html: loaded.html, rev: loaded.rev });
+                fetchedKeyRef.current = key;
+                setPage({ url: loaded.url, nonce: loaded.nonce, rev: loaded.rev });
                 setFrameKey(newNonce());
                 setPhase("ready");
             })
@@ -101,10 +118,7 @@ export const HtmlNoteView = ({
 
     // A frame that comes back after the tab was left starts clean: counters and the verdict reset.
     const frameActive = isActive && phase === "ready" && !navigated;
-    const srcDoc = useMemo(
-        () => (page ? buildHtmlSrcdoc(page.html, frameKey) : ""),
-        [page, frameKey]
-    );
+    const frameNonce = page?.nonce;
 
     const frameRef = useRef<HTMLIFrameElement | null>(null);
     const loadsRef = useRef(0);
@@ -125,19 +139,20 @@ export const HtmlNoteView = ({
         return clearGrace;
     }, [frameKey, frameActive, clearGrace]);
 
-    // The sentinel's message. Only a message from THIS frame carrying THIS frame's nonce counts.
+    // The sentinel's message. Only a message from THIS frame carrying the nonce the API gave us for
+    // this URL counts (a look-alike page only has the URL, never the nonce).
     useEffect(() => {
-        if (!frameActive) return;
+        if (!frameActive || !frameNonce) return;
         const onMessage = (event: MessageEvent) => {
             if (event.source !== frameRef.current?.contentWindow) return;
             const data = event.data as Record<string, unknown> | null;
-            if (data && typeof data === "object" && data[HTML_NOTE_LOADED_KEY] === frameKey) {
+            if (data && typeof data === "object" && data[HTML_NOTE_LOADED_KEY] === frameNonce) {
                 confirmedRef.current = true;
             }
         };
         window.addEventListener("message", onMessage);
         return () => window.removeEventListener("message", onMessage);
-    }, [frameActive, frameKey]);
+    }, [frameActive, frameNonce]);
 
     const handleFrameLoad = () => {
         loadsRef.current += 1;
@@ -243,7 +258,7 @@ export const HtmlNoteView = ({
                             loading="lazy"
                             referrerPolicy="no-referrer"
                             sandbox={HTML_NOTE_SANDBOX}
-                            srcDoc={srcDoc}
+                            src={page?.url}
                             style={{ display: "block", width: "100%", height: "100%", border: 0 }}
                             title={fmt(t.notes.htmlNote.frameTitle, { title })}
                             onLoad={handleFrameLoad}
