@@ -7108,6 +7108,33 @@ export const zh: DeepPartial<Messages> = {
                 teamLoadHide: "隐藏团队负载",
             },
             tabAgentActivity: "智能体活动",
+            tabCustomDashboards: "AI 自定义仪表盘",
+            customDashboards: {
+                heading: "AI 自定义仪表盘",
+                subtitle:
+                    "由你的 AI 计划保持更新的页面，以及同事与你共享的仪表盘。只显示你本来就能打开的内容。",
+                listLabel: "仪表盘",
+                own: "我的",
+                shared: "与我共享",
+                updated: "更新于 {when}",
+                notRun: "尚未运行",
+                paused: "已暂停",
+                sharedBy: "来自 {name}",
+                runNow: "立即运行",
+                openNote: "打开笔记",
+                runDone: "仪表盘已更新。",
+                runFailed: "无法更新仪表盘。",
+                notRunTitle: "此仪表盘尚未运行",
+                notRunBody: "立即运行以生成页面。",
+                emptyTitle: "还没有仪表盘",
+                emptyBody:
+                    "由你的 AI 计划保持更新的仪表盘，以及同事与你共享的仪表盘，会显示在这里。",
+                unavailableTitle: "仪表盘暂不可用",
+                unavailableBody: "此服务器暂时无法列出仪表盘，请稍后再试。",
+                errorTitle: "无法加载仪表盘",
+                errorBody: "请检查网络连接后重试。",
+                retry: "重试",
+            },
             tabToday: "今天",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
             today: {

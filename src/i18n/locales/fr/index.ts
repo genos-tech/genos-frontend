@@ -7505,6 +7505,34 @@ export const fr: DeepPartial<Messages> = {
                 teamLoadHide: "Masquer la charge de l'équipe",
             },
             tabAgentActivity: "Activité des agents",
+            tabCustomDashboards: "Tableaux de bord personnalisés par l’IA",
+            customDashboards: {
+                heading: "Tableaux de bord personnalisés par l’IA",
+                subtitle:
+                    "Les pages que vos planifications d’IA tiennent à jour et les tableaux de bord que vos collègues partagent avec vous. Seulement ce que vous pouvez déjà ouvrir.",
+                listLabel: "Tableaux de bord",
+                own: "Les vôtres",
+                shared: "Partagés avec vous",
+                updated: "Mis à jour {when}",
+                notRun: "Pas encore exécuté",
+                paused: "En pause",
+                sharedBy: "Par {name}",
+                runNow: "Exécuter maintenant",
+                openNote: "Ouvrir la note",
+                runDone: "Tableau de bord mis à jour.",
+                runFailed: "Le tableau de bord n’a pas pu être mis à jour.",
+                notRunTitle: "Ce tableau de bord n’a pas encore été exécuté",
+                notRunBody: "Exécutez-le maintenant pour créer la page.",
+                emptyTitle: "Aucun tableau de bord pour l’instant",
+                emptyBody:
+                    "Les tableaux de bord que vos planifications d’IA tiennent à jour, et ceux que vos collègues partagent avec vous, apparaissent ici.",
+                unavailableTitle: "Les tableaux de bord ne sont pas encore disponibles",
+                unavailableBody:
+                    "Ce serveur ne peut pas encore lister les tableaux de bord. Réessayez plus tard.",
+                errorTitle: "Impossible de charger les tableaux de bord",
+                errorBody: "Vérifiez votre connexion et réessayez.",
+                retry: "Réessayer",
+            },
             tabToday: "Aujourd'hui",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
             today: {

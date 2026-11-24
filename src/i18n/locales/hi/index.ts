@@ -4370,6 +4370,34 @@ export const hi: DeepPartial<Messages> = {
                 teamLoadHide: "टीम का कार्यभार छिपाएँ",
             },
             tabAgentActivity: "एजेंट गतिविधि",
+            tabCustomDashboards: "AI के कस्टम डैशबोर्ड",
+            customDashboards: {
+                heading: "AI के कस्टम डैशबोर्ड",
+                subtitle:
+                    "वे पेज जिन्हें आपके AI शेड्यूल अप-टू-डेट रखते हैं, और वे डैशबोर्ड जो साथी आपसे साझा करते हैं। केवल वही जो आप पहले से खोल सकते हैं।",
+                listLabel: "डैशबोर्ड",
+                own: "आपके",
+                shared: "आपसे साझा किए गए",
+                updated: "{when} को अपडेट हुआ",
+                notRun: "अभी तक नहीं चला",
+                paused: "रुका हुआ",
+                sharedBy: "{name} द्वारा",
+                runNow: "अभी चलाएँ",
+                openNote: "नोट खोलें",
+                runDone: "डैशबोर्ड अपडेट हो गया।",
+                runFailed: "डैशबोर्ड अपडेट नहीं हो सका।",
+                notRunTitle: "यह डैशबोर्ड अभी तक नहीं चला",
+                notRunBody: "पेज बनाने के लिए इसे अभी चलाएँ।",
+                emptyTitle: "अभी कोई डैशबोर्ड नहीं",
+                emptyBody:
+                    "आपके AI शेड्यूल जिन डैशबोर्ड को अप-टू-डेट रखते हैं और साथियों द्वारा साझा किए गए डैशबोर्ड यहाँ दिखते हैं।",
+                unavailableTitle: "डैशबोर्ड अभी उपलब्ध नहीं हैं",
+                unavailableBody:
+                    "यह सर्वर अभी डैशबोर्ड की सूची नहीं दे सकता। बाद में फिर कोशिश करें।",
+                errorTitle: "डैशबोर्ड लोड नहीं हो सके",
+                errorBody: "अपना कनेक्शन जाँचें और फिर कोशिश करें।",
+                retry: "फिर कोशिश करें",
+            },
             tabToday: "आज",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
             today: {
