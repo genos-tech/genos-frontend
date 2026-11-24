@@ -24,6 +24,7 @@ import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
+import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import TerminalRoundedIcon from "@mui/icons-material/TerminalRounded";
@@ -66,6 +67,7 @@ import {
     listConnections,
 } from "../../features/integrations/services/connections";
 import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
+import { TwoFactorSection } from "../../features/security/TwoFactorSection";
 import { useAnalyticsPreferences } from "../../hooks/common/analyticsPreferenceState";
 import {
     MAX_PINNED_BUBBLE_ACTIONS,
@@ -1662,6 +1664,7 @@ export type SettingsTabKey =
     | "shortcuts"
     | "integrations"
     | "developer"
+    | "security"
     | "account";
 
 /**
@@ -1851,6 +1854,10 @@ export const SettingsModal = ({
                             <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.shortcuts}
                         </Tab>
+                        <Tab sx={SIDEBAR_TAB_SX} value="security">
+                            <SecurityRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.security.tab}
+                        </Tab>
                         <Tab sx={SIDEBAR_TAB_SX} value="account">
                             <ManageAccountsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.account}
@@ -2023,6 +2030,14 @@ export const SettingsModal = ({
                     >
                         <Stack spacing={2}>
                             <KeyboardShortcutsSection />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="security"
+                    >
+                        <Stack spacing={2}>
+                            <TwoFactorSection />
                         </Stack>
                     </TabPanel>
                     <TabPanel

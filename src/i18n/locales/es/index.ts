@@ -607,6 +607,91 @@ export const es: DeepPartial<Messages> = {
             openGenos: "Abrir Genos",
         },
     },
+    security: {
+        tab: "Seguridad",
+        twoFactor: {
+            title: "Verificación en dos pasos",
+            description:
+                "Después de tu contraseña, Genos pide un código de 6 dígitos de una aplicación de autenticación. Una contraseña robada o adivinada ya no basta para abrir tu cuenta.",
+            statusOn: "Activada",
+            statusOff: "Desactivada",
+            onSince: "Activada desde el {date}",
+            recoveryLeft: "Códigos de recuperación restantes: {count}",
+            recoveryLow:
+                "Quedan pocos códigos de recuperación. Obtén un juego nuevo antes de necesitarlo.",
+            turnOn: "Activar",
+            turnOff: "Desactivar",
+            newCodes: "Obtener códigos de recuperación nuevos",
+            providerNote:
+                "Inicias sesión con Google o GitHub, que tienen su propia verificación en dos pasos. Actívala en esa cuenta; aquí no hay nada que configurar.",
+            loadFailed: "No se pudo cargar tu configuración de seguridad.",
+            retry: "Reintentar",
+            scopeNote: "Se aplica cuando inicias sesión con tu correo y contraseña.",
+        },
+        setup: {
+            title: "Activar la verificación en dos pasos",
+            passwordIntro:
+                "Introduce tu contraseña para empezar. Así, alguien que use tu sesión abierta no puede cambiar esto.",
+            passwordLabel: "Contraseña",
+            continue: "Continuar",
+            cancel: "Cancelar",
+            scanTitle: "Escanea con tu aplicación de autenticación",
+            scanBody:
+                "Usa Google Authenticator, 1Password, Authy o cualquier aplicación que genere códigos de 6 dígitos y luego introduce el código que muestra.",
+            qrAlt: "Código QR para añadir Genos a tu aplicación de autenticación",
+            manualTitle: "¿No puedes escanearlo? Escribe esta clave en la aplicación.",
+            keyLabel: "Clave de configuración",
+            copyKey: "Copiar clave",
+            copied: "Copiado",
+            openInApp: "Abrir en la aplicación de autenticación",
+            codeLabel: "Código de 6 dígitos",
+            codeHelp: "El código cambia cada 30 segundos.",
+            verify: "Activar",
+            recoveryTitle: "Guarda tus códigos de recuperación",
+            recoveryBody:
+                "Si pierdes el teléfono, cada uno de estos códigos te permite iniciar sesión una vez. Solo se muestran ahora, así que guárdalos en un lugar seguro, aparte de tu contraseña.",
+            copyAll: "Copiar todos",
+            download: "Descargar",
+            downloadHeader: "Códigos de recuperación de Genos. Cada uno funciona una sola vez.",
+            savedConfirm: "He guardado estos códigos",
+            done: "Listo",
+        },
+        confirm: {
+            passwordLabel: "Contraseña",
+            disableTitle: "¿Desactivar la verificación en dos pasos?",
+            disableBody:
+                "Cualquiera que tenga tu contraseña podrá iniciar sesión. Introduce tu contraseña para confirmar.",
+            disableAction: "Desactivar",
+            newCodesTitle: "¿Obtener códigos de recuperación nuevos?",
+            newCodesBody:
+                "Tus códigos de recuperación anteriores dejarán de funcionar. Introduce tu contraseña para obtener un juego nuevo.",
+            newCodesAction: "Obtener códigos nuevos",
+            cancel: "Cancelar",
+        },
+        errors: {
+            badPassword: "Esa contraseña no es correcta.",
+            invalidCode: "Ese código no es correcto. Revisa la aplicación e inténtalo de nuevo.",
+            locked: "Demasiados códigos incorrectos. Inténtalo de nuevo en {minutes} min.",
+            throttled: "Demasiados intentos. Espera un rato e inténtalo de nuevo.",
+            alreadyEnabled: "La verificación en dos pasos ya está activada.",
+            noSetup: "La configuración caducó. Empieza de nuevo.",
+            network: "Error de red. Comprueba tu conexión e inténtalo de nuevo.",
+            generic: "Algo salió mal. No se cambió nada.",
+        },
+        signIn: {
+            title: "Verificación en dos pasos",
+            appBody: "Introduce el código de 6 dígitos de tu aplicación de autenticación.",
+            recoveryBody:
+                "Introduce uno de tus códigos de recuperación. Cada uno funciona una sola vez.",
+            codeLabel: "Código de autenticación",
+            recoveryLabel: "Código de recuperación",
+            submit: "Verificar",
+            useRecovery: "Usar un código de recuperación",
+            useApp: "Usar la aplicación de autenticación",
+            back: "Volver a iniciar sesión",
+            expired: "Ese inicio de sesión caducó. Introduce tu contraseña de nuevo.",
+        },
+    },
     settings: {
         title: "Ajustes",
         tabs: {
@@ -2129,6 +2214,12 @@ export const es: DeepPartial<Messages> = {
                     anonymous: "Sesión cerrada",
                 },
                 actions: {
+                    "mfa.enabled": "Verificación en dos pasos activada",
+                    "mfa.disabled": "Verificación en dos pasos desactivada",
+                    "mfa.failed": "Segundo paso rechazado",
+                    "mfa.recovery_used": "Código de recuperación usado",
+                    "mfa.recovery_regenerated": "Códigos de recuperación reemplazados",
+                    "operator.mfa_reset": "Verificación en dos pasos restablecida por soporte",
                     "signin.succeeded": "Inicio de sesión",
                     "signin.failed": "Error al iniciar sesión",
                     signout: "Cierre de sesión",
@@ -5997,6 +6088,8 @@ export const es: DeepPartial<Messages> = {
                     not_authenticated: "Debe iniciar sesión para conectar una cuenta de terceros.",
                     already_connected_to_other_user:
                         "Esta cuenta ya está conectada a un usuario diferente.",
+                    mfa_password_only:
+                        "Esta cuenta usa la verificación en dos pasos, que funciona con tu correo y contraseña. Inicia sesión con tu correo, contraseña y código.",
                     not_a_login_account:
                         "Esa cuenta solo se conectó para acceder al calendario, por lo que no puede iniciar sesión.",
                     provider_already_connected:
