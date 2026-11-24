@@ -10,10 +10,15 @@ import { ProjectTaskFieldRules, TaskFieldRules } from "../utils/taskFieldRules";
 // consumers fail OPEN (no rules enforced) by design.
 
 const mapResponse = (projectId: number, data: unknown): ProjectTaskFieldRules => {
-    const payload = (data ?? {}) as { rules?: TaskFieldRules; ownerUserId?: string | null };
+    const payload = (data ?? {}) as {
+        rules?: TaskFieldRules;
+        ownerUserId?: string | null;
+        canManage?: boolean;
+    };
     return {
         projectId,
         ownerUserId: payload.ownerUserId ?? null,
+        ...(typeof payload.canManage === "boolean" ? { canManage: payload.canManage } : {}),
         rules: payload.rules ?? {},
     };
 };

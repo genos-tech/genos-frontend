@@ -70,14 +70,18 @@ export const LP_ROUTES: readonly LpRoute[] = [
 ];
 
 const BLOG_ARTICLE = /^\/blog\/[^/]+$/;
+/** `/docs/<topic>`: one manual topic (MIP-2331). The topics come from the manual JSON. */
+const DOCS_TOPIC = /^\/docs\/[a-z0-9-]+$/;
 
-/** The route a path belongs to; a blog article is an English-only page. */
+/** The route a path belongs to; a blog article is an English-only page, a manual topic toggles. */
 export const routeFor = (path: string): LpRoute | undefined => {
     const clean = path.length > 1 ? path.replace(/\/+$/, "") : path;
     // React Router matches case-insensitively, so `/Plans` is the plans page.
     const fixed = LP_ROUTES.find((r) => r.path === clean.toLowerCase());
     if (fixed) return fixed;
     if (BLOG_ARTICLE.test(clean.toLowerCase())) return { path: clean, langs: "en-only" };
+    if (DOCS_TOPIC.test(clean.toLowerCase()))
+        return { path: clean.toLowerCase(), langs: "toggle" };
     return undefined;
 };
 

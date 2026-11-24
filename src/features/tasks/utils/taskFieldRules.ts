@@ -43,6 +43,8 @@ export type TaskFieldRules = Partial<Record<ConfigurableTaskField, TaskFieldRule
 export type ProjectTaskFieldRules = {
     projectId: number;
     ownerUserId: string | null;
+    /** The caller may save the rules (owner or editor, the API's `can_manage`). Absent on an older API. */
+    canManage?: boolean;
     rules: TaskFieldRules;
 };
 

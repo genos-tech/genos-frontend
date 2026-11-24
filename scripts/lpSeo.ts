@@ -1,11 +1,13 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
 
 import type { ChangelogEntry } from "../src/lp/changelog/changelog";
 import { buildChangelogRss } from "../src/lp/changelog/rss";
+import { manualTopicHeads, manualTopicPaths, type ManualHeads } from "../src/lp/seo/manualHeads";
 import { buildSeoPages, type BlogArticleHead } from "../src/lp/seo/pageHeads";
 import { buildSitemapXml, type SitemapArticle } from "../src/lp/seo/sitemap";
+import type { Manual } from "../src/manual/manualSource";
 
 // Emits `sitemap.xml` into the build output from the same route list the app
 // uses (src/lp/seo/routes.ts) plus the blog manifest, so a new route or article
@@ -36,6 +38,21 @@ const readChangelog = (root: string): ChangelogEntry[] =>
         readFileSync(join(root, "src/lp/changelog/entries.json"), "utf8")
     ) as ChangelogEntry[];
 
+// The manual's topics per language, from the JSON the pages render. English must exist; Japanese
+// is added when `manual.ja.json` is (MIP-2322), and until then its heads fall back to English.
+const readManualHeads = (root: string): ManualHeads => {
+    const heads: ManualHeads = {};
+    for (const lang of ["en", "ja"] as const) {
+        const file = join(root, `src/manual/manual.${lang}.json`);
+        if (!existsSync(file)) {
+            if (lang === "en") throw new Error("lp-seo: src/manual/manual.en.json is missing");
+            continue;
+        }
+        heads[lang] = manualTopicHeads(JSON.parse(readFileSync(file, "utf8")) as Manual);
+    }
+    return heads;
+};
+
 export const lpSeo = (): Plugin => {
     let root = process.cwd();
     return {
@@ -50,7 +67,10 @@ export const lpSeo = (): Plugin => {
             this.emitFile({
                 type: "asset",
                 fileName: "sitemap.xml",
-                source: buildSitemapXml(readArticles(root)),
+                source: buildSitemapXml(
+                    readArticles(root),
+                    manualTopicPaths(readManualHeads(root))
+                ),
             });
             // changelog.rss from the same entries the /changelog page shows (MIP-1257).
             this.emitFile({
@@ -69,7 +89,7 @@ export const lpSeo = (): Plugin => {
                 throw new Error("lp-seo: no index.html in the bundle to write page heads from");
             }
             const template = String(index.source);
-            const pages = buildSeoPages(template, readManifest(root));
+            const pages = buildSeoPages(template, readManifest(root), readManualHeads(root));
             for (const page of pages) {
                 this.emitFile({ type: "asset", fileName: page.file, source: page.html });
             }

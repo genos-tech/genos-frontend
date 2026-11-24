@@ -15,3 +15,21 @@ export const isOwnerOfProject = (
     rules.projectId === projectId &&
     rules.ownerUserId != null &&
     rules.ownerUserId === userId;
+
+/**
+ * Whether the signed-in person may change the project's task-field rules: the owner OR an editor
+ * (the API's `can_manage`, MIP-2336). The API says so itself in `canManage`; an older API that
+ * does not send it leaves the owner check, so the menu never claims more than before.
+ */
+export const canCustomizeTaskFields = (
+    rules:
+        | { projectId: number; ownerUserId?: string | null; canManage?: boolean }
+        | null
+        | undefined,
+    projectId: number | null | undefined,
+    userId: string | null | undefined
+): boolean =>
+    rules != null &&
+    projectId != null &&
+    rules.projectId === projectId &&
+    (rules.canManage === true || isOwnerOfProject(rules, projectId, userId));
