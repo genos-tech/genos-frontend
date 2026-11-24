@@ -30,7 +30,7 @@ import { UserProps } from "../../../../types/admin";
 import { archiveProject, unarchiveProject } from "../../../archive/archiveApi";
 import { ArchivedBanner } from "../../../archive/ArchivedBanner";
 import { useArchiveState } from "../../../archive/archiveState";
-import { isOwnerOfProject } from "../../../archive/projectOwner";
+import { canCustomizeTaskFields, isOwnerOfProject } from "../../../archive/projectOwner";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
 import { ModalImportTasksCsv } from "../modals/ModalImportTasksCsv";
 import { TaskRefreshButton } from "./TaskRefreshButton";
@@ -72,11 +72,16 @@ export const TaskHeader = ({
     const { accessToken } = useAuth();
     const { t } = useTranslation();
 
-    // Owner-only "Customize task fields" entry. Owner-ness comes from the
-    // task-field-rules cache (fetched per project by taskHome) — the item
-    // simply stays hidden until that fetch resolves for THIS project.
+    // "Customize task fields" entry for the owner AND editors, as the API allows (MIP-2336). The
+    // role comes from the task-field-rules cache (fetched per project by taskHome) — the item
+    // simply stays hidden until that fetch resolves for THIS project. Archive stays owner-only.
     const fieldRules = useTM.taskFieldRules;
     const isProjectOwner = isOwnerOfProject(
+        fieldRules,
+        usePM.currentProject?.projectId,
+        myself.userId
+    );
+    const canCustomizeFields = canCustomizeTaskFields(
         fieldRules,
         usePM.currentProject?.projectId,
         myself.userId
@@ -173,7 +178,7 @@ export const TaskHeader = ({
             kind: "customizeFields",
             label: t.tasks.header.customizeFieldsMenuItem,
             icon: <TuneRoundedIcon sx={{ fontSize: 18 }} />,
-            visible: isProjectOwner,
+            visible: canCustomizeFields,
             onClick: () => setOpenCustomizeFields(true),
         },
         {
